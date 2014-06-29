@@ -1,0 +1,102 @@
+﻿# Väliste ressursside allikad
+OPENSSL_DIR = C:\Users\Taavi\Documents\GuardTime\TEST_OLD_LIB\openssl-0.9.8g-bin-win64
+CURL_DIR = C:\Users\Taavi\Documents\GuardTime\TEST_OLD_LIB\curl-7.37.0\builds\libcurl-vc10-x64-release-static-ipv6-sspi-spnego-winssl
+OPENSSL_CA_FILE = C:\Users\Taavi\Documents\GuardTime\ksicapi\test\resource\tlv\mock.crt
+KSI_INCLUDE_DIR = C:\Users\Taavi\Documents\GuardTime\ksicapi\src\ksi
+
+!IF "$(DLL)" != "lib" && "$(DLL)" != "dll"
+DLL = lib
+!ENDIF
+!IF "$(RTL)" != "MT" && "$(RTL)" != "MTd" && "$(RTL)" != "MD" && "$(RTL)" != "MDd"
+RTL = MT
+!ENDIF
+
+
+!IF "$(OPENSSL_CA_FILE)" != ""
+TRUSTSTORE_MACROS = $(TRUSTSTORE_MACROS) /DOPENSSL_CA_FILE=\"$(OPENSSL_CA_FILE:\=\\)\"
+!ENDIF
+
+!IF "$(OPENSSL_CA_DIR)" != ""
+TRUSTSTORE_MACROS = $(TRUSTSTORE_MACROS) /DOPENSSL_CA_DIR=\"$(OPENSSL_CA_DIR:\=\\)\" 
+!ENDIF
+
+SRC_DIR = src
+OBJ_DIR = obj
+INC_DIR = src
+LIB_DIR = lib
+BIN_DIR = bin
+
+TOOL_NAME = gtime
+
+#Objects used to make command-line tool
+
+CMDTOOL_OBJ = \
+	$(OBJ_DIR)\getopt.obj \
+	$(OBJ_DIR)\gt_cmdparameters.obj \
+	$(OBJ_DIR)\gt_task.obj \
+	$(OBJ_DIR)\gt_task_extend.obj \
+	$(OBJ_DIR)\gt_task_getpubfile.obj \
+	$(OBJ_DIR)\gt_task_sign.obj \
+	$(OBJ_DIR)\gt_task_verify.obj \
+	$(OBJ_DIR)\gtime.obj 
+
+
+	
+#Compiler and linker configuration
+
+
+EXT_LIB = libeay32$(RTL).lib \
+	user32.lib gdi32.lib \
+	libksiapi$(RTL).$(DLL) libcurl_a.lib 
+	
+#libcmt.lib advapi32.lib crypt32.lib
+
+CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE /DCURL_STATICLIB /I$(SRC_DIR) /I$(LIB_DIR) /I$(KSI_INCLUDE_DIR)
+LDFLAGS = /NOLOGO /LIBPATH:$(LIB_DIR)
+
+!IF "$(RTL)" == "MT" || "$(RTL)" == "MD"
+CCFLAGS = $(CCFLAGS) /DNDEBUG /O2
+LDFLAGS = $(LDFLAGS) /RELEASE
+!ELSE
+CCFLAGS = $(CCFLAGS) /D_DEBUG /Od /RTC1 /Zi
+LDFLAGS = $(LDFLAGS) /DEBUG
+!ENDIF
+CCFLAGS = $(CCFLAGS) /I"$(OPENSSL_DIR)\include" /I"$(CURL_DIR)\include"
+!IF "$(DLL)" == "lib"
+LDFLAGS = $(LDFLAGS) /LIBPATH:"$(OPENSSL_DIR)\lib" 
+LDFLAGS = $(LDFLAGS) /LIBPATH:"$(CURL_DIR)\lib"
+!ELSE
+LDFLAGS = $(LDFLAGS) /LIBPATH:"$(OPENSSL_DIR)\dll" 
+LDFLAGS = $(LDFLAGS) /LIBPATH:"$(CURL_DIR)\dll"
+!ENDIF
+CCFLAGS = $(CCFLAGS) $(CCEXTRA) $(TRUSTSTORE_MACROS)
+LDFLAGS = $(LDFLAGS) $(LDEXTRA)
+
+
+#Making
+ 
+#$(BIN_DIR)\pubfile.exe $(BIN_DIR)\extender.exe
+default: $(BIN_DIR)\$(TOOL_NAME).exe 
+
+#Linking obj files together. Depends on LIB_OBJ files created. 
+
+$(BIN_DIR)\$(TOOL_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(CMDTOOL_OBJ)
+	link $(LDFLAGS) /OUT:$@ $(CMDTOOL_OBJ) $(EXT_LIB) 
+
+
+
+#C file compilation  	
+{$(SRC_DIR)\}.c{$(OBJ_DIR)\}.obj:
+	cl /c /$(RTL) $(CCFLAGS) /Fo$@ $<
+
+
+
+
+#Folder factory	
+	
+$(OBJ_DIR) $(BIN_DIR):
+	@if not exist $@ mkdir $@
+	
+clean:
+	@for %i in ($(OBJ_DIR) $(BIN_DIR)) do @if exist .\%i rmdir /s /q .\%i
+	@echo "cleaning something"
