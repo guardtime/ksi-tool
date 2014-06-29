@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
             printf("todo download publications file");
             }
         else if (task == verifyPublicationsFile){
-            printf("todo verify publications file");
+            GT_verifyTask(&param, task);
             }
         else if (task == signDataFile || task == signHash){
             GT_signTask(&param, task);
@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
             printf("todo extending signature");
             }
         else if((task == verifyTimestamp_and_file_online) || (task == verifyTimestamp_online) || (task == verifyTimestamp_and_file_use_pubfile) || (task == verifyTimestamp_use_pubfile)){
-            printf("todo verify ");
+            GT_verifyTask(&param, task);
             }
         
         }

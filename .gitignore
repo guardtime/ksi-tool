@@ -6,4 +6,6 @@
 *.obj
 .dep.inc
 makefile
+todo.txt
+sign_test.bat
 

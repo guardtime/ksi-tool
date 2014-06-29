@@ -33,19 +33,19 @@ typedef struct _gtimeCmdParameters {
   //  int a;                              //simulated extending request age in days (when no signature token is specified), default 36 (-a)
     
     //Operations
-    bool o;                             //is output file <true/false>
-    bool i;				//is input signature  file <true/false>
-    bool b;				//is publications file in <true/false>
-    bool f;				//is input data file <true/false>
-    bool V;				//is OpenSSL-style truststore file <true/false>
-    bool W;				//is OpenSSL-style truststore destroy <true/false>
-    bool F;				//is Input data hash <true/false>
-    bool H;				//is Different hashAlg <true/false>
-    bool S;				//is signing service url <true/false>
-    bool X;				//is extending service url <true/false>
-    bool P;				//is publications file url <true/false>
-    bool c;				//is networkTransferTimeout <true/false>
-    bool C;				//is networkConnectionTimeout <true/false>
+    bool o;                             //is output file  
+    bool i;				//is input signature  file  
+    bool b;				//is publications file in  
+    bool f;				//is input data file  
+    bool V;				//is OpenSSL-style truststore file  
+    bool W;				//is OpenSSL-style truststore destroy  
+    bool F;				//is Input data hash  
+    bool H;				//is Different hashAlg  
+    bool S;				//is signing service url  
+    bool X;				//is extending service url  
+    bool P;				//is publications file url  
+    bool c;				//is networkTransferTimeout  
+    bool C;				//is networkConnectionTimeout  
     
     bool x;				//is task extending
     bool s;				//is task signing
