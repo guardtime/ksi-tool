@@ -2,7 +2,7 @@
 #include "getopt.h"
 #include <stdio.h>		//input output
 //#include <string.h>		
-//#include <stdlib.h>		//malloc, random, int ja strn muundused
+#include <stdlib.h>		//malloc, random, int ja strn muundused
 static GT_CmdParameters cmdParameters;
 static GT_Tasks taskTODO = noTask;
 
@@ -171,10 +171,10 @@ static void GT_extractTaskTODO(void){
             taskTODO = verifyTimestamp_use_pubfile;
         else if(cmdParameters.b && cmdParameters.f && cmdParameters.i)
             taskTODO = verifyTimestamp_and_file_use_pubfile;
-        else if(cmdParameters.x && cmdParameters.i)
-            taskTODO = verifyTimestamp_online;
         else if(cmdParameters.x && cmdParameters.f && cmdParameters.i)
             taskTODO = verifyTimestamp_and_file_online;
+        else if(cmdParameters.x && cmdParameters.i)
+            taskTODO = verifyTimestamp_online;
         else if(cmdParameters.b)
             taskTODO = verifyPublicationsFile;
         else
@@ -205,7 +205,7 @@ static void GT_printTaskErrorMessage(){
                     );
         break;
         case invalid_p:
-            fprintf(stderr, "Error: Using -p you have to define missing parameter -o <fn> <fn>\n");
+            fprintf(stderr, "Error: Using -p you have to define missing parameter -o <fn>\n");
         break;
         case invalid_s:
             fprintf(stderr, "Error: Using -s you have to define missing parameter(s) %s%s\n",
@@ -310,8 +310,8 @@ static void GT_printParameters(void){
 
 void GT_pritHelp(void){
 	fprintf(stderr,
-			"\nGuardTime command-line signing stool %s, using API %d.%d\n"
-			"Usage: %s <-s|-x|-p|-v> [more options]\n"
+			"\nGuardTime command-line signing tool, using API\n"
+			"Usage: <-s|-x|-p|-v> [more options]\n"
 			"Where recognized options are:\n"
 			" -s		Sign data\n"
 			" -S <url>	specify Signing Service URL\n"
@@ -336,11 +336,8 @@ void GT_pritHelp(void){
 			" -c <num>	network transfer timeout, after successful Connect\n"
 			" -C <num>	network Connect timeout.\n"
 			" -h		Help (You are reading it now)\n"
-			"		- instead of filename is stdin/stdout stream\n",
-                //PACKAGE_VERSION, GT_VERSION >> 16, GT_VERSION & 0xff, argv0,
-		"todo",
-                -1, 
-                -1
+			"		- instead of filename is stdin/stdout stream\n"
+             
 );
 	
 	fprintf(stderr, "\nDefault service access URL-s:\n"
@@ -360,7 +357,7 @@ bool GT_parseCommandline(int argc, char **argv){
         return true;
         }
     else{
-       // GT_pritHelp();
+        GT_pritHelp();
         return false;
         }
     }

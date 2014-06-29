@@ -1,9 +1,12 @@
 #ifndef GT_TASK_H
 #define	GT_TASK_H
 
-#include "gt_cmdparameters.h"
+#include <stdio.h>
+#include <string.h>
 #include <ksi.h>
-#include <net_curl.h>
+#include "gt_cmdparameters.h"
+
+
 
 #ifdef	__cplusplus
 extern "C" {
@@ -14,7 +17,9 @@ int calculateHashOfAFile(KSI_DataHasher *hsr, KSI_DataHash **hash ,const char *f
 int saveSignatureFile(KSI_Signature *sign, const char *fname);
 
 int GT_signTask(GT_CmdParameters *cmdparam, GT_Tasks task);
-
+int GT_verifyTask(GT_CmdParameters *cmdparam, GT_Tasks task);
+int GT_extendTask(GT_CmdParameters *cmdparam, GT_Tasks task);
+int GT_getPublicationsFileTask(GT_CmdParameters *cmdparam, GT_Tasks task);
 
 
 #define ERROR_HANDLING(...) \

@@ -1,11 +1,4 @@
 #include "gt_task.h"
-#include "gt_cmdparameters.h"
-
-#include <stdio.h>
-#include <string.h>
-
-#include <ksi.h>
-#include <net_curl.h>
 
 
 
@@ -20,9 +13,9 @@ int GT_signTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
 
     /*Initalization of KSI */
     res = KSI_global_init();
-    if (res != KSI_OK) goto cleanup;
+    ERROR_HANDLING("Unable to init KSI global resources.\n");
     res = KSI_CTX_new(&ksi);
-    ERROR_HANDLING("Unable to create context.\n");
+    ERROR_HANDLING("Unable to init KSI context.\n");
     res = configureNetworkProvider(cmdparam, ksi);
     ERROR_HANDLING("Unable to configure network provider.\n");
 

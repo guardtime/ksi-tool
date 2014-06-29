@@ -1,9 +1,6 @@
 #include "gt_task.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <ksi.h>
-#include <net_curl.h>
+
 
 int GT_verifyTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
 	int res = KSI_UNKNOWN_ERROR;
@@ -60,10 +57,12 @@ int GT_verifyTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
             /* Comparing hash of a datafile and timestamp */
             if((GT_getTask() == verifyTimestamp_and_file_online) || (GT_getTask() == verifyTimestamp_and_file_use_pubfile)){
                 /* Create hasher. */
+                printf("Verifying file's %s hash...", cmdparam->inDataFileName);
                 res = KSI_Signature_createDataHasher(sig, &hsr);
-                ERROR_HANDLING("Unable to create data hasher.\n");
+                ERROR_HANDLING(" failed!\nUnable to create data hasher.\n");
                 res = calculateHashOfAFile(hsr, &hsh ,cmdparam->inDataFileName);
-                ERROR_HANDLING("Unable to hash data.\n");
+                ERROR_HANDLING(" failed!\nUnable to hash data.\n");
+                printf("ok\n");
                 printf("Verifying document hash... ");
                 res = KSI_Signature_verifyDataHash(sig, hsh);
                 ERROR_HANDLING("failed (%s)\nWrong document or signature.\n", KSI_getErrorString(res));

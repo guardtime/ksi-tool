@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
         GT_Tasks task = GT_getTask();
         
         if(task == downloadPublicationsFile){
-            printf("todo download publications file");
+            GT_getPublicationsFileTask(&param, task);
             }
         else if (task == verifyPublicationsFile){
             GT_verifyTask(&param, task);
@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
             GT_signTask(&param, task);
             }
         else if(task == extendTimestamp){
-            printf("todo extending signature");
+            GT_extendTask(&param, task);
             }
         else if((task == verifyTimestamp_and_file_online) || (task == verifyTimestamp_online) || (task == verifyTimestamp_and_file_use_pubfile) || (task == verifyTimestamp_use_pubfile)){
             GT_verifyTask(&param, task);

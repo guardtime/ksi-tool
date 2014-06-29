@@ -1,9 +1,5 @@
 #include "gt_task.h"
-#include "gt_cmdparameters.h"
-
-#include <stdio.h>
-#include <string.h>
-
+#include <net_curl.h>
 
 
 

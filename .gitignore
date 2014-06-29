@@ -8,4 +8,5 @@
 makefile
 todo.txt
 sign_test.bat
+*.ksig
 
