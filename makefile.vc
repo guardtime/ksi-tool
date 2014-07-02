@@ -1,12 +1,4 @@
 ﻿# Väliste ressursside allikad
-OPENSSL_DIR = C:\Users\Taavi\Documents\GuardTime\LIBS\openssl-0.9.8g-win64
-#CURL_DIR = C:\Users\Taavi\Documents\GuardTime\TEST_OLD_LIB\curl-7.37.0\builds\libcurl-vc10-x64-release-static-ipv6-sspi-spnego-winssl
-CURL_DIR = C:\Users\Taavi\Documents\GuardTime\LIBS\curl-7.37.0
-OPENSSL_CA_FILE = C:\Users\Taavi\Documents\GuardTime\ksicapi\test\resource\tlv\mock.crt
-KSI_INCLUDE_DIR = "C:\Users\Taavi\Documents\GuardTime\ksicapi\src"
-#KSI_INCLUDE_DIR = "C:\Users\Taavi\Documents\GuardTime\ksicapi2\src\ksi"
-
-
 
 !IF "$(DLL)" != "lib" && "$(DLL)" != "dll"
 DLL = lib
@@ -26,8 +18,6 @@ TRUSTSTORE_MACROS = $(TRUSTSTORE_MACROS) /DOPENSSL_CA_DIR=\"$(OPENSSL_CA_DIR:\=\
 
 SRC_DIR = src
 OBJ_DIR = obj
-INC_DIR = src
-LIB_DIR = lib
 BIN_DIR = bin
 
 TOOL_NAME = gtime
@@ -50,13 +40,11 @@ CMDTOOL_OBJ = \
 
 
 EXT_LIB = libeay32$(RTL).lib \
-	user32.lib gdi32.lib \
+	user32.lib gdi32.lib advapi32.lib crypt32.lib\
 	libksiapi$(RTL).$(DLL) libcurl$(RTL).lib 
 	
-#libcmt.lib advapi32.lib crypt32.lib
-
-CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE /DCURL_STATICLIB /I$(SRC_DIR) /I$(LIB_DIR) /I$(KSI_INCLUDE_DIR) /I"$(KSI_INCLUDE_DIR)\ksi"
-LDFLAGS = /NOLOGO /LIBPATH:C:\Users\Taavi\Documents\GuardTime\ksicapi\out
+CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE /DCURL_STATICLIB /I$(SRC_DIR) /I$(KSI_DIR)\include 
+LDFLAGS = /NOLOGO /LIBPATH:$(KSI_DIR)\$(DLL) /NODEFAULTLIB:libcmt.lib
 
 !IF "$(RTL)" == "MT" || "$(RTL)" == "MD"
 CCFLAGS = $(CCFLAGS) /DNDEBUG /O2
@@ -103,4 +91,3 @@ $(OBJ_DIR) $(BIN_DIR):
 	
 clean:
 	@for %i in ($(OBJ_DIR) $(BIN_DIR)) do @if exist .\%i rmdir /s /q .\%i
-	@echo "cleaning something"
