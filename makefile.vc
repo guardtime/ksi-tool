@@ -1,8 +1,12 @@
 ﻿# Väliste ressursside allikad
-OPENSSL_DIR = C:\Users\Taavi\Documents\GuardTime\TEST_OLD_LIB\openssl-0.9.8g-bin-win64
-CURL_DIR = C:\Users\Taavi\Documents\GuardTime\TEST_OLD_LIB\curl-7.37.0\builds\libcurl-vc10-x64-release-static-ipv6-sspi-spnego-winssl
+OPENSSL_DIR = C:\Users\Taavi\Documents\GuardTime\LIBS\openssl-0.9.8g-win64
+#CURL_DIR = C:\Users\Taavi\Documents\GuardTime\TEST_OLD_LIB\curl-7.37.0\builds\libcurl-vc10-x64-release-static-ipv6-sspi-spnego-winssl
+CURL_DIR = C:\Users\Taavi\Documents\GuardTime\LIBS\curl-7.37.0
 OPENSSL_CA_FILE = C:\Users\Taavi\Documents\GuardTime\ksicapi\test\resource\tlv\mock.crt
-KSI_INCLUDE_DIR = C:\Users\Taavi\Documents\GuardTime\ksicapi\src\ksi
+KSI_INCLUDE_DIR = "C:\Users\Taavi\Documents\GuardTime\ksicapi\src"
+#KSI_INCLUDE_DIR = "C:\Users\Taavi\Documents\GuardTime\ksicapi2\src\ksi"
+
+
 
 !IF "$(DLL)" != "lib" && "$(DLL)" != "dll"
 DLL = lib
@@ -47,12 +51,12 @@ CMDTOOL_OBJ = \
 
 EXT_LIB = libeay32$(RTL).lib \
 	user32.lib gdi32.lib \
-	libksiapi$(RTL).$(DLL) libcurl_a.lib 
+	libksiapi$(RTL).$(DLL) libcurl$(RTL).lib 
 	
 #libcmt.lib advapi32.lib crypt32.lib
 
-CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE /DCURL_STATICLIB /I$(SRC_DIR) /I$(LIB_DIR) /I$(KSI_INCLUDE_DIR)
-LDFLAGS = /NOLOGO /LIBPATH:$(LIB_DIR)
+CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE /DCURL_STATICLIB /I$(SRC_DIR) /I$(LIB_DIR) /I$(KSI_INCLUDE_DIR) /I"$(KSI_INCLUDE_DIR)\ksi"
+LDFLAGS = /NOLOGO /LIBPATH:C:\Users\Taavi\Documents\GuardTime\ksicapi\out
 
 !IF "$(RTL)" == "MT" || "$(RTL)" == "MD"
 CCFLAGS = $(CCFLAGS) /DNDEBUG /O2

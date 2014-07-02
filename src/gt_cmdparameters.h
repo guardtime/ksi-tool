@@ -19,9 +19,11 @@ typedef struct _gtimeCmdParameters {
     char *openSSLTruststoreFileName;    //specified OpenSSL-style truststore file                   (-V)
     char *openSSLTrustStoreDirName;     //specified OpenSSL-style truststore directory              (-W)
     
-    char *rawHashString;                //A buffer for storing raw HASH string                      (-F)
-    char *rawHasAlgIdentifierString;    //A buffer for storing raw HASH algorithm identifier        (-H)
-    int hashAlg;                        //Hasalg extracted from parameters -H or -F                 (-H, -F)                        
+    //char *rawHashString;              //A buffer for storing raw HASH string                      (-F)
+    char *hashAlgName_H;                //A buffer for storing raw HASH algorithm identifier        (-H)
+    char *hashAlgName_F;                //                                                          (-F)
+    char *inputHashStrn;                //                                                          (-F)
+//    int hashAlg;                      //Hasalg extracted from parameters -H or -F                 (-H, -F)                        
     
     char* signingService_url;           //specify Signing Service URL                               (-S)
     char* verificationService_url;      //specify verification (eXtending) service URL              (-X)			

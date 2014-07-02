@@ -35,7 +35,7 @@ int GT_verifyTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
             /* Reading signature file for verification. */
             printf("Reading signature... ");
             res = KSI_Signature_fromFile(ksi, cmdparam->inSigFileName, &sig);
-            ERROR_HANDLING("failed (%s)\n", KSI_getErrorString(res));
+            ERROR_HANDLING_STATUS_DUMP("failed (%s)\n", KSI_getErrorString(res));
             printf("ok\n");
             
             /* Choosing between online and publications file signature verification */

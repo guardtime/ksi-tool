@@ -15,6 +15,7 @@ extern "C" {
 int configureNetworkProvider(GT_CmdParameters *cmdparam, KSI_CTX *ksi);
 int calculateHashOfAFile(KSI_DataHasher *hsr, KSI_DataHash **hash ,const char *fname);  
 int saveSignatureFile(KSI_Signature *sign, const char *fname);
+int getHashFromCommandLine(GT_CmdParameters *cmdparam,KSI_CTX *ksi, KSI_DataHash **hash);
 
 int GT_signTask(GT_CmdParameters *cmdparam, GT_Tasks task);
 int GT_verifyTask(GT_CmdParameters *cmdparam, GT_Tasks task);
@@ -27,7 +28,6 @@ int GT_getPublicationsFileTask(GT_CmdParameters *cmdparam, GT_Tasks task);
 	fprintf(stderr, __VA_ARGS__); \
 	goto cleanup; \
 	}
-
 
 #define ERROR_HANDLING_STATUS_DUMP(...) \
     if (res != KSI_OK){  \

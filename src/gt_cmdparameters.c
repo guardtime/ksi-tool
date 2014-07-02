@@ -1,7 +1,7 @@
 #include "gt_cmdparameters.h"
 #include "getopt.h"
 #include <stdio.h>		//input output
-//#include <string.h>		
+#include <string.h>		
 #include <stdlib.h>		//malloc, random, int ja strn muundused
 static GT_CmdParameters cmdParameters;
 static GT_Tasks taskTODO = noTask;
@@ -40,15 +40,61 @@ static bool analyseOutputFile(const char* path){
         return true;
     }
 
-static bool analyseInputHash(const char* hash){
-   if(hash == NULL){
-        fprintf(stderr, "Error: HASH is not inserted. It is nullptr!\n");
-        return false;
-        }
-    else
-        return true;
+static bool analyseInputHash(void){
+        if(cmdParameters.hashAlgName_F == NULL){
+            fprintf(stderr, "Error: Hash Algorithm name is not inserted. It is nullptr!\n");
+            return false;
+            }
+        else if(strlen(cmdParameters.hashAlgName_F) == 0){
+            fprintf(stderr, "Error: Hash Algorithm name \"\" is not valid\n");
+            return false;
+            }
+        else if(cmdParameters.inputHashStrn == NULL){
+            fprintf(stderr, "Error: Hash is not inserted. It is nullptr!\n");
+            return false;
+            }
+        else if(strlen(cmdParameters.inputHashStrn) == 0){
+            fprintf(stderr, "Error: Hash \"\" is not valid\n");
+            return false;
+            }
+        else
+            return true;
         
     }
+
+
+
+static void getHashAndAlgStrings(const char *instrn, char **strnAlgName, char **strnHash){
+    char *colon;
+    size_t algLen=0;
+    size_t hahsLen=0;
+    char *temp_strnAlg = NULL;
+    char *temp_strnHash = NULL;
+    *strnAlgName = NULL;
+    *strnHash = NULL;
+    
+    if(instrn==NULL)
+        return;
+    
+    colon = strchr(instrn, ':');
+    if (colon != NULL) {
+            algLen = (colon-instrn)/sizeof(char);
+            hahsLen = strlen(instrn)-algLen-1;
+            temp_strnAlg = calloc(algLen+1, sizeof(char));
+            temp_strnHash = calloc(hahsLen+1, sizeof(char));
+            memcpy(temp_strnAlg, instrn, algLen);
+            temp_strnAlg[algLen]=0;
+            memcpy(temp_strnHash, colon+1, hahsLen);
+            temp_strnHash[hahsLen]=0;
+            }
+    *strnAlgName = temp_strnAlg;
+    *strnHash =temp_strnHash;
+    //printf("Alg %s\nHash %s\n", *strnAlgName, *strnHash);
+    }
+
+
+
+
 
 
 /****************Functions for parsing command line parameters****************/
@@ -127,11 +173,11 @@ static void GT_readCommandLineParameters(int argc, char **argv){
                 break;
             
            case 'F':
-               cmdParameters.rawHashString = optarg;
+               getHashAndAlgStrings(optarg, &cmdParameters.hashAlgName_F, &cmdParameters.inputHashStrn);
                cmdParameters.F = true;
                break;
            case 'H':
-               cmdParameters.rawHasAlgIdentifierString = optarg;
+               cmdParameters.hashAlgName_H = optarg;
                cmdParameters.H = true;
                break;
 		}
@@ -248,7 +294,7 @@ static bool GT_controlParameters(void){
         else return false;
         }
     else if(taskTODO == signHash){
-        if(analyseInputHash(cmdParameters.rawHashString) && analyseOutputFile(cmdParameters.outSigFileName)) return true;
+        if(analyseInputHash() && analyseOutputFile(cmdParameters.outSigFileName)) return true;
         else return false;
         }
     else if(taskTODO == extendTimestamp){
@@ -285,8 +331,8 @@ static void GT_printParameters(void){
     if(cmdParameters.f == true) printf("-f %s\n", cmdParameters.inDataFileName);
     if(cmdParameters.V == true) printf("-V %s\n", cmdParameters.openSSLTruststoreFileName);
     if(cmdParameters.W == true) printf("-W %s\n", cmdParameters.openSSLTrustStoreDirName);
-    if(cmdParameters.F == true) printf("-F %s\n", cmdParameters.rawHashString);
-    if(cmdParameters.H == true) printf("-H %s\n", cmdParameters.rawHasAlgIdentifierString);
+    if(cmdParameters.F == true) printf("-F Alg: %s and Hash: %s\n", cmdParameters.hashAlgName_F, cmdParameters.inputHashStrn);
+    if(cmdParameters.H == true) printf("-H %s\n", cmdParameters.hashAlgName_H);
     if(cmdParameters.S == true) printf("-S %s\n", cmdParameters.signingService_url);
     if(cmdParameters.X == true) printf("-X %s\n", cmdParameters.verificationService_url);
     if(cmdParameters.P == true) printf("-P %s\n", cmdParameters.publicationsFile_url);

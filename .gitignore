@@ -3,6 +3,7 @@
 /build
 /dist
 /nbproject
+/test
 *.obj
 .dep.inc
 makefile
