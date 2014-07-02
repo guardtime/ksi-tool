@@ -23,10 +23,17 @@ int GT_signTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
     /*Getting the hash for signing process*/
     if(GT_getTask() == signDataFile){
         char *hashAlg;
+        int hasAlgID=-1;
         /*Choosing of hash algorithm and creation of data hasher*/
         printf("Getting hash from file for signing process...");
         hashAlg = cmdparam->H ? (cmdparam->hashAlgName_H) : ("default");
-        res = KSI_DataHasher_open(ksi, KSI_getHashAlgorithmByName(hashAlg), &hsr);
+        hasAlgID = KSI_getHashAlgorithmByName(hashAlg);
+        if(hasAlgID == -1){
+            fprintf(stderr, "The hash algorithm \"%s\"is unknown\n", cmdparam->hashAlgName_F);
+            res = KSI_INVALID_ARGUMENT;
+            goto cleanup;
+        }
+        res = KSI_DataHasher_open(ksi,hasAlgID , &hsr);
         ERROR_HANDLING("\nUnable to create hasher.\n");
         res = calculateHashOfAFile(hsr, &hash ,cmdparam->inDataFileName);
         ERROR_HANDLING("\nUnable to hash data.\n");

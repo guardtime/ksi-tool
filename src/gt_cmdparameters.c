@@ -390,8 +390,8 @@ void GT_pritHelp(void){
 			"\tSigning:      %s\n"
 			"\tVerifying:         %s\n"
 			"\tPublications file: %s\n", DEFAULT_S_URL, DEFAULT_X_URL, DEFAULT_P_URL);
-	fprintf(stderr, "\nSupported hash algorithms:\n"
-			"\tSHA1, SHA224, SHA256 (default), SHA384, SHA512, RIPEMD160\n");
+	fprintf(stderr, "\nSupported hash algorithms (-H, -F):\n"
+			"\tSHA-1, SHA-256 (default), RIPEMD-160, SHA-224, SHA-384, SHA-512, RIPEMD-256, SHA3-244, SHA3-256, SHA3-384, SHA3-512, SM3\n");
 }
 
 bool GT_parseCommandline(int argc, char **argv){
@@ -403,7 +403,7 @@ bool GT_parseCommandline(int argc, char **argv){
         return true;
         }
     else{
-        GT_pritHelp();
+        //GT_pritHelp();
         return false;
         }
     }
