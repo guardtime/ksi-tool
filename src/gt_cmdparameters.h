@@ -21,8 +21,8 @@ typedef struct _gtimeCmdParameters {
     
     //char *rawHashString;              //A buffer for storing raw HASH string                      (-F)
     char *hashAlgName_H;                //A buffer for storing raw HASH algorithm identifier        (-H)
-    char *hashAlgName_F;                //                                                          (-F)
-    char *inputHashStrn;                //                                                          (-F)
+    char *hashAlgName_F;                //A buffer for storing raw HASH algorithm identifier        (-F)
+    char *inputHashStrn;                //A buffer for storing raw HASH                             (-F)
 //    int hashAlg;                      //Hasalg extracted from parameters -H or -F                 (-H, -F)                        
     
     char* signingService_url;           //specify Signing Service URL                               (-S)
@@ -102,6 +102,7 @@ GT_CmdParameters GT_getCMDParam(void);
  */
 
 GT_Tasks GT_getTask(void);
+
 /**
  * Function for printing command line help. 
  */

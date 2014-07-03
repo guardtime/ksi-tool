@@ -8,6 +8,19 @@ static GT_Tasks taskTODO = noTask;
 
 /**Functions for analysing and checking if command line parameters are valid**/
 
+static bool isValidHex(const char *hexStrn, char *invalidchar){
+    int i=0;
+    char C;
+    while(C=hexStrn[i++]){
+        if(!isxdigit(C)){
+            printf("\n invalid %c\n", C);
+            *invalidchar=C;
+            return false;
+            }
+        }
+    return true;
+    }
+
 static bool doFileExists(const char* path){
     FILE *file;
     if (file = fopen(path, "r"))
@@ -41,6 +54,8 @@ static bool analyseOutputFile(const char* path){
     }
 
 static bool analyseInputHash(void){
+    char invalidChar=0;
+    
         if(cmdParameters.hashAlgName_F == NULL){
             fprintf(stderr, "Error: Hash Algorithm name is not inserted. It is nullptr!\n");
             return false;
@@ -57,12 +72,17 @@ static bool analyseInputHash(void){
             fprintf(stderr, "Error: Hash \"\" is not valid\n");
             return false;
             }
-        else
-            return true;
         
+        if(!isValidHex(cmdParameters.inputHashStrn, &invalidChar)){
+            fprintf(stderr, "Error: Hash contains invalid character: %c\n", invalidChar);
+            return false;
+            }
+    return true;
     }
 
 
+
+/****************Functions for parsing command line parameters****************/
 
 static void getHashAndAlgStrings(const char *instrn, char **strnAlgName, char **strnHash){
     char *colon;
@@ -92,12 +112,6 @@ static void getHashAndAlgStrings(const char *instrn, char **strnAlgName, char **
     //printf("Alg %s\nHash %s\n", *strnAlgName, *strnHash);
     }
 
-
-
-
-
-
-/****************Functions for parsing command line parameters****************/
 
 //Just reads raw parameters and arguments from command line and inserts the data
 // into cmdParameters
@@ -187,9 +201,9 @@ static void GT_readCommandLineParameters(int argc, char **argv){
 
 }
 
+
 //Extracts the task and its status into taskTODO. The task can be ok ( all 
-//important parameters are present (the content is not checked) or invalid
-//(some parameters are missing).
+//important parameters are present) or invalid. The content of parameters is not checked. 
 static void GT_extractTaskTODO(void){
     //No multiple tasks allowed ((p or s) and (v or x)) and (p and v)
     if(((cmdParameters.p || cmdParameters.s) && (cmdParameters.v || cmdParameters.x)) || (cmdParameters.p && cmdParameters.s)){
@@ -240,7 +254,7 @@ static void GT_extractTaskTODO(void){
 
 //Prints an error message if something is wrong with the FORM of the parameters.
 //Used after GT_extractTaskTODO().
-static void GT_printTaskErrorMessage(){
+static void GT_printTaskErrorMessage(void){
     switch(taskTODO){
         case invalid_multipleTasks:
             fprintf(stderr, "Error: You can't use multiple tasks together: %s%s%s%s\n",
@@ -279,7 +293,8 @@ static void GT_printTaskErrorMessage(){
     }
 
 //Controls the parameters and prints error messages. Checks if input files exists
-// and input strings are not nullptrs. The contents of the files are not checked. 
+//and input strings are not nullptrs. The content of the files is not checked.
+//Return true if Parameters are correct, false otherwise.
 static bool GT_controlParameters(void){
     if(taskTODO == verifyPublicationsFile)
         {
@@ -320,6 +335,7 @@ static bool GT_controlParameters(void){
     else{
         return false;
         }
+    printf("ok\n");
 }
 
 //Visualize all extracted parameters and their values.
@@ -353,7 +369,6 @@ static void GT_printParameters(void){
     }
 
 /*********************************User Functions******************************/
-
 void GT_pritHelp(void){
 	fprintf(stderr,
 			"\nGuardTime command-line signing tool, using API\n"
@@ -397,7 +412,7 @@ void GT_pritHelp(void){
 bool GT_parseCommandline(int argc, char **argv){
     GT_readCommandLineParameters(argc, argv);
     GT_extractTaskTODO();
-    //GT_printParameters();
+   //GT_printParameters();
     GT_printTaskErrorMessage();
     if(GT_controlParameters()){
         return true;

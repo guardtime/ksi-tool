@@ -1,5 +1,5 @@
 #include "gt_task.h"
-#include <net_curl.h>
+#include <ksi/net_curl.h>
 #include <string.h>
 #include <ctype.h>
 

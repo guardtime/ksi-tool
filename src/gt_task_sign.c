@@ -21,7 +21,7 @@ int GT_signTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
 
         
     /*Getting the hash for signing process*/
-    if(GT_getTask() == signDataFile){
+    if(task == signDataFile){
         char *hashAlg;
         int hasAlgID=-1;
         /*Choosing of hash algorithm and creation of data hasher*/
@@ -39,10 +39,10 @@ int GT_signTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
         ERROR_HANDLING("\nUnable to hash data.\n");
         printf("ok.\n");
         }
-    else if(GT_getTask() == signHash){
+    else if(task == signHash){
         printf("Getting hash from input string for signing process...");
         res = getHashFromCommandLine(cmdparam,ksi, &hash);
-        ERROR_HANDLING_STATUS_DUMP("_Unable to create hash from digest.\n");
+        ERROR_HANDLING_STATUS_DUMP("\nUnable to create hash from digest.\n");
         printf("ok.\n");
         }
     else{
@@ -138,17 +138,17 @@ static int getHashFromCommandLine(GT_CmdParameters *cmdparam,KSI_CTX *ksi, KSI_D
    // KSI_DataHash *temp_hash;
     
     res = getBinaryFromHexString(ksi, cmdparam->inputHashStrn, &data, &len);
-    ERROR_HANDLING("Unable to extract Hash value from command line input.\n");
+    ERROR_HANDLING("\nUnable to extract Hash value from command line input.\n");
     
     hasAlg = KSI_getHashAlgorithmByName (cmdparam->hashAlgName_F);
     if(hasAlg == -1){
-        fprintf(stderr, "The hash algorithm \"%s\"is unknown\n", cmdparam->hashAlgName_F);
+        fprintf(stderr, "\nThe hash algorithm \"%s\"is unknown\n", cmdparam->hashAlgName_F);
         res = KSI_INVALID_ARGUMENT;
         goto cleanup;
         }
     
     res = KSI_DataHash_fromDigest(ksi, hasAlg, data, len, hash);
-    ERROR_HANDLING("Unable to create hash from digest.\n");
+    ERROR_HANDLING("\nUnable to create hash from digest.\n");
     cleanup:
     
     return res;

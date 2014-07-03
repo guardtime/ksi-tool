@@ -18,10 +18,10 @@ int GT_verifyTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
 	res = configureNetworkProvider(cmdparam, ksi);
         ERROR_HANDLING("Unable to configure network provider.\n");
         
-        //if(GT_getTask() == verifyTimestamp_online)
+        //if(task == verifyTimestamp_online)
         
         /* Verification on publications file or signature*/
-        if(GT_getTask() == verifyPublicationsFile){
+        if(task == verifyPublicationsFile){
             printf("Reading publications file... ");
             res = KSI_PublicationsFile_fromFile(ksi, cmdparam->inPubFileName, &publicationsFile);
             ERROR_HANDLING_STATUS_DUMP("failed!\nUnable to read publications file %s.\n", cmdparam->inPubFileName);
@@ -39,13 +39,13 @@ int GT_verifyTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
             printf("ok\n");
             
             /* Choosing between online and publications file signature verification */
-            if((GT_getTask() == verifyTimestamp_and_file_online) || (GT_getTask() == verifyTimestamp_online)){
+            if((task == verifyTimestamp_and_file_online) || (task == verifyTimestamp_online)){
                 printf("Verifying signature online... ");
                 res = KSI_Signature_verify(sig, ksi);
                 ERROR_HANDLING("failed (%s)\n", KSI_getErrorString(res));
                 printf("ok\n");
                 }
-            else if((GT_getTask() == verifyTimestamp_and_file_use_pubfile) || (GT_getTask() == verifyTimestamp_use_pubfile)){
+            else if((task == verifyTimestamp_and_file_use_pubfile) || (task == verifyTimestamp_use_pubfile)){
                 printf("TODO verification via publications file.\n");
                 goto cleanup;
                 }
@@ -55,7 +55,7 @@ int GT_verifyTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
                 }
             
             /* Comparing hash of a datafile and timestamp */
-            if((GT_getTask() == verifyTimestamp_and_file_online) || (GT_getTask() == verifyTimestamp_and_file_use_pubfile)){
+            if((task == verifyTimestamp_and_file_online) || (task == verifyTimestamp_and_file_use_pubfile)){
                 /* Create hasher. */
                 printf("Verifying file's %s hash...", cmdparam->inDataFileName);
                 res = KSI_Signature_createDataHasher(sig, &hsr);
@@ -71,8 +71,8 @@ int GT_verifyTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
         }
 
 	printf("Verification of %s %s successful.\n", 
-                (GT_getTask() == verifyPublicationsFile) ? "publications file" : "signature file",
-                (GT_getTask() == verifyPublicationsFile) ? cmdparam->inPubFileName : cmdparam->inSigFileName
+                (task == verifyPublicationsFile) ? "publications file" : "signature file",
+                (task == verifyPublicationsFile) ? cmdparam->inPubFileName : cmdparam->inSigFileName
                 );
 	res = KSI_OK;
 

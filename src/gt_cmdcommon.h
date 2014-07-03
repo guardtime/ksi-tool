@@ -11,7 +11,7 @@ extern "C" {
 #endif
 
 #ifndef __cplusplus
-typedef enum { false, true } bool;
+typedef enum { false=0, true=1 } bool;
 #endif
 
 
