@@ -36,6 +36,9 @@ int main(int argc, char** argv) {
         else if((task == verifyTimestamp_and_file_online) || (task == verifyTimestamp_online) || (task == verifyTimestamp_and_file_use_pubfile) || (task == verifyTimestamp_use_pubfile)){
             GT_verifyTask(&param, task);
             }
+        else if(task == showHelp){
+            GT_pritHelp();
+            }
         
         }
     else

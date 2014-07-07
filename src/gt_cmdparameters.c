@@ -205,8 +205,11 @@ static void GT_readCommandLineParameters(int argc, char **argv){
 //Extracts the task and its status into taskTODO. The task can be ok ( all 
 //important parameters are present) or invalid. The content of parameters is not checked. 
 static void GT_extractTaskTODO(void){
+    if(cmdParameters.h){
+        taskTODO = showHelp;
+        }
     //No multiple tasks allowed ((p or s) and (v or x)) and (p and v)
-    if(((cmdParameters.p || cmdParameters.s) && (cmdParameters.v || cmdParameters.x)) || (cmdParameters.p && cmdParameters.s)){
+    else if(((cmdParameters.p || cmdParameters.s) && (cmdParameters.v || cmdParameters.x)) || (cmdParameters.p && cmdParameters.s)){
         taskTODO = invalid_multipleTasks;
         }
     //Download publications file
@@ -286,7 +289,7 @@ static void GT_printTaskErrorMessage(void){
                     );
         break;
         case noTask:
-            fprintf(stderr, "Error: The task is not defined. Use parameters -s or -x or -v or -p to define one. \n");
+            fprintf(stderr, "Error: The task is not defined. Use parameters -s or -x or -v or -p to define one. \n Use -h parameter for help.\n");
         break;
             
         }
@@ -331,6 +334,9 @@ static bool GT_controlParameters(void){
     else if (taskTODO == verifyTimestamp_and_file_online){
         if(analyseInputFile(cmdParameters.inSigFileName) && analyseInputFile(cmdParameters.inDataFileName)) return true;
         else return false;
+        }
+    else if(taskTODO == showHelp){
+        return true;
         }
     else{
         return false;

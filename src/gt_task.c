@@ -1,7 +1,7 @@
 #include "gt_task.h"
 #include <ksi/net_curl.h>
 #include <string.h>
-#include <ctype.h>
+
 
 int configureNetworkProvider(GT_CmdParameters *cmdparam, KSI_CTX *ksi){
     int res = KSI_OK;

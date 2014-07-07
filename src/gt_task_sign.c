@@ -1,4 +1,5 @@
 #include "gt_task.h"
+#include <ctype.h>
 
 static int getHashFromCommandLine(GT_CmdParameters *cmdparam,KSI_CTX *ksi, KSI_DataHash **hash);
 

@@ -78,7 +78,8 @@ typedef enum _tasksTODO{
     invalid_x,
     invalid_p,
     invalid_multipleTasks,
-    noTask
+    noTask,
+    showHelp
 } GT_Tasks;
 
 

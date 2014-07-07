@@ -5,7 +5,6 @@ int GT_getPublicationsFileTask(GT_CmdParameters *cmdparam, GT_Tasks task){
 	KSI_CTX *ksi = NULL;
 	int res;
 	KSI_PublicationsFile *publicationsFile = NULL;
-	KSI_LIST(KSI_PublicationRecord) *publications = NULL;
 	const char *fileName = NULL;
 
 
@@ -22,9 +21,11 @@ int GT_getPublicationsFileTask(GT_CmdParameters *cmdparam, GT_Tasks task){
 	res = KSI_verifyPublicationsFile(ksi, publicationsFile);
         ERROR_HANDLING_STATUS_DUMP("failed! Unable to verify publications file.\n");
 	printf("ok.\n");
+
+        res = KSI_PublicationsFile_toFile(ksi, publicationsFile, cmdparam->outPubFileName);
+        ERROR_HANDLING_STATUS_DUMP("Unable to save publications file.\n");
         
-        
-        printf("Publications file %s saved.", cmdparam->outPubFileName);
+        printf("Publications file %s saved.\n", cmdparam->outPubFileName);
         
     cleanup:
         KSI_CTX_free(ksi);
