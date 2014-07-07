@@ -20,7 +20,7 @@ int GT_verifyTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
         
         //if(task == verifyTimestamp_online)
         
-        /* Verification on publications file or signature*/
+        /* Verification of publications file */
         if(task == verifyPublicationsFile){
             printf("Reading publications file... ");
             res = KSI_PublicationsFile_fromFile(ksi, cmdparam->inPubFileName, &publicationsFile);
@@ -31,6 +31,7 @@ int GT_verifyTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
             ERROR_HANDLING_STATUS_DUMP("failed\n")
             printf("ok\n");
             }
+        /* Verification of signature*/
         else{
             /* Reading signature file for verification. */
             printf("Reading signature... ");
@@ -39,13 +40,13 @@ int GT_verifyTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
             printf("ok\n");
             
             /* Choosing between online and publications file signature verification */
-            if((task == verifyTimestamp_and_file_online) || (task == verifyTimestamp_online)){
+            if(task == verifyTimestamp_online){
                 printf("Verifying signature online... ");
                 res = KSI_Signature_verify(sig, ksi);
                 ERROR_HANDLING("failed (%s)\n", KSI_getErrorString(res));
                 printf("ok\n");
                 }
-            else if((task == verifyTimestamp_and_file_use_pubfile) || (task == verifyTimestamp_use_pubfile)){
+            else if(task == verifyTimestamp_locally){
                 printf("TODO verification via publications file.\n");
                 goto cleanup;
                 }
@@ -54,8 +55,8 @@ int GT_verifyTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
                 goto cleanup;
                 }
             
-            /* Comparing hash of a datafile and timestamp */
-            if((task == verifyTimestamp_and_file_online) || (task == verifyTimestamp_and_file_use_pubfile)){
+            /* If datafile is present comparing hash of a datafile and timestamp */
+            if(cmdparam->f){
                 /* Create hasher. */
                 printf("Verifying file's %s hash...", cmdparam->inDataFileName);
                 res = KSI_Signature_createDataHasher(sig, &hsr);

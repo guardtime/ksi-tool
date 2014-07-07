@@ -65,14 +65,12 @@ typedef struct _gtimeCmdParameters {
 
 typedef enum _tasksTODO{
     downloadPublicationsFile,
-    verifyPublicationsFile,
     signDataFile,
     signHash,
     extendTimestamp,
-    verifyTimestamp_use_pubfile,
-    verifyTimestamp_and_file_use_pubfile,
+    verifyPublicationsFile,
     verifyTimestamp_online,
-    verifyTimestamp_and_file_online,
+    verifyTimestamp_locally,
     invalid_s,
     invalid_v,
     invalid_x,
@@ -82,6 +80,12 @@ typedef enum _tasksTODO{
     showHelp
 } GT_Tasks;
 
+/*
+ verifyTimestamp_use_pubfile,
+    verifyTimestamp_and_file_use_pubfile,
+    verifyTimestamp_online,
+    verifyTimestamp_and_file_online,
+ */
 
 /**
  * Function for extracting raw data from commandline

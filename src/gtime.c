@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
         else if(task == extendTimestamp){
             GT_extendTask(&param, task);
             }
-        else if((task == verifyTimestamp_and_file_online) || (task == verifyTimestamp_online) || (task == verifyTimestamp_and_file_use_pubfile) || (task == verifyTimestamp_use_pubfile)){
+        else if((task == verifyTimestamp_online) || (task == verifyTimestamp_locally)){
             GT_verifyTask(&param, task);
             }
         else if(task == showHelp){

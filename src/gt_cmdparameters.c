@@ -3,6 +3,8 @@
 #include <stdio.h>		//input output
 #include <string.h>		
 #include <stdlib.h>		//malloc, random, int ja strn muundused
+#include <ctype.h>
+
 static GT_CmdParameters cmdParameters;
 static GT_Tasks taskTODO = noTask;
 
@@ -230,6 +232,7 @@ static void GT_extractTaskTODO(void){
         }
     //Verify locally or online
     else if(cmdParameters.v ){
+        /*
         if(cmdParameters.b && cmdParameters.i)
             taskTODO = verifyTimestamp_use_pubfile;
         else if(cmdParameters.b && cmdParameters.f && cmdParameters.i)
@@ -237,7 +240,13 @@ static void GT_extractTaskTODO(void){
         else if(cmdParameters.x && cmdParameters.f && cmdParameters.i)
             taskTODO = verifyTimestamp_and_file_online;
         else if(cmdParameters.x && cmdParameters.i)
+            taskTODO = verifyTimestamp_online;*/
+        if(cmdParameters.x && cmdParameters.i){
             taskTODO = verifyTimestamp_online;
+            }
+        else if(cmdParameters.i){
+            taskTODO = verifyTimestamp_locally;
+            }
         else if(cmdParameters.b)
             taskTODO = verifyPublicationsFile;
         else
@@ -319,22 +328,18 @@ static bool GT_controlParameters(void){
          if(analyseInputFile(cmdParameters.inSigFileName) && analyseOutputFile(cmdParameters.outSigFileName)) return true;
          else return false;
         }
-    else if (taskTODO == verifyTimestamp_use_pubfile){
-        if(analyseInputFile(cmdParameters.inSigFileName) && analyseInputFile(cmdParameters.inPubFileName)) return true;
+    else if ((taskTODO == verifyTimestamp_locally) || (taskTODO == verifyTimestamp_online)){
+        if((taskTODO == verifyTimestamp_locally) && analyseInputFile(cmdParameters.inSigFileName) && analyseInputFile(cmdParameters.inPubFileName)) goto extra_check;
+        else if ((taskTODO == verifyTimestamp_online) && analyseInputFile(cmdParameters.inSigFileName)) goto extra_check;
         else return false;
-        }
-    else if (taskTODO == verifyTimestamp_and_file_use_pubfile){
-        if(analyseInputFile(cmdParameters.inSigFileName) && analyseInputFile(cmdParameters.inPubFileName) && analyseInputFile(cmdParameters.inDataFileName)) return true;
-        else return false;
-        }
-    else if (taskTODO == verifyTimestamp_online){
-        if(analyseInputFile(cmdParameters.inSigFileName)) return true;
-        else return false;
-        }
-    else if (taskTODO == verifyTimestamp_and_file_online){
-        if(analyseInputFile(cmdParameters.inSigFileName) && analyseInputFile(cmdParameters.inDataFileName)) return true;
-        else return false;
-        }
+        
+        extra_check:
+        if(cmdParameters.f && !analyseInputFile(cmdParameters.inDataFileName)){
+            printf("Warning: Ignoring parameter -f\n");
+            cmdParameters.f = false;
+            }
+        return true;
+        }    
     else if(taskTODO == showHelp){
         return true;
         }
@@ -380,13 +385,13 @@ void GT_pritHelp(void){
 			"\nGuardTime command-line signing tool, using API\n"
 			"Usage: <-s|-x|-p|-v> [more options]\n"
 			"Where recognized options are:\n"
-			" -s		Sign data\n"
+			" -s		Sign data (The result is automatically verified)\n"
 			" -S <url>	specify Signing Service URL\n"
 			" -x		use online verification (eXtending) service\n"
 			" -X <url>	specify verification (eXtending) service URL\n"
-			" -p		download Publications file\n"
+			" -p		download Publications file (The result is automatically verified)\n"
 			" -P <url>	specify Publications file URL\n"
-			" -v		Verify signature token (-i <ts>); online verify with -x; or result of -s, -p if present\n"
+			" -v		Verify signature token (-i <ts>); online verify with -x;\n"
 			" -t		include service Timing\n"
 			" -n		print signer Name (identity)\n"
 			" -r		print publication References (use with -vx)\n"			
