@@ -68,6 +68,11 @@ int GT_extendTask(GT_CmdParameters *cmdparam, GT_Tasks task);
 int GT_getPublicationsFileTask(GT_CmdParameters *cmdparam, GT_Tasks task);
 
 
+int printSignerIdentity(KSI_Signature *sign);
+
+int printPublicationReferences(const KSI_PublicationsFile *pubFile);
+
+void printSignaturePublicationReference(const KSI_Signature *sig);
 #define ERROR_HANDLING(...) \
     if (res != KSI_OK){  \
 	fprintf(stderr, __VA_ARGS__); \
