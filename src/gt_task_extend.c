@@ -43,16 +43,18 @@ int GT_extendTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
         printf("ok.\n");
         
 	/* To be extra sure, lets verify the extended signature. */
+        /*
         printf("Verifying extended signature...");
 	res = KSI_verifySignature(ksi, ext);
         ERROR_HANDLING_STATUS_DUMP("failed\n Unable to verify the extended signature.\n");
         printf("ok.\n");       
+        */
         res = saveSignatureFile(ext, cmdparam->outSigFileName);
         ERROR_HANDLING("Unable to save signature"); 
         
 	
 
-	printf("Signature extended.");
+	printf("Signature extended.\n");
 
 cleanup:
 

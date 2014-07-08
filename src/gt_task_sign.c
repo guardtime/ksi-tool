@@ -55,10 +55,16 @@ int GT_signTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
     res = KSI_createSignature(ksi, hash, &sign);
     ERROR_HANDLING_STATUS_DUMP("\nUnable to sign %d.\n", res);
     printf("ok\n");
+    /*
     printf("Verifying freshly created signature...");
     res = KSI_Signature_verify(sign, ksi);
-    ERROR_HANDLING("\nVerifying failed (%s)\n", KSI_getErrorString(res));
+    ERROR_HANDLING_STATUS_DUMP("\nVerifying failed (%s)\n", KSI_getErrorString(res));
     printf("ok\n");
+    */
+    
+    if(cmdparam->n)
+        printSignerIdentity(sign);
+    
     /* Save signature file */
     res = saveSignatureFile(sign, cmdparam->outSigFileName);
     ERROR_HANDLING("Unable to save signature file %s", cmdparam->outSigFileName);    
