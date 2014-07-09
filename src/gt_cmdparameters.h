@@ -54,7 +54,7 @@ typedef struct _gtimeCmdParameters {
     bool v;				//is task verification
     bool p;     			//is task download Publications File
     
-    bool t;
+    bool t;                             //timing info
     bool r;
     bool n;
     bool l;

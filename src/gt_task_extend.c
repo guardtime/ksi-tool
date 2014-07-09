@@ -24,13 +24,19 @@ int GT_extendTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
 
 	/* Make sure the signature is ok. */
         printf("Verifying old signature...");
-	res = KSI_verifySignature(ksi, sig);
+        MEASURE_TIME(
+            res = KSI_verifySignature(ksi, sig);,
+            "\n  -Verifing old signature ",
+            cmdparam->t);
         ERROR_HANDLING_STATUS_DUMP("failed!\nUnable to verify signature.\n");
         printf("ok.\n");
 
 	/* Extend the signature. */
         printf("Extending old signature...");
-	res = KSI_extendSignature(ksi, sig, &ext);
+	MEASURE_TIME(
+            res = KSI_extendSignature(ksi, sig, &ext);,
+            "\n  -Extending old signature ",
+            cmdparam->t);
 	if (res != KSI_OK) {
 		if (res == KSI_EXTEND_NO_SUITABLE_PUBLICATION) {
 			printf("failed!\nNo suitable publication to extend to.\n");

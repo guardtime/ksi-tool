@@ -1,7 +1,6 @@
 #include "gt_task.h"
 #include <ksi/net_http.h>
 #include <string.h>
-#include <time.h>
 
 int configureNetworkProvider(GT_CmdParameters *cmdparam, KSI_CTX *ksi)
 {
@@ -150,7 +149,7 @@ static void printfPublicationRecordTime(KSI_PublicationRecord *publicationRecord
     time_t pubTime;
     struct tm *publicationTime = NULL;
     int res = KSI_UNKNOWN_ERROR;
-
+    
     res = KSI_PublicationRecord_getPublishedData(publicationRecord, &publicationData);
     ERROR_HANDLING("Unable to get pulication data\n");
     res = KSI_PublicationData_getTime(publicationData, &rawTime);
@@ -227,7 +226,6 @@ int printSignerIdentity(KSI_Signature *sign)
 
     res = KSI_Signature_getSignerIdentity(sign, &signerIdentity);
     ERROR_HANDLING("Unable to read signer identity.\n");
-
     printf("Signer identity: '%s'\n", signerIdentity == NULL ? "Unknown" : signerIdentity);
 
 cleanup:

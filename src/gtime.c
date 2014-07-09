@@ -15,7 +15,7 @@
 int main(int argc, char** argv) {
     bool state = GT_parseCommandline(argc, argv);
 
-    
+
     
     if(state){
         GT_CmdParameters param = GT_getCMDParam();

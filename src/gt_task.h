@@ -5,6 +5,7 @@
 #include <string.h>
 #include <ksi\ksi.h>
 #include "gt_cmdparameters.h"
+#include <time.h>
 
 
 
@@ -105,6 +106,17 @@ int printSignaturePublicationReference(const KSI_Signature *sig);
 	goto cleanup; \
 	}
 
+#define MEASURE_TIME(code_here, process_name, enable) \
+    {   \
+    clock_t start, finish; \
+    unsigned int elapsed_time; \
+    start = clock(); \
+    code_here; \
+    finish = clock(); \
+    elapsed_time = 1000*(finish - start) / CLOCKS_PER_SEC; \
+    if(enable == true) \
+    printf("%s took %i ms.\n",process_name, elapsed_time); \
+    }
 
 #ifdef	__cplusplus
 }
