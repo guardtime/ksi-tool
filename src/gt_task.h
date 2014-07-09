@@ -16,63 +16,82 @@ extern "C" {
 /**
  * Configures NetworkProvider using info from commandline.
  * Sets urls and timeouts.
- * @param [in] cmdparam - pointer to command-line parameters
- * @param [in] ksi - pointer to KSI context.
- * @return status code (KSI_OK, when operation succeeded, otherwise an error code). 
+ * @param[in] cmdparam pointer to command-line parameters.
+ * @param[in] ksi pointer to KSI context.
+ * @return Status code (KSI_OK, when operation succeeded, otherwise an error code). 
  */
 int configureNetworkProvider(GT_CmdParameters *cmdparam, KSI_CTX *ksi);
 
 /**
  * Calculates the hash of an input file.
- * @param [in] hsr pointer to hasher object 
- * @param [in] fname pointer to file path.
- * @param hash [obj] hash object generated from file.
- * @return status code (KSI_OK, when operation succeeded, otherwise an error code).
+ * @param[in] hsr Pointer to hasher object. 
+ * @param[in] fname Pointer to file path.
+ * @param[out] hash Pointer to the receiving pointer to the KSI hash object.
+ * @return Status code (KSI_OK, when operation succeeded, otherwise an error code).
  */
 int calculateHashOfAFile(KSI_DataHasher *hsr, KSI_DataHash **hash ,const char *fname); 
 
 /**
  * Saves signature object to file.
- * @param [in] sign pointer to signature object for saving.
- * @param [in] fname pointer to file path.
- * @return status code (KSI_OK, when operation succeeded, otherwise an error code).
+ * @param [in] sign Pointer to signature object for saving.
+ * @param [in] fname Pointer to file path.
+ * @return Status code (KSI_OK, when operation succeeded, otherwise an error code).
  */
 int saveSignatureFile(KSI_Signature *sign, const char *fname);
 
 /**
  * Task that deals with signing operations.
- * @param [in] cmdparam - pointer to command-line parameters
- * @return status code (KSI_OK, when operation succeeded, otherwise an error code).
+ * @param [in] cmdparam Pointer to command-line parameters.
+ * @return Ptatus code (KSI_OK, when operation succeeded, otherwise an error code).
  */
 int GT_signTask(GT_CmdParameters *cmdparam, GT_Tasks task);
 
 /**
  * Task that deals with verifying operations.
- * @param [in] cmdparam - pointer to command-line parameters
- * @return status code (KSI_OK, when operation succeeded, otherwise an error code).
+ * @param [in] cmdparam Pointer to command-line parameters.
+ * @return Status code (KSI_OK, when operation succeeded, otherwise an error code).
  */
 int GT_verifyTask(GT_CmdParameters *cmdparam, GT_Tasks task);
 
 /**
  * Task that deals with extending operations.
- * @param [in] cmdparam - pointer to command-line parameters
- * @return status code (KSI_OK, when operation succeeded, otherwise an error code).
+ * @param [in] cmdparam Pointer to command-line parameters
+ * @return Status code (KSI_OK, when operation succeeded, otherwise an error code).
  */
 int GT_extendTask(GT_CmdParameters *cmdparam, GT_Tasks task);
 
 /**
  * Task that deals with extending operations.
- * @param [in] cmdparam - pointer to command-line parameters
- * @return status code (KSI_OK, when operation succeeded, otherwise an error code).
+ * @param [in] cmdparam Pointer to command-line parameters.
+ * @return Status code (KSI_OK, when operation succeeded, otherwise an error code).
  */
 int GT_getPublicationsFileTask(GT_CmdParameters *cmdparam, GT_Tasks task);
 
-
+/**
+ * Prints the signer identity.
+ * @param[in] sign Pointer to KSI signture object.
+ * @return Status code (KSI_OK, when operation succeeded, otherwise an error code).
+ */
 int printSignerIdentity(KSI_Signature *sign);
 
+/**
+ * Prints publications file publications references.
+ *  [date]
+ *   list of references
+ * 
+ * @param[in] pubFile Pointer to KSI publications file object.
+ * @return Status code (KSI_OK, when operation succeeded, otherwise an error code).
+ */
 int printPublicationReferences(const KSI_PublicationsFile *pubFile);
 
-void printSignaturePublicationReference(const KSI_Signature *sig);
+/**
+ * Prints signatures publication references.
+ * @param[in] sig Pointer to KSI signture object.
+ * @return Status code (KSI_OK, when operation succeeded, otherwise an error code).
+ */
+int printSignaturePublicationReference(const KSI_Signature *sig);
+
+
 #define ERROR_HANDLING(...) \
     if (res != KSI_OK){  \
 	fprintf(stderr, __VA_ARGS__); \

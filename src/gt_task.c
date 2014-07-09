@@ -98,8 +98,7 @@ int saveSignatureFile(KSI_Signature *sign, const char *fname)
     /* Serialize the extended signature. */
     res = KSI_Signature_serialize(sign, &raw, &raw_len);
     ERROR_HANDLING("Unable to serialize signature.\n");
-
-
+    
     /* Open output file. */
     out = fopen(fname, "wb");
     if (out == NULL) {
@@ -121,21 +120,7 @@ cleanup:
     return res;
 }
 
-int printSignerIdentity(KSI_Signature *sign)
-{
-    int res = KSI_UNKNOWN_ERROR;
-    char *signerIdentity = NULL;
 
-    res = KSI_Signature_getSignerIdentity(sign, &signerIdentity);
-    ERROR_HANDLING("Unable to read signer identity.\n");
-
-    printf("Signer identity: '%s'\n", signerIdentity);
-
-cleanup:
-    //KSI_free(signerIdentity);
-    return res;
-
-}
 
 static void printPublicationRecordReferences(KSI_PublicationRecord *publicationRecord)
 {
@@ -185,18 +170,17 @@ cleanup:
 
 }
 
-//the bibliographic reference to a media outlet where the publication appeared
 
+//the bibliographic reference to a media outlet where the publication appeared
 int printPublicationReferences(const KSI_PublicationsFile *pubFile)
 {
     int res = KSI_UNKNOWN_ERROR;
     KSI_LIST(KSI_PublicationRecord)* list_publicationRecord = NULL;
     KSI_PublicationRecord *publicationRecord = NULL;
-
     int j, i;
 
     res = KSI_PublicationsFile_getPublications(pubFile, &list_publicationRecord);
-    ERROR_HANDLING("Unable to get publications records");
+    ERROR_HANDLING("Unable to get publications records.\n");
 
     for (i = 0; i < KSI_PublicationRecordList_length(list_publicationRecord); i++) {
 
@@ -214,7 +198,7 @@ cleanup:
     return res;
 }
 
-void printSignaturePublicationReference(const KSI_Signature *sig)
+int printSignaturePublicationReference(const KSI_Signature *sig)
 {
     int res = KSI_UNKNOWN_ERROR;
     KSI_PublicationRecord *publicationRecord;
@@ -224,13 +208,30 @@ void printSignaturePublicationReference(const KSI_Signature *sig)
 
     if (publicationRecord == NULL) {
         printf("No publication Record avilable.\n");
+        res = KSI_UNKNOWN_ERROR;
         goto cleanup;
     }
 
     printfPublicationRecordTime(publicationRecord);
     printPublicationRecordReferences(publicationRecord);
-
+    
 cleanup:
     //KSI_PublicationRecord_free(publicationRecord);
-    return;
+    return res;
+}
+
+int printSignerIdentity(KSI_Signature *sign)
+{
+    int res = KSI_UNKNOWN_ERROR;
+    char *signerIdentity = NULL;
+
+    res = KSI_Signature_getSignerIdentity(sign, &signerIdentity);
+    ERROR_HANDLING("Unable to read signer identity.\n");
+
+    printf("Signer identity: '%s'\n", signerIdentity == NULL ? "Unknown" : signerIdentity);
+
+cleanup:
+    KSI_free(signerIdentity);
+    return res;
+
 }
