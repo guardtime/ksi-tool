@@ -8,7 +8,7 @@
 #include <errno.h>
 
 static GT_CmdParameters cmdParameters;
-static GT_Tasks taskTODO = noTask;
+//static GT_Tasks taskTODO = noTask;
 
 /**Functions for analysing and checking if command line parameters are valid**/
 
@@ -38,24 +38,24 @@ static bool analyseInputFile(const char* path)
     if (path == NULL) {
         fprintf(stderr, "Error: File name is not inserted. It is nullptr!\n");
         return false;
-        }
+    }
 
     fileStatus = doFileExists(path);
 
-    switch (fileStatus){
-        case 0:
-            return true;
-            break;
-        case EACCES:
-            fprintf(stderr, "Error: Access denied for file \"%s\" !\n", path);
-            break;
-        case ENOENT:
-            fprintf(stderr, "Error: File \"%s\" dose not exist!\n", path);
-            break;
-        case EINVAL:
-            fprintf(stderr, "Error: File \"%s\" is invalid parameter!\n", path);
-            break;
-        }
+    switch (fileStatus) {
+    case 0:
+        return true;
+        break;
+    case EACCES:
+        fprintf(stderr, "Error: Access denied for file \"%s\" !\n", path);
+        break;
+    case ENOENT:
+        fprintf(stderr, "Error: File \"%s\" dose not exist!\n", path);
+        break;
+    case EINVAL:
+        fprintf(stderr, "Error: File \"%s\" is invalid parameter!\n", path);
+        break;
+    }
 
     return false;
 }
@@ -233,52 +233,52 @@ static void GT_readCommandLineParameters(int argc, char **argv)
 static void GT_extractTaskTODO(void)
 {
     if (cmdParameters.h) {
-        taskTODO = showHelp;
+        cmdParameters.task = showHelp;
     }//No multiple tasks allowed ((p or s) and (v or x)) and (p and v)
     else if (((cmdParameters.p || cmdParameters.s) && (cmdParameters.v || cmdParameters.x)) || (cmdParameters.p && cmdParameters.s)) {
-        taskTODO = invalid_multipleTasks;
+        cmdParameters.task = invalid_multipleTasks;
     }//Download publications file
     else if (cmdParameters.p) {
         if (cmdParameters.o == true)
-            taskTODO = downloadPublicationsFile;
+            cmdParameters.task = downloadPublicationsFile;
         else
-            taskTODO = invalid_p;
+            cmdParameters.task = invalid_p;
     }//Sign data or hash    
     else if (cmdParameters.s) {
         if (cmdParameters.o && cmdParameters.F)
-            taskTODO = signHash;
+            cmdParameters.task = signHash;
         else if (cmdParameters.o && cmdParameters.f)
-            taskTODO = signDataFile;
+            cmdParameters.task = signDataFile;
         else
-            taskTODO = invalid_s;
+            cmdParameters.task = invalid_s;
     }//Verify locally or online
     else if (cmdParameters.v) {
         /*
         if(cmdParameters.b && cmdParameters.i)
-            taskTODO = verifyTimestamp_use_pubfile;
+            cmdParameters.task = verifyTimestamp_use_pubfile;
         else if(cmdParameters.b && cmdParameters.f && cmdParameters.i)
-            taskTODO = verifyTimestamp_and_file_use_pubfile;
+            cmdParameters.task = verifyTimestamp_and_file_use_pubfile;
         else if(cmdParameters.x && cmdParameters.f && cmdParameters.i)
-            taskTODO = verifyTimestamp_and_file_online;
+            cmdParameters.task = verifyTimestamp_and_file_online;
         else if(cmdParameters.x && cmdParameters.i)
-            taskTODO = verifyTimestamp_online;*/
+            cmdParameters.task = verifyTimestamp_online;*/
         if (cmdParameters.x && cmdParameters.i) {
-            taskTODO = verifyTimestamp_online;
+            cmdParameters.task = verifyTimestamp_online;
         } else if (cmdParameters.i) {
-            taskTODO = verifyTimestamp_locally;
+            cmdParameters.task = verifyTimestamp_locally;
         } else if (cmdParameters.b)
-            taskTODO = verifyPublicationsFile;
+            cmdParameters.task = verifyPublicationsFile;
         else
-            taskTODO = invalid_v;
+            cmdParameters.task = invalid_v;
     }//Extend timestamps
     else if (cmdParameters.x && !cmdParameters.v) {
         if (cmdParameters.i && cmdParameters.o)
-            taskTODO = extendTimestamp;
+            cmdParameters.task = extendTimestamp;
         else
-            taskTODO = invalid_x;
+            cmdParameters.task = invalid_x;
     }//There is no task -p, -s, -v, x,    
     else
-        taskTODO = noTask;
+        cmdParameters.task = noTask;
 }
 
 //Prints an error message if something is wrong with the FORM of the parameters.
@@ -286,7 +286,7 @@ static void GT_extractTaskTODO(void)
 
 static void GT_printTaskErrorMessage(void)
 {
-    switch (taskTODO) {
+    switch (cmdParameters.task) {
     case invalid_multipleTasks:
         fprintf(stderr, "Error: You can't use multiple tasks together: %s%s%s%s\n",
                 cmdParameters.p ? "-p " : "",
@@ -329,23 +329,23 @@ static void GT_printTaskErrorMessage(void)
 
 static bool GT_controlParameters(void)
 {
-    if (taskTODO == verifyPublicationsFile) {
+    if (cmdParameters.task == verifyPublicationsFile) {
         if (analyseInputFile(cmdParameters.inPubFileName)) return true;
         else return false;
-    } else if (taskTODO == downloadPublicationsFile) {
+    } else if (cmdParameters.task == downloadPublicationsFile) {
         return true;
-    } else if (taskTODO == signDataFile) {
+    } else if (cmdParameters.task == signDataFile) {
         if (analyseInputFile(cmdParameters.inDataFileName) && analyseOutputFile(cmdParameters.outSigFileName)) return true;
         else return false;
-    } else if (taskTODO == signHash) {
+    } else if (cmdParameters.task == signHash) {
         if (analyseInputHash() && analyseOutputFile(cmdParameters.outSigFileName)) return true;
         else return false;
-    } else if (taskTODO == extendTimestamp) {
+    } else if (cmdParameters.task == extendTimestamp) {
         if (analyseInputFile(cmdParameters.inSigFileName) && analyseOutputFile(cmdParameters.outSigFileName)) return true;
         else return false;
-    } else if ((taskTODO == verifyTimestamp_locally) || (taskTODO == verifyTimestamp_online)) {
-        if ((taskTODO == verifyTimestamp_locally) && analyseInputFile(cmdParameters.inSigFileName) && analyseInputFile(cmdParameters.inPubFileName)) goto extra_check;
-        else if ((taskTODO == verifyTimestamp_online) && analyseInputFile(cmdParameters.inSigFileName)) goto extra_check;
+    } else if ((cmdParameters.task == verifyTimestamp_locally) || (cmdParameters.task == verifyTimestamp_online)) {
+        if ((cmdParameters.task == verifyTimestamp_locally) && analyseInputFile(cmdParameters.inSigFileName) && analyseInputFile(cmdParameters.inPubFileName)) goto extra_check;
+        else if ((cmdParameters.task == verifyTimestamp_online) && analyseInputFile(cmdParameters.inSigFileName)) goto extra_check;
         else return false;
 
     extra_check:
@@ -354,7 +354,7 @@ static bool GT_controlParameters(void)
             cmdParameters.f = false;
         }
         return true;
-    } else if (taskTODO == showHelp) {
+    } else if (cmdParameters.task == showHelp) {
         return true;
     } else {
         return false;
@@ -454,30 +454,4 @@ GT_CmdParameters GT_getCMDParam(void)
 {
     return cmdParameters;
 }
-
-GT_Tasks GT_getTask(void)
-{
-    return taskTODO;
-}
-
-/*
- Taskid::
-"### Publications file download"                    -p -o <pubfile_out> -P <purl> // KUI P on vigane, siis saab warningu ja võetakse default
-"### Verifying publications file"                   -v -b <pubfile_in>
-
-"### Signing"                                       -s -f <datafile_in> -o <sigfail_out> -S <surl>  //KUI S on vigan, saab warningu ja võetakse default
-"### Using RIPEMD160"                               -s -F <alg>:<hahs> -o <sigfile_out> -S <surl>
-
-"### Extending timestamp"                           -x -i <sigfile_in> -o <sigfile_out> -X <xurl>   //Kui X on vigane, saab warningu ja võetakse default
-
-"### Verifying freshly created signature token"     -v -b <pubfile_in> -i <sigfail_in>
-"### Verifying extended timestamp"                  -v -b <pubfile_in> -i <sigfile_in>
-"### Verifying old timestamp"                       -v -b <pubfile_in> -i <sigfile_in> -f <datafile_in>
-"### Online verifying old timestamp"                -vx -b <pubfile_in> -i <sigfile_in> -f <datafile_in> -X <xurl>
-"### Online verifying extended timestamp"           -vx -b <pubfile_in> -i <sigfile_in> -X <xurl>
- */
-
-
-
-
 

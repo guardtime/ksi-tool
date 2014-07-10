@@ -1,7 +1,7 @@
 #include "gt_task.h"
 
 
-int GT_extendTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
+int GT_extendTask(GT_CmdParameters *cmdparam) {
 	KSI_CTX *ksi = NULL;
 	int res;
 	KSI_Signature *sig = NULL;

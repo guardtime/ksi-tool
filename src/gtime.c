@@ -14,29 +14,26 @@
  */
 int main(int argc, char** argv) {
     bool state = GT_parseCommandline(argc, argv);
-
-
     
     if(state){
         GT_CmdParameters param = GT_getCMDParam();
-        GT_Tasks task = GT_getTask();
         
-        if(task == downloadPublicationsFile){
-            GT_getPublicationsFileTask(&param, task);
+        if(param.task == downloadPublicationsFile){
+            GT_getPublicationsFileTask(&param);
             }
-        else if (task == verifyPublicationsFile){
-            GT_verifyTask(&param, task);
+        else if (param.task == verifyPublicationsFile){
+            GT_verifyTask(&param);
             }
-        else if (task == signDataFile || task == signHash){
-            GT_signTask(&param, task);
+        else if (param.task == signDataFile || param.task == signHash){
+            GT_signTask(&param);
             }
-        else if(task == extendTimestamp){
-            GT_extendTask(&param, task);
+        else if(param.task == extendTimestamp){
+            GT_extendTask(&param);
             }
-        else if((task == verifyTimestamp_online) || (task == verifyTimestamp_locally)){
-            GT_verifyTask(&param, task);
+        else if((param.task == verifyTimestamp_online) || (param.task == verifyTimestamp_locally)){
+            GT_verifyTask(&param);
             }
-        else if(task == showHelp){
+        else if(param.task == showHelp){
             GT_pritHelp();
             }
         

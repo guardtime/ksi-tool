@@ -45,28 +45,28 @@ int saveSignatureFile(KSI_Signature *sign, const char *fname);
  * @param [in] cmdparam Pointer to command-line parameters.
  * @return Ptatus code (KSI_OK, when operation succeeded, otherwise an error code).
  */
-int GT_signTask(GT_CmdParameters *cmdparam, GT_Tasks task);
+int GT_signTask(GT_CmdParameters *cmdparam);
 
 /**
  * Task that deals with verifying operations.
  * @param [in] cmdparam Pointer to command-line parameters.
  * @return Status code (KSI_OK, when operation succeeded, otherwise an error code).
  */
-int GT_verifyTask(GT_CmdParameters *cmdparam, GT_Tasks task);
+int GT_verifyTask(GT_CmdParameters *cmdparam);
 
 /**
  * Task that deals with extending operations.
  * @param [in] cmdparam Pointer to command-line parameters
  * @return Status code (KSI_OK, when operation succeeded, otherwise an error code).
  */
-int GT_extendTask(GT_CmdParameters *cmdparam, GT_Tasks task);
+int GT_extendTask(GT_CmdParameters *cmdparam);
 
 /**
  * Task that deals with extending operations.
  * @param [in] cmdparam Pointer to command-line parameters.
  * @return Status code (KSI_OK, when operation succeeded, otherwise an error code).
  */
-int GT_getPublicationsFileTask(GT_CmdParameters *cmdparam, GT_Tasks task);
+int GT_getPublicationsFileTask(GT_CmdParameters *cmdparam);
 
 /**
  * Prints the signer identity.

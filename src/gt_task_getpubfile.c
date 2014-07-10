@@ -1,6 +1,6 @@
 #include "gt_task.h"
 
-int GT_getPublicationsFileTask(GT_CmdParameters *cmdparam, GT_Tasks task)
+int GT_getPublicationsFileTask(GT_CmdParameters *cmdparam)
 {
     KSI_CTX *ksi = NULL;
     int res;

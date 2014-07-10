@@ -1,6 +1,6 @@
 #include "gt_task.h"
 
-int GT_verifyTask(GT_CmdParameters *cmdparam, GT_Tasks task)
+int GT_verifyTask(GT_CmdParameters *cmdparam)
 {
     int res = KSI_UNKNOWN_ERROR;
     KSI_CTX *ksi = NULL;
@@ -8,7 +8,7 @@ int GT_verifyTask(GT_CmdParameters *cmdparam, GT_Tasks task)
     KSI_DataHash *hsh = NULL;
     KSI_DataHasher *hsr = NULL;
     KSI_PublicationsFile *publicationsFile = NULL;
-
+    
     /* Init global resources. */
     res = KSI_global_init();
     ERROR_HANDLING("Unable to init KSI global resources.\n");
@@ -20,7 +20,7 @@ int GT_verifyTask(GT_CmdParameters *cmdparam, GT_Tasks task)
     //if(task == verifyTimestamp_online)
 
     /* Verification of publications file */
-    if (task == verifyPublicationsFile) {
+    if (cmdparam->task == verifyPublicationsFile) {
         printf("Reading publications file... ");
         MEASURE_TIME(
             res = KSI_PublicationsFile_fromFile(ksi, cmdparam->inPubFileName, &publicationsFile);,
@@ -49,7 +49,7 @@ int GT_verifyTask(GT_CmdParameters *cmdparam, GT_Tasks task)
         }
 
         /* Choosing between online and publications file signature verification */
-        if (task == verifyTimestamp_online) {
+        if (cmdparam->task == verifyTimestamp_online) {
             printf("Verifying signature online... ");
             MEASURE_TIME(
                 res = KSI_Signature_verify(sig, ksi);,
@@ -57,7 +57,7 @@ int GT_verifyTask(GT_CmdParameters *cmdparam, GT_Tasks task)
                 cmdparam->t);
             ERROR_HANDLING_STATUS_DUMP("failed (%s)\n", KSI_getErrorString(res));
             printf("ok\n");
-        } else if (task == verifyTimestamp_locally) {
+        } else if (cmdparam->task == verifyTimestamp_locally) {
             printf("TODO verification via publications file.\n");
             goto cleanup;
         } else {
@@ -82,8 +82,8 @@ int GT_verifyTask(GT_CmdParameters *cmdparam, GT_Tasks task)
     }
 
     printf("Verification of %s %s successful.\n",
-            (task == verifyPublicationsFile) ? "publications file" : "signature file",
-            (task == verifyPublicationsFile) ? cmdparam->inPubFileName : cmdparam->inSigFileName
+            (cmdparam->task == verifyPublicationsFile) ? "publications file" : "signature file",
+            (cmdparam->task == verifyPublicationsFile) ? cmdparam->inPubFileName : cmdparam->inSigFileName
             );
     res = KSI_OK;
 

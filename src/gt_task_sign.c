@@ -4,7 +4,7 @@
 static int getHashFromCommandLine(GT_CmdParameters *cmdparam,KSI_CTX *ksi, KSI_DataHash **hash);
 
 
-int GT_signTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
+int GT_signTask(GT_CmdParameters *cmdparam) {
     KSI_CTX *ksi = NULL;
     int res = KSI_UNKNOWN_ERROR;
     KSI_DataHasher *hsr = NULL;
@@ -22,7 +22,7 @@ int GT_signTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
 
         
     /*Getting the hash for signing process*/
-    if(task == signDataFile){
+    if(cmdparam->task == signDataFile){
         char *hashAlg;
         int hasAlgID=-1;
         /*Choosing of hash algorithm and creation of data hasher*/
@@ -40,7 +40,7 @@ int GT_signTask(GT_CmdParameters *cmdparam, GT_Tasks task) {
         ERROR_HANDLING("\nUnable to hash data.\n");
         printf("ok.\n");
         }
-    else if(task == signHash){
+    else if(cmdparam->task == signHash){
         printf("Getting hash from input string for signing process...");
         res = getHashFromCommandLine(cmdparam,ksi, &hash);
         ERROR_HANDLING_STATUS_DUMP("\nUnable to create hash from digest.\n");
