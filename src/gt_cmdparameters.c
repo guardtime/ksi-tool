@@ -7,95 +7,226 @@
 #include <io.h>
 #include <errno.h>
 
+#include "gt_cmd_control.h"
+
+//Static variable that contains all valid command line prameters
 static GT_CmdParameters cmdParameters;
-//static GT_Tasks taskTODO = noTask;
 
-/**Functions for analysing and checking if command line parameters are valid**/
 
-static bool isValidHex(const char *hexStrn, char *invalidchar)
-{
-    int i = 0;
-    char C;
-    while (C = hexStrn[i++]) {
-        if (!isxdigit(C)) {
-            printf("\n invalid %c\n", C);
-            *invalidchar = C;
-            return false;
-        }
-    }
-    return true;
-}
+//Copies a flag_ from raw (struct raw_parameters) to param (GT_CmdParameters))
+#define copyFlag(param,raw,flag_) param.flag_ = raw.flag_.flag
 
-static int doFileExists(const char* path)
-{
-    return _access_s(path, 0);
-}
+/**
+ * extrac raw string data from command line buffer (struct raw_parameters) and inserts into GT_CmdParameters. 
+ * Takes a function name (control) that is used to control the form of the parameter.
+ * If control fails prints error message and returns false.
+ */
+#define SET_STRN_PARAM(param,raw,flag_, cflg,cmd_arg, control) \
+    if (raw.flag_.flag){ \
+        if (control(raw.flag_.arg)){ \
+            param.cmd_arg = raw.flag_.arg; \
+            param.flag_ = true; \
+            } \
+        else{ \
+            param.cmd_arg = NULL; \
+            printf("Invalid parameter -%c format.\n", cflg); \
+            param.flag_ = false; \
+            return false; \
+            } \
+        } 
 
-static bool analyseInputFile(const char* path)
-{
-    int fileStatus;
+/**
+ * extrac raw integer data from command line buffer (struct raw_parameters) and inserts into GT_CmdParameters. 
+ * Takes a function name (control) that is used to control the form of the parameter.
+ * If control fails prints error message and returns false.
+ */
+#define SET_INT_PARAM(param,raw,flag_,cflg,cmd_arg, control) \
+    if (raw.flag_.flag){ \
+        if (control(raw.flag_.arg)){ \
+            param.cmd_arg = atoi(raw.flag_.arg); \
+            param.flag_ = true; \
+            } \
+        else{ \
+            param.cmd_arg = 0; \
+            printf("Invalid parameter -%c  format.\n", cflg); \
+            param.flag_ = false; \
+            return false; \
+            } \
+        } 
 
-    if (path == NULL) {
-        fprintf(stderr, "Error: File name is not inserted. It is nullptr!\n");
-        return false;
-    }
+//Check if a flag in (GT_CmdParameters) is set and print warning message about unused parameter.
+#define UNUSED_FLAG_WARNING(param, flag_, cflag, ctask) if(param.flag_ == true) printf("Warning: You can't use -%c with -%c\n", cflag, ctask);
 
-    fileStatus = doFileExists(path);
+/**
+ * A struct containing a flag and its argument.
+ * -flag <argument>
+ * If flag is not set or has no argument, arg must be NULL
+ */
+struct st_param {
+    bool flag;
+    char *arg;
+};
 
-    switch (fileStatus) {
-    case 0:
-        return true;
-        break;
-    case EACCES:
-        fprintf(stderr, "Error: Access denied for file \"%s\" !\n", path);
-        break;
-    case ENOENT:
-        fprintf(stderr, "Error: File \"%s\" dose not exist!\n", path);
-        break;
-    case EINVAL:
-        fprintf(stderr, "Error: File \"%s\" is invalid parameter!\n", path);
-        break;
-    }
+/**
+ * A RAW struct containing all the command line parameters.
+ * Used for reading all raw command line parameters.
+ */
+struct raw_parameters {
+    struct st_param o; //output file  
+    struct st_param i; //input signature  file  
+    struct st_param b; //publications file in  
+    struct st_param f; //input data file  
+    struct st_param V; //OpenSSL-style truststore file  
+    struct st_param W; //OpenSSL-style truststore destroy  
+    struct st_param F; //Input data hash  
+    struct st_param H; //Different hashAlg  
+    struct st_param S; //signing service url  
+    struct st_param X; //extending service url  
+    struct st_param P; //publications file url  
+    struct st_param c; //networkTransferTimeout  
+    struct st_param C; //networkConnectionTimeout  
 
-    return false;
-}
+    struct st_param x; //task extending
+    struct st_param s; //task signing
+    struct st_param v; //task verification
+    struct st_param p; //task download Publications File
 
-static bool analyseOutputFile(const char* path)
-{
-    if (path == NULL) {
-        fprintf(stderr, "Error: File name is not inserted. It is nullptr!\n");
-        return false;
-    } else
-        return true;
-}
-
-static bool analyseInputHash(void)
-{
-    char invalidChar = 0;
-
-    if (cmdParameters.hashAlgName_F == NULL) {
-        fprintf(stderr, "Error: Hash Algorithm name is not inserted. It is nullptr!\n");
-        return false;
-    } else if (strlen(cmdParameters.hashAlgName_F) == 0) {
-        fprintf(stderr, "Error: Hash Algorithm name \"\" is not valid\n");
-        return false;
-    } else if (cmdParameters.inputHashStrn == NULL) {
-        fprintf(stderr, "Error: Hash is not inserted. It is nullptr!\n");
-        return false;
-    } else if (strlen(cmdParameters.inputHashStrn) == 0) {
-        fprintf(stderr, "Error: Hash \"\" is not valid\n");
-        return false;
-    }
-
-    if (!isValidHex(cmdParameters.inputHashStrn, &invalidChar)) {
-        fprintf(stderr, "Error: Hash contains invalid character: %c\n", invalidChar);
-        return false;
-    }
-    return true;
-}
+    struct st_param t; //print timing info
+    struct st_param r; //print publication reference
+    struct st_param n; //print signer name
+    struct st_param l; //print 'extended Location ID' value
+    struct st_param d; //Dump detailed information
+    struct st_param h; //print hlp
+};
 
 /****************Functions for parsing command line parameters****************/
 
+/**
+ * Reads RAW command line parameters. See struct raw_parameters
+ * @param[in] argc Count of command line arguments.
+ * @param[in] argv Pointer to the list of all command line parameters strings.
+ * @param[out] rawParam Pointer to the receiving pointer to struct raw_parameters.
+ */
+static void readRawCmdParam(int argc, char **argv, struct raw_parameters **rawParam)
+{
+    int c = 0;
+    struct raw_parameters *rawParam_tmp = (struct raw_parameters*) calloc(1, sizeof (struct raw_parameters));
+
+    while (1) {
+        c = getopt(argc, argv, "sxpvtrdo:i:f:b:a:hc:C:V:W:S:X:P:F:lH:n");
+        if (c == -1) {
+            break;
+        }
+
+        switch (c) {
+        case 'h':
+            rawParam_tmp->h.flag = true;
+            rawParam_tmp->h.arg = NULL;
+            break;
+        case 's':
+            rawParam_tmp->s.flag = true;
+            rawParam_tmp->s.arg = NULL;
+            break;
+        case 'x':
+            rawParam_tmp->x.flag = true;
+            rawParam_tmp->x.arg = NULL;
+            break;
+        case 'p':
+            rawParam_tmp->p.flag = true;
+            rawParam_tmp->p.arg = NULL;
+            break;
+        case 'v':
+            rawParam_tmp->v.flag = true;
+            rawParam_tmp->v.arg = NULL;
+            break;
+        case 't':
+            rawParam_tmp->t.flag = true;
+            rawParam_tmp->t.arg = NULL;
+            break;
+        case 'd':
+            rawParam_tmp->d.flag = true;
+            rawParam_tmp->d.arg = NULL;
+            break;
+        case 'r':
+            rawParam_tmp->r.flag = true;
+            rawParam_tmp->r.arg = NULL;
+            break;
+        case 'l':
+            rawParam_tmp->l.flag = true;
+            rawParam_tmp->l.arg = NULL;
+            break;
+        case 'n':
+            rawParam_tmp->n.flag = true;
+            rawParam_tmp->n.arg = NULL;
+            break;
+            //   case 'a': rawParameters.a = atoi(optarg); break;
+        case 'i':
+            rawParam_tmp->i.flag = true;
+            rawParam_tmp->i.arg = optarg;
+            break;
+        case 'f':
+            rawParam_tmp->f.flag = true;
+            rawParam_tmp->f.arg = optarg;
+            break;
+        case 'b':
+            rawParam_tmp->b.flag = true;
+            rawParam_tmp->b.arg = optarg;
+            break;
+        case 'o':
+            rawParam_tmp->o.flag = true;
+            rawParam_tmp->o.arg = optarg;
+            break;
+        case 'c':
+            rawParam_tmp->c.flag = true;
+            rawParam_tmp->c.arg = optarg;
+            break;
+        case 'C':
+            rawParam_tmp->C.flag = true;
+            rawParam_tmp->C.arg = optarg;
+            break;
+        case 'S':
+            rawParam_tmp->S.flag = true;
+            rawParam_tmp->S.arg = optarg;
+            break;
+        case 'X':
+            rawParam_tmp->X.flag = true;
+            rawParam_tmp->X.arg = optarg;
+            break;
+        case 'P':
+            rawParam_tmp->P.flag = true;
+            rawParam_tmp->P.arg = optarg;
+            break;
+        case 'V':
+            rawParam_tmp->V.flag = true;
+            rawParam_tmp->V.arg = optarg;
+            break;
+        case 'W':
+            rawParam_tmp->W.flag = true;
+            rawParam_tmp->W.arg = optarg;
+            break;
+
+        case 'F':
+            rawParam_tmp->F.flag = true;
+            rawParam_tmp->F.arg = optarg;
+            break;
+        case 'H':
+            rawParam_tmp->H.flag = true;
+            rawParam_tmp->H.arg = optarg;
+            break;
+        }
+    }
+    *rawParam = rawParam_tmp;
+}
+
+/**
+ * Extracts hash algorithm name and hash value from string 
+ * formatted as <algorithm>:<hash value in hex> .
+ * @param[in] instrn Input string.
+ * @param[out] strnAlgName Pointer to the receiving pointer to string containing hash algorithm name.  
+ * @param[out] strnHash Pointer to the receiving pointer to string containing hash.
+ * 
+ * @note strnHash belongs to the caller and must be freed manually.
+ */
 static void getHashAndAlgStrings(const char *instrn, char **strnAlgName, char **strnHash)
 {
     char *colon;
@@ -125,112 +256,66 @@ static void getHashAndAlgStrings(const char *instrn, char **strnAlgName, char **
     //printf("Alg %s\nHash %s\n", *strnAlgName, *strnHash);
 }
 
-
-//Just reads raw parameters and arguments from command line and inserts the data
-// into cmdParameters
-
-static void GT_readCommandLineParameters(int argc, char **argv)
+/**
+ * Reads command line parameters and controls the format. At first raw parameters  
+ * (see readRawCmdParam) are extracted and controlled. If error occurs an error message is printed.
+ * @param[in] argc Count of command line arguments.
+ * @param[in] argv Pointer to the list of all command line parameters strings.
+ * @return Returns true if the form of the parameters is OK. False otherwise.
+ */
+static bool readCmdParam(int argc, char **argv)
 {
-    int c = 0;
+    struct raw_parameters *rawParam = NULL;
+    readRawCmdParam(argc, argv, &rawParam);
+    copyFlag(cmdParameters, (*rawParam), x);
+    copyFlag(cmdParameters, (*rawParam), s);
+    copyFlag(cmdParameters, (*rawParam), v);
+    copyFlag(cmdParameters, (*rawParam), p);
+    copyFlag(cmdParameters, (*rawParam), t);
+    copyFlag(cmdParameters, (*rawParam), r);
+    copyFlag(cmdParameters, (*rawParam), n);
+    copyFlag(cmdParameters, (*rawParam), l);
+    copyFlag(cmdParameters, (*rawParam), d);
+    copyFlag(cmdParameters, (*rawParam), h);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), f, 'f', inDataFileName, isPathFormOk);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), b, 'b', inPubFileName, isPathFormOk);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), i, 'i', inSigFileName, isPathFormOk);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), o, 'o', outPubFileName, isPathFormOk);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), o, 'o', outSigFileName, isPathFormOk);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), W, 'W', openSSLTrustStoreDirName, isPathFormOk);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), V, 'V', openSSLTruststoreFileName, isPathFormOk);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), P, 'P', publicationsFile_url, isURLFormatOK);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), S, 'S', signingService_url, isURLFormatOK);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), X, 'X', verificationService_url, isURLFormatOK);
+    SET_INT_PARAM(cmdParameters, (*rawParam), C, 'C', networkConnectionTimeout, isIntegerFormatOK);
+    SET_INT_PARAM(cmdParameters, (*rawParam), c, 'c', networkTransferTimeout, isIntegerFormatOK);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), H, 'H', hashAlgName_H, isHashAlgFormatOK);
 
-    while (1) {
-        c = getopt(argc, argv, "sxpvtrdo:i:f:b:a:hc:C:V:W:S:X:P:F:lH:n");
-        if (c == -1) {
-            break;
-        }
+    if (rawParam->F.flag) {
+        char *hashAlg;
+        char *hash;
+        getHashAndAlgStrings(rawParam->F.arg, &hashAlg, &hash);
 
-        // printf(">> %c (%i)\n", c,c);
-        switch (c) {
-        case 'h': cmdParameters.h = true;
-            break;
-        case 's': cmdParameters.s = true;
-            break;
-        case 'x': cmdParameters.x = true;
-            break;
-        case 'p': cmdParameters.p = true;
-            break;
-        case 'v': cmdParameters.v = true;
-            break;
-
-        case 't': cmdParameters.t = true;
-            break;
-        case 'd': cmdParameters.d = true;
-            break;
-        case 'r': cmdParameters.r = true;
-            break;
-
-        case 'l': cmdParameters.l = true;
-            break;
-        case 'n': cmdParameters.n = true;
-            break;
-            //   case 'a': cmdParameters.a = atoi(optarg); break;
-
-        case 'i':
-            cmdParameters.inSigFileName = optarg;
-            cmdParameters.i = true;
-            break;
-        case 'f':
-            cmdParameters.inDataFileName = optarg;
-            cmdParameters.f = true;
-            break;
-        case 'b':
-            cmdParameters.inPubFileName = optarg;
-            cmdParameters.b = true;
-            break;
-        case 'o':
-            cmdParameters.outPubFileName = optarg;
-            cmdParameters.outSigFileName = optarg;
-            cmdParameters.o = true;
-            break;
-        case 'c':
-            cmdParameters.networkTransferTimeout = atoi(optarg);
-            cmdParameters.c = true;
-            break;
-        case 'C':
-            cmdParameters.networkConnectionTimeout = atoi(optarg);
-            cmdParameters.C = true;
-            break;
-        case 'S':
-            cmdParameters.signingService_url = optarg;
-            cmdParameters.S = true;
-            break;
-        case 'X':
-            cmdParameters.verificationService_url = optarg;
-            cmdParameters.X = true;
-            break;
-        case 'P':
-            cmdParameters.publicationsFile_url = optarg;
-            cmdParameters.P = true;
-            break;
-        case 'V':
-            cmdParameters.openSSLTruststoreFileName = optarg;
-            cmdParameters.V = true;
-            break;
-        case 'W':
-            cmdParameters.openSSLTrustStoreDirName = optarg;
-            cmdParameters.W = true;
-            break;
-
-        case 'F':
-            getHashAndAlgStrings(optarg, &cmdParameters.hashAlgName_F, &cmdParameters.inputHashStrn);
+        if (isHexFormatOK(hash) && isHashAlgFormatOK(hashAlg)) {
+            cmdParameters.inputHashStrn = hash;
+            cmdParameters.hashAlgName_F = hashAlg;
             cmdParameters.F = true;
-            break;
-        case 'H':
-            cmdParameters.hashAlgName_H = optarg;
-            cmdParameters.H = true;
-            break;
+        } else {
+            cmdParameters.inputHashStrn = hash;
+            cmdParameters.hashAlgName_F = hashAlg;
+            printf("Invalid parameter -F  format.\n"); \
+            cmdParameters.F = false;
+            return false;
         }
     }
-
-    //printf("eof\n");
-
 }
 
-
-//Extracts the task and its status into taskTODO. The task can be ok ( all 
-//important parameters are present) or invalid. The content of parameters is not checked. 
-
-static void GT_extractTaskTODO(void)
+/**
+ * Extracts the task, see GT_CmdParameters field task. It checks the combinations 
+ * of command line parameters.
+ * The task can be valid, invalid or undefined.
+ */
+static void extractTask(void)
 {
     if (cmdParameters.h) {
         cmdParameters.task = showHelp;
@@ -253,18 +338,9 @@ static void GT_extractTaskTODO(void)
             cmdParameters.task = invalid_s;
     }//Verify locally or online
     else if (cmdParameters.v) {
-        /*
-        if(cmdParameters.b && cmdParameters.i)
-            cmdParameters.task = verifyTimestamp_use_pubfile;
-        else if(cmdParameters.b && cmdParameters.f && cmdParameters.i)
-            cmdParameters.task = verifyTimestamp_and_file_use_pubfile;
-        else if(cmdParameters.x && cmdParameters.f && cmdParameters.i)
-            cmdParameters.task = verifyTimestamp_and_file_online;
-        else if(cmdParameters.x && cmdParameters.i)
-            cmdParameters.task = verifyTimestamp_online;*/
         if (cmdParameters.x && cmdParameters.i) {
             cmdParameters.task = verifyTimestamp_online;
-        } else if (cmdParameters.i) {
+        } else if (cmdParameters.i && cmdParameters.b) {
             cmdParameters.task = verifyTimestamp_locally;
         } else if (cmdParameters.b)
             cmdParameters.task = verifyPublicationsFile;
@@ -281,64 +357,24 @@ static void GT_extractTaskTODO(void)
         cmdParameters.task = noTask;
 }
 
-//Prints an error message if something is wrong with the FORM of the parameters.
-//Used after GT_extractTaskTODO().
-
-static void GT_printTaskErrorMessage(void)
-{
-    switch (cmdParameters.task) {
-    case invalid_multipleTasks:
-        fprintf(stderr, "Error: You can't use multiple tasks together: %s%s%s%s\n",
-                cmdParameters.p ? "-p " : "",
-                cmdParameters.s ? "-s " : "",
-                cmdParameters.v ? "-v " : "",
-                cmdParameters.x ? "-x " : ""
-                );
-        break;
-    case invalid_p:
-        fprintf(stderr, "Error: Using -p you have to define missing parameter -o <fn>\n");
-        break;
-    case invalid_s:
-        fprintf(stderr, "Error: Using -s you have to define missing parameter(s) %s%s\n",
-                !(cmdParameters.o) ? "-o <fn> " : "",
-                !(cmdParameters.f && cmdParameters.F) ? "-f <fn> or -F<hash>" : ""
-                );
-        break;
-    case invalid_v:
-        fprintf(stderr, "Error: Using -v you have to define missing parameter(s) %s%s\n",
-                !(cmdParameters.i) ? "-i <fn> " : "",
-                !(cmdParameters.b && cmdParameters.x) ? "-b <fn> or -x" : ""
-                );
-        break;
-    case invalid_x:
-        fprintf(stderr, "Error: Using -x you have to define missing parameter(s) %s%s\n",
-                !(cmdParameters.o) ? "-o <fn> " : "",
-                !(cmdParameters.i) ? "-i <fn> " : ""
-                );
-        break;
-    case noTask:
-        fprintf(stderr, "Error: The task is not defined. Use parameters -s or -x or -v or -p to define one. \n Use -h parameter for help.\n");
-        break;
-
-    }
-}
-
-//Controls the parameters and prints error messages. Checks if input files exists
-//and input strings are not nullptrs. The content of the files is not checked.
-//Return true if Parameters are correct, false otherwise.
-
-static bool GT_controlParameters(void)
+/**
+ * Controls the content of the parameters. 
+ * Currently only input and output files are under the test.
+ * @return 
+ */
+static bool controlParameters(void)
 {
     if (cmdParameters.task == verifyPublicationsFile) {
         if (analyseInputFile(cmdParameters.inPubFileName)) return true;
         else return false;
     } else if (cmdParameters.task == downloadPublicationsFile) {
-        return true;
+        if (analyseOutputFile(cmdParameters.outPubFileName)) return true;
+        return false;
     } else if (cmdParameters.task == signDataFile) {
-        if (analyseInputFile(cmdParameters.inDataFileName) && analyseOutputFile(cmdParameters.outSigFileName)) return true;
+        if (analyseInputFile(cmdParameters.inDataFileName)) return true;
         else return false;
     } else if (cmdParameters.task == signHash) {
-        if (analyseInputHash() && analyseOutputFile(cmdParameters.outSigFileName)) return true;
+        if (analyseOutputFile(cmdParameters.outSigFileName)) return true;
         else return false;
     } else if (cmdParameters.task == extendTimestamp) {
         if (analyseInputFile(cmdParameters.inSigFileName) && analyseOutputFile(cmdParameters.outSigFileName)) return true;
@@ -362,22 +398,94 @@ static bool GT_controlParameters(void)
     printf("ok\n");
 }
 
-//Visualize all extracted parameters and their values.
+/**
+ * If task is invalid prints error message explaining the fault.
+ */
+static void printTaskErrorMessage(void)
+{
+    switch (cmdParameters.task) {
+    case invalid_multipleTasks:
+        fprintf(stderr, "Error: You can't use multiple tasks together: %s%s%s%s\n",
+                cmdParameters.p ? "-p " : "",
+                cmdParameters.s ? "-s " : "",
+                cmdParameters.v ? "-v " : "",
+                cmdParameters.x ? "-x " : ""
+                );
+        break;
+    case invalid_p:
+        fprintf(stderr, "Error: Using -p you have to define missing parameter -o <fn>\n");
+        break;
+    case invalid_s:
+        fprintf(stderr, "Error: Using -s you have to define missing parameter(s) %s%s\n",
+                !(cmdParameters.o) ? "-o <output file> " : "",
+                !(cmdParameters.f && cmdParameters.F) ? "-f <fn> or -F<hash>" : ""
+                );
+        break;
+    case invalid_v:
+        fprintf(stderr, "Error: Using -v you have to define missing parameter(s) %s%s\n",
+                !(cmdParameters.i) ? "-i <fn> " : "",
+                !(cmdParameters.b && cmdParameters.x) ? "-b <publications file> or -x (verify online)" : ""
+                );
+        break;
+    case invalid_x:
+        fprintf(stderr, "Error: Using -x you have to define missing parameter(s) %s%s\n",
+                !(cmdParameters.o) ? "-o <output file> " : "",
+                !(cmdParameters.i) ? "-i <publications file in> " : ""
+                );
+        break;
+    case noTask:
+        fprintf(stderr, "Error: The task is not defined. Use parameters -s or -x or -v or -p to define one. \n Use -h parameter for help.\n");
+        break;
 
+    }
+}
+
+/**
+ * Prints warning message about unused parameters. 
+ */
+static void printTaskWarningMessage(void)
+{
+    switch (cmdParameters.task) {
+    case signHash:
+    case signDataFile:
+        UNUSED_FLAG_WARNING(cmdParameters, X, 'X', 's');
+        UNUSED_FLAG_WARNING(cmdParameters, P, 'P', 's');
+        UNUSED_FLAG_WARNING(cmdParameters, b, 'b', 's');
+        UNUSED_FLAG_WARNING(cmdParameters, i, 'i', 's');
+        break;
+    case verifyTimestamp_locally:
+    case verifyTimestamp_online:
+    case verifyPublicationsFile:
+        UNUSED_FLAG_WARNING(cmdParameters, S, 'S', 'v');
+        UNUSED_FLAG_WARNING(cmdParameters, H, 'H', 'v');
+        UNUSED_FLAG_WARNING(cmdParameters, F, 'F', 'v');
+        UNUSED_FLAG_WARNING(cmdParameters, o, 'o', 'v');
+        break;
+    case extendTimestamp:
+        UNUSED_FLAG_WARNING(cmdParameters, S, 'S', 'x');
+        UNUSED_FLAG_WARNING(cmdParameters, H, 'H', 'x');
+        UNUSED_FLAG_WARNING(cmdParameters, F, 'F', 'x');
+        UNUSED_FLAG_WARNING(cmdParameters, f, 'f', 'x');
+    }
+}
+
+/**
+ * Prinst all the parameters and their valu extracted from commandline.
+ */
 static void GT_printParameters(void)
 {
     printf("Parameters and arguments transfered from command line:\n");
-    if (cmdParameters.o == true) printf("-o %s\n", cmdParameters.outPubFileName);
-    if (cmdParameters.i == true) printf("-i %s\n", cmdParameters.inSigFileName);
-    if (cmdParameters.b == true) printf("-b %s\n", cmdParameters.inPubFileName);
-    if (cmdParameters.f == true) printf("-f %s\n", cmdParameters.inDataFileName);
-    if (cmdParameters.V == true) printf("-V %s\n", cmdParameters.openSSLTruststoreFileName);
-    if (cmdParameters.W == true) printf("-W %s\n", cmdParameters.openSSLTrustStoreDirName);
-    if (cmdParameters.F == true) printf("-F Alg: %s and Hash: %s\n", cmdParameters.hashAlgName_F, cmdParameters.inputHashStrn);
-    if (cmdParameters.H == true) printf("-H %s\n", cmdParameters.hashAlgName_H);
-    if (cmdParameters.S == true) printf("-S %s\n", cmdParameters.signingService_url);
-    if (cmdParameters.X == true) printf("-X %s\n", cmdParameters.verificationService_url);
-    if (cmdParameters.P == true) printf("-P %s\n", cmdParameters.publicationsFile_url);
+    if (cmdParameters.o == true) printf("-o '%s'\n", cmdParameters.outPubFileName);
+    if (cmdParameters.i == true) printf("-i '%s'\n", cmdParameters.inSigFileName);
+    if (cmdParameters.b == true) printf("-b '%s'\n", cmdParameters.inPubFileName);
+    if (cmdParameters.f == true) printf("-f '%s'\n", cmdParameters.inDataFileName);
+    if (cmdParameters.V == true) printf("-V '%s'\n", cmdParameters.openSSLTruststoreFileName);
+    if (cmdParameters.W == true) printf("-W '%s'\n", cmdParameters.openSSLTrustStoreDirName);
+    if (cmdParameters.F == true) printf("-F Alg: '%s' and Hash: '%s'\n", cmdParameters.hashAlgName_F, cmdParameters.inputHashStrn);
+    if (cmdParameters.H == true) printf("-H '%s'\n", cmdParameters.hashAlgName_H);
+    if (cmdParameters.S == true) printf("-S '%s'\n", cmdParameters.signingService_url);
+    if (cmdParameters.X == true) printf("-X '%s'\n", cmdParameters.verificationService_url);
+    if (cmdParameters.P == true) printf("-P '%s'\n", cmdParameters.publicationsFile_url);
     if (cmdParameters.c == true) printf("-c %i\n", cmdParameters.networkTransferTimeout);
     if (cmdParameters.C == true) printf("-C %i\n", cmdParameters.networkConnectionTimeout);
 
@@ -438,16 +546,20 @@ void GT_pritHelp(void)
 
 bool GT_parseCommandline(int argc, char **argv)
 {
-    GT_readCommandLineParameters(argc, argv);
-    GT_extractTaskTODO();
-    //GT_printParameters();
-    GT_printTaskErrorMessage();
-    if (GT_controlParameters()) {
-        return true;
-    } else {
-        //GT_pritHelp();
-        return false;
+    if (readCmdParam(argc, argv)) {
+        extractTask();
+        //  GT_printParameters();
+        printTaskErrorMessage();
+        printTaskWarningMessage();
+        if (controlParameters()) {
+            return true;
+        } else {
+            //GT_pritHelp();
+            return false;
+        }
+
     }
+    return false;
 }
 
 GT_CmdParameters GT_getCMDParam(void)
