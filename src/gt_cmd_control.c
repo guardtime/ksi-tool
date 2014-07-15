@@ -3,7 +3,11 @@
 #include <string.h>
 #ifdef _WIN32 
 #   include <io.h>
+#else
+#   define _access_s access
 #endif
+
+
 #include <errno.h>
 #include "gt_cmdcommon.h"
 #include "gt_cmd_control.h"
