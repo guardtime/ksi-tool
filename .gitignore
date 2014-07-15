@@ -1,13 +1,37 @@
+# Object files, executable
+*.obj
+*.o
 /bin
 /obj
-/build
-/dist
-/nbproject
-/test
-*.obj
-.dep.inc
-makefile
+*.exe
+src/gtime
+
+# Test files, temp files
+
 todo.txt
-sign_test.bat
+/test
 *.ksig
+sign_test.bat
+*~
+
+
+# Ide project files
+/nbproject
+/dist
+gtime/
+/src/.deps/
+/gtime/nbproject/private/
+.dep.inc
+
+
+
+makefile
+config.[*hls]*
+configure
+GNUmakefile
+*.log
+*.in
+aclocal.m4
+autom4te.cache
+build-aux
 
