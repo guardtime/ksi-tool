@@ -304,6 +304,7 @@ static bool readCmdParam(int argc, char **argv)
             return false;
         }
     }
+    return true;
 }
 
 /**
