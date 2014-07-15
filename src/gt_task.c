@@ -1,6 +1,6 @@
-#include "gt_task.h"
-#include <ksi/net_http.h>
 #include <string.h>
+#include <ksi/net_http.h>
+#include "gt_task.h"
 
 int configureNetworkProvider(GT_CmdParameters *cmdparam, KSI_CTX *ksi)
 {

@@ -8,7 +8,7 @@
 #ifndef GT_CMD_CONTROL_H
 #define	GT_CMD_CONTROL_H
 
-
+#include "gt_cmdcommon.h"
 
 #ifdef	__cplusplus
 extern "C" {

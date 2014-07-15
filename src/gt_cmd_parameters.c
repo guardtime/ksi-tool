@@ -1,8 +1,8 @@
-#include "gt_cmdparameters.h"
-#include "getopt.h"
 #include <stdio.h>		//input output
 #include <string.h>		
 #include <stdlib.h>		//malloc, random, int ja strn muundused
+#include "getopt.h"
+#include "gt_cmd_parameters.h"
 #include "gt_cmd_control.h"
 
 //Static variable that contains all valid command line prameters

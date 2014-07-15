@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "gt_cmdparameters.h"
+#include "gt_cmd_parameters.h"
 #include "gt_task.h"
 /*
  * 

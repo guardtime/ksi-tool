@@ -5,7 +5,7 @@
 #include <string.h>
 #include <ksi/ksi.h>
 #include <time.h>
-#include "gt_cmdparameters.h"
+#include "gt_cmd_parameters.h"
 
 
 

@@ -6,10 +6,7 @@
 #else
 #   define _access_s access
 #endif
-
-
 #include <errno.h>
-#include "gt_cmdcommon.h"
 #include "gt_cmd_control.h"
 
 #define CheckNullPtr(strn, msg) \
