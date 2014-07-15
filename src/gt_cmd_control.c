@@ -80,7 +80,8 @@ bool isHashAlgFormatOK(const char *hashAlg){
 
 static int doFileExists(const char* path)
 {
-    return _access_s(path, 0);
+    _access_s(path, 0);
+    return errno;
 }
 
 bool analyseInputFile(const char* path)
