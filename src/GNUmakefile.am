@@ -1,0 +1,5 @@
+bin_PROGRAMS = gtime
+gtime_SOURCES = getopt.c gtime.c gt_task_getpubfile.c gt_cmd_control.c gt_task.c gt_task_sign.c gt_cmdparameters.c gt_task_extend.c gt_task_verify.c
+
+
+
