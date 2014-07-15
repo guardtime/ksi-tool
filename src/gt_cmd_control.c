@@ -1,9 +1,9 @@
 #include <ctype.h>
 #include <stdio.h>		//input output
-#include <string.h>		
-#include <stdlib.h>		//malloc, random, int ja strn muundused
-#include <ctype.h>
-#include <io.h>
+#include <string.h>
+#ifdef _WIN32 
+#   include <io.h>
+#endif
 #include <errno.h>
 #include "gt_cmdcommon.h"
 #include "gt_cmd_control.h"
@@ -18,13 +18,13 @@
     fprintf(stderr, msg); \
     return false;}
 
-bool isPathFormOk(char *path)
+bool isPathFormOk(const char *path)
 {
     CheckNullPtr(path, "Path is nullptr\n");
     return true;
 }
 
-bool isHexFormatOK(char *hex)
+bool isHexFormatOK(const char *hex)
 {
     int i = 0;
     char C;
@@ -42,14 +42,14 @@ bool isHexFormatOK(char *hex)
     return failure ? false : true;
 }
 
-bool isURLFormatOK(char *url)
+bool isURLFormatOK(const char *url)
 {
     CheckNullPtr(url, "Url is nullptr.\n");
     CheckEmpty(url, "Url has no content: ''.\n");
     return true;
 }
 
-bool isIntegerFormatOK(char *integer)
+bool isIntegerFormatOK(const char *integer)
 {
     int i = 0;
     int C;
@@ -68,7 +68,7 @@ bool isIntegerFormatOK(char *integer)
     return true;
 }
 
-bool isHashAlgFormatOK(char *hashAlg){
+bool isHashAlgFormatOK(const char *hashAlg){
     CheckNullPtr(hashAlg, "HashAlg is nullptr.");
     CheckEmpty(hashAlg, "Hash algorithm has no content: ''.\n");
     return true;

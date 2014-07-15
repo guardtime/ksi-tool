@@ -10,13 +10,13 @@ int GT_signTask(GT_CmdParameters *cmdparam) {
     KSI_DataHasher *hsr = NULL;
     KSI_DataHash *hash = NULL;
     KSI_Signature *sign = NULL;
-
-
+    
+    
     /*Initalization of KSI */
     res = KSI_global_init();
     ERROR_HANDLING("Unable to init KSI global resources.\n");
     res = KSI_CTX_new(&ksi);
-    ERROR_HANDLING("Unable to init KSI context.\n");
+    ERROR_HANDLING("Unable to init KSI context. %s\n", KSI_getErrorString(res));
     res = configureNetworkProvider(cmdparam, ksi);
     ERROR_HANDLING("Unable to configure network provider.\n");
 

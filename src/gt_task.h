@@ -3,9 +3,10 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <ksi\ksi.h>
-#include "gt_cmdparameters.h"
+#include <ksi/ksi.h>
 #include <time.h>
+#include "gt_cmdparameters.h"
+
 
 
 

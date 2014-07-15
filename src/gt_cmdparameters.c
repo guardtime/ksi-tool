@@ -3,10 +3,6 @@
 #include <stdio.h>		//input output
 #include <string.h>		
 #include <stdlib.h>		//malloc, random, int ja strn muundused
-#include <ctype.h>
-#include <io.h>
-#include <errno.h>
-
 #include "gt_cmd_control.h"
 
 //Static variable that contains all valid command line prameters

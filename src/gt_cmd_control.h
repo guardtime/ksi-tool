@@ -14,11 +14,11 @@
 extern "C" {
 #endif
 
-bool isPathFormOk(char *path);
-bool isHexFormatOK(char *hex);
-bool isURLFormatOK(char *url);
-bool isIntegerFormatOK(char *integer);
-bool isHashAlgFormatOK(char *hashAlg);
+bool isPathFormOk(const char *path);
+bool isHexFormatOK(const char *hex);
+bool isURLFormatOK(const char *url);
+bool isIntegerFormatOK(const char *integer);
+bool isHashAlgFormatOK(const char *hashAlg);
 
 bool analyseInputFile(const char* path);
 bool analyseOutputFile(const char* path);
