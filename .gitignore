@@ -9,19 +9,21 @@ src/gtime
 # Test files, temp files
 
 todo.txt
-/test
 *.ksig
 sign_test.bat
 *~
+*.lnk
 
 
 # Ide project files
 /nbproject
 /dist
 gtime/
+build/
 /src/.deps/
 /gtime/nbproject/private/
 .dep.inc
+*.pdb
 
 
 
