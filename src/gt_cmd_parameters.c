@@ -445,21 +445,17 @@ static void printTaskWarningMessage(void)
     switch (cmdParameters.task) {
     case signHash:
     case signDataFile:
-        UNUSED_FLAG_WARNING(cmdParameters, X, 'X', 's');
-        UNUSED_FLAG_WARNING(cmdParameters, P, 'P', 's');
         UNUSED_FLAG_WARNING(cmdParameters, b, 'b', 's');
         UNUSED_FLAG_WARNING(cmdParameters, i, 'i', 's');
         break;
     case verifyTimestamp_locally:
     case verifyTimestamp_online:
     case verifyPublicationsFile:
-        UNUSED_FLAG_WARNING(cmdParameters, S, 'S', 'v');
         UNUSED_FLAG_WARNING(cmdParameters, H, 'H', 'v');
         UNUSED_FLAG_WARNING(cmdParameters, F, 'F', 'v');
         UNUSED_FLAG_WARNING(cmdParameters, o, 'o', 'v');
         break;
     case extendTimestamp:
-        UNUSED_FLAG_WARNING(cmdParameters, S, 'S', 'x');
         UNUSED_FLAG_WARNING(cmdParameters, H, 'H', 'x');
         UNUSED_FLAG_WARNING(cmdParameters, F, 'F', 'x');
         UNUSED_FLAG_WARNING(cmdParameters, f, 'f', 'x');

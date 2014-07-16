@@ -1,19 +1,8 @@
-﻿# Väliste ressursside allikad
-
 !IF "$(DLL)" != "lib" && "$(DLL)" != "dll"
 DLL = lib
 !ENDIF
 !IF "$(RTL)" != "MT" && "$(RTL)" != "MTd" && "$(RTL)" != "MD" && "$(RTL)" != "MDd"
 RTL = MT
-!ENDIF
-
-
-!IF "$(OPENSSL_CA_FILE)" != ""
-TRUSTSTORE_MACROS = $(TRUSTSTORE_MACROS) /DOPENSSL_CA_FILE=\"$(OPENSSL_CA_FILE:\=\\)\"
-!ENDIF
-
-!IF "$(OPENSSL_CA_DIR)" != ""
-TRUSTSTORE_MACROS = $(TRUSTSTORE_MACROS) /DOPENSSL_CA_DIR=\"$(OPENSSL_CA_DIR:\=\\)\" 
 !ENDIF
 
 SRC_DIR = src
@@ -22,7 +11,7 @@ BIN_DIR = bin
 
 TOOL_NAME = gtime
 
-#Objects used to make command-line tool
+#Objects for making command-line tool
 
 CMDTOOL_OBJ = \
 	$(OBJ_DIR)\getopt.obj \
@@ -62,21 +51,17 @@ LDFLAGS = $(LDFLAGS) /LIBPATH:"$(CURL_DIR)\lib"
 LDFLAGS = $(LDFLAGS) /LIBPATH:"$(OPENSSL_DIR)\dll" 
 LDFLAGS = $(LDFLAGS) /LIBPATH:"$(CURL_DIR)\dll"
 !ENDIF
-CCFLAGS = $(CCFLAGS) $(CCEXTRA) $(TRUSTSTORE_MACROS)
+CCFLAGS = $(CCFLAGS) $(CCEXTRA)
 LDFLAGS = $(LDFLAGS) $(LDEXTRA)
 
 
 #Making
- 
-#$(BIN_DIR)\pubfile.exe $(BIN_DIR)\extender.exe
+
 default: $(BIN_DIR)\$(TOOL_NAME).exe 
 
-#Linking obj files together. Depends on LIB_OBJ files created. 
-
+#Linking 
 $(BIN_DIR)\$(TOOL_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(CMDTOOL_OBJ)
 	link $(LDFLAGS) /OUT:$@ $(CMDTOOL_OBJ) $(EXT_LIB) 
-
-
 
 #C file compilation  	
 {$(SRC_DIR)\}.c{$(OBJ_DIR)\}.obj:
