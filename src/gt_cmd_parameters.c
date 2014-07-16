@@ -51,7 +51,7 @@ static GT_CmdParameters cmdParameters;
         } 
 
 //Check if a flag in (GT_CmdParameters) is set and print warning message about unused parameter.
-#define UNUSED_FLAG_WARNING(param, flag_, cflag, ctask) if(param.flag_ == true) printf("Warning: You can't use -%c with -%c\n", cflag, ctask);
+#define UNUSED_FLAG_WARNING(param, flag_, ...) if(param.flag_ == true) fprintf(stderr,__VA_ARGS__);
 
 /**
  * A struct containing a flag and its argument.
@@ -445,20 +445,22 @@ static void printTaskWarningMessage(void)
     switch (cmdParameters.task) {
     case signHash:
     case signDataFile:
-        UNUSED_FLAG_WARNING(cmdParameters, b, 'b', 's');
-        UNUSED_FLAG_WARNING(cmdParameters, i, 'i', 's');
+        UNUSED_FLAG_WARNING(cmdParameters, b, "Warning: Can't use -b with -s.\n");
+        UNUSED_FLAG_WARNING(cmdParameters, i, "Warning: Can't use -i with -s.\n");
         break;
-    case verifyTimestamp_locally:
     case verifyTimestamp_online:
+        UNUSED_FLAG_WARNING(cmdParameters, b, "Warning: Can't use -b with -v -x.\n");
+    case verifyTimestamp_locally:
     case verifyPublicationsFile:
-        UNUSED_FLAG_WARNING(cmdParameters, H, 'H', 'v');
-        UNUSED_FLAG_WARNING(cmdParameters, F, 'F', 'v');
-        UNUSED_FLAG_WARNING(cmdParameters, o, 'o', 'v');
+        UNUSED_FLAG_WARNING(cmdParameters, H, "Warning: Can't use -H with -v.\n");
+        UNUSED_FLAG_WARNING(cmdParameters, F, "Warning: Can't use -F with -v.\n");
+        UNUSED_FLAG_WARNING(cmdParameters, o, "Warning: Can't use -o with -v.\n");
         break;
     case extendTimestamp:
-        UNUSED_FLAG_WARNING(cmdParameters, H, 'H', 'x');
-        UNUSED_FLAG_WARNING(cmdParameters, F, 'F', 'x');
-        UNUSED_FLAG_WARNING(cmdParameters, f, 'f', 'x');
+        UNUSED_FLAG_WARNING(cmdParameters, H, "Warning: Can't use -H with -x.\n");
+        UNUSED_FLAG_WARNING(cmdParameters, F, "Warning: Can't use -F with -x.\n");
+        UNUSED_FLAG_WARNING(cmdParameters, f, "Warning: Can't use -f with -x.\n");
+        break;
     }
 }
 

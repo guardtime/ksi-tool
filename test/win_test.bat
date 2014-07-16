@@ -16,7 +16,6 @@ REM input files
 SET TEST_FILE=../test/testFile
 SET TEST_OLD_SIG=../test/ok-sig-2014-04-30.1.ksig
 SET SH256_DATA_FILE=../test/data_sh256.txt
-SET PUBFILE=../test/pubfile
 
 REM input hash
 SET SH1_HASH=bf9661defa3daecacfde5bde0214c4a439351d4d
@@ -29,10 +28,11 @@ SET SH1_file=../test/out/sh1.ksig
 SET SH256_file=../test/out/SH256.ksig
 SET RIPMED160_file=../test/out/RIPMED160.ksig
 SET TEST_FILE_OUT=../test/out/testFile
+SET PUBFILE=../test/out/pubfile
 
 
 
-rm %TEST_EXTENDED_SIG% %RIPMED160_file% %SH1_file% %SH256_file% %TEST_FILE_OUT%.ksig %TEST_FILE_OUT%SH-1.ksig
+rm %TEST_EXTENDED_SIG% %RIPMED160_file% %SH1_file% %SH256_file% %TEST_FILE_OUT%.ksig %TEST_FILE_OUT%SH-1.ksig %PUBFILE%
 
 
 echo ****************** download publications file ******************
@@ -43,7 +43,7 @@ gtime.exe -v -t -b %PUBFILE%
 echo ****************** signing data -n ******************
 gtime.exe -s %SERVICES% -f %TEST_FILE% -o %TEST_FILE_OUT%.ksig  -n
 sleep %WAIT%
-gtime.exe -v -t %SERVICES% -x -i %TEST_FILE%.ksig -n %SERVICES% 
+gtime.exe -v -t %SERVICES% -x -i %TEST_FILE_OUT%.ksig -n %SERVICES% 
 
 echo ****************** signing data with algorithm -H SH-1 ****************** 
 gtime.exe -s %SERVICES% -f %TEST_FILE% -o %TEST_FILE_OUT%SH-1.ksig  -H SHA-1

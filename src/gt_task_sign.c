@@ -59,7 +59,7 @@ int GT_signTask(GT_CmdParameters *cmdparam) {
     printf("Verifying freshly created signature...");
     res = KSI_Signature_verify(sign, ksi);
     ERROR_HANDLING_STATUS_DUMP("\nVerifying failed (%s)\n", KSI_getErrorString(res));
-    printf("ok\n");
+    printf("ok.\n");
     */
     
     if(cmdparam->n)

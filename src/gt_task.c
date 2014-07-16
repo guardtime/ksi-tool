@@ -7,6 +7,7 @@
 #ifdef _WIN32 
 #   define snprintf _snprintf
 #endif
+
 static unsigned int elapsed_time_ms;
 
 int configureNetworkProvider(GT_CmdParameters *cmdparam, KSI_CTX *ksi)

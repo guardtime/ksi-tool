@@ -7,10 +7,9 @@
 src/gtime
 
 # Test files, temp files
-
+test/out
 todo.txt
 *.ksig
-sign_test.bat
 *~
 *.lnk
 

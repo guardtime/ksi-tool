@@ -29,14 +29,14 @@ int GT_verifyTask(GT_CmdParameters *cmdparam)
         printf("Verifying  publications file... ");
         res = KSI_verifyPublicationsFile(ksi, publicationsFile);
         ERROR_HANDLING_STATUS_DUMP("failed\n")
-        printf("ok\n");
+        printf("ok.\n");
     }        /* Verification of signature*/
     else {
         /* Reading signature file for verification. */
         printf("Reading signature... ");
         res = KSI_Signature_fromFile(ksi, cmdparam->inSigFileName, &sig);
         ERROR_HANDLING_STATUS_DUMP("failed (%s)\n", KSI_getErrorString(res));
-        printf("ok\n");
+        printf("ok.\n");
 
         if (cmdparam->n) {
             printSignerIdentity(sig);
@@ -68,11 +68,11 @@ int GT_verifyTask(GT_CmdParameters *cmdparam)
             ERROR_HANDLING(" failed!\nUnable to create data hasher.\n");
             res = calculateHashOfAFile(hsr, &hsh, cmdparam->inDataFileName);
             ERROR_HANDLING(" failed!\nUnable to hash data.\n");
-            printf("ok\n");
+            printf("ok.\n");
             printf("Verifying document hash... ");
             res = KSI_Signature_verifyDataHash(sig, hsh);
             ERROR_HANDLING("failed (%s)\nWrong document or signature.\n", KSI_getErrorString(res));
-            printf("ok\n");
+            printf("ok.\n");
         }
     }
 

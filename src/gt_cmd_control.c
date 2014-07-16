@@ -36,7 +36,7 @@ bool isHexFormatOK(const char *hex)
     
     while (C = hex[i++]) {
         if (!isxdigit(C)) {
-            printf("Invalid hex char: '%c'\n", C);
+            fprintf(stderr,"Invalid hex char: '%c'\n", C);
             failure = true;
         }
     }
@@ -59,7 +59,7 @@ bool isIntegerFormatOK(const char *integer)
 
     while (C = integer[i++]) {
         if (isdigit(C)==0) {
-            printf("'%s' is not a valid integer.\n", integer);
+            fprintf(stderr, "'%s' is not a valid integer.\n", integer);
             return false;
         }
     }
