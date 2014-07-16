@@ -52,12 +52,9 @@ int GT_signTask(GT_CmdParameters *cmdparam) {
     
     /* Sign the data hash. */
     printf("Creating signature from hash...");
-    MEASURE_TIME(
-            res = KSI_createSignature(ksi, hash, &sign);,
-            "\n  -Creating signature ",
-            cmdparam->t);
+    MEASURE_TIME(res = KSI_createSignature(ksi, hash, &sign);)
     ERROR_HANDLING_STATUS_DUMP("\nUnable to sign %d.\n", res);
-    printf("ok\n");
+    printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
     /*
     printf("Verifying freshly created signature...");
     res = KSI_Signature_verify(sign, ksi);

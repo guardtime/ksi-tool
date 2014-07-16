@@ -1,6 +1,10 @@
 #include <string.h>
+#include <time.h>
 #include <ksi/net_http.h>
+#include <stdio.h>
 #include "gt_task.h"
+
+static unsigned int elapsed_time_ms;
 
 int configureNetworkProvider(GT_CmdParameters *cmdparam, KSI_CTX *ksi)
 {
@@ -233,3 +237,24 @@ cleanup:
     return res;
 
 }
+
+
+
+unsigned int measureLastCall(void){
+    static clock_t thisCall = 0;
+    static clock_t lastCall = 0;
+
+    thisCall = clock();
+    elapsed_time_ms = 1000*(thisCall - lastCall) / CLOCKS_PER_SEC;
+    lastCall = thisCall;
+    return elapsed_time_ms;
+}
+
+unsigned int measuredTime(void){
+    return elapsed_time_ms;
+    }
+char* str_measuredTime(void){
+    static char buf[32];
+    _snprintf(buf,32,"(%i ms)", elapsed_time_ms);
+    return buf;
+    }

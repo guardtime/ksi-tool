@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <ksi/ksi.h>
-#include <time.h>
 #include "gt_cmd_parameters.h"
 
 
@@ -93,6 +92,19 @@ int printPublicationReferences(const KSI_PublicationsFile *pubFile);
  */
 int printSignaturePublicationReference(const KSI_Signature *sig);
 
+/**
+ * Gives time difference between the current and last call in ms.
+ * @return Time difference in ms.
+ */
+unsigned int measureLastCall(void);
+
+/**
+ * Gives time difference between the current and last call of function measureLastCall in ms
+ * @return Time difference in ms.
+ */
+unsigned int measuredTime(void);
+
+char* str_measuredTime(void);
 
 #define ERROR_HANDLING(...) \
     if (res != KSI_OK){  \
@@ -107,17 +119,14 @@ int printSignaturePublicationReference(const KSI_Signature *sig);
 	goto cleanup; \
 	}
 
-#define MEASURE_TIME(code_here, process_name, enable) \
+#define MEASURE_TIME(code_here) \
     {   \
-    clock_t start, finish; \
-    unsigned int elapsed_time; \
-    start = clock(); \
+    measureLastCall(); \
     code_here; \
-    finish = clock(); \
-    elapsed_time = 1000*(finish - start) / CLOCKS_PER_SEC; \
-    if(enable == true) \
-    printf("%s took %i ms.\n",process_name, elapsed_time); \
+    measureLastCall(); \
     }
+
+
 
 #ifdef	__cplusplus
 }

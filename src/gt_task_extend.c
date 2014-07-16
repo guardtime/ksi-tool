@@ -24,29 +24,23 @@ int GT_extendTask(GT_CmdParameters *cmdparam) {
 
 	/* Make sure the signature is ok. */
         printf("Verifying old signature...");
-        MEASURE_TIME(
-            res = KSI_verifySignature(ksi, sig);,
-            "\n  -Verifing old signature ",
-            cmdparam->t);
+        MEASURE_TIME(res = KSI_verifySignature(ksi, sig);)
         ERROR_HANDLING_STATUS_DUMP("failed!\nUnable to verify signature.\n");
-        printf("ok.\n");
+        printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
 
 	/* Extend the signature. */
         printf("Extending old signature...");
-	MEASURE_TIME(
-            res = KSI_extendSignature(ksi, sig, &ext);,
-            "\n  -Extending old signature ",
-            cmdparam->t);
+	MEASURE_TIME(res = KSI_extendSignature(ksi, sig, &ext););
 	if (res != KSI_OK) {
 		if (res == KSI_EXTEND_NO_SUITABLE_PUBLICATION) {
-			sprintf(stderr, "failed!\nNo suitable publication to extend to.\n");
+			fprintf(stderr, "failed!\nNo suitable publication to extend to.\n");
 			goto cleanup;
 		}
 		fprintf(stderr, "failed¤\nUnable to extend signature.\n");
 		KSI_ERR_statusDump(ksi, stderr);
 		goto cleanup;
 	}
-        printf("ok.\n");
+        printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
         
 	/* To be extra sure, lets verify the extended signature. */
         /*

@@ -18,18 +18,15 @@ int GT_getPublicationsFileTask(GT_CmdParameters *cmdparam)
     ERROR_HANDLING("Unable to configure network provider.\n");
 
     printf("Downloading publications file...");
-    MEASURE_TIME(
-            res = KSI_receivePublicationsFile(ksi, &publicationsFile);,
-            "\n  -Publications file download",
-            cmdparam->t);
+    MEASURE_TIME(res = KSI_receivePublicationsFile(ksi, &publicationsFile);)
     ERROR_HANDLING_STATUS_DUMP("failed!\n Unable to read publications file.\n");
-
-    MEASURE_TIME(
-            res = KSI_verifyPublicationsFile(ksi, publicationsFile);,
-            "  -Verifing publications file ",
-            cmdparam->t);
-    ERROR_HANDLING_STATUS_DUMP("failed! Unable to verify publications file.\n");
-    printf("ok.\n");
+    printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
+    
+    printf("Verifying publications file...");
+    MEASURE_TIME(res = KSI_verifyPublicationsFile(ksi, publicationsFile);)
+    ERROR_HANDLING_STATUS_DUMP("failed!\nUnable to verify publications file.\n");
+    printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
+    
     res = KSI_PublicationsFile_serialize(ksi, publicationsFile, &raw, &raw_len);
     ERROR_HANDLING_STATUS_DUMP("Unable serialize publications file.\n");
 
