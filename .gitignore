@@ -27,7 +27,7 @@ build/
 
 
 
-makefile
+
 config.[*hls]*
 configure
 GNUmakefile
@@ -36,4 +36,5 @@ GNUmakefile
 aclocal.m4
 autom4te.cache
 build-aux
+stamp-h1
 

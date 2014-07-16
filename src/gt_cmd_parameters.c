@@ -519,7 +519,7 @@ void GT_pritHelp(void)
             " -F <hash>	data hash to be signed / verified. hash Format: <ALG>:<hash in hex>\n"
             " -i <fn>	Input signature token file to be extended / verified\n"
             " -o <fn>	Output filename to store signature token or publications file\n"
-            " -b <fn>	use specified BBublications file\n"
+            " -b <fn>	use specified Bublications file\n"
             " -V <fn>	use specified OpenSSL-style truststore file for publications file Verification\n"
             " -W <dir>	use specified OpenSSL-style truststore directory for publications file WWerification\n"
             " -c <num>	network transfer timeout, after successful Connect\n"

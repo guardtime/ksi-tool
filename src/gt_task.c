@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include "gt_task.h"
 
+#ifdef _WIN32 
+#   define snprintf _snprintf
+#endif
 static unsigned int elapsed_time_ms;
 
 int configureNetworkProvider(GT_CmdParameters *cmdparam, KSI_CTX *ksi)
@@ -210,7 +213,7 @@ int printSignaturePublicationReference(const KSI_Signature *sig)
     ERROR_HANDLING("Failed to get publications reference list from publication record object.\n");
 
     if (publicationRecord == NULL) {
-        sprintf(stderr, "No publication Record avilable.\n");
+        fprintf(stderr, "No publication Record avilable.\n");
         res = KSI_UNKNOWN_ERROR;
         goto cleanup;
     }
@@ -255,6 +258,6 @@ unsigned int measuredTime(void){
     }
 char* str_measuredTime(void){
     static char buf[32];
-    _snprintf(buf,32,"(%i ms)", elapsed_time_ms);
+    snprintf(buf,32,"(%i ms)", elapsed_time_ms);
     return buf;
     }
