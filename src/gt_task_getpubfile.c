@@ -1,6 +1,6 @@
 #include "gt_task.h"
 
-int GT_getPublicationsFileTask(GT_CmdParameters *cmdparam)
+bool GT_getPublicationsFileTask(GT_CmdParameters *cmdparam)
 {
     KSI_CTX *ksi = NULL;
     int res;
@@ -52,5 +52,5 @@ cleanup:
     if (out != NULL) fclose(out);
     KSI_CTX_free(ksi);
     KSI_global_cleanup();
-    return res;
+    return (res==KSI_OK) ? true : false;
 }

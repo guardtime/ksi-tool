@@ -1,7 +1,7 @@
 #include "gt_task.h"
 
 
-int GT_extendTask(GT_CmdParameters *cmdparam) {
+bool GT_extendTask(GT_CmdParameters *cmdparam) {
 	KSI_CTX *ksi = NULL;
 	int res;
 	KSI_Signature *sig = NULL;
@@ -62,6 +62,5 @@ cleanup:
 	KSI_Signature_free(ext);
 	KSI_CTX_free(ksi);
 	KSI_global_cleanup();
-
-	return res;
+	return (res==KSI_OK) ? true : false;
 }

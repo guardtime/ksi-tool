@@ -37,44 +37,59 @@ rm %TEST_EXTENDED_SIG% %RIPMED160_file% %SH1_file% %SH256_file% %TEST_FILE_OUT%.
 
 echo ****************** download publications file ******************
 gtime.exe -p -t -o %PUBFILE%
+echo %errorlevel%
 gtime.exe -v -t -b %PUBFILE%
 
 
 echo ****************** signing data -n ******************
 gtime.exe -s %SERVICES% -f %TEST_FILE% -o %TEST_FILE_OUT%.ksig  -n
+echo %errorlevel%
 sleep %WAIT%
 gtime.exe -v -t %SERVICES% -x -i %TEST_FILE_OUT%.ksig -n %SERVICES% 
+echo %errorlevel%
 
 echo ****************** signing data with algorithm -H SH-1 ****************** 
 gtime.exe -s %SERVICES% -f %TEST_FILE% -o %TEST_FILE_OUT%SH-1.ksig  -H SHA-1
+echo %errorlevel%
 sleep %WAIT%
 gtime.exe -v %SERVICES% -x -i %TEST_FILE_OUT%SH-1.ksig
+echo %errorlevel%
 
 echo ****************** verifying signature and file ****************** 
 gtime.exe -v -t %SERVICES% -x -i %TEST_FILE_OUT%.ksig -f %TEST_FILE%
+echo %errorlevel%
 
 echo ****************** verifying signature and missing file ****************** 
 gtime.exe -v -t %SERVICES% -x -i %TEST_FILE_OUT%.ksig -f missing_file
+echo %errorlevel%
 
 echo ****************** extend old signature ****************** 
 gtime.exe -x -t %SERVICES% -i %TEST_OLD_SIG% -o %TEST_EXTENDED_SIG%
+echo %errorlevel%
 sleep %WAIT%
 gtime.exe -v %SERVICES% -x -i %TEST_EXTENDED_SIG%
+echo %errorlevel%
 
 echo ****************** signing with SH1 ****************** 
 gtime.exe -s %SERVICES% -o %SH1_file% -S %SIG_SERV_IP% -F SHA-1:%SH1_HASH%
+echo %errorlevel%
 sleep %WAIT%
 gtime.exe -v %SERVICES% -x -i %SH1_file%
+echo %errorlevel%
 
 echo ****************** signing with SH256 ****************** 
 gtime.exe -s %SERVICES% -o %SH256_file% -S %SIG_SERV_IP% -F SHA-256:%SH256_HASH%
+echo %errorlevel%
 sleep %WAIT%
 gtime.exe -v %SERVICES% -x -i %SH256_file% -f %SH256_DATA_FILE%
+echo %errorlevel%
 
 echo ****************** signing with RIPMED160 ****************** 
 gtime.exe -s %SERVICES% -o %RIPMED160_file% -S %SIG_SERV_IP% -F RIPEMD-160:%RIPMED160_HASH%
+echo %errorlevel%
 sleep %WAIT%
 gtime.exe -v %SERVICES% -x -i %RIPMED160_file%
+echo %errorlevel%
 
 
 

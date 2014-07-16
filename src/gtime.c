@@ -19,28 +19,29 @@ int main(int argc, char** argv) {
         GT_CmdParameters param = GT_getCMDParam();
         
         if(param.task == downloadPublicationsFile){
-            GT_getPublicationsFileTask(&param);
+            state=GT_getPublicationsFileTask(&param);
             }
         else if (param.task == verifyPublicationsFile){
-            GT_verifyTask(&param);
+            state=GT_verifyTask(&param);
             }
         else if (param.task == signDataFile || param.task == signHash){
-            GT_signTask(&param);
+            state=GT_signTask(&param);
             }
         else if(param.task == extendTimestamp){
-            GT_extendTask(&param);
+            state=GT_extendTask(&param);
             }
         else if((param.task == verifyTimestamp_online) || (param.task == verifyTimestamp_locally)){
-            GT_verifyTask(&param);
+            state=GT_verifyTask(&param);
             }
         else if(param.task == showHelp){
             GT_pritHelp();
+            state = true;
             }
         
         }
     else
         return (EXIT_FAILURE);
  
-    return (EXIT_SUCCESS);
+    return state ? (EXIT_SUCCESS) : (EXIT_FAILURE);
 }
 

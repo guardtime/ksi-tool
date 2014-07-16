@@ -1,6 +1,6 @@
 #include "gt_task.h"
 
-int GT_verifyTask(GT_CmdParameters *cmdparam)
+bool GT_verifyTask(GT_CmdParameters *cmdparam)
 {
     int res = KSI_UNKNOWN_ERROR;
     KSI_CTX *ksi = NULL;
@@ -89,5 +89,5 @@ cleanup:
     KSI_DataHash_free(hsh);
     KSI_CTX_free(ksi);
     KSI_global_cleanup();
-    return res;
+    return (res==KSI_OK) ? true : false;
 }

@@ -4,7 +4,7 @@
 static int getHashFromCommandLine(GT_CmdParameters *cmdparam,KSI_CTX *ksi, KSI_DataHash **hash);
 
 
-int GT_signTask(GT_CmdParameters *cmdparam) {
+bool GT_signTask(GT_CmdParameters *cmdparam) {
     KSI_CTX *ksi = NULL;
     int res = KSI_UNKNOWN_ERROR;
     KSI_DataHasher *hsr = NULL;
@@ -77,7 +77,7 @@ cleanup:
     KSI_DataHasher_free(hsr);
     KSI_CTX_free(ksi);
     KSI_global_cleanup();
-    return res;
+    return (res==KSI_OK) ? true : false;
 }
 
 
