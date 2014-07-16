@@ -176,7 +176,7 @@ int printPublicationReferences(const KSI_PublicationsFile *pubFile)
     int res = KSI_UNKNOWN_ERROR;
     KSI_LIST(KSI_PublicationRecord)* list_publicationRecord = NULL;
     KSI_PublicationRecord *publicationRecord = NULL;
-    int j, i;
+    int i;
 
     res = KSI_PublicationsFile_getPublications(pubFile, &list_publicationRecord);
     ERROR_HANDLING("Unable to get publications records.\n");
@@ -206,7 +206,7 @@ int printSignaturePublicationReference(const KSI_Signature *sig)
     ERROR_HANDLING("Failed to get publications reference list from publication record object.\n");
 
     if (publicationRecord == NULL) {
-        printf("No publication Record avilable.\n");
+        sprintf(stderr, "No publication Record avilable.\n");
         res = KSI_UNKNOWN_ERROR;
         goto cleanup;
     }

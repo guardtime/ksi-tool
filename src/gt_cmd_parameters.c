@@ -25,7 +25,7 @@ static GT_CmdParameters cmdParameters;
             } \
         else{ \
             param.cmd_arg = NULL; \
-            printf("Invalid parameter -%c format.\n", cflg); \
+            fprintf(stderr, "Invalid parameter -%c format.\n", cflg); \
             param.flag_ = false; \
             return false; \
             } \
@@ -44,7 +44,7 @@ static GT_CmdParameters cmdParameters;
             } \
         else{ \
             param.cmd_arg = 0; \
-            printf("Invalid parameter -%c  format.\n", cflg); \
+            fprintf(stderr, "Invalid parameter -%c  format.\n", cflg); \
             param.flag_ = false; \
             return false; \
             } \
@@ -299,7 +299,7 @@ static bool readCmdParam(int argc, char **argv)
         } else {
             cmdParameters.inputHashStrn = hash;
             cmdParameters.hashAlgName_F = hashAlg;
-            printf("Invalid parameter -F  format.\n"); \
+            fprintf(stderr, "Invalid parameter -F  format.\n"); \
             cmdParameters.F = false;
             return false;
         }
@@ -383,7 +383,7 @@ static bool controlParameters(void)
 
     extra_check:
         if (cmdParameters.f && !analyseInputFile(cmdParameters.inDataFileName)) {
-            printf("Warning: Ignoring parameter -f\n");
+            fprintf(stderr, "Warning: Ignoring parameter -f\n");
             cmdParameters.f = false;
         }
         return true;
@@ -392,7 +392,7 @@ static bool controlParameters(void)
     } else {
         return false;
     }
-    printf("ok\n");
+    //printf("ok\n");
 }
 
 /**

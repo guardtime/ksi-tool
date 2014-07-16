@@ -39,7 +39,7 @@ int GT_extendTask(GT_CmdParameters *cmdparam) {
             cmdparam->t);
 	if (res != KSI_OK) {
 		if (res == KSI_EXTEND_NO_SUITABLE_PUBLICATION) {
-			printf("failed!\nNo suitable publication to extend to.\n");
+			sprintf(stderr, "failed!\nNo suitable publication to extend to.\n");
 			goto cleanup;
 		}
 		fprintf(stderr, "failed¤\nUnable to extend signature.\n");
