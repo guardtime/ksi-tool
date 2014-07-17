@@ -16,7 +16,7 @@ TOOL_NAME = gtime
 CMDTOOL_OBJ = \
 	$(OBJ_DIR)\getopt.obj \
 	$(OBJ_DIR)\gt_cmd_parameters.obj \
-	$(OBJ_DIR)\gt_task.obj \
+	$(OBJ_DIR)\gt_task_support.obj \
 	$(OBJ_DIR)\gt_task_extend.obj \
 	$(OBJ_DIR)\gt_task_getpubfile.obj \
 	$(OBJ_DIR)\gt_task_sign.obj \

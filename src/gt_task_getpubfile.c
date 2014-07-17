@@ -1,4 +1,4 @@
-#include "gt_task.h"
+#include "gt_task_support.h"
 
 bool GT_getPublicationsFileTask(GT_CmdParameters *cmdparam)
 {
