@@ -2,78 +2,67 @@
 #include <stdio.h>		//input output
 #include <string.h>
 #ifdef _WIN32 
-#   include <io.h>
+#include <io.h>
 #else
-#   define _access_s access
+#define _access_s access
 #endif
 #include <errno.h>
 #include "gt_cmd_control.h"
 
-#define CheckNullPtr(strn, msg) \
-    if(strn==NULL){ \
-    fprintf(stderr, msg); \
-    return false;}
+#define CheckNullPtr(strn) if(strn==NULL) return PARAM_NULLPTR;
+#define CheckEmpty(strn) if(strlen(strn) == 0) return PARAM_NOCONTENT;
 
-#define CheckEmpty(strn, msg) \
-    if(strlen(strn) == 0){ \
-    fprintf(stderr, msg); \
-    return false;}
-
-bool isPathFormOk(const char *path)
+PARAM_RES isPathFormOk(const char *path)
 {
-    CheckNullPtr(path, "Path is nullptr\n");
-    return true;
+    CheckNullPtr(path);
+    return PARAM_OK;
 }
 
-bool isHexFormatOK(const char *hex)
+PARAM_RES isHexFormatOK(const char *hex)
 {
     int i = 0;
     char C;
     bool failure = false;
 
-    CheckNullPtr(hex, "Hex is nullptr.\n");
-    CheckEmpty(hex, "Hex has no content: ''.\n");
-    
+    CheckNullPtr(hex);
+    CheckEmpty(hex);
+
     while (C = hex[i++]) {
         if (!isxdigit(C)) {
-            fprintf(stderr,"Invalid hex char: '%c'\n", C);
-            failure = true;
+            return PARAM_INVALID;
         }
     }
-    return failure ? false : true;
+    return PARAM_OK;
 }
 
-bool isURLFormatOK(const char *url)
+PARAM_RES isURLFormatOK(const char *url)
 {
-    CheckNullPtr(url, "Url is nullptr.\n");
-    CheckEmpty(url, "Url has no content: ''.\n");
-    return true;
+    CheckNullPtr(url);
+    CheckEmpty(url);
+    return PARAM_OK;
 }
 
-bool isIntegerFormatOK(const char *integer)
+PARAM_RES isIntegerFormatOK(const char *integer)
 {
     int i = 0;
     int C;
-    CheckNullPtr(integer, "Integer is nullptr.\n");
-    CheckEmpty(integer, "Integer has no content: ''.\n");
+    CheckNullPtr(integer);
+    CheckEmpty(integer);
 
     while (C = integer[i++]) {
-        if (isdigit(C)==0) {
-            fprintf(stderr, "'%s' is not a valid integer.\n", integer);
-            return false;
+        if (isdigit(C) == 0) {
+            return PARAM_INVALID;
         }
     }
-    
-    
-    
-    return true;
+    return PARAM_OK;
 }
 
-bool isHashAlgFormatOK(const char *hashAlg){
-    CheckNullPtr(hashAlg, "HashAlg is nullptr.");
-    CheckEmpty(hashAlg, "Hash algorithm has no content: ''.\n");
-    return true;
-    }
+PARAM_RES isHashAlgFormatOK(const char *hashAlg)
+{
+    CheckNullPtr(hashAlg);
+    CheckEmpty(hashAlg);
+    return PARAM_OK;
+}
 
 static int doFileExists(const char* path)
 {
@@ -81,24 +70,29 @@ static int doFileExists(const char* path)
     return errno;
 }
 
-bool analyseInputFile(const char* path)
+PARAM_RES analyseInputFile(const char* path)
 {
+    PARAM_RES res = PARAM_UNKNOWN_ERROR;
     int fileStatus = EINVAL;
-    if(isPathFormOk(path))
+
+    res = isPathFormOk(path);
+    if (res == PARAM_OK)
         fileStatus = doFileExists(path);
-    
+    else
+        return res;
+
     switch (fileStatus) {
     case 0:
-        return true;
+        return PARAM_OK;
         break;
     case EACCES:
-        fprintf(stderr, "Error: Access denied for file \"%s\" !\n", path);
+        return FILE_ACCESS_DENIED;
         break;
     case ENOENT:
-        fprintf(stderr, "Error: File \"%s\" dose not exist!\n", path);
+        return FILE_DOSE_NOT_EXIST;
         break;
     case EINVAL:
-        fprintf(stderr, "Error: File \"%s\" is invalid parameter!\n", path);
+        return FILE_INVALID_PATH;
         break;
     }
 
@@ -106,10 +100,32 @@ bool analyseInputFile(const char* path)
 }
 
 //TODO add some functionality
-bool analyseOutputFile(const char* path)
+
+PARAM_RES analyseOutputFile(const char* path)
 {
-    if(isPathFormOk(path))
-        return true;
-    else
-        return false;
+    CheckNullPtr(path);
+    return PARAM_OK;
+}
+
+const char * getFormatErrorString(PARAM_RES res)
+{
+    switch (res) {
+    case PARAM_OK: return "(Parameter OK)";
+        break;
+    case PARAM_NULLPTR: return "(Null)";
+        break;
+    case PARAM_NOCONTENT: return "(Parameter has no content)";
+        break;
+    case PARAM_INVALID: return "(Parameter is invalid)";
+        break;
+    case FILE_ACCESS_DENIED: return "(File access denied)";
+        break;
+    case FILE_DOSE_NOT_EXIST: return "(File dose not exist)";
+        break;
+    case FILE_INVALID_PATH: return "(Invalid path)";
+        break;
+    case PARAM_UNKNOWN_ERROR: return "(Unknown error)";
+        break;
+    }
+
 }
