@@ -5,7 +5,7 @@
 #include "gt_cmd_parameters.h"
 #include "gt_cmd_control.h"
 
-//Static variable that contains all valid command line prameters
+//Static variable that contains all valid command-line prameters
 static GT_CmdParameters cmdParameters;
 
 
@@ -13,11 +13,17 @@ static GT_CmdParameters cmdParameters;
 #define copyFlag(param,raw,flag_) param.flag_ = raw.flag_.flag
 
 /**
- * extrac raw string data from command line buffer (struct raw_parameters) and inserts into GT_CmdParameters. 
- * Takes a function name (control) that is used to control the form of the parameter.
- * If control fails prints error message and returns false.
+ * Extracts raw string data from command line buffer (raw) and inserts into param. 
+ * Takes a control function name (control) that is used to control the form of the parameter.
+ * If control fails an error message is printed, flag_ is disabled and return false is called.
+ * 
+ * @param[in] param Destination variable type GT_CmdParameters.
+ * @param[in] raw Source variable type struct raw_parameters.
+ * @param[in] flag_ Name of parameter (member of data type).
+ * @param[in] cmd_arg Argument name that correspond to flag_.
+ * @param[in] control Name of a form controlling function.
  */
-#define SET_STRN_PARAM(param,raw,flag_, cflg,cmd_arg, control) \
+#define SET_STRN_PARAM(param,raw,flag_, cmd_arg, control) \
     if (raw.flag_.flag){ \
         if (control(raw.flag_.arg)){ \
             param.cmd_arg = raw.flag_.arg; \
@@ -25,18 +31,24 @@ static GT_CmdParameters cmdParameters;
             } \
         else{ \
             param.cmd_arg = NULL; \
-            fprintf(stderr, "Invalid parameter -%c format.\n", cflg); \
+            fprintf(stderr, "Invalid parameter -%s format.\n", #flag_); \
             param.flag_ = false; \
             return false; \
             } \
         } 
 
 /**
- * extrac raw integer data from command line buffer (struct raw_parameters) and inserts into GT_CmdParameters. 
- * Takes a function name (control) that is used to control the form of the parameter.
- * If control fails prints error message and returns false.
+ * Extracts raw integer data from command line buffer (raw) and inserts into param. 
+ * Takes a control function name (control) that is used to control the form of the parameter.
+ * If control fails an error message is printed, flag_ is disabled and return false is called.
+ * 
+ * @param[in] param Destination variable type GT_CmdParameters.
+ * @param[in] raw Source variable type struct raw_parameters.
+ * @param[in] flag_ Name of parameter (member of data type).
+ * @param[in] cmd_arg Argument name that correspond to flag_.
+ * @param[in] control Name of a form controlling function.
  */
-#define SET_INT_PARAM(param,raw,flag_,cflg,cmd_arg, control) \
+#define SET_INT_PARAM(param,raw,flag_,cmd_arg, control) \
     if (raw.flag_.flag){ \
         if (control(raw.flag_.arg)){ \
             param.cmd_arg = atoi(raw.flag_.arg); \
@@ -44,7 +56,7 @@ static GT_CmdParameters cmdParameters;
             } \
         else{ \
             param.cmd_arg = 0; \
-            fprintf(stderr, "Invalid parameter -%c  format.\n", cflg); \
+            fprintf(stderr, "Invalid parameter -%s  format.\n", #flag_); \
             param.flag_ = false; \
             return false; \
             } \
@@ -92,13 +104,14 @@ struct raw_parameters {
     struct st_param n; //print signer name
     struct st_param l; //print 'extended Location ID' value
     struct st_param d; //Dump detailed information
-    struct st_param h; //print hlp
+    struct st_param h; //print help
 };
 
 /****************Functions for parsing command line parameters****************/
 
 /**
- * Reads RAW command line parameters. See struct raw_parameters
+ * Reads RAW command line parameters. See struct raw_parameters.
+ * 
  * @param[in] argc Count of command line arguments.
  * @param[in] argv Pointer to the list of all command line parameters strings.
  * @param[out] rawParam Pointer to the receiving pointer to struct raw_parameters.
@@ -217,11 +230,12 @@ static void readRawCmdParam(int argc, char **argv, struct raw_parameters **rawPa
 /**
  * Extracts hash algorithm name and hash value from string 
  * formatted as <algorithm>:<hash value in hex> .
+ * 
  * @param[in] instrn Input string.
  * @param[out] strnAlgName Pointer to the receiving pointer to string containing hash algorithm name.  
  * @param[out] strnHash Pointer to the receiving pointer to string containing hash.
  * 
- * @note strnHash belongs to the caller and must be freed manually.
+ * @note strnAlgName and strnHash belongs to the caller and must be freed manually.
  */
 static void getHashAndAlgStrings(const char *instrn, char **strnAlgName, char **strnHash)
 {
@@ -255,6 +269,8 @@ static void getHashAndAlgStrings(const char *instrn, char **strnAlgName, char **
 /**
  * Reads command line parameters and controls the format. At first raw parameters  
  * (see readRawCmdParam) are extracted and controlled. If error occurs an error message is printed.
+ * The result is inserted into static variable cmdParameters.
+ * 
  * @param[in] argc Count of command line arguments.
  * @param[in] argv Pointer to the list of all command line parameters strings.
  * @return Returns true if the form of the parameters is OK. False otherwise.
@@ -273,19 +289,19 @@ static bool readCmdParam(int argc, char **argv)
     copyFlag(cmdParameters, (*rawParam), l);
     copyFlag(cmdParameters, (*rawParam), d);
     copyFlag(cmdParameters, (*rawParam), h);
-    SET_STRN_PARAM(cmdParameters, (*rawParam), f, 'f', inDataFileName, isPathFormOk);
-    SET_STRN_PARAM(cmdParameters, (*rawParam), b, 'b', inPubFileName, isPathFormOk);
-    SET_STRN_PARAM(cmdParameters, (*rawParam), i, 'i', inSigFileName, isPathFormOk);
-    SET_STRN_PARAM(cmdParameters, (*rawParam), o, 'o', outPubFileName, isPathFormOk);
-    SET_STRN_PARAM(cmdParameters, (*rawParam), o, 'o', outSigFileName, isPathFormOk);
-    SET_STRN_PARAM(cmdParameters, (*rawParam), W, 'W', openSSLTrustStoreDirName, isPathFormOk);
-    SET_STRN_PARAM(cmdParameters, (*rawParam), V, 'V', openSSLTruststoreFileName, isPathFormOk);
-    SET_STRN_PARAM(cmdParameters, (*rawParam), P, 'P', publicationsFile_url, isURLFormatOK);
-    SET_STRN_PARAM(cmdParameters, (*rawParam), S, 'S', signingService_url, isURLFormatOK);
-    SET_STRN_PARAM(cmdParameters, (*rawParam), X, 'X', verificationService_url, isURLFormatOK);
-    SET_INT_PARAM(cmdParameters, (*rawParam), C, 'C', networkConnectionTimeout, isIntegerFormatOK);
-    SET_INT_PARAM(cmdParameters, (*rawParam), c, 'c', networkTransferTimeout, isIntegerFormatOK);
-    SET_STRN_PARAM(cmdParameters, (*rawParam), H, 'H', hashAlgName_H, isHashAlgFormatOK);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), f, inDataFileName, isPathFormOk);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), b, inPubFileName, isPathFormOk);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), i, inSigFileName, isPathFormOk);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), o, outPubFileName, isPathFormOk);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), o, outSigFileName, isPathFormOk);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), W, openSSLTrustStoreDirName, isPathFormOk);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), V, openSSLTruststoreFileName, isPathFormOk);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), P, publicationsFile_url, isURLFormatOK);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), S, signingService_url, isURLFormatOK);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), X, verificationService_url, isURLFormatOK);
+    SET_INT_PARAM(cmdParameters, (*rawParam), C, networkConnectionTimeout, isIntegerFormatOK);
+    SET_INT_PARAM(cmdParameters, (*rawParam), c, networkTransferTimeout, isIntegerFormatOK);
+    SET_STRN_PARAM(cmdParameters, (*rawParam), H,hashAlgName_H, isHashAlgFormatOK);
 
     if (rawParam->F.flag) {
         char *hashAlg;
@@ -308,9 +324,8 @@ static bool readCmdParam(int argc, char **argv)
 }
 
 /**
- * Extracts the task, see GT_CmdParameters field task. It checks the combinations 
- * of command line parameters.
- * The task can be valid, invalid or undefined.
+ * Extracts the task by checking the combinations of command line parameters.
+ * The task is inserted into cmdParameters.task and it can be valid, invalid or undefined.
  */
 static void extractTask(void)
 {
@@ -357,7 +372,7 @@ static void extractTask(void)
 /**
  * Controls the content of the parameters. 
  * Currently only input and output files are under the test.
- * @return 
+ * @return True if successful, false otherwise.
  */
 static bool controlParameters(void)
 {
