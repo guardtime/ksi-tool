@@ -104,9 +104,23 @@ unsigned int measureLastCall(void);
  */
 unsigned int measuredTime(void);
 
+/**
+ * Gives a string representing string value of measured time by measureLastCall.
+ * String format is (%i ms).
+ * @return The pointer to the string
+ * 
+ * @note Pointer is always pointing to the same memory fiels. 
+ */
 char* str_measuredTime(void);
 
 #define ERROR_HANDLING(...) \
+    if (res != KSI_OK){  \
+	fprintf(stderr, __VA_ARGS__); \
+	goto cleanup; \
+	}
+
+
+#define ERROR_HANDLING_SILENT(...) \
     if (res != KSI_OK){  \
 	fprintf(stderr, __VA_ARGS__); \
 	goto cleanup; \

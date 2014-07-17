@@ -100,7 +100,6 @@ PARAM_RES analyseInputFile(const char* path)
 }
 
 //TODO add some functionality
-
 PARAM_RES analyseOutputFile(const char* path)
 {
     CheckNullPtr(path);
@@ -124,8 +123,7 @@ const char * getFormatErrorString(PARAM_RES res)
         break;
     case FILE_INVALID_PATH: return "(Invalid path)";
         break;
-    case PARAM_UNKNOWN_ERROR: return "(Unknown error)";
-        break;
     }
 
+    return "(Unknown error)";
 }

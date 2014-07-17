@@ -3,7 +3,7 @@
 #ifndef GT_CMDPARAMETERS_H
 #define	GT_CMDPARAMETERS_H
 
-#include "gt_cmdcommon.h"
+#include "gt_cmd_common.h"
 
 #ifdef	__cplusplus
 extern "C" {
