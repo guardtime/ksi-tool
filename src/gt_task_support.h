@@ -14,6 +14,8 @@ extern "C" {
 #endif
 
     
+const char *getLastSupportFunctionErrorMessage(void);
+    
 /**
  * Configures NetworkProvider using info from commandline.
  * Sets urls and timeouts.
@@ -21,7 +23,7 @@ extern "C" {
  * @param[in] ksi pointer to KSI context.
  * @return Status code (KSI_OK, when operation succeeded, otherwise an error code). 
  */
-int configureNetworkProvider(GT_CmdParameters *cmdparam, KSI_CTX *ksi);
+int configureNetworkProvider(KSI_CTX *ksi, GT_CmdParameters *cmdparam);
 
 /**
  * Calculates the hash of an input file.
@@ -30,7 +32,7 @@ int configureNetworkProvider(GT_CmdParameters *cmdparam, KSI_CTX *ksi);
  * @param[out] hash Pointer to the receiving pointer to the KSI hash object.
  * @return Status code (KSI_OK, when operation succeeded, otherwise an error code).
  */
-int calculateHashOfAFile(KSI_DataHasher *hsr, KSI_DataHash **hash ,const char *fname); 
+int calculateHashOfAFile(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash ); 
 
 /**
  * Saves signature object to file.
@@ -120,11 +122,7 @@ char* str_measuredTime(void);
 	}
 
 
-#define ERROR_HANDLING_SILENT(...) \
-    if (res != KSI_OK){  \
-	fprintf(stderr, __VA_ARGS__); \
-	goto cleanup; \
-	}
+
 
 #define ERROR_HANDLING_STATUS_DUMP(...) \
     if (res != KSI_OK){  \

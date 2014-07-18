@@ -14,7 +14,7 @@ bool GT_getPublicationsFileTask(GT_CmdParameters *cmdparam)
     ERROR_HANDLING("Unable to init KSI global resources.\n");
     res = KSI_CTX_new(&ksi);
     ERROR_HANDLING("Unable to init KSI context.\n");
-    res = configureNetworkProvider(cmdparam, ksi);
+    res = configureNetworkProvider(ksi, cmdparam);
     ERROR_HANDLING("Unable to configure network provider.\n");
 
     printf("Downloading publications file...");

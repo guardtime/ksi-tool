@@ -14,7 +14,7 @@ bool GT_verifyTask(GT_CmdParameters *cmdparam)
     ERROR_HANDLING("Unable to init KSI global resources.\n");
     res = KSI_CTX_new(&ksi);
     ERROR_HANDLING("Unable to init KSI context.\n");
-    res = configureNetworkProvider(cmdparam, ksi);
+    res = configureNetworkProvider(ksi, cmdparam);
     ERROR_HANDLING("Unable to configure network provider.\n");
 
     //if(task == verifyTimestamp_online)
@@ -66,7 +66,7 @@ bool GT_verifyTask(GT_CmdParameters *cmdparam)
             printf("Verifying file's %s hash...", cmdparam->inDataFileName);
             res = KSI_Signature_createDataHasher(sig, &hsr);
             ERROR_HANDLING(" failed!\nUnable to create data hasher.\n");
-            res = calculateHashOfAFile(hsr, &hsh, cmdparam->inDataFileName);
+            res = calculateHashOfAFile(hsr, cmdparam->inDataFileName, &hsh);
             ERROR_HANDLING(" failed!\nUnable to hash data.\n");
             printf("ok.\n");
             printf("Verifying document hash... ");

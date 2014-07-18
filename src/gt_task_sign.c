@@ -17,7 +17,7 @@ bool GT_signTask(GT_CmdParameters *cmdparam) {
     ERROR_HANDLING("Unable to init KSI global resources.\n");
     res = KSI_CTX_new(&ksi);
     ERROR_HANDLING("Unable to init KSI context. %s\n", KSI_getErrorString(res));
-    res = configureNetworkProvider(cmdparam, ksi);
+    res = configureNetworkProvider(ksi, cmdparam);
     ERROR_HANDLING("Unable to configure network provider.\n");
 
         
@@ -36,7 +36,7 @@ bool GT_signTask(GT_CmdParameters *cmdparam) {
         }
         res = KSI_DataHasher_open(ksi,hasAlgID , &hsr);
         ERROR_HANDLING("\nUnable to create hasher.\n");
-        res = calculateHashOfAFile(hsr, &hash ,cmdparam->inDataFileName);
+        res = calculateHashOfAFile(hsr, cmdparam->inDataFileName, &hash );
         ERROR_HANDLING("\nUnable to hash data.\n");
         printf("ok.\n");
         }

@@ -8,9 +8,20 @@
 #   define snprintf _snprintf
 #endif
 
-static unsigned int elapsed_time_ms;
+#define ERROR_MESSAGE_SIZE 256
+static char errorMessage[ERROR_MESSAGE_SIZE];
 
-int configureNetworkProvider(GT_CmdParameters *cmdparam, KSI_CTX *ksi)
+#define ERROR_HANDLING_SILENT(...) \
+    if (res != KSI_OK){  \
+        snprintf(errorMessage,ERROR_MESSAGE_SIZE,__VA_ARGS__);\
+	goto cleanup; \
+	}
+
+const char *getLastSupportFunctionErrorMessage(void){
+    return errorMessage;
+    }
+
+int configureNetworkProvider(KSI_CTX *ksi, GT_CmdParameters *cmdparam)
 {
     int res = KSI_OK;
     KSI_NetworkClient *net = NULL;
@@ -61,7 +72,7 @@ cleanup:
 
 }
 
-int calculateHashOfAFile(KSI_DataHasher *hsr, KSI_DataHash **hash, const char *fname)
+int calculateHashOfAFile(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash)
 {
     FILE *in = NULL;
     int res = KSI_UNKNOWN_ERROR;
@@ -71,7 +82,7 @@ int calculateHashOfAFile(KSI_DataHasher *hsr, KSI_DataHash **hash, const char *f
     /* Open Input file */
     in = fopen(fname, "rb");
     if (in == NULL) {
-        fprintf(stderr, "Unable to open input file '%s'\n", fname);
+        snprintf(errorMessage,ERROR_MESSAGE_SIZE,"Unable to open input file '%s'\n", fname);
         res = KSI_IO_ERROR;
         goto cleanup;
     }
@@ -109,14 +120,14 @@ int saveSignatureFile(KSI_Signature *sign, const char *fname)
     /* Open output file. */
     out = fopen(fname, "wb");
     if (out == NULL) {
-        fprintf(stderr, "Unable to open output file '%s'\n", fname);
+        snprintf(errorMessage,ERROR_MESSAGE_SIZE,"Unable to open output file '%s'\n", fname);
         res = KSI_IO_ERROR;
         goto cleanup;
     }
 
     count = fwrite(raw, 1, raw_len, out);
     if (count != raw_len) {
-        fprintf(stderr, "Failed to write output file.\n");
+        snprintf(errorMessage,ERROR_MESSAGE_SIZE,"Failed to write output file.\n");
         res = KSI_IO_ERROR;
         goto cleanup;
     }
@@ -162,7 +173,7 @@ static void printfPublicationRecordTime(KSI_PublicationRecord *publicationRecord
     ERROR_HANDLING_SILENT("Unable to get pulication data\n");
     res = KSI_PublicationData_getTime(publicationData, &rawTime);
     if (res != KSI_OK || rawTime == NULL) {
-        fprintf(stderr, "Failed to get publication time\n");
+        snprintf(errorMessage,ERROR_MESSAGE_SIZE,"Failed to get publication time\n");
         goto cleanup;
     }
     pubTime = (time_t) KSI_Integer_getUInt64(rawTime);
@@ -214,7 +225,7 @@ int printSignaturePublicationReference(const KSI_Signature *sig)
     ERROR_HANDLING_SILENT("Failed to get publications reference list from publication record object.\n");
 
     if (publicationRecord == NULL) {
-        fprintf(stderr, "No publication Record avilable.\n");
+        snprintf(errorMessage,ERROR_MESSAGE_SIZE,"No publication Record avilable.\n");
         res = KSI_UNKNOWN_ERROR;
         goto cleanup;
     }
@@ -243,6 +254,7 @@ cleanup:
 }
 
 
+static unsigned int elapsed_time_ms;
 
 unsigned int measureLastCall(void){
     static clock_t thisCall = 0;
@@ -257,6 +269,7 @@ unsigned int measureLastCall(void){
 unsigned int measuredTime(void){
     return elapsed_time_ms;
     }
+
 char* str_measuredTime(void){
     static char buf[32];
     snprintf(buf,32,"(%i ms)", elapsed_time_ms);
