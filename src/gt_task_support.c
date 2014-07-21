@@ -4,9 +4,7 @@
 #include <stdio.h>
 #include "gt_task_support.h"
 
-#ifdef _WIN32 
-#   define snprintf _snprintf
-#endif
+
 
 #define ERROR_MESSAGE_SIZE 256
 static char errorMessage[ERROR_MESSAGE_SIZE];

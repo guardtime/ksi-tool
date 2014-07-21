@@ -71,7 +71,7 @@ gtime.exe -v %SERVICES% -x -i %TEST_EXTENDED_SIG%
 echo %errorlevel%
 
 echo ****************** signing with SH1 ****************** 
-gtime.exe -s %SERVICES% -o %SH1_file% -S %SIG_SERV_IP% -F SHA-1:%SH1_HASH%
+gtime.exe -s %SERVICES% -o %SH1_file%  -F SHA-1:%SH1_HASH%
 echo %errorlevel%
 sleep %WAIT%
 gtime.exe -v %SERVICES% -x -i %SH1_file%
@@ -91,6 +91,23 @@ sleep %WAIT%
 gtime.exe -v %SERVICES% -x -i %RIPMED160_file%
 echo %errorlevel%
 
+echo ****************** error extend no suitable publication ****************** 
+gtime.exe -x -t %SERVICES% -i %TEST_FILE_OUT%.ksig -o %TEST_EXTENDED_SIG%
+echo %errorlevel%
 
+echo ****************** error not suitable format ****************** 
+gtime.exe -x -t %SERVICES% -i %TEST_FILE% -o %TEST_EXTENDED_SIG%
+echo %errorlevel%
 
+echo ****************** error not suitable format ****************** 
+gtime.exe -v -x -t %SERVICES% -i %TEST_FILE% 
+echo %errorlevel%
+
+echo ****************** error verifying signature and wrong file ****************** 
+gtime.exe -v -t %SERVICES% -x -i %TEST_FILE_OUT%.ksig -f %TEST_FILE_OUT%.ksig
+echo %errorlevel%
+
+echo ****************** signing with SH1 and wrong hash ****************** 
+gtime.exe -s %SERVICES% -o %SH1_file%  -F SHA-1:%SH1_HASH%ff
+echo %errorlevel%
 pause
