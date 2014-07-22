@@ -1,3 +1,19 @@
 bin_PROGRAMS = gtime
-gtime_SOURCES = getopt.c gtime.c gt_task_getpubfile.c gt_cmd_control.c gt_task_support.c gt_task_sign.c gt_cmd_parameters.c gt_task_extend.c gt_task_verify.c
-
+gtime_SOURCES = \
+	gtime.c	\
+	gt_cmd_common.h \
+	gt_task.h \
+	gt_task_support.c \
+	gt_task_support.h \
+	gt_task_sign.c \
+	gt_task_extend.c \
+	gt_task_verify.c \
+	gt_task_getpubfile.c \
+	getopt.h \
+	getopt.c\
+	gt_cmd_parameters.c \
+	gt_cmd_parameters.h \
+	gt_cmd_control.c \
+	gt_cmd_control.h \
+	try-catch.c \
+	try-catch.h

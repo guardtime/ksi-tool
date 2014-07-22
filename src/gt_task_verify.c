@@ -1,5 +1,3 @@
-#include <io.h>
-
 #include "gt_task_support.h"
 #include "try-catch.h"
 bool GT_verifyTask(GT_CmdParameters *cmdparam)

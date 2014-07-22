@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.69])
 AC_INIT([gtime], [000], [taavi.valjaots@guardtime.com])
-AC_CONFIG_AUX_DIR([build-aux])
+#AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_CONFIG_HEADERS([config.h])
 
