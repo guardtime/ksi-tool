@@ -23,31 +23,3 @@ typedef enum { false=0, true=1 } bool;
 #endif
 
 #endif	/* GTCMDCOMMON_H */
-
-
-
-#define _TRY { \
-    int _res = KSI_UNKNOWN_ERROR; \
-    char __msg[256]; \
-    do \
-
-
-#define _CATCH while(0); if(_res != KSI_OK)
-
-#define _TEST(test) if(test) break;
-
-#define _TEST_COMPLAIN(test, ...) \
-    if(test) {\
-    snprintf(__msg, 256, __VA_ARGS__);\
-        break; \
-    }
-
-#define _DO_TEST(_do) _res = _do; \
-    if(_res != KSI_OK) break;
-
-#define _DO_TEST_COMPLAIN(_do, ...) _res = _do; \
-    if(_res != KSI_OK) {\
-    snprintf(__msg, 256, __VA_ARGS__);\
-        break; \
-    }
-

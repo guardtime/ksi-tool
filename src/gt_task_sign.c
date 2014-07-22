@@ -1,30 +1,23 @@
 #include <ctype.h>
 #include "gt_task_support.h"
+#include "try-catch.h"
 
-static int getHashFromCommandLine(GT_CmdParameters *cmdparam,KSI_CTX *ksi, KSI_DataHash **hash);
-static int getHashAlgorithm(const char *hashAlg, int *id);
+static int getHashFromCommandLine_throws(GT_CmdParameters *cmdparam,KSI_CTX *ksi, KSI_DataHash **hash);
+static int getHashAlgorithm_throws(const char *hashAlg);
 
 bool GT_signTask(GT_CmdParameters *cmdparam) {
     KSI_CTX *ksi = NULL;
-    int res = KSI_UNKNOWN_ERROR;
     KSI_DataHasher *hsr = NULL;
     KSI_DataHash *hash = NULL;
     KSI_Signature *sign = NULL;
+    bool state = true;
     
-    
-    /*Initalization of KSI */
-    _TRY{
-        _DO_TEST_COMPLAIN(KSI_global_init(), "Error: Unable to init KSI global resources.\n");
-        _DO_TEST_COMPLAIN(KSI_CTX_new(&ksi), "Error: Unable to init KSI context.\n");
-        _DO_TEST_COMPLAIN(configureNetworkProvider(ksi, cmdparam), "Error: Unable to configure network provider.\n")
-    }_CATCH{
-        fprintf(stderr , __msg );
-        res = _res;
-        goto cleanup;
-        }};
-
-
-    _TRY{  
+    ResetExeptionHandler();
+    try
+        CODE{
+        /*Initalization of KSI */
+        InitTask_throws(cmdparam, &ksi);
+        
         /*Getting the hash for signing process*/
         if(cmdparam->task == signDataFile){
             char *hashAlg;
@@ -32,14 +25,14 @@ bool GT_signTask(GT_CmdParameters *cmdparam) {
             /*Choosing of hash algorithm and creation of data hasher*/
             printf("Getting hash from file for signing process...");
             hashAlg = cmdparam->H ? (cmdparam->hashAlgName_H) : ("default");
-            _DO_TEST_COMPLAIN(getHashAlgorithm(hashAlg, &hasAlgID), "Error: The hash algorithm \"%s\"is unknown\n", hashAlg);
-            _DO_TEST_COMPLAIN(KSI_DataHasher_open(ksi,hasAlgID , &hsr),"Error: Unable to create hasher.\n");
-            _DO_TEST_COMPLAIN(calculateHashOfAFile(hsr, cmdparam->inDataFileName, &hash ), "Error: Unable to hash data.\n");
+            hasAlgID = getHashAlgorithm_throws(hashAlg);
+            KSI_DataHasher_open_throws(ksi,hasAlgID , &hsr);
+            getFilesHash_throws(hsr, cmdparam->inDataFileName, &hash );
             printf("ok.\n");
             }
         else if(cmdparam->task == signHash){
             printf("Getting hash from input string for signing process...");
-            _DO_TEST_COMPLAIN(getHashFromCommandLine(cmdparam,ksi, &hash), "Error: Unable to create hash from digest.\n");
+            getHashFromCommandLine_throws(cmdparam,ksi, &hash);
             printf("ok.\n");
             }
         else{
@@ -47,40 +40,37 @@ bool GT_signTask(GT_CmdParameters *cmdparam) {
             }
 
         /* Sign the data hash. */
-            printf("Creating signature from hash...");
-            MEASURE_TIME(_res = KSI_createSignature(ksi, hash, &sign);)
-            _DO_TEST_COMPLAIN(_res, "Error: Unable to sign.\n");
-            printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
-
-            /* Save signature file */
-            _DO_TEST_COMPLAIN(saveSignatureFile(sign, cmdparam->outSigFileName),"Error: Unable to save signature file %s.\n", cmdparam->outSigFileName);
-            printf("Signature saved.\n");
-    }_CATCH{
+        printf("Creating signature from hash...");
+        MEASURE_TIME(KSI_createSignature_throws(ksi, hash, &sign);)
+        printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
+        
+        if(cmdparam->n) printSignerIdentity_throws(sign);
+        
+        /* Save signature file */
+        saveSignatureFile_throws(sign, cmdparam->outSigFileName);
+        printf("Signature saved.\n");
+        }
+    CATCH_ALL{
         printf("failed.\n");
-        fprintf(stderr , __msg );
-        res = _res;
+        fprintf(stderr , _EXP.expMsg);
+        state = false;
         goto cleanup;
-        }};
-    
+        }
+    end_try
+
     /*
     printf("Verifying freshly created signature...");
     res = KSI_Signature_verify(sign, ksi);
     ERROR_HANDLING_STATUS_DUMP("\nVerifying failed (%s)\n", KSI_getErrorString(res));
     printf("ok.\n");
     */
-    
-    if(cmdparam->n)
-        printSignerIdentity(sign);
-    
-    res = KSI_OK;
-
 cleanup:
     KSI_Signature_free(sign);
     KSI_DataHash_free(hash);
     KSI_DataHasher_free(hsr);
     KSI_CTX_free(ksi);
     KSI_global_cleanup();
-    return (res==KSI_OK) ? true : false;
+    return state;
 }
 
 
@@ -111,23 +101,20 @@ static int getBinaryFromHexString(KSI_CTX *ksi, const char *hexin, unsigned char
     int i,j;
     
     if(len%2 != 0){
-        KSI_LOG_debug(ksi, "The hash lenght is not even number!\n");
-        return KSI_INVALID_FORMAT ;
+        THROW_MSG(A_EXEPTION, "The hash lenght is not even number!\n");
         }
     
     tempBin = KSI_calloc(arraySize, sizeof(unsigned char));
     if(tempBin == NULL){
-        KSI_LOG_debug(ksi, "Unable to get memory for parsing hex to binary.\n");
-        return KSI_OUT_OF_MEMORY ;
+        THROW_MSG(A_EXEPTION, "Unable to get memory for parsing hex to binary.\n");
         }
     
     for(i=0,j=0; i<arraySize; i++, j+=2){
         int res = xx(hexin[j], hexin[j+1]);
         if(res == -1){
-            KSI_LOG_debug(ksi, "The hex number is invalid: %c%c!\n", hexin[j], hexin[j+1]);
             KSI_free(tempBin);
             tempBin = NULL;
-            return KSI_INVALID_FORMAT ;
+            THROW_MSG(A_EXEPTION, "The hex number is invalid: %c%c!\n", hexin[j], hexin[j+1]);
             }
         tempBin[i] = res;
         //printf("%c%c -> %i\n", hexin[j], hexin[j+1], tempBin[i]);
@@ -140,32 +127,37 @@ static int getBinaryFromHexString(KSI_CTX *ksi, const char *hexin, unsigned char
 }
 
 
-static int getHashFromCommandLine(GT_CmdParameters *cmdparam,KSI_CTX *ksi, KSI_DataHash **hash){
+static int getHashFromCommandLine_throws(GT_CmdParameters *cmdparam,KSI_CTX *ksi, KSI_DataHash **hash){
     unsigned char *data;
     size_t len;
     int res = KSI_UNKNOWN_ERROR;
     int hasAlg = -1;
-   // KSI_DataHash *temp_hash;
-    
-    res = getBinaryFromHexString(ksi, cmdparam->inputHashStrn, &data, &len);
-    ERROR_HANDLING("Unable to extract Hash value from command line input.\n");
-    
-    hasAlg = KSI_getHashAlgorithmByName (cmdparam->hashAlgName_F);
-    if(hasAlg == -1){
-      //  fprintf(stderr, "\nThe hash algorithm \"%s\"is unknown\n", cmdparam->hashAlgName_F);
-        res = KSI_INVALID_ARGUMENT;
-        goto cleanup;
-        }
-    
-    res = KSI_DataHash_fromDigest(ksi, hasAlg, data, len, hash);
-    ERROR_HANDLING("\nUnable to create hash from digest.\n");
-    cleanup:
+
+    try
+        CODE{
+            getBinaryFromHexString(ksi, cmdparam->inputHashStrn, &data, &len);
+            hasAlg = getHashAlgorithm_throws(cmdparam->hashAlgName_F);
+            KSI_DataHash_fromDigest_throws(ksi, hasAlg, data, len, hash);
+            }
+        CATCH_ALL{
+            THROW_FORWARD();
+            }
+    end_try
     
     return res;
     }
 
-static int getHashAlgorithm(const char *hashAlg, int *id){
+/**
+ * Gives hash algorithm identifier by name.
+ * 
+ * @param[in] hashAlg Hash algorithm name.
+ * 
+ * @return Hash algorithm identifier.
+ * 
+ * @throws KSI_EXEPTION.
+ */
+static int getHashAlgorithm_throws(const char *hashAlg){
     int hasAlgID = KSI_getHashAlgorithmByName(hashAlg);
-    *id = hasAlgID;
-    return (hasAlgID == -1) ? KSI_INVALID_ARGUMENT : KSI_OK;
+    if(hasAlgID == -1) THROW_MSG(KSI_EXEPTION, "Error: The hash algorithm \"%s\" is unknown\n", hashAlg);
+    return hasAlgID;
     }

@@ -22,7 +22,8 @@ CMDTOOL_OBJ = \
 	$(OBJ_DIR)\gt_task_sign.obj \
 	$(OBJ_DIR)\gt_task_verify.obj \
 	$(OBJ_DIR)\gtime.obj \
-	$(OBJ_DIR)\gt_cmd_control.obj
+	$(OBJ_DIR)\gt_cmd_control.obj \
+	$(OBJ_DIR)\try-catch.obj
 
 
 	

@@ -95,11 +95,11 @@ echo ****************** error extend no suitable publication ******************
 gtime.exe -x -t %SERVICES% -i %TEST_FILE_OUT%.ksig -o %TEST_EXTENDED_SIG%
 echo %errorlevel%
 
-echo ****************** error not suitable format ****************** 
+echo ****************** error extend not suitable format ****************** 
 gtime.exe -x -t %SERVICES% -i %TEST_FILE% -o %TEST_EXTENDED_SIG%
 echo %errorlevel%
 
-echo ****************** error not suitable format ****************** 
+echo ****************** error extend not suitable format ****************** 
 gtime.exe -v -x -t %SERVICES% -i %TEST_FILE% 
 echo %errorlevel%
 
@@ -107,7 +107,20 @@ echo ****************** error verifying signature and wrong file ***************
 gtime.exe -v -t %SERVICES% -x -i %TEST_FILE_OUT%.ksig -f %TEST_FILE_OUT%.ksig
 echo %errorlevel%
 
-echo ****************** signing with SH1 and wrong hash ****************** 
+echo ****************** error signing with SH1 and wrong hash ****************** 
 gtime.exe -s %SERVICES% -o %SH1_file%  -F SHA-1:%SH1_HASH%ff
 echo %errorlevel%
+
+echo ****************** error signing with unknown algorithm and wrong hash ****************** 
+gtime.exe -s %SERVICES% -o %TEST_FILE%  -F _UNKNOWN:%SH1_HASH%
+echo %errorlevel%
+
+echo ****************** error bad network provider****************** 
+gtime.exe -s -o %SH1_file%  -F SHA-1:%SH1_HASH% -S plaplaplaplpalpalap
+echo %errorlevel%
+
+
+
+
+
 pause

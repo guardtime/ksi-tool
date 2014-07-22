@@ -14,68 +14,43 @@ extern "C" {
 #endif
 
     
-const char *getLastSupportFunctionErrorMessage(void);
-    
 /**
- * Configures NetworkProvider using info from commandline.
- * Sets urls and timeouts.
- * @param[in] cmdparam pointer to command-line parameters.
- * @param[in] ksi pointer to KSI context.
- * @return Status code (KSI_OK, when operation succeeded, otherwise an error code). 
+ * Configures KSI using parameters extracted from command line. 
+ * 
+ * @param[in] cmdparam Pointer to command line parameter object.
+ * @param[out] ksi Pointer to receiving pointer to KSI context object.
+ * 
+ * @throws KSI_EXEPTION.
  */
-int configureNetworkProvider(KSI_CTX *ksi, GT_CmdParameters *cmdparam);
+void InitTask_throws(GT_CmdParameters *cmdparam ,KSI_CTX **ksi);
 
 /**
  * Calculates the hash of an input file.
  * @param[in] hsr Pointer to hasher object. 
  * @param[in] fname Pointer to file path.
  * @param[out] hash Pointer to the receiving pointer to the KSI hash object.
- * @return Status code (KSI_OK, when operation succeeded, otherwise an error code).
+ * 
+ * @throws KSI_EXEPTION, IO_EXEPTION.
  */
-int calculateHashOfAFile(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash ); 
+void getFilesHash_throws(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash ); 
 
 /**
  * Saves signature object to file.
  * @param [in] sign Pointer to signature object for saving.
  * @param [in] fname Pointer to file path.
- * @return Status code (KSI_OK, when operation succeeded, otherwise an error code).
+ * 
+ * @throws KSI_EXEPTION, IO_EXEPTION.
  */
-int saveSignatureFile(KSI_Signature *sign, const char *fname);
+void saveSignatureFile_throws(KSI_Signature *sign, const char *fname);
 
-/**
- * Task that deals with signing operations.
- * @param [in] cmdparam Pointer to command-line parameters.
- * @return True if successful, false otherwise.
- */
-bool GT_signTask(GT_CmdParameters *cmdparam);
-
-/**
- * Task that deals with verifying operations.
- * @param [in] cmdparam Pointer to command-line parameters.
- * @return True if successful, false otherwise.
- */
-bool GT_verifyTask(GT_CmdParameters *cmdparam);
-
-/**
- * Task that deals with extending operations.
- * @param [in] cmdparam Pointer to command-line parameters
- * @return True if successful, false otherwise.
- */
-bool GT_extendTask(GT_CmdParameters *cmdparam);
-
-/**
- * Task that deals with extending operations.
- * @param [in] cmdparam Pointer to command-line parameters.
- * @return True if successful, false otherwise.
- */
-bool GT_getPublicationsFileTask(GT_CmdParameters *cmdparam);
 
 /**
  * Prints the signer identity.
  * @param[in] sign Pointer to KSI signture object.
- * @return Status code (KSI_OK, when operation succeeded, otherwise an error code).
+ * 
+ * @throws KSI_EXEPTION.
  */
-int printSignerIdentity(KSI_Signature *sign);
+void printSignerIdentity_throws(KSI_Signature *sign);
 
 /**
  * Prints publications file publications references.
@@ -83,16 +58,18 @@ int printSignerIdentity(KSI_Signature *sign);
  *   list of references
  * 
  * @param[in] pubFile Pointer to KSI publications file object.
- * @return Status code (KSI_OK, when operation succeeded, otherwise an error code).
+ * 
+ * @throws KSI_EXEPTIO.
  */
-int printPublicationReferences(const KSI_PublicationsFile *pubFile);
+void printPublicationReferences_throws(const KSI_PublicationsFile *pubFile);
 
 /**
  * Prints signatures publication references.
  * @param[in] sig Pointer to KSI signture object.
- * @return Status code (KSI_OK, when operation succeeded, otherwise an error code).
+ * 
+ * @throws KSI_EXEPTIO
  */
-int printSignaturePublicationReference(const KSI_Signature *sig);
+void printSignaturePublicationReference_throws(const KSI_Signature *sig);
 
 /**
  * Gives time difference between the current and last call in ms.
@@ -111,25 +88,25 @@ unsigned int measuredTime(void);
  * String format is (%i ms).
  * @return The pointer to the string
  * 
- * @note Pointer is always pointing to the same memory fiels. 
+ * @note Pointer is always pointing to the same memory fields. 
  */
 char* str_measuredTime(void);
 
-#define ERROR_HANDLING(...) \
-    if (res != KSI_OK){  \
-	fprintf(stderr, __VA_ARGS__); \
-	goto cleanup; \
-	}
 
 
+int KSI_receivePublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile **publicationsFile);
+int KSI_verifyPublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *publicationsFile);
+int KSI_PublicationsFile_serialize_throws(KSI_CTX *ksi, KSI_PublicationsFile *publicationsFile, char **raw, int *raw_len);
+int KSI_DataHasher_open_throws(KSI_CTX *ksi,int hasAlgID ,KSI_DataHasher **hsr);
+int KSI_createSignature_throws(KSI_CTX *ksi, const KSI_DataHash *hash, KSI_Signature **sign);
+int KSI_DataHash_fromDigest_throws(KSI_CTX *ksi, int hasAlg, char *data, unsigned int len, KSI_DataHash **hash);
+int KSI_PublicationsFile_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_PublicationsFile **pubFile);
+int KSI_Signature_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_Signature **sig);
+int KSI_Signature_verify_throws(KSI_Signature *sig, KSI_CTX *ksi);
+int KSI_Signature_createDataHasher_throws(KSI_Signature *sig, KSI_DataHasher **hsr);
+int KSI_Signature_verifyDataHash_throws(KSI_Signature *sig, KSI_DataHash *hash);
+int KSI_extendSignature_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext);
 
-
-#define ERROR_HANDLING_STATUS_DUMP(...) \
-    if (res != KSI_OK){  \
-	fprintf(stderr, __VA_ARGS__); \
-        KSI_ERR_statusDump(ksi, stderr); \
-	goto cleanup; \
-	}
 
 #define MEASURE_TIME(code_here) \
     {   \
@@ -137,7 +114,6 @@ char* str_measuredTime(void);
     code_here; \
     measureLastCall(); \
     }
-
 
 
 #ifdef	__cplusplus
