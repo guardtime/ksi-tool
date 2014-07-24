@@ -6,10 +6,10 @@ SET WAIT=5
 
 REM 
 SET SIG_SERV_IP=192.168.1.36:3333/
-SET VER_SERV_IP=192.168.1.29:1111/gt-extendingservice
+REM SET VER_SERV_IP=192.168.1.29:1111/gt-extendingservice
 SET PUB_SERV_IP=172.20.20.7/publications.tlv
 REM SET SIG_SERV_IP=172.20.20.4:3333/
-REM SET VER_SERV_IP=192.168.1.36:8081/gt-extendingservice
+SET VER_SERV_IP=192.168.1.36:8081/gt-extendingservice
 SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -P %PUB_SERV_IP%
 
 REM input files
@@ -39,6 +39,7 @@ echo ****************** download publications file ******************
 gtime.exe -p -t -o %PUBFILE%
 echo %errorlevel%
 gtime.exe -v -t -b %PUBFILE%
+echo %errorlevel%
 
 
 echo ****************** signing data -n ******************
@@ -53,10 +54,6 @@ gtime.exe -s %SERVICES% -f %TEST_FILE% -o %TEST_FILE_OUT%SH-1.ksig  -H SHA-1
 echo %errorlevel%
 sleep %WAIT%
 gtime.exe -v %SERVICES% -x -i %TEST_FILE_OUT%SH-1.ksig
-echo %errorlevel%
-
-echo ****************** verifying signature and file ****************** 
-gtime.exe -v -t %SERVICES% -x -i %TEST_FILE_OUT%.ksig -f %TEST_FILE%
 echo %errorlevel%
 
 echo ****************** verifying signature and missing file ****************** 
@@ -78,14 +75,14 @@ gtime.exe -v %SERVICES% -x -i %SH1_file%
 echo %errorlevel%
 
 echo ****************** signing with SH256 ****************** 
-gtime.exe -s %SERVICES% -o %SH256_file% -S %SIG_SERV_IP% -F SHA-256:%SH256_HASH%
+gtime.exe -s %SERVICES% -o %SH256_file% -F SHA-256:%SH256_HASH%
 echo %errorlevel%
 sleep %WAIT%
 gtime.exe -v %SERVICES% -x -i %SH256_file% -f %SH256_DATA_FILE%
 echo %errorlevel%
 
 echo ****************** signing with RIPMED160 ****************** 
-gtime.exe -s %SERVICES% -o %RIPMED160_file% -S %SIG_SERV_IP% -F RIPEMD-160:%RIPMED160_HASH%
+gtime.exe -s %SERVICES% -o %RIPMED160_file% -F RIPEMD-160:%RIPMED160_HASH%
 echo %errorlevel%
 sleep %WAIT%
 gtime.exe -v %SERVICES% -x -i %RIPMED160_file%
@@ -111,6 +108,10 @@ echo ****************** error signing with SH1 and wrong hash ******************
 gtime.exe -s %SERVICES% -o %SH1_file%  -F SHA-1:%SH1_HASH%ff
 echo %errorlevel%
 
+echo ****************** error signing with SH1 and wrong invalid hash ****************** 
+gtime.exe -s %SERVICES% -o %SH1_file%  -F SHA-1:%SH1_HASH%f
+echo %errorlevel%
+
 echo ****************** error signing with unknown algorithm and wrong hash ****************** 
 gtime.exe -s %SERVICES% -o %TEST_FILE%  -F _UNKNOWN:%SH1_HASH%
 echo %errorlevel%
@@ -119,7 +120,9 @@ echo ****************** error bad network provider******************
 gtime.exe -s -o %SH1_file%  -F SHA-1:%SH1_HASH% -S plaplaplaplpalpalap
 echo %errorlevel%
 
-
+echo ****************** error no references -r ****************** 
+gtime.exe -v -t %SERVICES% -x -i %TEST_FILE_OUT%.ksig -f %TEST_FILE% -r
+echo %errorlevel%
 
 
 

@@ -2,7 +2,7 @@
 #include "gt_task_support.h"
 #include "try-catch.h"
 
-static int getHashFromCommandLine_throws(GT_CmdParameters *cmdparam,KSI_CTX *ksi, KSI_DataHash **hash);
+static void getHashFromCommandLine_throws(GT_CmdParameters *cmdparam,KSI_CTX *ksi, KSI_DataHash **hash);
 static int getHashAlgorithm_throws(const char *hashAlg);
 
 bool GT_signTask(GT_CmdParameters *cmdparam) {
@@ -11,7 +11,6 @@ bool GT_signTask(GT_CmdParameters *cmdparam) {
     KSI_DataHash *hash = NULL;
     KSI_Signature *sign = NULL;
     bool state = true;
-    
     ResetExeptionHandler();
     try
         CODE{
@@ -41,7 +40,7 @@ bool GT_signTask(GT_CmdParameters *cmdparam) {
 
         /* Sign the data hash. */
         printf("Creating signature from hash...");
-        MEASURE_TIME(KSI_createSignature_throws(ksi, hash, &sign);)
+        MEASURE_TIME(KSI_createSignature_throws(ksi, hash, &sign));
         printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
         
         if(cmdparam->n) printSignerIdentity_throws(sign);
@@ -52,7 +51,8 @@ bool GT_signTask(GT_CmdParameters *cmdparam) {
         }
     CATCH_ALL{
         printf("failed.\n");
-        fprintf(stderr , _EXP.expMsg);
+        printErrorLocations();
+        exeptionSolved();
         state = false;
         goto cleanup;
         }
@@ -94,19 +94,29 @@ static int xx(char c1, char c2)
 	return x(c1) * 16 + x(c2);
 }
 
-static int getBinaryFromHexString(KSI_CTX *ksi, const char *hexin, unsigned char **binout, size_t *lenout){
+/**
+ * Converts a string into binary array.
+ * 
+ * @param[in] ksi Pointer to KSI KSI_CTX object.
+ * @param[in] hexin Pointer to string for conversion.
+ * @param[out] binout Pointer to receiving pointer to binary array.  
+ * @param[out] lenout Pointer to binary array length.
+ * 
+ * @throws INVALID_ARGUMENT_EXEPTION.
+ */
+static void getBinaryFromHexString(KSI_CTX *ksi, const char *hexin, unsigned char **binout, size_t *lenout){
     size_t len = strlen(hexin);
     unsigned char *tempBin=NULL;
     size_t arraySize = len/2;
     int i,j;
     
     if(len%2 != 0){
-        THROW_MSG(A_EXEPTION, "The hash lenght is not even number!\n");
+        THROW_MSG(INVALID_ARGUMENT_EXEPTION, "Error: The hash lenght is not even number!\n");
         }
     
     tempBin = KSI_calloc(arraySize, sizeof(unsigned char));
     if(tempBin == NULL){
-        THROW_MSG(A_EXEPTION, "Unable to get memory for parsing hex to binary.\n");
+        THROW_MSG(INVALID_ARGUMENT_EXEPTION, "Error: Unable to get memory for parsing hex to binary.\n");
         }
     
     for(i=0,j=0; i<arraySize; i++, j+=2){
@@ -114,7 +124,7 @@ static int getBinaryFromHexString(KSI_CTX *ksi, const char *hexin, unsigned char
         if(res == -1){
             KSI_free(tempBin);
             tempBin = NULL;
-            THROW_MSG(A_EXEPTION, "The hex number is invalid: %c%c!\n", hexin[j], hexin[j+1]);
+            THROW_MSG(INVALID_ARGUMENT_EXEPTION, "Error: The hex number is invalid: %c%c!\n", hexin[j], hexin[j+1]);
             }
         tempBin[i] = res;
         //printf("%c%c -> %i\n", hexin[j], hexin[j+1], tempBin[i]);
@@ -123,11 +133,19 @@ static int getBinaryFromHexString(KSI_CTX *ksi, const char *hexin, unsigned char
     *lenout = arraySize;
     *binout = tempBin;
     
-    return KSI_OK;
+    return;
 }
 
-
-static int getHashFromCommandLine_throws(GT_CmdParameters *cmdparam,KSI_CTX *ksi, KSI_DataHash **hash){
+/**
+ * Reads hash from command line and creates the KSI_DataHash object.
+ * 
+ * @param[in] cmdparam Pointer to command line data object.
+ * @param[in] ksi Pointer to ksi context object.
+ * @param[out] hash Pointer to receiving pointer to KSI_DataHash object.
+ * 
+ * @throws INVALID_ARGUMENT_EXEPTION, KSI_EXEPTION.
+ */
+static void getHashFromCommandLine_throws(GT_CmdParameters *cmdparam,KSI_CTX *ksi, KSI_DataHash **hash){
     unsigned char *data;
     size_t len;
     int res = KSI_UNKNOWN_ERROR;
@@ -140,18 +158,17 @@ static int getHashFromCommandLine_throws(GT_CmdParameters *cmdparam,KSI_CTX *ksi
             KSI_DataHash_fromDigest_throws(ksi, hasAlg, data, len, hash);
             }
         CATCH_ALL{
-            THROW_FORWARD();
+            THROW_FORWARD_APPEND_MESSAGE("Error: Unable to get hash from command line input.\n");
             }
     end_try
     
-    return res;
+    return;
     }
 
 /**
  * Gives hash algorithm identifier by name.
  * 
  * @param[in] hashAlg Hash algorithm name.
- * 
  * @return Hash algorithm identifier.
  * 
  * @throws KSI_EXEPTION.
