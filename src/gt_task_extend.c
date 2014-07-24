@@ -20,19 +20,21 @@ bool GT_extendTask(GT_CmdParameters *cmdparam) {
 
             /* Make sure the signature is ok. */
             printf("Verifying old signature...");
-            MEASURE_TIME(KSI_verifySignature(ksi, sig);)
+            MEASURE_TIME(KSI_verifySignature(ksi, sig));
             printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
 
             /* Extend the signature. */
             printf("Extending old signature...");
-            MEASURE_TIME(KSI_extendSignature_throws(ksi, sig, &ext););
+            MEASURE_TIME(KSI_extendSignature_throws(ksi, sig, &ext));
             printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
-
+            
+            /* Save signature. */
             saveSignatureFile_throws(ext, cmdparam->outSigFileName);
             printf("Signature extended.\n");
             }
         CATCH_ALL{
-            fprintf(stderr , _EXP.expMsg);
+            printErrorLocations();
+            exeptionSolved();
             state = false;
             goto cleanup;
             }

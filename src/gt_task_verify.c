@@ -17,13 +17,14 @@ bool GT_verifyTask(GT_CmdParameters *cmdparam)
             
             if (cmdparam->task == verifyPublicationsFile) {
                 printf("Reading publications file... ");
-                MEASURE_TIME(KSI_PublicationsFile_fromFile_throws(ksi, cmdparam->inPubFileName, &publicationsFile);)
+                MEASURE_TIME(KSI_PublicationsFile_fromFile_throws(ksi, cmdparam->inPubFileName, &publicationsFile));
                 printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
                 
                 printf("Verifying  publications file... ");
                 KSI_verifyPublicationsFile_throws(ksi, publicationsFile);
                 printf("ok.\n");
-                }        /* Verification of signature*/
+                }    
+            /* Verification of signature*/
             else {
                 /* Reading signature file for verification. */
                 printf("Reading signature... ");
@@ -36,7 +37,7 @@ bool GT_verifyTask(GT_CmdParameters *cmdparam)
                 /* Choosing between online and publications file signature verification */
                 if (cmdparam->task == verifyTimestamp_online) {
                     printf("Verifying signature online... ");
-                    MEASURE_TIME(KSI_Signature_verify_throws(sig, ksi);)
+                    MEASURE_TIME(KSI_Signature_verify_throws(sig, ksi));
                     printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
                 } else if (cmdparam->task == verifyTimestamp_locally) {
                     printf("Verifying signature ... ");
@@ -65,7 +66,8 @@ bool GT_verifyTask(GT_CmdParameters *cmdparam)
             }
         CATCH_ALL{
             printf("failed.\n");
-            fprintf(stderr , _EXP.expMsg);
+            printErrorLocations();
+            exeptionSolved();
             state = false;
             goto cleanup;
             }

@@ -20,31 +20,31 @@ bool GT_getPublicationsFileTask(GT_CmdParameters *cmdparam)
             InitTask_throws(cmdparam ,&ksi);
 
             printf("Downloading publications file...");
-            MEASURE_TIME(KSI_receivePublicationsFile_throws(ksi, &publicationsFile);)
+            MEASURE_TIME(KSI_receivePublicationsFile_throws(ksi, &publicationsFile));
             printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
 
             printf("Verifying publications file...");
-            MEASURE_TIME(KSI_verifyPublicationsFile_throws(ksi, publicationsFile);)
+            MEASURE_TIME(KSI_verifyPublicationsFile_throws(ksi, publicationsFile));
             printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
 
             KSI_PublicationsFile_serialize(ksi, publicationsFile, &raw, &raw_len);
-            /* Open output file. */
             out = fopen(cmdparam->outPubFileName, "wb");
             if(out == NULL) THROW_MSG(IO_EXEPTION, "Unable to ope publications file '%s' for writing.\n", cmdparam->outPubFileName);
 
-            /* Write output file */
             count = fwrite(raw, 1, raw_len, out);
             if(count != raw_len) THROW_MSG(IO_EXEPTION, "Error: Unable to write publications file '%s'.\n", cmdparam->outPubFileName);
             printf("Publications file '%s' saved.\n", cmdparam->outPubFileName);
             }
     CATCH(KSI_EXEPTION){
             printf("failed.\n");
-            fprintf(stderr , _EXP.expMsg);
+            printErrorLocations();
+            exeptionSolved();
             state = false;
             goto cleanup;
             }
     CATCH(IO_EXEPTION){
-            fprintf(stderr , _EXP.expMsg);
+            fprintf(stderr , _EXP.tmp);
+            printErrorLocations();
             state = false;
             goto cleanup;
             }

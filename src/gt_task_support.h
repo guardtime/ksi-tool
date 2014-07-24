@@ -107,7 +107,6 @@ int KSI_Signature_createDataHasher_throws(KSI_Signature *sig, KSI_DataHasher **h
 int KSI_Signature_verifyDataHash_throws(KSI_Signature *sig, KSI_DataHash *hash);
 int KSI_extendSignature_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext);
 
-
 #define MEASURE_TIME(code_here) \
     {   \
     measureLastCall(); \
