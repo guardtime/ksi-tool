@@ -22,7 +22,7 @@ extern "C" {
  * 
  * @throws KSI_EXEPTION.
  */
-void InitTask_throws(GT_CmdParameters *cmdparam ,KSI_CTX **ksi);
+void initTask_throws(GT_CmdParameters *cmdparam ,KSI_CTX **ksi);
 
 /**
  * Calculates the hash of an input file.
@@ -93,6 +93,9 @@ unsigned int measuredTime(void);
 char* str_measuredTime(void);
 
 
+/*************************************************
+ * KSI api functions capable throwing exeptions  *
+ *************************************************/
 
 int KSI_receivePublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile **publicationsFile);
 int KSI_verifyPublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *publicationsFile);

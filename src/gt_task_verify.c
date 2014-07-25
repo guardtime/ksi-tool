@@ -9,11 +9,11 @@ bool GT_verifyTask(GT_CmdParameters *cmdparam)
     KSI_PublicationsFile *publicationsFile = NULL;
     bool state = true;
     
-    ResetExeptionHandler();
+    resetExeptionHandler();
     try
         CODE{
             /*Initalization of KSI */
-            InitTask_throws(cmdparam, &ksi);
+            initTask_throws(cmdparam, &ksi);
             
             if (cmdparam->task == verifyPublicationsFile) {
                 printf("Reading publications file... ");

@@ -14,10 +14,10 @@ bool GT_getPublicationsFileTask(GT_CmdParameters *cmdparam)
     int raw_len = 0;
 
     /*Initalization of KSI */
-    ResetExeptionHandler();
+    resetExeptionHandler();
     try
         CODE{
-            InitTask_throws(cmdparam ,&ksi);
+            initTask_throws(cmdparam ,&ksi);
 
             printf("Downloading publications file...");
             MEASURE_TIME(KSI_receivePublicationsFile_throws(ksi, &publicationsFile));

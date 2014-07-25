@@ -11,11 +11,11 @@ bool GT_signTask(GT_CmdParameters *cmdparam) {
     KSI_DataHash *hash = NULL;
     KSI_Signature *sign = NULL;
     bool state = true;
-    ResetExeptionHandler();
+    resetExeptionHandler();
     try
         CODE{
         /*Initalization of KSI */
-        InitTask_throws(cmdparam, &ksi);
+        initTask_throws(cmdparam, &ksi);
         
         /*Getting the hash for signing process*/
         if(cmdparam->task == signDataFile){
@@ -77,21 +77,21 @@ cleanup:
 
 // helpers for hex decoding
 static int x(char c){
-	if (c >= '0' && c <= '9')
-		return c - '0';
-	if (c >= 'a' && c <= 'f')
-		return c - 'a' + 10;
-	if (c >= 'A' && c <= 'F')
-		return c - 'A' + 10;
-	abort(); // isxdigit lies.
-	return -1; // makes compiler happy
+    if (c >= '0' && c <= '9')
+        return c - '0';
+    if (c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F')
+        return c - 'A' + 10;
+    abort(); // isxdigit lies.
+    return -1; // makes compiler happy
 }
 
 static int xx(char c1, char c2)
 {
-	if(!isxdigit(c1) || !isxdigit(c2))
-		return -1;
-	return x(c1) * 16 + x(c2);
+    if(!isxdigit(c1) || !isxdigit(c2))
+        return -1;
+    return x(c1) * 16 + x(c2);
 }
 
 /**

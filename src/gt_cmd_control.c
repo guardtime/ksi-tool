@@ -2,9 +2,9 @@
 #include <stdio.h>		//input output
 #include <string.h>
 #ifdef _WIN32 
-#include <io.h>
+#   include <io.h>
 #else
-#define _access_s access
+#   define _access_s access
 #endif
 #include <errno.h>
 #include "gt_cmd_control.h"

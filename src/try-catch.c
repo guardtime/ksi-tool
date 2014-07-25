@@ -37,7 +37,7 @@ void exeptionSolved(void){
     return;
     }
 
-void ResetExeptionHandler(void){
+void resetExeptionHandler(void){
     _EXP.exep.exeption = 0;
     _EXP.jump_pos =0;
     _EXP.exep.N =0;

@@ -7,11 +7,11 @@ bool GT_extendTask(GT_CmdParameters *cmdparam) {
     KSI_Signature *ext = NULL;
     bool state = true;
 
-    ResetExeptionHandler();
+    resetExeptionHandler();
     try
         CODE{
             /*Initalization of KSI */
-            InitTask_throws(cmdparam, &ksi);
+            initTask_throws(cmdparam, &ksi);
 
             /* Read the signature. */
             printf("Reading signature...");

@@ -192,7 +192,7 @@ extern "C" {
     /**
      * Reset exeption handler.
      */
-    void ResetExeptionHandler(void);
+    void resetExeptionHandler(void);
     
     /**
      * Clean all exeptions. 
