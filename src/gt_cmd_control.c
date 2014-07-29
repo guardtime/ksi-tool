@@ -1,10 +1,13 @@
 #include <ctype.h>
 #include <stdio.h>		//input output
 #include <string.h>
+
 #ifdef _WIN32 
-#include <io.h>
+#       include <io.h>
+#       define F_OK 0
 #else
-#define _access_s access
+#       include <unistd.h>
+#       define _access_s access
 #endif
 #include <errno.h>
 #include "gt_cmd_control.h"
@@ -66,7 +69,7 @@ PARAM_RES isHashAlgFormatOK(const char *hashAlg)
 
 static int doFileExists(const char* path)
 {
-    _access_s(path, 0);
+    _access_s(path, F_OK);
     return errno;
 }
 
@@ -74,7 +77,6 @@ PARAM_RES analyseInputFile(const char* path)
 {
     PARAM_RES res = PARAM_UNKNOWN_ERROR;
     int fileStatus = EINVAL;
-
     res = isPathFormOk(path);
     if (res == PARAM_OK)
         fileStatus = doFileExists(path);
@@ -96,7 +98,7 @@ PARAM_RES analyseInputFile(const char* path)
         break;
     }
 
-    return false;
+    return PARAM_UNKNOWN_ERROR;
 }
 
 //TODO add some functionality
