@@ -1,12 +1,16 @@
 #include <ctype.h>
 #include <stdio.h>		//input output
 #include <string.h>
-#ifdef _WIN32 
+
+#ifdef _WIN32
 #   include <io.h>
+#define F_OK 0
 #else
+#include <unistd.h>
 #   define _access_s access
 #endif
 #include <errno.h>
+#include <io.h>
 #include "gt_cmd_control.h"
 
 #define CheckNullPtr(strn) if(strn==NULL) return PARAM_NULLPTR;
@@ -66,7 +70,7 @@ PARAM_RES isHashAlgFormatOK(const char *hashAlg)
 
 static int doFileExists(const char* path)
 {
-    _access_s(path, 0);
+    _access_s(path, F_OK);
     return errno;
 }
 
