@@ -70,8 +70,8 @@ PARAM_RES isHashAlgFormatOK(const char *hashAlg)
 
 static int doFileExists(const char* path)
 {
-    _access_s(path, F_OK);
-    return errno;
+    if(_access_s(path, F_OK) == 0) return 0;
+    else return errno;
 }
 
 PARAM_RES analyseInputFile(const char* path)
