@@ -4,10 +4,10 @@ cd ../src
 WAIT=5
 
 SIG_SERV_IP=192.168.1.36:3333/
-VER_SERV_IP=192.168.1.29:1111/gt-extendingservice
+# VER_SERV_IP=192.168.1.29:1111/gt-extendingservice
 PUB_SERV_IP=172.20.20.7/publications.tlv
 # SIG_SERV_IP=172.20.20.4:3333/
-# VER_SERV_IP=192.168.1.36:8081/gt-extendingservice
+ VER_SERV_IP=192.168.1.36:8081/gt-extendingservice
 SERVICES="-S $SIG_SERV_IP  -X $VER_SERV_IP  -P $PUB_SERV_IP"
 echo $SERVICES
 
@@ -111,4 +111,6 @@ echo "****************** error bad network provider******************"
 ./gtime -s -o "$SH1_file"  -F SHA-1:"$SH1_HASH" -S plaplaplaplpalpalap
 echo $?
 
-
+echo "****************** error no references -r ******************"
+./gtime -v -t $SERVICES  -x -i "$TEST_FILE_OUT".ksig -f "$TEST_FILE" -r
+echo $?
