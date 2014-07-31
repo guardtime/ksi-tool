@@ -11,7 +11,6 @@
 #       define _access_s access
 #endif
 #include <errno.h>
-#include <io.h>
 #include "gt_cmd_control.h"
 
 #define CheckNullPtr(strn) if(strn==NULL) return PARAM_NULLPTR;
