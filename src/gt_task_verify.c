@@ -79,6 +79,5 @@ cleanup:
     KSI_DataHasher_free(hsr);
     KSI_DataHash_free(hsh);
     KSI_CTX_free(ksi);
-    KSI_global_cleanup();
     return state;
 }

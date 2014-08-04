@@ -53,6 +53,5 @@ bool GT_getPublicationsFileTask(GT_CmdParameters *cmdparam)
 cleanup:
     if (out != NULL) fclose(out);
     KSI_CTX_free(ksi);
-    KSI_global_cleanup();
     return state;
 }

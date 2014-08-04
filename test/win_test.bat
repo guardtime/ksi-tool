@@ -5,11 +5,11 @@ REM test configuration
 SET WAIT=5
 
 REM 
-SET SIG_SERV_IP=192.168.1.36:3333/
-rem SET VER_SERV_IP=192.168.1.29:1111/gt-extendingservice
-SET PUB_SERV_IP=172.20.20.7/publications.tlv
-REM SET SIG_SERV_IP=172.20.20.4:3333/
-SET VER_SERV_IP=192.168.1.36:8081/gt-extendingservice
+SET SIG_SERV_IP=http://192.168.1.36:3333/
+rem SET VER_SERV_IP=http://192.168.1.29:1111/gt-extendingservice
+SET PUB_SERV_IP=http://172.20.20.7/publications.tlv
+REM SET SIG_SERV_IP=http://172.20.20.4:3333/
+SET VER_SERV_IP=http://192.168.1.36:8081/gt-extendingservice
 SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -P %PUB_SERV_IP%
 
 REM input files
@@ -32,95 +32,98 @@ SET PUBFILE=../test/out/pubfile
 
 
 
-rm %TEST_EXTENDED_SIG% %RIPMED160_file% %SH1_file% %SH256_file% %TEST_FILE_OUT%.ksig %TEST_FILE_OUT%SH-1.ksig %PUBFILE%
+rm %TEST_EXTENDED_SIG% %RIPMED160_file% %SH1_file% %SH256_file% %TEST_FILE_OUT%.ksig %TEST_FILE_OUT%SH-1.ksig %PUBFILE% %PUBFILE%_fromDisk
 
 
-echo ****************** download publications file ******************
+echo ****************** Download publications file ******************
 gtime.exe -p -t -o %PUBFILE%
 echo %errorlevel%
 gtime.exe -v -t -b %PUBFILE%
 echo %errorlevel%
 
+echo ****************** Read publications file from disk******************
+gtime.exe -p -t -o %PUBFILE%_fromDisk -P file://C:\Users\Taavi\Documents\GuardTime\uusGtime\test\out\pubfile
+echo %errorlevel%
 
-echo ****************** signing data -n ******************
+echo ****************** Sign data [-n] ******************
 gtime.exe -s %SERVICES% -f %TEST_FILE% -o %TEST_FILE_OUT%.ksig  -n
 echo %errorlevel%
 sleep %WAIT%
 gtime.exe -v -t %SERVICES% -x -i %TEST_FILE_OUT%.ksig -n %SERVICES% 
 echo %errorlevel%
 
-echo ****************** signing data with algorithm -H SH-1 ****************** 
+echo ****************** Sign data with algorithm [-H SH-1] ****************** 
 gtime.exe -s %SERVICES% -f %TEST_FILE% -o %TEST_FILE_OUT%SH-1.ksig  -H SHA-1
 echo %errorlevel%
 sleep %WAIT%
 gtime.exe -v %SERVICES% -x -i %TEST_FILE_OUT%SH-1.ksig
 echo %errorlevel%
 
-echo ****************** verifying signature and missing file ****************** 
+echo ****************** Verify signature and missing file [-t] ****************** 
 gtime.exe -v -t %SERVICES% -x -i %TEST_FILE_OUT%.ksig -f missing_file
 echo %errorlevel%
 
-echo ****************** extend old signature ****************** 
+echo ****************** Extend old signature [-t] ****************** 
 gtime.exe -x -t %SERVICES% -i %TEST_OLD_SIG% -o %TEST_EXTENDED_SIG%
 echo %errorlevel%
 sleep %WAIT%
-gtime.exe -v %SERVICES% -x -i %TEST_EXTENDED_SIG%
+gtime.exe -v -t %SERVICES% -x -i %TEST_EXTENDED_SIG%
 echo %errorlevel%
 
-echo ****************** signing with SH1 ****************** 
+echo "****************** Sign raw hash with algorithm specified [-F SH1:<hash>] ******************" 
 gtime.exe -s %SERVICES% -o %SH1_file%  -F SHA-1:%SH1_HASH%
 echo %errorlevel%
 sleep %WAIT%
 gtime.exe -v %SERVICES% -x -i %SH1_file%
 echo %errorlevel%
 
-echo ****************** signing with SH256 ****************** 
+echo "****************** Sign raw hash with algorithm specified [-F SH256:<hash>] ******************" 
 gtime.exe -s %SERVICES% -o %SH256_file% -F SHA-256:%SH256_HASH%
 echo %errorlevel%
 sleep %WAIT%
 gtime.exe -v %SERVICES% -x -i %SH256_file% -f %SH256_DATA_FILE%
 echo %errorlevel%
 
-echo ****************** signing with RIPMED160 ****************** 
+echo "****************** Sign raw hash with algorithm specified [-F RIPMED160:<hash>] ******************" 
 gtime.exe -s %SERVICES% -o %RIPMED160_file% -F RIPEMD-160:%RIPMED160_HASH%
 echo %errorlevel%
 sleep %WAIT%
 gtime.exe -v %SERVICES% -x -i %RIPMED160_file%
 echo %errorlevel%
 
-echo ****************** error extend no suitable publication ****************** 
-gtime.exe -x -t %SERVICES% -i %TEST_FILE_OUT%.ksig -o %TEST_EXTENDED_SIG%
+echo ****************** Error extend no suitable publication ****************** 
+gtime.exe -x %SERVICES% -i %TEST_FILE_OUT%.ksig -o %TEST_EXTENDED_SIG%
 echo %errorlevel%
 
-echo ****************** error extend not suitable format ****************** 
-gtime.exe -x -t %SERVICES% -i %TEST_FILE% -o %TEST_EXTENDED_SIG%
+echo ****************** Error extend not suitable format ****************** 
+gtime.exe -x %SERVICES% -i %TEST_FILE% -o %TEST_EXTENDED_SIG%
 echo %errorlevel%
 
-echo ****************** error extend not suitable format ****************** 
-gtime.exe -v -x -t %SERVICES% -i %TEST_FILE% 
+echo ****************** Error extend not suitable format ****************** 
+gtime.exe -v -x %SERVICES% -i %TEST_FILE% 
 echo %errorlevel%
 
-echo ****************** error verifying signature and wrong file ****************** 
-gtime.exe -v -t %SERVICES% -x -i %TEST_FILE_OUT%.ksig -f %TEST_FILE_OUT%.ksig
+echo ****************** Error verifying signature and wrong file ****************** 
+gtime.exe -v %SERVICES% -x -i %TEST_FILE_OUT%.ksig -f %TEST_FILE_OUT%.ksig
 echo %errorlevel%
 
-echo ****************** error signing with SH1 and wrong hash ****************** 
+echo ****************** Error signing with SH1 and wrong hash ****************** 
 gtime.exe -s %SERVICES% -o %SH1_file%  -F SHA-1:%SH1_HASH%ff
 echo %errorlevel%
 
-echo ****************** error signing with SH1 and wrong invalid hash ****************** 
+echo ****************** Error signing with SH1 and invalid hash ****************** 
 gtime.exe -s %SERVICES% -o %SH1_file%  -F SHA-1:%SH1_HASH%f
 echo %errorlevel%
 
-echo ****************** error signing with unknown algorithm and wrong hash ****************** 
+echo ****************** Error signing with unknown algorithm and wrong hash ****************** 
 gtime.exe -s %SERVICES% -o %TEST_FILE%  -F _UNKNOWN:%SH1_HASH%
 echo %errorlevel%
 
-echo ****************** error bad network provider****************** 
+echo ****************** Error bad network provider ****************** 
 gtime.exe -s -o %SH1_file%  -F SHA-1:%SH1_HASH% -S plaplaplaplpalpalap
 echo %errorlevel%
 
-echo ****************** error no references -r ****************** 
+echo ****************** Error no references [-r] ****************** 
 gtime.exe -v -t %SERVICES% -x -i %TEST_FILE_OUT%.ksig -f %TEST_FILE% -r
 echo %errorlevel%
 

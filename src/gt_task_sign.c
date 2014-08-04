@@ -69,7 +69,6 @@ cleanup:
     KSI_DataHash_free(hash);
     KSI_DataHasher_free(hsr);
     KSI_CTX_free(ksi);
-    KSI_global_cleanup();
     return state;
 }
 

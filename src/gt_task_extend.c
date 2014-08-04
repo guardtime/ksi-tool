@@ -53,6 +53,5 @@ cleanup:
     KSI_Signature_free(sig);
     KSI_Signature_free(ext);
     KSI_CTX_free(ksi);
-    KSI_global_cleanup();
     return state;
 }

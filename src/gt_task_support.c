@@ -79,8 +79,6 @@ void initTask_throws(GT_CmdParameters *cmdparam ,KSI_CTX **ksi){
     int res = KSI_UNKNOWN_ERROR;
     try
         CODE{
-            res = KSI_global_init();
-            ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to init KSI global resources.\n");
             res = KSI_CTX_new(ksi);
             ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to init KSI context.\n");
             
