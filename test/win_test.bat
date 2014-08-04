@@ -41,9 +41,6 @@ echo %errorlevel%
 gtime.exe -v -t -b %PUBFILE%
 echo %errorlevel%
 
-echo ****************** Read publications file from disk******************
-gtime.exe -p -t -o %PUBFILE%_fromDisk -P file://C:\Users\Taavi\Documents\GuardTime\uusGtime\test\out\pubfile
-echo %errorlevel%
 
 echo ****************** Sign data [-n] ******************
 gtime.exe -s %SERVICES% -f %TEST_FILE% -o %TEST_FILE_OUT%.ksig  -n
@@ -99,7 +96,7 @@ echo ****************** Error extend not suitable format ******************
 gtime.exe -x %SERVICES% -i %TEST_FILE% -o %TEST_EXTENDED_SIG%
 echo %errorlevel%
 
-echo ****************** Error extend not suitable format ****************** 
+echo ****************** Error verify not suitable format ****************** 
 gtime.exe -v -x %SERVICES% -i %TEST_FILE% 
 echo %errorlevel%
 
