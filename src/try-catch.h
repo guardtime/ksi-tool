@@ -8,7 +8,7 @@
  * System uses global variable for storing location pointers and error messages.
  * 
  * NB:
- * Try-catch can only be used without multithreading and interupts.
+ * Try-catch can only be used without multithreading and interrupts.
  * Care must be taken when calling try. It stores the current state of a program
  * to restore it after throw. If some local variables are stored in registers and
  * changed after try the changes will be corrupted. Using volatile keyword can help.
@@ -72,6 +72,7 @@ extern "C" {
         jmp_buf array_jmp[JUMP_DEPTH];
         int jump_pos;
         exeption exep;
+		int isCatched;
         char tmp[MESSAGE_SIZE];
     } exp_handler;
     
@@ -93,7 +94,11 @@ extern "C" {
      * Macro for terminating try-catch block.
      */
     #define end_try } \
-        _EXP.jump_pos--; 
+        if(!_EXP.isCatched){ \
+			_EXP.jump_pos--; \
+		} \
+		else \
+			{_EXP.isCatched=0;} 
 
     /**
      * Macro for code block.
@@ -108,6 +113,7 @@ extern "C" {
      * @param[in] _exeption Exeption id. 
      */
     #define CATCH(_exeption) break; case _exeption: \
+		_EXP.isCatched = 1; \
         //printf("Exeption %i, catched at level %i.\n", _EXP.exeption, _EXP.jump_pos);
 
     /**
@@ -116,6 +122,7 @@ extern "C" {
      * @note Must always be last block between try and end_try.
      */
     #define CATCH_ALL break; default: \
+		_EXP.isCatched = 1; \
          //printf("Exeption %i, catched at level %i.\n", _EXP.exeption, _EXP.jump_pos);
 
     
