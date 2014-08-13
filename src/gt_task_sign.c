@@ -43,8 +43,15 @@ bool GT_signTask(GT_CmdParameters *cmdparam) {
         MEASURE_TIME(KSI_createSignature_throws(ksi, hash, &sign));
         printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
         
-        if(cmdparam->n) printSignerIdentity_throws(sign);
-        
+		try
+			CODE{
+				if(cmdparam->n) printSignerIdentity_throws(sign);
+			}
+		CATCH_ALL{
+			printErrorLocations();
+			exeptionSolved();
+			}
+		end_try
         /* Save signature file */
         saveSignatureFile_throws(sign, cmdparam->outSigFileName);
         printf("Signature saved.\n");

@@ -1,6 +1,7 @@
 #include <stdio.h>		//input output
 #include <string.h>		
-#include <stdlib.h>		//malloc, random, int ja strn muundused
+#include <stdlib.h>		//malloc, random, int ja strn 
+#include <ksi/ksi.h>
 #include "getopt.h"
 #include "gt_cmd_parameters.h"
 #include "gt_cmd_control.h"
@@ -565,37 +566,36 @@ void GT_pritHelp(void)
             "\nGuardTime command-line signing tool, using API\n"
             "Usage: <-s|-x|-p|-v> [more options]\n"
             "Where recognized options are:\n"
-            " -s		Sign data (The result is automatically verified)\n"
-            " -S <url>	specify Signing Service URL\n"
+            " -s		sign data \n"
+            " -S <url>	specify Signing service URL\n"
             " -x		use online verification (eXtending) service\n"
             " -X <url>	specify verification (eXtending) service URL\n"
             " -p		download Publications file (The result is automatically verified)\n"
             " -P <url>	specify Publications file URL\n"
-            " -v		Verify signature token (-i <ts>); online verify with -x;\n"
+            " -v		verify signature token (-i <ts>); online verify with -x;\n"
             " -t		include service Timing\n"
             " -n		print signer Name (identity)\n"
             " -r		print publication References (use with -vx)\n"
             " -l		print 'extended Location ID' value\n"
-            " -d		Dump detailed information\n"
-            " -f <fn>	File to be signed / verified\n"
-            " -H <ALG>	Hash algorithm used to hash the file to be signed\n"
+            " -d		dump detailed information\n"
+            " -f <fn>	file to be signed / verified\n"
+            " -H <ALG>	hash algorithm used to hash the file to be signed\n"
             " -F <hash>	data hash to be signed / verified. hash Format: <ALG>:<hash in hex>\n"
-            " -i <fn>	Input signature token file to be extended / verified\n"
-            " -o <fn>	Output filename to store signature token or publications file\n"
-            " -b <fn>	use specified Bublications file\n"
-            " -V <fn>	use specified OpenSSL-style truststore file for publications file Verification\n"
-            " -W <dir>	use specified OpenSSL-style truststore directory for publications file WWerification\n"
+            " -i <fn>	input signature token file to be extended / verified\n"
+            " -o <fn>	output filename to store signature token or publications file\n"
+            " -b <fn>	use specified publications file\n"
+            " -V <fn>	use specified OpenSSL-style trust store file for publications file Verification\n"
+            " -W <dir>	use specified OpenSSL-style trust store directory for publications file verification\n"
             " -c <num>	network transfer timeout, after successful Connect\n"
             " -C <num>	network Connect timeout.\n"
             " -h		Help (You are reading it now)\n"
-            "		- instead of filename is stdin/stdout stream\n"
 
             );
 
             fprintf(stderr, "\nDefault service access URL-s:\n"
-            "\tSigning:      %s\n"
+            "\tSigning:			  %s\n"
             "\tVerifying:         %s\n"
-            "\tPublications file: %s\n", DEFAULT_S_URL, DEFAULT_X_URL, DEFAULT_P_URL);
+            "\tPublications file: %s\n", KSI_DEFAULT_URI_AGGREGATOR, KSI_DEFAULT_URI_EXTENDER, KSI_DEFAULT_URI_PUBLICATIONS_FILE);
             fprintf(stderr, "\nSupported hash algorithms (-H, -F):\n"
             "\tSHA-1, SHA-256 (default), RIPEMD-160, SHA-224, SHA-384, SHA-512, RIPEMD-256, SHA3-244, SHA3-256, SHA3-384, SHA3-512, SM3\n");
 }
@@ -607,10 +607,12 @@ bool GT_parseCommandline(int argc, char **argv)
                 //  GT_printParameters();
                 printTaskErrorMessage();
                 printTaskWarningMessage();
+				if(cmdParameters.task == noTask)
+					GT_pritHelp();
         if (controlParameters()) {
             return true;
         } else {
-            //GT_pritHelp();
+            
 
             return false;
         }

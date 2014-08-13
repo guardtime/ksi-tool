@@ -2,14 +2,14 @@
 cd ../bin
 
 REM test configuration
-SET WAIT=5
+SET WAIT=10
 
 REM 
 SET SIG_SERV_IP=http://192.168.1.36:3333/
-rem SET VER_SERV_IP=http://192.168.1.29:1111/gt-extendingservice
+SET VER_SERV_IP=http://192.168.1.29:1111/gt-extendingservice
 SET PUB_SERV_IP=http://172.20.20.7/publications.tlv
 REM SET SIG_SERV_IP=http://172.20.20.4:3333/
-SET VER_SERV_IP=http://192.168.1.36:8081/gt-extendingservice
+rem SET VER_SERV_IP=http://192.168.1.36:8081/gt-extendingservice
 SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -P %PUB_SERV_IP%
 
 REM input files
@@ -60,11 +60,11 @@ echo ****************** Verify signature and missing file [-t] *****************
 gtime.exe -v -t %SERVICES% -x -i %TEST_FILE_OUT%.ksig -f missing_file
 echo %errorlevel%
 
-echo ****************** Extend old signature [-t] ****************** 
-gtime.exe -x -t %SERVICES% -i %TEST_OLD_SIG% -o %TEST_EXTENDED_SIG%
+echo ****************** Extend old signature [-t -r] ****************** 
+gtime.exe -x -t -r %SERVICES% -i %TEST_OLD_SIG% -o %TEST_EXTENDED_SIG%
 echo %errorlevel%
 sleep %WAIT%
-gtime.exe -v -t %SERVICES% -x -i %TEST_EXTENDED_SIG%
+gtime.exe -v -t -r %SERVICES% -x -i %TEST_EXTENDED_SIG%
 echo %errorlevel%
 
 echo "****************** Sign raw hash with algorithm specified [-F SH1:<hash>] ******************" 
@@ -102,6 +102,10 @@ echo %errorlevel%
 
 echo ****************** Error verifying signature and wrong file ****************** 
 gtime.exe -v %SERVICES% -x -i %TEST_FILE_OUT%.ksig -f %TEST_FILE_OUT%.ksig
+echo %errorlevel%
+
+echo ****************** Error verifying signature (no references) and wrong file [-r] ****************** 
+gtime.exe -v %SERVICES% -x -i %TEST_FILE_OUT%.ksig -f %TEST_FILE_OUT%.ksig -r
 echo %errorlevel%
 
 echo ****************** Error signing with SH1 and wrong hash ****************** 

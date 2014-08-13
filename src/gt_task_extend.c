@@ -27,7 +27,15 @@ bool GT_extendTask(GT_CmdParameters *cmdparam) {
             printf("Extending old signature...");
             MEASURE_TIME(KSI_extendSignature_throws(ksi, sig, &ext));
             printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
-            
+            try
+				CODE{
+					if (cmdparam->r) printSignaturePublicationReference_throws(ext);
+				}
+				CATCH_ALL{
+					printErrorLocations();
+					exeptionSolved();
+				}
+			end_try
             /* Save signature. */
             saveSignatureFile_throws(ext, cmdparam->outSigFileName);
             printf("Signature extended.\n");

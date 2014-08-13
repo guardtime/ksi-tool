@@ -31,9 +31,18 @@ bool GT_verifyTask(GT_CmdParameters *cmdparam)
                 KSI_Signature_fromFile_throws(ksi, cmdparam->inSigFileName, &sig);
                 printf("ok.\n");
 
-                if (cmdparam->n) printSignerIdentity_throws(sig);
-                if (cmdparam->r) printSignaturePublicationReference_throws(sig);
+				try
+					CODE{
+					if (cmdparam->n) printSignerIdentity_throws(sig);
+					if (cmdparam->r) printSignaturePublicationReference_throws(sig);
+					}
+				CATCH_ALL{
+					printErrorLocations();
+					exeptionSolved();
+					}
+				end_try
 
+				
                 /* Choosing between online and publications file signature verification */
                 if (cmdparam->task == verifyTimestamp_online) {
                     printf("Verifying signature online... ");
