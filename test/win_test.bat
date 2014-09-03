@@ -2,14 +2,14 @@
 cd ../bin
 
 REM test configuration
-SET WAIT=10
+SET WAIT=30
 
 REM 
 SET SIG_SERV_IP=http://192.168.1.36:3333/
-SET VER_SERV_IP=http://192.168.1.29:1111/gt-extendingservice
+rem SET VER_SERV_IP=http://192.168.1.29:1111/gt-extendingservice
 SET PUB_SERV_IP=http://172.20.20.7/publications.tlv
 REM SET SIG_SERV_IP=http://172.20.20.4:3333/
-rem SET VER_SERV_IP=http://192.168.1.36:8081/gt-extendingservice
+SET VER_SERV_IP=http://192.168.1.36:8081/gt-extendingservice
 SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -P %PUB_SERV_IP%
 
 REM input files

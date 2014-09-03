@@ -1,0 +1,111 @@
+Building with Microsoft Visual Studio
+=====================================
+
+	This document describes how to build KSI command-line tool gtime using Microsoft Visual
+	Studio tools and different libraries.
+	
+	
+Prerequisites
+=====================================
+
+	To be able to build GT KSI API one must have the following software pieces:
+
+		1) Microsoft Visual Studio <version goes here> or Windows SDK <version goes here> for building tools.
+		2) Guardtime KSI API <version goes here>
+		3) OpenSSL <version goes here> (optional,recommended).
+		4) Lib Curl <version goes here> (optional,recommended).
+		5) Windows native CryptoAPI <version goes here> (optional).
+		6) Windows native WinINet <version goes here> (optional).
+		7) Windows native WinHTTP <version goes here> (optionl).
+	
+	When KSI API uses OpenSSl or Curl the location of libraries must be specified containing KSI API itself.
+	See make file options CURL_DIR, OPENSSL_DIR and KSI_DIR.  The structure of the directories must be as follows:
+	
+	For CURL
+	
+    dll
+    include
+      |curl
+    lib
+	
+	For OpenSSL
+	
+    dll
+    include
+      |openssl
+    lib
+
+	For KSI API
+
+    dll
+    include
+      |ksi
+    lib
+	
+	Windows native libraries are already installed with Windows.
+	
+	
+Build process
+=====================================
+	
+	Below is the abstract structure of the project that describes the location of the source code,
+	make files and output. Root directory contains top level build scripts that are used to build
+	gtime. 
+	
+	//Top level build scripts
+    WinBuild.bat
+    makefile
+    
+	//Source code for gtime
+	src
+      | *.c
+      | *.h
+      
+   //Folders and files generated during build
+   obj
+     |*.obj
+   out
+     |*.exe
+
+	 
+	After successful build obj and out direcyory is created. Obj directory contains compiled obj files.
+	Out directory contains executable.
+
+
+Configuring build scripts
+=====================================	
+	
+	Using make file
+	
+	For building process, above described top level make file or WinBuild.bat must be called.
+	
+	Make file can be executed via CMD shell or Visual Studio command promt shell.
+	When using CMD shell environment must be configured using setenev command. 
+	For example setenev /x64.
+	
+	Make file has following tasks:
+	
+		1)default	- build gtime executable.
+		2)clean 	- clean build.
+	
+		
+	Make file has following options:
+	
+		1) DLL			- select KSI API library format (LIB, DLL). Default is LIB. 	
+		2) RTL			- select run-time library (MT, MTd, MD, MDd). Default is MT.
+		3) CURL_DIR 	- Directory containing Curl library and include files.
+		4) OPENSSL_DIR 	- Directory containing OpenSLL library and include files.
+		5) KSI_DIR 		- Directory containing KSI API library and include files
+		5) LDEXTRA 		- extra flags for linker.
+		6) CCEXTRA 		- extra flags for compiler.
+		
+	When compiling one must know how the KSI API was linked - DLL and RTL must be configured accordingly.
+	The location of KSI_API must be specified defining KSI_DIR. If KSI API uses Curl or OpenSSL 
+	CURL_DIR and OPENSSL_DIR must be specified.
+
+	Examples
+	
+	KSI API is built using MT run-time library and windows native libraries:
+		nmake RTL=MT DLL=LIB KSI_DIR="C:\KSI"
+	KSI API is built using MTd and OpenSLL
+		nmake RTL=MTd DLL=LIB KSI_DIR="C:\KSI" OPENSSL_DIR="C:\OPENSSL"
