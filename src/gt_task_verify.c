@@ -62,7 +62,7 @@ bool GT_verifyTask(GT_CmdParameters *cmdparam)
                     getFilesHash_throws(hsr, cmdparam->inDataFileName, &hsh);
                     printf("ok.\n");
                     printf("Verifying document hash... ");
-                    KSI_Signature_verifyDataHash_throws(sig, hsh);
+                    KSI_Signature_verifyDataHash_throws(sig, ksi, hsh);
                     printf("ok.\n");
                     }
                 }

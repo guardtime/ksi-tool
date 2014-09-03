@@ -387,8 +387,8 @@ int KSI_Signature_createDataHasher_throws(KSI_Signature *sig, KSI_DataHasher **h
     THROWABLE(KSI_Signature_createDataHasher(sig, hsr), "Error: Unable to create data hasher. (%s)\n", KSI_getErrorString(res));
     }
 
-int KSI_Signature_verifyDataHash_throws(KSI_Signature *sig, KSI_DataHash *hash){
-    THROWABLE(KSI_Signature_verifyDataHash(sig, hash), "Error: Wrong document or signature. (%s)\n", KSI_getErrorString(res));
+int KSI_Signature_verifyDataHash_throws(KSI_Signature *sig, KSI_CTX *ksi, KSI_DataHash *hash){
+    THROWABLE(KSI_Signature_verifyDataHash(sig, ksi,  hash), "Error: Wrong document or signature. (%s)\n", KSI_getErrorString(res));
 }
 
 int KSI_extendSignature_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext){
