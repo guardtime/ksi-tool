@@ -78,7 +78,9 @@ void initTask_throws(GT_CmdParameters *cmdparam ,KSI_CTX **ksi){
 	int res = KSI_UNKNOWN_ERROR;
 	KSI_CTX *tmpKsi = NULL;
 	KSI_PublicationsFile *tmpPubFile = NULL;
-
+	KSI_PKITruststore *refTrustStore = NULL;
+	int i=0;
+	
 	try
 		CODE{
 			res = KSI_CTX_new(&tmpKsi);
@@ -86,12 +88,26 @@ void initTask_throws(GT_CmdParameters *cmdparam ,KSI_CTX **ksi){
 
 			configureNetworkProvider_throws(tmpKsi, cmdparam);
 
-			if(cmdparam->b == true){
+			if(cmdparam->b){
 				KSI_LOG_debug(tmpKsi, "Setting publications file '%s'", cmdparam->inPubFileName);
 				KSI_PublicationsFile_fromFile_throws(tmpKsi, cmdparam->inPubFileName, &tmpPubFile);
 				KSI_setPublicationsFile(tmpKsi, tmpPubFile);
 			}
 
+			if(cmdparam->V || cmdparam->W){
+				
+				KSI_getPKITruststore(tmpKsi, &refTrustStore);
+				if(cmdparam->V){
+					for(i=0; i<cmdparam->sizeOpenSSLTruststoreFileName;i++){
+						KSI_PKITruststore_addLookupFile_throws(refTrustStore, cmdparam->openSSLTruststoreFileName[i]);
+					}
+				}
+				if(cmdparam->W){
+					KSI_PKITruststore_addLookupDir_throws(refTrustStore, cmdparam->openSSLTrustStoreDirName);
+				}
+			}
+			
+			
 			*ksi = tmpKsi;
 
 		}
@@ -427,14 +443,11 @@ int KSI_Signature_extend_throws(const KSI_Signature *signature, KSI_CTX *ctx, co
 	return res;
 }
 
-
-		
-void printSupportedHashAlgorithms(void){
-	int i = 0;
-	
-	for(i=0; i< KSI_NUMBER_OF_KNOWN_HASHALGS; i++){
-		if(KSI_isHashAlgorithmSupported(i)){
-			printf("%s ", KSI_getHashAlgorithmName(i));
-		}
-	}
+int KSI_PKITruststore_addLookupFile_throws(KSI_PKITruststore *store, const char *path){
+	THROWABLE(KSI_PKITruststore_addLookupFile(store,path), "Error: Unable to set PKI trust store lookup file. (%s)\n",  KSI_getErrorString(res));
 }
+		
+int KSI_PKITruststore_addLookupDir_throws(KSI_PKITruststore *store, const char *path){
+	THROWABLE(KSI_PKITruststore_addLookupDir(store,path), "Error: Unable to set PKI trust store lookup dir. (%s)\n",  KSI_getErrorString(res));
+}
+

@@ -33,7 +33,8 @@ typedef struct _gtimeCmdParameters {
 	char *inPubFileName; //Use specified publications file                           (-b)
 	char *inDataFileName; //Input file name for signing and verification              (-f)
 
-	char *openSSLTruststoreFileName; //specified OpenSSL-style truststore file                   (-V)
+	int sizeOpenSSLTruststoreFileName; //Count paths in openSSLTruststoreFileName
+	char **openSSLTruststoreFileName; //specified OpenSSL-style truststore file                   (-V)
 	char *openSSLTrustStoreDirName; //specified OpenSSL-style truststore directory              (-W)
 
 	//char *rawHashString;              //A buffer for storing raw HASH string                      (-F)

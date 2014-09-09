@@ -19,6 +19,7 @@ struct st_param {
 	char *arg;
 };
 
+
 /**
  * A RAW struct containing all the command line parameters.
  * Used for reading all raw command line parameters.
@@ -28,7 +29,7 @@ struct raw_parameters {
 	struct st_param i; //input signature  file  
 	struct st_param b; //publications file in  
 	struct st_param f; //input data file  
-	struct st_param V; //OpenSSL-style truststore file  
+	KSI_List *lst_V; //OpenSSL-style truststore file  
 	struct st_param W; //OpenSSL-style truststore destroy  
 	struct st_param F; //Input data hash  
 	struct st_param H; //Different hashAlg  
@@ -54,6 +55,37 @@ struct raw_parameters {
 
 /****************Functions for parsing command line parameters****************/
 
+static void rawParameters_new(struct raw_parameters **rawParam){
+	struct raw_parameters *tmpRawParam = NULL;
+	KSI_List *tmpList = NULL;
+	
+	*rawParam = NULL;
+	
+	tmpRawParam = (struct raw_parameters*)calloc(sizeof(struct raw_parameters), 1);
+	if(tmpRawParam == NULL) goto cleanup;
+	if(KSI_List_new(free, &tmpList) != KSI_OK) goto cleanup;
+	
+			
+	tmpRawParam->lst_V = tmpList;
+	*rawParam = tmpRawParam;
+	tmpList = NULL;
+	tmpRawParam = NULL;
+	
+cleanup:
+	
+	KSI_List_free(tmpList);
+	if(tmpRawParam) free(tmpRawParam);
+	
+	return;
+}
+
+static void rawParameters_free(struct raw_parameters *rawParam){
+	if(rawParam == NULL) return;
+	KSI_List_freeAll(rawParam->lst_V);
+	free(rawParam);
+}
+
+
 /**
  * Reads RAW command line parameters. See struct raw_parameters.
  * 
@@ -63,8 +95,12 @@ struct raw_parameters {
  */
 static void readRawCmdParam(int argc, char **argv, struct raw_parameters **rawParam){
 	int c = 0;
-	struct raw_parameters *rawParam_tmp = (struct raw_parameters*) calloc(1, sizeof (struct raw_parameters));
-
+	struct raw_parameters *tmpRawParam;
+	struct st_param *tmpParameter = NULL;
+	
+	rawParameters_new(&tmpRawParam);
+	
+	
 	while (1) {
 		c = getopt(argc, argv, "sxpvtrdo:i:f:b:a:hc:C:V:W:S:X:P:F:lH:nT:");
 		if (c == -1) {
@@ -73,108 +109,113 @@ static void readRawCmdParam(int argc, char **argv, struct raw_parameters **rawPa
 
 		switch (c) {
 		case 'h':
-			rawParam_tmp->h.flag = true;
-			rawParam_tmp->h.arg = NULL;
+			tmpRawParam->h.flag = true;
+			tmpRawParam->h.arg = NULL;
 			break;
 		case 's':
-			rawParam_tmp->s.flag = true;
-			rawParam_tmp->s.arg = NULL;
+			tmpRawParam->s.flag = true;
+			tmpRawParam->s.arg = NULL;
 			break;
 		case 'x':
-			rawParam_tmp->x.flag = true;
-			rawParam_tmp->x.arg = NULL;
+			tmpRawParam->x.flag = true;
+			tmpRawParam->x.arg = NULL;
 			break;
 		case 'p':
-			rawParam_tmp->p.flag = true;
-			rawParam_tmp->p.arg = NULL;
+			tmpRawParam->p.flag = true;
+			tmpRawParam->p.arg = NULL;
 			break;
 		case 'v':
-			rawParam_tmp->v.flag = true;
-			rawParam_tmp->v.arg = NULL;
+			tmpRawParam->v.flag = true;
+			tmpRawParam->v.arg = NULL;
 			break;
 		case 't':
-			rawParam_tmp->t.flag = true;
-			rawParam_tmp->t.arg = NULL;
+			tmpRawParam->t.flag = true;
+			tmpRawParam->t.arg = NULL;
 			break;
 		case 'd':
-			rawParam_tmp->d.flag = true;
-			rawParam_tmp->d.arg = NULL;
+			tmpRawParam->d.flag = true;
+			tmpRawParam->d.arg = NULL;
 			break;
 		case 'r':
-			rawParam_tmp->r.flag = true;
-			rawParam_tmp->r.arg = NULL;
+			tmpRawParam->r.flag = true;
+			tmpRawParam->r.arg = NULL;
 			break;
 		case 'l':
-			rawParam_tmp->l.flag = true;
-			rawParam_tmp->l.arg = NULL;
+			tmpRawParam->l.flag = true;
+			tmpRawParam->l.arg = NULL;
 			break;
 		case 'n':
-			rawParam_tmp->n.flag = true;
-			rawParam_tmp->n.arg = NULL;
+			tmpRawParam->n.flag = true;
+			tmpRawParam->n.arg = NULL;
 			break;
 			//   case 'a': rawParameters.a = atoi(optarg); break;
 		case 'i':
-			rawParam_tmp->i.flag = true;
-			rawParam_tmp->i.arg = optarg;
+			tmpRawParam->i.flag = true;
+			tmpRawParam->i.arg = optarg;
 			break;
 		case 'f':
-			rawParam_tmp->f.flag = true;
-			rawParam_tmp->f.arg = optarg;
+			tmpRawParam->f.flag = true;
+			tmpRawParam->f.arg = optarg;
 			break;
 		case 'b':
-			rawParam_tmp->b.flag = true;
-			rawParam_tmp->b.arg = optarg;
+			tmpRawParam->b.flag = true;
+			tmpRawParam->b.arg = optarg;
 			break;
 		case 'o':
-			rawParam_tmp->o.flag = true;
-			rawParam_tmp->o.arg = optarg;
+			tmpRawParam->o.flag = true;
+			tmpRawParam->o.arg = optarg;
 			break;
 		case 'c':
-			rawParam_tmp->c.flag = true;
-			rawParam_tmp->c.arg = optarg;
+			tmpRawParam->c.flag = true;
+			tmpRawParam->c.arg = optarg;
 			break;
 		case 'C':
-			rawParam_tmp->C.flag = true;
-			rawParam_tmp->C.arg = optarg;
+			tmpRawParam->C.flag = true;
+			tmpRawParam->C.arg = optarg;
 			break;
 		case 'S':
-			rawParam_tmp->S.flag = true;
-			rawParam_tmp->S.arg = optarg;
+			tmpRawParam->S.flag = true;
+			tmpRawParam->S.arg = optarg;
 			break;
 		case 'X':
-			rawParam_tmp->X.flag = true;
-			rawParam_tmp->X.arg = optarg;
+			tmpRawParam->X.flag = true;
+			tmpRawParam->X.arg = optarg;
 			break;
 		case 'P':
-			rawParam_tmp->P.flag = true;
-			rawParam_tmp->P.arg = optarg;
+			tmpRawParam->P.flag = true;
+			tmpRawParam->P.arg = optarg;
 			break;
 		case 'V':
-			rawParam_tmp->V.flag = true;
-			rawParam_tmp->V.arg = optarg;
+			tmpParameter = (struct st_param*)malloc(sizeof(struct st_param));
+			if(tmpParameter != NULL){
+				tmpParameter->flag = true;
+				tmpParameter->arg = optarg;
+				KSI_List_append(tmpRawParam->lst_V, tmpParameter);
+				tmpParameter = NULL;
+			}
 			break;
 		case 'W':
-			rawParam_tmp->W.flag = true;
-			rawParam_tmp->W.arg = optarg;
+			tmpRawParam->W.flag = true;
+			tmpRawParam->W.arg = optarg;
 			break;
 
 		case 'F':
-			rawParam_tmp->F.flag = true;
-			rawParam_tmp->F.arg = optarg;
+			tmpRawParam->F.flag = true;
+			tmpRawParam->F.arg = optarg;
 			break;
 		case 'H':
-			rawParam_tmp->H.flag = true;
-			rawParam_tmp->H.arg = optarg;
+			tmpRawParam->H.flag = true;
+			tmpRawParam->H.arg = optarg;
 			break;
 		case 'T':
 			printf("\n\nT == %s\n", optarg);
-			rawParam_tmp->T.flag = true;
-			rawParam_tmp->T.arg = optarg;
+			tmpRawParam->T.flag = true;
+			tmpRawParam->T.arg = optarg;
 			break;
 			
 		}
 	}
-	*rawParam = rawParam_tmp;
+	*rawParam = tmpRawParam;
 }
 
 /**
@@ -242,7 +283,8 @@ static void getHashAndAlgStrings(const char *instrn, char **strnAlgName, char **
 			param.cmd_arg = NULL; \
 			fprintf(stderr, "Error: Invalid parameter -%s '%s'format. %s\n", #flag_,raw.flag_.arg, getFormatErrorString(_p_res)); \
 			param.flag_ = false; \
-			return false; \
+			result = false; \
+			goto cleanup; \
 			} \
 		} \
 	}
@@ -269,8 +311,8 @@ static void getHashAndAlgStrings(const char *instrn, char **strnAlgName, char **
 		else{ \
 			param.cmd_arg = 0; \
 			fprintf(stderr, "Error: Invalid parameter -%s '%s' format. %s\n", #flag_,raw.flag_.arg, getFormatErrorString(_p_res)); \
-			param.flag_ = false; \
-			return false; \
+			result = false; \
+			goto cleanup; \
 			} \
 		} \
 	}
@@ -285,8 +327,17 @@ static void getHashAndAlgStrings(const char *instrn, char **strnAlgName, char **
  * @return Returns true if the form of the parameters is OK. False otherwise.
  */
 static bool readCmdParam(int argc, char **argv){
+	bool result = false;
 	struct raw_parameters *rawParam = NULL;
+	int i=0;
+	
 	readRawCmdParam(argc, argv, &rawParam);
+	
+	if(rawParam == NULL){
+		result = false;
+		goto cleanup;
+	}
+	
 	copyFlag(cmdParameters, (*rawParam), x);
 	copyFlag(cmdParameters, (*rawParam), s);
 	copyFlag(cmdParameters, (*rawParam), v);
@@ -297,13 +348,14 @@ static bool readCmdParam(int argc, char **argv){
 	copyFlag(cmdParameters, (*rawParam), l);
 	copyFlag(cmdParameters, (*rawParam), d);
 	copyFlag(cmdParameters, (*rawParam), h);
+	
 	SET_STRN_PARAM(cmdParameters, (*rawParam), f, inDataFileName, isPathFormOk);
 	SET_STRN_PARAM(cmdParameters, (*rawParam), b, inPubFileName, isPathFormOk);
 	SET_STRN_PARAM(cmdParameters, (*rawParam), i, inSigFileName, isPathFormOk);
 	SET_STRN_PARAM(cmdParameters, (*rawParam), o, outPubFileName, isPathFormOk);
 	SET_STRN_PARAM(cmdParameters, (*rawParam), o, outSigFileName, isPathFormOk);
 	SET_STRN_PARAM(cmdParameters, (*rawParam), W, openSSLTrustStoreDirName, isPathFormOk);
-	SET_STRN_PARAM(cmdParameters, (*rawParam), V, openSSLTruststoreFileName, isPathFormOk);
+	//SET_STRN_PARAM(cmdParameters, (*rawParam), V, openSSLTruststoreFileName, isPathFormOk);
 	SET_STRN_PARAM(cmdParameters, (*rawParam), P, publicationsFile_url, isURLFormatOK);
 	SET_STRN_PARAM(cmdParameters, (*rawParam), S, signingService_url, isURLFormatOK);
 	SET_STRN_PARAM(cmdParameters, (*rawParam), X, verificationService_url, isURLFormatOK);
@@ -312,6 +364,20 @@ static bool readCmdParam(int argc, char **argv){
 	SET_INT_PARAM(cmdParameters, (*rawParam), T, publicationTime, isIntegerFormatOK);
 	SET_STRN_PARAM(cmdParameters, (*rawParam), H, hashAlgName_H, isHashAlgFormatOK);
 
+	/*Dealing with V*/
+	cmdParameters.sizeOpenSSLTruststoreFileName = KSI_List_length(rawParam->lst_V);
+	if(cmdParameters.sizeOpenSSLTruststoreFileName != 0){
+		cmdParameters.openSSLTruststoreFileName = (char**)malloc(cmdParameters.sizeOpenSSLTruststoreFileName*sizeof(char*));
+		cmdParameters.V = true;
+		
+		for(i=0; i<cmdParameters.sizeOpenSSLTruststoreFileName ; i++){
+			struct st_param *tmpobj = NULL;
+			KSI_List_elementAt(rawParam->lst_V, i, &tmpobj);
+			cmdParameters.openSSLTruststoreFileName[i] = tmpobj->arg;
+		}
+		
+	}
+	
 	if (rawParam->F.flag) {
 		char *hashAlg;
 		char *hash;
@@ -332,9 +398,16 @@ static bool readCmdParam(int argc, char **argv){
 			fprintf(stderr, "Error: Invalid parameter -F '%s' format.\n<alg> %s\n<hash> %s\n",rawParam->F.arg,getFormatErrorString(_p_res_alg), getFormatErrorString(_p_res_hash));
 					cmdParameters.F = false;
 
-			return false;
+			result = false;
+			goto cleanup;
 		}
-	}
+	}	
+	
+	result = true;
+
+cleanup:	
+
+	rawParameters_free(rawParam);
 	return true;
 }
 
@@ -394,7 +467,7 @@ static void extractTask(void){
  * @param[in] flag_ Command line flag name for error message construction.
  * @param[in] param Parameter for analyzing and error message construction.
  */
-#define ANALYZ_RESULT(_analyze, flag_, param) \
+#define ANALYZ_RESULT(_analyze, flag_, param)\
 { \
 PARAM_RES _p_res = PARAM_UNKNOWN_ERROR; \
 	_p_res = _analyze(param); \
@@ -413,7 +486,19 @@ PARAM_RES _p_res = PARAM_UNKNOWN_ERROR; \
  */
 static bool controlParameters(void){
 	PARAM_RES res = PARAM_UNKNOWN_ERROR;
-
+	int i=0;
+	if(cmdParameters.V){
+		bool errors = false;
+		for(i=0; i< cmdParameters.sizeOpenSSLTruststoreFileName; i++){
+			PARAM_RES res = analyseInputFile(cmdParameters.openSSLTruststoreFileName[i]);
+			if(res != PARAM_OK){
+				errors = true;
+				fprintf(stderr, "Error: Invalid parameter -V '%s'. %s\n", cmdParameters.openSSLTruststoreFileName[i], getFormatErrorString(res));
+			}
+		}
+		if(errors) return false;
+	}
+	
 	if (IS_TASK(verifyPublicationsFile)) {
 		ANALYZ_RESULT(analyseInputFile,"-b", cmdParameters.inPubFileName);
 		return true;
@@ -537,7 +622,14 @@ static void GT_printParameters(void){
 	if (cmdParameters.i == true) printf("-i '%s'\n", cmdParameters.inSigFileName);
 	if (cmdParameters.b == true) printf("-b '%s'\n", cmdParameters.inPubFileName);
 	if (cmdParameters.f == true) printf("-f '%s'\n", cmdParameters.inDataFileName);
-	if (cmdParameters.V == true) printf("-V '%s'\n", cmdParameters.openSSLTruststoreFileName);
+	
+	if (cmdParameters.V == true){
+		int i =0;
+		for(i=0; i<cmdParameters.sizeOpenSSLTruststoreFileName;i++)
+			printf("-V '%s'\n", cmdParameters.openSSLTruststoreFileName[i]);
+	}
+	
+	
 	if (cmdParameters.W == true) printf("-W '%s'\n", cmdParameters.openSSLTrustStoreDirName);
 	if (cmdParameters.F == true) printf("-F Alg: '%s' and Hash: '%s'\n", cmdParameters.hashAlgName_F, cmdParameters.inputHashStrn);
 	if (cmdParameters.H == true) printf("-H '%s'\n", cmdParameters.hashAlgName_H);
@@ -600,6 +692,7 @@ void GT_pritHelp(void){
 			" -o <fn>	output filename to store signature token or publications file\n"
 			" -b <fn>	use specified publications file\n"
 			" -V <fn>	use specified OpenSSL-style trust store file for publications file Verification\n"
+			"        	Can have multiple values (-V <fn 1> -V <fn 2>)\n"
 			" -W <dir>	use specified OpenSSL-style trust store directory for publications file verification\n"
 			" -c <num>	network transfer timeout, after successful Connect\n"
 			" -C <num>	network Connect timeout.\n"
