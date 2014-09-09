@@ -77,14 +77,28 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, GT_CmdParameters *cmdp
 
 void initTask_throws(GT_CmdParameters *cmdparam ,KSI_CTX **ksi){
     int res = KSI_UNKNOWN_ERROR;
+	KSI_CTX *tmpKsi = NULL;
+	KSI_PublicationsFile *tmpPubFile = NULL;
+	
     try
         CODE{
-            res = KSI_CTX_new(ksi);
+            res = KSI_CTX_new(&tmpKsi);
             ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to init KSI context.\n");
             
-            configureNetworkProvider_throws(*ksi, cmdparam);
+            configureNetworkProvider_throws(tmpKsi, cmdparam);
+			
+			if(cmdparam->b == true){
+				KSI_LOG_debug(tmpKsi, "Setting publications file '%s'", cmdparam->inPubFileName);
+				KSI_PublicationsFile_fromFile_throws(tmpKsi, cmdparam->inPubFileName, &tmpPubFile);
+				KSI_setPublicationsFile(tmpKsi, tmpPubFile);
+			}
+			
+			*ksi = tmpKsi;
+			
             }
         CATCH(KSI_EXEPTION){
+			KSI_PublicationsFile_free(tmpPubFile);
+			KSI_CTX_free(tmpKsi);
             THROW_FORWARD_APPEND_MESSAGE("Error: Unable to configure KSI.\n");
             }
     end_try
@@ -193,6 +207,8 @@ static void printPublicationRecordReferences_throws(KSI_PublicationRecord *publi
                 ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to get reference.\n");
                 printf("*  %s\n", KSI_Utf8String_cstr(reference));
                 }
+			if(j==0)
+                printf("*  No publication records available\n");
             }
         CATCH_ALL{
             THROW_FORWARD_APPEND_MESSAGE("Error: Unable to print publication record reference.\n");
@@ -347,9 +363,19 @@ char* str_measuredTime(void){
     if(res != KSI_OK) {THROW_MSG(KSI_EXEPTION, __VA_ARGS__);} \
     return res;
 
+
 int KSI_receivePublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile **publicationsFile){
-    THROWABLE(KSI_receivePublicationsFile(ksi, publicationsFile), "Error: Unable to read publications file. (%s)\n", KSI_getErrorString(res));
-    }
+    //THROWABLE(KSI_receivePublicationsFile(ksi, publicationsFile), "Error: Unable to read publications file. (%s)\n", KSI_getErrorString(res));
+    
+	int res = KSI_UNKNOWN_ERROR; 
+    res = KSI_receivePublicationsFile(ksi, publicationsFile);  
+    if(res != KSI_OK) {
+		printf("\n");
+		KSI_ERR_statusDump(ksi, stderr);
+		THROW_MSG(KSI_EXEPTION, "Error: Unable to read publications file. (%s)\n", KSI_getErrorString(res));
+	} 
+    return res;
+}
 
 int KSI_verifyPublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *publicationsFile){
     THROWABLE(KSI_verifyPublicationsFile(ksi, publicationsFile), "Error: Unable to verify publications file. (%s)\n", KSI_getErrorString(res));
@@ -390,7 +416,20 @@ int KSI_Signature_createDataHasher_throws(KSI_Signature *sig, KSI_DataHasher **h
 int KSI_Signature_verifyDataHash_throws(KSI_Signature *sig, KSI_CTX *ksi, KSI_DataHash *hash){
     THROWABLE(KSI_Signature_verifyDataHash(sig, ksi,  hash), "Error: Wrong document or signature. (%s)\n", KSI_getErrorString(res));
 }
-
+/*To nearest publication available*/
 int KSI_extendSignature_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext){
     THROWABLE(KSI_extendSignature(ksi, sig, ext),"Error: Unable to extend signature. (%s)\n", KSI_getErrorString(res));
+}
+/*To Publication record*/
+int KSI_Signature_extend_throws(const KSI_Signature *signature, KSI_CTX *ctx, const KSI_PublicationRecord *pubRec, KSI_Signature **extended){
+	//THROWABLE(KSI_Signature_extend(signature, ctx, pubRec, extended), "Error: Unable to extend signature. (%s)\n", KSI_getErrorString(res));
+			
+	int res = KSI_UNKNOWN_ERROR; 
+    res = KSI_Signature_extend(signature, ctx, pubRec, extended);  
+    if(res != KSI_OK) {
+		printf("\n");
+		KSI_ERR_statusDump(ctx, stderr);
+		THROW_MSG(KSI_EXEPTION, "Error: Unable to extend signature. (%s)\n", KSI_getErrorString(res));
+	} 
+    return res;
 }

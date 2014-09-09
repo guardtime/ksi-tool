@@ -49,6 +49,7 @@ extern "C" {
         int networkTransferTimeout; //                                                          (-c)
         int networkConnectionTimeout; //                                                          (-C)
 
+		int publicationTime; //specific publication time
         //  int a;                              //simulated extending request age in days (when no signature token is specified), default 36 (-a)
 
         //Operations
@@ -65,7 +66,8 @@ extern "C" {
         bool P; //is publications file url  
         bool c; //is networkTransferTimeout  
         bool C; //is networkConnectionTimeout  
-
+		bool T; //Specific publication time to extend to
+		
         bool x; //is task extending
         bool s; //is task signing
         bool v; //is task verification

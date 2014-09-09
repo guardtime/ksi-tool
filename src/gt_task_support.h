@@ -109,6 +109,7 @@ int KSI_Signature_verify_throws(KSI_Signature *sig, KSI_CTX *ksi);
 int KSI_Signature_createDataHasher_throws(KSI_Signature *sig, KSI_DataHasher **hsr);
 int KSI_Signature_verifyDataHash_throws(KSI_Signature *sig, KSI_CTX *ksi, KSI_DataHash *hash);
 int KSI_extendSignature_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext);
+int KSI_Signature_extend_throws(const KSI_Signature *signature, KSI_CTX *ctx, const KSI_PublicationRecord *pubRec, KSI_Signature **extended);
 
 #define MEASURE_TIME(code_here) \
     {   \

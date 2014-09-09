@@ -37,7 +37,8 @@ struct raw_parameters {
     struct st_param P; //publications file url  
     struct st_param c; //networkTransferTimeout  
     struct st_param C; //networkConnectionTimeout  
-
+	struct st_param T; //Specific publication time to extend to 
+	
     struct st_param x; //task extending
     struct st_param s; //task signing
     struct st_param v; //task verification
@@ -66,7 +67,7 @@ static void readRawCmdParam(int argc, char **argv, struct raw_parameters **rawPa
     struct raw_parameters *rawParam_tmp = (struct raw_parameters*) calloc(1, sizeof (struct raw_parameters));
 
     while (1) {
-        c = getopt(argc, argv, "sxpvtrdo:i:f:b:a:hc:C:V:W:S:X:P:F:lH:n");
+        c = getopt(argc, argv, "sxpvtrdo:i:f:b:a:hc:C:V:W:S:X:P:F:lH:nT:");
         if (c == -1) {
             break;
         }
@@ -166,6 +167,12 @@ static void readRawCmdParam(int argc, char **argv, struct raw_parameters **rawPa
             rawParam_tmp->H.flag = true;
             rawParam_tmp->H.arg = optarg;
             break;
+        case 'T':
+            printf("\n\nT == %s\n", optarg);
+			rawParam_tmp->T.flag = true;
+            rawParam_tmp->T.arg = optarg;
+            break;
+			
         }
     }
     *rawParam = rawParam_tmp;
@@ -305,6 +312,7 @@ static bool readCmdParam(int argc, char **argv)
     SET_STRN_PARAM(cmdParameters, (*rawParam), X, verificationService_url, isURLFormatOK);
     SET_INT_PARAM(cmdParameters, (*rawParam), C, networkConnectionTimeout, isIntegerFormatOK);
     SET_INT_PARAM(cmdParameters, (*rawParam), c, networkTransferTimeout, isIntegerFormatOK);
+    SET_INT_PARAM(cmdParameters, (*rawParam), T, publicationTime, isIntegerFormatOK);
     SET_STRN_PARAM(cmdParameters, (*rawParam), H, hashAlgName_H, isHashAlgFormatOK);
 
     if (rawParam->F.flag) {
@@ -482,7 +490,7 @@ static void printTaskErrorMessage(void)
     case invalid_x:
         fprintf(stderr, "Error: Using -x you have to define missing parameter(s) %s%s\n",
                 !(cmdParameters.o) ? "-o <output file> " : "",
-                !(cmdParameters.i) ? "-i <publications file in> " : ""
+                !(cmdParameters.i) ? "-i <signature file in> " : ""
                 );
         break;
     case noTask:
@@ -506,14 +514,17 @@ static void printTaskWarningMessage(void)
     case signDataFile:
         UNUSED_FLAG_WARNING(cmdParameters, b, "Warning: Can't use -b with -s.\n");
         UNUSED_FLAG_WARNING(cmdParameters, i, "Warning: Can't use -i with -s.\n");
+        UNUSED_FLAG_WARNING(cmdParameters, T, "Warning: Can't use -T with -s.\n");
         break;
     case verifyTimestamp_online:
         UNUSED_FLAG_WARNING(cmdParameters, b, "Warning: Can't use -b with -v -x.\n");
+        UNUSED_FLAG_WARNING(cmdParameters, T, "Warning: Can't use -T with -v -x.\n");
     case verifyTimestamp_locally:
     case verifyPublicationsFile:
         UNUSED_FLAG_WARNING(cmdParameters, H, "Warning: Can't use -H with -v.\n");
         UNUSED_FLAG_WARNING(cmdParameters, F, "Warning: Can't use -F with -v.\n");
         UNUSED_FLAG_WARNING(cmdParameters, o, "Warning: Can't use -o with -v.\n");
+        UNUSED_FLAG_WARNING(cmdParameters, T, "Warning: Can't use -T with -v.\n");
         break;
     case extendTimestamp:
         UNUSED_FLAG_WARNING(cmdParameters, H, "Warning: Can't use -H with -x.\n");
@@ -543,6 +554,7 @@ static void GT_printParameters(void)
     if (cmdParameters.P == true) printf("-P '%s'\n", cmdParameters.publicationsFile_url);
     if (cmdParameters.c == true) printf("-c %i\n", cmdParameters.networkTransferTimeout);
     if (cmdParameters.C == true) printf("-C %i\n", cmdParameters.networkConnectionTimeout);
+    if (cmdParameters.T == true) printf("-T %i\n", cmdParameters.publicationTime);
 
     if (cmdParameters.x == true) printf("-x\n");
     if (cmdParameters.s == true) printf("-s\n");
@@ -574,6 +586,7 @@ void GT_pritHelp(void)
             " -P <url>	specify Publications file URL\n"
             " -v		verify signature token (-i <ts>); online verify with -x;\n"
             " -t		include service Timing\n"
+            " -T		specific publication time to extend to (use with -x)\n"
             " -n		print signer Name (identity)\n"
             " -r		print publication References (use with -vx)\n"
             " -l		print 'extended Location ID' value\n"
