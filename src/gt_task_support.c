@@ -426,3 +426,15 @@ int KSI_Signature_extend_throws(const KSI_Signature *signature, KSI_CTX *ctx, co
 	} 
 	return res;
 }
+
+
+		
+void printSupportedHashAlgorithms(void){
+	int i = 0;
+	
+	for(i=0; i< KSI_NUMBER_OF_KNOWN_HASHALGS; i++){
+		if(KSI_isHashAlgorithmSupported(i)){
+			printf("%s ", KSI_getHashAlgorithmName(i));
+		}
+	}
+}

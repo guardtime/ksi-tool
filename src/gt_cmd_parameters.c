@@ -562,6 +562,17 @@ static void GT_printParameters(void){
 	if (cmdParameters.h == true) printf("-h\n");
 }
 
+static void printSupportedHashAlgorithms(void){
+	int i = 0;
+	
+	for(i=0; i< KSI_NUMBER_OF_KNOWN_HASHALGS; i++){
+		if(KSI_isHashAlgorithmSupported(i)){
+			fprintf(stderr,"%s ", KSI_getHashAlgorithmName(i));
+		}
+	}
+}
+
+
 /*********************************User Functions******************************/
 void GT_pritHelp(void){
 
@@ -600,8 +611,10 @@ void GT_pritHelp(void){
 			"\tSigning:			  %s\n"
 			"\tVerifying:         %s\n"
 			"\tPublications file: %s\n", KSI_DEFAULT_URI_AGGREGATOR, KSI_DEFAULT_URI_EXTENDER, KSI_DEFAULT_URI_PUBLICATIONS_FILE);
-			fprintf(stderr, "\nSupported hash algorithms (-H, -F):\n"
-			"\tSHA-1, SHA-256 (default), RIPEMD-160, SHA-224, SHA-384, SHA-512, RIPEMD-256, SHA3-244, SHA3-256, SHA3-384, SHA3-512, SM3\n");
+			fprintf(stderr, "\nSupported hash algorithms (-H, -F):\n\t");
+			printSupportedHashAlgorithms();
+			fprintf(stderr, "\n");
+			//"\tSHA-1, SHA-256 (default), RIPEMD-160, SHA-224, SHA-384, SHA-512, RIPEMD-256, SHA3-244, SHA3-256, SHA3-384, SHA3-512, SM3\n");
 }
 
 bool GT_parseCommandline(int argc, char **argv){
