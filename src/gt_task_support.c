@@ -7,8 +7,8 @@
 
 
 #define ON_ERROR_THROW_MSG(_exeption, ...) \
-    if (res != KSI_OK){  \
-        THROW_MSG(_exeption,__VA_ARGS__); \
+	if (res != KSI_OK){  \
+		THROW_MSG(_exeption,__VA_ARGS__); \
 	}
 
 /**
@@ -19,168 +19,165 @@
  * 
  * @throws KSI_EXEPTION
  */
-static void configureNetworkProvider_throws(KSI_CTX *ksi, GT_CmdParameters *cmdparam)
-{
-    int res = KSI_OK;
-    KSI_NetworkClient *net = NULL;
-    try
-       CODE{
-            /* Check if uri's are specified. */
-            if (cmdparam->S || cmdparam->P || cmdparam->X || cmdparam->C || cmdparam->c) {
-                res = KSI_UNKNOWN_ERROR;
-                res = KSI_HttpClient_new(ksi, &net);
-                ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to create new network provider.\n");
+static void configureNetworkProvider_throws(KSI_CTX *ksi, GT_CmdParameters *cmdparam){
+	int res = KSI_OK;
+	KSI_NetworkClient *net = NULL;
+	try
+	   CODE{
+			/* Check if uri's are specified. */
+			if (cmdparam->S || cmdparam->P || cmdparam->X || cmdparam->C || cmdparam->c) {
+				res = KSI_UNKNOWN_ERROR;
+				res = KSI_HttpClient_new(ksi, &net);
+				ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to create new network provider.\n");
 
-                /* Check aggregator url */
-                if (cmdparam->S) {
-                    res = KSI_HttpClient_setSignerUrl(net, cmdparam->signingService_url);
-                    ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set aggregator url '%s'.\n", cmdparam->signingService_url);
-                    }
+				/* Check aggregator url */
+				if (cmdparam->S) {
+					res = KSI_HttpClient_setSignerUrl(net, cmdparam->signingService_url);
+					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set aggregator url '%s'.\n", cmdparam->signingService_url);
+				}
 
-                /* Check publications file url. */
-                if (cmdparam->P) {
-                    res = KSI_HttpClient_setPublicationUrl(net, cmdparam->publicationsFile_url);
-                    ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set publications file url '%s'.\n", cmdparam->publicationsFile_url);
-                    }
+				/* Check publications file url. */
+				if (cmdparam->P) {
+					res = KSI_HttpClient_setPublicationUrl(net, cmdparam->publicationsFile_url);
+					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set publications file url '%s'.\n", cmdparam->publicationsFile_url);
+				}
 
-                /* Check extending/verification service url. */
-                if (cmdparam->X) {
-                    res = KSI_HttpClient_setExtenderUrl(net, cmdparam->verificationService_url);
-                    ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set extender/verifier url '%s'.\n", cmdparam->verificationService_url);
-                    }
+				/* Check extending/verification service url. */
+				if (cmdparam->X) {
+					res = KSI_HttpClient_setExtenderUrl(net, cmdparam->verificationService_url);
+					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set extender/verifier url '%s'.\n", cmdparam->verificationService_url);
+				}
 
-                /* Check Network connection timeout. */
-                if (cmdparam->C) {
-                    res = KSI_HttpClient_setConnectTimeoutSeconds(net, cmdparam->networkConnectionTimeout);
-                    ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set network connection timeout %i.\n", cmdparam->networkConnectionTimeout);
-                    }
+				/* Check Network connection timeout. */
+				if (cmdparam->C) {
+					res = KSI_HttpClient_setConnectTimeoutSeconds(net, cmdparam->networkConnectionTimeout);
+					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set network connection timeout %i.\n", cmdparam->networkConnectionTimeout);
+				}
 
-                /* Check Network transfer timeout. */
-                if (cmdparam->c) {
-                    res = KSI_HttpClient_setReadTimeoutSeconds(net, cmdparam->networkTransferTimeout);
-                    ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set network transfer timeout %i.\n", cmdparam->networkTransferTimeout);
-                    }
+				/* Check Network transfer timeout. */
+				if (cmdparam->c) {
+					res = KSI_HttpClient_setReadTimeoutSeconds(net, cmdparam->networkTransferTimeout);
+					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set network transfer timeout %i.\n", cmdparam->networkTransferTimeout);
+				}
 
-                /* Set the new network provider. */
-                res = KSI_setNetworkProvider(ksi, net);
-                ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set network provider.\n");
-            }
+				/* Set the new network provider. */
+				res = KSI_setNetworkProvider(ksi, net);
+				ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set network provider.\n");
+			}
 
-        } 
-        CATCH_ALL{
-            THROW_FORWARD_APPEND_MESSAGE("Error: Unable to configure network provider.\n");
-            }
-    end_try
-    return;
+		} 
+		CATCH_ALL{
+			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to configure network provider.\n");
+		}
+	end_try
+	return;
 
 }
 
 void initTask_throws(GT_CmdParameters *cmdparam ,KSI_CTX **ksi){
-    int res = KSI_UNKNOWN_ERROR;
+	int res = KSI_UNKNOWN_ERROR;
 	KSI_CTX *tmpKsi = NULL;
 	KSI_PublicationsFile *tmpPubFile = NULL;
-	
-    try
-        CODE{
-            res = KSI_CTX_new(&tmpKsi);
-            ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to init KSI context.\n");
-            
-            configureNetworkProvider_throws(tmpKsi, cmdparam);
-			
+
+	try
+		CODE{
+			res = KSI_CTX_new(&tmpKsi);
+			ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to init KSI context.\n");
+
+			configureNetworkProvider_throws(tmpKsi, cmdparam);
+
 			if(cmdparam->b == true){
 				KSI_LOG_debug(tmpKsi, "Setting publications file '%s'", cmdparam->inPubFileName);
 				KSI_PublicationsFile_fromFile_throws(tmpKsi, cmdparam->inPubFileName, &tmpPubFile);
 				KSI_setPublicationsFile(tmpKsi, tmpPubFile);
 			}
-			
+
 			*ksi = tmpKsi;
-			
-            }
-        CATCH(KSI_EXEPTION){
+
+		}
+		CATCH(KSI_EXEPTION){
 			KSI_PublicationsFile_free(tmpPubFile);
 			KSI_CTX_free(tmpKsi);
-            THROW_FORWARD_APPEND_MESSAGE("Error: Unable to configure KSI.\n");
-            }
-    end_try
-    
-    return;
+			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to configure KSI.\n");
+		}
+	end_try
+
+	return;
 }
 
-void getFilesHash_throws(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash)
-{
-    FILE *in = NULL;
-    int res = KSI_UNKNOWN_ERROR;
-    unsigned char buf[1024];
-    int buf_len;
-    try
-        CODE{
-            /* Open Input file */
-            in = fopen(fname, "rb");
-            if (in == NULL) 
-                THROW_MSG(IO_EXEPTION, "Error: Unable to open input file '%s'\n", fname);
+void getFilesHash_throws(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash){
+	FILE *in = NULL;
+	int res = KSI_UNKNOWN_ERROR;
+	unsigned char buf[1024];
+	int buf_len;
+	try
+		CODE{
+			/* Open Input file */
+			in = fopen(fname, "rb");
+			if (in == NULL) 
+				THROW_MSG(IO_EXEPTION, "Error: Unable to open input file '%s'\n", fname);
 
-            /* Read the input file and calculate the hash of its contents. */
-            while (!feof(in)) {
-                buf_len = fread(buf, 1, sizeof (buf), in);
-                /* Add  next block to the calculation. */
-                res = KSI_DataHasher_add(hsr, buf, buf_len);
-                if(res != KSI_OK){
-                    fclose(in);
-                    ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to add data to hasher.\n");
-                    }
-                }
-            
-            if (in != NULL) fclose(in);
-            /* Close the data hasher and retreive the data hash. */
-            res = KSI_DataHasher_close(hsr, hash);
-            ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to create hash.\n");
-            }
-        CATCH_ALL{
-            THROW_FORWARD_APPEND_MESSAGE("Error: Unable to hash file '%s'.\n", fname);
-            }
-    end_try
+			/* Read the input file and calculate the hash of its contents. */
+			while (!feof(in)) {
+				buf_len = fread(buf, 1, sizeof (buf), in);
+				/* Add  next block to the calculation. */
+				res = KSI_DataHasher_add(hsr, buf, buf_len);
+				if(res != KSI_OK){
+					fclose(in);
+					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to add data to hasher.\n");
+				}
+			}
 
-    return;
+			if (in != NULL) fclose(in);
+			/* Close the data hasher and retreive the data hash. */
+			res = KSI_DataHasher_close(hsr, hash);
+			ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to create hash.\n");
+		}
+		CATCH_ALL{
+			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to hash file '%s'.\n", fname);
+		}
+	end_try
+
+	return;
 }
 
-void saveSignatureFile_throws(KSI_Signature *sign, const char *fname)
-{
-    int res = KSI_UNKNOWN_ERROR;
-    unsigned char *raw = NULL;
-    int raw_len = 0;
-    int count = 0;
-    FILE *out = NULL;
-    
-    try
-        CODE{
-            /* Serialize the extended signature. */
-            res = KSI_Signature_serialize(sign, &raw, &raw_len);
-            ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to serialize signature.\n");
+void saveSignatureFile_throws(KSI_Signature *sign, const char *fname){
+	int res = KSI_UNKNOWN_ERROR;
+	unsigned char *raw = NULL;
+	int raw_len = 0;
+	int count = 0;
+	FILE *out = NULL;
 
-            /* Open output file. */
-            out = fopen(fname, "wb");
-            if (out == NULL) {
-                KSI_free(raw);
-                THROW_MSG(IO_EXEPTION, "Error: Unable to open output file '%s'\n",fname);
-                }
+	try
+		CODE{
+			/* Serialize the extended signature. */
+			res = KSI_Signature_serialize(sign, &raw, &raw_len);
+			ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to serialize signature.\n");
 
-            count = fwrite(raw, 1, raw_len, out);
-            if (count != raw_len) {
-                fclose(out);
-                KSI_free(raw);
-                THROW_MSG(KSI_EXEPTION, "Error: Failed to write output file.\n");
-                }
+			/* Open output file. */
+			out = fopen(fname, "wb");
+			if (out == NULL) {
+				KSI_free(raw);
+				THROW_MSG(IO_EXEPTION, "Error: Unable to open output file '%s'\n",fname);
+			}
 
-            }
-        CATCH_ALL{
-            THROW_FORWARD_APPEND_MESSAGE("Error: Unable to save signature '%s'", fname);
-            }
-    end_try
-    
+			count = fwrite(raw, 1, raw_len, out);
+			if (count != raw_len) {
+				fclose(out);
+				KSI_free(raw);
+				THROW_MSG(KSI_EXEPTION, "Error: Failed to write output file.\n");
+			}
 
-    fclose(out);
-    KSI_free(raw);
-    return;
+		}
+		CATCH_ALL{
+			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to save signature '%s'", fname);
+		}
+	end_try
+
+
+	fclose(out);
+	KSI_free(raw);
+	return;
 }
 
 /**
@@ -190,32 +187,31 @@ void saveSignatureFile_throws(KSI_Signature *sign, const char *fname)
  * 
  * @throws KSI_EXEPTION.
  */
-static void printPublicationRecordReferences_throws(KSI_PublicationRecord *publicationRecord)
-{
-    KSI_LIST(KSI_Utf8String) *list_publicationReferences = NULL;
-    int res = KSI_UNKNOWN_ERROR;
-    int j = 0;
+static void printPublicationRecordReferences_throws(KSI_PublicationRecord *publicationRecord){
+	KSI_LIST(KSI_Utf8String) *list_publicationReferences = NULL;
+	int res = KSI_UNKNOWN_ERROR;
+	int j = 0;
 
-    try
-        CODE{
-            res = KSI_PublicationRecord_getPublicationRef(publicationRecord, &list_publicationReferences);
-            ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to get publication references.\n");
+	try
+		CODE{
+			res = KSI_PublicationRecord_getPublicationRef(publicationRecord, &list_publicationReferences);
+			ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to get publication references.\n");
 
-            for (j = 0; j < KSI_Utf8StringList_length(list_publicationReferences); j++) {
-                KSI_Utf8String *reference = NULL;
-                res = KSI_Utf8StringList_elementAt(list_publicationReferences, j, &reference);
-                ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to get reference.\n");
-                printf("*  %s\n", KSI_Utf8String_cstr(reference));
-                }
+			for (j = 0; j < KSI_Utf8StringList_length(list_publicationReferences); j++) {
+				KSI_Utf8String *reference = NULL;
+				res = KSI_Utf8StringList_elementAt(list_publicationReferences, j, &reference);
+				ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to get reference.\n");
+				printf("*  %s\n", KSI_Utf8String_cstr(reference));
+				}
 			if(j==0)
-                printf("*  No publication records available\n");
-            }
-        CATCH_ALL{
-            THROW_FORWARD_APPEND_MESSAGE("Error: Unable to print publication record reference.\n");
-            }
-    end_try
-    
-    return;
+				printf("*  No publication records available\n");
+		}
+		CATCH_ALL{
+			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to print publication record reference.\n");
+		}
+	end_try
+
+	return;
 }
 
 /**
@@ -225,211 +221,208 @@ static void printPublicationRecordReferences_throws(KSI_PublicationRecord *publi
  * 
  * @throws KSI_EXEPTION.
  */
-static void printfPublicationRecordTime_throws(KSI_PublicationRecord *publicationRecord)
-{
-    KSI_PublicationData *publicationData = NULL;
-    KSI_Integer *rawTime = NULL;
-    time_t pubTime;
-    struct tm *publicationTime = NULL;
-    int res = KSI_UNKNOWN_ERROR;
-    
-    try
-        CODE{
-            res = KSI_PublicationRecord_getPublishedData(publicationRecord, &publicationData);
-            ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to get pulication data\n");
+static void printfPublicationRecordTime_throws(KSI_PublicationRecord *publicationRecord){
+	KSI_PublicationData *publicationData = NULL;
+	KSI_Integer *rawTime = NULL;
+	time_t pubTime;
+	struct tm *publicationTime = NULL;
+	int res = KSI_UNKNOWN_ERROR;
 
-            res = KSI_PublicationData_getTime(publicationData, &rawTime);
-            if (res != KSI_OK || rawTime == NULL) {
-                THROW_MSG(KSI_EXEPTION, "Error: Failed to get publication time\n");
-                }
-            }
-        CATCH_ALL{
-            THROW_FORWARD_APPEND_MESSAGE("Error: Unable print publication record time.\n");
-            }
-    end_try
-    
-    pubTime = (time_t) KSI_Integer_getUInt64(rawTime);
-    publicationTime = gmtime(&pubTime);
-    printf("[%d-%d-%d]\n", 1900 + publicationTime->tm_year, publicationTime->tm_mon + 1, publicationTime->tm_mday);
+	try
+		CODE{
+			res = KSI_PublicationRecord_getPublishedData(publicationRecord, &publicationData);
+			ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to get pulication data\n");
 
-    return;
+			res = KSI_PublicationData_getTime(publicationData, &rawTime);
+			if (res != KSI_OK || rawTime == NULL) {
+				THROW_MSG(KSI_EXEPTION, "Error: Failed to get publication time\n");
+			}
+		}
+		CATCH_ALL{
+			THROW_FORWARD_APPEND_MESSAGE("Error: Unable print publication record time.\n");
+		}
+	end_try
+
+	pubTime = (time_t) KSI_Integer_getUInt64(rawTime);
+	publicationTime = gmtime(&pubTime);
+	printf("[%d-%d-%d]\n", 1900 + publicationTime->tm_year, publicationTime->tm_mon + 1, publicationTime->tm_mday);
+
+	return;
 }
 
 
 /*
 void printPublicationReferences_throws(const KSI_PublicationsFile *pubFile)
 {
-    int res = KSI_UNKNOWN_ERROR;
-    KSI_LIST(KSI_PublicationRecord)* list_publicationRecord = NULL;
-    KSI_PublicationRecord *publicationRecord = NULL;
-    int i;
-        
-    try
-       CODE{
-            res = KSI_PublicationsFile_getPublications(pubFile, &list_publicationRecord);
-            ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to get publications records.\n");
+	int res = KSI_UNKNOWN_ERROR;
+	KSI_LIST(KSI_PublicationRecord)* list_publicationRecord = NULL;
+	KSI_PublicationRecord *publicationRecord = NULL;
+	int i;
 
-            for (i = 0; i < KSI_PublicationRecordList_length(list_publicationRecord); i++) {
-                res = KSI_PublicationRecordList_elementAt(list_publicationRecord, i, &publicationRecord);
-                ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to get publications record object.\n");
-                
-                printfPublicationRecordTime_throws(publicationRecord);
-                printPublicationRecordReferences_throws(publicationRecord);
-                }
-            }
-        CATCH_ALL{
-            THROW_FORWARD_APPEND_MESSAGE("Error: Unable to print references.\n");
-            }
-    end_try
-        
-    return;
+	try
+	   CODE{
+			res = KSI_PublicationsFile_getPublications(pubFile, &list_publicationRecord);
+			ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to get publications records.\n");
+
+			for (i = 0; i < KSI_PublicationRecordList_length(list_publicationRecord); i++) {
+				res = KSI_PublicationRecordList_elementAt(list_publicationRecord, i, &publicationRecord);
+				ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to get publications record object.\n");
+
+				printfPublicationRecordTime_throws(publicationRecord);
+				printPublicationRecordReferences_throws(publicationRecord);
+				}
+			}
+		CATCH_ALL{
+			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to print references.\n");
+			}
+	end_try
+
+	return;
 }
 */
 
-void printSignaturePublicationReference_throws(const KSI_Signature *sig)
-{
-    int res = KSI_UNKNOWN_ERROR;
-    KSI_PublicationRecord *publicationRecord;
-    
-    try
-       CODE{
-            res = KSI_Signature_getPublicationRecord(sig, &publicationRecord);
-            ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to get publications reference list from publication record object.\n");
+void printSignaturePublicationReference_throws(const KSI_Signature *sig){
+	int res = KSI_UNKNOWN_ERROR;
+	KSI_PublicationRecord *publicationRecord;
 
-            if (publicationRecord == NULL) {
-                THROW_MSG(KSI_EXEPTION, "Error: No publication Record avilable.\n");
-            }
-            printfPublicationRecordTime_throws(publicationRecord);
-            printPublicationRecordReferences_throws(publicationRecord);
-            }
-        CATCH_ALL{
-            THROW_FORWARD_APPEND_MESSAGE("Error: Unable to print signatures publication reference.\n");
-            }
-    end_try
-    
-    return;
+	try
+		CODE{
+			res = KSI_Signature_getPublicationRecord(sig, &publicationRecord);
+			ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to get publications reference list from publication record object.\n");
+
+			if (publicationRecord == NULL) {
+				THROW_MSG(KSI_EXEPTION, "Error: No publication Record avilable.\n");
+			}
+			printfPublicationRecordTime_throws(publicationRecord);
+			printPublicationRecordReferences_throws(publicationRecord);
+		}
+		CATCH_ALL{
+			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to print signatures publication reference.\n");
+		}
+	end_try
+
+	return;
 }
 
-void printSignerIdentity_throws(KSI_Signature *sign)
-{
-    int res = KSI_UNKNOWN_ERROR;
-    char *signerIdentity = NULL;
-    try
-        CODE{
-            res = KSI_Signature_getSignerIdentity(sign, &signerIdentity);
-            if(res != KSI_OK){
-                KSI_free(signerIdentity);
-                ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to read signer identity.\n");
-                }
-            printf("Signer identity: '%s'\n", signerIdentity == NULL ? "Unknown" : signerIdentity);
-            }
-        CATCH_ALL{
-            THROW_FORWARD_APPEND_MESSAGE("Error: Unable to print signer identity.\n");
-            }
-    end_try
+void printSignerIdentity_throws(KSI_Signature *sign){
+	int res = KSI_UNKNOWN_ERROR;
+	char *signerIdentity = NULL;
+	try
+		CODE{
+			res = KSI_Signature_getSignerIdentity(sign, &signerIdentity);
+			if(res != KSI_OK){
+				KSI_free(signerIdentity);
+				ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to read signer identity.\n");
+			}
+			printf("Signer identity: '%s'\n", signerIdentity == NULL ? "Unknown" : signerIdentity);
+		}
+		CATCH_ALL{
+			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to print signer identity.\n");
+		}
+	end_try
 
-    KSI_free(signerIdentity);
-    return;
+	KSI_free(signerIdentity);
+	return;
 }
 
 
 static unsigned int elapsed_time_ms;
 
 unsigned int measureLastCall(void){
-    static clock_t thisCall = 0;
-    static clock_t lastCall = 0;
+	static clock_t thisCall = 0;
+	static clock_t lastCall = 0;
 
-    thisCall = clock();
-    elapsed_time_ms = 1000*(thisCall - lastCall) / CLOCKS_PER_SEC;
-    lastCall = thisCall;
-    return elapsed_time_ms;
+	thisCall = clock();
+	elapsed_time_ms = 1000*(thisCall - lastCall) / CLOCKS_PER_SEC;
+	lastCall = thisCall;
+	return elapsed_time_ms;
 }
 
 unsigned int measuredTime(void){
-    return elapsed_time_ms;
-    }
+	return elapsed_time_ms;
+}
 
 char* str_measuredTime(void){
-    static char buf[32];
-    snprintf(buf,32,"(%i ms)", elapsed_time_ms);
-    return buf;
-    }
+	static char buf[32];
+	snprintf(buf,32,"(%i ms)", elapsed_time_ms);
+	return buf;
+}
 
 
 
 #define THROWABLE(func, ...) \
-    int res = KSI_UNKNOWN_ERROR; \
-    res = func;  \
-    if(res != KSI_OK) {THROW_MSG(KSI_EXEPTION, __VA_ARGS__);} \
-    return res;
+	int res = KSI_UNKNOWN_ERROR; \
+	res = func;  \
+	if(res != KSI_OK) {THROW_MSG(KSI_EXEPTION, __VA_ARGS__);} \
+	return res;
 
 
 int KSI_receivePublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile **publicationsFile){
-    //THROWABLE(KSI_receivePublicationsFile(ksi, publicationsFile), "Error: Unable to read publications file. (%s)\n", KSI_getErrorString(res));
-    
+	//THROWABLE(KSI_receivePublicationsFile(ksi, publicationsFile), "Error: Unable to read publications file. (%s)\n", KSI_getErrorString(res));
+
 	int res = KSI_UNKNOWN_ERROR; 
-    res = KSI_receivePublicationsFile(ksi, publicationsFile);  
-    if(res != KSI_OK) {
+	res = KSI_receivePublicationsFile(ksi, publicationsFile);  
+	if(res != KSI_OK) {
 		printf("\n");
 		KSI_ERR_statusDump(ksi, stderr);
 		THROW_MSG(KSI_EXEPTION, "Error: Unable to read publications file. (%s)\n", KSI_getErrorString(res));
 	} 
-    return res;
+	return res;
 }
 
 int KSI_verifyPublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *publicationsFile){
-    THROWABLE(KSI_verifyPublicationsFile(ksi, publicationsFile), "Error: Unable to verify publications file. (%s)\n", KSI_getErrorString(res));
-    }
+	THROWABLE(KSI_verifyPublicationsFile(ksi, publicationsFile), "Error: Unable to verify publications file. (%s)\n", KSI_getErrorString(res));
+}
 
 int KSI_PublicationsFile_serialize_throws(KSI_CTX *ksi, KSI_PublicationsFile *publicationsFile, char **raw, int *raw_len){
-    THROWABLE(KSI_PublicationsFile_serialize(ksi, publicationsFile, raw, raw_len), "Error: Unable serialize publications file. (%s)\n", KSI_getErrorString(res));
+	THROWABLE(KSI_PublicationsFile_serialize(ksi, publicationsFile, raw, raw_len), "Error: Unable serialize publications file. (%s)\n", KSI_getErrorString(res));
 }
 
 int KSI_DataHasher_open_throws(KSI_CTX *ksi,int hasAlgID ,KSI_DataHasher **hsr){
-    THROWABLE(KSI_DataHasher_open(ksi, hasAlgID, hsr), "Error: Unable to create hasher. (%s)\n", KSI_getErrorString(res));
+	THROWABLE(KSI_DataHasher_open(ksi, hasAlgID, hsr), "Error: Unable to create hasher. (%s)\n", KSI_getErrorString(res));
 }
 
 int KSI_createSignature_throws(KSI_CTX *ksi, const KSI_DataHash *hash, KSI_Signature **sign){
-     THROWABLE(KSI_createSignature(ksi, hash, sign), "Error: Unable to sign. (%s)\n", KSI_getErrorString(res));
+	 THROWABLE(KSI_createSignature(ksi, hash, sign), "Error: Unable to sign. (%s)\n", KSI_getErrorString(res));
 	 }
 
 int KSI_DataHash_fromDigest_throws(KSI_CTX *ksi, int hasAlg, char *data, unsigned int len, KSI_DataHash **hash){
-    THROWABLE(KSI_DataHash_fromDigest(ksi, hasAlg, data, len, hash), "Error: Unable to create hash from digest. (%s)\n", KSI_getErrorString(res));
-    }
+	THROWABLE(KSI_DataHash_fromDigest(ksi, hasAlg, data, len, hash), "Error: Unable to create hash from digest. (%s)\n", KSI_getErrorString(res));
+}
 
 int KSI_PublicationsFile_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_PublicationsFile **pubFile){
-    THROWABLE(KSI_PublicationsFile_fromFile(ksi, fileName, pubFile), "Error: Unable to read publications file '%s'.\n", fileName)
-    }
+	THROWABLE(KSI_PublicationsFile_fromFile(ksi, fileName, pubFile), "Error: Unable to read publications file '%s'.\n", fileName)
+}
 
 int KSI_Signature_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_Signature **sig){
-    THROWABLE(KSI_Signature_fromFile(ksi, fileName, sig), "Error: Unable to read signature from file. (%s)\n", KSI_getErrorString(res));
+	THROWABLE(KSI_Signature_fromFile(ksi, fileName, sig), "Error: Unable to read signature from file. (%s)\n", KSI_getErrorString(res));
 }
 
 int KSI_Signature_verify_throws(KSI_Signature *sig, KSI_CTX *ksi){
-    THROWABLE(KSI_Signature_verify(sig, ksi), "Error: Unable verify signature. (%s)\n", KSI_getErrorString(res));
-    }
+	THROWABLE(KSI_Signature_verify(sig, ksi), "Error: Unable verify signature. (%s)\n", KSI_getErrorString(res));
+}
 
 int KSI_Signature_createDataHasher_throws(KSI_Signature *sig, KSI_DataHasher **hsr){
-    THROWABLE(KSI_Signature_createDataHasher(sig, hsr), "Error: Unable to create data hasher. (%s)\n", KSI_getErrorString(res));
-    }
+	THROWABLE(KSI_Signature_createDataHasher(sig, hsr), "Error: Unable to create data hasher. (%s)\n", KSI_getErrorString(res));
+}
 
 int KSI_Signature_verifyDataHash_throws(KSI_Signature *sig, KSI_CTX *ksi, KSI_DataHash *hash){
-    THROWABLE(KSI_Signature_verifyDataHash(sig, ksi,  hash), "Error: Wrong document or signature. (%s)\n", KSI_getErrorString(res));
+	THROWABLE(KSI_Signature_verifyDataHash(sig, ksi,  hash), "Error: Wrong document or signature. (%s)\n", KSI_getErrorString(res));
 }
 /*To nearest publication available*/
 int KSI_extendSignature_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext){
-    THROWABLE(KSI_extendSignature(ksi, sig, ext),"Error: Unable to extend signature. (%s)\n", KSI_getErrorString(res));
+	THROWABLE(KSI_extendSignature(ksi, sig, ext),"Error: Unable to extend signature. (%s)\n", KSI_getErrorString(res));
 }
 /*To Publication record*/
 int KSI_Signature_extend_throws(const KSI_Signature *signature, KSI_CTX *ctx, const KSI_PublicationRecord *pubRec, KSI_Signature **extended){
 	//THROWABLE(KSI_Signature_extend(signature, ctx, pubRec, extended), "Error: Unable to extend signature. (%s)\n", KSI_getErrorString(res));
-			
+
 	int res = KSI_UNKNOWN_ERROR; 
-    res = KSI_Signature_extend(signature, ctx, pubRec, extended);  
-    if(res != KSI_OK) {
+	res = KSI_Signature_extend(signature, ctx, pubRec, extended);  
+	if(res != KSI_OK) {
 		printf("\n");
 		KSI_ERR_statusDump(ctx, stderr);
 		THROW_MSG(KSI_EXEPTION, "Error: Unable to extend signature. (%s)\n", KSI_getErrorString(res));
 	} 
-    return res;
+	return res;
 }

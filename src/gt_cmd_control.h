@@ -14,27 +14,27 @@
 extern "C" {
 #endif
 
-    typedef enum paramContRes {
-        PARAM_OK,
-        PARAM_NULLPTR,
-        PARAM_NOCONTENT,
-        PARAM_INVALID,
-        FILE_ACCESS_DENIED,
-        FILE_DOSE_NOT_EXIST,
-        FILE_INVALID_PATH,
-        PARAM_UNKNOWN_ERROR
-    } PARAM_RES;
+typedef enum paramContRes {
+	PARAM_OK,
+	PARAM_NULLPTR,
+	PARAM_NOCONTENT,
+	PARAM_INVALID,
+	FILE_ACCESS_DENIED,
+	FILE_DOSE_NOT_EXIST,
+	FILE_INVALID_PATH,
+	PARAM_UNKNOWN_ERROR
+} PARAM_RES;
 
-    PARAM_RES isPathFormOk(const char *path);
-    PARAM_RES isHexFormatOK(const char *hex);
-    PARAM_RES isURLFormatOK(const char *url);
-    PARAM_RES isIntegerFormatOK(const char *integer);
-    PARAM_RES isHashAlgFormatOK(const char *hashAlg);
+PARAM_RES isPathFormOk(const char *path);
+PARAM_RES isHexFormatOK(const char *hex);
+PARAM_RES isURLFormatOK(const char *url);
+PARAM_RES isIntegerFormatOK(const char *integer);
+PARAM_RES isHashAlgFormatOK(const char *hashAlg);
 
-    PARAM_RES analyseInputFile(const char* path);
-    PARAM_RES analyseOutputFile(const char* path);
-    
-    const char * getFormatErrorString(PARAM_RES res);
+PARAM_RES analyseInputFile(const char* path);
+PARAM_RES analyseOutputFile(const char* path);
+
+const char * getFormatErrorString(PARAM_RES res);
 
 
 

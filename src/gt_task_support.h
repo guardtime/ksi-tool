@@ -112,11 +112,11 @@ int KSI_extendSignature_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature *
 int KSI_Signature_extend_throws(const KSI_Signature *signature, KSI_CTX *ctx, const KSI_PublicationRecord *pubRec, KSI_Signature **extended);
 
 #define MEASURE_TIME(code_here) \
-    {   \
-    measureLastCall(); \
-    code_here; \
-    measureLastCall(); \
-    }
+	{   \
+	measureLastCall(); \
+	code_here; \
+	measureLastCall(); \
+	}
 
 
 #ifdef	__cplusplus
