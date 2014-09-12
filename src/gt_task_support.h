@@ -45,12 +45,11 @@ void saveSignatureFile_throws(KSI_Signature *sign, const char *fname);
 
 
 /**
- * Prints the signer identity.
- * @param[in] sign Pointer to KSI signture object.
+ * Prints the signer identity. If sig == NULL dose nothing.
+ * @param[in] sig Pointer to KSI signature object.
  * 
- * @throws KSI_EXEPTION.
  */
-void printSignerIdentity_throws(KSI_Signature *sign);
+void printSignerIdentity(KSI_Signature *sig);
 
 /**
  * Prints publications file publications references.
@@ -59,17 +58,23 @@ void printSignerIdentity_throws(KSI_Signature *sign);
  * 
  * @param[in] pubFile Pointer to KSI publications file object.
  * 
- * @throws KSI_EXEPTIO.
  */
-void printPublicationReferences_throws(const KSI_PublicationsFile *pubFile);
+void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile);
 
 /**
- * Prints signatures publication references.
- * @param[in] sig Pointer to KSI signture object.
+ * Prints signatures publication references. If sig == NULL dose nothing.
+ * @param[in] sig Pointer to KSI signature object.
  * 
- * @throws KSI_EXEPTIO
  */
-void printSignaturePublicationReference_throws(const KSI_Signature *sig);
+void printSignaturePublicationReference(const KSI_Signature *sig);
+
+/**
+ * Prints signature verification info.  If sig == NULL dose nothing.
+ * @param[in] sig Pointer to KSI signature object.
+ */
+void printSignatureVerificationInfo(const KSI_Signature *sig);
+
+void printPublicationsFileCertificates(const KSI_PublicationsFile *pubfile);
 
 /**
  * Gives time difference between the current and last call in ms.

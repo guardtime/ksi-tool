@@ -11,6 +11,7 @@ bool GT_signTask(GT_CmdParameters *cmdparam) {
 	KSI_DataHash *hash = NULL;
 	KSI_Signature *sign = NULL;
 	bool state = true;
+
 	resetExeptionHandler();
 	try
 		CODE{
@@ -35,7 +36,7 @@ bool GT_signTask(GT_CmdParameters *cmdparam) {
 				printf("ok.\n");
 			}
 			else{
-				goto cleanup;
+				THROW(INVALID_ARGUMENT_EXEPTION);
 			}
 
 			/* Sign the data hash. */
@@ -43,15 +44,7 @@ bool GT_signTask(GT_CmdParameters *cmdparam) {
 			MEASURE_TIME(KSI_createSignature_throws(ksi, hash, &sign));
 			printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
 
-			try
-				CODE{
-					if(cmdparam->n) printSignerIdentity_throws(sign);
-				}
-				CATCH_ALL{
-					printErrorLocations();
-					exeptionSolved();
-				}
-			end_try
+					
 			/* Save signature file */
 			saveSignatureFile_throws(sign, cmdparam->outSigFileName);
 			printf("Signature saved.\n");
@@ -61,21 +54,18 @@ bool GT_signTask(GT_CmdParameters *cmdparam) {
 			printErrorLocations();
 			exeptionSolved();
 			state = false;
-			goto cleanup;
 		}
 	end_try
 
-	/*
-	printf("Verifying freshly created signature...");
-	res = KSI_Signature_verify(sign, ksi);
-	ERROR_HANDLING_STATUS_DUMP("\nVerifying failed (%s)\n", KSI_getErrorString(res));
-	printf("ok.\n");
-	*/
-cleanup:
+	if(cmdparam->n || cmdparam->r || cmdparam->d) printf("\n");
+	if (cmdparam->n) printSignerIdentity(sign);
+	
+				
 	KSI_Signature_free(sign);
 	KSI_DataHash_free(hash);
 	KSI_DataHasher_free(hsr);
 	KSI_CTX_free(ksi);
+	
 	return state;
 }
 

@@ -29,31 +29,17 @@ bool GT_verifyTask(GT_CmdParameters *cmdparam){
 				printf("Reading signature... ");
 				KSI_Signature_fromFile_throws(ksi, cmdparam->inSigFileName, &sig);
 				printf("ok.\n");
-
-				try
-					CODE{
-					if (cmdparam->n) printSignerIdentity_throws(sig);
-					if (cmdparam->r) printSignaturePublicationReference_throws(sig);
-					}
-				CATCH_ALL{
-					printErrorLocations();
-					exeptionSolved();
-					}
-				end_try
-
-
+		
 				/* Choosing between online and publications file signature verification */
-				if (cmdparam->task == verifyTimestamp_online) {
-					printf("Verifying signature online... ");
+				if (cmdparam->task == verifyTimestamp) {
+					printf("Verifying signature %s ", cmdparam->b ? "using local publications file..." : "online...");
 					MEASURE_TIME(KSI_Signature_verify_throws(sig, ksi));
 					printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
-				} else if (cmdparam->task == verifyTimestamp_locally) {
-					printf("Verifying signature ... ");
-					THROW_MSG(KSI_EXEPTION, "Error: Not implemeneted.\n");
-				} else {
+				}
+				else{
 					THROW_MSG(KSI_EXEPTION, "Error: Unexpected error Unknown task.\n ");
-						}
-						/* If datafile is present comparing hash of a datafile and timestamp */
+				}
+				/* If datafile is present compare hash of a datafile and timestamp */
 				if (cmdparam->f) {
 					/* Create hasher. */
 					printf("Verifying file's %s hash...", cmdparam->inDataFileName);
@@ -64,8 +50,7 @@ bool GT_verifyTask(GT_CmdParameters *cmdparam){
 					KSI_Signature_verifyDataHash_throws(sig, ksi, hsh);
 					printf("ok.\n");
 				}
-				}
-
+			}
 
 			printf("Verification of %s %s successful.\n",
 					(cmdparam->task == verifyPublicationsFile) ? "publications file" : "signature file",
@@ -77,15 +62,18 @@ bool GT_verifyTask(GT_CmdParameters *cmdparam){
 			printErrorLocations();
 			exeptionSolved();
 			state = false;
-			goto cleanup;
 		}
 	end_try
-
-cleanup:
-
+	
+	if(cmdparam->n || cmdparam->r || cmdparam->d) printf("\n");
+	if (cmdparam->n) printSignerIdentity(sig);
+	if (cmdparam->r) printSignaturePublicationReference(sig);
+	if (cmdparam->d) printSignatureVerificationInfo(sig);
+	
 	KSI_Signature_free(sig);
 	KSI_DataHasher_free(hsr);
 	KSI_DataHash_free(hsh);
 	KSI_CTX_free(ksi);
+	
 	return state;
 }

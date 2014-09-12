@@ -40,7 +40,15 @@ PARAM_RES isHexFormatOK(const char *hex){
 PARAM_RES isURLFormatOK(const char *url){
 	CheckNullPtr(url);
 	CheckEmpty(url);
-	return PARAM_OK;
+	
+	if(strstr(url, "http://")==url)
+		return PARAM_OK;
+	else if(strstr(url, "file://")==url)
+		return PARAM_OK;
+	else
+		return URL_UNKNOWN_SCHEME;
+	
+	return PARAM_UNKNOWN_ERROR;
 }
 
 PARAM_RES isIntegerFormatOK(const char *integer){
@@ -116,6 +124,8 @@ const char * getFormatErrorString(PARAM_RES res){
 	case FILE_DOSE_NOT_EXIST: return "(File dose not exist)";
 		break;
 	case FILE_INVALID_PATH: return "(Invalid path)";
+		break;
+	case URL_UNKNOWN_SCHEME: return "(URL scheme is unknown)";
 		break;
 	}
 

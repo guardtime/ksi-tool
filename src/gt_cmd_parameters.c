@@ -284,7 +284,6 @@ static void getHashAndAlgStrings(const char *instrn, char **strnAlgName, char **
 			fprintf(stderr, "Error: Invalid parameter -%s '%s'format. %s\n", #flag_,raw.flag_.arg, getFormatErrorString(_p_res)); \
 			param.flag_ = false; \
 			result = false; \
-			goto cleanup; \
 			} \
 		} \
 	}
@@ -312,7 +311,6 @@ static void getHashAndAlgStrings(const char *instrn, char **strnAlgName, char **
 			param.cmd_arg = 0; \
 			fprintf(stderr, "Error: Invalid parameter -%s '%s' format. %s\n", #flag_,raw.flag_.arg, getFormatErrorString(_p_res)); \
 			result = false; \
-			goto cleanup; \
 			} \
 		} \
 	}
@@ -327,9 +325,10 @@ static void getHashAndAlgStrings(const char *instrn, char **strnAlgName, char **
  * @return Returns true if the form of the parameters is OK. False otherwise.
  */
 static bool readCmdParam(int argc, char **argv){
-	bool result = false;
+	bool result = true;
 	struct raw_parameters *rawParam = NULL;
 	int i=0;
+	
 	
 	readRawCmdParam(argc, argv, &rawParam);
 	
@@ -368,12 +367,23 @@ static bool readCmdParam(int argc, char **argv){
 	cmdParameters.sizeOpenSSLTruststoreFileName = KSI_List_length(rawParam->lst_V);
 	if(cmdParameters.sizeOpenSSLTruststoreFileName != 0){
 		cmdParameters.openSSLTruststoreFileName = (char**)malloc(cmdParameters.sizeOpenSSLTruststoreFileName*sizeof(char*));
-		cmdParameters.V = true;
 		
 		for(i=0; i<cmdParameters.sizeOpenSSLTruststoreFileName ; i++){
+			PARAM_RES paramRes;
 			struct st_param *tmpobj = NULL;
 			KSI_List_elementAt(rawParam->lst_V, i, &tmpobj);
-			cmdParameters.openSSLTruststoreFileName[i] = tmpobj->arg;
+			paramRes = isPathFormOk(tmpobj->arg) ;
+			
+			if(paramRes == PARAM_OK){
+				cmdParameters.V = true;
+				cmdParameters.openSSLTruststoreFileName[i] = tmpobj->arg;
+			}
+			else{
+				cmdParameters.V = false;
+				cmdParameters.openSSLTruststoreFileName[i] = NULL;
+				fprintf(stderr, "Error: Invalid parameter -V '%s' format. %s\n",tmpobj->arg, getFormatErrorString(paramRes));
+				result = false; 
+			}
 		}
 		
 	}
@@ -403,8 +413,6 @@ static bool readCmdParam(int argc, char **argv){
 		}
 	}	
 	
-	result = true;
-
 cleanup:	
 
 	rawParameters_free(rawParam);
@@ -438,9 +446,7 @@ static void extractTask(void){
 		}//Verify locally or online
 	else if (cmdParameters.v) {
 		if (cmdParameters.x && cmdParameters.i) {
-			cmdParameters.task = verifyTimestamp_online;
-		} else if (cmdParameters.i && cmdParameters.b) {
-			cmdParameters.task = verifyTimestamp_locally;
+			cmdParameters.task = verifyTimestamp;
 		} else if (cmdParameters.b)
 				cmdParameters.task = verifyPublicationsFile;
 		else
@@ -473,7 +479,7 @@ PARAM_RES _p_res = PARAM_UNKNOWN_ERROR; \
 	_p_res = _analyze(param); \
 	if(_p_res != PARAM_OK){ \
 		fprintf(stderr, "Error: Invalid parameter %s '%s'. %s\n", flag_,param, getFormatErrorString(_p_res)); \
-		return false; \
+		isError=true; \
 }};
 
 /**
@@ -486,44 +492,37 @@ PARAM_RES _p_res = PARAM_UNKNOWN_ERROR; \
  */
 static bool controlParameters(void){
 	PARAM_RES res = PARAM_UNKNOWN_ERROR;
+	bool isError = false;
 	int i=0;
+	
+	if (IS_TASK(showHelp)) return true;
+	
 	if(cmdParameters.V){
-		bool errors = false;
 		for(i=0; i< cmdParameters.sizeOpenSSLTruststoreFileName; i++){
 			PARAM_RES res = analyseInputFile(cmdParameters.openSSLTruststoreFileName[i]);
 			if(res != PARAM_OK){
-				errors = true;
+				isError = true;
 				fprintf(stderr, "Error: Invalid parameter -V '%s'. %s\n", cmdParameters.openSSLTruststoreFileName[i], getFormatErrorString(res));
 			}
 		}
-		if(errors) return false;
+		
 	}
 	
 	if (IS_TASK(verifyPublicationsFile)) {
 		ANALYZ_RESULT(analyseInputFile,"-b", cmdParameters.inPubFileName);
-		return true;
 	} else if (IS_TASK(downloadPublicationsFile)) {
 		ANALYZ_RESULT(analyseOutputFile, "-o", cmdParameters.outPubFileName);
-		return true;
 	} else if (IS_TASK(signDataFile)) {
 		ANALYZ_RESULT(analyseInputFile, "-f", cmdParameters.inDataFileName);
-		return true;
 	} else if (IS_TASK(signHash)) {
 		ANALYZ_RESULT(analyseOutputFile, "-o", cmdParameters.outSigFileName);
-		return true;
 	} else if (IS_TASK(extendTimestamp)) {
 		ANALYZ_RESULT(analyseInputFile, "-i", cmdParameters.inSigFileName);
 		ANALYZ_RESULT(analyseOutputFile, "-o", cmdParameters.outSigFileName);
-		return true;
-	} else if (IS_TASK(verifyTimestamp_locally)) {
+	} else if (IS_TASK(verifyTimestamp)) {
 		ANALYZ_RESULT(analyseInputFile, "-i", cmdParameters.inSigFileName);
-		ANALYZ_RESULT(analyseInputFile, "-b", cmdParameters.inPubFileName);
+		if(cmdParameters.b) ANALYZ_RESULT(analyseInputFile, "-b", cmdParameters.inPubFileName);
 		goto extra_check;
-	} else if (IS_TASK(verifyTimestamp_online)) {
-		ANALYZ_RESULT(analyseInputFile, "-i", cmdParameters.inSigFileName);
-		goto extra_check;
-	} else if (IS_TASK(showHelp)) {
-		return true;
 	} else {
 		return false;
 	}
@@ -535,7 +534,8 @@ extra_check :
 		cmdParameters.f = false;
 	}
 
-	return true;
+	if(isError) return false;
+	else return true;
 }
 
 /**
@@ -594,10 +594,8 @@ static void printTaskWarningMessage(void){
 		UNUSED_FLAG_WARNING(cmdParameters, i, "Warning: Can't use -i with -s.\n");
 		UNUSED_FLAG_WARNING(cmdParameters, T, "Warning: Can't use -T with -s.\n");
 		break;
-	case verifyTimestamp_online:
-		UNUSED_FLAG_WARNING(cmdParameters, b, "Warning: Can't use -b with -v -x.\n");
+	case verifyTimestamp:
 		UNUSED_FLAG_WARNING(cmdParameters, T, "Warning: Can't use -T with -v -x.\n");
-	case verifyTimestamp_locally:
 	case verifyPublicationsFile:
 		UNUSED_FLAG_WARNING(cmdParameters, H, "Warning: Can't use -H with -v.\n");
 		UNUSED_FLAG_WARNING(cmdParameters, F, "Warning: Can't use -F with -v.\n");
@@ -713,19 +711,12 @@ void GT_pritHelp(void){
 bool GT_parseCommandline(int argc, char **argv){
 	if (readCmdParam(argc, argv)) {
 		extractTask();
-				//  GT_printParameters();
-				printTaskErrorMessage();
-				printTaskWarningMessage();
-				if(cmdParameters.task == noTask)
-					GT_pritHelp();
-		if (controlParameters()) {
-			return true;
-		} else {
-
-
-			return false;
-		}
-
+		//  GT_printParameters();
+		printTaskErrorMessage();
+		printTaskWarningMessage();
+		if(cmdParameters.task == noTask)
+			GT_pritHelp();
+		return controlParameters();
 	}
 	return false;
 }

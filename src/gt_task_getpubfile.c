@@ -39,18 +39,20 @@ bool GT_getPublicationsFileTask(GT_CmdParameters *cmdparam){
 				printErrorLocations();
 				exeptionSolved();
 				state = false;
-				goto cleanup;
 		}
 		CATCH(IO_EXEPTION){
 				fprintf(stderr , _EXP.tmp);
 				printErrorLocations();
 				state = false;
-				goto cleanup;
 		}
 	end_try
 
-cleanup:
+	if(cmdparam->d) printf("\n");
+	if(cmdparam->d) printPublicationsFileReferences(publicationsFile);	
+	if(cmdparam->d) printPublicationsFileCertificates(publicationsFile);	
+				
 	if (out != NULL) fclose(out);
 	KSI_CTX_free(ksi);
+	
 	return state;
 }

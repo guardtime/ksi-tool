@@ -14,6 +14,9 @@
 extern "C" {
 #endif
 
+	/**
+	 * Enumeration of command line parameters states.
+	 */
 typedef enum paramContRes {
 	PARAM_OK,
 	PARAM_NULLPTR,
@@ -22,6 +25,7 @@ typedef enum paramContRes {
 	FILE_ACCESS_DENIED,
 	FILE_DOSE_NOT_EXIST,
 	FILE_INVALID_PATH,
+	URL_UNKNOWN_SCHEME,
 	PARAM_UNKNOWN_ERROR
 } PARAM_RES;
 

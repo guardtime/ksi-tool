@@ -85,17 +85,15 @@ void initTask_throws(GT_CmdParameters *cmdparam ,KSI_CTX **ksi){
 		CODE{
 			res = KSI_CTX_new(&tmpKsi);
 			ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to init KSI context.\n");
-
 			configureNetworkProvider_throws(tmpKsi, cmdparam);
 
-			if(cmdparam->b){
+			if(cmdparam->b && (cmdparam->task != downloadPublicationsFile && cmdparam->task != verifyPublicationsFile)){
 				KSI_LOG_debug(tmpKsi, "Setting publications file '%s'", cmdparam->inPubFileName);
 				KSI_PublicationsFile_fromFile_throws(tmpKsi, cmdparam->inPubFileName, &tmpPubFile);
 				KSI_setPublicationsFile(tmpKsi, tmpPubFile);
 			}
 
 			if(cmdparam->V || cmdparam->W){
-				
 				KSI_getPKITruststore(tmpKsi, &refTrustStore);
 				if(cmdparam->V){
 					for(i=0; i<cmdparam->sizeOpenSSLTruststoreFileName;i++){
@@ -107,9 +105,7 @@ void initTask_throws(GT_CmdParameters *cmdparam ,KSI_CTX **ksi){
 				}
 			}
 			
-			
 			*ksi = tmpKsi;
-
 		}
 		CATCH(KSI_EXEPTION){
 			KSI_PublicationsFile_free(tmpPubFile);
@@ -196,151 +192,159 @@ void saveSignatureFile_throws(KSI_Signature *sign, const char *fname){
 	return;
 }
 
-/**
- * Print publication record references.
- * 
- * @param[in] publicationRecord Pointer to KSI_PublicationRecord object.
- * 
- * @throws KSI_EXEPTION.
- */
-static void printPublicationRecordReferences_throws(KSI_PublicationRecord *publicationRecord){
-	KSI_LIST(KSI_Utf8String) *list_publicationReferences = NULL;
-	int res = KSI_UNKNOWN_ERROR;
-	int j = 0;
-
-	try
-		CODE{
-			res = KSI_PublicationRecord_getPublicationRef(publicationRecord, &list_publicationReferences);
-			ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to get publication references.\n");
-
-			for (j = 0; j < KSI_Utf8StringList_length(list_publicationReferences); j++) {
-				KSI_Utf8String *reference = NULL;
-				res = KSI_Utf8StringList_elementAt(list_publicationReferences, j, &reference);
-				ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to get reference.\n");
-				printf("*  %s\n", KSI_Utf8String_cstr(reference));
-				}
-			if(j==0)
-				printf("*  No publication records available\n");
-		}
-		CATCH_ALL{
-			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to print publication record reference.\n");
-		}
-	end_try
-
-	return;
-}
-
-/**
- * Print publication record time as [yy-mm-dd].
- * 
- * @param[in] publicationRecord Pointer to KSI_PublicationRecord object.
- * 
- * @throws KSI_EXEPTION.
- */
-static void printfPublicationRecordTime_throws(KSI_PublicationRecord *publicationRecord){
-	KSI_PublicationData *publicationData = NULL;
-	KSI_Integer *rawTime = NULL;
-	time_t pubTime;
-	struct tm *publicationTime = NULL;
-	int res = KSI_UNKNOWN_ERROR;
-
-	try
-		CODE{
-			res = KSI_PublicationRecord_getPublishedData(publicationRecord, &publicationData);
-			ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to get pulication data\n");
-
-			res = KSI_PublicationData_getTime(publicationData, &rawTime);
-			if (res != KSI_OK || rawTime == NULL) {
-				THROW_MSG(KSI_EXEPTION, "Error: Failed to get publication time\n");
-			}
-		}
-		CATCH_ALL{
-			THROW_FORWARD_APPEND_MESSAGE("Error: Unable print publication record time.\n");
-		}
-	end_try
-
-	pubTime = (time_t) KSI_Integer_getUInt64(rawTime);
-	publicationTime = gmtime(&pubTime);
-	printf("[%d-%d-%d]\n", 1900 + publicationTime->tm_year, publicationTime->tm_mon + 1, publicationTime->tm_mday);
-
-	return;
-}
-
-
-/*
-void printPublicationReferences_throws(const KSI_PublicationsFile *pubFile)
-{
+void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile){
 	int res = KSI_UNKNOWN_ERROR;
 	KSI_LIST(KSI_PublicationRecord)* list_publicationRecord = NULL;
 	KSI_PublicationRecord *publicationRecord = NULL;
-	int i;
+	char buf[1024];
+	int i, j;
+	char *pLineBreak = NULL;
+	char *pStart = NULL;
+	
+	if(pubFile == NULL) return;
+	
+	printf("Publications file references:\n");
+	
+	res = KSI_PublicationsFile_getPublications(pubFile, &list_publicationRecord);
+	if(res != KSI_OK) return;
 
-	try
-	   CODE{
-			res = KSI_PublicationsFile_getPublications(pubFile, &list_publicationRecord);
-			ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to get publications records.\n");
-
-			for (i = 0; i < KSI_PublicationRecordList_length(list_publicationRecord); i++) {
-				res = KSI_PublicationRecordList_elementAt(list_publicationRecord, i, &publicationRecord);
-				ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to get publications record object.\n");
-
-				printfPublicationRecordTime_throws(publicationRecord);
-				printPublicationRecordReferences_throws(publicationRecord);
-				}
-			}
-		CATCH_ALL{
-			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to print references.\n");
-			}
-	end_try
+	for (i = 0; i < KSI_PublicationRecordList_length(list_publicationRecord); i++) {
+		res = KSI_PublicationRecordList_elementAt(list_publicationRecord, i, &publicationRecord);
+		if(res != KSI_OK) return;
+		
+		if(KSI_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
+		pStart = buf;
+		j=1;
+		while(pLineBreak = strchr(pStart, '\n')){
+			*pLineBreak = 0;
+			printf("%s %2i) %s\n", (pStart == buf) ? "  " : "    ", (pStart == buf) ? (i+1) : j++, pStart);
+			pStart = pLineBreak+1;
+		}
+	}
 
 	return;
 }
-*/
 
-void printSignaturePublicationReference_throws(const KSI_Signature *sig){
+void printSignaturePublicationReference(const KSI_Signature *sig){
 	int res = KSI_UNKNOWN_ERROR;
 	KSI_PublicationRecord *publicationRecord;
-
-	try
-		CODE{
-			res = KSI_Signature_getPublicationRecord(sig, &publicationRecord);
-			ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to get publications reference list from publication record object.\n");
-
-			if (publicationRecord == NULL) {
-				THROW_MSG(KSI_EXEPTION, "Error: No publication Record avilable.\n");
-			}
-			printfPublicationRecordTime_throws(publicationRecord);
-			printPublicationRecordReferences_throws(publicationRecord);
-		}
-		CATCH_ALL{
-			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to print signatures publication reference.\n");
-		}
-	end_try
-
+	char buf[1024];
+	char *pLineBreak = NULL;
+	char *pStart = buf;
+	int i=0;
+	if(sig == NULL) return;
+	
+	printf("Signature publication references:\n");
+	res = KSI_Signature_getPublicationRecord(sig, &publicationRecord);
+	if(res != KSI_OK)return ;
+	
+	if(publicationRecord == NULL) {
+		printf("  (No publication Records available)\n");
+		return;
+	}
+	
+	if(KSI_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
+	pStart = buf;
+	
+	while(pLineBreak = strchr(pStart, '\n')){
+		*pLineBreak = 0;
+		printf("%s", (pStart == buf) ? "  " : "    ");
+		if(i++) 
+			printf(" %2i) %s\n", i, pStart);
+		else
+			printf(" %s\n", pStart);
+		pStart = pLineBreak+1;
+	}
+	
 	return;
 }
 
-void printSignerIdentity_throws(KSI_Signature *sign){
+void printSignerIdentity(KSI_Signature *sig){
 	int res = KSI_UNKNOWN_ERROR;
 	char *signerIdentity = NULL;
-	try
-		CODE{
-			res = KSI_Signature_getSignerIdentity(sign, &signerIdentity);
-			if(res != KSI_OK){
-				KSI_free(signerIdentity);
-				ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to read signer identity.\n");
-			}
-			printf("Signer identity: '%s'\n", signerIdentity == NULL ? "Unknown" : signerIdentity);
-		}
-		CATCH_ALL{
-			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to print signer identity.\n");
-		}
-	end_try
 
+	if(sig == NULL) goto cleanup;
+	
+	printf("Signer identity: ");
+	res = KSI_Signature_getSignerIdentity(sig, &signerIdentity);
+	if(res != KSI_OK){
+		printf("Unable to get signer identity.\n");
+		goto cleanup;
+	}
+	
+	printf("'%s'\n", signerIdentity == NULL ? "Unknown" : signerIdentity);
+
+cleanup:	
+	
 	KSI_free(signerIdentity);
 	return;
 }
 
+void printSignatureVerificationInfo(const KSI_Signature *sig){
+	int res = KSI_UNKNOWN_ERROR;
+	const KSI_VerificationResult *sigVerification = NULL;
+	KSI_VerificationStepResult *result = NULL;
+	const char *desc;
+	int i=0;
+
+	if(sig == NULL){
+		return;
+	}
+	
+	printf("Verification steps:\n");
+	res = KSI_Signature_getVerificationResult(sig, &sigVerification);
+	if(res != KSI_OK){
+		return;
+	}
+	
+	if(sigVerification != NULL){
+		for(i=0; i< KSI_VerificationResult_getStepResultCount(sigVerification); i++){
+			res = KSI_VerificationResult_getStepResult(sigVerification, i, &result);
+			if(res != KSI_OK){
+				return;
+			}
+			printf("  0x%02x:\t%s", KSI_VerificationStepResult_getStep(result), KSI_VerificationStepResult_isSuccess(result) ? "OK" : "FAIL");
+			desc = KSI_VerificationStepResult_getDescription(result);
+			if (desc && *desc) {
+				printf(" (%s)", desc);
+			}
+			printf("\n");
+		}
+	}
+	return;
+}
+
+void printPublicationsFileCertificates(const KSI_PublicationsFile *pubfile){
+	KSI_CertificateRecordList *certReclist = NULL;
+	KSI_CertificateRecord *certRec = NULL;
+	KSI_PKICertificate *cert = NULL;
+	char buf[1024];
+	int i=0;
+	int res = 0;
+	
+	if(pubfile == NULL) goto cleanup;
+	printf("Publications file certificates::\n");
+	
+	res = KSI_PublicationsFile_getCertificates(pubfile, &certReclist);
+	if(res != KSI_OK || certReclist == NULL) goto cleanup;
+	
+	for(i=0; i<KSI_CertificateRecordList_length(certReclist); i++){
+		res = KSI_CertificateRecordList_elementAt(certReclist, i, &certRec);
+		if(res != KSI_OK || certRec == NULL) goto cleanup;
+		
+		res = KSI_CertificateRecord_getCert(certRec, &cert);
+		if(res != KSI_OK || cert == NULL) goto cleanup;
+
+		if(KSI_PKICertificate_toString(cert, buf, sizeof(buf)) != NULL)
+			printf("  %2i)  %s\n",i, buf);
+		else
+			printf("  %2i)  null\n",i);
+	}
+	
+cleanup:
+				
+	return;	
+	}
 
 static unsigned int elapsed_time_ms;
 
@@ -407,7 +411,16 @@ int KSI_DataHash_fromDigest_throws(KSI_CTX *ksi, int hasAlg, char *data, unsigne
 }
 
 int KSI_PublicationsFile_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_PublicationsFile **pubFile){
-	THROWABLE(KSI_PublicationsFile_fromFile(ksi, fileName, pubFile), "Error: Unable to read publications file '%s'.\n", fileName)
+	//THROWABLE(KSI_PublicationsFile_fromFile(ksi, fileName, pubFile), "Error: Unable to read publications file '%s'.\n", fileName)
+	
+		int res = KSI_UNKNOWN_ERROR; 
+	res = KSI_PublicationsFile_fromFile(ksi, fileName, pubFile);  
+	if(res != KSI_OK) {
+		printf("\n");
+		KSI_ERR_statusDump(ksi, stderr);
+		THROW_MSG(KSI_EXEPTION, "Error: Get pubfile. (%s)\n", KSI_getErrorString(res));
+	} 
+	return res;
 }
 
 int KSI_Signature_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_Signature **sig){

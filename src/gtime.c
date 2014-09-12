@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
 		else if(param.task == extendTimestamp){
 			state=GT_extendTask(&param);
 		}
-		else if((param.task == verifyTimestamp_online) || (param.task == verifyTimestamp_locally)){
+		else if(param.task == verifyTimestamp){
 			state=GT_verifyTask(&param);
 		}
 		else if(param.task == showHelp){
