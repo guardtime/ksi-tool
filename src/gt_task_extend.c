@@ -60,6 +60,7 @@ bool GT_extendTask(GT_CmdParameters *cmdparam) {
 	end_try
 
 	if(cmdparam->n || cmdparam->r || cmdparam->d) printf("\n");
+	if (cmdparam->n) printSignerIdentity(ext);
 	if (cmdparam->r) printSignaturePublicationReference(ext);
 
 	KSI_Signature_free(sig);

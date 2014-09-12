@@ -447,6 +447,8 @@ static void extractTask(void){
 	else if (cmdParameters.v) {
 		if (cmdParameters.x && cmdParameters.i) {
 			cmdParameters.task = verifyTimestamp;
+		} else if (cmdParameters.b && cmdParameters.i) {
+			cmdParameters.task = verifyTimestamp;
 		} else if (cmdParameters.b)
 				cmdParameters.task = verifyPublicationsFile;
 		else
@@ -552,17 +554,17 @@ static void printTaskErrorMessage(void){
 				);
 		break;
 	case invalid_p:
-		fprintf(stderr, "Error: Using -p you have to define missing parameter -o <fn>\n");
+		fprintf(stderr, "Error: Using -p you have to define missing parameter -o <file>\n");
 		break;
 	case invalid_s:
 		fprintf(stderr, "Error: Using -s you have to define missing parameter(s) %s%s\n",
 				!(cmdParameters.o) ? "-o <output file> " : "",
-				!(cmdParameters.f && cmdParameters.F) ? "-f <fn> or -F<hash>" : ""
+				!(cmdParameters.f && cmdParameters.F) ? "-f <file> or -F<hash>" : ""
 				);
 		break;
 	case invalid_v:
 		fprintf(stderr, "Error: Using -v you have to define missing parameter(s) %s%s\n",
-				!(cmdParameters.i) ? "-i <fn> " : "",
+				!(cmdParameters.i) ? "-i <file> " : "",
 				!(cmdParameters.b && cmdParameters.x) ? "-b <publications file> or -x (verify online)" : ""
 				);
 		break;
@@ -667,41 +669,60 @@ static void printSupportedHashAlgorithms(void){
 void GT_pritHelp(void){
 
 	fprintf(stderr,
-			"\nGuardTime command-line signing tool, using API\n"
+			"\nGuardTime command-line signing tool\n"
 			"Usage: <-s|-x|-p|-v> [more options]\n"
 			"Where recognized options are:\n"
-			" -s		sign data \n"
-			" -S <url>	specify Signing service URL\n"
-			" -x		use online verification (eXtending) service\n"
-			" -X <url>	specify verification (eXtending) service URL\n"
-			" -p		download Publications file (The result is automatically verified)\n"
-			" -P <url>	specify Publications file URL\n"
-			" -v		verify signature token (-i <ts>); online verify with -x;\n"
-			" -t		include service Timing\n"
-			" -T		specific publication time to extend to (use with -x)\n"
+			" -s		sign data (-n -d -t) \n"
+			"   		-f -o sign data file\n"
+			"   		-f -H -o sign data file with specific hash algorithm\n"
+			"   		-F -o sign hash\n"
+			" -x		use online verification (eXtending) service (-n -r -t)\n"
+			"   		-i -o extend signature to the nearest publication\n"
+			"   		-i -T -o extend signature to specified time\n"
+			" -p		download Publications file (-d -t)\n"
+			"   		-o download publications file\n"
+			" -v		verify signature or publications file (-n -r -d -t):\n"
+			"   		-x -i (-f) verify signature (and signed document) online\n"
+			"   		-b -i (-f) verify signature (and signed document) using specific publications file\n"
+			"   		-b verify publication file\n"
+			
+			"\nInput/output:\n"
+			" -f <file>	file to be signed / verified\n"
+			" -F <hash>	data hash to be signed / verified. hash Format: <ALG>:<hash in hex>\n"
+			" -o <file>	output filename to store signature token or publications file\n"
+			" -i <file>	input signature token file to be extended / verified\n"
+			" -b <file>	use specified publications file\n"
+			" -H <ALG>	hash algorithm used to hash the file to be signed\n"
+			" -T <UTC>	specific publication time to extend to (use with -x) as number of seconds since\n"
+			"   		1970-01-01 00:00:00 UTC\n"
+			
+			"\nDetails:\n"
+			" -t		print service Timing in ms\n"
 			" -n		print signer Name (identity)\n"
 			" -r		print publication References (use with -vx)\n"
 			" -l		print 'extended Location ID' value\n"
 			" -d		dump detailed information\n"
-			" -f <fn>	file to be signed / verified\n"
-			" -H <ALG>	hash algorithm used to hash the file to be signed\n"
-			" -F <hash>	data hash to be signed / verified. hash Format: <ALG>:<hash in hex>\n"
-			" -i <fn>	input signature token file to be extended / verified\n"
-			" -o <fn>	output filename to store signature token or publications file\n"
-			" -b <fn>	use specified publications file\n"
-			" -V <fn>	use specified OpenSSL-style trust store file for publications file Verification\n"
-			"        	Can have multiple values (-V <fn 1> -V <fn 2>)\n"
-			" -W <dir>	use specified OpenSSL-style trust store directory for publications file verification\n"
+			
+			"\nConfiguration:\n"
+			" -S <url>	specify Signing service URL\n"
+			" -X <url>	specify verification (eXtending) service URL\n"
+			" -P <url>	specify Publications file URL\n"
 			" -c <num>	network transfer timeout, after successful Connect\n"
 			" -C <num>	network Connect timeout.\n"
+			" -V <file>	use specified OpenSSL-style trust store file for publications file Verification\n"
+			"   		Can have multiple values (-V <file 1> -V <file 2>)\n"
+			" -W <dir>	use specified OpenSSL-style trust store directory for publications file verification\n"
+			
+			"\nHelp:\n"
 			" -h		Help (You are reading it now)\n"
 
 			);
 
 			fprintf(stderr, "\nDefault service access URL-s:\n"
-			"\tSigning:			  %s\n"
-			"\tVerifying:         %s\n"
-			"\tPublications file: %s\n", KSI_DEFAULT_URI_AGGREGATOR, KSI_DEFAULT_URI_EXTENDER, KSI_DEFAULT_URI_PUBLICATIONS_FILE);
+			"\tSigning:		%s\n"
+			"\tVerifying:		%s\n"
+			"\tPublications file:	%s\n", KSI_DEFAULT_URI_AGGREGATOR, KSI_DEFAULT_URI_EXTENDER, KSI_DEFAULT_URI_PUBLICATIONS_FILE);
+			
 			fprintf(stderr, "\nSupported hash algorithms (-H, -F):\n\t");
 			printSupportedHashAlgorithms();
 			fprintf(stderr, "\n");
