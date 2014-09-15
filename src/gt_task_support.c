@@ -303,7 +303,7 @@ void printSignatureVerificationInfo(const KSI_Signature *sig){
 			if(res != KSI_OK){
 				return;
 			}
-			printf("  0x%02x:\t%s", KSI_VerificationStepResult_getStep(result), KSI_VerificationStepResult_isSuccess(result) ? "OK" : "FAIL");
+			printf("  0x%03x:\t%s", KSI_VerificationStepResult_getStep(result), KSI_VerificationStepResult_isSuccess(result) ? "OK" : "FAIL");
 			desc = KSI_VerificationStepResult_getDescription(result);
 			if (desc && *desc) {
 				printf(" (%s)", desc);

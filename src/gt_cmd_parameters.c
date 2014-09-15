@@ -475,7 +475,7 @@ static void extractTask(void){
  * @param[in] flag_ Command line flag name for error message construction.
  * @param[in] param Parameter for analyzing and error message construction.
  */
-#define ANALYZ_RESULT(_analyze, flag_, param)\
+#define ANALYSE_RESULT(_analyze, flag_, param)\
 { \
 PARAM_RES _p_res = PARAM_UNKNOWN_ERROR; \
 	_p_res = _analyze(param); \
@@ -507,34 +507,27 @@ static bool controlParameters(void){
 				fprintf(stderr, "Error: Invalid parameter -V '%s'. %s\n", cmdParameters.openSSLTruststoreFileName[i], getFormatErrorString(res));
 			}
 		}
-		
 	}
 	
 	if (IS_TASK(verifyPublicationsFile)) {
-		ANALYZ_RESULT(analyseInputFile,"-b", cmdParameters.inPubFileName);
+		ANALYSE_RESULT(analyseInputFile,"-b", cmdParameters.inPubFileName);
 	} else if (IS_TASK(downloadPublicationsFile)) {
-		ANALYZ_RESULT(analyseOutputFile, "-o", cmdParameters.outPubFileName);
+		ANALYSE_RESULT(analyseOutputFile, "-o", cmdParameters.outPubFileName);
 	} else if (IS_TASK(signDataFile)) {
-		ANALYZ_RESULT(analyseInputFile, "-f", cmdParameters.inDataFileName);
+		ANALYSE_RESULT(analyseInputFile, "-f", cmdParameters.inDataFileName);
 	} else if (IS_TASK(signHash)) {
-		ANALYZ_RESULT(analyseOutputFile, "-o", cmdParameters.outSigFileName);
+		ANALYSE_RESULT(analyseOutputFile, "-o", cmdParameters.outSigFileName);
 	} else if (IS_TASK(extendTimestamp)) {
-		ANALYZ_RESULT(analyseInputFile, "-i", cmdParameters.inSigFileName);
-		ANALYZ_RESULT(analyseOutputFile, "-o", cmdParameters.outSigFileName);
+		ANALYSE_RESULT(analyseInputFile, "-i", cmdParameters.inSigFileName);
+		ANALYSE_RESULT(analyseOutputFile, "-o", cmdParameters.outSigFileName);
 	} else if (IS_TASK(verifyTimestamp)) {
-		ANALYZ_RESULT(analyseInputFile, "-i", cmdParameters.inSigFileName);
-		if(cmdParameters.b) ANALYZ_RESULT(analyseInputFile, "-b", cmdParameters.inPubFileName);
-		goto extra_check;
+		ANALYSE_RESULT(analyseInputFile, "-i", cmdParameters.inSigFileName);
+		if(cmdParameters.b) ANALYSE_RESULT(analyseInputFile, "-b", cmdParameters.inPubFileName);
+		if(cmdParameters.f) ANALYSE_RESULT(analyseInputFile, "-f", cmdParameters.inDataFileName);
 	} else {
 		return false;
 	}
 
-extra_check :
-	res = analyseInputFile(cmdParameters.inDataFileName);
-	if (cmdParameters.f && (res != PARAM_OK)) {
-		fprintf(stderr, "Warning: Ignoring parameter -f '%s'. %s\n",cmdParameters.inDataFileName, getFormatErrorString(res));
-		cmdParameters.f = false;
-	}
 
 	if(isError) return false;
 	else return true;
@@ -586,23 +579,26 @@ static void printTaskErrorMessage(void){
 #define UNUSED_FLAG_WARNING(param, flag_, ...) if(param.flag_ == true) fprintf(stderr,__VA_ARGS__);
 
 /**
- * Prints warning message about unused parameters. 
+ * Prints warning message about unused parameters. If there is a unused parameter it's flag is undefined
  */
 static void printTaskWarningMessage(void){
 	switch (cmdParameters.task) {
 	case signHash:
 	case signDataFile:
 		UNUSED_FLAG_WARNING(cmdParameters, b, "Warning: Can't use -b with -s.\n");
+		UNUSED_FLAG_WARNING(cmdParameters, b, "Warning: Can't use -r with -s.\n");
 		UNUSED_FLAG_WARNING(cmdParameters, i, "Warning: Can't use -i with -s.\n");
 		UNUSED_FLAG_WARNING(cmdParameters, T, "Warning: Can't use -T with -s.\n");
 		break;
 	case verifyTimestamp:
-		UNUSED_FLAG_WARNING(cmdParameters, T, "Warning: Can't use -T with -v -x.\n");
+		UNUSED_FLAG_WARNING(cmdParameters, T, "Warning: Can't use -T with -v %s -i.\n", cmdParameters.x ? "-x" : "-b");
+		UNUSED_FLAG_WARNING(cmdParameters, T, "Warning: Can't use -F with -v %s -i.\n", cmdParameters.x ? "-x" : "-b");
+		UNUSED_FLAG_WARNING(cmdParameters, T, "Warning: Can't use -H with -v %s -i.\n", cmdParameters.x ? "-x" : "-b");
 	case verifyPublicationsFile:
-		UNUSED_FLAG_WARNING(cmdParameters, H, "Warning: Can't use -H with -v.\n");
-		UNUSED_FLAG_WARNING(cmdParameters, F, "Warning: Can't use -F with -v.\n");
-		UNUSED_FLAG_WARNING(cmdParameters, o, "Warning: Can't use -o with -v.\n");
-		UNUSED_FLAG_WARNING(cmdParameters, T, "Warning: Can't use -T with -v.\n");
+		UNUSED_FLAG_WARNING(cmdParameters, H, "Warning: Can't use -H with -v -b.\n");
+		UNUSED_FLAG_WARNING(cmdParameters, F, "Warning: Can't use -F with -v -b.\n");
+		UNUSED_FLAG_WARNING(cmdParameters, o, "Warning: Can't use -o with -v -b.\n");
+		UNUSED_FLAG_WARNING(cmdParameters, T, "Warning: Can't use -T with -v -b.\n");
 		break;
 	case extendTimestamp:
 		UNUSED_FLAG_WARNING(cmdParameters, H, "Warning: Can't use -H with -x.\n");
