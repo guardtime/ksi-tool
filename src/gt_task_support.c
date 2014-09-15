@@ -209,15 +209,21 @@ void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile){
 	if(res != KSI_OK) return;
 
 	for (i = 0; i < KSI_PublicationRecordList_length(list_publicationRecord); i++) {
+		int h=0;
 		res = KSI_PublicationRecordList_elementAt(list_publicationRecord, i, &publicationRecord);
 		if(res != KSI_OK) return;
 		
 		if(KSI_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
 		pStart = buf;
 		j=1;
+		h=0;
+		if(i) printf("\n");
 		while(pLineBreak = strchr(pStart, '\n')){
 			*pLineBreak = 0;
-			printf("%s %2i) %s\n", (pStart == buf) ? "  " : "    ", (pStart == buf) ? (i+1) : j++, pStart);
+			if(h++<3)
+				printf("%s %s\n", "  ", pStart);
+			else
+				printf("%s %2i) %s\n", "    ", j++, pStart);
 			pStart = pLineBreak+1;
 		}
 	}
@@ -231,7 +237,7 @@ void printSignaturePublicationReference(const KSI_Signature *sig){
 	char buf[1024];
 	char *pLineBreak = NULL;
 	char *pStart = buf;
-	int i=0;
+	int i=1;
 	if(sig == NULL) return;
 	
 	printf("Signature publication references:\n");
@@ -247,12 +253,14 @@ void printSignaturePublicationReference(const KSI_Signature *sig){
 	pStart = buf;
 	
 	while(pLineBreak = strchr(pStart, '\n')){
+		int h=0;
 		*pLineBreak = 0;
-		printf("%s", (pStart == buf) ? "  " : "    ");
-		if(i++) 
-			printf(" %2i) %s\n", i, pStart);
+
+		if(h++<3)
+			printf("%s %s\n", "  ", pStart);
 		else
-			printf(" %s\n", pStart);
+			printf("%s %2i) %s\n", "    ", i++, pStart);
+
 		pStart = pLineBreak+1;
 	}
 	
