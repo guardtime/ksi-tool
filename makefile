@@ -18,7 +18,7 @@ CMDTOOL_OBJ = \
 	$(OBJ_DIR)\gt_cmd_parameters.obj \
 	$(OBJ_DIR)\gt_task_support.obj \
 	$(OBJ_DIR)\gt_task_extend.obj \
-	$(OBJ_DIR)\gt_task_getpubfile.obj \
+	$(OBJ_DIR)\gt_task_pubfile.obj \
 	$(OBJ_DIR)\gt_task_sign.obj \
 	$(OBJ_DIR)\gt_task_verify.obj \
 	$(OBJ_DIR)\gtime.obj \

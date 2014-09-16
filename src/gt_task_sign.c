@@ -150,7 +150,7 @@ static void getHashFromCommandLine_throws(GT_CmdParameters *cmdparam,KSI_CTX *ks
 		CODE{
 			getBinaryFromHexString(ksi, cmdparam->inputHashStrn, &data, &len);
 			hasAlg = getHashAlgorithm_throws(cmdparam->hashAlgName_F);
-			KSI_DataHash_fromDigest_throws(ksi, hasAlg, data, len, hash);
+			KSI_DataHash_fromDigest_throws(ksi, hasAlg, data, (unsigned int)len, hash);
 		}
 		CATCH_ALL{
 			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to get hash from command line input.\n");

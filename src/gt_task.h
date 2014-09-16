@@ -40,7 +40,7 @@ bool GT_extendTask(GT_CmdParameters *cmdparam);
  * @param [in] cmdparam Pointer to command-line parameters.
  * @return True if successful, false otherwise.
  */
-bool GT_getPublicationsFileTask(GT_CmdParameters *cmdparam);
+bool GT_publicationsFileTask(GT_CmdParameters *cmdparam);
 
 
 #ifdef	__cplusplus

@@ -8,7 +8,7 @@ gtime_SOURCES = \
 	gt_task_sign.c \
 	gt_task_extend.c \
 	gt_task_verify.c \
-	gt_task_getpubfile.c \
+	gt_task_pubfile.c \
 	getopt.h \
 	getopt.c\
 	gt_cmd_parameters.c \

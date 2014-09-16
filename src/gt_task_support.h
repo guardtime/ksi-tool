@@ -117,6 +117,20 @@ int KSI_extendSignature_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature *
 int KSI_Signature_extend_throws(const KSI_Signature *signature, KSI_CTX *ctx, const KSI_PublicationRecord *pubRec, KSI_Signature **extended);
 int KSI_PKITruststore_addLookupFile_throws(KSI_PKITruststore *store, const char *path);
 int KSI_PKITruststore_addLookupDir_throws(KSI_PKITruststore *store, const char *path);
+int KSI_Integer_new_throws(KSI_CTX *ctx, KSI_uint64_t value, KSI_Integer **kint);
+int KSI_ExtendReq_new_throws(KSI_CTX *ctx, KSI_ExtendReq **t);
+int KSI_ExtendReq_setAggregationTime_throws(KSI_ExtendReq *t, KSI_Integer *aggregationTime);
+int KSI_ExtendReq_setPublicationTime_throws(KSI_ExtendReq *t, KSI_Integer *publicationTime);
+int KSI_sendExtendRequest_throws(KSI_CTX *ctx, KSI_ExtendReq *request, KSI_RequestHandle **handle);
+int KSI_RequestHandle_getExtendResponse_throws(KSI_RequestHandle *handle, KSI_ExtendResp **resp);
+int KSI_ExtendResp_getStatus_throws(const KSI_ExtendResp *t, KSI_Integer **status);
+int KSI_ExtendResp_getCalendarHashChain_throws(const KSI_ExtendResp *t, KSI_CalendarHashChain **calendarHashChain);
+int KSI_CalendarHashChain_aggregate_throws(KSI_CalendarHashChain *chain, KSI_DataHash **hsh);
+int KSI_CalendarHashChain_getPublicationTime_throws(const KSI_CalendarHashChain *t, KSI_Integer **publicationTime);
+int KSI_PublicationData_new_throws(KSI_CTX *ctx, KSI_PublicationData **t);
+int KSI_PublicationData_setImprint_throws(KSI_PublicationData *t, KSI_DataHash *imprint);
+int KSI_PublicationData_setTime_throws(KSI_PublicationData *t, KSI_Integer *time);
+int KSI_PublicationData_toBase32_throws(const KSI_PublicationData *published_data, char **publication);
 
 #define MEASURE_TIME(code_here) \
 	{   \

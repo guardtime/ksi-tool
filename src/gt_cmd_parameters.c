@@ -208,7 +208,6 @@ static void readRawCmdParam(int argc, char **argv, struct raw_parameters **rawPa
 			tmpRawParam->H.arg = optarg;
 			break;
 		case 'T':
-			printf("\n\nT == %s\n", optarg);
 			tmpRawParam->T.flag = true;
 			tmpRawParam->T.arg = optarg;
 			break;
@@ -364,7 +363,7 @@ static bool readCmdParam(int argc, char **argv){
 	SET_STRN_PARAM(cmdParameters, (*rawParam), H, hashAlgName_H, isHashAlgFormatOK);
 
 	/*Dealing with V*/
-	cmdParameters.sizeOpenSSLTruststoreFileName = KSI_List_length(rawParam->lst_V);
+	cmdParameters.sizeOpenSSLTruststoreFileName = (int)KSI_List_length(rawParam->lst_V);
 	if(cmdParameters.sizeOpenSSLTruststoreFileName != 0){
 		cmdParameters.openSSLTruststoreFileName = (char**)malloc(cmdParameters.sizeOpenSSLTruststoreFileName*sizeof(char*));
 		
@@ -432,7 +431,9 @@ static void extractTask(void){
 	}//Download publications file
 	else if (cmdParameters.p) {
 		if (cmdParameters.o == true)
-				cmdParameters.task = downloadPublicationsFile;
+			cmdParameters.task = downloadPublicationsFile;
+		else if(cmdParameters.T == true)
+			cmdParameters.task = createPublicationString;
 		else
 			cmdParameters.task = invalid_p;
 		}//Sign data or hash    
@@ -524,7 +525,9 @@ static bool controlParameters(void){
 		ANALYSE_RESULT(analyseInputFile, "-i", cmdParameters.inSigFileName);
 		if(cmdParameters.b) ANALYSE_RESULT(analyseInputFile, "-b", cmdParameters.inPubFileName);
 		if(cmdParameters.f) ANALYSE_RESULT(analyseInputFile, "-f", cmdParameters.inDataFileName);
-	} else {
+	} else if(IS_TASK(createPublicationString)){
+		;
+	} else { 
 		return false;
 	}
 
@@ -648,6 +651,8 @@ static void GT_printParameters(void){
 	if (cmdParameters.d == true) printf("-d\n");
 
 	if (cmdParameters.h == true) printf("-h\n");
+	
+	printf("\nTask: %i\n", cmdParameters.task);
 }
 
 static void printSupportedHashAlgorithms(void){
@@ -677,6 +682,7 @@ void GT_pritHelp(void){
 			"   		-i -T -o extend signature to specified time\n"
 			" -p		download Publications file (-d -t)\n"
 			"   		-o download publications file\n"
+			"   		-T create publication string\n"
 			" -v		verify signature or publications file (-n -r -d -t):\n"
 			"   		-x -i (-f) verify signature (and signed document) online\n"
 			"   		-b -i (-f) verify signature (and signed document) using specific publications file\n"

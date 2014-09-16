@@ -2,8 +2,13 @@
 #define	GT_CMDCOMMON_H
 
 
-#ifdef _WIN32 
-#   define snprintf _snprintf
+#ifdef _WIN32
+#	ifndef snprintf
+#		define snprintf _snprintf
+#	endif
+#	ifndef gmtime_r
+#		define gmtime_r(time, resultp) gmtime_s(resultp, time)
+#	endif
 #endif
 
 #ifdef	__cplusplus

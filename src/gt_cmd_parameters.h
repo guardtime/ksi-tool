@@ -11,6 +11,7 @@ extern "C" {
 
 typedef enum _tasksTODO {
 	downloadPublicationsFile,
+	createPublicationString,
 	signDataFile,
 	signHash,
 	extendTimestamp,

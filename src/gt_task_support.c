@@ -121,7 +121,7 @@ void getFilesHash_throws(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **
 	FILE *in = NULL;
 	int res = KSI_UNKNOWN_ERROR;
 	unsigned char buf[1024];
-	int buf_len;
+	size_t buf_len;
 	try
 		CODE{
 			/* Open Input file */
@@ -157,7 +157,7 @@ void saveSignatureFile_throws(KSI_Signature *sign, const char *fname){
 	int res = KSI_UNKNOWN_ERROR;
 	unsigned char *raw = NULL;
 	int raw_len = 0;
-	int count = 0;
+	size_t count = 0;
 	FILE *out = NULL;
 
 	try
@@ -300,7 +300,7 @@ void printSignatureVerificationInfo(const KSI_Signature *sig){
 	}
 	
 	printf("Verification steps:\n");
-	res = KSI_Signature_getVerificationResult(sig, &sigVerification);
+	res = KSI_Signature_getVerificationResult((KSI_Signature*)sig, &sigVerification);
 	if(res != KSI_OK){
 		return;
 	}
@@ -472,3 +472,59 @@ int KSI_PKITruststore_addLookupDir_throws(KSI_PKITruststore *store, const char *
 	THROWABLE(KSI_PKITruststore_addLookupDir(store,path), "Error: Unable to set PKI trust store lookup dir. (%s)\n",  KSI_getErrorString(res));
 }
 
+
+
+int KSI_Integer_new_throws(KSI_CTX *ctx, KSI_uint64_t value, KSI_Integer **kint){
+	THROWABLE(KSI_Integer_new(ctx, value, kint), "Error: Unable construkt KSI Interger. (%s)\n",  KSI_getErrorString(res));
+}
+
+int KSI_ExtendReq_new_throws(KSI_CTX *ctx, KSI_ExtendReq **t){
+	THROWABLE(KSI_ExtendReq_new(ctx, t);, "Error: Unable construct KSI extend request. (%s)\n",  KSI_getErrorString(res));
+}
+
+int KSI_ExtendReq_setAggregationTime_throws(KSI_ExtendReq *t, KSI_Integer *aggregationTime){
+	THROWABLE(KSI_ExtendReq_setAggregationTime(t, aggregationTime);, "Error: Unable to set request aggregation time. (%s)\n",  KSI_getErrorString(res));
+}
+
+int KSI_ExtendReq_setPublicationTime_throws(KSI_ExtendReq *t, KSI_Integer *publicationTime){
+	THROWABLE(KSI_ExtendReq_setPublicationTime(t, publicationTime), "Error: Unable to set request publication time. (%s)\n",  KSI_getErrorString(res));
+}
+
+int KSI_sendExtendRequest_throws(KSI_CTX *ctx, KSI_ExtendReq *request, KSI_RequestHandle **handle){
+	THROWABLE(KSI_sendExtendRequest(ctx, request, handle), "Error: Unable to send extend request. (%s)\n",  KSI_getErrorString(res));
+}
+
+int KSI_RequestHandle_getExtendResponse_throws(KSI_RequestHandle *handle, KSI_ExtendResp **resp){
+	THROWABLE(KSI_RequestHandle_getExtendResponse(handle, resp), "Error: Unable to get extend request. (%s)\n",  KSI_getErrorString(res));
+}
+
+int KSI_ExtendResp_getStatus_throws(const KSI_ExtendResp *t, KSI_Integer **status){
+	THROWABLE(KSI_ExtendResp_getStatus(t, status), "Error: Unable to get request response status. (%s)\n",  KSI_getErrorString(res));
+}
+int KSI_ExtendResp_getCalendarHashChain_throws(const KSI_ExtendResp *t, KSI_CalendarHashChain **calendarHashChain){
+	THROWABLE(KSI_ExtendResp_getCalendarHashChain(t, calendarHashChain), "Error: Unable to get calendar hash chain. (%s)\n",  KSI_getErrorString(res));
+}
+
+int KSI_CalendarHashChain_aggregate_throws(KSI_CalendarHashChain *chain, KSI_DataHash **hsh){
+	THROWABLE(KSI_CalendarHashChain_aggregate(chain, hsh), "Error: Unable to aggregate. (%s)\n",  KSI_getErrorString(res));
+}
+
+int KSI_CalendarHashChain_getPublicationTime_throws(const KSI_CalendarHashChain *t, KSI_Integer **publicationTime){
+	THROWABLE(KSI_CalendarHashChain_getPublicationTime(t, publicationTime), "Error: Unable to get publications time. (%s)\n",  KSI_getErrorString(res));
+}
+
+int KSI_PublicationData_new_throws(KSI_CTX *ctx, KSI_PublicationData **t){
+	THROWABLE(KSI_PublicationData_new(ctx, t), "Error: Unable to construct publication data. (%s)\n",  KSI_getErrorString(res));
+}
+
+int KSI_PublicationData_setImprint_throws(KSI_PublicationData *t, KSI_DataHash *imprint){
+	THROWABLE(KSI_PublicationData_setImprint(t,imprint), "Error: Unable to set publication data imprint. (%s)\n",  KSI_getErrorString(res));
+}
+
+int KSI_PublicationData_setTime_throws(KSI_PublicationData *t, KSI_Integer *time){
+	THROWABLE(KSI_PublicationData_setTime(t, time), "Error: Unable to set publication data time. (%s)\n",  KSI_getErrorString(res));
+}
+
+int KSI_PublicationData_toBase32_throws(const KSI_PublicationData *published_data, char **publication){
+	THROWABLE(KSI_PublicationData_toBase32(published_data, publication), "Error: Unable to convert publication data to base 32. (%s)\n",  KSI_getErrorString(res));
+}

@@ -17,9 +17,8 @@ int main(int argc, char** argv) {
 
 	if(state){
 		GT_CmdParameters param = GT_getCMDParam();
-
-		if(param.task == downloadPublicationsFile){
-			state=GT_getPublicationsFileTask(&param);
+		if(param.task == downloadPublicationsFile || param.task == createPublicationString){
+			state=GT_publicationsFileTask(&param);
 		}
 		else if (param.task == verifyPublicationsFile){
 			state=GT_verifyTask(&param);

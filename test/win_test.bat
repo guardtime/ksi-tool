@@ -53,6 +53,9 @@ echo %errorlevel%
 gtime.exe -v -t -b %PUBFILE% %CERTS%
 echo %errorlevel%
 
+echo "****************** Get Publication string ******************" 
+gtime.exe -p %GLOBAL% -T 1410848909
+
 
 echo ****************** Sign data ******************
 gtime.exe -s %GLOBAL% %SIGN_FLAGS% -f %TEST_FILE% -o %TEST_FILE_OUT%.ksig -b %PUBFILE% 
@@ -103,6 +106,7 @@ echo %errorlevel%
 sleep %WAIT%
 gtime.exe -v -x %GLOBAL% %VERIFY_FLAGS% -i %RIPMED160_file%
 echo %errorlevel%
+
 
 echo ****************** Error extend no suitable publication ****************** 
 gtime.exe -x %GLOBAL% %EXTEND_FLAGS% -i %TEST_FILE_OUT%.ksig -o %TEST_EXTENDED_SIG%
@@ -155,6 +159,9 @@ echo %errorlevel%
 echo ****************** Error Invalid publications file ******************
 gtime.exe -v -t %GLOBAL% %VERIFY_FLAGS% -i %TEST_FILE_OUT%.ksig -b %INVALID_PUBFILE%
 echo %errorlevel%
+
+echo "****************** Error Unable to Get Publication string ******************" 
+gtime.exe -p %GLOBAL% -T 969085709
 
 
 
