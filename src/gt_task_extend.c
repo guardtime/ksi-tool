@@ -6,15 +6,22 @@ bool GT_extendTask(GT_CmdParameters *cmdparam) {
 	KSI_Signature *sig = NULL;
 	KSI_Signature *ext = NULL;
 	bool state = true;
-	KSI_PublicationRecord *pPubRec = NULL;
-	KSI_PublicationData *pPublicationData = NULL;
+	
+	KSI_Integer *signTime = NULL;
 	KSI_Integer *pubTime = NULL;
-	KSI_DataHash *dummyHash = NULL;
+	KSI_ExtendReq *extReq = NULL;
+	KSI_ExtendResp *extResp = NULL;
+	KSI_CalendarHashChain *calHashChain = NULL;
+	KSI_Integer *respStatus = NULL;
+	KSI_PublicationRecord *pubRec = NULL;
+	KSI_PublicationRecord *pubRecClone = NULL;
+	KSI_PublicationsFile *pubFile = NULL;
+	KSI_RequestHandle *handle = NULL;
 	
 	resetExeptionHandler();
 	try
 		CODE{
-			/*Initalization of KSI */
+			/*Initialization of KSI */
 			initTask_throws(cmdparam, &ksi);
 			/* Read the signature. */
 			printf("Reading signature...");
@@ -26,20 +33,53 @@ bool GT_extendTask(GT_CmdParameters *cmdparam) {
 			MEASURE_TIME(KSI_verifySignature(ksi, sig));
 			printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
 
-			
 			/* Extend the signature. */
 			if(cmdparam->T){
 				printf("Extending old signature to %i...", cmdparam->publicationTime);
+
+				KSI_Signature_clone_throws(sig, &ext);
+				KSI_Signature_getSigningTime_throws(ext, &signTime);
+				KSI_Integer_new_throws(ksi, cmdparam->publicationTime, &pubTime);
+
+				KSI_ExtendReq_new_throws(ksi, &extReq);
+				KSI_ExtendReq_setAggregationTime_throws(extReq, signTime);
+				KSI_ExtendReq_setPublicationTime_throws(extReq, pubTime);
 				
-				KSI_PublicationRecord_new(ksi, &pPubRec);
-				KSI_PublicationData_new(ksi, &pPublicationData);
-				KSI_Integer_new(ksi, cmdparam->publicationTime, &pubTime);
-				KSI_Signature_getDocumentHash(sig, &dummyHash);
-				KSI_PublicationData_setTime(pPublicationData, pubTime);
-				KSI_PublicationData_setImprint(pPublicationData, dummyHash);
-				KSI_PublicationRecord_setPublishedData(pPubRec, pPublicationData);
 				
-				MEASURE_TIME(KSI_Signature_extend_throws(sig, ksi, pPubRec, &ext));
+				/* Send the actual request. */
+				measureLastCall();
+				KSI_sendExtendRequest_throws(ksi, extReq, &handle);
+				KSI_RequestHandle_getExtendResponse_throws(handle, &extResp);
+
+				/* Verify the response is ok. */
+				KSI_ExtendResp_getStatus_throws(extResp, &respStatus);
+
+				if (respStatus == NULL || !KSI_Integer_equalsUInt(respStatus, 0)) {
+					KSI_Utf8String *errm = NULL;
+					int res = KSI_ExtendResp_getErrorMsg(extResp, &errm);
+					if (res == KSI_OK && KSI_Utf8String_cstr(errm) != NULL) {
+						THROW_MSG(KSI_EXEPTION, "Extender returned error %llu: '%s'.\n", (unsigned long long)KSI_Integer_getUInt64(respStatus), KSI_Utf8String_cstr(errm));
+					}else{
+						THROW_MSG(KSI_EXEPTION, "Extender returned error %llu.\n", (unsigned long long)KSI_Integer_getUInt64(respStatus));
+					}
+				}
+				measureLastCall();
+
+				/*Remove HashChain from response. Add the hash chain to the signature.*/
+				KSI_ExtendResp_getCalendarHashChain_throws(extResp, &calHashChain);
+				KSI_ExtendResp_setCalendarHashChain_throws(extResp, NULL);
+				KSI_Signature_replaceCalendarChain_throws(ext, calHashChain);
+				
+				/* If the publication exists set it as the trust anchor. */
+				KSI_receivePublicationsFile_throws(ksi, &pubFile);
+				
+				/*TODO NB! pubRec must be cloned. It still belongs to the publications file*/
+				KSI_PublicationsFile_getPublicationDataByTime_throws(pubFile, pubTime, &pubRec);
+				if(pubRec != NULL){
+					KSI_PublicationRecord_clone_throws(pubRec, &pubRecClone);
+				}
+				KSI_Signature_replacePublicationRecord_throws(ext, pubRecClone);
+				pubRecClone = NULL;
 			}
 			else{
 				printf("Extending old signature...");
@@ -47,9 +87,13 @@ bool GT_extendTask(GT_CmdParameters *cmdparam) {
 			}
 			printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
 
+			printf("Verifying extended signature...");
+			MEASURE_TIME(KSI_Signature_verify_throws(ext, ksi));
+			printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
+			
 			/* Save signature. */
 			saveSignatureFile_throws(ext, cmdparam->outSigFileName);
-			printf("Signature extended.\n");
+			printf("Extended signature saved.\n");
 		}
 		CATCH_ALL{
 			printf("failed.\n");
@@ -62,9 +106,19 @@ bool GT_extendTask(GT_CmdParameters *cmdparam) {
 	if(cmdparam->n || cmdparam->r || cmdparam->d) printf("\n");
 	if (cmdparam->n) printSignerIdentity(ext);
 	if (cmdparam->r) printSignaturePublicationReference(ext);
+	if (cmdparam->d) printSignatureVerificationInfo(ext);
 
 	KSI_Signature_free(sig);
 	KSI_Signature_free(ext);
+	
+	KSI_ExtendReq_free(extReq);
+	KSI_ExtendResp_free(extResp);
+	KSI_RequestHandle_free(handle);
+	KSI_PublicationRecord_free(pubRecClone);
+
+	
 	KSI_CTX_free(ksi);
 	return state;
 }
+
+

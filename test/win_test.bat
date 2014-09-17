@@ -33,6 +33,7 @@ SET RIPMED160_file=../test/out/RIPMED160.ksig
 SET TEST_FILE_OUT=../test/out/testFile
 SET PUBFILE=../test/out/pubfile
 
+rem gtime.exe -x -i ..\test\out\testFile.ksig -o ..\test\out\__extended -X http://192.168.1.36:8081/gt-extendingservice -T 1410858222
 REM Cert files to use
 REM SET CERTS= -V "C:\Users\Taavi\Documents\GuardTime\certs\Symantec Class 1 Individual Subscriber CA(64).crt" 
 REM set CERTS= %CERTS% -V "C:\Users\Taavi\Documents\GuardTime\certs\VerSign Class 1 Public Primary Certification Authority - G3(64).crt"

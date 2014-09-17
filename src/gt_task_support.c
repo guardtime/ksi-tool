@@ -528,3 +528,32 @@ int KSI_PublicationData_setTime_throws(KSI_PublicationData *t, KSI_Integer *time
 int KSI_PublicationData_toBase32_throws(const KSI_PublicationData *published_data, char **publication){
 	THROWABLE(KSI_PublicationData_toBase32(published_data, publication), "Error: Unable to convert publication data to base 32. (%s)\n",  KSI_getErrorString(res));
 }
+
+int KSI_Signature_clone_throws(const KSI_Signature *sig, KSI_Signature **clone){
+	THROWABLE(KSI_Signature_clone(sig, clone), "Error: Unable to clone signature. (%s)\n",  KSI_getErrorString(res));
+}
+
+int KSI_Signature_getSigningTime_throws(const KSI_Signature *sig, KSI_Integer **signTime){
+	THROWABLE(KSI_Signature_getSigningTime(sig, signTime), "Error: Unable to get signatures signing time. (%s)\n",  KSI_getErrorString(res));
+}
+
+int KSI_ExtendResp_setCalendarHashChain_throws(KSI_ExtendResp *t, KSI_CalendarHashChain *calendarHashChain){
+	THROWABLE(KSI_ExtendResp_setCalendarHashChain(t, calendarHashChain), "Error: Unable to get extension response signing time. (%s)\n",  KSI_getErrorString(res));
+}
+
+int KSI_Signature_replaceCalendarChain_throws(KSI_Signature *sig, KSI_CalendarHashChain *calendarHashChain){
+	THROWABLE(KSI_Signature_replaceCalendarChain(sig,calendarHashChain), "Error: Unable to replace signatures calender hash chain. (%s)\n",  KSI_getErrorString(res));
+}
+
+int KSI_PublicationsFile_getPublicationDataByTime_throws(const KSI_PublicationsFile *pubFile, const KSI_Integer *pubTime, KSI_PublicationRecord **pubRec){
+	THROWABLE(KSI_PublicationsFile_getPublicationDataByTime(pubFile, pubTime, pubRec), "Error: Unable to get publication date by time. (%s)\n",  KSI_getErrorString(res));
+}
+
+int KSI_Signature_replacePublicationRecord_throws(KSI_Signature *sig, KSI_PublicationRecord *pubRec){
+	THROWABLE(KSI_Signature_replacePublicationRecord(sig, pubRec), "Error: Unable set signatures publication record. (%s)\n",  KSI_getErrorString(res));
+}
+
+int KSI_PublicationRecord_clone_throws(const KSI_PublicationRecord *rec, KSI_PublicationRecord **clone){
+	THROWABLE(KSI_PublicationRecord_clone(rec, clone), "Error: Unable clone signatures publication record. (%s)\n",  KSI_getErrorString(res));
+	
+}

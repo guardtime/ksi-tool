@@ -131,7 +131,13 @@ int KSI_PublicationData_new_throws(KSI_CTX *ctx, KSI_PublicationData **t);
 int KSI_PublicationData_setImprint_throws(KSI_PublicationData *t, KSI_DataHash *imprint);
 int KSI_PublicationData_setTime_throws(KSI_PublicationData *t, KSI_Integer *time);
 int KSI_PublicationData_toBase32_throws(const KSI_PublicationData *published_data, char **publication);
-
+int KSI_Signature_clone_throws(const KSI_Signature *sig, KSI_Signature **clone);
+int KSI_Signature_getSigningTime_throws(const KSI_Signature *sig, KSI_Integer **signTime);
+int KSI_ExtendResp_setCalendarHashChain_throws(KSI_ExtendResp *t, KSI_CalendarHashChain *calendarHashChain);
+int KSI_Signature_replaceCalendarChain_throws(KSI_Signature *sig, KSI_CalendarHashChain *calendarHashChain);
+int KSI_PublicationsFile_getPublicationDataByTime_throws(const KSI_PublicationsFile *pubFile, const KSI_Integer *pubTime, KSI_PublicationRecord **pubRec);
+int KSI_Signature_replacePublicationRecord_throws(KSI_Signature *sig, KSI_PublicationRecord *pubRec);
+int KSI_PublicationRecord_clone_throws(const KSI_PublicationRecord *rec, KSI_PublicationRecord **clone);
 #define MEASURE_TIME(code_here) \
 	{   \
 	measureLastCall(); \
