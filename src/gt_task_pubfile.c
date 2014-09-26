@@ -3,7 +3,7 @@
 
 void getPublicationString_throws(KSI_CTX *ctx, KSI_Integer *time);
 
-bool GT_publicationsFileTask(GT_CmdParameters *cmdparam){
+bool GT_publicationsFileTask(Task *task){
 	KSI_CTX *ksi = NULL;
 	KSI_PublicationsFile *publicationsFile = NULL;
 	FILE *out = NULL;
@@ -28,33 +28,42 @@ bool GT_publicationsFileTask(GT_CmdParameters *cmdparam){
 	
 	bool state = true;
 	
+	bool d,t;
+	char *outPubFileName = NULL;
+	int publicationTime = 0;
+	
+	paramSet_getStrValueByNameAt(task->set, 'o',0,&outPubFileName);
+	paramSet_getIntValueByNameAt(task->set,'T',0,&publicationTime);
+	d = paramSet_isSetByName(task->set, 'd');
+	t = paramSet_isSetByName(task->set, 't');
+	
 	/*Initalization of KSI */
 	resetExeptionHandler();
 	try
 		CODE{
-			initTask_throws(cmdparam ,&ksi);
+			initTask_throws(task ,&ksi);
 
-			if(cmdparam->task == downloadPublicationsFile){
+			if(task->id == downloadPublicationsFile){
 				printf("Downloading publications file...");
 				MEASURE_TIME(KSI_receivePublicationsFile_throws(ksi, &publicationsFile));
-				printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
+				printf("ok. %s\n",t ? str_measuredTime() : "");
 
 				printf("Verifying publications file...");
 				MEASURE_TIME(KSI_verifyPublicationsFile_throws(ksi, publicationsFile));
-				printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
+				printf("ok. %s\n",t ? str_measuredTime() : "");
 
 				KSI_PublicationsFile_serialize(ksi, publicationsFile, &rawPubfile, &rawLen);
-				out = fopen(cmdparam->outPubFileName, "wb");
-				if(out == NULL) THROW_MSG(IO_EXEPTION, "Unable to ope publications file '%s' for writing.\n", cmdparam->outPubFileName);
+				out = fopen(outPubFileName, "wb");
+				if(out == NULL) THROW_MSG(IO_EXEPTION, "Unable to ope publications file '%s' for writing.\n", outPubFileName);
 
 				bytesWritten = fwrite(rawPubfile, 1, rawLen, out);
-				if(bytesWritten != rawLen) THROW_MSG(IO_EXEPTION, "Error: Unable to write publications file '%s'.\n", cmdparam->outPubFileName);
-				printf("Publications file '%s' saved.\n", cmdparam->outPubFileName);
-			} else if(cmdparam->task == createPublicationString){
+				if(bytesWritten != rawLen) THROW_MSG(IO_EXEPTION, "Error: Unable to write publications file '%s'.\n", outPubFileName);
+				printf("Publications file '%s' saved.\n", outPubFileName);
+			} else if(task->id == createPublicationString){
 				printf("Sending aggregation request...");
 				measureLastCall();
-				KSI_Integer_new_throws(ksi, cmdparam->publicationTime, &start);
-				KSI_Integer_new_throws(ksi, cmdparam->publicationTime, &end);
+				KSI_Integer_new_throws(ksi, publicationTime, &start);
+				KSI_Integer_new_throws(ksi, publicationTime, &end);
 				KSI_ExtendReq_new_throws(ksi, &extReq);
 				KSI_ExtendReq_setAggregationTime_throws(extReq, start);
 				KSI_ExtendReq_setPublicationTime_throws(extReq, end);
@@ -73,7 +82,7 @@ bool GT_publicationsFileTask(GT_CmdParameters *cmdparam){
 					}
 				}
 				measureLastCall();
-				printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
+				printf("ok. %s\n",t ? str_measuredTime() : "");
 
 				
 				printf("Getting publication string...");
@@ -112,9 +121,9 @@ bool GT_publicationsFileTask(GT_CmdParameters *cmdparam){
 		}
 	end_try
 
-	if(cmdparam->d) printf("\n");
-	if(cmdparam->d) printPublicationsFileReferences(publicationsFile);	
-	if(cmdparam->d) printPublicationsFileCertificates(publicationsFile);	
+	if(d) printf("\n");
+	if(d) printPublicationsFileReferences(publicationsFile);	
+	if(d) printPublicationsFileCertificates(publicationsFile);	
 				
 	if (out != NULL) fclose(out);
 	

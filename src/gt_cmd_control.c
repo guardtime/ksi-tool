@@ -16,68 +16,93 @@
 #define CheckNullPtr(strn) if(strn==NULL) return PARAM_NULLPTR;
 #define CheckEmpty(strn) if(strlen(strn) == 0) return PARAM_NOCONTENT;
 
-PARAM_RES isPathFormOk(const char *path){
-	CheckNullPtr(path);
-	return PARAM_OK;
+FormatStatus isPathFormOk(const char *path){
+	if(path == NULL) return FORMAT_NULLPTR;
+	return FORMAT_OK;
 }
 
-PARAM_RES isHexFormatOK(const char *hex){
+FormatStatus isHexFormatOK(const char *hex){
 	int i = 0;
 	char C;
 	bool failure = false;
 
-	CheckNullPtr(hex);
-	CheckEmpty(hex);
+	if(hex == NULL) return FORMAT_NULLPTR;
+	if(strlen(hex) == 0) return FORMAT_NOCONTENT;
 
 	while (C = hex[i++]) {
 		if (!isxdigit(C)) {
-			return PARAM_INVALID;
+			return FORMAT_INVALID;
 		}
 	}
-	return PARAM_OK;
+	return FORMAT_OK;
 }
 
-PARAM_RES isURLFormatOK(const char *url){
-	CheckNullPtr(url);
-	CheckEmpty(url);
+FormatStatus isURLFormatOK(const char *url){
+	if(url == NULL) return FORMAT_NULLPTR;
+	if(strlen(url) == 0) return FORMAT_NOCONTENT;
 	
 	if(strstr(url, "http://")==url)
-		return PARAM_OK;
+		return FORMAT_OK;
 	else if(strstr(url, "file://")==url)
-		return PARAM_OK;
+		return FORMAT_OK;
 	else
-		return URL_UNKNOWN_SCHEME;
+		return FORMAT_URL_UNKNOWN_SCHEME;
 	
-	return PARAM_UNKNOWN_ERROR;
+	return FORMAT_UNKNOWN_ERROR;
 }
 
-PARAM_RES isIntegerFormatOK(const char *integer){
+FormatStatus isIntegerFormatOK(const char *integer){
 	int i = 0;
 	int C;
-	CheckNullPtr(integer);
-	CheckEmpty(integer);
+	if(integer == NULL) return FORMAT_NULLPTR;
+	if(strlen(integer) == 0) return FORMAT_NOCONTENT;
 
 	while (C = integer[i++]) {
 		if (isdigit(C) == 0) {
-			return PARAM_INVALID;
+			return FORMAT_INVALID;
 		}
 	}
-	return PARAM_OK;
+	return FORMAT_OK;
 }
 
-PARAM_RES isHashAlgFormatOK(const char *hashAlg){
-	CheckNullPtr(hashAlg);
-	CheckEmpty(hashAlg);
-	return PARAM_OK;
+FormatStatus isHashAlgFormatOK(const char *hashAlg){
+	if(hashAlg == NULL) return FORMAT_NULLPTR;
+	if(strlen(hashAlg) == 0) return FORMAT_NOCONTENT;
+	return FORMAT_OK;
 }
+
+FormatStatus isImprintFormatOK(const char *imprint){
+	char *colon; 
+	FormatStatus status = FORMAT_UNKNOWN_ERROR;
+	
+	if(imprint == NULL) return FORMAT_NULLPTR;
+	if(strlen(imprint) == 0) return FORMAT_NOCONTENT;
+	
+	colon = strchr(imprint, ':');
+	
+	if(colon == NULL || colon == imprint) return FORMAT_INVALID;
+	if((colon +1) == NULL) return FORMAT_INVALID;
+	
+	if(isHexFormatOK(colon+1) != FORMAT_OK) return FORMAT_INVALID;
+	
+	return FORMAT_OK;
+}
+
+FormatStatus isFlagFormatOK(const char *hashAlg){
+	if(hashAlg == NULL) return FORMAT_OK; 
+	else return FORMAT_FLAG_HAS_ARGUMENT;
+}
+
+
+
 
 static int doFileExists(const char* path){
 	if(_access_s(path, F_OK) == 0) return 0;
 	else return errno;
 }
 
-PARAM_RES analyseInputFile(const char* path){
-	PARAM_RES res = PARAM_UNKNOWN_ERROR;
+ContentStatus isInputFileContOK(const char* path){
+	ContentStatus res = PARAM_UNKNOWN_ERROR;
 	int fileStatus = EINVAL;
 	res = isPathFormOk(path);
 	if (res == PARAM_OK)
@@ -104,28 +129,67 @@ PARAM_RES analyseInputFile(const char* path){
 }
 
 //TODO add some functionality
-PARAM_RES analyseOutputFile(const char* path){
-	CheckNullPtr(path);
+ContentStatus isOutputFileContOK(const char* path){
 	return PARAM_OK;
 }
 
-const char * getFormatErrorString(PARAM_RES res){
+ContentStatus isHashAlgContOK(const char *alg){
+	if(strcmp("SHA-1" ,alg) == 0) return PARAM_OK;
+	else if(strcmp("SHA-256" ,alg) == 0) return PARAM_OK;
+	else if(strcmp("RIPEMD-160" ,alg) == 0) return PARAM_OK;
+	else if(strcmp("SHA-224" ,alg) == 0) return PARAM_OK;
+	else if(strcmp("SHA-384" ,alg) == 0) return PARAM_OK;
+	else if(strcmp("SHA-512" ,alg) == 0) return PARAM_OK;
+	else if(strcmp("RIPEMD-256" ,alg) == 0) return PARAM_OK;
+	else if(strcmp("SHA3-244" ,alg) == 0) return PARAM_OK;
+	else if(strcmp("SHA3-256" ,alg) == 0) return PARAM_OK;
+	else if(strcmp("SHA3-384" ,alg) == 0) return PARAM_OK;
+	else if(strcmp("SHA3-512" ,alg) == 0) return PARAM_OK;
+	else if(strcmp("SM3" ,alg) == 0) return PARAM_OK;
+	else return HASH_ALG_INVALID_NAME;
+}
+
+ContentStatus ContentIsOK(const char *alg){
+	return PARAM_OK;
+}
+
+
+
+
+
+
+const char *getFormatErrorString(FormatStatus res){
+	switch (res) {
+	case FORMAT_OK: return "(Parameter OK)";
+		break;
+	case FORMAT_NULLPTR: return "(Nullptr)";
+		break;
+	case FORMAT_NOCONTENT: return "(Parameter has no content)";
+		break;
+	case FORMAT_INVALID: return "(Parameter is invalid)";
+		break;
+	case FORMAT_URL_UNKNOWN_SCHEME: return "(URL scheme is unknown)";
+		break;
+	case FORMAT_FLAG_HAS_ARGUMENT: return "(Parameter must have no arguments)";
+		break;
+	}
+
+	return "(Unknown error)";
+}
+
+const char *getParameterContentErrorString(ContentStatus res){
 	switch (res) {
 	case PARAM_OK: return "(Parameter OK)";
 		break;
-	case PARAM_NULLPTR: return "(Null)";
-		break;
-	case PARAM_NOCONTENT: return "(Parameter has no content)";
-		break;
 	case PARAM_INVALID: return "(Parameter is invalid)";
+		break;
+	case HASH_ALG_INVALID_NAME: return "(Algorithm name is incorrect)";
 		break;
 	case FILE_ACCESS_DENIED: return "(File access denied)";
 		break;
 	case FILE_DOSE_NOT_EXIST: return "(File dose not exist)";
 		break;
 	case FILE_INVALID_PATH: return "(Invalid path)";
-		break;
-	case URL_UNKNOWN_SCHEME: return "(URL scheme is unknown)";
 		break;
 	}
 

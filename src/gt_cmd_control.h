@@ -14,32 +14,42 @@
 extern "C" {
 #endif
 
-	/**
-	 * Enumeration of command line parameters states.
-	 */
-typedef enum paramContRes {
+
+typedef enum contentStatus {
 	PARAM_OK,
-	PARAM_NULLPTR,
-	PARAM_NOCONTENT,
 	PARAM_INVALID,
+	HASH_ALG_INVALID_NAME,
 	FILE_ACCESS_DENIED,
 	FILE_DOSE_NOT_EXIST,
 	FILE_INVALID_PATH,
-	URL_UNKNOWN_SCHEME,
 	PARAM_UNKNOWN_ERROR
-} PARAM_RES;
+} ContentStatus;
 
-PARAM_RES isPathFormOk(const char *path);
-PARAM_RES isHexFormatOK(const char *hex);
-PARAM_RES isURLFormatOK(const char *url);
-PARAM_RES isIntegerFormatOK(const char *integer);
-PARAM_RES isHashAlgFormatOK(const char *hashAlg);
+typedef enum formatStatus_enum{
+	FORMAT_OK,
+	FORMAT_NULLPTR,
+	FORMAT_NOCONTENT,
+	FORMAT_INVALID,
+	FORMAT_URL_UNKNOWN_SCHEME,
+	FORMAT_FLAG_HAS_ARGUMENT,
+	FORMAT_UNKNOWN_ERROR
+} FormatStatus;
 
-PARAM_RES analyseInputFile(const char* path);
-PARAM_RES analyseOutputFile(const char* path);
+FormatStatus isPathFormOk(const char *path);
+FormatStatus isHexFormatOK(const char *hex);
+FormatStatus isURLFormatOK(const char *url);
+FormatStatus isIntegerFormatOK(const char *integer);
+FormatStatus isHashAlgFormatOK(const char *hashAlg);
+FormatStatus isImprintFormatOK(const char *hashAlg);
+FormatStatus isFlagFormatOK(const char *hashAlg);
 
-const char * getFormatErrorString(PARAM_RES res);
+ContentStatus isInputFileContOK(const char* path);
+ContentStatus isOutputFileContOK(const char* path);
+ContentStatus isHashAlgContOK(const char *alg);
+ContentStatus ContentIsOK(const char *alg);
 
+const char *getFormatErrorString(ContentStatus res);
+const char *getParameterContentErrorString(ContentStatus res);
 
 
 #ifdef	__cplusplus

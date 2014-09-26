@@ -8,7 +8,7 @@
 #ifndef GT_TASK_H
 #define	GT_TASK_H
 
-#include "gt_cmd_parameters.h"
+#include "task_def.h"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -19,28 +19,28 @@ extern "C" {
  * @param [in] cmdparam Pointer to command-line parameters.
  * @return True if successful, false otherwise.
  */
-bool GT_signTask(GT_CmdParameters *cmdparam);
+bool GT_signTask(Task *task);
 
 /**
  * Task that deals with verifying operations.
  * @param [in] cmdparam Pointer to command-line parameters.
  * @return True if successful, false otherwise.
  */
-bool GT_verifyTask(GT_CmdParameters *cmdparam);
+bool GT_verifyTask(Task *task);
 
 /**
  * Task that deals with extending operations.
  * @param [in] cmdparam Pointer to command-line parameters
  * @return True if successful, false otherwise.
  */
-bool GT_extendTask(GT_CmdParameters *cmdparam);
+bool GT_extendTask(Task *task);
 
 /**
  * Task that deals with extending operations.
  * @param [in] cmdparam Pointer to command-line parameters.
  * @return True if successful, false otherwise.
  */
-bool GT_publicationsFileTask(GT_CmdParameters *cmdparam);
+bool GT_publicationsFileTask(Task *task);
 
 
 #ifdef	__cplusplus

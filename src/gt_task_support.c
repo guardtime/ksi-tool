@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "gt_task_support.h"
 #include "try-catch.h"
-
+#include "param_set.h"
 
 #define ON_ERROR_THROW_MSG(_exeption, ...) \
 	if (res != KSI_OK){  \
@@ -19,45 +19,58 @@
  * 
  * @throws KSI_EXEPTION
  */
-static void configureNetworkProvider_throws(KSI_CTX *ksi, GT_CmdParameters *cmdparam){
+static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	int res = KSI_OK;
 	KSI_NetworkClient *net = NULL;
+	bool S=false, P=false, X=false, C=false, c=false;
+	char *signingService_url = NULL;
+	char *publicationsFile_url = NULL;
+	char *verificationService_url = NULL;
+	int networkConnectionTimeout = 0;
+	int networkTransferTimeout = 0;
+	
+	S = paramSet_getStrValueByNameAt(task->set, 'S',0,&signingService_url);
+	P = paramSet_getStrValueByNameAt(task->set, 'P',0,&publicationsFile_url);
+	X = paramSet_getStrValueByNameAt(task->set, 'X',0,&verificationService_url);
+	C = paramSet_getIntValueByNameAt(task->set, 'C', 0,&networkConnectionTimeout);
+	c = paramSet_getIntValueByNameAt(task->set, 'c', 0,&networkTransferTimeout);
+
 	try
 	   CODE{
 			/* Check if uri's are specified. */
-			if (cmdparam->S || cmdparam->P || cmdparam->X || cmdparam->C || cmdparam->c) {
+			if (S || P || X || C || c) {
 				res = KSI_UNKNOWN_ERROR;
 				res = KSI_HttpClient_new(ksi, &net);
 				ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to create new network provider.\n");
 
 				/* Check aggregator url */
-				if (cmdparam->S) {
-					res = KSI_HttpClient_setSignerUrl(net, cmdparam->signingService_url);
-					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set aggregator url '%s'.\n", cmdparam->signingService_url);
+				if (S) {
+					res = KSI_HttpClient_setSignerUrl(net, signingService_url);
+					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set aggregator url '%s'.\n", signingService_url);
 				}
 
 				/* Check publications file url. */
-				if (cmdparam->P) {
-					res = KSI_HttpClient_setPublicationUrl(net, cmdparam->publicationsFile_url);
-					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set publications file url '%s'.\n", cmdparam->publicationsFile_url);
+				if (P) {
+					res = KSI_HttpClient_setPublicationUrl(net, publicationsFile_url);
+					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set publications file url '%s'.\n", publicationsFile_url);
 				}
 
 				/* Check extending/verification service url. */
-				if (cmdparam->X) {
-					res = KSI_HttpClient_setExtenderUrl(net, cmdparam->verificationService_url);
-					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set extender/verifier url '%s'.\n", cmdparam->verificationService_url);
+				if (X) {
+					res = KSI_HttpClient_setExtenderUrl(net, verificationService_url);
+					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set extender/verifier url '%s'.\n", verificationService_url);
 				}
 
 				/* Check Network connection timeout. */
-				if (cmdparam->C) {
-					res = KSI_HttpClient_setConnectTimeoutSeconds(net, cmdparam->networkConnectionTimeout);
-					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set network connection timeout %i.\n", cmdparam->networkConnectionTimeout);
+				if (C) {
+					res = KSI_HttpClient_setConnectTimeoutSeconds(net, networkConnectionTimeout);
+					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set network connection timeout %i.\n", networkConnectionTimeout);
 				}
 
 				/* Check Network transfer timeout. */
-				if (cmdparam->c) {
-					res = KSI_HttpClient_setReadTimeoutSeconds(net, cmdparam->networkTransferTimeout);
-					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set network transfer timeout %i.\n", cmdparam->networkTransferTimeout);
+				if (c) {
+					res = KSI_HttpClient_setReadTimeoutSeconds(net, networkTransferTimeout);
+					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set network transfer timeout %i.\n", networkTransferTimeout);
 				}
 
 				/* Set the new network provider. */
@@ -74,34 +87,42 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, GT_CmdParameters *cmdp
 
 }
 
-void initTask_throws(GT_CmdParameters *cmdparam ,KSI_CTX **ksi){
+void initTask_throws(Task *task ,KSI_CTX **ksi){
 	int res = KSI_UNKNOWN_ERROR;
 	KSI_CTX *tmpKsi = NULL;
 	KSI_PublicationsFile *tmpPubFile = NULL;
 	KSI_PKITruststore *refTrustStore = NULL;
 	int i=0;
 	
+	bool b,V, W;
+	char *inPubFileName;
+	char *lookupFile = NULL;
+	char *lookupDir = NULL;
+	
+	b = paramSet_getStrValueByNameAt(task->set, 'b',0, &inPubFileName);
+	V = paramSet_isSetByName(task->set,'V');
+	W = paramSet_getStrValueByNameAt(task->set, 'W',0, &lookupDir);
+	
 	try
 		CODE{
 			res = KSI_CTX_new(&tmpKsi);
 			ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to init KSI context.\n");
-			configureNetworkProvider_throws(tmpKsi, cmdparam);
+			configureNetworkProvider_throws(tmpKsi, task);
 
-			if(cmdparam->b && (cmdparam->task != downloadPublicationsFile && cmdparam->task != verifyPublicationsFile)){
-				KSI_LOG_debug(tmpKsi, "Setting publications file '%s'", cmdparam->inPubFileName);
-				KSI_PublicationsFile_fromFile_throws(tmpKsi, cmdparam->inPubFileName, &tmpPubFile);
+			if(b && (task->id != downloadPublicationsFile && task->id != verifyPublicationsFile)){
+				KSI_LOG_debug(tmpKsi, "Setting publications file '%s'", inPubFileName);
+				KSI_PublicationsFile_fromFile_throws(tmpKsi, inPubFileName, &tmpPubFile);
 				KSI_setPublicationsFile(tmpKsi, tmpPubFile);
 			}
 
-			if(cmdparam->V || cmdparam->W){
+			if(V || W){
 				KSI_getPKITruststore(tmpKsi, &refTrustStore);
-				if(cmdparam->V){
-					for(i=0; i<cmdparam->sizeOpenSSLTruststoreFileName;i++){
-						KSI_PKITruststore_addLookupFile_throws(refTrustStore, cmdparam->openSSLTruststoreFileName[i]);
-					}
+				if(V){
+					while(paramSet_getStrValueByNameAt(task->set, 'V',i++,&lookupFile))
+						KSI_PKITruststore_addLookupFile_throws(refTrustStore, lookupFile);
 				}
-				if(cmdparam->W){
-					KSI_PKITruststore_addLookupDir_throws(refTrustStore, cmdparam->openSSLTrustStoreDirName);
+				if(W){
+					KSI_PKITruststore_addLookupDir_throws(refTrustStore, lookupDir);
 				}
 			}
 			
@@ -375,6 +396,8 @@ char* str_measuredTime(void){
 	snprintf(buf,32,"(%i ms)", elapsed_time_ms);
 	return buf;
 }
+
+
 
 
 

@@ -6,12 +6,12 @@ SET WAIT=5
 
 REM Services to use
  
-SET SIG_SERV_IP=http://192.168.1.36:3333/
-rem SET VER_SERV_IP=http://192.168.1.29:1111/gt-extendingservice
+SET SIG_SERV_IP=http://192.168.100.36:3333/
+rem SET VER_SERV_IP=http://192.168.100.29:1111/gt-extendingservice
 REM SET PUB_SERV_IP=http://172.20.20.7/publications.tlv
 set PUB_SERV_IP=http://verify.guardtime.com/ksi-publications.bin
 REM SET SIG_SERV_IP=http://172.20.20.4:3333/
-SET VER_SERV_IP=http://192.168.1.36:8081/gt-extendingservice
+SET VER_SERV_IP=http://192.168.100.36:8081/gt-extendingservice
 SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -P %PUB_SERV_IP% -C 5 -c 5
 
 REM input files
@@ -33,7 +33,7 @@ SET RIPMED160_file=../test/out/RIPMED160.ksig
 SET TEST_FILE_OUT=../test/out/testFile
 SET PUBFILE=../test/out/pubfile
 
-rem gtime.exe -x -i ..\test\out\testFile.ksig -o ..\test\out\__extended -X http://192.168.1.36:8081/gt-extendingservice -T 1410858222
+rem gtime.exe -x -i ..\test\out\testFile.ksig -o ..\test\out\__extended -X http://192.168.100.36:8081/gt-extendingservice -T 1410858222
 REM Cert files to use
 REM SET CERTS= -V "C:\Users\Taavi\Documents\GuardTime\certs\Symantec Class 1 Individual Subscriber CA(64).crt" 
 REM set CERTS= %CERTS% -V "C:\Users\Taavi\Documents\GuardTime\certs\VerSign Class 1 Public Primary Certification Authority - G3(64).crt"

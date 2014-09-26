@@ -2,37 +2,50 @@
 #include "gt_task_support.h"
 #include "try-catch.h"
 
-static void getHashFromCommandLine_throws(GT_CmdParameters *cmdparam,KSI_CTX *ksi, KSI_DataHash **hash);
+static void getHashFromCommandLine_throws(const char *imprint,KSI_CTX *ksi, KSI_DataHash **hash);
 static int getHashAlgorithm_throws(const char *hashAlg);
 
-bool GT_signTask(GT_CmdParameters *cmdparam) {
+bool GT_signTask(Task *task) {
 	KSI_CTX *ksi = NULL;
 	KSI_DataHasher *hsr = NULL;
 	KSI_DataHash *hash = NULL;
 	KSI_Signature *sign = NULL;
 	bool state = true;
 
+	bool H, t, n, d;
+	char *hashAlgName_H = NULL;
+	char *inDataFileName = NULL;
+	char *outSigFileName = NULL;
+	char *imprint = NULL;
+	
+	H = paramSet_getStrValueByNameAt(task->set, 'H', 0,&hashAlgName_H);	
+	paramSet_getStrValueByNameAt(task->set, 'f', 0,&inDataFileName);
+	paramSet_getStrValueByNameAt(task->set, 'o', 0,&outSigFileName);
+	paramSet_getStrValueByNameAt(task->set, 'F', 0,&imprint);
+	n = paramSet_isSetByName(task->set, 'n');
+	t = paramSet_isSetByName(task->set, 't');
+	d = paramSet_isSetByName(task->set, 'd');
+	
 	resetExeptionHandler();
 	try
 		CODE{
 			/*Initalization of KSI */
-			initTask_throws(cmdparam, &ksi);
-
+			initTask_throws(task, &ksi);
 			/*Getting the hash for signing process*/
-			if(cmdparam->task == signDataFile){
+			if(task->id == signDataFile){
 				char *hashAlg;
 				int hasAlgID=-1;
 				/*Choosing of hash algorithm and creation of data hasher*/
 				printf("Getting hash from file for signing process...");
-				hashAlg = cmdparam->H ? (cmdparam->hashAlgName_H) : ("default");
+				hashAlg = H ? (hashAlgName_H) : ("default");
 				hasAlgID = getHashAlgorithm_throws(hashAlg);
 				KSI_DataHasher_open_throws(ksi,hasAlgID , &hsr);
-				getFilesHash_throws(hsr, cmdparam->inDataFileName, &hash );
+				getFilesHash_throws(hsr, inDataFileName, &hash );
 				printf("ok.\n");
 			}
-			else if(cmdparam->task == signHash){
+			else if(task->id == signHash){
 				printf("Getting hash from input string for signing process...");
-				getHashFromCommandLine_throws(cmdparam,ksi, &hash);
+				getHashFromCommandLine_throws(imprint,ksi, &hash);
 				printf("ok.\n");
 			}
 			else{
@@ -42,11 +55,11 @@ bool GT_signTask(GT_CmdParameters *cmdparam) {
 			/* Sign the data hash. */
 			printf("Creating signature from hash...");
 			MEASURE_TIME(KSI_createSignature_throws(ksi, hash, &sign));
-			printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
+			printf("ok. %s\n",t ? str_measuredTime() : "");
 
 					
 			/* Save signature file */
-			saveSignatureFile_throws(sign, cmdparam->outSigFileName);
+			saveSignatureFile_throws(sign, outSigFileName);
 			printf("Signature saved.\n");
 		}
 		CATCH_ALL{
@@ -57,8 +70,8 @@ bool GT_signTask(GT_CmdParameters *cmdparam) {
 		}
 	end_try
 
-	if(cmdparam->n || cmdparam->r || cmdparam->d) printf("\n");
-	if (cmdparam->n) printSignerIdentity(sign);
+	if(n || d) printf("\n");
+	if (n) printSignerIdentity(sign);
 	
 				
 	KSI_Signature_free(sign);
@@ -97,38 +110,72 @@ static int xx(char c1, char c2){
  * @param[out] binout Pointer to receiving pointer to binary array.  
  * @param[out] lenout Pointer to binary array length.
  * 
- * @throws INVALID_ARGUMENT_EXEPTION.
+ * @throws INVALID_ARGUMENT_EXEPTION, OUT_OF_MEMORY_EXEPTION.
  */
 static void getBinaryFromHexString(KSI_CTX *ksi, const char *hexin, unsigned char **binout, size_t *lenout){
 	size_t len = strlen(hexin);
-	unsigned char *tempBin=NULL;
+	unsigned char *tmp=NULL;
 	size_t arraySize = len/2;
 	int i,j;
 
+	if(hexin == NULL || binout == NULL || lenout == NULL)
+		THROW(NULLPTR_EXEPTION);
+	
 	if(len%2 != 0){
-		THROW_MSG(INVALID_ARGUMENT_EXEPTION, "Error: The hash lenght is not even number!\n");
+		THROW_MSG(INVALID_ARGUMENT_EXEPTION, "Error: The hash length is not even number!\n");
 	}
 
-	tempBin = KSI_calloc(arraySize, sizeof(unsigned char));
-	if(tempBin == NULL){
+	tmp = KSI_calloc(arraySize, sizeof(unsigned char));
+	if(tmp == NULL){
 		THROW_MSG(INVALID_ARGUMENT_EXEPTION, "Error: Unable to get memory for parsing hex to binary.\n");
 	}
 
 	for(i=0,j=0; i<arraySize; i++, j+=2){
 		int res = xx(hexin[j], hexin[j+1]);
 		if(res == -1){
-			KSI_free(tempBin);
-			tempBin = NULL;
+			KSI_free(tmp);
+			tmp = NULL;
 			THROW_MSG(INVALID_ARGUMENT_EXEPTION, "Error: The hex number is invalid: %c%c!\n", hexin[j], hexin[j+1]);
 		}
-		tempBin[i] = res;
+		tmp[i] = res;
 		//printf("%c%c -> %i\n", hexin[j], hexin[j+1], tempBin[i]);
 	}
 
 	*lenout = arraySize;
-	*binout = tempBin;
+	*binout = tmp;
 
 	return;
+}
+
+static bool getHashAndAlgStrings(const char *instrn, char **strnAlgName, char **strnHash){
+	char *colon = NULL;
+	size_t algLen = 0;
+	size_t hahsLen = 0;
+	char *temp_strnAlg = NULL;
+	char *temp_strnHash = NULL;
+	
+	
+	if(strnAlgName == NULL || strnHash == NULL) return false;
+	*strnAlgName = NULL;
+	*strnHash = NULL;
+	if (instrn == NULL) return false;
+
+	colon = strchr(instrn, ':');
+	if (colon != NULL) {
+		algLen = (colon - instrn) / sizeof (char);
+		hahsLen = strlen(instrn) - algLen - 1;
+		temp_strnAlg = calloc(algLen + 1, sizeof (char));
+		temp_strnHash = calloc(hahsLen + 1, sizeof (char));
+		memcpy(temp_strnAlg, instrn, algLen);
+		temp_strnAlg[algLen] = 0;
+		memcpy(temp_strnHash, colon + 1, hahsLen);
+		temp_strnHash[hahsLen] = 0;
+	}
+
+	*strnAlgName = temp_strnAlg;
+	*strnHash = temp_strnHash;
+	//printf("Alg %s\nHash %s\n", *strnAlgName, *strnHash);
+	return true;
 }
 
 /**
@@ -138,25 +185,37 @@ static void getBinaryFromHexString(KSI_CTX *ksi, const char *hexin, unsigned cha
  * @param[in] ksi Pointer to ksi context object.
  * @param[out] hash Pointer to receiving pointer to KSI_DataHash object.
  * 
- * @throws INVALID_ARGUMENT_EXEPTION, KSI_EXEPTION.
+ * @throws KSI_EXEPTION, NULLPTR_EXEPTION.
  */
-static void getHashFromCommandLine_throws(GT_CmdParameters *cmdparam,KSI_CTX *ksi, KSI_DataHash **hash){
-	unsigned char *data;
+static void getHashFromCommandLine_throws(const char *imprint,KSI_CTX *ksi, KSI_DataHash **hash){
+	unsigned char *data = NULL;
 	size_t len;
 	int res = KSI_UNKNOWN_ERROR;
 	int hasAlg = -1;
 
+	char *strAlg = NULL;
+	char *strHash = NULL;
 	try
 		CODE{
-			getBinaryFromHexString(ksi, cmdparam->inputHashStrn, &data, &len);
-			hasAlg = getHashAlgorithm_throws(cmdparam->hashAlgName_F);
+			if(imprint == NULL) THROW_MSG(NULLPTR_EXEPTION, "xxx");
+			getHashAndAlgStrings(imprint, &strAlg, &strHash);
+			if(strAlg == NULL || strHash== NULL ) THROW_MSG(NULLPTR_EXEPTION, "xx");
+			
+			getBinaryFromHexString(ksi, strHash, &data, &len);
+			hasAlg = getHashAlgorithm_throws(strAlg);
 			KSI_DataHash_fromDigest_throws(ksi, hasAlg, data, (unsigned int)len, hash);
 		}
 		CATCH_ALL{
+			free(strAlg);
+			free(strHash);
+			free(data);
 			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to get hash from command line input.\n");
 		}
 	end_try
 
+	free(strAlg);
+	free(strHash);
+	free(data);
 	return;
 }
 

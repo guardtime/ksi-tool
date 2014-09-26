@@ -15,7 +15,6 @@ TOOL_NAME = gtime
 
 CMDTOOL_OBJ = \
 	$(OBJ_DIR)\getopt.obj \
-	$(OBJ_DIR)\gt_cmd_parameters.obj \
 	$(OBJ_DIR)\gt_task_support.obj \
 	$(OBJ_DIR)\gt_task_extend.obj \
 	$(OBJ_DIR)\gt_task_pubfile.obj \
@@ -23,8 +22,9 @@ CMDTOOL_OBJ = \
 	$(OBJ_DIR)\gt_task_verify.obj \
 	$(OBJ_DIR)\gtime.obj \
 	$(OBJ_DIR)\gt_cmd_control.obj \
-	$(OBJ_DIR)\try-catch.obj
-
+	$(OBJ_DIR)\try-catch.obj \
+	$(OBJ_DIR)\task_def.obj \
+	$(OBJ_DIR)\param_set.obj
 
 	
 #Compiler and linker configuration

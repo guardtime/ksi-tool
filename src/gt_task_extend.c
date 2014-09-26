@@ -1,7 +1,7 @@
 #include "gt_task_support.h"
 #include "try-catch.h"
 
-bool GT_extendTask(GT_CmdParameters *cmdparam) {
+bool GT_extendTask(Task *task) {
 	KSI_CTX *ksi = NULL;
 	KSI_Signature *sig = NULL;
 	KSI_Signature *ext = NULL;
@@ -18,28 +18,41 @@ bool GT_extendTask(GT_CmdParameters *cmdparam) {
 	KSI_PublicationsFile *pubFile = NULL;
 	KSI_RequestHandle *handle = NULL;
 	
+	bool T,t, n, r, d;
+	char *inSigFileName = NULL;
+	char *outSigFileName = NULL;
+	int publicationTime = 0;
+	
+	paramSet_getStrValueByNameAt(task->set, 'i', 0,&inSigFileName);
+	paramSet_getStrValueByNameAt(task->set, 'o', 0,&outSigFileName);
+	T = paramSet_getIntValueByNameAt(task->set,'T',0,&publicationTime);
+	n = paramSet_isSetByName(task->set, 'n');
+	t = paramSet_isSetByName(task->set, 't');
+	r = paramSet_isSetByName(task->set, 'r');
+	d = paramSet_isSetByName(task->set, 'd');
+	
 	resetExeptionHandler();
 	try
 		CODE{
 			/*Initialization of KSI */
-			initTask_throws(cmdparam, &ksi);
+			initTask_throws(task, &ksi);
 			/* Read the signature. */
 			printf("Reading signature...");
-			KSI_Signature_fromFile_throws(ksi, cmdparam->inSigFileName, &sig);
+			KSI_Signature_fromFile_throws(ksi, inSigFileName, &sig);
 			printf("ok.\n");
 
 			/* Make sure the signature is ok. */
 			printf("Verifying old signature...");
 			MEASURE_TIME(KSI_verifySignature(ksi, sig));
-			printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
+			printf("ok. %s\n",t ? str_measuredTime() : "");
 
 			/* Extend the signature. */
-			if(cmdparam->T){
-				printf("Extending old signature to %i...", cmdparam->publicationTime);
+			if(T){
+				printf("Extending old signature to %i...", publicationTime);
 
 				KSI_Signature_clone_throws(sig, &ext);
 				KSI_Signature_getSigningTime_throws(ext, &signTime);
-				KSI_Integer_new_throws(ksi, cmdparam->publicationTime, &pubTime);
+				KSI_Integer_new_throws(ksi, publicationTime, &pubTime);
 
 				KSI_ExtendReq_new_throws(ksi, &extReq);
 				KSI_ExtendReq_setAggregationTime_throws(extReq, signTime);
@@ -85,14 +98,14 @@ bool GT_extendTask(GT_CmdParameters *cmdparam) {
 				printf("Extending old signature...");
 				MEASURE_TIME(KSI_extendSignature_throws(ksi, sig, &ext));
 			}
-			printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
+			printf("ok. %s\n",t ? str_measuredTime() : "");
 
 			printf("Verifying extended signature...");
 			MEASURE_TIME(KSI_Signature_verify_throws(ext, ksi));
-			printf("ok. %s\n",cmdparam->t ? str_measuredTime() : "");
+			printf("ok. %s\n",t ? str_measuredTime() : "");
 			
 			/* Save signature. */
-			saveSignatureFile_throws(ext, cmdparam->outSigFileName);
+			saveSignatureFile_throws(ext, outSigFileName);
 			printf("Extended signature saved.\n");
 		}
 		CATCH_ALL{
@@ -103,10 +116,10 @@ bool GT_extendTask(GT_CmdParameters *cmdparam) {
 		}
 	end_try
 
-	if(cmdparam->n || cmdparam->r || cmdparam->d) printf("\n");
-	if (cmdparam->n) printSignerIdentity(ext);
-	if (cmdparam->r) printSignaturePublicationReference(ext);
-	if (cmdparam->d) printSignatureVerificationInfo(ext);
+	if(n || r || d) printf("\n");
+	if (n) printSignerIdentity(ext);
+	if (r) printSignaturePublicationReference(ext);
+	if (d) printSignatureVerificationInfo(ext);
 
 	KSI_Signature_free(sig);
 	KSI_Signature_free(ext);

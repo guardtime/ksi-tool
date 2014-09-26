@@ -11,9 +11,11 @@ gtime_SOURCES = \
 	gt_task_pubfile.c \
 	getopt.h \
 	getopt.c\
-	gt_cmd_parameters.c \
-	gt_cmd_parameters.h \
+	task_def.c \
+	task_def.h \
 	gt_cmd_control.c \
 	gt_cmd_control.h \
 	try-catch.c \
-	try-catch.h
+	try-catch.h \
+	param_set.c \
+	param_set.h

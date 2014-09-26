@@ -6,6 +6,23 @@
 
 exp_handler _EXP;
 
+char *Exeption_toString(exeptions_t e){
+	switch(e){
+	case KSI_EXEPTION:
+		return "KSI exeption";
+	case NULLPTR_EXEPTION:
+		return "Nullptr exeption";
+	case INVALID_ARGUMENT_EXEPTION:
+		return "Invalid argument exeption";
+	case OUT_OF_MEMORY_EXEPTION:
+		return "Out of memory exeption";
+	case IO_EXEPTION:
+		return "IO exeption";
+	default:
+		return "Unknown exeption";
+	}
+} 
+
 void _appendMessage(const char *msg, const char *fname, int lineN){
 	if((_EXP.exep.N +1 ) == JUMP_DEPTH ) return;
 	strncpy(_EXP.exep.message[_EXP.exep.N], msg, MESSAGE_SIZE);
@@ -26,7 +43,7 @@ void printMessage(void){
 void printErrorLocations(void){
 	int i=0;
 	for(i=_EXP.exep.N-1; i>=0; i--){
-		printf("%i) %s (%i) %s%s",i,  _EXP.exep.fileName[i], _EXP.exep.lineNumber[i],_EXP.exep.message[i],(_EXP.exep.message[i][strlen(_EXP.exep.message[i])-1] == '\n') ? ("") : ("\n") );
+		printf("%i)[%s] %s (%i) %s%s",i, Exeption_toString(_EXP.exep.exeption), _EXP.exep.fileName[i], _EXP.exep.lineNumber[i],_EXP.exep.message[i],(_EXP.exep.message[i][strlen(_EXP.exep.message[i])-1] == '\n') ? ("") : ("\n") );
 	}
 	return;
 }

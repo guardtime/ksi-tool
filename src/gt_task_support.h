@@ -1,10 +1,10 @@
-#ifndef GT_TASK_H
-#define	GT_TASK_H
+#ifndef GT_TASK_SUPPORT_H
+#define	GT_TASK_SUPPORT_H
 
 #include <stdio.h>
 #include <string.h>
 #include <ksi/ksi.h>
-#include "gt_cmd_parameters.h"
+#include "task_def.h"
 
 
 
@@ -22,7 +22,7 @@ extern "C" {
  * 
  * @throws KSI_EXEPTION.
  */
-void initTask_throws(GT_CmdParameters *cmdparam ,KSI_CTX **ksi);
+void initTask_throws(Task *task ,KSI_CTX **ksi);
 
 /**
  * Calculates the hash of an input file.
@@ -81,7 +81,6 @@ void printPublicationsFileCertificates(const KSI_PublicationsFile *pubfile);
  * @return Time difference in ms.
  */
 unsigned int measureLastCall(void);
-
 /**
  * Gives time difference between the current and last call of function measureLastCall in ms
  * @return Time difference in ms.

@@ -46,7 +46,9 @@ extern "C" {
 	typedef enum _exeptions_t{
 		_CODE = 0,
 		KSI_EXEPTION = 100,
-		INVALID_ARGUMENT_EXEPTION, 
+		NULLPTR_EXEPTION,
+		INVALID_ARGUMENT_EXEPTION,
+		OUT_OF_MEMORY_EXEPTION,
 		IO_EXEPTION
 	}exeptions_t;
 
