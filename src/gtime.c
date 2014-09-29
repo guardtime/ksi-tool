@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
 	paramSet *set = NULL;
 	TaskDefinition *array[8];
 	Task *task = NULL;
-	paramSet_new("s*x*p*v*t*r*d*n*h*oifbacCV*WSXPFlHT", &set);
+	paramSet_new("s*x*p*v*t*r*d*n*h*oifbacCV*WSXPFlHTE", &set);
 	if(set == NULL) goto cleanup;
 	
 	paramSet_addControl(set, "o", isPathFormOk, isOutputFileContOK);
@@ -30,9 +30,11 @@ int main(int argc, char** argv) {
 	paramSet_addControl(set, "H", isHashAlgFormatOK, isHashAlgContOK);
 	paramSet_addControl(set, "SXP", isURLFormatOK, ContentIsOK);
 	paramSet_addControl(set, "cCT", isIntegerFormatOK, ContentIsOK);
+	paramSet_addControl(set, "E", isEmailFormatOK, ContentIsOK);
 	paramSet_addControl(set, "xsvptrnldh", isFlagFormatOK, ContentIsOK);
 	
-	paramSet_readFromcCMD(argc, argv,"sxpvtrdo:i:f:b:a:hc:C:V:W:S:X:P:F:lH:nT:", set);
+	
+	paramSet_readFromcCMD(argc, argv,"sxpvtrdo:i:f:b:a:hc:C:V:W:S:X:P:F:lH:nT:E:", set);
 	if(set == NULL) goto cleanup;
 	
 //	rawParamSet_Print(set);
@@ -75,6 +77,7 @@ int main(int argc, char** argv) {
 cleanup:
 	
 	paramSet_free(set);
+	if(!state) GT_pritHelp();
 
 	return state ? (EXIT_SUCCESS) : (EXIT_FAILURE);
 }
@@ -138,6 +141,7 @@ static void GT_pritHelp(void){
 			" -V <file>	use specified OpenSSL-style trust store file for publications file Verification\n"
 			"   		Can have multiple values (-V <file 1> -V <file 2>)\n"
 			" -W <dir>	use specified OpenSSL-style trust store directory for publications file verification\n"
+			" -E <mail>	use specified publication certificate email\n"
 			
 			"\nHelp:\n"
 			" -h		Help (You are reading it now)\n"

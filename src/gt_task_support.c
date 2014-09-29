@@ -94,14 +94,16 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 	KSI_PKITruststore *refTrustStore = NULL;
 	int i=0;
 	
-	bool b,V, W;
+	bool b,V, W, E;
 	char *inPubFileName;
 	char *lookupFile = NULL;
 	char *lookupDir = NULL;
+	char *magicEmail = NULL;
 	
 	b = paramSet_getStrValueByNameAt(task->set, 'b',0, &inPubFileName);
 	V = paramSet_isSetByName(task->set,'V');
 	W = paramSet_getStrValueByNameAt(task->set, 'W',0, &lookupDir);
+	E = paramSet_getStrValueByNameAt(task->set, 'E',0, &magicEmail);
 	
 	try
 		CODE{
@@ -124,6 +126,10 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 				if(W){
 					KSI_PKITruststore_addLookupDir_throws(refTrustStore, lookupDir);
 				}
+			}
+			
+			if(E){
+				KSI_setPublicationCertEmail_throws(tmpKsi, magicEmail);
 			}
 			
 			*ksi = tmpKsi;
@@ -580,3 +586,8 @@ int KSI_PublicationRecord_clone_throws(const KSI_PublicationRecord *rec, KSI_Pub
 	THROWABLE(KSI_PublicationRecord_clone(rec, clone), "Error: Unable clone signatures publication record. (%s)\n",  KSI_getErrorString(res));
 	
 }
+
+int KSI_setPublicationCertEmail_throws(KSI_CTX *ctx, const char *email){
+	THROWABLE(KSI_setPublicationCertEmail(ctx, email), "Error: Unable set publication cert email. (%s)\n",  KSI_getErrorString(res));
+}
+

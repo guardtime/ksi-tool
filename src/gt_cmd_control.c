@@ -93,6 +93,20 @@ FormatStatus isFlagFormatOK(const char *hashAlg){
 	else return FORMAT_FLAG_HAS_ARGUMENT;
 }
 
+FormatStatus isEmailFormatOK(const char *email){
+	char *at = NULL;
+	char *dot = NULL;
+	if(email == NULL) return FORMAT_NULLPTR;
+	if(strlen(email) == 0) return FORMAT_NOCONTENT;
+	
+	if((at = strchr(email,'@')) == NULL) return FORMAT_INVALID;
+	if(at == email || *(at+1)==0) return FORMAT_INVALID;
+	
+	if((dot = strchr(email,'.')) == NULL) return FORMAT_INVALID;
+	if(dot == email || *(dot+1)==0 || (dot-1) == at) return FORMAT_INVALID;
+	
+	return FORMAT_OK;
+}
 
 
 

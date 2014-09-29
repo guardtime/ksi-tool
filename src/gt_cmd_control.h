@@ -42,6 +42,7 @@ FormatStatus isIntegerFormatOK(const char *integer);
 FormatStatus isHashAlgFormatOK(const char *hashAlg);
 FormatStatus isImprintFormatOK(const char *hashAlg);
 FormatStatus isFlagFormatOK(const char *hashAlg);
+FormatStatus isEmailFormatOK(const char *email);
 
 ContentStatus isInputFileContOK(const char* path);
 ContentStatus isOutputFileContOK(const char* path);

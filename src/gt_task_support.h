@@ -137,6 +137,8 @@ int KSI_Signature_replaceCalendarChain_throws(KSI_Signature *sig, KSI_CalendarHa
 int KSI_PublicationsFile_getPublicationDataByTime_throws(const KSI_PublicationsFile *pubFile, const KSI_Integer *pubTime, KSI_PublicationRecord **pubRec);
 int KSI_Signature_replacePublicationRecord_throws(KSI_Signature *sig, KSI_PublicationRecord *pubRec);
 int KSI_PublicationRecord_clone_throws(const KSI_PublicationRecord *rec, KSI_PublicationRecord **clone);
+int KSI_setPublicationCertEmail_throws(KSI_CTX *ctx, const char *email);
+
 #define MEASURE_TIME(code_here) \
 	{   \
 	measureLastCall(); \

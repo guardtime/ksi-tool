@@ -45,13 +45,13 @@ md ..\test\out\
 
 SET GLOBAL= %CERTS% %SERVICES%
 SET SIGN_FLAGS= -n -r -d -t
-SET VERIFY_FLAGS= -n -r -d -t
+SET VERIFY_FLAGS= -n -r -d -t 
 SET EXTEND_FLAGS= -t -t
 
 echo ****************** Download publications file ******************
-gtime.exe -p -t -o %PUBFILE% %CERTS% -d 
+gtime.exe -p -t -o %PUBFILE% %GLOBAL% -d 
 echo %errorlevel%
-gtime.exe -v -t -b %PUBFILE% %CERTS%
+gtime.exe -v -t -b %PUBFILE% %GLOBAL%
 echo %errorlevel%
 
 echo "****************** Get Publication string ******************" 
@@ -163,7 +163,11 @@ echo %errorlevel%
 
 echo "****************** Error Unable to Get Publication string ******************" 
 gtime.exe -p %GLOBAL% -T 969085709
+echo %errorlevel%
 
+echo ****************** Error wrong E-mail******************
+gtime.exe -p -t -o %PUBFILE%err %GLOBAL% -E magic@email.null 
+echo %errorlevel%
 
 
 pause
