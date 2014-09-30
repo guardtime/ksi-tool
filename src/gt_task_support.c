@@ -29,11 +29,11 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	int networkConnectionTimeout = 0;
 	int networkTransferTimeout = 0;
 	
-	S = paramSet_getStrValueByNameAt(task->set, 'S',0,&signingService_url);
-	P = paramSet_getStrValueByNameAt(task->set, 'P',0,&publicationsFile_url);
-	X = paramSet_getStrValueByNameAt(task->set, 'X',0,&verificationService_url);
-	C = paramSet_getIntValueByNameAt(task->set, 'C', 0,&networkConnectionTimeout);
-	c = paramSet_getIntValueByNameAt(task->set, 'c', 0,&networkTransferTimeout);
+	S = paramSet_getStrValueByNameAt(task->set, "S",0,&signingService_url);
+	P = paramSet_getStrValueByNameAt(task->set, "P",0,&publicationsFile_url);
+	X = paramSet_getStrValueByNameAt(task->set, "X",0,&verificationService_url);
+	C = paramSet_getIntValueByNameAt(task->set, "C", 0,&networkConnectionTimeout);
+	c = paramSet_getIntValueByNameAt(task->set, "c", 0,&networkTransferTimeout);
 
 	try
 	   CODE{
@@ -99,12 +99,12 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 	char *lookupFile = NULL;
 	char *lookupDir = NULL;
 	char *magicEmail = NULL;
-	
-	b = paramSet_getStrValueByNameAt(task->set, 'b',0, &inPubFileName);
-	V = paramSet_isSetByName(task->set,'V');
-	W = paramSet_getStrValueByNameAt(task->set, 'W',0, &lookupDir);
-	E = paramSet_getStrValueByNameAt(task->set, 'E',0, &magicEmail);
-	
+
+	b = paramSet_getStrValueByNameAt(task->set, "b",0, &inPubFileName);
+	V = paramSet_isSetByName(task->set,"V");
+	W = paramSet_getStrValueByNameAt(task->set, "W",0, &lookupDir);
+	E = paramSet_getStrValueByNameAt(task->set, "E",0, &magicEmail);
+
 	try
 		CODE{
 			res = KSI_CTX_new(&tmpKsi);
@@ -120,7 +120,7 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 			if(V || W){
 				KSI_getPKITruststore(tmpKsi, &refTrustStore);
 				if(V){
-					while(paramSet_getStrValueByNameAt(task->set, 'V',i++,&lookupFile))
+					while(paramSet_getStrValueByNameAt(task->set, "V",i++,&lookupFile))
 						KSI_PKITruststore_addLookupFile_throws(refTrustStore, lookupFile);
 				}
 				if(W){
@@ -441,7 +441,15 @@ int KSI_DataHasher_open_throws(KSI_CTX *ksi,int hasAlgID ,KSI_DataHasher **hsr){
 
 int KSI_createSignature_throws(KSI_CTX *ksi, const KSI_DataHash *hash, KSI_Signature **sign){
 	 THROWABLE(KSI_createSignature(ksi, hash, sign), "Error: Unable to sign. (%s)\n", KSI_getErrorString(res));
-	 }
+//		int res = KSI_UNKNOWN_ERROR; 
+//	res = KSI_createSignature(ksi, hash, sign);  
+//	if(res != KSI_OK) {
+//		printf("\n");
+//		KSI_ERR_statusDump(ksi, stderr);
+//		THROW_MSG(KSI_EXEPTION, "Error: Unable to sign. (%s)\n", KSI_getErrorString(res));
+//	} 
+//	return res;	 
+}
 
 int KSI_DataHash_fromDigest_throws(KSI_CTX *ksi, int hasAlg, char *data, unsigned int len, KSI_DataHash **hash){
 	THROWABLE(KSI_DataHash_fromDigest(ksi, hasAlg, data, len, hash), "Error: Unable to create hash from digest. (%s)\n", KSI_getErrorString(res));

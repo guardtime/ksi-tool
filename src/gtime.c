@@ -17,43 +17,58 @@
 static void GT_pritHelp(void);
 
 int main(int argc, char** argv) {
-	bool state = false;
+	TaskDefinition *taskDefArray[9];
 	paramSet *set = NULL;
-	TaskDefinition *array[8];
 	Task *task = NULL;
-	paramSet_new("s*x*p*v*t*r*d*n*h*oifbacCV*WSXPFlHTE", &set);
+	bool state = false;
+	
+	/*Create parameter set*/
+	paramSet_new("{s}*{x}*{p}*{v}*{t}*{r}*{d}*{n}*{h}*{o}{i}{f}{b}{a}{c}{C}{V}*{W}{S}{X}{P}{F}{l}{H}{T}{E}{user}{pass}", &set);
 	if(set == NULL) goto cleanup;
 	
-	paramSet_addControl(set, "o", isPathFormOk, isOutputFileContOK);
-	paramSet_addControl(set, "ibfVW", isPathFormOk, isInputFileContOK);
-	paramSet_addControl(set, "F", isImprintFormatOK, ContentIsOK);
-	paramSet_addControl(set, "H", isHashAlgFormatOK, isHashAlgContOK);
-	paramSet_addControl(set, "SXP", isURLFormatOK, ContentIsOK);
-	paramSet_addControl(set, "cCT", isIntegerFormatOK, ContentIsOK);
-	paramSet_addControl(set, "E", isEmailFormatOK, ContentIsOK);
-	paramSet_addControl(set, "xsvptrnldh", isFlagFormatOK, ContentIsOK);
+	/*Configure parameter set*/
+	paramSet_addControl(set, "{o}", isPathFormOk, isOutputFileContOK);
+	paramSet_addControl(set, "{i}{b}{f}{V}{W}", isPathFormOk, isInputFileContOK);
+	paramSet_addControl(set, "{F}", isImprintFormatOK, contentIsOK);
+	paramSet_addControl(set, "{H}", isHashAlgFormatOK, isHashAlgContOK);
+	paramSet_addControl(set, "{S}{X}{P}", isURLFormatOK, contentIsOK);
+	paramSet_addControl(set, "{c}{C}{T}", isIntegerFormatOK, contentIsOK);
+	paramSet_addControl(set, "{E}", isEmailFormatOK, contentIsOK);
+	paramSet_addControl(set, "{user}{pass}", isUserPassFormatOK, contentIsOK);
+
+	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{l}{d}{h}", isFlagFormatOK, contentIsOK);
 	
 	
+	/*Read parameter set*/
 	paramSet_readFromcCMD(argc, argv,"sxpvtrdo:i:f:b:a:hc:C:V:W:S:X:P:F:lH:nT:E:", set);
 	if(set == NULL) goto cleanup;
+//	paramSet_Print(set); 
 	
-//	rawParamSet_Print(set);
+	if(paramSet_isSetByName(set, "h")){
+		GT_pritHelp();
+		state = true;
+		goto cleanup;
+	}
+	
+	/*Define possible tasks*/
+	//						ID							DESC					DEF		MAN		IGNORE			OPTIONAL		FORBIDDEN			NEW OBJ
+	TaskDefinition_new(signDataFile,			"Sign data file",				"s|f",	"o",	"b|r|i|T",		"H|n|d|t",		"x|p|v|F",			&taskDefArray[0]);
+	TaskDefinition_new(signHash,				"Sign hash",					"s|F",	"o",	"b|r|i",		"n|d|t",		"x|p|v|H|f",		&taskDefArray[1]);
+	TaskDefinition_new(extendTimestamp,			"Extend signature",				"x",	"i|o",	"H|F|f",		"T|n|r|t",		"s|p|v",			&taskDefArray[2]);
+	TaskDefinition_new(downloadPublicationsFile,"Download publication file",	"p|o",	"",		"",				"d|t",			"s|x|v|T",			&taskDefArray[3]);
+	TaskDefinition_new(createPublicationString, "Create publication string",	"p|T",	"",		"",				"d|t",			"s|x|v|o",			&taskDefArray[4]);
+	TaskDefinition_new(verifyTimestamp,			"Verify online",				"v|x",	"i",	"",				"f|n|d|r|t",	"s|p|b",			&taskDefArray[5]);
+	TaskDefinition_new(verifyTimestamp,			"Verify locally",				"v|b|i","",		"",				"f|n|d|r|t",	"x|s|p",			&taskDefArray[6]);
+	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"v|b",	"",		"T|F|H",		"n|d|r|t",		"x|s|p|i|f|Test",	&taskDefArray[7]);
+	
+	
+	/*Extract task */
+	task = Task_getConsistentTask(taskDefArray, 8, set);
+	if(task == NULL) goto cleanup;
 	if(paramSet_isFormatOK(set) == false) goto cleanup;
 	
-	TaskDefinition_new(signDataFile,			"Sign data file",				"sf",	"o",	"briT",		"Hndt",		"xpvF",&array[0]);
-	TaskDefinition_new(signHash,				"Sign hash imprint",			"sF",	"o",	"bri",		"ndt",		"xpvHf",&array[1]);
-	TaskDefinition_new(extendTimestamp,			"extend signature",				"x",	"io",	"HFf",		"Tnrt",		"spv",&array[2]);
-	TaskDefinition_new(downloadPublicationsFile,"Download publication file",	"po",	"",		"",			"dt",		"sxv T",&array[3]);
-	TaskDefinition_new(createPublicationString, "Create publication string",	"pT",	"",		"",			"dt",		"sxvo",&array[4]);
-	TaskDefinition_new(verifyTimestamp,			"Verify online",				"vx",	"i",	"",			"f ndrt",	"spb",&array[5]);
-	TaskDefinition_new(verifyTimestamp,			"Verify locally",				"vbi",	"",		"",			"f ndrt",	"xsp",&array[6]);
-	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"vb",	"",		"TFH",		"ndrt",		"xsp if",&array[7]);
 	
-	
-	task = Task_getConsistentTask(array, 8, set);
-	
-	if(task == NULL) goto cleanup;
-	
+	/*DO*/
 	if(task->id == downloadPublicationsFile || task->id == createPublicationString){
 		state=GT_publicationsFileTask(task);
 	}
@@ -69,15 +84,11 @@ int main(int argc, char** argv) {
 	else if(task->id == verifyTimestamp){
 		state=GT_verifyTask(task);
 	}
-	else if(task->id == showHelp){
-		GT_pritHelp();
-		state = true;
-	}
 
 cleanup:
 	
 	paramSet_free(set);
-	if(!state) GT_pritHelp();
+//	if(!state) GT_pritHelp();
 
 	return state ? (EXIT_SUCCESS) : (EXIT_FAILURE);
 }

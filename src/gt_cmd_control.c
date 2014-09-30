@@ -108,6 +108,11 @@ FormatStatus isEmailFormatOK(const char *email){
 	return FORMAT_OK;
 }
 
+FormatStatus isUserPassFormatOK(const char *uss_pass){
+	if(uss_pass == NULL) return FORMAT_NULLPTR;
+	if(strlen(uss_pass) == 0) return FORMAT_NOCONTENT;
+	return FORMAT_OK;
+}
 
 
 static int doFileExists(const char* path){
@@ -163,7 +168,7 @@ ContentStatus isHashAlgContOK(const char *alg){
 	else return HASH_ALG_INVALID_NAME;
 }
 
-ContentStatus ContentIsOK(const char *alg){
+ContentStatus contentIsOK(const char *alg){
 	return PARAM_OK;
 }
 

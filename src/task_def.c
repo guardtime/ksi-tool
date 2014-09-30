@@ -46,98 +46,131 @@ void TaskDefinition_free(TaskDefinition *obj){
 	free(obj);	
 }
 
+static const char *getParametersNameFromCateghory(const char* categhory, char *buf, short len){
+	int i = 0;
+	
+	if(categhory == NULL || buf == NULL) return NULL;
+	if(categhory[0] == 0) return NULL;
+	
+	while(categhory[i] != '|' && categhory[i] != 0){
+		if(len-1 <= i){
+			return NULL;
+		}
+		buf[i] = categhory[i];
+		i++;
+	}
+	
+	buf[i] = 0;
+	if(categhory[i] == '|') i++;
+	return &categhory[i];
+}
+
+static int getFlagCount(const char* categhory){
+	const char *c = NULL;
+	int count = 0;
+	if(categhory == NULL) return 0;
+	if(categhory[0] == 0) return 0;
+	
+	c = categhory;
+	while((c = strchr(c, '|'))){
+		count++;
+		c++;
+	}
+	return count+1;
+}
+
 static int TaskDefinition_getMissingFlagCount(const char* category, paramSet *set){
-	char c;
 	int missedFlags = 0;
+	rawParam *tmp = NULL;
+	const char *pName = NULL;
+	char buf[256];
+
 	if(category == NULL || set == NULL) return -1;
 	
-	c = *category;
-	while((c = *category++)!= 0){
-		if(paramSet_isSetByName(set, c) == false){
+	pName = category;		
+	while((pName = getParametersNameFromCateghory(pName,buf, sizeof(buf))) != NULL){
+//		printf("'%s' is %i\n", buf, paramSet_isSetByName(set, buf));
+		if(paramSet_isSetByName(set, buf) == false){
 			missedFlags++;
 		}
 	}
+	
 	return missedFlags;
 }
 
 static bool TaskDefinition_analyse(TaskDefinition *def, paramSet *set){
 	bool state = true;
-
+	const char *pName = NULL;
+	char buf[256];
 	if(def == NULL || set == NULL) return false;
 	
-//	printf("Is Task defined::\n");
+//	printf("Is Task %s defined::\n", def->name);
 	if(TaskDefinition_getMissingFlagCount(def->taskDefinitionFlags, set) > 0)
 		state = false;
 	else
 		def->isDefined = true;
 	
+//	printf("Is Task consistent fb->%i::\n", getFlagCount(def->forbittenFlags));
 	if(TaskDefinition_getMissingFlagCount(def->mandatoryFlags, set) > 0) state = false;
-	if(TaskDefinition_getMissingFlagCount(def->forbittenFlags, set) != strlen(def->forbittenFlags)) state = false;
-	
+	if(TaskDefinition_getMissingFlagCount(def->forbittenFlags, set) != getFlagCount(def->forbittenFlags)) state = false;
 	def->isConsistent = state;
+	
+
+	
+	
+	
 	return state;
 }
 
 static void TaskDefinition_PrintErrors(TaskDefinition *def, paramSet *set){
 	int i=0;
-	char c;
+	char buf[256];
+	const char *pName = NULL;
 	
 	if(def == NULL){
-		printf("Task is null pointer.\n");
+		printf("Error: Task is null pointer.\n");
 		return;
 	}
 
 	if(set == NULL){
-		printf("Parameter set is null pointer.\n");
+		printf("Error: Parameter set is null pointer.\n");
 		return;
 	}
 	
-	if(def->isDefined == false){
-		printf("Task '%s' (%s) is not defined.\n", def->name, def->taskDefinitionFlags);
-		return;
-	}
-	
-	if(def->isConsistent == false){
-		printf("Task '%s' (%s) is invalid:\n", def->name, def->taskDefinitionFlags);
-
-		for(i=0; i<strlen(def->mandatoryFlags); i++){
-			c = def->mandatoryFlags[i];
-			if(paramSet_isSetByName(set, c) == false){
-				printf("Error: You have to define flag -%c\n",c);
+		pName = def->mandatoryFlags;		
+		while((pName = getParametersNameFromCateghory(pName,buf, sizeof(buf))) != NULL){
+			if(paramSet_isSetByName(set, buf) == false){
+				printf("Error: You have to define flag '-%s'\n",buf);
 			}
 		}
-
-		for(i=0; i<strlen(def->forbittenFlags); i++){
-			c = def->forbittenFlags[i];
-			if(paramSet_isSetByName(set, c) == true){
-				printf("Error: You must not use flag -%c\n",c);
+		
+		pName = def->forbittenFlags;		
+		while((pName = getParametersNameFromCateghory(pName,buf, sizeof(buf))) != NULL){
+			if(paramSet_isSetByName(set, buf) == true){
+				printf("Error: You must not use flag '-%s'\n",buf);
 			}
 		}
-	}
+//	}
 	
 	return;
 }
 
 static void TaskDefinition_PrintWarnings(TaskDefinition *def, paramSet *set){
 	int i=0;
-	char c;
+	const char *pName = NULL;
+	char buf[256];
 	
 	if(def == NULL){
-		printf("Task is null pointer.\n");
+		printf("Error: Task is null pointer.\n");
 		return;
 	}
 
-	if(set == NULL){
-		printf("Parameter set is null pointer.\n");
-		return;
-	}
-
-	for(i=0; i<strlen(def->ignoredFlags); i++){
-		c = def->ignoredFlags[i];
-		if(paramSet_isSetByName(set, c) == true){
-			printf("Warning: flag -%c is ignored\n",c);
+	pName = def->ignoredFlags;		
+		while((pName = getParametersNameFromCateghory(pName,buf, sizeof(buf))) != NULL){
+			if(paramSet_isSetByName(set, buf) == true){
+				printf("Warning: flag -%s is ignored\n",buf);
+			}
 		}
-	}
 	return;
 }
 
@@ -168,6 +201,8 @@ void Task_free(Task *obj){
 Task* Task_getConsistentTask(TaskDefinition **def, int count, paramSet *set){
 	int i=0;
 	int definedCount = 0;
+	const char *pName = NULL;
+	char buf[256];
 	Task *tmpTask = NULL;
 	TaskDefinition *tmp = NULL;
 	TaskDefinition *consistent = NULL;
@@ -183,19 +218,18 @@ Task* Task_getConsistentTask(TaskDefinition **def, int count, paramSet *set){
 	}
 	
 	if(definedCount == 0)
-		printf("Task is not defined\n");
+		printf("Task is not defined. Use (-x, -s, -v, -p) and read help -h\n");
 	
 	
 	if(definedCount >= 1 && consistent == NULL){
 		consistent = NULL;
 		if(definedCount > 1)
-			printf("You cant define multiple tasks together::\n");
-		else
-			printf("Taski is invalid::\n");
+			printf("Error: You can't define multiple tasks together:\n");
 		
 		for(i=0; i<count; i++){
 			tmp = def[i];
 			if(tmp->isDefined){
+				printf("Task '%s' (%s) is invalid:\n", tmp->name, tmp->taskDefinitionFlags);
 				TaskDefinition_PrintErrors(tmp, set);
 				TaskDefinition_PrintWarnings(tmp, set);
 			}
@@ -203,14 +237,23 @@ Task* Task_getConsistentTask(TaskDefinition **def, int count, paramSet *set){
 	}
 	
 	if(consistent){
-		TaskDefinition_PrintWarnings(consistent, set);
-		Task_new(&tmpTask);
-		if(tmpTask == NULL) return NULL;
-		
-		tmpTask->def = consistent;
-		tmpTask->id = consistent->id;
-		tmpTask->set = set;
-	}
+			if(TaskDefinition_getMissingFlagCount(consistent->ignoredFlags, set) != getFlagCount(consistent->ignoredFlags)){
+//				printf("Task '%s' (%s) has warnings:\n", consistent->name, consistent->taskDefinitionFlags, );
+				TaskDefinition_PrintWarnings(consistent, set);
+			}
+				
+			pName = consistent->ignoredFlags;		
+			while((pName = getParametersNameFromCateghory(pName,buf, sizeof(buf))) != NULL){
+				paramSet_removeParameterByName(set, buf);
+			}
+	
+			Task_new(&tmpTask);
+			if(tmpTask == NULL) return NULL;
+			
+			tmpTask->def = consistent;
+			tmpTask->id = consistent->id;
+			tmpTask->set = set;
+		}
 	
 	return tmpTask;
 }

@@ -24,13 +24,16 @@ bool paramSet_isFormatOK(paramSet *set);
 void paramSet_Print(paramSet *set);
 void paramSet_free(paramSet *set);
 
-bool paramSet_isSetByName(paramSet *set, char name);
+bool paramSet_isSetByName(paramSet *set, char *name);
 
-bool paramSet_getIntValueByNameAt(paramSet *set, char name,int at, int *value);
-bool paramSet_getStrValueByNameAt(paramSet *set, char name,int at, char **value);
-bool paramSet_getValueCountByName(paramSet *set, char name, int *count);
-bool paramSet_isSetByName(paramSet *set, char name);
-void paramSet_addControl(paramSet *set, char *names, FormatStatus (*controlFormat)(const char *), ContentStatus (*controlContent)(const char *));
+bool paramSet_getIntValueByNameAt(paramSet *set, char *name,int at, int *value);
+bool paramSet_getStrValueByNameAt(paramSet *set, char *name,int at, char **value);
+bool paramSet_getValueCountByName(paramSet *set, char *name, int *count);
+void paramSet_removeParameterByName(paramSet *set, char *name);
+bool paramSet_isSetByName(paramSet *set, char *name);
+void paramSet_addControl(paramSet *set, const char *names, FormatStatus (*controlFormat)(const char *), ContentStatus (*controlContent)(const char *));
+
+char *getParametersName(const char* names, char *buf, short len, bool *isMultiple);
 
 #ifdef	__cplusplus
 }

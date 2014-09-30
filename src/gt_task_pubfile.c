@@ -31,11 +31,11 @@ bool GT_publicationsFileTask(Task *task){
 	bool d,t;
 	char *outPubFileName = NULL;
 	int publicationTime = 0;
-	
-	paramSet_getStrValueByNameAt(task->set, 'o',0,&outPubFileName);
-	paramSet_getIntValueByNameAt(task->set,'T',0,&publicationTime);
-	d = paramSet_isSetByName(task->set, 'd');
-	t = paramSet_isSetByName(task->set, 't');
+		
+	paramSet_getStrValueByNameAt(task->set, "o",0,&outPubFileName);
+	paramSet_getIntValueByNameAt(task->set,"T",0,&publicationTime);
+	d = paramSet_isSetByName(task->set, "d");
+	t = paramSet_isSetByName(task->set, "t");
 	
 	/*Initalization of KSI */
 	resetExeptionHandler();

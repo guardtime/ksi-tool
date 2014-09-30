@@ -43,11 +43,12 @@ FormatStatus isHashAlgFormatOK(const char *hashAlg);
 FormatStatus isImprintFormatOK(const char *hashAlg);
 FormatStatus isFlagFormatOK(const char *hashAlg);
 FormatStatus isEmailFormatOK(const char *email);
+FormatStatus isUserPassFormatOK(const char *uss_pass);
 
 ContentStatus isInputFileContOK(const char* path);
 ContentStatus isOutputFileContOK(const char* path);
 ContentStatus isHashAlgContOK(const char *alg);
-ContentStatus ContentIsOK(const char *alg);
+ContentStatus contentIsOK(const char *alg);
 
 const char *getFormatErrorString(ContentStatus res);
 const char *getParameterContentErrorString(ContentStatus res);

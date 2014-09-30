@@ -23,13 +23,13 @@ bool GT_extendTask(Task *task) {
 	char *outSigFileName = NULL;
 	int publicationTime = 0;
 	
-	paramSet_getStrValueByNameAt(task->set, 'i', 0,&inSigFileName);
-	paramSet_getStrValueByNameAt(task->set, 'o', 0,&outSigFileName);
-	T = paramSet_getIntValueByNameAt(task->set,'T',0,&publicationTime);
-	n = paramSet_isSetByName(task->set, 'n');
-	t = paramSet_isSetByName(task->set, 't');
-	r = paramSet_isSetByName(task->set, 'r');
-	d = paramSet_isSetByName(task->set, 'd');
+	paramSet_getStrValueByNameAt(task->set, "i", 0,&inSigFileName);
+	paramSet_getStrValueByNameAt(task->set, "o", 0,&outSigFileName);
+	T = paramSet_getIntValueByNameAt(task->set,"T",0,&publicationTime);
+	n = paramSet_isSetByName(task->set, "n");
+	t = paramSet_isSetByName(task->set, "t");
+	r = paramSet_isSetByName(task->set, "r");
+	d = paramSet_isSetByName(task->set, "d");
 	
 	resetExeptionHandler();
 	try

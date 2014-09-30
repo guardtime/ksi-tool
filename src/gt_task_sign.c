@@ -18,13 +18,13 @@ bool GT_signTask(Task *task) {
 	char *outSigFileName = NULL;
 	char *imprint = NULL;
 	
-	H = paramSet_getStrValueByNameAt(task->set, 'H', 0,&hashAlgName_H);	
-	paramSet_getStrValueByNameAt(task->set, 'f', 0,&inDataFileName);
-	paramSet_getStrValueByNameAt(task->set, 'o', 0,&outSigFileName);
-	paramSet_getStrValueByNameAt(task->set, 'F', 0,&imprint);
-	n = paramSet_isSetByName(task->set, 'n');
-	t = paramSet_isSetByName(task->set, 't');
-	d = paramSet_isSetByName(task->set, 'd');
+	H = paramSet_getStrValueByNameAt(task->set, "H", 0,&hashAlgName_H);	
+	paramSet_getStrValueByNameAt(task->set, "f", 0,&inDataFileName);
+	paramSet_getStrValueByNameAt(task->set, "o", 0,&outSigFileName);
+	paramSet_getStrValueByNameAt(task->set, "F", 0,&imprint);
+	n = paramSet_isSetByName(task->set, "n");
+	t = paramSet_isSetByName(task->set, "t");
+	d = paramSet_isSetByName(task->set, "d");
 	
 	resetExeptionHandler();
 	try

@@ -13,14 +13,14 @@ bool GT_verifyTask(Task *task){
 	char *inSigFileName = NULL;
 	char *inDataFileName = NULL;
 	
-	b = paramSet_getStrValueByNameAt(task->set, 'b',0, &inPubFileName);
-	paramSet_getStrValueByNameAt(task->set, 'i',0, &inSigFileName);
-	f = paramSet_getStrValueByNameAt(task->set, 'f',0, &inDataFileName);
+	b = paramSet_getStrValueByNameAt(task->set, "b",0, &inPubFileName);
+	paramSet_getStrValueByNameAt(task->set, "i",0, &inSigFileName);
+	f = paramSet_getStrValueByNameAt(task->set, "f",0, &inDataFileName);
 	
-	n = paramSet_isSetByName(task->set, 'n');
-	r = paramSet_isSetByName(task->set, 'r');
-	d = paramSet_isSetByName(task->set, 'd');
-	t = paramSet_isSetByName(task->set, 't');
+	n = paramSet_isSetByName(task->set, "n");
+	r = paramSet_isSetByName(task->set, "r");
+	d = paramSet_isSetByName(task->set, "d");
+	t = paramSet_isSetByName(task->set, "t");
 	
 	resetExeptionHandler();
 	try
