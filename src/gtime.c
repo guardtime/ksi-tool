@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include "task_def.h"
 #include "gt_task.h"
-#include "control.h"
 #include "gt_task_support.h"
 #include <ksi/ksi.h>
 
@@ -37,7 +36,7 @@ int main(int argc, char** argv) {
 	paramSet_readFromcCMD(argc, argv,"sxpvtrdo:i:f:b:a:hc:C:V:W:S:X:P:F:lH:nT:E:", set);
 	if(set == NULL) goto cleanup;
 	
-//	rawParamSet_Print(set);
+	//paramSet_Print(set);
 	if(paramSet_isFormatOK(set) == false) goto cleanup;
 	
 	TaskDefinition_new(signDataFile,			"Sign data file",				"sf",	"o",	"briT",		"Hndt",		"xpvF",&array[0]);
@@ -77,7 +76,7 @@ int main(int argc, char** argv) {
 cleanup:
 	
 	paramSet_free(set);
-	if(!state) GT_pritHelp();
+	//if(!state) GT_pritHelp();
 
 	return state ? (EXIT_SUCCESS) : (EXIT_FAILURE);
 }

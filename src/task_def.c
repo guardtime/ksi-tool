@@ -3,7 +3,7 @@
 #include <stdlib.h>		//malloc, random, int ja strn 
 #include "task_def.h"
 
-typedef struct taskdef_st{
+struct taskdef_st{
 	int id;
 	const char *name;
 	const char *taskDefinitionFlags;

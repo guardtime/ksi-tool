@@ -49,7 +49,7 @@ ContentStatus isOutputFileContOK(const char* path);
 ContentStatus isHashAlgContOK(const char *alg);
 ContentStatus ContentIsOK(const char *alg);
 
-const char *getFormatErrorString(ContentStatus res);
+const char *getFormatErrorString(FormatStatus res);
 const char *getParameterContentErrorString(ContentStatus res);
 
 
