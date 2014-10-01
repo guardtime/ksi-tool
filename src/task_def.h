@@ -25,7 +25,7 @@ typedef enum tasks_en{
 	invalid		
 } TaskID;
 
-typedef  struct task_st{
+struct task_st{
 	TaskDefinition *def;
 	TaskID id;
 	paramSet *set;
