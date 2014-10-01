@@ -13,13 +13,13 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
-
+	
+	
 typedef struct paramValu_st paramValue;
-typedef struct rawParam_st rawParam;
 typedef struct paramSet_st paramSet;	
 
 bool paramSet_new(const char *names, paramSet **set);
-void paramSet_readFromcCMD(int argc, char **argv, char* definition, paramSet *rawParam);
+void paramSet_readFromCMD(int argc, char **argv, paramSet *set);
 bool paramSet_isFormatOK(paramSet *set);
 void paramSet_Print(paramSet *set);
 void paramSet_free(paramSet *set);
@@ -32,6 +32,7 @@ bool paramSet_getValueCountByName(paramSet *set, char *name, int *count);
 void paramSet_removeParameterByName(paramSet *set, char *name);
 bool paramSet_isSetByName(paramSet *set, char *name);
 void paramSet_addControl(paramSet *set, const char *names, FormatStatus (*controlFormat)(const char *), ContentStatus (*controlContent)(const char *));
+void paramSet_printUnknownParameterWarnings(paramSet *set);
 
 char *getParametersName(const char* names, char *buf, short len, bool *isMultiple);
 

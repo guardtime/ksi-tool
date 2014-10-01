@@ -114,6 +114,10 @@ FormatStatus isUserPassFormatOK(const char *uss_pass){
 	return FORMAT_OK;
 }
 
+FormatStatus formatIsOK(const char *obj){
+	return FORMAT_OK;
+}
+
 
 static int doFileExists(const char* path){
 	if(_access_s(path, F_OK) == 0) return 0;

@@ -44,6 +44,7 @@ FormatStatus isImprintFormatOK(const char *hashAlg);
 FormatStatus isFlagFormatOK(const char *hashAlg);
 FormatStatus isEmailFormatOK(const char *email);
 FormatStatus isUserPassFormatOK(const char *uss_pass);
+FormatStatus formatIsOK(const char *obj);
 
 ContentStatus isInputFileContOK(const char* path);
 ContentStatus isOutputFileContOK(const char* path);

@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include "task_def.h"
 #include "gt_task.h"
-#include "control.h"
 #include "gt_task_support.h"
 #include <ksi/ksi.h>
 
@@ -40,7 +39,7 @@ int main(int argc, char** argv) {
 	
 	
 	/*Read parameter set*/
-	paramSet_readFromcCMD(argc, argv,"sxpvtrdo:i:f:b:a:hc:C:V:W:S:X:P:F:lH:nT:E:", set);
+	paramSet_readFromCMD(argc, argv,set);
 	if(set == NULL) goto cleanup;
 //	paramSet_Print(set); 
 	
@@ -63,10 +62,10 @@ int main(int argc, char** argv) {
 	
 	
 	/*Extract task */
+	paramSet_printUnknownParameterWarnings(set);
 	task = Task_getConsistentTask(taskDefArray, 8, set);
 	if(task == NULL) goto cleanup;
 	if(paramSet_isFormatOK(set) == false) goto cleanup;
-	
 	
 	/*DO*/
 	if(task->id == downloadPublicationsFile || task->id == createPublicationString){

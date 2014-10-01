@@ -81,7 +81,6 @@ static int getFlagCount(const char* categhory){
 
 static int TaskDefinition_getMissingFlagCount(const char* category, paramSet *set){
 	int missedFlags = 0;
-	rawParam *tmp = NULL;
 	const char *pName = NULL;
 	char buf[256];
 
@@ -101,7 +100,6 @@ static int TaskDefinition_getMissingFlagCount(const char* category, paramSet *se
 static bool TaskDefinition_analyse(TaskDefinition *def, paramSet *set){
 	bool state = true;
 	const char *pName = NULL;
-	char buf[256];
 	if(def == NULL || set == NULL) return false;
 	
 //	printf("Is Task %s defined::\n", def->name);

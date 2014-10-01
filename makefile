@@ -14,7 +14,6 @@ TOOL_NAME = gtime
 #Objects for making command-line tool
 
 CMDTOOL_OBJ = \
-	$(OBJ_DIR)\getopt.obj \
 	$(OBJ_DIR)\gt_task_support.obj \
 	$(OBJ_DIR)\gt_task_extend.obj \
 	$(OBJ_DIR)\gt_task_pubfile.obj \
