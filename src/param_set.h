@@ -20,6 +20,8 @@ typedef struct paramSet_st paramSet;
 
 bool paramSet_new(const char *names, paramSet **set);
 void paramSet_readFromCMD(int argc, char **argv, paramSet *set);
+void paramSet_readFromFile(const char *fname, paramSet *set);
+
 bool paramSet_isFormatOK(paramSet *set);
 void paramSet_Print(paramSet *set);
 void paramSet_free(paramSet *set);

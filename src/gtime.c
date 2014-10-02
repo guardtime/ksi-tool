@@ -22,12 +22,12 @@ int main(int argc, char** argv) {
 	bool state = false;
 	
 	/*Create parameter set*/
-	paramSet_new("{s}*{x}*{p}*{v}*{t}*{r}*{d}*{n}*{h}*{o}{i}{f}{b}{a}{c}{C}{V}*{W}{S}{X}{P}{F}{l}{H}{T}{E}{user}{pass}", &set);
+	paramSet_new("{s}*{x}*{p}*{v}*{t}*{r}*{d}*{n}*{h}*{o}{i}{f}{b}{a}{c}{C}{V}*{W}{S}{X}{P}{F}{l}{H}{T}{E}{user}{pass}{inc}*", &set);
 	if(set == NULL) goto cleanup;
 	
 	/*Configure parameter set*/
 	paramSet_addControl(set, "{o}", isPathFormOk, isOutputFileContOK);
-	paramSet_addControl(set, "{i}{b}{f}{V}{W}", isPathFormOk, isInputFileContOK);
+	paramSet_addControl(set, "{i}{b}{f}{V}{W}{inc}", isPathFormOk, isInputFileContOK);
 	paramSet_addControl(set, "{F}", isImprintFormatOK, contentIsOK);
 	paramSet_addControl(set, "{H}", isHashAlgFormatOK, isHashAlgContOK);
 	paramSet_addControl(set, "{S}{X}{P}", isURLFormatOK, contentIsOK);
@@ -48,6 +48,30 @@ int main(int argc, char** argv) {
 		state = true;
 		goto cleanup;
 	}
+
+	if(paramSet_isSetByName(set, "inc")){
+		char *fname = NULL;
+		char *fname2 = NULL;
+		int i=0;
+		int n=0;
+		int count=0;
+		
+		while(paramSet_getStrValueByNameAt(set, "inc",i,&fname)){
+			paramSet_getValueCountByName(set, "inc", &count);
+			
+			for(n=0; n<i; n++){
+				paramSet_getStrValueByNameAt(set, "inc",n,&fname2);
+				
+				if(strcmp(fname, fname2)==0){
+					fname = NULL;
+					break;
+				}
+			}
+			
+			paramSet_readFromFile(fname, set);
+			if(++i>255) goto cleanup;
+		}
+	}
 	
 	/*Define possible tasks*/
 	//						ID							DESC					DEF		MAN		IGNORE			OPTIONAL		FORBIDDEN			NEW OBJ
@@ -62,10 +86,9 @@ int main(int argc, char** argv) {
 	
 	
 	/*Extract task */
-	paramSet_printUnknownParameterWarnings(set);
 	task = Task_getConsistentTask(taskDefArray, 8, set);
-	if(task == NULL) goto cleanup;
-	if(paramSet_isFormatOK(set) == false) goto cleanup;
+	paramSet_printUnknownParameterWarnings(set);
+	if(paramSet_isFormatOK(set) == false || task == NULL) goto cleanup;
 	
 	/*DO*/
 	if(task->id == downloadPublicationsFile || task->id == createPublicationString){
@@ -152,6 +175,7 @@ static void GT_pritHelp(void){
 			"   		Can have multiple values (-V <file 1> -V <file 2>)\n"
 			" -W <dir>	use specified OpenSSL-style trust store directory for publications file verification\n"
 			" -E <mail>	use specified publication certificate email\n"
+			" -inc <fn>	use configuration file containing command-line parameters\n"
 			
 			"\nHelp:\n"
 			" -h		Help (You are reading it now)\n"

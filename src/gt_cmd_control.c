@@ -193,7 +193,7 @@ const char *getFormatErrorString(FormatStatus res){
 		break;
 	case FORMAT_URL_UNKNOWN_SCHEME: return "(URL scheme is unknown)";
 		break;
-	case FORMAT_FLAG_HAS_ARGUMENT: return "(Parameter must have no arguments)";
+	case FORMAT_FLAG_HAS_ARGUMENT: return "(Parameter must not have arguments)";
 		break;
 	}
 

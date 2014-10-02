@@ -2,6 +2,7 @@
 #include <string.h>		
 #include <stdlib.h>		//malloc, random, int ja strn 
 #include <ctype.h>
+#include <stdio.h>
 #include "gt_cmd_control.h"
 #include "param_set.h"
 #include "task_def.h"
@@ -199,21 +200,15 @@ static void parameter_Print(parameter *param){
 	
 	if(param == NULL) return;
 	
-	printf("%s == %s\n",param->flagName, param->flag ? "true" : "false");
-	printf("Multi: %s\n", param->isMultipleAllowed ? "true" : "false");
-	printf("N %i\n", param->arcCount);
-	printf("Controll form %x cont %x\n", param->controlFormat, param->controlContent);
-	
-	
-	printf("values:\n");
+	printf("%s\n", param->flagName);
 	pValue = param->arg;
 	do{
 		if(pValue != NULL){
-			printf("p-->%6x n-->%6x:'%s' err: %2x %2x\n", (int)pValue, (int)pValue->next, pValue->cstr_value, pValue->formatStatus, pValue->contentStatus);
+			printf("  '%s'  err: %2x %2x\n", pValue->cstr_value, pValue->formatStatus, pValue->contentStatus);
 			pValue = pValue->next;
 			}
 		else
-			printf("<null>\n");
+			printf("  <null>\n");
 	}while(pValue);
 	
 }
@@ -435,6 +430,44 @@ void paramSet_addControl(paramSet *set, const char *names, FormatStatus (*contro
 }
 
 
+void paramSet_readFromFile(const char *fname, paramSet *set){
+	FILE *file = NULL;
+	char *ln = NULL;
+	char line[1024];
+	char flag[1024];
+	char arg[1024];
+	
+	if(fname == NULL || set == NULL) goto cleanup;
+	
+	printf("File %s\n", fname);
+	file = fopen(fname, "r");
+	if(file == NULL) goto cleanup;
+	
+	
+	while(fgets(line, sizeof(line),file)){
+		ln = strchr(line, '\n');
+		if(ln != NULL) *ln = 0;
+		
+		if(sscanf(line, "%s %s", flag, arg) == 2){
+			if(paramSet_appendParameterByName(arg,flag[0] == '-' ? flag+1 : flag,set)==false){
+				paramSet_appendParameterByName(flag[0] == '-' ? flag+1 : flag, UNKNOWN_PARAMETER_NAME,set);
+				paramSet_appendParameterByName(arg,UNKNOWN_PARAMETER_NAME,set);
+			}
+		}	
+		else{
+			if(paramSet_appendParameterByName(NULL,line[0] == '-' ? line+1 : line,set)==false){
+				paramSet_appendParameterByName(line[0] == '-' ? line+1 : line,UNKNOWN_PARAMETER_NAME,set);
+			}
+		}
+		
+	}
+	
+cleanup:
+	
+	if(file) fclose(file);
+	return;
+	
+}
 void paramSet_readFromCMD(int argc, char **argv, paramSet *set){
 	int c = 0;
 	paramValue *test = NULL;
@@ -490,6 +523,7 @@ bool paramSet_isFormatOK(paramSet *set){
 	
 	for(i=0; i<numOfElements;i++){
 		if((pParam = array[i]) != NULL){
+			if(strcmp(pParam->flagName, UNKNOWN_PARAMETER_NAME)==0) continue;
 			if(pParam->arcCount > 1 && !(pParam->isMultipleAllowed)){
 				printf("Error: Duplicate values '%s'!\n", pParam->flagName);
 				status = false;
@@ -528,7 +562,6 @@ void paramSet_Print(paramSet *set){
 	
 	for(i=0; i<numOfElements;i++){
 		if(array[i]->flag){
-			printf("-------\n");
 			parameter_Print(array[i]);
 		}
 	}

@@ -440,7 +440,6 @@ int KSI_DataHasher_open_throws(KSI_CTX *ksi,int hasAlgID ,KSI_DataHasher **hsr){
 }
 
 int KSI_createSignature_throws(KSI_CTX *ksi, const KSI_DataHash *hash, KSI_Signature **sign){
-/*
 	 THROWABLE(KSI_createSignature(ksi, hash, sign), "Error: Unable to sign. (%s)\n", KSI_getErrorString(res));
 //		int res = KSI_UNKNOWN_ERROR; 
 //	res = KSI_createSignature(ksi, hash, sign);  

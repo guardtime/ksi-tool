@@ -108,6 +108,12 @@ sleep %WAIT%
 gtime.exe -v -x %GLOBAL% %VERIFY_FLAGS% -i %RIPMED160_file%
 echo %errorlevel%
 
+echo "****************** Test include. Must show ignored parameters and fail ******************" 
+gtime.exe -inc ../test/conf1 -inc ../test/conf3
+echo %errorlevel%
+
+
+
 
 echo ****************** Error extend no suitable publication ****************** 
 gtime.exe -x %GLOBAL% %EXTEND_FLAGS% -i %TEST_FILE_OUT%.ksig -o %TEST_EXTENDED_SIG%
