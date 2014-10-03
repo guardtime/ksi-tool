@@ -48,7 +48,8 @@ int main(int argc, char** argv) {
 		state = true;
 		goto cleanup;
 	}
-
+	
+	/*Read command-line parameters from file*/
 	if(paramSet_isSetByName(set, "inc")){
 		char *fname = NULL;
 		char *fname2 = NULL;
@@ -75,21 +76,24 @@ int main(int argc, char** argv) {
 	
 	/*Define possible tasks*/
 	//						ID							DESC					DEF		MAN		IGNORE			OPTIONAL		FORBIDDEN			NEW OBJ
-	TaskDefinition_new(signDataFile,			"Sign data file",				"s|f",	"o",	"b|r|i|T",		"H|n|d|t",		"x|p|v|F",			&taskDefArray[0]);
-	TaskDefinition_new(signHash,				"Sign hash",					"s|F",	"o",	"b|r|i",		"n|d|t",		"x|p|v|H|f",		&taskDefArray[1]);
-	TaskDefinition_new(extendTimestamp,			"Extend signature",				"x",	"i|o",	"H|F|f",		"T|n|r|t",		"s|p|v",			&taskDefArray[2]);
-	TaskDefinition_new(downloadPublicationsFile,"Download publication file",	"p|o",	"",		"",				"d|t",			"s|x|v|T",			&taskDefArray[3]);
-	TaskDefinition_new(createPublicationString, "Create publication string",	"p|T",	"",		"",				"d|t",			"s|x|v|o",			&taskDefArray[4]);
-	TaskDefinition_new(verifyTimestamp,			"Verify online",				"v|x",	"i",	"",				"f|n|d|r|t",	"s|p|b",			&taskDefArray[5]);
-	TaskDefinition_new(verifyTimestamp,			"Verify locally",				"v|b|i","",		"",				"f|n|d|r|t",	"x|s|p",			&taskDefArray[6]);
-	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"v|b",	"",		"T|F|H",		"n|d|r|t",		"x|s|p|i|f|Test",	&taskDefArray[7]);
+	TaskDefinition_new(signDataFile,			"Sign data file",				"s|f",	"o",	"b|r|i|T",			"H|n|d|t",		"x|p|v|F",			&taskDefArray[0]);
+	TaskDefinition_new(signHash,				"Sign hash",					"s|F",	"o",	"b|r|i|H|T",		"n|d|t",		"x|p|v|f",		&taskDefArray[1]);
+	TaskDefinition_new(extendTimestamp,			"Extend signature",				"x",	"i|o",	"H|F|f|b|",			"T|n|r|t",		"s|p|v",			&taskDefArray[2]);
+	TaskDefinition_new(downloadPublicationsFile,"Download publication file",	"p|o",	"",		"H|F|f|i|T|n|r",	"d|t",			"s|x|v|T",			&taskDefArray[3]);
+	TaskDefinition_new(createPublicationString, "Create publication string",	"p|T",	"",		"H|F|f|i|n|r",		"d|t",			"s|x|v|o",			&taskDefArray[4]);
+	TaskDefinition_new(verifyTimestamp,			"Verify online",				"v|x",	"i",	"F|H|T",			"f|n|d|r|t",	"s|p|b",			&taskDefArray[5]);
+	TaskDefinition_new(verifyTimestamp,			"Verify locally",				"v|b|i","",		"F|H|T",			"f|n|d|r|t",	"x|s|p",			&taskDefArray[6]);
+	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"v|b",	"",		"T|F|H",			"n|d|r|t",		"x|s|p|i|f",	&taskDefArray[7]);
 	
 	
 	/*Extract task */
 	task = Task_getConsistentTask(taskDefArray, 8, set);
 	paramSet_printUnknownParameterWarnings(set);
-	if(paramSet_isFormatOK(set) == false || task == NULL) goto cleanup;
-	
+	if(task == NULL) goto cleanup;
+	if(paramSet_isFormatOK(set) == false){
+		paramSet_PrintErrorMessages(set);
+		goto cleanup;
+	}
 	/*DO*/
 	if(task->id == downloadPublicationsFile || task->id == createPublicationString){
 		state=GT_publicationsFileTask(task);

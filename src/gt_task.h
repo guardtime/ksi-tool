@@ -16,28 +16,28 @@ extern "C" {
 
 /**
  * Task that deals with signing operations.
- * @param [in] cmdparam Pointer to command-line parameters.
+ * @param [in] task Pointer to task object.
  * @return True if successful, false otherwise.
  */
 bool GT_signTask(Task *task);
 
 /**
  * Task that deals with verifying operations.
- * @param [in] cmdparam Pointer to command-line parameters.
+ * @param [in] task Pointer to task object.
  * @return True if successful, false otherwise.
  */
 bool GT_verifyTask(Task *task);
 
 /**
  * Task that deals with extending operations.
- * @param [in] cmdparam Pointer to command-line parameters
+ * @param [in] task Pointer to task object.
  * @return True if successful, false otherwise.
  */
 bool GT_extendTask(Task *task);
 
 /**
  * Task that deals with extending operations.
- * @param [in] cmdparam Pointer to command-line parameters.
+ * @param [in] task Pointer to task object.
  * @return True if successful, false otherwise.
  */
 bool GT_publicationsFileTask(Task *task);

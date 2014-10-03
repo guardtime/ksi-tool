@@ -160,7 +160,7 @@ gtime.exe -v -x %GLOBAL% %VERIFY_FLAGS% -i %TEST_FILE_OUT%.ksig -f missing_file
 echo %errorlevel%
 
 echo ****************** Error missing cert files ****************** 
-gtime.exe -p -o %PUBFILE% %CERTS% -V missing1 -V missing2 -V missing 3 
+gtime.exe -p -o %PUBFILE% %CERTS% -V missing1 -V missing2 -V missing3 
 echo %errorlevel%
 
 echo ****************** Error Invalid publications file ******************

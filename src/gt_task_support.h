@@ -17,7 +17,7 @@ extern "C" {
 /**
  * Configures KSI using parameters extracted from command line. 
  * 
- * @param[in] cmdparam Pointer to command line parameter object.
+ * @param[in] task Pointer to task object.
  * @param[out] ksi Pointer to receiving pointer to KSI context object.
  * 
  * @throws KSI_EXEPTION.
