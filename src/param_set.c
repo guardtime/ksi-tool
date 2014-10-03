@@ -623,7 +623,7 @@ void paramSet_PrintErrorMessages(paramSet *set){
 	int numOfElements = 0;
 	paramValue *value = NULL;
 	
-	if(set == NULL) return false;
+	if(set == NULL) return;
 	numOfElements = set->count;
 	array = set->parameter;
 	

@@ -103,6 +103,14 @@ sleep $WAIT
 ./gtime -v -x $GLOBAL $VERIFY_FLAGS -i "$RIPMED160_file"
 echo $?
 
+echo "****************** Test include. Must show ignored parameters and fail ******************" 
+./gtime -inc ../test/conf1 -inc ../test/conf3
+echo $?
+
+
+
+
+
 echo "****************** Error extend no suitable publication ******************" 
 ./gtime -x $GLOBAL $EXTEND_FLAGS -i "$TEST_FILE_OUT".ksig -o "$TEST_EXTENDED_SIG"
 echo $?
