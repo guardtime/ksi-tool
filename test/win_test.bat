@@ -11,7 +11,11 @@ rem SET VER_SERV_IP=http://192.168.100.29:1111/gt-extendingservice
 REM SET PUB_SERV_IP=http://172.20.20.7/publications.tlv
 set PUB_SERV_IP=http://verify.guardtime.com/ksi-publications.bin
 REM SET SIG_SERV_IP=http://172.20.20.4:3333/
-SET VER_SERV_IP=http://192.168.100.36:8081/gt-extendingservice
+REM SET VER_SERV_IP=http://192.168.100.36:8081/gt-extendingservice
+SET VER_SERV_IP=http://192.168.100.36:8081/
+
+
+
 SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -P %PUB_SERV_IP% -C 5 -c 5
 
 REM input files

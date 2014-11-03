@@ -76,6 +76,8 @@ void printSignatureVerificationInfo(const KSI_Signature *sig);
 
 void printPublicationsFileCertificates(const KSI_PublicationsFile *pubfile);
 
+void printSignaturesRootHash_n_Time(const KSI_Signature *sig);
+
 /**
  * Gives time difference between the current and last call in ms.
  * @return Time difference in ms.
@@ -105,12 +107,15 @@ int KSI_receivePublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile **publ
 int KSI_verifyPublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *publicationsFile);
 int KSI_PublicationsFile_serialize_throws(KSI_CTX *ksi, KSI_PublicationsFile *publicationsFile, char **raw, int *raw_len);
 int KSI_DataHasher_open_throws(KSI_CTX *ksi,int hasAlgID ,KSI_DataHasher **hsr);
+int KSI_DataHasher_add_throws(KSI_DataHasher *hasher, const void *data, size_t data_length);
+int KSI_DataHasher_close_throws(KSI_DataHasher *hasher, KSI_DataHash **hash);
 int KSI_createSignature_throws(KSI_CTX *ksi, const KSI_DataHash *hash, KSI_Signature **sign);
 int KSI_DataHash_fromDigest_throws(KSI_CTX *ksi, int hasAlg, char *data, unsigned int len, KSI_DataHash **hash);
 int KSI_PublicationsFile_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_PublicationsFile **pubFile);
 int KSI_Signature_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_Signature **sig);
 int KSI_Signature_verify_throws(KSI_Signature *sig, KSI_CTX *ksi);
 int KSI_Signature_createDataHasher_throws(KSI_Signature *sig, KSI_DataHasher **hsr);
+int KSI_Signature_create_throws(KSI_CTX *ctx, KSI_DataHash *hsh, KSI_Signature **signature);
 int KSI_Signature_verifyDataHash_throws(KSI_Signature *sig, KSI_CTX *ksi, KSI_DataHash *hash);
 int KSI_extendSignature_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext);
 int KSI_Signature_extend_throws(const KSI_Signature *signature, KSI_CTX *ctx, const KSI_PublicationRecord *pubRec, KSI_Signature **extended);

@@ -20,6 +20,8 @@ typedef enum tasks_en{
 	extendTimestamp,
 	verifyPublicationsFile,
 	verifyTimestamp,
+	getRootH_T,
+	setSysTime,
 	showHelp,
 	noTask,
 	invalid		

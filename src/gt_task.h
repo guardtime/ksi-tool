@@ -42,6 +42,7 @@ bool GT_extendTask(Task *task);
  */
 bool GT_publicationsFileTask(Task *task);
 
+bool GT_other(Task *task);
 
 #ifdef	__cplusplus
 }

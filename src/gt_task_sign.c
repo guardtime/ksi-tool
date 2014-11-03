@@ -4,6 +4,7 @@
 
 static void getHashFromCommandLine_throws(const char *imprint,KSI_CTX *ksi, KSI_DataHash **hash);
 static int getHashAlgorithm_throws(const char *hashAlg);
+static void printSignaturesRootHash_and_Time(const KSI_Signature *sig);
 
 bool GT_signTask(Task *task) {
 	KSI_CTX *ksi = NULL;
@@ -57,7 +58,6 @@ bool GT_signTask(Task *task) {
 			MEASURE_TIME(KSI_createSignature_throws(ksi, hash, &sign));
 			printf("ok. %s\n",t ? str_measuredTime() : "");
 
-					
 			/* Save signature file */
 			saveSignatureFile_throws(sign, outSigFileName);
 			printf("Signature saved.\n");

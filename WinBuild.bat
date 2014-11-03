@@ -7,7 +7,8 @@ SET KSI_DIR=C:\Users\Taavi\Documents\GuardTime\ksi-c-api\out
 
 
 ECHO ************ Rebuilding project ************
+
 nmake clean
-nmake RTL=MTd 
+nmake /S RTL=MTd KSI_LIB=lib  
 
 pause

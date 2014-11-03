@@ -99,7 +99,7 @@ bool GT_publicationsFileTask(Task *task){
 				
 				pubTm = (time_t)KSI_Integer_getUInt64(pubTime);
 				gmtime_r(&pubTm, &tm);
-				strftime(strTime, sizeof(strTime), "%Y-%m-%d", &tm);
+				strftime(strTime, sizeof(strTime), "%Y-%m-%d %H:%M:%S", &tm);
 
 				printf("[%s]\n", strTime);
 				printf("pub=%s\n", base32);

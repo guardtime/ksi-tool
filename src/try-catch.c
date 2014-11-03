@@ -16,6 +16,8 @@ char *Exeption_toString(exeptions_t e){
 		return "Invalid argument exeption";
 	case OUT_OF_MEMORY_EXEPTION:
 		return "Out of memory exeption";
+	case NO_PRIVILEGES_EXEPTION:
+		return "No privileges exeption";
 	case IO_EXEPTION:
 		return "IO exeption";
 	default:

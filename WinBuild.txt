@@ -91,8 +91,8 @@ Configuring build scripts
 		
 	Make file has following options:
 	
-		1) DLL			- select KSI API library format (LIB, DLL). Default is LIB. 	
-		2) RTL			- select run-time library (MT, MTd, MD, MDd). Default is MT.
+		1) KSI_LIB		- select KSI API library format (lib, dll). Default is lib. 	
+		2) RTL			- select C run-time library (MT, MTd, MD, MDd). Default is MT.
 		3) CURL_DIR 	- Directory containing Curl library and include files.
 		4) OPENSSL_DIR 	- Directory containing OpenSLL library and include files.
 		5) KSI_DIR 		- Directory containing KSI API library and include files

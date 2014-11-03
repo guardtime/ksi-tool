@@ -104,13 +104,13 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 	V = paramSet_isSetByName(task->set,"V");
 	W = paramSet_getStrValueByNameAt(task->set, "W",0, &lookupDir);
 	E = paramSet_getStrValueByNameAt(task->set, "E",0, &magicEmail);
-
+	
 	try
 		CODE{
 			res = KSI_CTX_new(&tmpKsi);
 			ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to init KSI context.\n");
 			configureNetworkProvider_throws(tmpKsi, task);
-
+			
 			if(b && (task->id != downloadPublicationsFile && task->id != verifyPublicationsFile)){
 				KSI_LOG_debug(tmpKsi, "Setting publications file '%s'", inPubFileName);
 				KSI_PublicationsFile_fromFile_throws(tmpKsi, inPubFileName, &tmpPubFile);
@@ -439,6 +439,14 @@ int KSI_DataHasher_open_throws(KSI_CTX *ksi,int hasAlgID ,KSI_DataHasher **hsr){
 	THROWABLE(KSI_DataHasher_open(ksi, hasAlgID, hsr), "Error: Unable to create hasher. (%s)\n", KSI_getErrorString(res));
 }
 
+int KSI_DataHasher_add_throws(KSI_DataHasher *hasher, const void *data, size_t data_length){
+	 THROWABLE(KSI_DataHasher_add(hasher, data, data_length), "Error: Unable to data to hasher. (%s)\n", KSI_getErrorString(res));
+}
+
+int KSI_DataHasher_close_throws(KSI_DataHasher *hasher, KSI_DataHash **hash){
+	 THROWABLE(KSI_DataHasher_close(hasher, hash), "Error: close hasher. (%s)\n", KSI_getErrorString(res));
+}
+
 int KSI_createSignature_throws(KSI_CTX *ksi, const KSI_DataHash *hash, KSI_Signature **sign){
 	 THROWABLE(KSI_createSignature(ksi, hash, sign), "Error: Unable to sign. (%s)\n", KSI_getErrorString(res));
 //		int res = KSI_UNKNOWN_ERROR; 
@@ -474,6 +482,10 @@ int KSI_Signature_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_Signat
 
 int KSI_Signature_verify_throws(KSI_Signature *sig, KSI_CTX *ksi){
 	THROWABLE(KSI_Signature_verify(sig, ksi), "Error: Unable verify signature. (%s)\n", KSI_getErrorString(res));
+}
+
+int KSI_Signature_create_throws(KSI_CTX *ctx, KSI_DataHash *hsh, KSI_Signature **signature){
+	THROWABLE(KSI_Signature_create(ctx, hsh, signature), "Error: Unable create signature. (%s)\n", KSI_getErrorString(res));
 }
 
 int KSI_Signature_createDataHasher_throws(KSI_Signature *sig, KSI_DataHasher **hsr){

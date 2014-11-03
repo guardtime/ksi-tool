@@ -16,13 +16,13 @@
 static void GT_pritHelp(void);
 
 int main(int argc, char** argv) {
-	TaskDefinition *taskDefArray[9];
+	TaskDefinition *taskDefArray[11];
 	paramSet *set = NULL;
 	Task *task = NULL;
 	bool state = false;
 	
 	/*Create parameter set*/
-	paramSet_new("{s}*{x}*{p}*{v}*{t}*{r}*{d}*{n}*{h}*{o}{i}{f}{b}{a}{c}{C}{V}*{W}{S}{X}{P}{F}{l}{H}{T}{E}{user}{pass}{inc}*", &set);
+	paramSet_new("{s}*{x}*{p}*{v}*{t}*{r}*{d}*{n}*{h}*{o}{i}{f}{b}{a}{c}{C}{V}*{W}{S}{X}{P}{F}{l}{H}{T}{E}{user}{pass}{inc}*{agre}{htime}{setsystime}", &set);
 	if(set == NULL) goto cleanup;
 	
 	/*Configure parameter set*/
@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
 	paramSet_addControl(set, "{E}", isEmailFormatOK, contentIsOK);
 	paramSet_addControl(set, "{user}{pass}", isUserPassFormatOK, contentIsOK);
 
-	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{l}{d}{h}", isFlagFormatOK, contentIsOK);
+	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{l}{d}{h}{agre}{htime}{setsystime}", isFlagFormatOK, contentIsOK);
 	
 	
 	/*Read parameter set*/
@@ -75,19 +75,21 @@ int main(int argc, char** argv) {
 	}
 	
 	/*Define possible tasks*/
-	//						ID							DESC					DEF		MAN		IGNORE			OPTIONAL		FORBIDDEN			NEW OBJ
-	TaskDefinition_new(signDataFile,			"Sign data file",				"s|f",	"o",	"b|r|i|T",			"H|n|d|t",		"x|p|v|F",			&taskDefArray[0]);
-	TaskDefinition_new(signHash,				"Sign hash",					"s|F",	"o",	"b|r|i|H|T",		"n|d|t",		"x|p|v|f",		&taskDefArray[1]);
-	TaskDefinition_new(extendTimestamp,			"Extend signature",				"x",	"i|o",	"H|F|f|b|",			"T|n|r|t",		"s|p|v",			&taskDefArray[2]);
-	TaskDefinition_new(downloadPublicationsFile,"Download publication file",	"p|o",	"",		"H|F|f|i|T|n|r",	"d|t",			"s|x|v|T",			&taskDefArray[3]);
-	TaskDefinition_new(createPublicationString, "Create publication string",	"p|T",	"",		"H|F|f|i|n|r",		"d|t",			"s|x|v|o",			&taskDefArray[4]);
-	TaskDefinition_new(verifyTimestamp,			"Verify online",				"v|x",	"i",	"F|H|T",			"f|n|d|r|t",	"s|p|b",			&taskDefArray[5]);
-	TaskDefinition_new(verifyTimestamp,			"Verify locally",				"v|b|i","",		"F|H|T",			"f|n|d|r|t",	"x|s|p",			&taskDefArray[6]);
-	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"v|b",	"",		"T|F|H",			"n|d|r|t",		"x|s|p|i|f",	&taskDefArray[7]);
+	//						ID							DESC					DEF				MAN		IGNORE				OPTIONAL		FORBIDDEN			NEW OBJ
+	TaskDefinition_new(signDataFile,			"Sign data file",				"s|f",			"o",	"b|r|i|T",			"H|n|d|t",		"x|p|v|F",			&taskDefArray[0]);
+	TaskDefinition_new(signHash,				"Sign hash",					"s|F",			"o",	"b|r|i|H|T",		"n|d|t",		"x|p|v|f",			&taskDefArray[1]);
+	TaskDefinition_new(extendTimestamp,			"Extend signature",				"x",			"i|o",	"H|F|f|b|",			"T|n|r|t",		"s|p|v",			&taskDefArray[2]);
+	TaskDefinition_new(downloadPublicationsFile,"Download publication file",	"p|o",			"",		"H|F|f|i|T|n|r",	"d|t",			"s|x|v|T",			&taskDefArray[3]);
+	TaskDefinition_new(createPublicationString, "Create publication string",	"p|T",			"",		"H|F|f|i|n|r",		"d|t",			"s|x|v|o",			&taskDefArray[4]);
+	TaskDefinition_new(verifyTimestamp,			"Verify online",				"v|x",			"i",	"F|H|T",			"f|n|d|r|t",	"s|p|b",			&taskDefArray[5]);
+	TaskDefinition_new(verifyTimestamp,			"Verify locally",				"v|b|i",		"",		"F|H|T",			"f|n|d|r|t",	"x|s|p",			&taskDefArray[6]);
+	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"v|b",			"",		"T|F|H",			"n|d|r|t",		"x|s|p|i|f",		&taskDefArray[7]);
+	TaskDefinition_new(getRootH_T,				"Get Aggregator root hash",		"agre|htime",	"",		"",					"",				"x|s|p|v",			&taskDefArray[8]);
+	TaskDefinition_new(setSysTime,				"Set system time",				"agre|setsystime",	"",		"",					"",				"x|s|p|v",			&taskDefArray[9]);
 	
 	
 	/*Extract task */
-	task = Task_getConsistentTask(taskDefArray, 8, set);
+	task = Task_getConsistentTask(taskDefArray, 10, set);
 	paramSet_printUnknownParameterWarnings(set);
 	if(task == NULL) goto cleanup;
 	if(paramSet_isFormatOK(set) == false){
@@ -106,6 +108,9 @@ int main(int argc, char** argv) {
 	}
 	else if(task->id == extendTimestamp){
 		state=GT_extendTask(task);
+	}
+	else if(task->id == getRootH_T || task->id == setSysTime){
+		state=GT_other(task);
 	}
 	else if(task->id == verifyTimestamp){
 		state=GT_verifyTask(task);
@@ -151,6 +156,10 @@ static void GT_pritHelp(void){
 			"   		-x -i (-f) verify signature (and signed document) online\n"
 			"   		-b -i (-f) verify signature (and signed document) using specific publications file\n"
 			"   		-b verify publication file\n"
+			" -agre		use aggregator for (-n -t):\n"
+			"   		-htime display current aggregation root hash value and time\n"
+			"   		-setsystime set system time from current aggregation\n"
+			
 			
 			"\nInput/output:\n"
 			" -f <file>	file to be signed / verified\n"
