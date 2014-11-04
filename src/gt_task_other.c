@@ -36,7 +36,6 @@ bool GT_other(Task *task){
 				KSI_DataHasher_close_throws(hsr, &hsh);
 				KSI_Signature_create_throws(ksi, hsh, &sig);
 				
-				printf("MIS TOIMUB?\n");
 				if (task->id == getRootH_T) {
 					printSignaturesRootHash_and_Time(sig);
 				}
@@ -111,6 +110,8 @@ static void setSystemTime_throws(const KSI_Signature *sig){
 
 #ifdef _WIN32
 	SYSTEMTIME newTime;
+#else
+        struct timeval tv ={0,0};
 #endif	
 	
 	res = KSI_Signature_getCalendarAuthRec(sig, &calAuthrec);
@@ -145,8 +146,8 @@ static void setSystemTime_throws(const KSI_Signature *sig){
 		}
 	}
 #else
-	struct timeval tv = {mktime(&tm), 0};
-    settimeofday(&tv, 0);
+        tv.tv_sec = mktime(&tm);
+        settimeofday(&tv, 0);
 #endif
 	return;
 }
