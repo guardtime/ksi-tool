@@ -411,7 +411,8 @@ void paramSet_free(paramSet *set){
 	
 	for(i=0; i<numOfElements;i++)
 		parameter_free(array[i]);
-	
+	free(set->parameter);
+
 	free(set);
 	return;
 	}

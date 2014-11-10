@@ -1,8 +1,8 @@
 Building with Microsoft Visual Studio
 =====================================
 
-	This document describes how to build KSI command-line tool gtime using Microsoft Visual
-	Studio tools and different libraries.
+	This document describes how to build KSI command-line tool gtime using
+	Microsoft Visual Studio tools and different libraries.
 	
 	
 Prerequisites
@@ -18,8 +18,11 @@ Prerequisites
 		6) Windows native WinINet <version goes here> (optional).
 		7) Windows native WinHTTP <version goes here> (optionl).
 	
-	When KSI API uses OpenSSl or Curl the location of libraries must be specified containing KSI API itself.
-	See make file options CURL_DIR, OPENSSL_DIR and KSI_DIR.  The structure of the directories must be as follows:
+	When KSI API uses OpenSSl or Curl the location of libraries must be
+	specified containing KSI API itself. See make file options CURL_DIR,
+	OPENSSL_DIR and KSI_DIR.  The structure of the directories must be
+	as follows: Windows native libraries are already installed with
+	Windows.
 	
 	For CURL
 	
@@ -42,15 +45,17 @@ Prerequisites
       |ksi
     lib
 	
-	Windows native libraries are already installed with Windows.
+	
 	
 	
 Build process
 =====================================
 	
-	Below is the abstract structure of the project that describes the location of the source code,
-	make files and output. Root directory contains top level build scripts that are used to build
-	gtime. 
+	Below is the abstract structure of the project that describes the location
+	of the source code, make files and output. Root directory contains top-level
+	build scripts that are used to build gtime. After successful build obj and
+	out directory is created. Obj directory contains compiled obj files. Out 
+	directory contains executable.
 	
 	//Top level build scripts
     WinBuild.bat
@@ -68,20 +73,18 @@ Build process
      |*.exe
 
 	 
-	After successful build obj and out direcyory is created. Obj directory contains compiled obj files.
-	Out directory contains executable.
+
 
 
 Configuring build scripts
 =====================================	
 	
-	Using make file
+	For building process, above described top-level make file or WinBuild.bat
+	must be called.
 	
-	For building process, above described top level make file or WinBuild.bat must be called.
-	
-	Make file can be executed via CMD shell or Visual Studio command promt shell.
-	When using CMD shell environment must be configured using setenev command. 
-	For example setenev /x64.
+	Make file can be executed via CMD shell or Visual Studio command prompt
+	shell. When using CMD shell environment must be configured using setenv
+	command. For example setenv /x64.
 	
 	Make file has following tasks:
 	
@@ -91,17 +94,20 @@ Configuring build scripts
 		
 	Make file has following options:
 	
-		1) KSI_LIB		- select KSI API library format (lib, dll). Default is lib. 	
-		2) RTL			- select C run-time library (MT, MTd, MD, MDd). Default is MT.
+		1) KSI_LIB		- select KSI API library format (lib, dll).
+						Default is lib. 	
+		2) RTL			- select C run-time library (MT, MTd, MD, MDd).
+						Default is MT.
 		3) CURL_DIR 	- Directory containing Curl library and include files.
 		4) OPENSSL_DIR 	- Directory containing OpenSLL library and include files.
 		5) KSI_DIR 		- Directory containing KSI API library and include files
 		5) LDEXTRA 		- extra flags for linker.
 		6) CCEXTRA 		- extra flags for compiler.
 		
-	When compiling one must know how the KSI API was linked - DLL and RTL must be configured accordingly.
-	The location of KSI_API must be specified defining KSI_DIR. If KSI API uses Curl or OpenSSL 
-	CURL_DIR and OPENSSL_DIR must be specified.
+	When compiling one must know how the KSI API was linked - DLL and RTL must
+	be configured accordingly. The location of KSI_API must be specified by 
+	defining KSI_DIR. If KSI API uses Curl or OpenSSL CURL_DIR and OPENSSL_DIR
+	must be specified.
 
 	Examples
 	

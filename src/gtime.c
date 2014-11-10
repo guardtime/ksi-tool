@@ -12,17 +12,31 @@
 #include "gt_task_support.h"
 #include <ksi/ksi.h>
 
-
 static void GT_pritHelp(void);
 
 int main(int argc, char** argv) {
-	TaskDefinition *taskDefArray[11];
+	TaskDefinition *taskDefArray[11]={NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 	paramSet *set = NULL;
 	Task *task = NULL;
 	bool state = false;
+	int i;
 	
+#ifdef _WIN32
+#ifdef _DEBUG
+//	TODO
+//	_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+//	Send all reports to STDOUT
+//	_CrtSetReportMode( _CRT_WARN, _CRTDBG_MODE_FILE );
+//	_CrtSetReportFile( _CRT_WARN, _CRTDBG_FILE_STDOUT );
+//	_CrtSetReportMode( _CRT_ERROR, _CRTDBG_MODE_FILE );
+//	_CrtSetReportFile( _CRT_ERROR, _CRTDBG_FILE_STDOUT );
+//	_CrtSetReportMode( _CRT_ASSERT, _CRTDBG_MODE_FILE );
+//	_CrtSetReportFile( _CRT_ASSERT, _CRTDBG_FILE_STDOUT );
+#endif	
+#endif	
+
 	/*Create parameter set*/
-	paramSet_new("{s}*{x}*{p}*{v}*{t}*{r}*{d}*{n}*{h}*{o}{i}{f}{b}{a}{c}{C}{V}*{W}{S}{X}{P}{F}{l}{H}{T}{E}{user}{pass}{inc}*{agre}{htime}{setsystime}", &set);
+	paramSet_new("{s}*{x}*{p}*{v}*{t}*{r}*{d}*{n}*{h}*{o}{i}{f}{b}{a}{c}{C}{V}*{W}{S}{X}{P}{F}{l}{H}{T}{E}{user}{pass}{inc}*{aggre}{htime}{setsystime}", &set);
 	if(set == NULL) goto cleanup;
 	
 	/*Configure parameter set*/
@@ -34,9 +48,20 @@ int main(int argc, char** argv) {
 	paramSet_addControl(set, "{c}{C}{T}", isIntegerFormatOK, contentIsOK);
 	paramSet_addControl(set, "{E}", isEmailFormatOK, contentIsOK);
 	paramSet_addControl(set, "{user}{pass}", isUserPassFormatOK, contentIsOK);
-
-	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{l}{d}{h}{agre}{htime}{setsystime}", isFlagFormatOK, contentIsOK);
+	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{l}{d}{h}{aggre}{htime}{setsystime}", isFlagFormatOK, contentIsOK);
 	
+	/*Define possible tasks*/
+	//						ID							DESC					DEF				MAN		IGNORE				OPTIONAL		FORBIDDEN			NEW OBJ
+	TaskDefinition_new(signDataFile,			"Sign data file",				"s|f",			"o",	"b|r|i|T",			"H|n|d|t",		"x|p|v|F",			&taskDefArray[0]);
+	TaskDefinition_new(signHash,				"Sign hash",					"s|F",			"o",	"b|r|i|H|T",		"n|d|t",		"x|p|v|f",			&taskDefArray[1]);
+	TaskDefinition_new(extendTimestamp,			"Extend signature",				"x",			"i|o",	"H|F|f|b|",			"T|n|r|t",		"s|p|v",			&taskDefArray[2]);
+	TaskDefinition_new(downloadPublicationsFile,"Download publication file",	"p|o",			"",		"H|F|f|i|T|n|r",	"d|t",			"s|x|v|T",			&taskDefArray[3]);
+	TaskDefinition_new(createPublicationString, "Create publication string",	"p|T",			"",		"H|F|f|i|n|r",		"d|t",			"s|x|v|o",			&taskDefArray[4]);
+	TaskDefinition_new(verifyTimestamp,			"Verify online",				"v|x",			"i",	"F|H|T",			"f|n|d|r|t",	"s|p|b",			&taskDefArray[5]);
+	TaskDefinition_new(verifyTimestamp,			"Verify locally",				"v|b|i",		"",		"F|H|T",			"f|n|d|r|t",	"x|s|p",			&taskDefArray[6]);
+	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"v|b",			"",		"T|F|H",			"n|d|r|t",		"x|s|p|i|f",		&taskDefArray[7]);
+	TaskDefinition_new(getRootH_T,				"Get Aggregator root hash",		"aggre|htime",	"",		"",					"",				"x|s|p|v",			&taskDefArray[8]);
+	TaskDefinition_new(setSysTime,				"Set system time",				"aggre|setsystime",	"",		"",					"",				"x|s|p|v",			&taskDefArray[9]);
 	
 	/*Read parameter set*/
 	paramSet_readFromCMD(argc, argv,set);
@@ -74,18 +99,6 @@ int main(int argc, char** argv) {
 		}
 	}
 	
-	/*Define possible tasks*/
-	//						ID							DESC					DEF				MAN		IGNORE				OPTIONAL		FORBIDDEN			NEW OBJ
-	TaskDefinition_new(signDataFile,			"Sign data file",				"s|f",			"o",	"b|r|i|T",			"H|n|d|t",		"x|p|v|F",			&taskDefArray[0]);
-	TaskDefinition_new(signHash,				"Sign hash",					"s|F",			"o",	"b|r|i|H|T",		"n|d|t",		"x|p|v|f",			&taskDefArray[1]);
-	TaskDefinition_new(extendTimestamp,			"Extend signature",				"x",			"i|o",	"H|F|f|b|",			"T|n|r|t",		"s|p|v",			&taskDefArray[2]);
-	TaskDefinition_new(downloadPublicationsFile,"Download publication file",	"p|o",			"",		"H|F|f|i|T|n|r",	"d|t",			"s|x|v|T",			&taskDefArray[3]);
-	TaskDefinition_new(createPublicationString, "Create publication string",	"p|T",			"",		"H|F|f|i|n|r",		"d|t",			"s|x|v|o",			&taskDefArray[4]);
-	TaskDefinition_new(verifyTimestamp,			"Verify online",				"v|x",			"i",	"F|H|T",			"f|n|d|r|t",	"s|p|b",			&taskDefArray[5]);
-	TaskDefinition_new(verifyTimestamp,			"Verify locally",				"v|b|i",		"",		"F|H|T",			"f|n|d|r|t",	"x|s|p",			&taskDefArray[6]);
-	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"v|b",			"",		"T|F|H",			"n|d|r|t",		"x|s|p|i|f",		&taskDefArray[7]);
-	TaskDefinition_new(getRootH_T,				"Get Aggregator root hash",		"agre|htime",	"",		"",					"",				"x|s|p|v",			&taskDefArray[8]);
-	TaskDefinition_new(setSysTime,				"Set system time",				"agre|setsystime",	"",		"",					"",				"x|s|p|v",			&taskDefArray[9]);
 	
 	
 	/*Extract task */
@@ -119,7 +132,9 @@ int main(int argc, char** argv) {
 cleanup:
 	
 	paramSet_free(set);
-//	if(!state) GT_pritHelp();
+	for(i=0; i<11;i++)
+		TaskDefinition_free(taskDefArray[i]);
+	Task_free(task);
 
 	return state ? (EXIT_SUCCESS) : (EXIT_FAILURE);
 }
@@ -156,7 +171,7 @@ static void GT_pritHelp(void){
 			"   		-x -i (-f) verify signature (and signed document) online\n"
 			"   		-b -i (-f) verify signature (and signed document) using specific publications file\n"
 			"   		-b verify publication file\n"
-			" -agre		use aggregator for (-n -t):\n"
+			" -aggre		use aggregator for (-n -t):\n"
 			"   		-htime display current aggregation root hash value and time\n"
 			"   		-setsystime set system time from current aggregation\n"
 			

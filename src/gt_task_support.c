@@ -108,7 +108,7 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 	try
 		CODE{
 			res = KSI_CTX_new(&tmpKsi);
-			ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to init KSI context.\n");
+			ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to initialize KSI context.\n");
 			configureNetworkProvider_throws(tmpKsi, task);
 			
 			if(b && (task->id != downloadPublicationsFile && task->id != verifyPublicationsFile)){
@@ -267,12 +267,12 @@ void printSignaturePublicationReference(const KSI_Signature *sig){
 	int i=1;
 	if(sig == NULL) return;
 	
-	printf("Signature publication references:\n");
+	printf("Signatures publication references:\n");
 	res = KSI_Signature_getPublicationRecord(sig, &publicationRecord);
 	if(res != KSI_OK)return ;
 	
 	if(publicationRecord == NULL) {
-		printf("  (No publication Records available)\n");
+		fprintf(stderr, "  (No publication records available)\n");
 		return;
 	}
 	
@@ -303,7 +303,7 @@ void printSignerIdentity(KSI_Signature *sig){
 	printf("Signer identity: ");
 	res = KSI_Signature_getSignerIdentity(sig, &signerIdentity);
 	if(res != KSI_OK){
-		printf("Unable to get signer identity.\n");
+		fprintf(stderr, "Unable to get signer identity.\n");
 		goto cleanup;
 	}
 	
@@ -440,23 +440,24 @@ int KSI_DataHasher_open_throws(KSI_CTX *ksi,int hasAlgID ,KSI_DataHasher **hsr){
 }
 
 int KSI_DataHasher_add_throws(KSI_DataHasher *hasher, const void *data, size_t data_length){
-	 THROWABLE(KSI_DataHasher_add(hasher, data, data_length), "Error: Unable to data to hasher. (%s)\n", KSI_getErrorString(res));
+	 THROWABLE(KSI_DataHasher_add(hasher, data, data_length), "Error: Unable to add data to hasher. (%s)\n", KSI_getErrorString(res));
 }
 
 int KSI_DataHasher_close_throws(KSI_DataHasher *hasher, KSI_DataHash **hash){
-	 THROWABLE(KSI_DataHasher_close(hasher, hash), "Error: close hasher. (%s)\n", KSI_getErrorString(res));
+	 THROWABLE(KSI_DataHasher_close(hasher, hash), "Error:Unable to close hasher. (%s)\n", KSI_getErrorString(res));
 }
 
-int KSI_createSignature_throws(KSI_CTX *ksi, const KSI_DataHash *hash, KSI_Signature **sign){
-	 THROWABLE(KSI_createSignature(ksi, hash, sign), "Error: Unable to sign. (%s)\n", KSI_getErrorString(res));
-//		int res = KSI_UNKNOWN_ERROR; 
-//	res = KSI_createSignature(ksi, hash, sign);  
-//	if(res != KSI_OK) {
-//		printf("\n");
-//		KSI_ERR_statusDump(ksi, stderr);
-//		THROW_MSG(KSI_EXEPTION, "Error: Unable to sign. (%s)\n", KSI_getErrorString(res));
-//	} 
-//	return res;	 
+int KSI_createSignature_throws(KSI_CTX *ksi, KSI_DataHash *hash, KSI_Signature **sign){
+//	 THROWABLE(KSI_createSignature(ksi, hash, sign), "Error: Unable to sign. (%s)\n", KSI_getErrorString(res));
+//TODO
+	 		int res = KSI_UNKNOWN_ERROR; 
+	res = KSI_createSignature(ksi, hash, sign);  
+	if(res != KSI_OK) {
+		printf("\n");
+		KSI_ERR_statusDump(ksi, stderr);
+		THROW_MSG(KSI_EXEPTION, "Error: Unable to sign. (%s)\n", KSI_getErrorString(res));
+	} 
+	return res;	 
 }
 
 int KSI_DataHash_fromDigest_throws(KSI_CTX *ksi, int hasAlg, char *data, unsigned int len, KSI_DataHash **hash){
@@ -464,15 +465,7 @@ int KSI_DataHash_fromDigest_throws(KSI_CTX *ksi, int hasAlg, char *data, unsigne
 }
 
 int KSI_PublicationsFile_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_PublicationsFile **pubFile){
-	//THROWABLE(KSI_PublicationsFile_fromFile(ksi, fileName, pubFile), "Error: Unable to read publications file '%s'.\n", fileName)
-	
-		int res = KSI_UNKNOWN_ERROR; 
-	res = KSI_PublicationsFile_fromFile(ksi, fileName, pubFile);  
-	if(res != KSI_OK) {
-		printf("\n");
-		KSI_ERR_statusDump(ksi, stderr);
-		THROW_MSG(KSI_EXEPTION, "Error: Get pubfile. (%s)\n", KSI_getErrorString(res));
-	} 
+	THROWABLE(KSI_PublicationsFile_fromFile(ksi, fileName, pubFile), "Error: Unable to read publications file. (%s)\n", fileName)
 	return res;
 }
 
@@ -485,7 +478,16 @@ int KSI_Signature_verify_throws(KSI_Signature *sig, KSI_CTX *ksi){
 }
 
 int KSI_Signature_create_throws(KSI_CTX *ctx, KSI_DataHash *hsh, KSI_Signature **signature){
-	THROWABLE(KSI_Signature_create(ctx, hsh, signature), "Error: Unable create signature. (%s)\n", KSI_getErrorString(res));
+//	THROWABLE(KSI_Signature_create(ctx, hsh, signature), "Error: Unable create signature. (%s)\n", KSI_getErrorString(res));
+//	TODO
+	int res = KSI_UNKNOWN_ERROR; 
+	res = KSI_Signature_create(ctx, hsh, signature);  
+	if(res != KSI_OK) {
+		printf("\n");
+		KSI_ERR_statusDump(ctx, stderr);
+		THROW_MSG(KSI_EXEPTION, "Error: Unable create signature. (%s)\n", KSI_getErrorString(res));
+	} 
+	return res;
 }
 
 int KSI_Signature_createDataHasher_throws(KSI_Signature *sig, KSI_DataHasher **hsr){
@@ -502,7 +504,7 @@ int KSI_extendSignature_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature *
 /*To Publication record*/
 int KSI_Signature_extend_throws(const KSI_Signature *signature, KSI_CTX *ctx, const KSI_PublicationRecord *pubRec, KSI_Signature **extended){
 	//THROWABLE(KSI_Signature_extend(signature, ctx, pubRec, extended), "Error: Unable to extend signature. (%s)\n", KSI_getErrorString(res));
-
+	//TODO
 	int res = KSI_UNKNOWN_ERROR; 
 	res = KSI_Signature_extend(signature, ctx, pubRec, extended);  
 	if(res != KSI_OK) {
@@ -518,17 +520,15 @@ int KSI_PKITruststore_addLookupFile_throws(KSI_PKITruststore *store, const char 
 }
 		
 int KSI_PKITruststore_addLookupDir_throws(KSI_PKITruststore *store, const char *path){
-	THROWABLE(KSI_PKITruststore_addLookupDir(store,path), "Error: Unable to set PKI trust store lookup dir. (%s)\n",  KSI_getErrorString(res));
+	THROWABLE(KSI_PKITruststore_addLookupDir(store,path), "Error: Unable to set PKI trust store lookup directory. (%s)\n",  KSI_getErrorString(res));
 }
 
-
-
 int KSI_Integer_new_throws(KSI_CTX *ctx, KSI_uint64_t value, KSI_Integer **kint){
-	THROWABLE(KSI_Integer_new(ctx, value, kint), "Error: Unable construkt KSI Interger. (%s)\n",  KSI_getErrorString(res));
+	THROWABLE(KSI_Integer_new(ctx, value, kint), "Error: Unable to construct KSI Integer. (%s)\n",  KSI_getErrorString(res));
 }
 
 int KSI_ExtendReq_new_throws(KSI_CTX *ctx, KSI_ExtendReq **t){
-	THROWABLE(KSI_ExtendReq_new(ctx, t);, "Error: Unable construct KSI extend request. (%s)\n",  KSI_getErrorString(res));
+	THROWABLE(KSI_ExtendReq_new(ctx, t);, "Error: Unable to construct KSI extend request. (%s)\n",  KSI_getErrorString(res));
 }
 
 int KSI_ExtendReq_setAggregationTime_throws(KSI_ExtendReq *t, KSI_Integer *aggregationTime){
@@ -571,7 +571,7 @@ int KSI_PublicationData_setImprint_throws(KSI_PublicationData *t, KSI_DataHash *
 }
 
 int KSI_PublicationData_setTime_throws(KSI_PublicationData *t, KSI_Integer *time){
-	THROWABLE(KSI_PublicationData_setTime(t, time), "Error: Unable to set publication data time. (%s)\n",  KSI_getErrorString(res));
+	THROWABLE(KSI_PublicationData_setTime(t, time), "Error: Unable to set publication data time attribute. (%s)\n",  KSI_getErrorString(res));
 }
 
 int KSI_PublicationData_toBase32_throws(const KSI_PublicationData *published_data, char **publication){
@@ -608,6 +608,6 @@ int KSI_PublicationRecord_clone_throws(const KSI_PublicationRecord *rec, KSI_Pub
 }
 
 int KSI_setPublicationCertEmail_throws(KSI_CTX *ctx, const char *email){
-	THROWABLE(KSI_setPublicationCertEmail(ctx, email), "Error: Unable set publication cert email. (%s)\n",  KSI_getErrorString(res));
+	THROWABLE(KSI_setPublicationCertEmail(ctx, email), "Error: Unable set publication certificate email. (%s)\n",  KSI_getErrorString(res));
 }
 

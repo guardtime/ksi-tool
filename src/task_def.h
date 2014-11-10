@@ -36,6 +36,7 @@ struct task_st{
 void TaskDefinition_new(int id, const char *name, const char *def,const char *man, const char *ignore, const char *opt, const char *forb, TaskDefinition **new);
 void TaskDefinition_free(TaskDefinition *obj);
 Task* Task_getConsistentTask(TaskDefinition **def, int count, paramSet *set);
+void Task_free(Task *obj);
 
 #ifdef	__cplusplus
 }

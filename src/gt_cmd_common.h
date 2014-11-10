@@ -9,6 +9,11 @@
 #	ifndef gmtime_r
 #		define gmtime_r(time, resultp) gmtime_s(resultp, time)
 #	endif
+#	ifdef _DEBUG
+#		define _CRTDBG_MAP_ALLOC
+#		include <stdlib.h>
+#		include <crtdbg.h>
+#	endif
 #endif
 
 #ifdef	__cplusplus

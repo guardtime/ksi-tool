@@ -5,7 +5,7 @@
 #include <string.h>
 #include <ksi/ksi.h>
 #include "task_def.h"
-
+#include "gt_cmd_common.h"
 
 
 
@@ -109,7 +109,7 @@ int KSI_PublicationsFile_serialize_throws(KSI_CTX *ksi, KSI_PublicationsFile *pu
 int KSI_DataHasher_open_throws(KSI_CTX *ksi,int hasAlgID ,KSI_DataHasher **hsr);
 int KSI_DataHasher_add_throws(KSI_DataHasher *hasher, const void *data, size_t data_length);
 int KSI_DataHasher_close_throws(KSI_DataHasher *hasher, KSI_DataHash **hash);
-int KSI_createSignature_throws(KSI_CTX *ksi, const KSI_DataHash *hash, KSI_Signature **sign);
+int KSI_createSignature_throws(KSI_CTX *ksi, KSI_DataHash *hash, KSI_Signature **sign);
 int KSI_DataHash_fromDigest_throws(KSI_CTX *ksi, int hasAlg, char *data, unsigned int len, KSI_DataHash **hash);
 int KSI_PublicationsFile_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_PublicationsFile **pubFile);
 int KSI_Signature_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_Signature **sig);
