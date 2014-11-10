@@ -48,7 +48,7 @@ bool GT_other(Task *task){
 		}
 		CATCH_ALL{
 			printf("failed.\n");
-			printErrorLocations();
+			printErrorMessage();
 			exeptionSolved();
 			state = false;
 		}
@@ -138,7 +138,6 @@ static void setSystemTime_throws(const KSI_Signature *sig){
 	if(!SetSystemTime(&newTime)){
 		DWORD err = GetLastError();
 		if(err == ERROR_PRIVILEGE_NOT_HELD){
-			printf("Mis synnib\n");
 			THROW_MSG(NO_PRIVILEGES_EXEPTION, "User has no privileges to change date");
 		}
 		else{

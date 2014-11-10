@@ -73,7 +73,7 @@ bool GT_verifyTask(Task *task){
 		}
 		CATCH_ALL{
 			printf("failed.\n");
-			printErrorLocations();
+			printErrorMessage();
 			exeptionSolved();
 			state = false;
 		}

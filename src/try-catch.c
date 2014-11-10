@@ -34,10 +34,10 @@ void _appendMessage(const char *msg, const char *fname, int lineN){
 	return;
 	}
 
-void printMessage(void){
+void printErrorMessage(void){
 	int i=0;
 	for(i=_EXP.exep.N-1; i>=0; i--){
-		printf("%s%s", _EXP.exep.message[i], (_EXP.exep.message[i][strlen(_EXP.exep.message[i])-1] == '\n') ? ("") : ("\n"));
+		fprintf(stderr, "%s%s", _EXP.exep.message[i], (_EXP.exep.message[i][strlen(_EXP.exep.message[i])-1] == '\n') ? ("") : ("\n"));
 	}
 	return;
 	}
@@ -45,7 +45,7 @@ void printMessage(void){
 void printErrorLocations(void){
 	int i=0;
 	for(i=_EXP.exep.N-1; i>=0; i--){
-		printf("%i)[%s] %s (%i) %s%s",i, Exeption_toString(_EXP.exep.exeption), _EXP.exep.fileName[i], _EXP.exep.lineNumber[i],_EXP.exep.message[i],(_EXP.exep.message[i][strlen(_EXP.exep.message[i])-1] == '\n') ? ("") : ("\n") );
+		fprintf(stderr, "%i)[%s] %s (%i) %s%s",i, Exeption_toString(_EXP.exep.exeption), _EXP.exep.fileName[i], _EXP.exep.lineNumber[i],_EXP.exep.message[i],(_EXP.exep.message[i][strlen(_EXP.exep.message[i])-1] == '\n') ? ("") : ("\n") );
 	}
 	return;
 }
@@ -70,7 +70,7 @@ void THROW(exeptions_t exeption){
 		longjmp(_EXP.array_jmp[_EXP.jump_pos],exeption); 
 	}
 	else{
-		printf("There is no catcher to catch. Nothing was thrown!\n");
+		fprintf(stderr, "There is no catcher to catch. Nothing was thrown!\n");
 	}
 }
 

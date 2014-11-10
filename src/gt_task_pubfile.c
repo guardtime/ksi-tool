@@ -110,13 +110,13 @@ bool GT_publicationsFileTask(Task *task){
 		}
 		CATCH(KSI_EXEPTION){
 				printf("failed.\n");
-				printErrorLocations();
+				printErrorMessage();
 				exeptionSolved();
 				state = false;
 		}
 		CATCH(IO_EXEPTION){
 				fprintf(stderr , _EXP.tmp);
-				printErrorLocations();
+				printErrorMessage();
 				state = false;
 		}
 	end_try

@@ -192,7 +192,7 @@ extern "C" {
 	/**
 	 * Prints messages appended to global exeption object.
 	 */
-	void printMessage(void);
+	void printErrorMessage(void);
 
 	/**
 	 * Prints messages + file names and line numbers where exeptions were thrown.

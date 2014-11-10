@@ -110,7 +110,7 @@ bool GT_extendTask(Task *task) {
 		}
 		CATCH_ALL{
 			printf("failed.\n");
-			printErrorLocations();
+			printErrorMessage();
 			exeptionSolved();
 			state = false;
 		}
