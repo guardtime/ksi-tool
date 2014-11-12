@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.59])
-AC_INIT([gtime], [1.0-0], [taavi.valjaots@guardtime.com])
+AC_INIT([gtime], [1.0.0], [taavi.valjaots@guardtime.com])
 #AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_CONFIG_HEADERS([config.h])
@@ -30,5 +30,5 @@ AC_CHECK_FUNCS([strchr])
 
 
 
-AC_CONFIG_FILES([GNUmakefile src/GNUmakefile])
+AC_CONFIG_FILES([GNUmakefile src/GNUmakefile redhat/gtime.spec])
 AC_OUTPUT
