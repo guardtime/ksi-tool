@@ -1,5 +1,6 @@
-%define	name	gtime
+%define	name	@PACKAGE@
 %define version @VERSION@
+
 %define upstream_release 0
 
 
@@ -14,7 +15,7 @@ URL: http://www.guardtime.com/
 Vendor: Guardtime AS
 Packager: Guardtime AS <info@guardtime.com>
 Distribution: Guardtime utilities
-BuildRoot: %{_tmppath}/%{name}-%{version}--build
+BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
 Requires: openssl
 Requires: curl
@@ -25,7 +26,7 @@ BuildRequires: libksi-devel
 
 %description
 Guardtime signing and verification tool. Execute 
-gtime -h to view brief usage instructions.
+%{name} -h to view brief usage instructions.
 
 %prep
 %setup -q -n %{name}-%{version}
@@ -42,7 +43,7 @@ make install DESTDIR=%{buildroot}
 %files
 %defattr (-,root,root)
 
-%{_bindir}/gtime*
+%{_bindir}/%{name}*
 
 
 %changelog

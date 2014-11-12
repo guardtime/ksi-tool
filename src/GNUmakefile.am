@@ -1,5 +1,5 @@
-bin_PROGRAMS = gtime
-gtime_SOURCES = \
+bin_PROGRAMS = ksitool
+ksitool_SOURCES = \
 	gtime.c	\
 	gt_cmd_common.h \
 	gt_task.h \

@@ -40,71 +40,71 @@ rm -rf ../test/out
 mkdir -p ../test/out
 
 echo "****************** Download publications file ******************"
-./gtime -p -t $GLOBAL -o "$PUBFILE" -d 
+./ksitool -p -t $GLOBAL -o "$PUBFILE" -d 
 echo $?
-./gtime -v -t $GLOBAL -b "$PUBFILE"
+./ksitool -v -t $GLOBAL -b "$PUBFILE"
 echo $?
 
 echo "****************** Get Publication string ******************" 
-./gtime -p -t $GLOBAL -T 1410848909
+./ksitool -p -t $GLOBAL -T 1410848909
 echo $?
 
 
 echo "****************** Sign data [-n] ******************"
-./gtime -s $GLOBAL $SIGN_FLAGS -f "$TEST_FILE" -o "$TEST_FILE_OUT".ksig -b $PUBFILE 
+./ksitool -s $GLOBAL $SIGN_FLAGS -f "$TEST_FILE" -o "$TEST_FILE_OUT".ksig -b $PUBFILE 
 echo $?
 sleep $WAIT 
 
 echo "****************** Verify online ******************"
-./gtime -v -x $GLOBAL $VERIFY_FLAGS -i "$TEST_FILE_OUT".ksig
+./ksitool -v -x $GLOBAL $VERIFY_FLAGS -i "$TEST_FILE_OUT".ksig
 echo $?
 
 echo "****************** Verify using publications file ******************"
-./gtime -v $GLOBAL $VERIFY_FLAGS -i "$TEST_FILE_OUT".ksig -b $PUBFILE
+./ksitool -v $GLOBAL $VERIFY_FLAGS -i "$TEST_FILE_OUT".ksig -b $PUBFILE
 echo $?
 
 echo "****************** Sign data with algorithm [-H SH-1] ******************" 
-./gtime -s $GLOBAL $SIGN_FLAGS -f "$TEST_FILE" -o "$TEST_FILE_OUT"SH-1.ksig  -H SHA-1
+./ksitool -s $GLOBAL $SIGN_FLAGS -f "$TEST_FILE" -o "$TEST_FILE_OUT"SH-1.ksig  -H SHA-1
 echo $?
 sleep $WAIT
-./gtime -v -x $GLOBAL $VERIFY_FLAGS -i "$TEST_FILE_OUT"SH-1.ksig
+./ksitool -v -x $GLOBAL $VERIFY_FLAGS -i "$TEST_FILE_OUT"SH-1.ksig
 echo $?
 
 echo "****************** Verifying signature and file [-t]******************" 
-./gtime -v -x $GLOBAL $VERIFY_FLAGS -i "$TEST_FILE_OUT".ksig -f "$TEST_FILE"
+./ksitool -v -x $GLOBAL $VERIFY_FLAGS -i "$TEST_FILE_OUT".ksig -f "$TEST_FILE"
 echo $?
 
 
 echo "****************** Extend old signature [-t] ******************" 
-./gtime -x $GLOBAL $EXTEND_FLAGS -i "$TEST_OLD_SIG" -o "$TEST_EXTENDED_SIG"
+./ksitool -x $GLOBAL $EXTEND_FLAGS -i "$TEST_OLD_SIG" -o "$TEST_EXTENDED_SIG"
 echo $?
 sleep $WAIT
-./gtime -v -x $GLOBAL $VERIFY_FLAGS -i "$TEST_EXTENDED_SIG"
+./ksitool -v -x $GLOBAL $VERIFY_FLAGS -i "$TEST_EXTENDED_SIG"
 echo $?
 
 echo "****************** Sign raw hash with algorithm specified [-F SH1:<hash>] ******************" 
-./gtime -s $GLOBAL $SIGN_FLAGS -o "$SH1_file"  -F SHA-1:"$SH1_HASH"
+./ksitool -s $GLOBAL $SIGN_FLAGS -o "$SH1_file"  -F SHA-1:"$SH1_HASH"
 echo $?
 sleep $WAIT
-./gtime -v -x $GLOBAL $VERIFY_FLAGS -i "$SH1_file"
+./ksitool -v -x $GLOBAL $VERIFY_FLAGS -i "$SH1_file"
 echo $?
 
 echo "****************** Sign raw hash with algorithm specified [-F SH256:<hash>] ******************" 
-./gtime -s $GLOBAL $SIGN_FLAGS -o "$SH256_file" -F SHA-256:"$SH256_HASH"
+./ksitool -s $GLOBAL $SIGN_FLAGS -o "$SH256_file" -F SHA-256:"$SH256_HASH"
 echo $?
 sleep $WAIT
-./gtime -v -x $GLOBAL $VERIFY_FLAGS -i "$SH256_file" -f "$SH256_DATA_FILE"
+./ksitool -v -x $GLOBAL $VERIFY_FLAGS -i "$SH256_file" -f "$SH256_DATA_FILE"
 echo $?
 
 echo "****************** Sign raw hash with algorithm specified [-F RIPMED160:<hash>] ******************" 
-./gtime -s $GLOBAL $SIGN_FLAGS -o "$RIPMED160_file" -F RIPEMD-160:"$RIPMED160_HASH"
+./ksitool -s $GLOBAL $SIGN_FLAGS -o "$RIPMED160_file" -F RIPEMD-160:"$RIPMED160_HASH"
 echo $?
 sleep $WAIT
-./gtime -v -x $GLOBAL $VERIFY_FLAGS -i "$RIPMED160_file"
+./ksitool -v -x $GLOBAL $VERIFY_FLAGS -i "$RIPMED160_file"
 echo $?
 
 echo "****************** Test include. Must show ignored parameters and fail ******************" 
-./gtime -inc ../test/conf1 -inc ../test/conf3
+./ksitool -inc ../test/conf1 -inc ../test/conf3
 echo $?
 
 
@@ -112,52 +112,52 @@ echo $?
 
 
 echo "****************** Error extend no suitable publication ******************" 
-./gtime -x $GLOBAL $EXTEND_FLAGS -i "$TEST_FILE_OUT".ksig -o "$TEST_EXTENDED_SIG"
+./ksitool -x $GLOBAL $EXTEND_FLAGS -i "$TEST_FILE_OUT".ksig -o "$TEST_EXTENDED_SIG"
 echo $?
 
 echo "****************** Error extend not suitable format ******************" 
-./gtime -x $GLOBAL $EXTEND_FLAGS -i "$TEST_FILE" -o "$TEST_EXTENDED_SIG"
+./ksitool -x $GLOBAL $EXTEND_FLAGS -i "$TEST_FILE" -o "$TEST_EXTENDED_SIG"
 echo $?
 
 echo "****************** Error verify not suitable format ******************" 
-./gtime -v -x $GLOBAL $VERIFY_FLAGS -i "$TEST_FILE" 
+./ksitool -v -x $GLOBAL $VERIFY_FLAGS -i "$TEST_FILE" 
 echo $?
 
 echo "****************** Error verifying signature and wrong file ******************" 
-./gtime -v -x $GLOBAL $VERIFY_FLAGS -i "$TEST_FILE_OUT".ksig -f "$TEST_FILE_OUT".ksig
+./ksitool -v -x $GLOBAL $VERIFY_FLAGS -i "$TEST_FILE_OUT".ksig -f "$TEST_FILE_OUT".ksig
 echo $?
 
 echo "****************** Error signing with SH1 and wrong hash ******************" 
-./gtime -s $GLOBAL $SIGN_FLAGS -o "$SH1_file"  -F SHA-1:"$SH1_HASH"ff
+./ksitool -s $GLOBAL $SIGN_FLAGS -o "$SH1_file"  -F SHA-1:"$SH1_HASH"ff
 echo $?
 
 echo "****************** Error signing with unknown algorithm and wrong hash ******************" 
-./gtime -s $GLOBAL $SIGN_FLAGS -o "$TEST_FILE"  -F _UNKNOWN:"$SH1_HASH"
+./ksitool -s $GLOBAL $SIGN_FLAGS -o "$TEST_FILE"  -F _UNKNOWN:"$SH1_HASH"
 echo $?
 
 echo "****************** Error bad network provider******************" 
-./gtime -s $SIGN_FLAGS -o "$SH1_file"  -F SHA-1:"$SH1_HASH" -S plaplaplaplpalpalap
+./ksitool -s $SIGN_FLAGS -o "$SH1_file"  -F SHA-1:"$SH1_HASH" -S plaplaplaplpalpalap
 echo $?
 
 
 
 
 echo "****************** Error Verify signature and missing file ******************" 
-./gtime -v -x $GLOBAL $VERIFY_FLAGS -i "$TEST_FILE_OUT".ksig -f missing_file
+./ksitool -v -x $GLOBAL $VERIFY_FLAGS -i "$TEST_FILE_OUT".ksig -f missing_file
 echo $?
 
 echo "****************** Error missing cert files ******************" 
-./gtime -p -o $PUBFILE -V missing1 -V missing2 -V missing 3 
+./ksitool -p -o $PUBFILE -V missing1 -V missing2 -V missing 3 
 echo $?
 
 echo "****************** Error Invalid publications file ******************"
-./gtime -v -t $GLOBAL $VERIFY_FLAGS -i "$TEST_FILE_OUT".ksig -b "$INVALID_PUBFILE"
+./ksitool -v -t $GLOBAL $VERIFY_FLAGS -i "$TEST_FILE_OUT".ksig -b "$INVALID_PUBFILE"
 echo $?
 
 echo "****************** Error Unable to Get Publication string ******************" 
-./gtime -p $GLOBAL -T 969085709
+./ksitool -p $GLOBAL -T 969085709
 echo $?
 
 echo "****************** Error wrong E-mail******************"
-./gtime -p -t $GLOBAL -o "$PUBFILE"  -E magic@email.null 
+./ksitool -p -t $GLOBAL -o "$PUBFILE"  -E magic@email.null 
 echo $?
