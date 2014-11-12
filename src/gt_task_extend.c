@@ -31,7 +31,7 @@ bool GT_extendTask(Task *task) {
 	r = paramSet_isSetByName(task->set, "r");
 	d = paramSet_isSetByName(task->set, "d");
 	
-	resetExeptionHandler();
+	resetExceptionHandler();
 	try
 		CODE{
 			/*Initialization of KSI */
@@ -71,9 +71,9 @@ bool GT_extendTask(Task *task) {
 					KSI_Utf8String *errm = NULL;
 					int res = KSI_ExtendResp_getErrorMsg(extResp, &errm);
 					if (res == KSI_OK && KSI_Utf8String_cstr(errm) != NULL) {
-						THROW_MSG(KSI_EXEPTION, "Extender returned error %llu: '%s'.\n", (unsigned long long)KSI_Integer_getUInt64(respStatus), KSI_Utf8String_cstr(errm));
+						THROW_MSG(KSI_EXCEPTION, "Extender returned error %llu: '%s'.\n", (unsigned long long)KSI_Integer_getUInt64(respStatus), KSI_Utf8String_cstr(errm));
 					}else{
-						THROW_MSG(KSI_EXEPTION, "Extender returned error %llu.\n", (unsigned long long)KSI_Integer_getUInt64(respStatus));
+						THROW_MSG(KSI_EXCEPTION, "Extender returned error %llu.\n", (unsigned long long)KSI_Integer_getUInt64(respStatus));
 					}
 				}
 				measureLastCall();
@@ -111,7 +111,7 @@ bool GT_extendTask(Task *task) {
 		CATCH_ALL{
 			printf("failed.\n");
 			printErrorMessage();
-			exeptionSolved();
+			exceptionSolved();
 			state = false;
 		}
 	end_try

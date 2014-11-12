@@ -6,9 +6,9 @@
 #include "try-catch.h"
 #include "param_set.h"
 
-#define ON_ERROR_THROW_MSG(_exeption, ...) \
+#define ON_ERROR_THROW_MSG(_exception, ...) \
 	if (res != KSI_OK){  \
-		THROW_MSG(_exeption,__VA_ARGS__); \
+		THROW_MSG(_exception,__VA_ARGS__); \
 	}
 
 /**
@@ -17,7 +17,7 @@
  * @param[in] cmdparam pointer to command-line parameters.
  * @param[in] ksi pointer to KSI context.
  * 
- * @throws KSI_EXEPTION
+ * @throws KSI_EXCEPTION
  */
 static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	int res = KSI_OK;
@@ -41,41 +41,41 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 			if (S || P || X || C || c) {
 				res = KSI_UNKNOWN_ERROR;
 				res = KSI_HttpClient_new(ksi, &net);
-				ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to create new network provider.\n");
+				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to create new network provider.\n");
 
 				/* Check aggregator url */
 				if (S) {
 					res = KSI_HttpClient_setSignerUrl(net, signingService_url);
-					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set aggregator url '%s'.\n", signingService_url);
+					ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set aggregator url '%s'.\n", signingService_url);
 				}
 
 				/* Check publications file url. */
 				if (P) {
 					res = KSI_HttpClient_setPublicationUrl(net, publicationsFile_url);
-					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set publications file url '%s'.\n", publicationsFile_url);
+					ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set publications file url '%s'.\n", publicationsFile_url);
 				}
 
 				/* Check extending/verification service url. */
 				if (X) {
 					res = KSI_HttpClient_setExtenderUrl(net, verificationService_url);
-					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set extender/verifier url '%s'.\n", verificationService_url);
+					ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set extender/verifier url '%s'.\n", verificationService_url);
 				}
 
 				/* Check Network connection timeout. */
 				if (C) {
 					res = KSI_HttpClient_setConnectTimeoutSeconds(net, networkConnectionTimeout);
-					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set network connection timeout %i.\n", networkConnectionTimeout);
+					ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set network connection timeout %i.\n", networkConnectionTimeout);
 				}
 
 				/* Check Network transfer timeout. */
 				if (c) {
 					res = KSI_HttpClient_setReadTimeoutSeconds(net, networkTransferTimeout);
-					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set network transfer timeout %i.\n", networkTransferTimeout);
+					ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set network transfer timeout %i.\n", networkTransferTimeout);
 				}
 
 				/* Set the new network provider. */
 				res = KSI_setNetworkProvider(ksi, net);
-				ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to set network provider.\n");
+				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set network provider.\n");
 			}
 
 		} 
@@ -108,7 +108,7 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 	try
 		CODE{
 			res = KSI_CTX_new(&tmpKsi);
-			ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to initialize KSI context.\n");
+			ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to initialize KSI context.\n");
 			configureNetworkProvider_throws(tmpKsi, task);
 			
 			if(b && (task->id != downloadPublicationsFile && task->id != verifyPublicationsFile)){
@@ -134,7 +134,7 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 			
 			*ksi = tmpKsi;
 		}
-		CATCH(KSI_EXEPTION){
+		CATCH(KSI_EXCEPTION){
 			KSI_PublicationsFile_free(tmpPubFile);
 			KSI_CTX_free(tmpKsi);
 			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to configure KSI.\n");
@@ -154,7 +154,7 @@ void getFilesHash_throws(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **
 			/* Open Input file */
 			in = fopen(fname, "rb");
 			if (in == NULL) 
-				THROW_MSG(IO_EXEPTION, "Error: Unable to open input file '%s'\n", fname);
+				THROW_MSG(IO_EXCEPTION, "Error: Unable to open input file '%s'\n", fname);
 
 			/* Read the input file and calculate the hash of its contents. */
 			while (!feof(in)) {
@@ -163,14 +163,14 @@ void getFilesHash_throws(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **
 				res = KSI_DataHasher_add(hsr, buf, buf_len);
 				if(res != KSI_OK){
 					fclose(in);
-					ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to add data to hasher.\n");
+					ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to add data to hasher.\n");
 				}
 			}
 
 			if (in != NULL) fclose(in);
 			/* Close the data hasher and retreive the data hash. */
 			res = KSI_DataHasher_close(hsr, hash);
-			ON_ERROR_THROW_MSG(KSI_EXEPTION, "Error: Unable to create hash.\n");
+			ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to create hash.\n");
 		}
 		CATCH_ALL{
 			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to hash file '%s'.\n", fname);
@@ -191,20 +191,20 @@ void saveSignatureFile_throws(KSI_Signature *sign, const char *fname){
 		CODE{
 			/* Serialize the extended signature. */
 			res = KSI_Signature_serialize(sign, &raw, &raw_len);
-			ON_ERROR_THROW_MSG(KSI_EXEPTION,"Error: Unable to serialize signature.\n");
+			ON_ERROR_THROW_MSG(KSI_EXCEPTION,"Error: Unable to serialize signature.\n");
 
 			/* Open output file. */
 			out = fopen(fname, "wb");
 			if (out == NULL) {
 				KSI_free(raw);
-				THROW_MSG(IO_EXEPTION, "Error: Unable to open output file '%s'\n",fname);
+				THROW_MSG(IO_EXCEPTION, "Error: Unable to open output file '%s'\n",fname);
 			}
 
 			count = fwrite(raw, 1, raw_len, out);
 			if (count != raw_len) {
 				fclose(out);
 				KSI_free(raw);
-				THROW_MSG(KSI_EXEPTION, "Error: Failed to write output file.\n");
+				THROW_MSG(KSI_EXCEPTION, "Error: Failed to write output file.\n");
 			}
 
 		}
@@ -410,7 +410,7 @@ char* str_measuredTime(void){
 #define THROWABLE(func, ...) \
 	int res = KSI_UNKNOWN_ERROR; \
 	res = func;  \
-	if(res != KSI_OK) {THROW_MSG(KSI_EXEPTION, __VA_ARGS__);} \
+	if(res != KSI_OK) {THROW_MSG(KSI_EXCEPTION, __VA_ARGS__);} \
 	return res;
 
 
@@ -422,7 +422,7 @@ int KSI_receivePublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile **publ
 	if(res != KSI_OK) {
 		printf("\n");
 		KSI_ERR_statusDump(ksi, stderr);
-		THROW_MSG(KSI_EXEPTION, "Error: Unable to read publications file. (%s)\n", KSI_getErrorString(res));
+		THROW_MSG(KSI_EXCEPTION, "Error: Unable to read publications file. (%s)\n", KSI_getErrorString(res));
 	} 
 	return res;
 }
@@ -455,7 +455,7 @@ int KSI_createSignature_throws(KSI_CTX *ksi, KSI_DataHash *hash, KSI_Signature *
 	if(res != KSI_OK) {
 		printf("\n");
 		KSI_ERR_statusDump(ksi, stderr);
-		THROW_MSG(KSI_EXEPTION, "Error: Unable to sign. (%s)\n", KSI_getErrorString(res));
+		THROW_MSG(KSI_EXCEPTION, "Error: Unable to sign. (%s)\n", KSI_getErrorString(res));
 	} 
 	return res;	 
 }
@@ -485,7 +485,7 @@ int KSI_Signature_create_throws(KSI_CTX *ctx, KSI_DataHash *hsh, KSI_Signature *
 	if(res != KSI_OK) {
 		printf("\n");
 		KSI_ERR_statusDump(ctx, stderr);
-		THROW_MSG(KSI_EXEPTION, "Error: Unable create signature. (%s)\n", KSI_getErrorString(res));
+		THROW_MSG(KSI_EXCEPTION, "Error: Unable create signature. (%s)\n", KSI_getErrorString(res));
 	} 
 	return res;
 }
@@ -510,7 +510,7 @@ int KSI_Signature_extend_throws(const KSI_Signature *signature, KSI_CTX *ctx, co
 	if(res != KSI_OK) {
 		printf("\n");
 		KSI_ERR_statusDump(ctx, stderr);
-		THROW_MSG(KSI_EXEPTION, "Error: Unable to extend signature. (%s)\n", KSI_getErrorString(res));
+		THROW_MSG(KSI_EXCEPTION, "Error: Unable to extend signature. (%s)\n", KSI_getErrorString(res));
 	} 
 	return res;
 }

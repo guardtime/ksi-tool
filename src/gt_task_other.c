@@ -24,7 +24,7 @@ bool GT_other(Task *task){
 	d = paramSet_isSetByName(task->set, "d");
 	t = paramSet_isSetByName(task->set, "t");
 	
-	resetExeptionHandler();
+	resetExceptionHandler();
 	try
 		CODE{
 			/*Initalization of KSI */
@@ -49,7 +49,7 @@ bool GT_other(Task *task){
 		CATCH_ALL{
 			printf("failed.\n");
 			printErrorMessage();
-			exeptionSolved();
+			exceptionSolved();
 			state = false;
 		}
 	end_try
@@ -115,13 +115,13 @@ static void setSystemTime_throws(const KSI_Signature *sig){
 #endif	
 	
 	res = KSI_Signature_getCalendarAuthRec(sig, &calAuthrec);
-	if(res != KSI_OK || calAuthrec == NULL ) THROW_MSG(KSI_EXEPTION, "Unable to get calendar authentication record");
+	if(res != KSI_OK || calAuthrec == NULL ) THROW_MSG(KSI_EXCEPTION, "Unable to get calendar authentication record");
 
 	res = KSI_CalendarAuthRec_getPublishedData(calAuthrec, &pubData);
-	if(res != KSI_OK || pubData == NULL ) THROW_MSG(KSI_EXEPTION, "Unable to get published data");
+	if(res != KSI_OK || pubData == NULL ) THROW_MSG(KSI_EXCEPTION, "Unable to get published data");
 	
 	res = KSI_PublicationData_getTime(pubData, &time);
-	if(res != KSI_OK || time == NULL ) THROW_MSG(KSI_EXEPTION, "Unable to get time");
+	if(res != KSI_OK || time == NULL ) THROW_MSG(KSI_EXCEPTION, "Unable to get time");
 	
 	pubTm = (time_t)KSI_Integer_getUInt64(time);
 	gmtime_r(&pubTm, &tm);
@@ -138,10 +138,10 @@ static void setSystemTime_throws(const KSI_Signature *sig){
 	if(!SetSystemTime(&newTime)){
 		DWORD err = GetLastError();
 		if(err == ERROR_PRIVILEGE_NOT_HELD){
-			THROW_MSG(NO_PRIVILEGES_EXEPTION, "User has no privileges to change date");
+			THROW_MSG(NO_PRIVILEGES_EXCEPTION, "User has no privileges to change date");
 		}
 		else{
-			THROW_MSG(NO_PRIVILEGES_EXEPTION, "Unable to set time");
+			THROW_MSG(NO_PRIVILEGES_EXCEPTION, "Unable to set time");
 		}
 	}
 #else

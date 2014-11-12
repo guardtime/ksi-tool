@@ -6,22 +6,22 @@
 
 exp_handler _EXP;
 
-char *Exeption_toString(exeptions_t e){
+char *Exception_toString(exceptions_t e){
 	switch(e){
-	case KSI_EXEPTION:
-		return "KSI exeption";
-	case NULLPTR_EXEPTION:
-		return "Nullptr exeption";
-	case INVALID_ARGUMENT_EXEPTION:
-		return "Invalid argument exeption";
-	case OUT_OF_MEMORY_EXEPTION:
-		return "Out of memory exeption";
-	case NO_PRIVILEGES_EXEPTION:
-		return "No privileges exeption";
-	case IO_EXEPTION:
-		return "IO exeption";
+	case KSI_EXCEPTION:
+		return "KSI exception";
+	case NULLPTR_EXCEPTION:
+		return "Nullptr exception";
+	case INVALID_ARGUMENT_EXCEPTION:
+		return "Invalid argument exception";
+	case OUT_OF_MEMORY_EXCEPTION:
+		return "Out of memory exception";
+	case NO_PRIVILEGES_EXCEPTION:
+		return "No privileges exception";
+	case IO_EXCEPTION:
+		return "IO exception";
 	default:
-		return "Unknown exeption";
+		return "Unknown exception";
 	}
 } 
 
@@ -45,29 +45,29 @@ void printErrorMessage(void){
 void printErrorLocations(void){
 	int i=0;
 	for(i=_EXP.exep.N-1; i>=0; i--){
-		fprintf(stderr, "%i)[%s] %s (%i) %s%s",i, Exeption_toString(_EXP.exep.exeption), _EXP.exep.fileName[i], _EXP.exep.lineNumber[i],_EXP.exep.message[i],(_EXP.exep.message[i][strlen(_EXP.exep.message[i])-1] == '\n') ? ("") : ("\n") );
+		fprintf(stderr, "%i)[%s] %s (%i) %s%s",i, Exception_toString(_EXP.exep.exception), _EXP.exep.fileName[i], _EXP.exep.lineNumber[i],_EXP.exep.message[i],(_EXP.exep.message[i][strlen(_EXP.exep.message[i])-1] == '\n') ? ("") : ("\n") );
 	}
 	return;
 }
 
-void exeptionSolved(void){
+void exceptionSolved(void){
 	_EXP.exep.N = 0;
-	_EXP.exep.exeption = 0;
+	_EXP.exep.exception = 0;
 	return;
 }
 
-void resetExeptionHandler(void){
-	_EXP.exep.exeption = 0;
+void resetExceptionHandler(void){
+	_EXP.exep.exception = 0;
 	_EXP.jump_pos =0;
 	_EXP.exep.N =0;
 }
 
-void THROW(exeptions_t exeption){
+void THROW(exceptions_t exception){
 	if(_EXP.jump_pos > 0){ 
 		_EXP.jump_pos--; 
-		_EXP.exep.exeption = exeption; 
-		//printf("Exeption: %i Thrown at level %i.\n", _EXP.exep.exeption, _EXP.jump_pos); 
-		longjmp(_EXP.array_jmp[_EXP.jump_pos],exeption); 
+		_EXP.exep.exception = exception; 
+		//printf("Exception: %i Thrown at level %i.\n", _EXP.exep.exception, _EXP.jump_pos); 
+		longjmp(_EXP.array_jmp[_EXP.jump_pos],exception); 
 	}
 	else{
 		fprintf(stderr, "There is no catcher to catch. Nothing was thrown!\n");
@@ -75,5 +75,5 @@ void THROW(exeptions_t exeption){
 }
 
 void _THROW_FORWARD(void){
-	THROW(_EXP.exep.exeption);
+	THROW(_EXP.exep.exception);
 }

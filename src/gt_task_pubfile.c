@@ -38,7 +38,7 @@ bool GT_publicationsFileTask(Task *task){
 	t = paramSet_isSetByName(task->set, "t");
 	
 	/*Initalization of KSI */
-	resetExeptionHandler();
+	resetExceptionHandler();
 	try
 		CODE{
 			initTask_throws(task ,&ksi);
@@ -54,10 +54,10 @@ bool GT_publicationsFileTask(Task *task){
 
 				KSI_PublicationsFile_serialize(ksi, publicationsFile, &rawPubfile, &rawLen);
 				out = fopen(outPubFileName, "wb");
-				if(out == NULL) THROW_MSG(IO_EXEPTION, "Unable to ope publications file '%s' for writing.\n", outPubFileName);
+				if(out == NULL) THROW_MSG(IO_EXCEPTION, "Unable to ope publications file '%s' for writing.\n", outPubFileName);
 
 				bytesWritten = fwrite(rawPubfile, 1, rawLen, out);
-				if(bytesWritten != rawLen) THROW_MSG(IO_EXEPTION, "Error: Unable to write publications file '%s'.\n", outPubFileName);
+				if(bytesWritten != rawLen) THROW_MSG(IO_EXCEPTION, "Error: Unable to write publications file '%s'.\n", outPubFileName);
 				printf("Publications file '%s' saved.\n", outPubFileName);
 			} else if(task->id == createPublicationString){
 				printf("Sending aggregation request...");
@@ -76,9 +76,9 @@ bool GT_publicationsFileTask(Task *task){
 					KSI_Utf8String *errm = NULL;
 					int res = KSI_ExtendResp_getErrorMsg(extResp, &errm);
 					if (res == KSI_OK && KSI_Utf8String_cstr(errm) != NULL) {
-						THROW_MSG(KSI_EXEPTION, "Extender returned error %llu: '%s'.\n", (unsigned long long)KSI_Integer_getUInt64(respStatus), KSI_Utf8String_cstr(errm));
+						THROW_MSG(KSI_EXCEPTION, "Extender returned error %llu: '%s'.\n", (unsigned long long)KSI_Integer_getUInt64(respStatus), KSI_Utf8String_cstr(errm));
 					}else{
-						THROW_MSG(KSI_EXEPTION, "Extender returned error %llu.\n", (unsigned long long)KSI_Integer_getUInt64(respStatus));
+						THROW_MSG(KSI_EXCEPTION, "Extender returned error %llu.\n", (unsigned long long)KSI_Integer_getUInt64(respStatus));
 					}
 				}
 				measureLastCall();
@@ -104,19 +104,20 @@ bool GT_publicationsFileTask(Task *task){
 				printf("[%s]\n", strTime);
 				printf("pub=%s\n", base32);
 			}else{
-				THROW_MSG(KSI_EXEPTION, "Unkown error");
+				THROW_MSG(KSI_EXCEPTION, "Unkown error");
 			}
 			
 		}
-		CATCH(KSI_EXEPTION){
+		CATCH(KSI_EXCEPTION){
 				printf("failed.\n");
 				printErrorMessage();
-				exeptionSolved();
+				exceptionSolved();
 				state = false;
 		}
-		CATCH(IO_EXEPTION){
+		CATCH(IO_EXCEPTION){
 				fprintf(stderr , _EXP.tmp);
 				printErrorMessage();
+				exceptionSolved();
 				state = false;
 		}
 	end_try

@@ -18,7 +18,7 @@
  * try
  *      CODE{
  *          }
- *      CATCH(exeption)
+ *      CATCH(exception)
  *              {
  *              }
  *      CATCHALL{
@@ -41,46 +41,46 @@
 extern "C" {
 #endif
 	/**
-	 * Availabel exeptions
+	 * Availabel exceptions
 	 */
-	typedef enum _exeptions_t{
+	typedef enum _exceptions_t{
 		_CODE = 0,
-		KSI_EXEPTION = 100,
-		NULLPTR_EXEPTION,
-		INVALID_ARGUMENT_EXEPTION,
-		OUT_OF_MEMORY_EXEPTION,
-		NO_PRIVILEGES_EXEPTION,		
-		IO_EXEPTION
-	}exeptions_t;
+		KSI_EXCEPTION = 100,
+		NULLPTR_EXCEPTION,
+		INVALID_ARGUMENT_EXCEPTION,
+		OUT_OF_MEMORY_EXCEPTION,
+		NO_PRIVILEGES_EXCEPTION,		
+		IO_EXCEPTION
+	}exceptions_t;
 
 	/**
-	 * Object for storing exeption data.
+	 * Object for storing exception data.
 	 */
 	typedef struct _exep{
 		//Array of messages.
 		char message[JUMP_DEPTH][MESSAGE_SIZE];
-		//Array of file names and lines where the exeption was thrown.
+		//Array of file names and lines where the exception was thrown.
 		char fileName[JUMP_DEPTH][FILE_NAME_SIZE];
 		int lineNumber[JUMP_DEPTH];
 		//Throwing count.
 		int N;
-		//Exeption ID.
-		exeptions_t exeption;
-	} exeption;
+		//Exception ID.
+		exceptions_t exception;
+	} exception;
 
 	/**
-	 * Object for exeption handler
+	 * Object for exception handler
 	 */
 	typedef struct _exp_handler{
 		jmp_buf array_jmp[JUMP_DEPTH];
 		int jump_pos;
-		exeption exep;
+		exception exep;
 		int isCatched;
 		char tmp[MESSAGE_SIZE];
 	} exp_handler;
 
 	/**
-	 * Global exeption handler object.
+	 * Global exception handler object.
 	 */
 	extern exp_handler _EXP;
 
@@ -111,35 +111,35 @@ extern "C" {
 	#define CODE case 0:
 
 	/**
-	 * Macro for catching exeption (see THROW()).  Must be used between try and end-try.
+	 * Macro for catching exception (see THROW()).  Must be used between try and end-try.
 	 * 
-	 * @param[in] _exeption Exeption id. 
+	 * @param[in] _exception Exception id. 
 	 */
-	#define CATCH(_exeption) break; case _exeption: \
+	#define CATCH(_exception) break; case _exception: \
 		_EXP.isCatched = 1; \
-		//printf("Exeption %i, catched at level %i.\n", _EXP.exeption, _EXP.jump_pos);
+		//printf("Exception %i, catched at level %i.\n", _EXP.exception, _EXP.jump_pos);
 
 	/**
-	 * Macro for catching all exeptions.
+	 * Macro for catching all exceptions.
 	 * 
 	 * @note Must always be last block between try and end_try.
 	 */
 	#define CATCH_ALL break; default: \
 		_EXP.isCatched = 1; \
-		 //printf("Exeption %i, catched at level %i.\n", _EXP.exeption, _EXP.jump_pos);
+		 //printf("Exception %i, catched at level %i.\n", _EXP.exception, _EXP.jump_pos);
 
 
 
 
 	/**
-	 * Throws an exeption.
+	 * Throws an exception.
 	 * 
-	 * @param[in] exeption Exeption id.
+	 * @param[in] exception Exception id.
 	 */
-	void THROW(exeptions_t exeption);
+	void THROW(exceptions_t exception);
 
 	/**
-	 * If there is already thrown exeptions, throws it to another catcher.
+	 * If there is already thrown exceptions, throws it to another catcher.
 	 * 
 	 * @note USE macros THROW_FORWARD or THROW_FORWARD_APPEND_MESSAGE instead _THROW_FORWARD.
 	 */
@@ -148,23 +148,23 @@ extern "C" {
 	/**
 	 * Throws an exption with message + file and line number.
 	 *  
-	 * @param[in] _exeption Exeption id.
+	 * @param[in] _exception Exception id.
 	 * @param[in] ... Message format strings and parameters.
 	 */
-	#define THROW_MSG(_exeption, ...){ \
+	#define THROW_MSG(_exception, ...){ \
 		snprintf(_EXP.tmp, MESSAGE_SIZE, __VA_ARGS__);\
 		_appendMessage(_EXP.tmp, __FILE__, __LINE__);\
-		THROW(_exeption);}
+		THROW(_exception);}
 
 	/**
-	 * Throws already thrown exeption forward and appends file name and line.
+	 * Throws already thrown exception forward and appends file name and line.
 	 */
 	#define THROW_FORWARD() \
 		_appendMessage("", __FILE__, __LINE__);  \
 		_THROW_FORWARD(); 
 
 	/**
-	 * Throws already thrown exeption forward and appends message + file name and line.
+	 * Throws already thrown exception forward and appends message + file name and line.
 	 * 
 	 * @param[in] ... Message format strings and parameters.
 	 */
@@ -174,14 +174,14 @@ extern "C" {
 		_THROW_FORWARD();
 
 	/**
-	 * Append message + file name and line to global exeption object.
+	 * Append message + file name and line to global exception object.
 	 * @param msg
 	 */
 	#define appendMessage(msg) \
 		_appendMessage(msg, __FILE__, __LINE__);
 
 	/**
-	 * Appends message + file name and line to global exeption object. 
+	 * Appends message + file name and line to global exception object. 
 	 *      * 
 	 * @param[in] msg Message string.
 	 * @param[in] fname File name where the function is to be called.
@@ -190,24 +190,24 @@ extern "C" {
 	void _appendMessage(const char *msg, const char *fname, int lineN);
 
 	/**
-	 * Prints messages appended to global exeption object.
+	 * Prints messages appended to global exception object.
 	 */
 	void printErrorMessage(void);
 
 	/**
-	 * Prints messages + file names and line numbers where exeptions were thrown.
+	 * Prints messages + file names and line numbers where exceptions were thrown.
 	 */
 	void printErrorLocations(void);
 
 	/**
-	 * Reset exeption handler.
+	 * Reset exception handler.
 	 */
-	void resetExeptionHandler(void);
+	void resetExceptionHandler(void);
 
 	/**
-	 * Clean all exeptions. 
+	 * Clean all exceptions. 
 	 */
-	void exeptionSolved(void);
+	void exceptionSolved(void);
 
 
 #ifdef	__cplusplus

@@ -22,7 +22,7 @@ bool GT_verifyTask(Task *task){
 	d = paramSet_isSetByName(task->set, "d");
 	t = paramSet_isSetByName(task->set, "t");
 	
-	resetExeptionHandler();
+	resetExceptionHandler();
 	try
 		CODE{
 			/*Initalization of KSI */
@@ -51,7 +51,7 @@ bool GT_verifyTask(Task *task){
 					printf("ok. %s\n",t ? str_measuredTime() : "");
 				}
 				else{
-					THROW_MSG(KSI_EXEPTION, "Error: Unexpected error Unknown task.\n ");
+					THROW_MSG(KSI_EXCEPTION, "Error: Unexpected error Unknown task.\n ");
 				}
 				/* If datafile is present compare hash of a datafile and timestamp */
 				if (f) {
@@ -74,7 +74,7 @@ bool GT_verifyTask(Task *task){
 		CATCH_ALL{
 			printf("failed.\n");
 			printErrorMessage();
-			exeptionSolved();
+			exceptionSolved();
 			state = false;
 		}
 	end_try

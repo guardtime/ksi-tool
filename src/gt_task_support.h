@@ -20,7 +20,7 @@ extern "C" {
  * @param[in] task Pointer to task object.
  * @param[out] ksi Pointer to receiving pointer to KSI context object.
  * 
- * @throws KSI_EXEPTION.
+ * @throws KSI_EXCEPTION.
  */
 void initTask_throws(Task *task ,KSI_CTX **ksi);
 
@@ -30,7 +30,7 @@ void initTask_throws(Task *task ,KSI_CTX **ksi);
  * @param[in] fname Pointer to file path.
  * @param[out] hash Pointer to the receiving pointer to the KSI hash object.
  * 
- * @throws KSI_EXEPTION, IO_EXEPTION.
+ * @throws KSI_EXCEPTION, IO_EXCEPTION.
  */
 void getFilesHash_throws(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash ); 
 
@@ -39,7 +39,7 @@ void getFilesHash_throws(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **
  * @param [in] sign Pointer to signature object for saving.
  * @param [in] fname Pointer to file path.
  * 
- * @throws KSI_EXEPTION, IO_EXEPTION.
+ * @throws KSI_EXCEPTION, IO_EXCEPTION.
  */
 void saveSignatureFile_throws(KSI_Signature *sign, const char *fname);
 
@@ -100,7 +100,7 @@ char* str_measuredTime(void);
 
 
 /*************************************************
- * KSI api functions capable throwing exeptions  *
+ * KSI api functions capable throwing exceptions  *
  *************************************************/
 
 int KSI_receivePublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile **publicationsFile);

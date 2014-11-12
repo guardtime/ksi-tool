@@ -27,7 +27,7 @@ bool GT_signTask(Task *task) {
 	t = paramSet_isSetByName(task->set, "t");
 	d = paramSet_isSetByName(task->set, "d");
 	
-	resetExeptionHandler();
+	resetExceptionHandler();
 	try
 		CODE{
 			/*Initalization of KSI */
@@ -50,7 +50,7 @@ bool GT_signTask(Task *task) {
 				printf("ok.\n");
 			}
 			else{
-				THROW(INVALID_ARGUMENT_EXEPTION);
+				THROW(INVALID_ARGUMENT_EXCEPTION);
 			}
 
 			/* Sign the data hash. */
@@ -65,7 +65,7 @@ bool GT_signTask(Task *task) {
 		CATCH_ALL{
 			printf("failed.\n");
 			printErrorMessage();
-			exeptionSolved();
+			exceptionSolved();
 			state = false;
 		}
 	end_try
@@ -110,7 +110,7 @@ static int xx(char c1, char c2){
  * @param[out] binout Pointer to receiving pointer to binary array.  
  * @param[out] lenout Pointer to binary array length.
  * 
- * @throws INVALID_ARGUMENT_EXEPTION, OUT_OF_MEMORY_EXEPTION.
+ * @throws INVALID_ARGUMENT_EXCEPTION, OUT_OF_MEMORY_EXCEPTION.
  */
 static void getBinaryFromHexString(KSI_CTX *ksi, const char *hexin, unsigned char **binout, size_t *lenout){
 	size_t len = strlen(hexin);
@@ -119,15 +119,15 @@ static void getBinaryFromHexString(KSI_CTX *ksi, const char *hexin, unsigned cha
 	int i,j;
 
 	if(hexin == NULL || binout == NULL || lenout == NULL)
-		THROW(NULLPTR_EXEPTION);
+		THROW(NULLPTR_EXCEPTION);
 	
 	if(len%2 != 0){
-		THROW_MSG(INVALID_ARGUMENT_EXEPTION, "Error: The hash length is not even number!\n");
+		THROW_MSG(INVALID_ARGUMENT_EXCEPTION, "Error: The hash length is not even number!\n");
 	}
 
 	tmp = KSI_calloc(arraySize, sizeof(unsigned char));
 	if(tmp == NULL){
-		THROW_MSG(INVALID_ARGUMENT_EXEPTION, "Error: Unable to get memory for parsing hex to binary.\n");
+		THROW_MSG(INVALID_ARGUMENT_EXCEPTION, "Error: Unable to get memory for parsing hex to binary.\n");
 	}
 
 	for(i=0,j=0; i<arraySize; i++, j+=2){
@@ -135,7 +135,7 @@ static void getBinaryFromHexString(KSI_CTX *ksi, const char *hexin, unsigned cha
 		if(res == -1){
 			KSI_free(tmp);
 			tmp = NULL;
-			THROW_MSG(INVALID_ARGUMENT_EXEPTION, "Error: The hex number is invalid: %c%c!\n", hexin[j], hexin[j+1]);
+			THROW_MSG(INVALID_ARGUMENT_EXCEPTION, "Error: The hex number is invalid: %c%c!\n", hexin[j], hexin[j+1]);
 		}
 		tmp[i] = res;
 		//printf("%c%c -> %i\n", hexin[j], hexin[j+1], tempBin[i]);
@@ -185,7 +185,7 @@ static bool getHashAndAlgStrings(const char *instrn, char **strnAlgName, char **
  * @param[in] ksi Pointer to ksi context object.
  * @param[out] hash Pointer to receiving pointer to KSI_DataHash object.
  * 
- * @throws KSI_EXEPTION, NULLPTR_EXEPTION.
+ * @throws KSI_EXCEPTION, NULLPTR_EXCEPTION.
  */
 static void getHashFromCommandLine_throws(const char *imprint,KSI_CTX *ksi, KSI_DataHash **hash){
 	unsigned char *data = NULL;
@@ -197,9 +197,9 @@ static void getHashFromCommandLine_throws(const char *imprint,KSI_CTX *ksi, KSI_
 	char *strHash = NULL;
 	try
 		CODE{
-			if(imprint == NULL) THROW_MSG(NULLPTR_EXEPTION, "xxx");
+			if(imprint == NULL) THROW_MSG(NULLPTR_EXCEPTION, "xxx");
 			getHashAndAlgStrings(imprint, &strAlg, &strHash);
-			if(strAlg == NULL || strHash== NULL ) THROW_MSG(NULLPTR_EXEPTION, "xx");
+			if(strAlg == NULL || strHash== NULL ) THROW_MSG(NULLPTR_EXCEPTION, "xx");
 			
 			getBinaryFromHexString(ksi, strHash, &data, &len);
 			hasAlg = getHashAlgorithm_throws(strAlg);
@@ -225,10 +225,10 @@ static void getHashFromCommandLine_throws(const char *imprint,KSI_CTX *ksi, KSI_
  * @param[in] hashAlg Hash algorithm name.
  * @return Hash algorithm identifier.
  * 
- * @throws KSI_EXEPTION.
+ * @throws KSI_EXCEPTION.
  */
 static int getHashAlgorithm_throws(const char *hashAlg){
 	int hasAlgID = KSI_getHashAlgorithmByName(hashAlg);
-	if(hasAlgID == -1) THROW_MSG(KSI_EXEPTION, "Error: The hash algorithm \"%s\" is unknown\n", hashAlg);
+	if(hasAlgID == -1) THROW_MSG(KSI_EXCEPTION, "Error: The hash algorithm \"%s\" is unknown\n", hashAlg);
 	return hasAlgID;
 }
