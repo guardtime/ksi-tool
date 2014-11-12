@@ -1,7 +1,7 @@
 Building with Microsoft Visual Studio
 =====================================
 
-	This document describes how to build KSI command-line tool gtime using
+	This document describes how to build KSI command-line tool ksitool using
 	Microsoft Visual Studio tools and different libraries.
 	
 	
@@ -53,7 +53,7 @@ Build process
 	
 	Below is the abstract structure of the project that describes the location
 	of the source code, make files and output. Root directory contains top-level
-	build scripts that are used to build gtime. After successful build obj and
+	build scripts that are used to build ksitool. After successful build obj and
 	out directory is created. Obj directory contains compiled obj files. Out 
 	directory contains executable.
 	
@@ -61,7 +61,7 @@ Build process
     WinBuild.bat
     makefile
     
-	//Source code for gtime
+	//Source code for ksitool
 	src
       | *.c
       | *.h
@@ -88,7 +88,7 @@ Configuring build scripts
 	
 	Make file has following tasks:
 	
-		1)default	- build gtime executable.
+		1)default	- build ksitool executable.
 		2)clean 	- clean build.
 	
 		

@@ -1,10 +1,3 @@
-/* 
- * File:   gtime.c
- * Author: Taavi
- *
- * Created on June 18, 2014, 4:25 PM
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include "task_def.h"

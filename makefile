@@ -13,7 +13,7 @@ SRC_DIR = src
 OBJ_DIR = obj
 BIN_DIR = bin
 
-TOOL_NAME = gtime
+TOOL_NAME = ksitool
 
 #Objects for making command-line tool
 
@@ -24,7 +24,7 @@ CMDTOOL_OBJ = \
 	$(OBJ_DIR)\gt_task_sign.obj \
 	$(OBJ_DIR)\gt_task_verify.obj \
 	$(OBJ_DIR)\gt_task_other.obj \
-	$(OBJ_DIR)\gtime.obj \
+	$(OBJ_DIR)\ksitool.obj \
 	$(OBJ_DIR)\gt_cmd_control.obj \
 	$(OBJ_DIR)\try-catch.obj \
 	$(OBJ_DIR)\task_def.obj \

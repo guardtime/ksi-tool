@@ -1,6 +1,6 @@
 bin_PROGRAMS = ksitool
 ksitool_SOURCES = \
-	gtime.c	\
+	ksitool.c	\
 	gt_cmd_common.h \
 	gt_task.h \
 	gt_task_support.c \
