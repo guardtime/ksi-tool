@@ -16,7 +16,7 @@ Packager: Guardtime AS <info@guardtime.com>
 Distribution: Guardtime utilities
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{upstream_release}-build
 
-Requires: openssl, curl, libgtbase
+Requires: openssl, curl
 %if 0%{?fedora} || 0%{?rhel_version} || 0%{?centos_version}
 BuildRequires:  openssl-devel
 %else
@@ -49,7 +49,7 @@ make install DESTDIR=%{buildroot}
 %files
 %defattr (-,root,root)
 
-/usr/bin/gtime*
+%{_bindir}gtime*
 
 
 %changelog
