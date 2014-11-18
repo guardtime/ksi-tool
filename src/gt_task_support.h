@@ -45,7 +45,7 @@ void saveSignatureFile_throws(KSI_Signature *sign, const char *fname);
 
 
 /**
- * Prints the signer identity. If sig == NULL dose nothing.
+ * Prints the signer identity. If sig == NULL does nothing.
  * @param[in] sig Pointer to KSI signature object.
  * 
  */
@@ -62,14 +62,14 @@ void printSignerIdentity(KSI_Signature *sig);
 void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile);
 
 /**
- * Prints signatures publication references. If sig == NULL dose nothing.
+ * Prints signatures publication references. If sig == NULL does nothing.
  * @param[in] sig Pointer to KSI signature object.
  * 
  */
 void printSignaturePublicationReference(const KSI_Signature *sig);
 
 /**
- * Prints signature verification info.  If sig == NULL dose nothing.
+ * Prints signature verification info.  If sig == NULL does nothing.
  * @param[in] sig Pointer to KSI signature object.
  */
 void printSignatureVerificationInfo(const KSI_Signature *sig);

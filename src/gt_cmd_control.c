@@ -141,7 +141,7 @@ ContentStatus isInputFileContOK(const char* path){
 		return FILE_ACCESS_DENIED;
 		break;
 	case ENOENT:
-		return FILE_DOSE_NOT_EXIST;
+		return FILE_DOES_NOT_EXIST;
 		break;
 	case EINVAL:
 		return FILE_INVALID_PATH;
@@ -210,7 +210,7 @@ const char *getParameterContentErrorString(ContentStatus res){
 		break;
 	case FILE_ACCESS_DENIED: return "(File access denied)";
 		break;
-	case FILE_DOSE_NOT_EXIST: return "(File dose not exist)";
+	case FILE_DOES_NOT_EXIST: return "(File does not exist)";
 		break;
 	case FILE_INVALID_PATH: return "(Invalid path)";
 		break;
