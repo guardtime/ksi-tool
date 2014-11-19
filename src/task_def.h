@@ -37,7 +37,7 @@ void TaskDefinition_new(int id, const char *name, const char *def,const char *ma
 void TaskDefinition_free(TaskDefinition *obj);
 Task* Task_getConsistentTask(TaskDefinition **def, int count, paramSet *set);
 void Task_free(Task *obj);
-
+void Task_printSuggestions(TaskDefinition **def, int count, paramSet *set);
 #ifdef	__cplusplus
 }
 #endif

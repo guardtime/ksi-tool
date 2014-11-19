@@ -1,6 +1,7 @@
-#include <stdio.h>		//input output
-#include <string.h>		
-#include <stdlib.h>		//malloc, random, int ja strn 
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
 #include "task_def.h"
 
 struct taskdef_st{
@@ -47,21 +48,34 @@ void TaskDefinition_free(TaskDefinition *obj){
 }
 
 static const char *getParametersNameFromCateghory(const char* categhory, char *buf, short len){
-	int i = 0;
+	int i = 1;
+	int j = 0;
 	
+	buf[0] = 0;
 	if(categhory == NULL || buf == NULL) return NULL;
-	if(categhory[0] == 0) return NULL;
+	if(categhory[0] == 0) {
+		buf[0]=0;
+		return NULL;
+	}
 	
-	while(categhory[i] != '|' && categhory[i] != 0){
-		if(len-1 <= i){
+	while(categhory[i] != 0){
+		if(len-1 <= j){
+			buf[0]=0;
 			return NULL;
 		}
-		buf[i] = categhory[i];
+		
+		if(isalpha(categhory[i]) || isalnum(categhory[i])){
+			buf[j] = categhory[i];
+			j++;
+		}
+		else if(j>0){
+			break;
+		}
+		
 		i++;
 	}
 	
-	buf[i] = 0;
-	if(categhory[i] == '|') i++;
+	buf[j] = 0;
 	return &categhory[i];
 }
 
@@ -72,11 +86,11 @@ static int getFlagCount(const char* categhory){
 	if(categhory[0] == 0) return 0;
 	
 	c = categhory;
-	while((c = strchr(c, '|'))){
+	while((c = strchr(c, '-'))){
 		count++;
 		c++;
 	}
-	return count+1;
+	return count;
 }
 
 static int TaskDefinition_getMissingFlagCount(const char* category, paramSet *set){
@@ -88,7 +102,6 @@ static int TaskDefinition_getMissingFlagCount(const char* category, paramSet *se
 	
 	pName = category;		
 	while((pName = getParametersNameFromCateghory(pName,buf, sizeof(buf))) != NULL){
-//		printf("'%s' is %i\n", buf, paramSet_isSetByName(set, buf));
 		if(paramSet_isSetByName(set, buf) == false){
 			missedFlags++;
 		}
@@ -102,20 +115,14 @@ static bool TaskDefinition_analyse(TaskDefinition *def, paramSet *set){
 	const char *pName = NULL;
 	if(def == NULL || set == NULL) return false;
 	
-//	printf("Is Task %s defined::\n", def->name);
 	if(TaskDefinition_getMissingFlagCount(def->taskDefinitionFlags, set) > 0)
 		state = false;
 	else
 		def->isDefined = true;
 	
-//	printf("Is Task consistent fb->%i::\n", getFlagCount(def->forbittenFlags));
 	if(TaskDefinition_getMissingFlagCount(def->mandatoryFlags, set) > 0) state = false;
 	if(TaskDefinition_getMissingFlagCount(def->forbittenFlags, set) != getFlagCount(def->forbittenFlags)) state = false;
 	def->isConsistent = state;
-	
-
-	
-	
 	
 	return state;
 }
@@ -124,31 +131,47 @@ static void TaskDefinition_PrintErrors(TaskDefinition *def, paramSet *set){
 	int i=0;
 	char buf[256];
 	const char *pName = NULL;
+	bool def_printed = false;
+	bool err_printed = false;
 	
 	if(def == NULL){
-		printf("Error: Task is null pointer.\n");
+		fprintf(stderr, "Error: Task is null pointer.\n");
 		return;
 	}
 
 	if(set == NULL){
-		printf("Error: Parameter set is null pointer.\n");
+		fprintf(stderr, "Error: Parameter set is null pointer.\n");
 		return;
 	}
 	
 		pName = def->mandatoryFlags;		
 		while((pName = getParametersNameFromCateghory(pName,buf, sizeof(buf))) != NULL){
 			if(paramSet_isSetByName(set, buf) == false){
-				printf("Error: You have to define flag '-%s'\n",buf);
+				if(!def_printed){
+					fprintf(stderr, "Error: You have to define flag(s) '-%s'",buf);
+					def_printed = true;
+				}
+				else{
+					fprintf(stderr, ", '-%s'",buf);
+				}
 			}
 		}
+		if(def_printed) fprintf(stderr, "\n");
+		
 		
 		pName = def->forbittenFlags;		
 		while((pName = getParametersNameFromCateghory(pName,buf, sizeof(buf))) != NULL){
 			if(paramSet_isSetByName(set, buf) == true){
-				printf("Error: You must not use flag '-%s'\n",buf);
+				if(!err_printed){
+					fprintf(stderr, "Error: You must not use flag(s) '-%s'",buf);
+					err_printed = true;
+				}
+				else{
+					fprintf(stderr, ", '-%s'",buf);
+				}
 			}
 		}
-//	}
+		if(err_printed) fprintf(stderr, "\n");
 	
 	return;
 }
@@ -159,14 +182,14 @@ static void TaskDefinition_PrintWarnings(TaskDefinition *def, paramSet *set){
 	char buf[256];
 	
 	if(def == NULL){
-		printf("Error: Task is null pointer.\n");
+		fprintf(stderr, "Error: Task is null pointer.\n");
 		return;
 	}
 
 	pName = def->ignoredFlags;		
 		while((pName = getParametersNameFromCateghory(pName,buf, sizeof(buf))) != NULL){
 			if(paramSet_isSetByName(set, buf) == true){
-				printf("Warning: flag -%s is ignored\n",buf);
+				fprintf(stderr, "Warning: flag -%s is ignored\n",buf);
 			}
 		}
 	return;
@@ -215,19 +238,21 @@ Task* Task_getConsistentTask(TaskDefinition **def, int count, paramSet *set){
 		if(tmp->isDefined) definedCount++;
 	}
 	
-	if(definedCount == 0)
-		printf("Task is not defined. Use (-x, -s, -v, -p) and read help -h\n");
+	if(definedCount == 0){
+		fprintf(stderr, "Task is not defined. Use (-x, -s, -v, -p) and read help -h\n");
+		Task_printSuggestions(def, count, set);
+	}
 	
 	
 	if(definedCount >= 1 && consistent == NULL){
 		consistent = NULL;
 		if(definedCount > 1)
-			printf("Error: You can't define multiple tasks together:\n");
+			fprintf(stderr, "Error: You can't define multiple tasks together:\n");
 		
 		for(i=0; i<count; i++){
 			tmp = def[i];
 			if(tmp->isDefined){
-				printf("Task '%s' (%s) is invalid:\n", tmp->name, tmp->taskDefinitionFlags);
+				fprintf(stderr, "Task '%s' (%s) is invalid:\n", tmp->name, tmp->taskDefinitionFlags);
 				TaskDefinition_PrintErrors(tmp, set);
 				TaskDefinition_PrintWarnings(tmp, set);
 			}
@@ -236,7 +261,6 @@ Task* Task_getConsistentTask(TaskDefinition **def, int count, paramSet *set){
 	
 	if(consistent){
 			if(TaskDefinition_getMissingFlagCount(consistent->ignoredFlags, set) != getFlagCount(consistent->ignoredFlags)){
-//				printf("Task '%s' (%s) has warnings:\n", consistent->name, consistent->taskDefinitionFlags, );
 				TaskDefinition_PrintWarnings(consistent, set);
 			}
 				
@@ -254,4 +278,25 @@ Task* Task_getConsistentTask(TaskDefinition **def, int count, paramSet *set){
 		}
 	
 	return tmpTask;
+}
+
+
+void Task_printSuggestions(TaskDefinition **def, int count, paramSet *set){
+	int i;
+	TaskDefinition *tmp;
+	char first_flag[128];
+	int missing;
+	int all;
+	
+	for(i=0; i<count; i++){
+		tmp = def[i];
+		
+		all = getFlagCount(tmp->taskDefinitionFlags );
+		missing = TaskDefinition_getMissingFlagCount(tmp->taskDefinitionFlags, set);
+		getParametersNameFromCateghory(tmp->taskDefinitionFlags, first_flag, sizeof(first_flag));
+
+		if((100*missing)/all <= 75 && paramSet_isSetByName(set, first_flag))
+			fprintf(stderr, "Maybe you want to : %s %s %s\n", tmp->name, tmp->taskDefinitionFlags, tmp->mandatoryFlags);
+		
+	}
 }

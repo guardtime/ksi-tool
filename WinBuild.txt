@@ -72,15 +72,12 @@ Build process
    out
      |*.exe
 
-	 
-
-
 
 Configuring build scripts
 =====================================	
 	
 	For building process, above described top-level make file or WinBuild.bat
-	must be called.
+	must be called. WinBuild32 contain the call	to the make file.
 	
 	Make file can be executed via CMD shell or Visual Studio command prompt
 	shell. When using CMD shell environment must be configured using setenv
@@ -96,7 +93,7 @@ Configuring build scripts
 	
 		1) KSI_LIB		- select KSI API library format (lib, dll).
 						Default is lib. 	
-		2) RTL			- select C run-time library (MT, MTd, MD, MDd).
+		2) RTL			- select C run-time library (RTL) (MT, MTd, MD, MDd).
 						Default is MT.
 		3) CURL_DIR 	- Directory containing Curl library and include files.
 		4) OPENSSL_DIR 	- Directory containing OpenSLL library and include files.
@@ -111,7 +108,9 @@ Configuring build scripts
 
 	Examples
 	
-	KSI API is built using MT run-time library and windows native libraries:
-		nmake RTL=MT DLL=LIB KSI_DIR="C:\KSI"
-	KSI API is built using MTd and OpenSLL
-		nmake RTL=MTd DLL=LIB KSI_DIR="C:\KSI" OPENSSL_DIR="C:\OPENSSL"
+	KSI API is built as lib using MT RTL and windows native libraries:
+		nmake RTL=MT DLL=lib KSI_DIR="C:\KSI"
+	KSI API is built as lib using MTd RTL and OpenSLL
+		nmake RTL=MTd DLL=lib KSI_DIR="C:\KSI" OPENSSL_DIR="C:\OPENSSL"
+	KSI API is built as dll using MD RTL and windows native libraries:
+	nmake RTL=MD DLL=dll KSI_DIR="C:\KSI" OPENSSL_DIR="C:\OPENSSL"
