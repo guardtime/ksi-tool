@@ -22,23 +22,30 @@
 static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	int res = KSI_OK;
 	KSI_NetworkClient *net = NULL;
-	bool S=false, P=false, X=false, C=false, c=false;
+	bool S=false, P=false, X=false, C=false, c=false, bUser=false, bPass=false, s=false, x=false, p=false;
 	char *signingService_url = NULL;
 	char *publicationsFile_url = NULL;
 	char *verificationService_url = NULL;
 	int networkConnectionTimeout = 0;
 	int networkTransferTimeout = 0;
+	char *user = NULL;
+	char *pass = NULL;
 	
 	S = paramSet_getStrValueByNameAt(task->set, "S",0,&signingService_url);
 	P = paramSet_getStrValueByNameAt(task->set, "P",0,&publicationsFile_url);
 	X = paramSet_getStrValueByNameAt(task->set, "X",0,&verificationService_url);
+	bUser = paramSet_getStrValueByNameAt(task->set, "user",0,&user);
+	bPass = paramSet_getStrValueByNameAt(task->set, "pass",0,&pass);
 	C = paramSet_getIntValueByNameAt(task->set, "C", 0,&networkConnectionTimeout);
 	c = paramSet_getIntValueByNameAt(task->set, "c", 0,&networkTransferTimeout);
-
+	s = paramSet_isSetByName(task->set, "s");
+	x = paramSet_isSetByName(task->set, "x");
+	p = paramSet_isSetByName(task->set, "p");
+	
 	try
 	   CODE{
 			/* Check if uri's are specified. */
-			if (S || P || X || C || c) {
+			if (S || P || X || C || c || bUser || bPass) {
 				res = KSI_UNKNOWN_ERROR;
 				res = KSI_HttpClient_new(ksi, &net);
 				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to create new network provider.\n");
@@ -55,6 +62,16 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 					ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set publications file url '%s'.\n", publicationsFile_url);
 				}
 
+				if(bUser){
+					if(x|| p) KSI_NetworkClient_setExtenderUser_throws(ksi, net, user);
+					if(s) KSI_NetworkClient_setAggregatorUser_throws(ksi, net, user);
+				}
+				
+				if(bPass){
+					if(x|| p) KSI_NetworkClient_setExtenderPass_throws(ksi, net, pass);
+					if(s) KSI_NetworkClient_setAggregatorPass_throws(ksi, net, pass);
+				}
+				
 				/* Check extending/verification service url. */
 				if (X) {
 					res = KSI_HttpClient_setExtenderUrl(net, verificationService_url);
@@ -583,3 +600,18 @@ int KSI_setPublicationCertEmail_throws(KSI_CTX *ksi, const char *email){
 	THROWABLE3(ksi, KSI_setPublicationCertEmail(ksi, email), "Error: Unable set publication certificate email.");
 }
 
+int KSI_NetworkClient_setExtenderUser_throws(KSI_CTX *ksi, KSI_NetworkClient *netProvider, const char *val){
+	THROWABLE3(ksi,KSI_NetworkClient_setExtenderUser(netProvider, val) , "Error: Unable set extender user name.");
+}
+
+int KSI_NetworkClient_setExtenderPass_throws(KSI_CTX *ksi, KSI_NetworkClient *netProvider, const char *val){
+	THROWABLE3(ksi,KSI_NetworkClient_setExtenderPass(netProvider, val) , "Error: Unable set extender password.");
+}
+
+int KSI_NetworkClient_setAggregatorUser_throws(KSI_CTX *ksi, KSI_NetworkClient *netProvider, const char *val){
+	THROWABLE3(ksi,KSI_NetworkClient_setAggregatorUser(netProvider, val) , "Error: Unable set aggregator user name.");
+}
+
+int KSI_NetworkClient_setAggregatorPass_throws(KSI_CTX *ksi, KSI_NetworkClient *netProvider, const char *val){
+	THROWABLE3(ksi, KSI_NetworkClient_setAggregatorPass(netProvider, val) , "Error: Unable set aggregator password.");
+}

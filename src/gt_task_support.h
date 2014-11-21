@@ -143,6 +143,10 @@ int KSI_PublicationsFile_getPublicationDataByTime_throws(KSI_CTX *ksi, const KSI
 int KSI_Signature_replacePublicationRecord_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_PublicationRecord *pubRec);
 int KSI_PublicationRecord_clone_throws(KSI_CTX *ksi, const KSI_PublicationRecord *rec, KSI_PublicationRecord **clone);
 int KSI_setPublicationCertEmail_throws(KSI_CTX *ksi, const char *email);
+int KSI_NetworkClient_setExtenderUser_throws(KSI_CTX *ksi, KSI_NetworkClient *netProvider, const char *val);
+int KSI_NetworkClient_setExtenderPass_throws(KSI_CTX *ksi, KSI_NetworkClient *netProvider, const char *val);
+int KSI_NetworkClient_setAggregatorUser_throws(KSI_CTX *ksi, KSI_NetworkClient *netProvider, const char *val);
+int KSI_NetworkClient_setAggregatorPass_throws(KSI_CTX *ksi, KSI_NetworkClient *netProvider, const char *val);
 
 #define MEASURE_TIME(code_here) \
 	{   \

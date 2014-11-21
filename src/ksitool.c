@@ -29,7 +29,9 @@ int main(int argc, char** argv) {
 #endif	
 
 	/*Create parameter set*/
-	paramSet_new("{s}*{x}*{p}*{v}*{t}*{r}*{d}*{n}*{h}*{o}{i}{f}{b}{a}{c}{C}{V}*{W}{S}{X}{P}{F}{H}{T}{E}{user}{pass}{inc}*{aggre}{htime}{setsystime}", &set);
+	paramSet_new("{s}*{x}*{p}*{v}*{t}*{r}*{d}*{n}*{h}*{o}{i}{f}{b}{a}{c}{C}{V}*"
+				 "{W}{S}{X}{P}{F}{H}{T}{E}{inc}*{aggre}{htime}{setsystime}"
+				 "{user}{pass}", &set);
 	if(set == NULL) goto cleanup;
 	
 	/*Configure parameter set*/
@@ -194,6 +196,8 @@ static void GT_pritHelp(void){
 			" -S <url>	specify Signing service URL\n"
 			" -X <url>	specify verification (eXtending) service URL\n"
 			" -P <url>	specify Publications file URL\n"
+			" -user		user name\n"
+			" -pass		password\n"
 			" -c <num>	network transfer timeout, after successful Connect\n"
 			" -C <num>	network Connect timeout.\n"
 			" -V <file>	use specified OpenSSL-style trust store file for publications file\n"
