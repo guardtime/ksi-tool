@@ -57,7 +57,7 @@ bool GT_verifyTask(Task *task){
 				if (f) {
 					/* Create hasher. */
 					printf("Verifying file's %s hash...", inDataFileName);
-					KSI_Signature_createDataHasher_throws(sig, &hsr);
+					KSI_Signature_createDataHasher_throws(ksi, sig, &hsr);
 					getFilesHash_throws(hsr, inDataFileName, &hsh);
 					printf("ok.\n");
 					printf("Verifying document hash... ");

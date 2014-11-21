@@ -32,8 +32,8 @@ bool GT_other(Task *task){
 
 			if (task->id == getRootH_T || task->id == setSysTime) {
 				KSI_DataHasher_open_throws(ksi, KSI_getHashAlgorithmByName("default"), &hsr);
-				KSI_DataHasher_add_throws(hsr, "tere",4);
-				KSI_DataHasher_close_throws(hsr, &hsh);
+				KSI_DataHasher_add_throws(ksi, hsr, "tere",4);
+				KSI_DataHasher_close_throws(ksi, hsr, &hsh);
 				KSI_Signature_create_throws(ksi, hsh, &sig);
 				
 				if (task->id == getRootH_T) {

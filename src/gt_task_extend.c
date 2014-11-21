@@ -50,22 +50,22 @@ bool GT_extendTask(Task *task) {
 			if(T){
 				printf("Extending old signature to %i...", publicationTime);
 
-				KSI_Signature_clone_throws(sig, &ext);
-				KSI_Signature_getSigningTime_throws(ext, &signTime);
+				KSI_Signature_clone_throws(ksi, sig, &ext);
+				KSI_Signature_getSigningTime_throws(ksi, ext, &signTime);
 				KSI_Integer_new_throws(ksi, publicationTime, &pubTime);
 
 				KSI_ExtendReq_new_throws(ksi, &extReq);
-				KSI_ExtendReq_setAggregationTime_throws(extReq, signTime);
-				KSI_ExtendReq_setPublicationTime_throws(extReq, pubTime);
+				KSI_ExtendReq_setAggregationTime_throws(ksi, extReq, signTime);
+				KSI_ExtendReq_setPublicationTime_throws(ksi, extReq, pubTime);
 				
 				
 				/* Send the actual request. */
 				measureLastCall();
 				KSI_sendExtendRequest_throws(ksi, extReq, &handle);
-				KSI_RequestHandle_getExtendResponse_throws(handle, &extResp);
+				KSI_RequestHandle_getExtendResponse_throws(ksi, handle, &extResp);
 
 				/* Verify the response is ok. */
-				KSI_ExtendResp_getStatus_throws(extResp, &respStatus);
+				KSI_ExtendResp_getStatus_throws(ksi, extResp, &respStatus);
 
 				if (respStatus == NULL || !KSI_Integer_equalsUInt(respStatus, 0)) {
 					KSI_Utf8String *errm = NULL;
@@ -79,19 +79,19 @@ bool GT_extendTask(Task *task) {
 				measureLastCall();
 
 				/*Remove HashChain from response. Add the hash chain to the signature.*/
-				KSI_ExtendResp_getCalendarHashChain_throws(extResp, &calHashChain);
-				KSI_ExtendResp_setCalendarHashChain_throws(extResp, NULL);
-				KSI_Signature_replaceCalendarChain_throws(ext, calHashChain);
+				KSI_ExtendResp_getCalendarHashChain_throws(ksi, extResp, &calHashChain);
+				KSI_ExtendResp_setCalendarHashChain_throws(ksi, extResp, NULL);
+				KSI_Signature_replaceCalendarChain_throws(ksi, ext, calHashChain);
 				
 				/* If the publication exists set it as the trust anchor. */
 				KSI_receivePublicationsFile_throws(ksi, &pubFile);
 				
 				/*TODO NB! pubRec must be cloned. It still belongs to the publications file*/
-				KSI_PublicationsFile_getPublicationDataByTime_throws(pubFile, pubTime, &pubRec);
+				KSI_PublicationsFile_getPublicationDataByTime_throws(ksi, pubFile, pubTime, &pubRec);
 				if(pubRec != NULL){
-					KSI_PublicationRecord_clone_throws(pubRec, &pubRecClone);
+					KSI_PublicationRecord_clone_throws(ksi, pubRec, &pubRecClone);
 				}
-				KSI_Signature_replacePublicationRecord_throws(ext, pubRecClone);
+				KSI_Signature_replacePublicationRecord_throws(ksi, ext, pubRecClone);
 				pubRecClone = NULL;
 			}
 			else{

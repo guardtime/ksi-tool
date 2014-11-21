@@ -65,12 +65,12 @@ bool GT_publicationsFileTask(Task *task){
 				KSI_Integer_new_throws(ksi, publicationTime, &start);
 				KSI_Integer_new_throws(ksi, publicationTime, &end);
 				KSI_ExtendReq_new_throws(ksi, &extReq);
-				KSI_ExtendReq_setAggregationTime_throws(extReq, start);
-				KSI_ExtendReq_setPublicationTime_throws(extReq, end);
+				KSI_ExtendReq_setAggregationTime_throws(ksi, extReq, start);
+				KSI_ExtendReq_setPublicationTime_throws(ksi, extReq, end);
 				KSI_sendExtendRequest_throws(ksi, extReq, &request);
 				
-				KSI_RequestHandle_getExtendResponse_throws(request, &extResp);
-				KSI_ExtendResp_getStatus_throws(extResp, &respStatus);
+				KSI_RequestHandle_getExtendResponse_throws(ksi, request, &extResp);
+				KSI_ExtendResp_getStatus_throws(ksi, extResp, &respStatus);
 
 				if (respStatus == NULL || !KSI_Integer_equalsUInt(respStatus, 0)) {
 					KSI_Utf8String *errm = NULL;
@@ -86,13 +86,13 @@ bool GT_publicationsFileTask(Task *task){
 
 				
 				printf("Getting publication string...");
-				KSI_ExtendResp_getCalendarHashChain_throws(extResp, &chain);
-				KSI_CalendarHashChain_aggregate_throws(chain, &extHsh);
-				KSI_CalendarHashChain_getPublicationTime_throws(chain, &pubTime);
+				KSI_ExtendResp_getCalendarHashChain_throws(ksi, extResp, &chain);
+				KSI_CalendarHashChain_aggregate_throws(ksi, chain, &extHsh);
+				KSI_CalendarHashChain_getPublicationTime_throws(ksi, chain, &pubTime);
 				KSI_PublicationData_new_throws(ksi, &pubData);
-				KSI_PublicationData_setImprint_throws(pubData, extHsh);
-				KSI_PublicationData_setTime_throws(pubData, pubTime);
-				KSI_PublicationData_toBase32_throws(pubData, &base32);
+				KSI_PublicationData_setImprint_throws(ksi, pubData, extHsh);
+				KSI_PublicationData_setTime_throws(ksi, pubData, pubTime);
+				KSI_PublicationData_toBase32_throws(ksi, pubData, &base32);
 				printf("ok\n\n");
 
 				

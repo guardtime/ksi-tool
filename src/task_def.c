@@ -296,7 +296,7 @@ void Task_printSuggestions(TaskDefinition **def, int count, paramSet *set){
 		getParametersNameFromCateghory(tmp->taskDefinitionFlags, first_flag, sizeof(first_flag));
 
 		if((100*missing)/all <= 75 && paramSet_isSetByName(set, first_flag))
-			fprintf(stderr, "Maybe you want to : %s %s %s\n", tmp->name, tmp->taskDefinitionFlags, tmp->mandatoryFlags);
+			fprintf(stderr, "Maybe you want to: %s %s %s\n", tmp->name, tmp->taskDefinitionFlags, tmp->mandatoryFlags);
 		
 	}
 }

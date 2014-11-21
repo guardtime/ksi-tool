@@ -37,7 +37,7 @@ void _appendMessage(const char *msg, const char *fname, int lineN){
 void printErrorMessage(void){
 	int i=0;
 	for(i=_EXP.exep.N-1; i>=0; i--){
-		fprintf(stderr, "%s%s", _EXP.exep.message[i], (_EXP.exep.message[i][strlen(_EXP.exep.message[i])-1] == '\n') ? ("") : ("\n"));
+		fprintf(stderr, "%i) %s%s",i+1,  _EXP.exep.message[i], (_EXP.exep.message[i][strlen(_EXP.exep.message[i])-1] == '\n') ? ("") : ("\n"));
 	}
 	return;
 	}
@@ -45,7 +45,7 @@ void printErrorMessage(void){
 void printErrorLocations(void){
 	int i=0;
 	for(i=_EXP.exep.N-1; i>=0; i--){
-		fprintf(stderr, "%i)[%s] %s (%i) %s%s",i, Exception_toString(_EXP.exep.exception), _EXP.exep.fileName[i], _EXP.exep.lineNumber[i],_EXP.exep.message[i],(_EXP.exep.message[i][strlen(_EXP.exep.message[i])-1] == '\n') ? ("") : ("\n") );
+		fprintf(stderr, "%i)[%s] %s (%i) %s%s",i+1, Exception_toString(_EXP.exep.exception), _EXP.exep.fileName[i], _EXP.exep.lineNumber[i],_EXP.exep.message[i],(_EXP.exep.message[i][strlen(_EXP.exep.message[i])-1] == '\n') ? ("") : ("\n") );
 	}
 	return;
 }
