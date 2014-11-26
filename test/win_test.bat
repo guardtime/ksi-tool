@@ -5,8 +5,8 @@ REM test configuration
 SET WAIT=5
 
 REM Services to use
- 
-SET SIG_SERV_IP=http://192.168.100.29:1234/
+REM SET SIG_SERV_IP=http://192.168.100.29:1234/ 
+SET SIG_SERV_IP=http://192.168.100.36:3333/
 rem SET VER_SERV_IP=http://192.168.100.29:1111/gt-extendingservice
 REM SET PUB_SERV_IP=http://172.20.20.7/publications.tlv
 set PUB_SERV_IP=http://verify.guardtime.com/ksi-publications.bin
@@ -16,7 +16,7 @@ SET VER_SERV_IP=http://192.168.100.36:8081/
 
 
 
-SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -P %PUB_SERV_IP% -C 5 -c 5 -user ano -pass ass
+SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -P %PUB_SERV_IP% -C 5 -c 5 -user anon -pass anon
 
 REM input files
 SET TEST_FILE=../test/testFile
@@ -60,7 +60,7 @@ echo %errorlevel%
 
 echo "****************** Get Publication string ******************" 
 ksitool.exe -p %GLOBAL% -T 1410848909
-
+echo %errorlevel%
 
 echo ****************** Sign data ******************
 ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -f %TEST_FILE% -o %TEST_FILE_OUT%.ksig -b %PUBFILE% 

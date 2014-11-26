@@ -62,10 +62,11 @@ void resetExceptionHandler(void){
 	_EXP.exep.N =0;
 }
 
-void THROW(exceptions_t exception){
+void THROW(exceptions_t exception, int ret){
 	if(_EXP.jump_pos > 0){ 
 		_EXP.jump_pos--; 
-		_EXP.exep.exception = exception; 
+		_EXP.exep.exception = exception;
+		_EXP.exep.ret = ret;
 		//printf("Exception: %i Thrown at level %i.\n", _EXP.exep.exception, _EXP.jump_pos); 
 		longjmp(_EXP.array_jmp[_EXP.jump_pos],exception); 
 	}
@@ -75,5 +76,5 @@ void THROW(exceptions_t exception){
 }
 
 void _THROW_FORWARD(void){
-	THROW(_EXP.exep.exception);
+	THROW(_EXP.exep.exception, _EXP.exep.ret);
 }

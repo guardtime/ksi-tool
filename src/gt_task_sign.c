@@ -6,12 +6,12 @@ static void getHashFromCommandLine_throws(const char *imprint,KSI_CTX *ksi, KSI_
 static int getHashAlgorithm_throws(const char *hashAlg);
 static void printSignaturesRootHash_and_Time(const KSI_Signature *sig);
 
-bool GT_signTask(Task *task) {
+int GT_signTask(Task *task) {
 	KSI_CTX *ksi = NULL;
 	KSI_DataHasher *hsr = NULL;
 	KSI_DataHash *hash = NULL;
 	KSI_Signature *sign = NULL;
-	bool state = true;
+	int retval = EXIT_SUCCESS;
 
 	bool H, t, n, d;
 	char *hashAlgName_H = NULL;
@@ -49,9 +49,6 @@ bool GT_signTask(Task *task) {
 				getHashFromCommandLine_throws(imprint,ksi, &hash);
 				printf("ok.\n");
 			}
-			else{
-				THROW(INVALID_ARGUMENT_EXCEPTION);
-			}
 
 			/* Sign the data hash. */
 			printf("Creating signature from hash...");
@@ -65,8 +62,8 @@ bool GT_signTask(Task *task) {
 		CATCH_ALL{
 			printf("failed.\n");
 			printErrorMessage();
+			retval = _EXP.exep.ret;
 			exceptionSolved();
-			state = false;
 		}
 	end_try
 
@@ -79,7 +76,7 @@ bool GT_signTask(Task *task) {
 	KSI_DataHasher_free(hsr);
 	KSI_CTX_free(ksi);
 	
-	return state;
+	return retval;
 }
 
 
@@ -119,15 +116,15 @@ static void getBinaryFromHexString(KSI_CTX *ksi, const char *hexin, unsigned cha
 	int i,j;
 
 	if(hexin == NULL || binout == NULL || lenout == NULL)
-		THROW(NULLPTR_EXCEPTION);
+		THROW(INVALID_ARGUMENT_EXCEPTION,EXIT_FAILURE);
 	
 	if(len%2 != 0){
-		THROW_MSG(INVALID_ARGUMENT_EXCEPTION, "Error: The hash length is not even number!\n");
+		THROW_MSG(INVALID_ARGUMENT_EXCEPTION,EXIT_INVALID_FORMAT, "Error: The hash length is not even number!\n");
 	}
 
 	tmp = KSI_calloc(arraySize, sizeof(unsigned char));
 	if(tmp == NULL){
-		THROW_MSG(INVALID_ARGUMENT_EXCEPTION, "Error: Unable to get memory for parsing hex to binary.\n");
+		THROW_MSG(OUT_OF_MEMORY_EXCEPTION,EXIT_OUT_OF_MEMORY, "Error: Unable to get memory for parsing hex to binary.\n");
 	}
 
 	for(i=0,j=0; i<arraySize; i++, j+=2){
@@ -135,7 +132,7 @@ static void getBinaryFromHexString(KSI_CTX *ksi, const char *hexin, unsigned cha
 		if(res == -1){
 			KSI_free(tmp);
 			tmp = NULL;
-			THROW_MSG(INVALID_ARGUMENT_EXCEPTION, "Error: The hex number is invalid: %c%c!\n", hexin[j], hexin[j+1]);
+			THROW_MSG(INVALID_ARGUMENT_EXCEPTION,EXIT_INVALID_FORMAT, "Error: The hex number is invalid: %c%c!\n", hexin[j], hexin[j+1]);
 		}
 		tmp[i] = res;
 		//printf("%c%c -> %i\n", hexin[j], hexin[j+1], tempBin[i]);
@@ -185,7 +182,7 @@ static bool getHashAndAlgStrings(const char *instrn, char **strnAlgName, char **
  * @param[in] ksi Pointer to ksi context object.
  * @param[out] hash Pointer to receiving pointer to KSI_DataHash object.
  * 
- * @throws KSI_EXCEPTION, NULLPTR_EXCEPTION.
+ * @throws KSI_EXCEPTION, INVALID_ARGUMENT_EXCEPTION.
  */
 static void getHashFromCommandLine_throws(const char *imprint,KSI_CTX *ksi, KSI_DataHash **hash){
 	unsigned char *data = NULL;
@@ -197,9 +194,9 @@ static void getHashFromCommandLine_throws(const char *imprint,KSI_CTX *ksi, KSI_
 	char *strHash = NULL;
 	try
 		CODE{
-			if(imprint == NULL) THROW_MSG(NULLPTR_EXCEPTION, "xxx");
+			if(imprint == NULL) THROW_MSG(INVALID_ARGUMENT_EXCEPTION,EXIT_INVALID_CL_PARAMETERS, "");
 			getHashAndAlgStrings(imprint, &strAlg, &strHash);
-			if(strAlg == NULL || strHash== NULL ) THROW_MSG(NULLPTR_EXCEPTION, "xx");
+			if(strAlg == NULL || strHash== NULL ) THROW_MSG(INVALID_ARGUMENT_EXCEPTION,EXIT_INVALID_CL_PARAMETERS, "");
 			
 			getBinaryFromHexString(ksi, strHash, &data, &len);
 			hasAlg = getHashAlgorithm_throws(strAlg);
@@ -209,7 +206,7 @@ static void getHashFromCommandLine_throws(const char *imprint,KSI_CTX *ksi, KSI_
 			free(strAlg);
 			free(strHash);
 			free(data);
-			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to get hash from command line input.\n");
+			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to get hash from command-line.\n");
 		}
 	end_try
 
@@ -229,6 +226,6 @@ static void getHashFromCommandLine_throws(const char *imprint,KSI_CTX *ksi, KSI_
  */
 static int getHashAlgorithm_throws(const char *hashAlg){
 	int hasAlgID = KSI_getHashAlgorithmByName(hashAlg);
-	if(hasAlgID == -1) THROW_MSG(KSI_EXCEPTION, "Error: The hash algorithm \"%s\" is unknown\n", hashAlg);
+	if(hasAlgID == -1) THROW_MSG(KSI_EXCEPTION, EXIT_CRYPTO_ERROR, "Error: The hash algorithm \"%s\" is unknown\n", hashAlg);
 	return hasAlgID;
 }

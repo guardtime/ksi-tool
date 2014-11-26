@@ -1,11 +1,11 @@
 #include "gt_task_support.h"
 #include "try-catch.h"
 
-bool GT_extendTask(Task *task) {
+int GT_extendTask(Task *task) {
 	KSI_CTX *ksi = NULL;
 	KSI_Signature *sig = NULL;
 	KSI_Signature *ext = NULL;
-	bool state = true;
+	int retval = EXIT_SUCCESS;
 	
 	KSI_Integer *signTime = NULL;
 	KSI_Integer *pubTime = NULL;
@@ -71,9 +71,9 @@ bool GT_extendTask(Task *task) {
 					KSI_Utf8String *errm = NULL;
 					int res = KSI_ExtendResp_getErrorMsg(extResp, &errm);
 					if (res == KSI_OK && KSI_Utf8String_cstr(errm) != NULL) {
-						THROW_MSG(KSI_EXCEPTION, "Extender returned error %llu: '%s'.\n", (unsigned long long)KSI_Integer_getUInt64(respStatus), KSI_Utf8String_cstr(errm));
+						THROW_MSG(KSI_EXCEPTION,EXIT_EXTEND_ERROR, "Extender returned error %llu: '%s'.\n", (unsigned long long)KSI_Integer_getUInt64(respStatus), KSI_Utf8String_cstr(errm));
 					}else{
-						THROW_MSG(KSI_EXCEPTION, "Extender returned error %llu.\n", (unsigned long long)KSI_Integer_getUInt64(respStatus));
+						THROW_MSG(KSI_EXCEPTION,EXIT_EXTEND_ERROR, "Extender returned error %llu.\n", (unsigned long long)KSI_Integer_getUInt64(respStatus));
 					}
 				}
 				measureLastCall();
@@ -111,8 +111,8 @@ bool GT_extendTask(Task *task) {
 		CATCH_ALL{
 			printf("failed.\n");
 			printErrorMessage();
+			retval = _EXP.exep.ret;
 			exceptionSolved();
-			state = false;
 		}
 	end_try
 
@@ -131,7 +131,7 @@ bool GT_extendTask(Task *task) {
 
 	
 	KSI_CTX_free(ksi);
-	return state;
+	return retval;
 }
 
 

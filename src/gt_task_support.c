@@ -8,7 +8,7 @@
 
 #define ON_ERROR_THROW_MSG(_exception, ...) \
 	if (res != KSI_OK){  \
-		THROW_MSG(_exception,__VA_ARGS__); \
+		THROW_MSG(_exception,getReturnValue(res),__VA_ARGS__); \
 	}
 
 /**
@@ -171,7 +171,7 @@ void getFilesHash_throws(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **
 			/* Open Input file */
 			in = fopen(fname, "rb");
 			if (in == NULL) 
-				THROW_MSG(IO_EXCEPTION, "Error: Unable to open input file '%s'\n", fname);
+				THROW_MSG(IO_EXCEPTION,EXIT_IO_ERROR, "Error: Unable to open input file '%s'\n", fname);
 
 			/* Read the input file and calculate the hash of its contents. */
 			while (!feof(in)) {
@@ -208,20 +208,20 @@ void saveSignatureFile_throws(KSI_Signature *sign, const char *fname){
 		CODE{
 			/* Serialize the extended signature. */
 			res = KSI_Signature_serialize(sign, &raw, &raw_len);
-			ON_ERROR_THROW_MSG(KSI_EXCEPTION,"Error: Unable to serialize signature.\n");
+			ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to serialize signature.\n");
 
 			/* Open output file. */
 			out = fopen(fname, "wb");
 			if (out == NULL) {
 				KSI_free(raw);
-				THROW_MSG(IO_EXCEPTION, "Error: Unable to open output file '%s'\n",fname);
+				THROW_MSG(IO_EXCEPTION,res, "Error: Unable to open output file '%s'\n",fname);
 			}
 
 			count = fwrite(raw, 1, raw_len, out);
 			if (count != raw_len) {
 				fclose(out);
 				KSI_free(raw);
-				THROW_MSG(KSI_EXCEPTION, "Error: Failed to write output file.\n");
+				THROW_MSG(KSI_EXCEPTION,res, "Error: Failed to write output file.\n");
 			}
 
 		}
@@ -421,6 +421,69 @@ char* str_measuredTime(void){
 }
 
 
+int getReturnValue(int error_code){
+	switch (error_code) {
+		case KSI_OK:
+			return EXIT_SUCCESS;
+		case KSI_INVALID_ARGUMENT:
+			return EXIT_FAILURE;
+		case KSI_INVALID_FORMAT:
+			return EXIT_INVALID_FORMAT;
+		case KSI_UNTRUSTED_HASH_ALGORITHM:
+			return EXIT_CRYPTO_ERROR;
+		case KSI_UNAVAILABLE_HASH_ALGORITHM:
+			return EXIT_CRYPTO_ERROR;
+		case KSI_BUFFER_OVERFLOW:
+			return EXIT_FAILURE;
+		case KSI_TLV_PAYLOAD_TYPE_MISMATCH:
+			return EXIT_FAILURE;
+		case KSI_ASYNC_NOT_FINISHED:
+			return EXIT_FAILURE;
+		case KSI_INVALID_SIGNATURE:
+			return EXIT_INVALID_FORMAT;
+		case KSI_INVALID_PKI_SIGNATURE:
+			return EXIT_CRYPTO_ERROR;
+		case KSI_PKI_CERTIFICATE_NOT_TRUSTED:
+			return EXIT_CRYPTO_ERROR;
+		case KSI_OUT_OF_MEMORY:
+			return EXIT_OUT_OF_MEMORY;
+		case KSI_IO_ERROR:
+			return EXIT_IO_ERROR;
+		case KSI_NETWORK_ERROR:
+			return EXIT_NETWORK_ERROR;
+		case KSI_NETWORK_CONNECTION_TIMEOUT:
+			return EXIT_NETWORK_ERROR;
+		case KSI_NETWORK_SEND_TIMEOUT:
+			return EXIT_NETWORK_ERROR;
+		case KSI_NETWORK_RECIEVE_TIMEOUT:
+			return EXIT_NETWORK_ERROR;
+		case KSI_HTTP_ERROR:
+			return EXIT_NETWORK_ERROR;
+		case KSI_AGGREGATOR_ERROR:
+			return EXIT_AGGRE_ERROR;
+		case KSI_EXTENDER_ERROR:
+			return EXIT_EXTEND_ERROR;
+		case KSI_EXTEND_WRONG_CAL_CHAIN:
+			return EXIT_EXTEND_ERROR;
+		case KSI_EXTEND_NO_SUITABLE_PUBLICATION:
+			return EXIT_EXTEND_ERROR;
+		case KSI_VERIFICATION_FAILURE:
+			return EXIT_VERIFY_ERROR;
+		case KSI_INVALID_PUBLICATION:
+			return EXIT_INVALID_FORMAT;
+		case KSI_PUBLICATIONS_FILE_NOT_SIGNED_WITH_PKI:
+			return EXIT_CRYPTO_ERROR;
+		case KSI_CRYPTO_FAILURE:
+			return EXIT_CRYPTO_ERROR;
+		case KSI_HMAC_MISMATCH:
+			return EXIT_HMAC_ERROR;
+		case KSI_UNKNOWN_ERROR:
+			return EXIT_FAILURE;
+		default:
+			return EXIT_FAILURE;
+	}
+}
+
 #define THROWABLE3(_ctx,func, ...) \
 	int res = KSI_UNKNOWN_ERROR; \
 	char buf[1024]; \
@@ -436,7 +499,7 @@ char* str_measuredTime(void){
 		else \
 			snprintf(buf2, sizeof(buf2), "Error: %s %s", buf, errstr); \
 		appendMessage(buf2); \
-		THROW_MSG(KSI_EXCEPTION, __VA_ARGS__); \
+		THROW_MSG(KSI_EXCEPTION,getReturnValue(res), __VA_ARGS__); \
 	} \
 	return res;	 \
 	

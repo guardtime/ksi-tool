@@ -3,7 +3,7 @@
 
 void getPublicationString_throws(KSI_CTX *ctx, KSI_Integer *time);
 
-bool GT_publicationsFileTask(Task *task){
+int GT_publicationsFileTask(Task *task){
 	KSI_CTX *ksi = NULL;
 	KSI_PublicationsFile *publicationsFile = NULL;
 	FILE *out = NULL;
@@ -26,7 +26,7 @@ bool GT_publicationsFileTask(Task *task){
 	time_t pubTm;
 	struct tm tm;					
 	
-	bool state = true;
+	int retval = EXIT_SUCCESS;
 	
 	bool d,t;
 	char *outPubFileName = NULL;
@@ -54,13 +54,13 @@ bool GT_publicationsFileTask(Task *task){
 
 				KSI_PublicationsFile_serialize(ksi, publicationsFile, &rawPubfile, &rawLen);
 				out = fopen(outPubFileName, "wb");
-				if(out == NULL) THROW_MSG(IO_EXCEPTION, "Unable to ope publications file '%s' for writing.\n", outPubFileName);
+				if(out == NULL) THROW_MSG(IO_EXCEPTION,EXIT_IO_ERROR, "Error: Unable to ope publications file '%s' for writing.\n", outPubFileName);
 
 				bytesWritten = fwrite(rawPubfile, 1, rawLen, out);
-				if(bytesWritten != rawLen) THROW_MSG(IO_EXCEPTION, "Error: Unable to write publications file '%s'.\n", outPubFileName);
+				if(bytesWritten != rawLen) THROW_MSG(IO_EXCEPTION,EXIT_IO_ERROR, "Error: Unable to write publications file '%s'.\n", outPubFileName);
 				printf("Publications file '%s' saved.\n", outPubFileName);
 			} else if(task->id == createPublicationString){
-				printf("Sending aggregation request...");
+				printf("Sending extend request...");
 				measureLastCall();
 				KSI_Integer_new_throws(ksi, publicationTime, &start);
 				KSI_Integer_new_throws(ksi, publicationTime, &end);
@@ -76,9 +76,9 @@ bool GT_publicationsFileTask(Task *task){
 					KSI_Utf8String *errm = NULL;
 					int res = KSI_ExtendResp_getErrorMsg(extResp, &errm);
 					if (res == KSI_OK && KSI_Utf8String_cstr(errm) != NULL) {
-						THROW_MSG(KSI_EXCEPTION, "Extender returned error %llu: '%s'.\n", (unsigned long long)KSI_Integer_getUInt64(respStatus), KSI_Utf8String_cstr(errm));
+						THROW_MSG(KSI_EXCEPTION,EXIT_EXTEND_ERROR, "Extender returned error %llu: '%s'.\n", (unsigned long long)KSI_Integer_getUInt64(respStatus), KSI_Utf8String_cstr(errm));
 					}else{
-						THROW_MSG(KSI_EXCEPTION, "Extender returned error %llu.\n", (unsigned long long)KSI_Integer_getUInt64(respStatus));
+						THROW_MSG(KSI_EXCEPTION,EXIT_EXTEND_ERROR, "Extender returned error %llu.\n", (unsigned long long)KSI_Integer_getUInt64(respStatus));
 					}
 				}
 				measureLastCall();
@@ -103,22 +103,19 @@ bool GT_publicationsFileTask(Task *task){
 
 				printf("[%s]\n", strTime);
 				printf("pub=%s\n", base32);
-			}else{
-				THROW_MSG(KSI_EXCEPTION, "Unkown error");
 			}
-			
 		}
 		CATCH(KSI_EXCEPTION){
 				printf("failed.\n");
 				printErrorMessage();
+				retval = _EXP.exep.ret;
 				exceptionSolved();
-				state = false;
 		}
 		CATCH(IO_EXCEPTION){
 				fprintf(stderr , _EXP.tmp);
 				printErrorMessage();
+				retval = _EXP.exep.ret;
 				exceptionSolved();
-				state = false;
 		}
 	end_try
 
@@ -137,7 +134,7 @@ bool GT_publicationsFileTask(Task *task){
 	KSI_free(base32);
 	KSI_CTX_free(ksi);
 	
-	return state;
+	return retval;
 }
 
 

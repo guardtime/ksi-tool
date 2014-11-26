@@ -98,6 +98,7 @@ unsigned int measuredTime(void);
  */
 char* str_measuredTime(void);
 
+int getReturnValue(int error_code);
 
 /*************************************************
  * KSI api functions capable throwing exceptions  *

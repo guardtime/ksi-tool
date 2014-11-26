@@ -10,12 +10,12 @@
 static void printSignaturesRootHash_and_Time(const KSI_Signature *sig);
 static void setSystemTime_throws(const KSI_Signature *sig);
 
-bool GT_other(Task *task){
+int GT_other(Task *task){
 	KSI_CTX *ksi = NULL;
 	KSI_DataHasher *hsr = NULL;
 	KSI_DataHash *hsh = NULL;
 	KSI_Signature *sig = NULL;
-	bool state = true;
+	int retval = EXIT_SUCCESS;
 	
 	bool n,r, d,t;
 	
@@ -47,10 +47,9 @@ bool GT_other(Task *task){
 			
 		}
 		CATCH_ALL{
-			printf("failed.\n");
 			printErrorMessage();
+			retval = _EXP.exep.ret;
 			exceptionSolved();
-			state = false;
 		}
 	end_try
 	
@@ -62,7 +61,7 @@ bool GT_other(Task *task){
 	KSI_Signature_free(sig);
 	KSI_CTX_free(ksi);
 	
-	return state;
+	return retval;
 }
 
 static void printSignaturesRootHash_and_Time(const KSI_Signature *sig){
@@ -115,13 +114,13 @@ static void setSystemTime_throws(const KSI_Signature *sig){
 #endif	
 	
 	res = KSI_Signature_getCalendarAuthRec(sig, &calAuthrec);
-	if(res != KSI_OK || calAuthrec == NULL ) THROW_MSG(KSI_EXCEPTION, "Unable to get calendar authentication record");
+	if(res != KSI_OK || calAuthrec == NULL ) THROW_MSG(KSI_EXCEPTION,getReturnValue(res), "Unable to get calendar authentication record");
 
 	res = KSI_CalendarAuthRec_getPublishedData(calAuthrec, &pubData);
-	if(res != KSI_OK || pubData == NULL ) THROW_MSG(KSI_EXCEPTION, "Unable to get published data");
+	if(res != KSI_OK || pubData == NULL ) THROW_MSG(KSI_EXCEPTION,getReturnValue(res), "Unable to get published data");
 	
 	res = KSI_PublicationData_getTime(pubData, &time);
-	if(res != KSI_OK || time == NULL ) THROW_MSG(KSI_EXCEPTION, "Unable to get time");
+	if(res != KSI_OK || time == NULL ) THROW_MSG(KSI_EXCEPTION,getReturnValue(res), "Unable to get time");
 	
 	pubTm = (time_t)KSI_Integer_getUInt64(time);
 	gmtime_r(&pubTm, &tm);
@@ -138,10 +137,10 @@ static void setSystemTime_throws(const KSI_Signature *sig){
 	if(!SetSystemTime(&newTime)){
 		DWORD err = GetLastError();
 		if(err == ERROR_PRIVILEGE_NOT_HELD){
-			THROW_MSG(NO_PRIVILEGES_EXCEPTION, "User has no privileges to change date");
+			THROW_MSG(NO_PRIVILEGES_EXCEPTION,EXIT_NO_PRIVILEGES, "User has no privileges to change date");
 		}
 		else{
-			THROW_MSG(NO_PRIVILEGES_EXCEPTION, "Unable to set time");
+			THROW_MSG(NO_PRIVILEGES_EXCEPTION,EXIT_NO_PRIVILEGES, "Unable to set time");
 		}
 	}
 #else

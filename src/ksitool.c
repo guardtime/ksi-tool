@@ -10,8 +10,8 @@ static void GT_pritHelp(void);
 int main(int argc, char** argv) {
 	TaskDefinition *taskDefArray[11]={NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 	paramSet *set = NULL;
+	int retval = EXIT_SUCCESS;
 	Task *task = NULL;
-	bool state = false;
 	int i;
 	
 #ifdef _WIN32
@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
 	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{aggre}{htime}{setsystime}", isFlagFormatOK, contentIsOK);
 	
 	/*Define possible tasks*/
-	//						ID							DESC					DEF						MAN			IGNORE				OPTIONAL		FORBIDDEN			NEW OBJ
+	/*						ID							DESC					DEF						MAN			IGNORE				OPTIONAL		FORBIDDEN			NEW OBJ*/
 	TaskDefinition_new(signDataFile,			"Sign data file",				"-s -f",				"-o",		"-b-r-i-T",			"-H-n-d-t",		"-x-p-v-F",			&taskDefArray[0]);
 	TaskDefinition_new(signHash,				"Sign hash",					"-s -F",				"-o",		"-b-r-i-H-T",		"-n-d-t",		"-x-p-v-f",			&taskDefArray[1]);
 	TaskDefinition_new(extendTimestamp,			"Extend signature",				"-x",					"-i -o",	"-H-F-f-b-",		"-T-n-r-t",		"-s-p-v",			&taskDefArray[2]);
@@ -65,7 +65,6 @@ int main(int argc, char** argv) {
 	
 	if(paramSet_isSetByName(set, "h")){
 		GT_pritHelp();
-		state = true;
 		goto cleanup;
 	}
 	
@@ -100,32 +99,33 @@ int main(int argc, char** argv) {
 	task = Task_getConsistentTask(taskDefArray, 10, set);
 	paramSet_printUnknownParameterWarnings(set);
 	if(task == NULL){
-		
+		retval = EXIT_INVALID_CL_PARAMETERS;
 		goto cleanup;
 	}
 	if(paramSet_isFormatOK(set) == false){
 		paramSet_PrintErrorMessages(set);
+		retval = EXIT_INVALID_CL_PARAMETERS;
 		goto cleanup;
 	}
 	
 	/*DO*/
 	if(task->id == downloadPublicationsFile || task->id == createPublicationString){
-		state=GT_publicationsFileTask(task);
+		retval=GT_publicationsFileTask(task);
 	}
 	else if (task->id == verifyPublicationsFile){
-		state=GT_verifyTask(task);
+		retval=GT_verifyTask(task);
 	}
 	else if (task->id == signDataFile || task->id == signHash){
-		state=GT_signTask(task);
+		retval=GT_signTask(task);
 	}
 	else if(task->id == extendTimestamp){
-		state=GT_extendTask(task);
+		retval=GT_extendTask(task);
 	}
 	else if(task->id == getRootH_T || task->id == setSysTime){
-		state=GT_other(task);
+		retval=GT_other(task);
 	}
 	else if(task->id == verifyTimestamp){
-		state=GT_verifyTask(task);
+		retval=GT_verifyTask(task);
 	}
 
 cleanup:
@@ -135,7 +135,7 @@ cleanup:
 		TaskDefinition_free(taskDefArray[i]);
 	Task_free(task);
 
-	return state ? (EXIT_SUCCESS) : (EXIT_FAILURE);
+	return retval;
 }
 
 

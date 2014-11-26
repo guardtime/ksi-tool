@@ -1,12 +1,12 @@
 #include "gt_task_support.h"
 #include "try-catch.h"
-bool GT_verifyTask(Task *task){
+int GT_verifyTask(Task *task){
 	KSI_CTX *ksi = NULL;
 	KSI_Signature *sig = NULL;
 	KSI_DataHash *hsh = NULL;
 	KSI_DataHasher *hsr = NULL;
 	KSI_PublicationsFile *publicationsFile = NULL;
-	bool state = true;
+	int retval = EXIT_SUCCESS;
 	
 	bool n,r, d,t, b, f;
 	char *inPubFileName = NULL;
@@ -50,9 +50,7 @@ bool GT_verifyTask(Task *task){
 					MEASURE_TIME(KSI_Signature_verify_throws(sig, ksi));
 					printf("ok. %s\n",t ? str_measuredTime() : "");
 				}
-				else{
-					THROW_MSG(KSI_EXCEPTION, "Error: Unexpected error Unknown task.\n ");
-				}
+
 				/* If datafile is present compare hash of a datafile and timestamp */
 				if (f) {
 					/* Create hasher. */
@@ -74,8 +72,8 @@ bool GT_verifyTask(Task *task){
 		CATCH_ALL{
 			printf("failed.\n");
 			printErrorMessage();
+			retval = _EXP.exep.ret;
 			exceptionSolved();
-			state = false;
 		}
 	end_try
 	
@@ -89,5 +87,5 @@ bool GT_verifyTask(Task *task){
 	KSI_DataHash_free(hsh);
 	KSI_CTX_free(ksi);
 	
-	return state;
+	return retval;
 }

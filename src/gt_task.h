@@ -19,30 +19,30 @@ extern "C" {
  * @param [in] task Pointer to task object.
  * @return True if successful, false otherwise.
  */
-bool GT_signTask(Task *task);
+int GT_signTask(Task *task);
 
 /**
  * Task that deals with verifying operations.
  * @param [in] task Pointer to task object.
  * @return True if successful, false otherwise.
  */
-bool GT_verifyTask(Task *task);
+int GT_verifyTask(Task *task);
 
 /**
  * Task that deals with extending operations.
  * @param [in] task Pointer to task object.
  * @return True if successful, false otherwise.
  */
-bool GT_extendTask(Task *task);
+int GT_extendTask(Task *task);
 
 /**
  * Task that deals with extending operations.
  * @param [in] task Pointer to task object.
  * @return True if successful, false otherwise.
  */
-bool GT_publicationsFileTask(Task *task);
+int GT_publicationsFileTask(Task *task);
 
-bool GT_other(Task *task);
+int GT_other(Task *task);
 
 #ifdef	__cplusplus
 }

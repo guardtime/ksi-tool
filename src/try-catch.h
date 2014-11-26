@@ -64,6 +64,7 @@ extern "C" {
 		int lineNumber[JUMP_DEPTH];
 		//Throwing count.
 		int N;
+		int ret;
 		//Exception ID.
 		exceptions_t exception;
 	} exception;
@@ -136,7 +137,7 @@ extern "C" {
 	 * 
 	 * @param[in] exception Exception id.
 	 */
-	void THROW(exceptions_t exception);
+	void THROW(exceptions_t exception, int ret);
 
 	/**
 	 * If there is already thrown exceptions, throws it to another catcher.
@@ -151,10 +152,10 @@ extern "C" {
 	 * @param[in] _exception Exception id.
 	 * @param[in] ... Message format strings and parameters.
 	 */
-	#define THROW_MSG(_exception, ...){ \
+	#define THROW_MSG(_exception,_ret, ...){ \
 		snprintf(_EXP.tmp, MESSAGE_SIZE, __VA_ARGS__);\
 		_appendMessage(_EXP.tmp, __FILE__, __LINE__);\
-		THROW(_exception);}
+		THROW(_exception,_ret);}
 
 	/**
 	 * Throws already thrown exception forward and appends file name and line.
