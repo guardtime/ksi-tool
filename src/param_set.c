@@ -494,10 +494,21 @@ void paramSet_readFromCMD(int argc, char **argv, paramSet *set){
 			
 //			printf("%i) -%s '%s'\n", i,flag, arg);
 			if(paramSet_appendParameterByName(arg,flag,set)==false){
-				paramSet_appendParameterByName(flag,UNKNOWN_PARAMETER_NAME,set);
-				if(arg)
-					paramSet_appendParameterByName(arg,UNKNOWN_PARAMETER_NAME,set);
-				
+				char str_flg[2] = {255,0};
+					if(arg == NULL){
+						int itr = 0;
+						while(str_flg[0] = flag[itr++]){
+							if(paramSet_appendParameterByName(NULL,str_flg,set)==false)
+								break;
+						}
+
+					}
+
+				if(str_flg[0] != 0){
+					paramSet_appendParameterByName(flag,UNKNOWN_PARAMETER_NAME,set);
+					if(arg)
+						paramSet_appendParameterByName(arg,UNKNOWN_PARAMETER_NAME,set);
+				}
 			}
 		}
 		else{
