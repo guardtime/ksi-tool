@@ -25,6 +25,13 @@ extern "C" {
 void initTask_throws(Task *task ,KSI_CTX **ksi);
 
 /**
+ * Closes KSI and logging file.
+ * @param[in] task Pointer to task object.
+ * @param[in] ksi Pointer to receiving pointer to KSI context object.
+ */
+void closeTask(KSI_CTX *ksi);
+
+/**
  * Calculates the hash of an input file.
  * @param[in] hsr Pointer to hasher object. 
  * @param[in] fname Pointer to file path.

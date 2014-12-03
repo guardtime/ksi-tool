@@ -104,6 +104,11 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 
 }
 
+/**
+ * File object for logging
+ */
+static FILE *logFile = NULL;
+
 void initTask_throws(Task *task ,KSI_CTX **ksi){
 	int res = KSI_UNKNOWN_ERROR;
 	KSI_CTX *tmpKsi = NULL;
@@ -111,12 +116,14 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 	KSI_PKITruststore *refTrustStore = NULL;
 	int i=0;
 	
-	bool b,V, W, E;
-	char *inPubFileName;
+	bool log, b,V, W, E;
+	char *outLogfile = NULL;
+	char *inPubFileName = NULL;
 	char *lookupFile = NULL;
 	char *lookupDir = NULL;
 	char *magicEmail = NULL;
 
+	log = paramSet_getStrValueByNameAt(task->set, "log",0, &outLogfile);
 	b = paramSet_getStrValueByNameAt(task->set, "b",0, &inPubFileName);
 	V = paramSet_isSetByName(task->set,"V");
 	W = paramSet_getStrValueByNameAt(task->set, "W",0, &lookupDir);
@@ -126,6 +133,15 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 		CODE{
 			res = KSI_CTX_new(&tmpKsi);
 			ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to initialize KSI context.\n");
+			
+			if(log){
+				logFile = fopen(outLogfile, "w");
+				if (logFile == NULL)
+					fprintf(stderr, "Error: Unable to open log file '%s'.\n", outLogfile);
+				KSI_CTX_setLoggerCallback(tmpKsi, KSI_LOG_StreamLogger, logFile);
+				KSI_CTX_setLogLevel(tmpKsi, KSI_LOG_DEBUG);
+			}
+			
 			configureNetworkProvider_throws(tmpKsi, task);
 			
 			if(b && (task->id != downloadPublicationsFile && task->id != verifyPublicationsFile)){
@@ -159,6 +175,11 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 	end_try
 
 	return;
+}
+
+void closeTask(KSI_CTX *ksi){
+	if(logFile) fclose(logFile);
+	KSI_CTX_free(ksi);
 }
 
 void getFilesHash_throws(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash){

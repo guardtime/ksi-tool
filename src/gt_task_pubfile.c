@@ -132,7 +132,7 @@ int GT_publicationsFileTask(Task *task){
 	KSI_RequestHandle_free(request);
 	KSI_PublicationData_free(pubData);
 	KSI_free(base32);
-	KSI_CTX_free(ksi);
+	closeTask(ksi);
 	
 	return retval;
 }

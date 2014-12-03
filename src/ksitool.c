@@ -31,11 +31,11 @@ int main(int argc, char** argv) {
 	/*Create parameter set*/
 	paramSet_new("{s}*{x}*{p}*{v}*{t}*{r}*{d}*{n}*{h}*{o}{i}{f}{b}{a}{c}{C}{V}*"
 				 "{W}{S}{X}{P}{F}{H}{T}{E}{inc}*{aggre}{htime}{setsystime}"
-				 "{user}{pass}", &set);
+				 "{user}{pass}{log}", &set);
 	if(set == NULL) goto cleanup;
 	
 	/*Configure parameter set*/
-	paramSet_addControl(set, "{o}", isPathFormOk, isOutputFileContOK);
+	paramSet_addControl(set, "{o}{log}", isPathFormOk, isOutputFileContOK);
 	paramSet_addControl(set, "{i}{b}{f}{V}{W}{inc}", isPathFormOk, isInputFileContOK);
 	paramSet_addControl(set, "{F}", isImprintFormatOK, contentIsOK);
 	paramSet_addControl(set, "{H}", isHashAlgFormatOK, isHashAlgContOK);
@@ -191,6 +191,7 @@ static void GT_pritHelp(void){
 			" -n		print signer Name (identity)\n"
 			" -r		print publication References (use with -vx)\n"
 			" -d		dump detailed information\n"
+			"-log<file>	dump KSI log int file\n"
 			
 			"\nConfiguration:\n"
 			" -S <url>	specify Signing service URL\n"

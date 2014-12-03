@@ -85,7 +85,7 @@ int GT_verifyTask(Task *task){
 	KSI_Signature_free(sig);
 	KSI_DataHasher_free(hsr);
 	KSI_DataHash_free(hsh);
-	KSI_CTX_free(ksi);
+	closeTask(ksi);
 	
 	return retval;
 }

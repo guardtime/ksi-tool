@@ -59,7 +59,7 @@ int GT_other(Task *task){
 	KSI_DataHasher_free(hsr);
 	KSI_DataHash_free(hsh);
 	KSI_Signature_free(sig);
-	KSI_CTX_free(ksi);
+	closeTask(ksi);
 	
 	return retval;
 }

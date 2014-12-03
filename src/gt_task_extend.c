@@ -130,7 +130,7 @@ int GT_extendTask(Task *task) {
 	KSI_PublicationRecord_free(pubRecClone);
 
 	
-	KSI_CTX_free(ksi);
+	closeTask(ksi);
 	return retval;
 }
 

@@ -23,6 +23,9 @@ SET TEST_FILE=../test/testFile
 SET TEST_OLD_SIG=../test/ok-sig-2014-04-30.1.ksig
 SET SH256_DATA_FILE=../test/data_sh256.txt
 SET INVALID_PUBFILE=../test/nok_pubfile
+SET INVALID_SIG_CERTID=../test/invalid_cert_id.ksig
+SET INVALID_SIG_CORPSIG=../test/invalid_signature_value.ksig
+SET INVALID_SIG_CORPSIGLEN=../test/invalid_signature_len.ksig
 
 REM input hash
 SET SH1_HASH=bf9661defa3daecacfde5bde0214c4a439351d4d
@@ -133,11 +136,25 @@ echo return %errorlevel%
 
 echo __________________________________________________________________________
 echo 7) Error Invalid publications file
-ksitool.exe -v -t %GLOBAL% %VERIFY_FLAGS% -i %TEST_FILE_OUT%.ksig -b %INVALID_PUBFILE%
+ksitool.exe -v %GLOBAL% %VERIFY_FLAGS% -i %TEST_FILE_OUT%.ksig -b %INVALID_PUBFILE%
 echo return %errorlevel%
 echo __________________________________________________________________________
 
+echo __________________________________________________________________________
+echo 8) Error Invalid signature: cert ID is wrong
+ksitool.exe -v -x %GLOBAL% %VERIFY_FLAGS% -i %INVALID_SIG_CERTID%
+echo return %errorlevel%
+echo __________________________________________________________________________
 
+echo 9) Error Invalid signature: signature data is corrupted
+ksitool.exe -v -x %GLOBAL% %VERIFY_FLAGS% -i %INVALID_SIG_CORPSIG%
+echo return %errorlevel%
+echo __________________________________________________________________________
+
+echo 10) Error Invalid signature: signature data end is deleted
+ksitool.exe -v -x %GLOBAL% %VERIFY_FLAGS% -i %INVALID_SIG_CORPSIGLEN%
+echo return %errorlevel%
+echo __________________________________________________________________________
 
 echo ************************************************************************** 
 echo ********************************* EXTEND ********************************* 
@@ -175,9 +192,13 @@ ksitool.exe -p -t -o %PUBFILE%err %GLOBAL% -E magic@email.null
 echo return %errorlevel%
 
 echo __________________________________________________________________________
-echo 4) Error invalid cert file
+echo 4) Error invalid empty cert file (Dose not fail with cryptoAPI)
 ksitool.exe -p -t -o %PUBFILE%err %GLOBAL% -V %TEST_FILE% 
 echo return %errorlevel%
 echo __________________________________________________________________________
 
+echo 5) Error invalid empty cert file
+ksitool.exe -p -t -o %PUBFILE%err %GLOBAL% -V %TEST_OLD_SIG% 
+echo return %errorlevel%
+echo __________________________________________________________________________
 pause

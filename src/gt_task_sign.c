@@ -74,7 +74,7 @@ int GT_signTask(Task *task) {
 	KSI_Signature_free(sign);
 	KSI_DataHash_free(hash);
 	KSI_DataHasher_free(hsr);
-	KSI_CTX_free(ksi);
+	closeTask(ksi);
 	
 	return retval;
 }
