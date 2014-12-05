@@ -21,7 +21,7 @@
  */
 static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	int res = KSI_OK;
-	KSI_NetworkClient *net = NULL;
+	KSI_HttpClient *net = NULL;
 	bool S=false, P=false, X=false, C=false, c=false, bUser=false, bPass=false, s=false, x=false, p=false;
 	char *signingService_url = NULL;
 	char *publicationsFile_url = NULL;
@@ -63,13 +63,13 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 				}
 
 				if(bUser){
-					if(x|| p) KSI_NetworkClient_setExtenderUser_throws(ksi, net, user);
-					if(s) KSI_NetworkClient_setAggregatorUser_throws(ksi, net, user);
+					if(x|| p) KSI_NetworkClient_setExtenderUser_throws(ksi, (KSI_NetworkClient *)net, user);
+					if(s) KSI_NetworkClient_setAggregatorUser_throws(ksi, (KSI_NetworkClient *)net, user);
 				}
 				
 				if(bPass){
-					if(x|| p) KSI_NetworkClient_setExtenderPass_throws(ksi, net, pass);
-					if(s) KSI_NetworkClient_setAggregatorPass_throws(ksi, net, pass);
+					if(x|| p) KSI_NetworkClient_setExtenderPass_throws(ksi, (KSI_NetworkClient *)net, pass);
+					if(s) KSI_NetworkClient_setAggregatorPass_throws(ksi, (KSI_NetworkClient *)net, pass);
 				}
 				
 				/* Check extending/verification service url. */
@@ -91,7 +91,7 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 				}
 
 				/* Set the new network provider. */
-				res = KSI_setNetworkProvider(ksi, net);
+				res = KSI_setNetworkProvider(ksi, (KSI_NetworkClient *)net);
 				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set network provider.\n");
 			}
 
@@ -565,11 +565,11 @@ int KSI_Signature_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_Signat
 }
 
 int KSI_Signature_verify_throws(KSI_Signature *sig, KSI_CTX *ksi){
-	THROWABLE3(ksi, KSI_Signature_verify(sig, ksi), "Error: Unable verify signature.");
+	THROWABLE3(ksi, KSI_Signature_verify(sig, ksi), "Error: Unable to verify signature.");
 }
 
 int KSI_Signature_create_throws(KSI_CTX *ksi, KSI_DataHash *hsh, KSI_Signature **signature){
-	THROWABLE3(ksi, KSI_Signature_create(ksi, hsh, signature), "Error: Unable create signature.");
+	THROWABLE3(ksi, KSI_Signature_create(ksi, hsh, signature), "Error: Unable to create signature.");
 }
 
 int KSI_Signature_createDataHasher_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_DataHasher **hsr){
