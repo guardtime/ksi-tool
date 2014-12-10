@@ -13,6 +13,7 @@ int GT_publicationsFileTask(Task *task){
 
 	KSI_Integer *end = NULL;
 	KSI_Integer *start = NULL;
+	KSI_Integer *reqID = NULL;
 	KSI_ExtendReq *extReq = NULL;
 	KSI_RequestHandle *request = NULL;
 	KSI_ExtendResp *extResp = NULL;
@@ -64,9 +65,11 @@ int GT_publicationsFileTask(Task *task){
 				measureLastCall();
 				KSI_Integer_new_throws(ksi, publicationTime, &start);
 				KSI_Integer_new_throws(ksi, publicationTime, &end);
+				KSI_Integer_new_throws(ksi, (KSI_uint64_t)start, &reqID);
 				KSI_ExtendReq_new_throws(ksi, &extReq);
 				KSI_ExtendReq_setAggregationTime_throws(ksi, extReq, start);
 				KSI_ExtendReq_setPublicationTime_throws(ksi, extReq, end);
+				KSI_ExtendReq_setRequestId_throws(ksi, extReq, reqID);
 				KSI_sendExtendRequest_throws(ksi, extReq, &request);
 				
 				KSI_RequestHandle_getExtendResponse_throws(ksi, request, &extResp);

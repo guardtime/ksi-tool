@@ -5,15 +5,14 @@ REM test configuration
 SET WAIT=5
 
 REM Services to use
-SET SIG_SERV_IP=http://192.168.100.29:1234/ 
+SET SIG_SERV_IP=http://ksigw.test.guardtime.com:3333/gt-signingservice 
 REM SET SIG_SERV_IP=http://192.168.100.36:3333/
-rem SET VER_SERV_IP=http://192.168.100.29:1111/gt-extendingservice
 REM SET PUB_SERV_IP=http://172.20.20.7/publications.tlv
 set PUB_SERV_IP=http://verify.guardtime.com/ksi-publications.bin
 REM SET SIG_SERV_IP=http://172.20.20.4:3333/
 REM SET VER_SERV_IP=http://192.168.100.36:8081/gt-extendingservice
-SET VER_SERV_IP=http://192.168.100.36:8081/
-
+REM SET VER_SERV_IP=http://192.168.100.36:8081/
+SET VER_SERV_IP=http://ksigw.test.guardtime.com:8010/gt-extendingservice
 
 
 SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -P %PUB_SERV_IP% -C 5 -c 5 -user anon -pass anon -log KSI_LOGI.txt

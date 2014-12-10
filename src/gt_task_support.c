@@ -612,6 +612,10 @@ int KSI_ExtendReq_setPublicationTime_throws(KSI_CTX *ksi, KSI_ExtendReq *t, KSI_
 	THROWABLE3(ksi, KSI_ExtendReq_setPublicationTime(t, publicationTime), "Error: Unable to set request publication time.");
 }
 
+int KSI_ExtendReq_setRequestId_throws(KSI_CTX *ksi, KSI_ExtendReq *t, KSI_Integer *requestId){
+	THROWABLE3(ksi, KSI_ExtendReq_setRequestId(t, requestId), "Error: Unable to set request ID.");
+}
+
 int KSI_sendExtendRequest_throws(KSI_CTX *ksi, KSI_ExtendReq *request, KSI_RequestHandle **handle){
 	THROWABLE3(ksi, KSI_sendExtendRequest(ksi, request, handle), "Error: Unable to send extend request.");
 }
