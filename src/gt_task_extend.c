@@ -37,18 +37,18 @@ int GT_extendTask(Task *task) {
 			/*Initialization of KSI */
 			initTask_throws(task, &ksi);
 			/* Read the signature. */
-			printf("Reading signature...");
+			printf("Reading signature... ");
 			KSI_Signature_fromFile_throws(ksi, inSigFileName, &sig);
 			printf("ok.\n");
 
 			/* Make sure the signature is ok. */
-			printf("Verifying old signature...");
+			printf("Verifying old signature... ");
 			MEASURE_TIME(KSI_verifySignature(ksi, sig));
 			printf("ok. %s\n",t ? str_measuredTime() : "");
 
 			/* Extend the signature. */
 			if(T){
-				printf("Extending old signature to %i...", publicationTime);
+				printf("Extending old signature to %i... ", publicationTime);
 
 				KSI_Signature_clone_throws(ksi, sig, &ext);
 				KSI_Signature_getSigningTime_throws(ksi, ext, &signTime);
@@ -95,12 +95,12 @@ int GT_extendTask(Task *task) {
 				pubRecClone = NULL;
 			}
 			else{
-				printf("Extending old signature...");
+				printf("Extending old signature... ");
 				MEASURE_TIME(KSI_extendSignature_throws(ksi, sig, &ext));
 			}
 			printf("ok. %s\n",t ? str_measuredTime() : "");
 
-			printf("Verifying extended signature...");
+			printf("Verifying extended signature... ");
 			MEASURE_TIME(KSI_Signature_verify_throws(ext, ksi));
 			printf("ok. %s\n",t ? str_measuredTime() : "");
 			
@@ -109,7 +109,8 @@ int GT_extendTask(Task *task) {
 			printf("Extended signature saved.\n");
 		}
 		CATCH_ALL{
-			printf("failed.\n");
+			if(ksi)
+				printf("failed.\n");
 			printErrorMessage();
 			retval = _EXP.exep.ret;
 			exceptionSolved();

@@ -46,7 +46,7 @@ int GT_verifyTask(Task *task){
 		
 				/* Choosing between online and publications file signature verification */
 				if (task->id == verifyTimestamp) {
-					printf("Verifying signature %s ", b ? "using local publications file..." : "online...");
+					printf("Verifying signature %s ", b ? "using local publications file... " : "online... ");
 					MEASURE_TIME(KSI_Signature_verify_throws(sig, ksi));
 					printf("ok. %s\n",t ? str_measuredTime() : "");
 				}
@@ -54,7 +54,7 @@ int GT_verifyTask(Task *task){
 				/* If datafile is present compare hash of a datafile and timestamp */
 				if (f) {
 					/* Create hasher. */
-					printf("Verifying file's %s hash...", inDataFileName);
+					printf("Verifying file's %s hash... ", inDataFileName);
 					KSI_Signature_createDataHasher_throws(ksi, sig, &hsr);
 					getFilesHash_throws(hsr, inDataFileName, &hsh);
 					printf("ok.\n");
@@ -70,7 +70,8 @@ int GT_verifyTask(Task *task){
 					);
 		}
 		CATCH_ALL{
-			printf("failed.\n");
+			if(ksi)
+				printf("failed.\n");
 			printErrorMessage();
 			retval = _EXP.exep.ret;
 			exceptionSolved();

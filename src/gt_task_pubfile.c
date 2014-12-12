@@ -45,11 +45,11 @@ int GT_publicationsFileTask(Task *task){
 			initTask_throws(task ,&ksi);
 
 			if(task->id == downloadPublicationsFile){
-				printf("Downloading publications file...");
+				printf("Downloading publications file... ");
 				MEASURE_TIME(KSI_receivePublicationsFile_throws(ksi, &publicationsFile));
 				printf("ok. %s\n",t ? str_measuredTime() : "");
 
-				printf("Verifying publications file...");
+				printf("Verifying publications file... ");
 				MEASURE_TIME(KSI_verifyPublicationsFile_throws(ksi, publicationsFile));
 				printf("ok. %s\n",t ? str_measuredTime() : "");
 
@@ -61,7 +61,7 @@ int GT_publicationsFileTask(Task *task){
 				if(bytesWritten != rawLen) THROW_MSG(IO_EXCEPTION,EXIT_IO_ERROR, "Error: Unable to write publications file '%s'.\n", outPubFileName);
 				printf("Publications file '%s' saved.\n", outPubFileName);
 			} else if(task->id == createPublicationString){
-				printf("Sending extend request...");
+				printf("Sending extend request... ");
 				measureLastCall();
 				KSI_Integer_new_throws(ksi, publicationTime, &start);
 				KSI_Integer_new_throws(ksi, publicationTime, &end);
@@ -88,7 +88,7 @@ int GT_publicationsFileTask(Task *task){
 				printf("ok. %s\n",t ? str_measuredTime() : "");
 
 				
-				printf("Getting publication string...");
+				printf("Getting publication string... ");
 				KSI_ExtendResp_getCalendarHashChain_throws(ksi, extResp, &chain);
 				KSI_CalendarHashChain_aggregate_throws(ksi, chain, &extHsh);
 				KSI_CalendarHashChain_getPublicationTime_throws(ksi, chain, &pubTime);
@@ -109,7 +109,8 @@ int GT_publicationsFileTask(Task *task){
 			}
 		}
 		CATCH(KSI_EXCEPTION){
-				printf("failed.\n");
+				if(ksi)
+					printf("failed.\n");
 				printErrorMessage();
 				retval = _EXP.exep.ret;
 				exceptionSolved();

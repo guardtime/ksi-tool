@@ -7,6 +7,8 @@
 
 static void GT_pritHelp(void);
 
+
+
 int main(int argc, char** argv) {
 	TaskDefinition *taskDefArray[11]={NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 	paramSet *set = NULL;
@@ -37,7 +39,7 @@ int main(int argc, char** argv) {
 	/*Configure parameter set*/
 	paramSet_addControl(set, "{o}{log}", isPathFormOk, isOutputFileContOK);
 	paramSet_addControl(set, "{i}{b}{f}{V}{W}{inc}", isPathFormOk, isInputFileContOK);
-	paramSet_addControl(set, "{F}", isImprintFormatOK, contentIsOK);
+	paramSet_addControl(set, "{F}", isImprintFormatOK, isImprintContOK);
 	paramSet_addControl(set, "{H}", isHashAlgFormatOK, isHashAlgContOK);
 	paramSet_addControl(set, "{S}{X}{P}", isURLFormatOK, contentIsOK);
 	paramSet_addControl(set, "{c}{C}{T}", isIntegerFormatOK, contentIsOK);
@@ -134,7 +136,7 @@ cleanup:
 	for(i=0; i<11;i++)
 		TaskDefinition_free(taskDefArray[i]);
 	Task_free(task);
-
+//	_CrtDumpMemoryLeaks();
 	return retval;
 }
 

@@ -148,6 +148,7 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 				KSI_LOG_debug(tmpKsi, "Setting publications file '%s'", inPubFileName);
 				KSI_PublicationsFile_fromFile_throws(tmpKsi, inPubFileName, &tmpPubFile);
 				KSI_setPublicationsFile(tmpKsi, tmpPubFile);
+				tmpPubFile = NULL;
 			}
 
 			if(V || W){

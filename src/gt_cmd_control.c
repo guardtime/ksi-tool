@@ -170,6 +170,66 @@ ContentStatus isHashAlgContOK(const char *alg){
 	else if(strcmp("SHA3-512" ,alg) == 0) return PARAM_OK;
 	else if(strcmp("SM3" ,alg) == 0) return PARAM_OK;
 	else return HASH_ALG_INVALID_NAME;
+	
+	
+	
+}
+
+ContentStatus isImprintContOK(const char *imprint){
+	char *tmp = NULL;
+	char *colon = NULL;
+	char *imp = NULL;
+	char *alg = NULL;
+	ContentStatus status = PARAM_INVALID;
+	unsigned len = 0;
+	unsigned expected_len = 0;
+	if(imprint == NULL) return PARAM_INVALID;
+	
+	tmp = malloc(strlen(imprint)+1);
+	if(tmp == NULL)
+		exit(EXIT_OUT_OF_MEMORY);
+	
+	strcpy(tmp, imprint);
+	colon = strchr(tmp, ':');
+	
+	*colon = 0;
+	alg = tmp;
+	imp = colon+1;
+	
+	if(strcmp("SHA-1" ,alg) == 0) expected_len = 160/8;
+	else if(strcmp("SHA-256" ,alg) == 0) expected_len = 256/8;
+	else if(strcmp("RIPEMD-160" ,alg) == 0) expected_len = 160/8;
+	else if(strcmp("SHA-224" ,alg) == 0) expected_len = 224/8;
+	else if(strcmp("SHA-384" ,alg) == 0) expected_len = 384/8;
+	else if(strcmp("SHA-512" ,alg) == 0) expected_len = 512/8;
+	else if(strcmp("RIPEMD-256" ,alg) == 0) expected_len = 256/8;
+	else if(strcmp("SHA3-244" ,alg) == 0) expected_len = 224/8;
+	else if(strcmp("SHA3-256" ,alg) == 0) expected_len = 256/8;
+	else if(strcmp("SHA3-384" ,alg) == 0) expected_len = 384/8;
+	else if(strcmp("SHA3-512" ,alg) == 0) expected_len = 512/8;
+	else if(strcmp("SM3" ,alg) == 0) expected_len = 256/8;
+	else{
+		status = HASH_ALG_INVALID_NAME;
+		goto cleanup;
+	}
+	
+	len = (unsigned)strlen(imp);
+	
+	if(len%2 != 0){
+		status = HASH_IMPRINT_INVALID_LEN;
+		goto cleanup;
+	}
+	
+	if(len/2 != expected_len){
+		status = HASH_IMPRINT_INVALID_LEN;
+		goto cleanup;
+	}
+	
+	status = PARAM_OK;
+cleanup:
+		
+	free(tmp);
+	return status;
 }
 
 ContentStatus contentIsOK(const char *alg){
@@ -207,6 +267,8 @@ const char *getParameterContentErrorString(ContentStatus res){
 	case PARAM_INVALID: return "(Parameter is invalid)";
 		break;
 	case HASH_ALG_INVALID_NAME: return "(Algorithm name is incorrect)";
+		break;
+	case HASH_IMPRINT_INVALID_LEN: return "(Hash length is incorrect)";
 		break;
 	case FILE_ACCESS_DENIED: return "(File access denied)";
 		break;

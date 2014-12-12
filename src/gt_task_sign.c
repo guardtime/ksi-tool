@@ -37,7 +37,7 @@ int GT_signTask(Task *task) {
 				char *hashAlg;
 				int hasAlgID=-1;
 				/*Choosing of hash algorithm and creation of data hasher*/
-				printf("Getting hash from file for signing process...");
+				printf("Getting hash from file for signing process... ");
 				hashAlg = H ? (hashAlgName_H) : ("default");
 				hasAlgID = getHashAlgorithm_throws(hashAlg);
 				KSI_DataHasher_open_throws(ksi,hasAlgID , &hsr);
@@ -45,13 +45,13 @@ int GT_signTask(Task *task) {
 				printf("ok.\n");
 			}
 			else if(task->id == signHash){
-				printf("Getting hash from input string for signing process...");
+				printf("Getting hash from input string for signing process... ");
 				getHashFromCommandLine_throws(imprint,ksi, &hash);
 				printf("ok.\n");
 			}
 
 			/* Sign the data hash. */
-			printf("Creating signature from hash...");
+			printf("Creating signature from hash... ");
 			MEASURE_TIME(KSI_createSignature_throws(ksi, hash, &sign));
 			printf("ok. %s\n",t ? str_measuredTime() : "");
 
@@ -60,7 +60,8 @@ int GT_signTask(Task *task) {
 			printf("Signature saved.\n");
 		}
 		CATCH_ALL{
-			printf("failed.\n");
+			if(ksi)
+				printf("failed.\n");
 			printErrorMessage();
 			retval = _EXP.exep.ret;
 			exceptionSolved();
