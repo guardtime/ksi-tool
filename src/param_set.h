@@ -121,7 +121,7 @@ bool paramSet_getStrValueByNameAt(paramSet *set, char *name,int at, char **value
 bool paramSet_getValueCountByName(paramSet *set, char *name, int *count);
 
 void paramSet_removeParameterByName(paramSet *set, char *name);
-
+bool paramSet_appendParameterByName(const char *argument, char *name, paramSet *set);
 
 void paramSet_Print(paramSet *set);
 void paramSet_PrintErrorMessages(paramSet *set);

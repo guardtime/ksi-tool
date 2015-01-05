@@ -31,70 +31,62 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	char *user = NULL;
 	char *pass = NULL;
 	
-	S = paramSet_getStrValueByNameAt(task->set, "S",0,&signingService_url);
+	S = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "S") ? "S" : "sysvar_aggre_url",0,&signingService_url);
+	X = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "X") ? "x" : "sysvar_ext_url",0,&verificationService_url);
 	P = paramSet_getStrValueByNameAt(task->set, "P",0,&publicationsFile_url);
-	X = paramSet_getStrValueByNameAt(task->set, "X",0,&verificationService_url);
-	bUser = paramSet_getStrValueByNameAt(task->set, "user",0,&user);
-	bPass = paramSet_getStrValueByNameAt(task->set, "pass",0,&pass);
+	
 	C = paramSet_getIntValueByNameAt(task->set, "C", 0,&networkConnectionTimeout);
 	c = paramSet_getIntValueByNameAt(task->set, "c", 0,&networkTransferTimeout);
 	s = paramSet_isSetByName(task->set, "s");
 	x = paramSet_isSetByName(task->set, "x");
 	p = paramSet_isSetByName(task->set, "p");
 	
+	if(x || p){
+		bUser = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "user") ? "user" : "sysvar_ext_user",0,&user);
+		bPass = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "pass") ? "pass" : "sysvar_ext_pass",0,&pass);
+	}
+	else if(s){
+		bUser = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "user") ? "user" : "sysvar_aggre_user",0,&user);
+		bPass = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "pass") ? "pass" : "sysvar_aggre_pass",0,&pass);
+		}
+	
 	try
 	   CODE{
 			/* Check if uri's are specified. */
-			if (S || P || X || C || c || bUser || bPass) {
-				res = KSI_UNKNOWN_ERROR;
-				res = KSI_HttpClient_new(ksi, &net);
-				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to create new network provider.\n");
+			res = KSI_HttpClient_new(ksi, &net);
+			ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to create new network provider.\n");
 
-				/* Check aggregator url */
-				if (S) {
-					res = KSI_HttpClient_setSignerUrl(net, signingService_url);
-					ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set aggregator url '%s'.\n", signingService_url);
-				}
-
-				/* Check publications file url. */
-				if (P) {
-					res = KSI_HttpClient_setPublicationUrl(net, publicationsFile_url);
-					ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set publications file url '%s'.\n", publicationsFile_url);
-				}
-
-				if(bUser){
-					if(x|| p) KSI_NetworkClient_setExtenderUser_throws(ksi, (KSI_NetworkClient *)net, user);
-					if(s) KSI_NetworkClient_setAggregatorUser_throws(ksi, (KSI_NetworkClient *)net, user);
-				}
-				
-				if(bPass){
-					if(x|| p) KSI_NetworkClient_setExtenderPass_throws(ksi, (KSI_NetworkClient *)net, pass);
-					if(s) KSI_NetworkClient_setAggregatorPass_throws(ksi, (KSI_NetworkClient *)net, pass);
-				}
-				
-				/* Check extending/verification service url. */
-				if (X) {
-					res = KSI_HttpClient_setExtenderUrl(net, verificationService_url);
-					ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set extender/verifier url '%s'.\n", verificationService_url);
-				}
-
-				/* Check Network connection timeout. */
-				if (C) {
-					res = KSI_HttpClient_setConnectTimeoutSeconds(net, networkConnectionTimeout);
-					ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set network connection timeout %i.\n", networkConnectionTimeout);
-				}
-
-				/* Check Network transfer timeout. */
-				if (c) {
-					res = KSI_HttpClient_setReadTimeoutSeconds(net, networkTransferTimeout);
-					ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set network transfer timeout %i.\n", networkTransferTimeout);
-				}
-
-				/* Set the new network provider. */
-				res = KSI_setNetworkProvider(ksi, (KSI_NetworkClient *)net);
-				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set network provider.\n");
+			/* Check aggregator url */
+			if(x || p){
+				res = KSI_HttpClient_setExtender(net, verificationService_url, user, pass);
+				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set extender/verifier url '%s'.\n", verificationService_url);
+			}
+			else if(s){
+				res = KSI_HttpClient_setAggregator(net, signingService_url, user, pass);
+				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set aggregator url '%s'.\n", signingService_url);
 			}
 
+			/* Check publications file url. */
+			if (P) {
+				res = KSI_HttpClient_setPublicationUrl(net, publicationsFile_url);
+				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set publications file url '%s'.\n", publicationsFile_url);
+			}
+
+			/* Check Network connection timeout. */
+			if (C) {
+				res = KSI_HttpClient_setConnectTimeoutSeconds(net, networkConnectionTimeout);
+				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set network connection timeout %i.\n", networkConnectionTimeout);
+			}
+
+			/* Check Network transfer timeout. */
+			if (c) {
+				res = KSI_HttpClient_setReadTimeoutSeconds(net, networkTransferTimeout);
+				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set network transfer timeout %i.\n", networkTransferTimeout);
+			}
+
+			/* Set the new network provider. */
+			res = KSI_setNetworkProvider(ksi, (KSI_NetworkClient *)net);
+			ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set network provider.\n");
 		} 
 		CATCH_ALL{
 			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to configure network provider.\n");
@@ -552,9 +544,8 @@ int KSI_DataHasher_close_throws(KSI_CTX *ksi, KSI_DataHasher *hasher, KSI_DataHa
 int KSI_createSignature_throws(KSI_CTX *ksi, KSI_DataHash *hash, KSI_Signature **sign){
 	 THROWABLE3(ksi, KSI_createSignature(ksi, hash, sign), "Error: Unable to sign.");
 }
-
-int KSI_DataHash_fromDigest_throws(KSI_CTX *ksi, int hasAlg, char *data, unsigned int len, KSI_DataHash **hash){
-	THROWABLE3(ksi, KSI_DataHash_fromDigest(ksi, hasAlg, data, len, hash), "Error: Unable to create hash from digest.");
+int KSI_DataHash_fromDigest_throws(KSI_CTX *ksi, int hasAlg, const unsigned char *digest, unsigned int len, KSI_DataHash **hash){
+	THROWABLE3(ksi, KSI_DataHash_fromDigest(ksi, hasAlg, digest, len, hash), "Error: Unable to create hash from digest.");
 }
 
 int KSI_PublicationsFile_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_PublicationsFile **pubFile){

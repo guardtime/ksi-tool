@@ -275,7 +275,7 @@ static void paramSet_getParameterByName(paramSet *set, char *name, parameter **p
 	return;
 }
 
-static bool paramSet_appendParameterByName(const char *argument, char *name, paramSet *set){
+bool paramSet_appendParameterByName(const char *argument, char *name, paramSet *set){
 	parameter *param = NULL;
 	
 	if(set == NULL || name == NULL) return false;
