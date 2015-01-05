@@ -56,18 +56,18 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp){
         if(strncmp(*envp, "KSI_AGGREGATOR", sizeof("KSI_AGGREGATOR")-1)==0){
 			if(!getEnvValue(*envp, "url", tmp, sizeof(tmp))) return false;
 			paramSet_appendParameterByName(tmp, "sysvar_aggre_url", set);
-			if(!getEnvValue(*envp, "user", tmp, sizeof(tmp))) return false;
-			paramSet_appendParameterByName(tmp, "sysvar_aggre_user", set);
-			if(!getEnvValue(*envp, "pass", tmp, sizeof(tmp))) return false;
-			paramSet_appendParameterByName(tmp, "sysvar_aggre_pass", set);
+			if(getEnvValue(*envp, "user", tmp, sizeof(tmp)))
+				paramSet_appendParameterByName(tmp, "sysvar_aggre_user", set);
+			if(getEnvValue(*envp, "pass", tmp, sizeof(tmp)))
+				paramSet_appendParameterByName(tmp, "sysvar_aggre_pass", set);
 		}
         else if(strncmp(*envp, "KSI_EXTENDER", sizeof("KSI_EXTENDER")-1)==0){
 			if(!getEnvValue(*envp, "url", tmp, sizeof(tmp))) return false;
 			paramSet_appendParameterByName(tmp, "sysvar_ext_url", set);
-			if(!getEnvValue(*envp, "user", tmp, sizeof(tmp))) return false;
-			paramSet_appendParameterByName(tmp, "sysvar_ext_user", set);
-			if(!getEnvValue(*envp, "pass", tmp, sizeof(tmp))) return false;
-			paramSet_appendParameterByName(tmp, "sysvar_ext_pass", set);
+			if(getEnvValue(*envp, "user", tmp, sizeof(tmp)))
+				paramSet_appendParameterByName(tmp, "sysvar_ext_user", set);
+			if(getEnvValue(*envp, "pass", tmp, sizeof(tmp)))
+				paramSet_appendParameterByName(tmp, "sysvar_ext_pass", set);
 		}
 		
         envp++;
@@ -155,9 +155,13 @@ static void GT_pritHelp(paramSet *set){
 			);
 
 			fprintf(stderr, "\nDefault service access URL-s:\n"
+			"\tTo define default URL-s system variables must be defined.\n"
+			"\tFor aggregator define \"KSI_AGGREGATOR\"=\"url=<url> pass=<pass> user=<user>\".\n"
+			"\tFor extender define \"KSI_EXTENDER\"=\"url=<url> pass=<pass> user=<user>\".\n"
+			"\tOnly <url> part is mandatory. Default <pass> and <user> is \"anon\".\n\n"		
 			"\tSigning:		%s\n"
-			"\tVerifying:		%s\n"
-			"\tPublications file:	%s\n", (aggre_url ? aggre_url : "Define system variable \"KSI_AGGREGATOR\"=\"url=<url> pass=<pass> user=<user>\"."), (ext_url ? ext_url : "Define system variable \"KSI_EXTENDER\"=\"url=<url> pass=<pass> user=<user>\"."), KSI_DEFAULT_URI_PUBLICATIONS_FILE);
+			"\tExtending/Verifying:	%s\n"
+			"\tPublications file:	%s\n", (aggre_url ? aggre_url : "Not defined."), (ext_url ? ext_url : "Not defined."), KSI_DEFAULT_URI_PUBLICATIONS_FILE);
 			
 			fprintf(stderr, "\nSupported hash algorithms (-H, -F):\n\t");
 			printSupportedHashAlgorithms();

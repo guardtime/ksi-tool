@@ -49,7 +49,8 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 		bUser = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "user") ? "user" : "sysvar_aggre_user",0,&user);
 		bPass = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "pass") ? "pass" : "sysvar_aggre_pass",0,&pass);
 		}
-	
+	if(user == NULL) user = "anon";
+	if(pass == NULL) pass = "anon";
 	try
 	   CODE{
 			/* Check if uri's are specified. */
@@ -59,11 +60,11 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 			/* Check aggregator url */
 			if(x || p){
 				res = KSI_HttpClient_setExtender(net, verificationService_url, user, pass);
-				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set extender/verifier url '%s'.\n", verificationService_url);
+				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set extender/verifier url '%s'.%s\n", verificationService_url, verificationService_url ? "" : "Define system variable \"KSI_AGGREGATOR\", read help (-h) for more information.");
 			}
 			else if(s){
 				res = KSI_HttpClient_setAggregator(net, signingService_url, user, pass);
-				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set aggregator url '%s'.\n", signingService_url);
+				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set aggregator url '%s'.%s\n", signingService_url, verificationService_url ? "" : "Define system variable \"KSI_EXTENDER\", read help (-h) for more information.");
 			}
 
 			/* Check publications file url. */
