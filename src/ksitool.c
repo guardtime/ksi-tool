@@ -111,9 +111,9 @@ static void GT_pritHelp(paramSet *set){
 			"   		-v -b -i (-f) verify signature (and signed document) using specific\n"
 			"		publications file\n"
 			"   		-v -b verify publication file\n"
-			" -aggre		use aggregator for (-n -t):\n"
-			"   		-aggre -htime display current aggregation root hash value and time\n"
-			"   		-aggre -setsystime set system time from current aggregation\n"
+			" --aggre	use aggregator for (-n -t):\n"
+			"   		--aggre -htime display current aggregation root hash value and time\n"
+			"   		--aggre -setsystime set system time from current aggregation\n"
 			
 			
 			"\nInput/output:\n"
@@ -131,14 +131,14 @@ static void GT_pritHelp(paramSet *set){
 			" -n		print signer Name (identity)\n"
 			" -r		print publication References (use with -vx)\n"
 			" -d		dump detailed information\n"
-			"-log<file>	dump KSI log int file\n"
+			" --log <file>	dump KSI log into file\n"
 			
 			"\nConfiguration:\n"
 			" -S <url>	specify Signing service URL\n"
 			" -X <url>	specify verification (eXtending) service URL\n"
 			" -P <url>	specify Publications file URL\n"
-			" -user		user name\n"
-			" -pass		password\n"
+			" --user		user name\n"
+			" --pass		password\n"
 			" -c <num>	network transfer timeout, after successful Connect\n"
 			" -C <num>	network Connect timeout.\n"
 			" -V <file>	use specified OpenSSL-style trust store file for publications file\n"
@@ -147,7 +147,8 @@ static void GT_pritHelp(paramSet *set){
 			" -W <dir>	use specified OpenSSL-style trust store directory for publications\n"
 			"		file verification\n"
 			" -E <mail>	use specified publication certificate email\n"
-			" -inc <fn>	use configuration file containing command-line parameters\n"
+			" --inc <file>	use configuration file containing command-line parameters.\n"
+			"		Parameter must be written line by line."
 			
 			"\nHelp:\n"
 			" -h		Help (You are reading it now)\n"
@@ -191,7 +192,7 @@ int main(int argc, char** argv, char **envp) {
 #endif	
 
 	/*Create parameter set*/
-	paramSet_new("{s}*{x}*{p}*{v}*{t}*{r}*{d}*{n}*{h}*{o}{i}{f}{b}{a}{c}{C}{V}*"
+	paramSet_new("{s|sign}*{x}*{p}*{v}*{t}*{r}*{d}*{n}*{h|help}*{o}{i}{f}{b}{a}{c}{C}{V}*"
 				 "{W}{S}{X}{P}{F}{H}{T}{E}{inc}*{aggre}{htime}{setsystime}"
 				 "{user}{pass}{log}"
 				 "{sysvar_aggre_url}{sysvar_aggre_pass}{sysvar_aggre_user}"
