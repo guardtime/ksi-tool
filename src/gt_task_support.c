@@ -32,7 +32,7 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	char *pass = NULL;
 	
 	S = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "S") ? "S" : "sysvar_aggre_url",0,&signingService_url);
-	X = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "X") ? "x" : "sysvar_ext_url",0,&verificationService_url);
+	X = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "X") ? "X" : "sysvar_ext_url",0,&verificationService_url);
 	P = paramSet_getStrValueByNameAt(task->set, "P",0,&publicationsFile_url);
 	
 	C = paramSet_getIntValueByNameAt(task->set, "C", 0,&networkConnectionTimeout);
@@ -60,11 +60,11 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 			/* Check aggregator url */
 			if(x || p){
 				res = KSI_HttpClient_setExtender(net, verificationService_url, user, pass);
-				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set extender/verifier url '%s'.%s\n", verificationService_url, verificationService_url ? "" : "Define system variable \"KSI_AGGREGATOR\", read help (-h) for more information.");
+				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set extender/verifier url '%s'.%s\n", verificationService_url, verificationService_url ? "" : "Define system variable \"KSI_EXTENDER\", read help (-h) for more information.");
 			}
 			else if(s){
 				res = KSI_HttpClient_setAggregator(net, signingService_url, user, pass);
-				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set aggregator url '%s'.%s\n", signingService_url, verificationService_url ? "" : "Define system variable \"KSI_EXTENDER\", read help (-h) for more information.");
+				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set aggregator url '%s'.%s\n", signingService_url, verificationService_url ? "" : "Define system variable \"KSI_AGGREGATOR\", read help (-h) for more information.");
 			}
 
 			/* Check publications file url. */
