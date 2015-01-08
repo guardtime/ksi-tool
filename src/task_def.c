@@ -78,7 +78,7 @@ static const char *getParametersNameFromCateghory(const char* categhory, char *b
 	buf[j] = 0;
 	return &categhory[i];
 }
-
+/*TODO*/
 static int getFlagCount(const char* categhory){
 	const char *c = NULL;
 	int count = 0;
@@ -148,11 +148,11 @@ static void TaskDefinition_PrintErrors(TaskDefinition *def, paramSet *set){
 		while((pName = getParametersNameFromCateghory(pName,buf, sizeof(buf))) != NULL){
 			if(paramSet_isSetByName(set, buf) == false){
 				if(!def_printed){
-					fprintf(stderr, "Error: You have to define flag(s) '-%s'",buf);
+					fprintf(stderr, "Error: You have to define flag(s) '%s%s'",strlen(buf)>1 ? "--" : "-", buf);
 					def_printed = true;
 				}
 				else{
-					fprintf(stderr, ", '-%s'",buf);
+					fprintf(stderr, ", '%s%s'",strlen(buf)>1 ? "--" : "-", buf);
 				}
 			}
 		}
@@ -163,11 +163,11 @@ static void TaskDefinition_PrintErrors(TaskDefinition *def, paramSet *set){
 		while((pName = getParametersNameFromCateghory(pName,buf, sizeof(buf))) != NULL){
 			if(paramSet_isSetByName(set, buf) == true){
 				if(!err_printed){
-					fprintf(stderr, "Error: You must not use flag(s) '-%s'",buf);
+					fprintf(stderr, "Error: You must not use flag(s) '%s%s'",strlen(buf)>1 ? "--" : "-", buf);
 					err_printed = true;
 				}
 				else{
-					fprintf(stderr, ", '-%s'",buf);
+					fprintf(stderr, ", '%s%s'",strlen(buf)>1 ? "--" : "-", buf);
 				}
 			}
 		}
@@ -189,7 +189,7 @@ static void TaskDefinition_PrintWarnings(TaskDefinition *def, paramSet *set){
 	pName = def->ignoredFlags;		
 		while((pName = getParametersNameFromCateghory(pName,buf, sizeof(buf))) != NULL){
 			if(paramSet_isSetByName(set, buf) == true){
-				fprintf(stderr, "Warning: flag -%s is ignored\n",buf);
+				fprintf(stderr, "Warning: flag %s%s is ignored\n",strlen(buf)>1 ? "--" : "-", buf);
 			}
 		}
 	return;
@@ -246,17 +246,22 @@ Task* Task_getConsistentTask(TaskDefinition **def, int count, paramSet *set){
 	
 	if(definedCount >= 1 && consistent == NULL){
 		consistent = NULL;
-		if(definedCount > 1)
-			fprintf(stderr, "Error: You can't define multiple tasks together:\n");
-		
-		for(i=0; i<count; i++){
-			tmp = def[i];
-			if(tmp->isDefined){
-				fprintf(stderr, "Task '%s' (%s) is invalid:\n", tmp->name, tmp->taskDefinitionFlags);
-				TaskDefinition_PrintErrors(tmp, set);
-				TaskDefinition_PrintWarnings(tmp, set);
+		if(definedCount > 1){
+			fprintf(stderr, "Task is not fully defined:\n");
+			Task_printSuggestions(def, count, set);
+		}
+		else{
+			for(i=0; i<count; i++){
+				tmp = def[i];
+				if(tmp->isDefined){
+					fprintf(stderr, "Error: Task '%s' (%s) is invalid:\n", tmp->name, tmp->taskDefinitionFlags);
+					TaskDefinition_PrintErrors(tmp, set);
+					TaskDefinition_PrintWarnings(tmp, set);
+					break;
+				}
 			}
 		}
+		
 	}
 	
 	if(consistent){

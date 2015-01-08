@@ -3,6 +3,7 @@
 #include <stdlib.h>		//malloc, random, int ja strn 
 #include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "gt_cmd_control.h"
 #include "param_set.h"
 #include "task_def.h"
@@ -11,6 +12,7 @@
 #define MULTIPLE true 
 
 #define UNKNOWN_PARAMETER_NAME "_UN_KNOWN_"
+#define TYPO_PARAMETER_NAME "_TYPO_"
 
 typedef struct paramValu_st paramValue;
 
@@ -330,8 +332,10 @@ void paramSet_removeParameterByName(paramSet *set, char *name){
 		tmp = array[i];
 		if(tmp != NULL){
 			if(strcmp(tmp->flagName, name) == 0 || (tmp->flagAlias && strcmp(tmp->flagAlias, name) == 0)){
-				parameter_free(tmp);
-				array[i] = NULL;
+				tmp->arcCount = 0;
+				tmp->flag = false;
+				if(tmp->arg) paramValue_recursiveFree(tmp->arg);
+				tmp->arg = NULL;
 				return;
 			}
 		}
@@ -396,10 +400,10 @@ bool paramSet_new(const char *names, paramSet **set){
 		}
 		i++;
 	}
+	paramCount+=2;
 
 	tmp = (paramSet*)calloc(sizeof(paramSet), 1);
 	if(tmp == NULL) goto cleanup;
-	paramCount++;
 	tmp->parameter = (parameter**)calloc(paramCount, sizeof(parameter*));
 	if(tmp->parameter == NULL) goto cleanup;
 
@@ -415,7 +419,8 @@ bool paramSet_new(const char *names, paramSet **set){
 		iter++;
 	}
 	
-	parameter_new(UNKNOWN_PARAMETER_NAME,NULL,MULTIPLE,NULL,NULL, &tmp->parameter[iter]);
+	parameter_new(UNKNOWN_PARAMETER_NAME,NULL,MULTIPLE,NULL,NULL, &tmp->parameter[iter++]);
+	parameter_new(TYPO_PARAMETER_NAME,NULL,MULTIPLE,NULL,NULL, &tmp->parameter[iter]);
 	
 	*set = tmp;
 	tmp = NULL;	
@@ -459,6 +464,99 @@ void paramSet_addControl(paramSet *set, const char *names, FormatStatus (*contro
 	}
 }
 
+static unsigned min_of_3(unsigned A, unsigned B,unsigned C){
+	unsigned tmp;
+	tmp = A < B ? A : B;
+	return tmp < C ? tmp : C;
+}
+
+#define UP(m,i,j) m[i-1][j]	//del
+#define LEFT(m,i,j) m[i][j-1] //ins
+#define DIAG(m,i,j) m[i-1][j-1] //rep
+
+static int editDistance_levenshtein(const char *A, const char *B){
+	unsigned lenA, lenB;
+	unsigned M_H, M_W;
+	unsigned i=0, j=0;
+	char **m;
+	unsigned rows_created = 0;
+	unsigned edit_distance = -1;
+	
+	/*Get the size of each string*/
+	lenA = (unsigned)strlen(A);//vertical 
+	lenB = (unsigned)strlen(B);//horizontal
+	/*Data matrix is larger by 1 row and column*/
+	M_H = lenA+1;
+	M_W = lenB+1;
+	
+	/*Creating of initial matrix*/
+	m=(char**)malloc(M_H*sizeof(char*));
+	if(m == NULL) goto cleanup;
+	
+	for(i=0; i<M_H; i++){
+		m[i]=(char*)malloc(M_W*sizeof(char));
+		if(m[i] == NULL) goto cleanup;
+		m[i][0] = i;
+		rows_created++;
+	}
+	
+	for(j=0; j<M_W; j++) m[0][j] = j;
+	
+	for(j=1; j<M_W; j++){
+		for(i=1; i<M_H; i++){
+			if(A[i-1] == B[j-1]) m[i][j] = DIAG(m,i,j);
+			else m[i][j] = min_of_3(UP(m,i,j), LEFT(m,i,j), DIAG(m,i,j))+1;
+		}
+	}
+	edit_distance = m[i-1][j-1];
+	
+//	printf("Matrix::\n");
+//	for(i=0; i<M_H; i++){
+//		for(j=0; j<M_W; j++){
+//			printf("%2i", m[i][j]);
+//		}
+//		printf("\n");
+//	}
+	
+cleanup:
+	if(m)					
+		for(i=0; i<rows_created; i++) free(m[i]);
+	free(m);
+	
+	return edit_distance;
+}
+
+static bool paramSet_couldItBeTypo(const char *str, paramSet *set){
+	int numOfElements = 0;
+	parameter **array = NULL;
+	int i =0;
+	
+	if(set == NULL) return false;
+	numOfElements = set->count;
+	array = set->parameter;
+	
+	for(i=0; i<numOfElements;i++){
+		unsigned lenName = 0;
+		int editDist = 0;
+
+		editDist = editDistance_levenshtein(array[i]->flagName, str); 
+		lenName = (unsigned)strlen(array[i]->flagName);
+		
+		if((editDist*100)/lenName <= 49)
+			return true;
+		
+		if(array[i]->flagAlias){
+			editDist = editDistance_levenshtein(array[i]->flagAlias, str); 
+			lenName = (unsigned)strlen(array[i]->flagAlias);
+
+			if((editDist*100)/lenName <= 49)
+				return true;
+		}
+	}
+	
+	return false;
+}
+
 /**
  * This functions adds raw parameter to the set. It parses parameters formatted as:
  * --long		- long parameter without argument.
@@ -472,17 +570,33 @@ void paramSet_addControl(paramSet *set, const char *names, FormatStatus (*contro
 static void paramSet_addRawParameter(char *param, char *arg, paramSet *set){
 	int i=0;
 	char *flag = NULL;
+	unsigned len;
 	
+	len = (unsigned)strlen(param);
 	if(param[0] == '-' && param[1] != 0){
 		flag = param+(param[1] == '-' ? 2 : 1);
 
 		/*It is long parameter*/
+		if(strncmp("--", param, 2)==0 && len >= 3){
+			if(param[3] == 0){
+				paramSet_appendParameterByName(flag,TYPO_PARAMETER_NAME,set);
+				if(arg)
+					paramSet_appendParameterByName(arg,paramSet_couldItBeTypo(arg, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME,set);
+				return;
+			}
+				
+			if(paramSet_appendParameterByName(arg,flag,set)==false){
+				paramSet_appendParameterByName(flag,paramSet_couldItBeTypo(flag, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME,set);
+				if(arg)
+					paramSet_appendParameterByName(arg,paramSet_couldItBeTypo(arg, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME,set);
+			}
+		}
 		/*It is short parameter*/
-		if(param[1] == '-' || (param[1] != '-' && param[2] == 0)){
+		else if(param[0] == '-' && len == 2){
 			if(paramSet_appendParameterByName(arg,flag,set)==false){
 				paramSet_appendParameterByName(flag,UNKNOWN_PARAMETER_NAME,set);
 				if(arg)
-					paramSet_appendParameterByName(arg,UNKNOWN_PARAMETER_NAME,set);
+					paramSet_appendParameterByName(arg,paramSet_couldItBeTypo(arg, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME,set);
 			}
 		}
 		/*It is bunch of flags*/
@@ -490,13 +604,21 @@ static void paramSet_addRawParameter(char *param, char *arg, paramSet *set){
 			//paramSet_appendParameterByName(arg,flag,set)==false
 			char str_flg[2] = {255,0};
 			int itr = 0;
+			
+			if(arg)
+				paramSet_appendParameterByName(arg,paramSet_couldItBeTypo(arg, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME,set);
+			
 			while(str_flg[0] = flag[itr++]){
-				if(paramSet_appendParameterByName(NULL,str_flg,set)==false)
-					paramSet_appendParameterByName(str_flg,UNKNOWN_PARAMETER_NAME,set);
+				if(paramSet_appendParameterByName(NULL,str_flg,set)==false){
+					if(paramSet_couldItBeTypo(flag, set)){
+						paramSet_appendParameterByName(flag,TYPO_PARAMETER_NAME,set);
+						break;
+					}
+					else
+						paramSet_appendParameterByName(str_flg,UNKNOWN_PARAMETER_NAME,set);
+				}
 			}
 
-			if(arg)
-				paramSet_appendParameterByName(arg,UNKNOWN_PARAMETER_NAME,set);
 		}
 	}
 	else{
@@ -572,7 +694,8 @@ bool paramSet_isFormatOK(paramSet *set){
 	for(i=0; i<numOfElements;i++){
 		if((pParam = array[i]) != NULL){
 			if(strcmp(pParam->flagName, UNKNOWN_PARAMETER_NAME)==0) continue;
-			
+			if(strcmp(pParam->flagName, TYPO_PARAMETER_NAME)==0) continue;
+
 			if(pParam->arcCount > 1 && !(pParam->isMultipleAllowed)){
 				return false;
 			}
@@ -681,6 +804,7 @@ void paramSet_PrintErrorMessages(paramSet *set){
 	for(i=0; i<numOfElements;i++){
 		if((pParam = array[i]) != NULL){
 			if(strcmp(pParam->flagName, UNKNOWN_PARAMETER_NAME)==0) continue;
+			if(strcmp(pParam->flagName, TYPO_PARAMETER_NAME)==0) continue;
 			
 			if(pParam->arcCount > 1 && !(pParam->isMultipleAllowed)){
 				printf("Error: Duplicate values '%s'!\n", pParam->flagName);
@@ -690,11 +814,11 @@ void paramSet_PrintErrorMessages(paramSet *set){
 			while(value){
 				if(value->formatStatus == FORMAT_OK){
 					if(value->contentStatus != PARAM_OK){
-						printf("Content error: -%s '%s' err: %s\n",pParam->flagName, value->cstr_value, getParameterContentErrorString(value->contentStatus));
+						printf("Content error: %s%s '%s' err: %s\n",strlen(pParam->flagName)>1 ? "--" : "-", pParam->flagName, value->cstr_value, getParameterContentErrorString(value->contentStatus));
 					}
 				}
 				else{
-					printf("Format error: -%s '%s' err: %s\n",pParam->flagName, value->cstr_value, getFormatErrorString(value->formatStatus));
+					printf("Format error: %s%s '%s' err: %s\n",strlen(pParam->flagName)>1 ? "--" : "-", pParam->flagName, value->cstr_value, getFormatErrorString(value->formatStatus));
 				}
 				
 				value = value->next;
@@ -721,4 +845,60 @@ void paramSet_printUnknownParameterWarnings(paramSet *set){
 				printf("Warning: Unknown parameter '%s'\n", value->cstr_value);
 		}
 	}
+}
+
+
+
+static void paramSet_PrintSimilar(const char *str, paramSet *set){
+	int numOfElements = 0;
+	parameter **array = NULL;
+	int i =0;
+	
+	if(set == NULL) return;
+
+	numOfElements = set->count;
+	array = set->parameter;
+	
+	for(i=0; i<numOfElements;i++){
+		int editDist = 0;
+		unsigned lenName = 0;
+		editDist = editDistance_levenshtein(array[i]->flagName, str); 
+		lenName = (unsigned)strlen(array[i]->flagName);
+		
+		if((editDist*100)/lenName <= 49)
+			printf("Typo: Did You mean '%s%s'.\n",lenName>1 ? "--" : "-", array[i]->flagName);
+		
+		if(array[i]->flagAlias){
+			editDist = editDistance_levenshtein(array[i]->flagAlias, str); 
+			lenName = (unsigned)strlen(array[i]->flagAlias);
+
+			if((editDist*100)/lenName <= 33)
+				printf("Typo: Did You mean '%s%s'.\n",lenName>1 ? "--" : "-", array[i]->flagAlias);
+		}
+	}
+	
+	return;
+}
+
+void paramSet_printTypoWarnings(paramSet *set){
+	int i = 0;
+	int count = 0;
+	char *tmp = NULL;
+	
+	if(set == NULL) return;
+	
+	if(paramSet_getValueCountByName(set, TYPO_PARAMETER_NAME,&count)){
+		for(i=0; i<count; i++){
+			paramValue *value = NULL;
+			paramSet_getValueByNameAt(set, TYPO_PARAMETER_NAME, i, &value);
+			if(value)
+				paramSet_PrintSimilar(value->cstr_value, set);
+		}
+	}
+}
+
+bool paramSet_isTypos(paramSet *set){
+	int count = 0;
+	paramSet_getValueCountByName(set, TYPO_PARAMETER_NAME,&count);
+	return count > 0 ? true : false; 
 }

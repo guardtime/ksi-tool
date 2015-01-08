@@ -126,7 +126,8 @@ bool paramSet_appendParameterByName(const char *argument, char *name, paramSet *
 void paramSet_Print(paramSet *set);
 void paramSet_PrintErrorMessages(paramSet *set);
 void paramSet_printUnknownParameterWarnings(paramSet *set);
-
+void paramSet_printTypoWarnings(paramSet *set);
+bool paramSet_isTypos(paramSet *set);
 
 #ifdef	__cplusplus
 }

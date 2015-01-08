@@ -70,7 +70,7 @@ echo return %errorlevel%
 
 echo __________________________________________________________________________
 echo 3) Sign data wrong user or pass
-ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -f %TEST_FILE% -o %TEST_FILE_OUT%.ksig -user ano -pass anon
+ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -f %TEST_FILE% -o %TEST_FILE_OUT%.ksig --user ano --pass anon
 echo return %errorlevel%
 
 echo __________________________________________________________________________

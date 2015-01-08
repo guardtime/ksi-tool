@@ -5,8 +5,8 @@ REM test configuration
 SET WAIT=5
 
 REM Services to use
-SET SIG_SERV_IP=http://ksigw.test.guardtime.com:3333/gt-signingservice 
-REM SET SIG_SERV_IP=http://192.168.100.36:3333/
+REM SET SIG_SERV_IP=http://ksigw.test.guardtime.com:3333/gt-signingservice 
+SET SIG_SERV_IP=http://192.168.100.29:1234/
 REM SET PUB_SERV_IP=http://172.20.20.7/publications.tlv
 set PUB_SERV_IP=http://verify.guardtime.com/ksi-publications.bin
 REM SET SIG_SERV_IP=http://172.20.20.4:3333/
@@ -15,7 +15,7 @@ REM SET VER_SERV_IP=http://192.168.100.36:8081/
 SET VER_SERV_IP=http://ksigw.test.guardtime.com:8010/gt-extendingservice
 
 
-SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -P %PUB_SERV_IP% -C 5 -c 5 -user anon -pass anon -log KSI_LOGI.txt
+SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -P %PUB_SERV_IP% -C 5 -c 5 --user anon --pass anon --log KSI_LOGI.txt
 
 REM input files
 SET TEST_FILE=../test/testFile
@@ -113,7 +113,7 @@ ksitool.exe -v -x %GLOBAL% %VERIFY_FLAGS% -i %RIPMED160_file%
 echo %errorlevel%
 
 echo "****************** Test include. Must show ignored parameters and fail ******************" 
-ksitool.exe -inc ../test/conf1 -inc ../test/conf3
+ksitool.exe --inc ../test/conf1 --inc ../test/conf3
 echo %errorlevel%
 
 

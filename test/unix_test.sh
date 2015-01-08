@@ -104,7 +104,7 @@ sleep $WAIT
 echo $?
 
 echo "****************** Test include. Must show ignored parameters and fail ******************" 
-./ksitool -inc ../test/conf1 -inc ../test/conf3
+./ksitool --inc ../test/conf1 --inc ../test/conf3
 echo $?
 
 

@@ -96,62 +96,61 @@ static void GT_pritHelp(paramSet *set){
 			"\nGuardTime command-line signing tool\n"
 			"Usage: <-s|-x|-p|-v> [more options]\n"
 			"Where recognized options are:\n"
-			" -s		sign data (-n -d -t) \n"
-			"   		-s -f -o sign data file\n"
-			"   		-s -f -H -o sign data file with specific hash algorithm\n"
-			"   		-s -F -o sign hash\n"
-			" -x		use online verification (eXtending) service (-n -r -t)\n"
-			"   		-x -i -o extend signature to the nearest publication\n"
-			"   		-x -i -T -o extend signature to specified time\n"
-			" -p		download Publications file (-d -t)\n"
-			"   		-p -o download publications file\n"
-			"   		-p -T create publication string\n"
-			" -v		verify signature or publications file (-n -r -d -t):\n"
-			"   		-v -x -i (-f) verify signature (and signed document) online\n"
-			"   		-v -b -i (-f) verify signature (and signed document) using specific\n"
-			"		publications file\n"
-			"   		-v -b verify publication file\n"
+			" -s --sign\tsign data (-n -d -t) \n"
+			"\t\t-s -f -o sign data file\n"
+			"\t\t-s -f -H -o sign data file with specific hash algorithm\n"
+			"\t\t-s -F -o sign hash\n"
+			" -x --extend\tuse online verification (eXtending) service (-n -r -t)\n"
+			"\t\t-x -i -o extend signature to the nearest publication\n"
+			"\t\t-x -i -T -o extend signature to specified time\n"
+			" -p\t\tdownload Publications file (-d -t)\n"
+			"\t\t-p -o download publications file\n"
+			"\t\t-p -T create publication string\n"
+			" -v --verify\tverify signature or publications file (-n -r -d -t):\n"
+			"\t\t-v -x -i (-f) verify signature (and signed document) online\n"
+			"\t\t-v -b -i (-f) verify signature (and signed document) using specific\n"
+			"\t\tpublications file\n"
+			"\t\t-v -b verify publication file\n"
 			" --aggre	use aggregator for (-n -t):\n"
-			"   		--aggre -htime display current aggregation root hash value and time\n"
-			"   		--aggre -setsystime set system time from current aggregation\n"
+			"\t\t--aggre -htime display current aggregation root hash value and time\n"
+			"\t\t--aggre -setsystime set system time from current aggregation\n"
 			
 			
 			"\nInput/output:\n"
-			" -f <file>	file to be signed / verified\n"
-			" -F <hash>	data hash to be signed / verified. Hash format: <ALG>:<hash in hex>\n"
-			" -o <file>	output filename to store signature token or publications file\n"
-			" -i <file>	input signature token file to be extended / verified\n"
-			" -b <file>	use specified publications file\n"
-			" -H <ALG>	hash algorithm used to hash the file to be signed\n"
-			" -T <UTC>	specific publication time to extend to (use with -x) as number\n"
-			"   		of seconds since 1970-01-01 00:00:00 UTC\n"
+			" -f <file>\tfile to be signed / verified\n"
+			" -F <hash>\tdata hash to be signed / verified. Hash format: <ALG>:<hash in hex>\n"
+			" -o <file>\toutput filename to store signature token or publications file\n"
+			" -i <file>\tinput signature token file to be extended / verified\n"
+			" -b <file>\tuse specified publications file\n"
+			" -H <ALG>\thash algorithm used to hash the file to be signed\n"
+			" -T <UTC>\tspecific publication time to extend to (use with -x) as number\n"
+			"\t\tof seconds since 1970-01-01 00:00:00 UTC\n"
 			
 			"\nDetails:\n"
-			" -t		print service Timing in ms\n"
-			" -n		print signer Name (identity)\n"
-			" -r		print publication References (use with -vx)\n"
-			" -d		dump detailed information\n"
-			" --log <file>	dump KSI log into file\n"
+			" -t\t\tprint service Timing in ms\n"
+			" -n\t\tprint signer Name (identity)\n"
+			" -r\t\tprint publication References (use with -vx)\n"
+			" -d\t\tdump detailed information\n"
+			" --log <file>\tdump KSI log into file\n"
 			
 			"\nConfiguration:\n"
-			" -S <url>	specify Signing service URL\n"
-			" -X <url>	specify verification (eXtending) service URL\n"
-			" -P <url>	specify Publications file URL\n"
-			" --user		user name\n"
-			" --pass		password\n"
-			" -c <num>	network transfer timeout, after successful Connect\n"
-			" -C <num>	network Connect timeout.\n"
-			" -V <file>	use specified OpenSSL-style trust store file for publications file\n"
-			"		Verification\n"
-			"   		Can have multiple values (-V <file 1> -V <file 2>)\n"
-			" -W <dir>	use specified OpenSSL-style trust store directory for publications\n"
-			"		file verification\n"
-			" -E <mail>	use specified publication certificate email\n"
-			" --inc <file>	use configuration file containing command-line parameters.\n"
-			"		Parameter must be written line by line."
+			" -S <url>\tspecify Signing service URL\n"
+			" -X <url>\tspecify verification (eXtending) service URL\n"
+			" -P <url>\tspecify Publications file URL\n"
+			" --user\t\tuser name\n"
+			" --pass\t\tpassword\n"
+			" -c <num>\tnetwork transfer timeout, after successful Connect\n"
+			" -C <num>\tnetwork Connect timeout.\n"
+			" -V <file>\tuse specified OpenSSL-style trust store file for publications file\n"
+			"\t\tverification. Can have multiple values (-V <file 1> -V <file 2>)\n"
+			" -W <dir>\tuse specified OpenSSL-style trust store directory for publications\n"
+			"\t\tfile verification\n"
+			" -E <mail>\tuse specified publication certificate email\n"
+			" --inc <file>\tuse configuration file containing command-line parameters.\n"
+			"\t\tParameter must be written line by line."
 			
 			"\nHelp:\n"
-			" -h		Help (You are reading it now)\n"
+			" -h --help\tHelp (You are reading it now)\n"
 
 			);
 
@@ -192,7 +191,7 @@ int main(int argc, char** argv, char **envp) {
 #endif	
 
 	/*Create parameter set*/
-	paramSet_new("{s|sign}*{x}*{p}*{v}*{t}*{r}*{d}*{n}*{h|help}*{o}{i}{f}{b}{a}{c}{C}{V}*"
+	paramSet_new("{s|sign}*{x|extend}*{p}*{v|verify}*{t}*{r}*{d}*{n}*{h|help}*{o|out}{i}{f}{b}{c}{C}{V}*"
 				 "{W}{S}{X}{P}{F}{H}{T}{E}{inc}*{aggre}{htime}{setsystime}"
 				 "{user}{pass}{log}"
 				 "{sysvar_aggre_url}{sysvar_aggre_pass}{sysvar_aggre_user}"
@@ -230,7 +229,13 @@ int main(int argc, char** argv, char **envp) {
 	if(includeParametersFromFile(set) == false) goto cleanup;
 	if(includeParametersFromEnvironment(set, envp) == false) goto cleanup;
 	if(paramSet_isSetByName(set, "h")) goto cleanup;
-
+	
+	if(paramSet_isTypos(set)){
+		paramSet_printTypoWarnings(set);
+		retval = EXIT_INVALID_CL_PARAMETERS;
+		goto cleanup;
+	}
+	
 	/*Extract task */
 	task = Task_getConsistentTask(taskDefArray, 10, set);
 	paramSet_printUnknownParameterWarnings(set);
