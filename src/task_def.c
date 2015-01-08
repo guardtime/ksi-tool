@@ -292,16 +292,32 @@ void Task_printSuggestions(TaskDefinition **def, int count, paramSet *set){
 	char first_flag[128];
 	int missing;
 	int all;
+	unsigned char *matchChart = NULL;
+	unsigned min = 101;
+	
+	matchChart = malloc(count*sizeof(unsigned char));
+	if(matchChart == NULL) return;
+	
 	
 	for(i=0; i<count; i++){
 		tmp = def[i];
 		
-		all = getFlagCount(tmp->taskDefinitionFlags );
-		missing = TaskDefinition_getMissingFlagCount(tmp->taskDefinitionFlags, set);
+		all = getFlagCount(tmp->taskDefinitionFlags )+getFlagCount(tmp->mandatoryFlags);
+		missing = TaskDefinition_getMissingFlagCount(tmp->taskDefinitionFlags, set)+TaskDefinition_getMissingFlagCount(tmp->mandatoryFlags, set);
 		getParametersNameFromCateghory(tmp->taskDefinitionFlags, first_flag, sizeof(first_flag));
-
-		if((100*missing)/all <= 75 && paramSet_isSetByName(set, first_flag))
+		
+		matchChart[i] = (100*missing)/all;
+		min = matchChart[i] < min ? matchChart[i] : min; 
+	}
+	
+	if(min == 100) return;
+	
+	for(i=0; i<count; i++){
+		tmp = def[i];
+		if(matchChart[i] == min)
 			fprintf(stderr, "Maybe you want to: %s %s %s\n", tmp->name, tmp->taskDefinitionFlags, tmp->mandatoryFlags);
 		
 	}
+	
+	free(matchChart);
 }
