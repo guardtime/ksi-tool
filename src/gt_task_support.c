@@ -130,8 +130,9 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 			
 			if(log){
 				logFile = fopen(outLogfile, "w");
-				if (logFile == NULL)
-					fprintf(stderr, "Error: Unable to open log file '%s'.\n", outLogfile);
+				if (logFile == NULL){
+					THROW_MSG(IO_EXCEPTION, EXIT_IO_ERROR, "Error: Unable to open log file '%s'.\n", outLogfile);
+				}
 				KSI_CTX_setLoggerCallback(tmpKsi, KSI_LOG_StreamLogger, logFile);
 				KSI_CTX_setLogLevel(tmpKsi, KSI_LOG_DEBUG);
 			}
@@ -162,7 +163,7 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 			
 			*ksi = tmpKsi;
 		}
-		CATCH(KSI_EXCEPTION){
+		CATCH_ALL{
 			KSI_PublicationsFile_free(tmpPubFile);
 			KSI_CTX_free(tmpKsi);
 			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to configure KSI.\n");

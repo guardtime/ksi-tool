@@ -116,7 +116,6 @@ int GT_publicationsFileTask(Task *task){
 				exceptionSolved();
 		}
 		CATCH(IO_EXCEPTION){
-				fprintf(stderr , _EXP.tmp);
 				printErrorMessage();
 				retval = _EXP.exep.ret;
 				exceptionSolved();
