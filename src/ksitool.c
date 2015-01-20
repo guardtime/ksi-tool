@@ -276,6 +276,7 @@ paramSet_free(set);
 	for(i=0; i<11;i++)
 		TaskDefinition_free(taskDefArray[i]);
 	Task_free(task);
-//	_CrtDumpMemoryLeaks();
+	/*TODO*/
+	//	_CrtDumpMemoryLeaks();
 	return retval;
 }

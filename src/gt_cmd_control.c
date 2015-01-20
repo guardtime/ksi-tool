@@ -41,9 +41,9 @@ FormatStatus isURLFormatOK(const char *url){
 	if(url == NULL) return FORMAT_NULLPTR;
 	if(strlen(url) == 0) return FORMAT_NOCONTENT;
 	
-	if(strstr(url, "http://")==url)
+	if(strstr(url, "http://")==url || strstr(url, "HTTP://")==url)
 		return FORMAT_OK;
-	else if(strstr(url, "file://")==url)
+	else if(strstr(url, "tcp://")==url || strstr(url, "TCP://")==url)
 		return FORMAT_OK;
 	else
 		return FORMAT_URL_UNKNOWN_SCHEME;

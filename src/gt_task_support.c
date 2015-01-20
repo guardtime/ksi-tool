@@ -1,6 +1,7 @@
 #include <string.h>
 #include <time.h>
 #include <ksi/net_http.h>
+#include <ksi/net_tcp.h>
 #include <stdio.h>
 #include "gt_task_support.h"
 #include "try-catch.h"
@@ -10,6 +11,68 @@
 	if (res != KSI_OK){  \
 		THROW_MSG(_exception,getReturnValue(res),__VA_ARGS__); \
 	}
+
+static int url_getHost(const char* url, char* buf, int len){
+	char *startOfHost = NULL;
+	char *endOfHost = NULL;
+	int hostLen = 0;
+	
+	if(url == NULL) return 1;
+	startOfHost = strstr(url, "://");
+	if(startOfHost == NULL) return 1;
+	startOfHost+=3;
+	
+	endOfHost = strstr(startOfHost, ":");
+	if(endOfHost == NULL)
+	endOfHost = strstr(startOfHost, "/");
+	if(endOfHost == NULL) return 1;
+	
+	hostLen = (int)(endOfHost - startOfHost);
+	if(len < hostLen+1 && hostLen > 0) return 1;
+	
+	strncpy(buf, startOfHost, hostLen);
+	buf[hostLen] = 0;
+	printf("host '%s'\n", buf);
+	return 0;
+}
+
+static int url_getPort(const char* url, unsigned* port){
+	char *startOfHost = NULL;
+	char *startOfPort = NULL;
+	int tmp = 30;
+	
+	if(url == NULL) return 1;
+	startOfHost = strstr(url, "://");
+	if(startOfHost == NULL) return 1;
+	startOfHost+=3;
+	startOfPort = strstr(startOfHost, ":");
+	if(startOfPort == NULL) return 1;
+	startOfPort++;
+	
+	sscanf(startOfPort, "%i", &tmp);
+	
+	*port = tmp;
+	return 0;
+}
+
+static int url_getScheme(const char* url, char* buf, int len){
+	char *end;
+	int subLen;
+	
+	if(url == NULL || buf == NULL) return 1;
+	end = strstr(url, "://");
+	if(end == NULL) return 1;
+	
+	subLen = (int)(end - url);
+	if(len < subLen+1 && subLen > 0) return 1;
+	
+	strncpy(buf, url, subLen);
+	buf[subLen] = 0;
+	printf(">>>scheme '%s'\n", buf);
+	return 0;
+}
+
+
 
 /**
  * Configures NetworkProvider using info from command-line.
@@ -21,7 +84,7 @@
  */
 static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	int res = KSI_OK;
-	KSI_HttpClient *net = NULL;
+	void *net;
 	bool S=false, P=false, X=false, C=false, c=false, bUser=false, bPass=false, s=false, x=false, p=false, T=false;
 	char *signingService_url = NULL;
 	char *publicationsFile_url = NULL;
@@ -30,6 +93,10 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	int networkTransferTimeout = 0;
 	char *user = NULL;
 	char *pass = NULL;
+	char scheme[32];
+	char host[32];
+	int port;
+	bool useTCP = false;
 	
 	S = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "S") ? "S" : "sysvar_aggre_url",0,&signingService_url);
 	X = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "X") ? "X" : "sysvar_ext_url",0,&verificationService_url);
@@ -42,48 +109,76 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	p = paramSet_isSetByName(task->set, "p");
 	T = paramSet_isSetByName(task->set, "T");
 	
+	
+
 	if(x || (p && T)){
 		bUser = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "user") ? "user" : "sysvar_ext_user",0,&user);
 		bPass = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "pass") ? "pass" : "sysvar_ext_pass",0,&pass);
+		url_getScheme(verificationService_url, scheme, sizeof(scheme));
+		if(strcmp(scheme, "tcp") == 0 || strcmp(scheme, "TCP") == 0){
+			useTCP = true;
+			url_getPort(verificationService_url, &port);
+			url_getHost(verificationService_url, host, sizeof(host));
+		}
 	}
 	else if(s){
 		bUser = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "user") ? "user" : "sysvar_aggre_user",0,&user);
 		bPass = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "pass") ? "pass" : "sysvar_aggre_pass",0,&pass);
+		url_getScheme(signingService_url, scheme, sizeof(scheme));
+		if(strcmp(scheme, "tcp") == 0 || strcmp(scheme, "TCP") == 0){
+			useTCP = true;
+			url_getPort(signingService_url, &port);
+			url_getHost(signingService_url, host, sizeof(host));
 		}
+	}
+	
 	if(user == NULL) user = "anon";
 	if(pass == NULL) pass = "anon";
+	
 	try
 	   CODE{
 			/* Check if uri's are specified. */
-			res = KSI_HttpClient_new(ksi, &net);
+			res = useTCP ? KSI_TcpClient_new(ksi, &(KSI_TcpClient*)net) : KSI_HttpClient_new(ksi, &(KSI_HttpClient*)net);
+
 			ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to create new network provider.\n");
 
 			/* Check aggregator url */
 			if(x || (p && T)){
-				res = KSI_HttpClient_setExtender(net, verificationService_url, user, pass);
+				if(useTCP)
+					res = KSI_TcpClient_setExtender((KSI_TcpClient*)net, host, port, user, pass);
+				else
+					res = KSI_HttpClient_setExtender((KSI_HttpClient*)net, verificationService_url, user, pass);
+					
 				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set extender/verifier url '%s'.%s\n", verificationService_url, verificationService_url ? "" : " Define system variable \"KSI_EXTENDER\", read help (-h) for more information.");
 			}
 			else if(s){
-				res = KSI_HttpClient_setAggregator(net, signingService_url, user, pass);
+				if(useTCP)
+					res = KSI_TcpClient_setAggregator((KSI_TcpClient*)net, host, port, user, pass);
+				else
+					res = KSI_HttpClient_setAggregator((KSI_HttpClient*)net, signingService_url, user, pass);
 				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set aggregator url '%s'.%s\n", signingService_url, verificationService_url ? "" : " Define system variable \"KSI_AGGREGATOR\", read help (-h) for more information.");
 			}
 
 			/* Check publications file url. */
 			if (P) {
-				res = KSI_HttpClient_setPublicationUrl(net, publicationsFile_url);
+				res = KSI_HttpClient_setPublicationUrl((KSI_HttpClient*)net, publicationsFile_url);
 				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set publications file url '%s'.\n", publicationsFile_url);
 			}
 
 			/* Check Network connection timeout. */
 			if (C) {
-				res = KSI_HttpClient_setConnectTimeoutSeconds(net, networkConnectionTimeout);
-				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set network connection timeout %i.\n", networkConnectionTimeout);
+				if(!useTCP){
+					res = KSI_HttpClient_setConnectTimeoutSeconds((KSI_HttpClient*)net, networkConnectionTimeout);
+					ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set network connection timeout %i.\n", networkConnectionTimeout);
+				}
 			}
 
 			/* Check Network transfer timeout. */
 			if (c) {
-				res = KSI_HttpClient_setReadTimeoutSeconds(net, networkTransferTimeout);
-				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set network transfer timeout %i.\n", networkTransferTimeout);
+				if(!useTCP){
+					res = KSI_HttpClient_setReadTimeoutSeconds((KSI_HttpClient*)net, networkTransferTimeout);
+					ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set network transfer timeout %i.\n", networkTransferTimeout);
+				}
 			}
 
 			/* Set the new network provider. */
