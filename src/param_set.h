@@ -45,12 +45,13 @@ void paramSet_free(paramSet *set);
 /**
  * Adds format and content control to a set of parameters. The set is defined 
  * using {} containing parameters name. For example {a}{h}{file} 
- * @param[in] set pointer to parameter set
- * @param[in] names parameters names
- * @param[in] controlFormat function for format control
- * @param[in] controlContent function for content control 
+ * @param[in] set pointer to parameter set.
+ * @param[in] names parameters names.
+ * @param[in] controlFormat function for format control.
+ * @param[in] controlContent function for content control.
+ * @param[in] convert function for argument conversion.  
  */
-void paramSet_addControl(paramSet *set, const char *names, FormatStatus (*controlFormat)(const char *), ContentStatus (*controlContent)(const char *));
+void paramSet_addControl(paramSet *set, const char *names, FormatStatus (*controlFormat)(const char *), ContentStatus (*controlContent)(const char *), bool (*convert)(const char*, char*, unsigned));
 
 /**
  * Reads parameter values from command-line using predefined 

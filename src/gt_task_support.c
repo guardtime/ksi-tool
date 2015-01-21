@@ -68,7 +68,6 @@ static int url_getScheme(const char* url, char* buf, int len){
 	
 	strncpy(buf, url, subLen);
 	buf[subLen] = 0;
-	printf(">>>scheme '%s'\n", buf);
 	return 0;
 }
 
@@ -115,7 +114,7 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 		bUser = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "user") ? "user" : "sysvar_ext_user",0,&user);
 		bPass = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "pass") ? "pass" : "sysvar_ext_pass",0,&pass);
 		url_getScheme(verificationService_url, scheme, sizeof(scheme));
-		if(strcmp(scheme, "tcp") == 0 || strcmp(scheme, "TCP") == 0){
+		if(strcmp(scheme, "tcp") == 0){
 			useTCP = true;
 			url_getPort(verificationService_url, &port);
 			url_getHost(verificationService_url, host, sizeof(host));
@@ -125,7 +124,7 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 		bUser = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "user") ? "user" : "sysvar_aggre_user",0,&user);
 		bPass = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "pass") ? "pass" : "sysvar_aggre_pass",0,&pass);
 		url_getScheme(signingService_url, scheme, sizeof(scheme));
-		if(strcmp(scheme, "tcp") == 0 || strcmp(scheme, "TCP") == 0){
+		if(strcmp(scheme, "tcp") == 0){
 			useTCP = true;
 			url_getPort(signingService_url, &port);
 			url_getHost(signingService_url, host, sizeof(host));

@@ -199,15 +199,15 @@ int main(int argc, char** argv, char **envp) {
 	if(set == NULL) goto cleanup;
 	
 	/*Configure parameter set*/
-	paramSet_addControl(set, "{o}{log}", isPathFormOk, isOutputFileContOK);
-	paramSet_addControl(set, "{i}{b}{f}{V}{W}{inc}", isPathFormOk, isInputFileContOK);
-	paramSet_addControl(set, "{F}", isImprintFormatOK, isImprintContOK);
-	paramSet_addControl(set, "{H}", isHashAlgFormatOK, isHashAlgContOK);
-	paramSet_addControl(set, "{S}{X}{P}{sysvar_aggre_url}{sysvar_ext_url}", isURLFormatOK, contentIsOK);
-	paramSet_addControl(set, "{c}{C}{T}", isIntegerFormatOK, contentIsOK);
-	paramSet_addControl(set, "{E}", isEmailFormatOK, contentIsOK);
-	paramSet_addControl(set, "{user}{pass}{sysvar_ext_pass}{sysvar_ext_user}{sysvar_aggre_pass}{sysvar_aggre_user}", isUserPassFormatOK, contentIsOK);
-	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{aggre}{htime}{setsystime}", isFlagFormatOK, contentIsOK);
+	paramSet_addControl(set, "{o}{log}", isPathFormOk, isOutputFileContOK, NULL);
+	paramSet_addControl(set, "{i}{b}{f}{V}{W}{inc}", isPathFormOk, isInputFileContOK, NULL);
+	paramSet_addControl(set, "{F}", isImprintFormatOK, isImprintContOK, NULL);
+	paramSet_addControl(set, "{H}", isHashAlgFormatOK, isHashAlgContOK, NULL);
+	paramSet_addControl(set, "{S}{X}{P}{sysvar_aggre_url}{sysvar_ext_url}", isURLFormatOK, contentIsOK, convert_repairUrl);
+	paramSet_addControl(set, "{c}{C}{T}", isIntegerFormatOK, contentIsOK, NULL);
+	paramSet_addControl(set, "{E}", isEmailFormatOK, contentIsOK, NULL);
+	paramSet_addControl(set, "{user}{pass}{sysvar_ext_pass}{sysvar_ext_user}{sysvar_aggre_pass}{sysvar_aggre_user}", isUserPassFormatOK, contentIsOK, NULL);
+	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{aggre}{htime}{setsystime}", isFlagFormatOK, contentIsOK, NULL);
 	
 	/*Define possible tasks*/
 	/*						ID							DESC					DEF						MAN			IGNORE				OPTIONAL		FORBIDDEN			NEW OBJ*/

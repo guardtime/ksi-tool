@@ -41,9 +41,9 @@ FormatStatus isURLFormatOK(const char *url){
 	if(url == NULL) return FORMAT_NULLPTR;
 	if(strlen(url) == 0) return FORMAT_NOCONTENT;
 	
-	if(strstr(url, "http://")==url || strstr(url, "HTTP://")==url)
+	if(strstr(url, "http://")==url)
 		return FORMAT_OK;
-	else if(strstr(url, "tcp://")==url || strstr(url, "TCP://")==url)
+	else if(strstr(url, "tcp://")==url)
 		return FORMAT_OK;
 	else
 		return FORMAT_URL_UNKNOWN_SCHEME;
@@ -279,4 +279,33 @@ const char *getParameterContentErrorString(ContentStatus res){
 	}
 
 	return "(Unknown error)";
+}
+
+bool convert_repairUrl(const char* arg, char* buf, unsigned len){
+	char *scheme = NULL;
+	int i = 0;
+	if(arg == NULL || buf == NULL) return false;
+	scheme = strstr(arg, "://");
+		
+	if(scheme == NULL){
+		strncpy(buf, "http://", len-1);
+		if(strlen(buf)+strlen(arg) < len)
+			strcat(buf, arg);
+		else
+			return false;
+	}
+	else{
+		while(arg[i] && i < len - 1){
+			if(&arg[i] < scheme){
+//				printf("%i) %i/%i\n",i, (int)&arg[i], (int)scheme);
+				buf[i] = tolower(arg[i]);
+			}
+			else
+				buf[i] = arg[i];
+			i++;
+		}
+		buf[i] = 0;
+	}
+//	printf("%s\n", buf);
+	return true;
 }

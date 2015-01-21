@@ -108,8 +108,9 @@ typedef struct param_st{
 	int arcCount;								//count of arguments in chain
 	paramValue *arg;							//argument(s)
 	
-	FormatStatus (*controlFormat)(const char *);	//function pointer for format control
-	ContentStatus (*controlContent)(const char *);	//function pointer for content control
+	FormatStatus (*controlFormat)(const char*);	//function pointer for format control
+	ContentStatus (*controlContent)(const char*);	//function pointer for content control
+	bool (*convert)(const char*, char*, unsigned);	//function pointer to convert the content
 } parameter;
 
 static void parameter_free(parameter *obj){
@@ -121,7 +122,11 @@ static void parameter_free(parameter *obj){
 	free(obj);
 }
 
-static bool parameter_new(const char *flagName,const char *flagAlias, bool isMultipleAllowed,FormatStatus (*controlFormat)(const char *),ContentStatus (*controlContent)(const char *), parameter **newObj){
+static bool parameter_new(const char *flagName,const char *flagAlias, bool isMultipleAllowed,
+		FormatStatus (*controlFormat)(const char *),
+		ContentStatus (*controlContent)(const char *),
+		bool (*convert)(const char*, char*, unsigned),
+		parameter **newObj){
 	parameter *tmp = NULL;
 	
 	if(newObj == NULL || flagName == NULL) return false;
@@ -149,7 +154,7 @@ static bool parameter_new(const char *flagName,const char *flagAlias, bool isMul
 	
 	tmp->controlFormat = controlFormat;
 	tmp->controlContent = controlContent;
-	
+	tmp->convert = convert;
 	*newObj = tmp;
 	tmp = NULL;
 
@@ -170,16 +175,28 @@ static bool parameter_addArgument(parameter *param, const char *argument){
 	paramValue *newValue = NULL;
 	paramValue *pNextValue = NULL;
 	bool status = false;
-	
+	char *arg = NULL;
+	char buf[1024];
 	if(param == NULL) return false;
+
+	/*If conversion function exists convert the argument*/
+	if(param->convert){
+		if(param->convert(argument, buf, sizeof(buf)))
+			arg = buf;
+		else
+			arg = (char *)argument;
+	}
+	else{
+		arg = (char *)argument;
+	}
 	
 	/*Create new object and control the format*/
-	if(!paramValue_new(argument, &newValue)) goto cleanup;
+	if(!paramValue_new(arg, &newValue)) goto cleanup;
 	
 	if(param->controlFormat)
-		newValue->formatStatus = param->controlFormat(argument);
+		newValue->formatStatus = param->controlFormat(arg);
 	if(newValue->formatStatus == FORMAT_OK && param->controlContent)
-		newValue->contentStatus = param->controlContent(argument);
+		newValue->contentStatus = param->controlContent(arg);
 	
 	if(param->arg == NULL){
 		param->arg = newValue;
@@ -414,13 +431,13 @@ bool paramSet_new(const char *names, paramSet **set){
 	
 	while((pName = getParametersName(pName,buf,alias, len, &isMultiple)) != NULL){
 //		printf(">>> '%s'/'%s' : %i\n", buf,alias, isMultiple);
-		if(!parameter_new(buf,alias[0] ? alias : NULL,isMultiple,NULL,NULL, &tmp->parameter[iter]))
+		if(!parameter_new(buf,alias[0] ? alias : NULL,isMultiple, NULL, NULL, NULL, &tmp->parameter[iter]))
 			goto cleanup;
 		iter++;
 	}
 	
-	parameter_new(UNKNOWN_PARAMETER_NAME,NULL,MULTIPLE,NULL,NULL, &tmp->parameter[iter++]);
-	parameter_new(TYPO_PARAMETER_NAME,NULL,MULTIPLE,NULL,NULL, &tmp->parameter[iter]);
+	parameter_new(UNKNOWN_PARAMETER_NAME, NULL,MULTIPLE, NULL, NULL, NULL, &tmp->parameter[iter++]);
+	parameter_new(TYPO_PARAMETER_NAME, NULL,MULTIPLE, NULL, NULL, NULL, &tmp->parameter[iter]);
 	
 	*set = tmp;
 	tmp = NULL;	
@@ -449,7 +466,10 @@ void paramSet_free(paramSet *set){
 	return;
 	}
 
-void paramSet_addControl(paramSet *set, const char *names, FormatStatus (*controlFormat)(const char *), ContentStatus (*controlContent)(const char *)){
+void paramSet_addControl(paramSet *set, const char *names,
+		FormatStatus (*controlFormat)(const char *),
+		ContentStatus (*controlContent)(const char *),
+		bool (*convert)(const char*, char*, unsigned)){
 	parameter *tmp = NULL;
 	const char *pName = NULL;
 	char buf[256];
@@ -460,6 +480,7 @@ void paramSet_addControl(paramSet *set, const char *names, FormatStatus (*contro
 		if(tmp != NULL){
 			tmp->controlFormat = controlFormat;
 			tmp->controlContent = controlContent;
+			tmp->convert = convert;
 		}
 	}
 }
