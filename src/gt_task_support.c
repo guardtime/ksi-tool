@@ -137,7 +137,7 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	try
 	   CODE{
 			/* Check if uri's are specified. */
-			res = useTCP ? KSI_TcpClient_new(ksi, &(KSI_TcpClient*)net) : KSI_HttpClient_new(ksi, &(KSI_HttpClient*)net);
+			res = useTCP ? KSI_TcpClient_new(ksi, (KSI_TcpClient**)&net) : KSI_HttpClient_new(ksi, (KSI_HttpClient**)&net);
 
 			ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to create new network provider.\n");
 

@@ -3,10 +3,10 @@ cd ../src
 # test configuration
 WAIT=5
 
-SIG_SERV_IP=http://192.168.100.36:3333/
+SIG_SERV_IP=http://ksigw.test.guardtime.com:3333/gt-signingservice
 PUB_SERV_IP=http://verify.guardtime.com/ksi-publications.bin
-VER_SERV_IP=http://192.168.100.36:8081/
-SERVICES="-S $SIG_SERV_IP  -X $VER_SERV_IP  -P $PUB_SERV_IP -C 25 -c 25"
+VER_SERV_IP=http://ksigw.test.guardtime.com:8010/gt-extendingservice
+SERVICES="-S $SIG_SERV_IP  -X $VER_SERV_IP  -P $PUB_SERV_IP -C 25 -c 25" 
 echo $SERVICES
 
 # input files
