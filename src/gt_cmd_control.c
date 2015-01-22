@@ -283,7 +283,7 @@ const char *getParameterContentErrorString(ContentStatus res){
 
 bool convert_repairUrl(const char* arg, char* buf, unsigned len){
 	char *scheme = NULL;
-	int i = 0;
+	unsigned i = 0;
 	if(arg == NULL || buf == NULL) return false;
 	scheme = strstr(arg, "://");
 		
@@ -297,7 +297,6 @@ bool convert_repairUrl(const char* arg, char* buf, unsigned len){
 	else{
 		while(arg[i] && i < len - 1){
 			if(&arg[i] < scheme){
-//				printf("%i) %i/%i\n",i, (int)&arg[i], (int)scheme);
 				buf[i] = tolower(arg[i]);
 			}
 			else
@@ -306,6 +305,5 @@ bool convert_repairUrl(const char* arg, char* buf, unsigned len){
 		}
 		buf[i] = 0;
 	}
-//	printf("%s\n", buf);
 	return true;
 }
