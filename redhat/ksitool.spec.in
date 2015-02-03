@@ -1,12 +1,11 @@
 %define	name	@PACKAGE@
-%define version @VERSION@
 
 %define upstream_release 0
 
 
 Summary: Command-line access to Guardtime Keyless Signature services
 Name: %{name}
-Version: %{version}
+Version: %(cat VERSION)
 Release: UNSTABLE 
 License: Apache 2.0
 Group: Applications/Security
