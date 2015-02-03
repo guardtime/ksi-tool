@@ -6,7 +6,7 @@ SET WAIT=5
 
 REM Services to use
 REM SET SIG_SERV_IP=http://192.168.100.29:1234/ 
-SET SIG_SERV_IP=http://192.168.100.36:3333/
+SET SIG_SERV_IP=Http://192.168.100.36:3333/
 rem SET VER_SERV_IP=http://192.168.100.29:1111/gt-extendingservice
 REM SET PUB_SERV_IP=http://172.20.20.7/publications.tlv
 set PUB_SERV_IP=http://verify.guardtime.com/ksi-publications.bin

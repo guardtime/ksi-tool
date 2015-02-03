@@ -9,6 +9,7 @@ int GT_extendTask(Task *task) {
 	
 	KSI_Integer *signTime = NULL;
 	KSI_Integer *pubTime = NULL;
+	KSI_Integer *reqID = NULL;
 	KSI_ExtendReq *extReq = NULL;
 	KSI_ExtendResp *extResp = NULL;
 	KSI_CalendarHashChain *calHashChain = NULL;
@@ -50,14 +51,24 @@ int GT_extendTask(Task *task) {
 			if(T){
 				printf("Extending old signature to %i... ", publicationTime);
 
+				KSI_Integer_new_throws(ksi, publicationTime, &pubTime);
+				KSI_Integer_new_throws(ksi, (uint64_t)pubTime, &reqID);
+				
+				/* If the publication exists set it as the trust anchor. */
+				KSI_receivePublicationsFile_throws(ksi, &pubFile);
+				KSI_PublicationsFile_getPublicationDataByTime_throws(ksi, pubFile, pubTime, &pubRec);
+				
 				KSI_Signature_clone_throws(ksi, sig, &ext);
 				KSI_Signature_getSigningTime_throws(ksi, ext, &signTime);
-				KSI_Integer_new_throws(ksi, publicationTime, &pubTime);
+				KSI_Integer_ref(signTime);
 
 				KSI_ExtendReq_new_throws(ksi, &extReq);
+				KSI_ExtendReq_setRequestId_throws(ksi, extReq, reqID);
+				reqID = NULL;
 				KSI_ExtendReq_setAggregationTime_throws(ksi, extReq, signTime);
+				signTime = NULL;
 				KSI_ExtendReq_setPublicationTime_throws(ksi, extReq, pubTime);
-				
+				pubTime = NULL;
 				
 				/* Send the actual request. */
 				measureLastCall();
@@ -81,18 +92,15 @@ int GT_extendTask(Task *task) {
 				/*Remove HashChain from response. Add the hash chain to the signature.*/
 				KSI_ExtendResp_getCalendarHashChain_throws(ksi, extResp, &calHashChain);
 				KSI_ExtendResp_setCalendarHashChain_throws(ksi, extResp, NULL);
+				
 				KSI_Signature_replaceCalendarChain_throws(ksi, ext, calHashChain);
 				
-				/* If the publication exists set it as the trust anchor. */
-				KSI_receivePublicationsFile_throws(ksi, &pubFile);
-				
-				/*TODO NB! pubRec must be cloned. It still belongs to the publications file*/
-				KSI_PublicationsFile_getPublicationDataByTime_throws(ksi, pubFile, pubTime, &pubRec);
+
 				if(pubRec != NULL){
 					KSI_PublicationRecord_clone_throws(ksi, pubRec, &pubRecClone);
+					KSI_Signature_replacePublicationRecord_throws(ksi, ext, pubRecClone);
+					pubRecClone = NULL;
 				}
-				KSI_Signature_replacePublicationRecord_throws(ksi, ext, pubRecClone);
-				pubRecClone = NULL;
 			}
 			else{
 				printf("Extending old signature... ");
@@ -124,6 +132,10 @@ int GT_extendTask(Task *task) {
 
 	KSI_Signature_free(sig);
 	KSI_Signature_free(ext);
+
+	KSI_Integer_free(pubTime);
+	KSI_Integer_free(signTime);
+	KSI_Integer_free(reqID);
 	
 	KSI_ExtendReq_free(extReq);
 	KSI_ExtendResp_free(extResp);

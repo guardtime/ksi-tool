@@ -39,7 +39,7 @@ static int url_getHost(const char* url, char* buf, int len){
 static int url_getPort(const char* url, unsigned* port){
 	char *startOfHost = NULL;
 	char *startOfPort = NULL;
-	int tmp = 30;
+	int tmp = 0;
 	
 	if(url == NULL) return 1;
 	startOfHost = strstr(url, "://");
@@ -570,10 +570,6 @@ int getReturnValue(int error_code){
 			return EXIT_NETWORK_ERROR;
 		case KSI_HTTP_ERROR:
 			return EXIT_NETWORK_ERROR;
-		case KSI_AGGREGATOR_ERROR:
-			return EXIT_AGGRE_ERROR;
-		case KSI_EXTENDER_ERROR:
-			return EXIT_EXTEND_ERROR;
 		case KSI_EXTEND_WRONG_CAL_CHAIN:
 			return EXIT_EXTEND_ERROR;
 		case KSI_EXTEND_NO_SUITABLE_PUBLICATION:
@@ -590,6 +586,37 @@ int getReturnValue(int error_code){
 			return EXIT_HMAC_ERROR;
 		case KSI_UNKNOWN_ERROR:
 			return EXIT_FAILURE;
+		case KSI_SERVICE_INVALID_REQUEST:
+			return 0;
+		/*generic*/
+		case KSI_SERVICE_AUTHENTICATION_FAILURE:
+			return EXIT_AUTH_FAILURE;
+		case KSI_SERVICE_INVALID_PAYLOAD:
+			return EXIT_INVALID_FORMAT;
+		case KSI_SERVICE_INTERNAL_ERROR:
+			return EXIT_FAILURE;
+		case KSI_SERVICE_UPSTREAM_ERROR:
+			return EXIT_FAILURE;
+		case KSI_SERVICE_UPSTREAM_TIMEOUT:
+			return EXIT_FAILURE;
+		case KSI_SERVICE_UNKNOWN_ERROR:
+			return EXIT_FAILURE;
+		/*aggre*/
+		case KSI_SERVICE_AGGR_REQUEST_TOO_LARGE:
+			return EXIT_AGGRE_ERROR;
+		case KSI_SERVICE_AGGR_REQUEST_OVER_QUOTA:
+			return EXIT_AGGRE_ERROR;
+		/*extender*/
+		case KSI_SERVICE_EXTENDER_INVALID_TIME_RANGE:
+			return EXIT_EXTEND_ERROR;
+		case KSI_SERVICE_EXTENDER_DATABASE_MISSING:
+			return EXIT_EXTEND_ERROR;
+		case KSI_SERVICE_EXTENDER_DATABASE_CORRUPT:
+			return EXIT_EXTEND_ERROR;
+		case KSI_SERVICE_EXTENDER_REQUEST_TIME_TOO_OLD:
+			return EXIT_EXTEND_ERROR;
+		case KSI_SERVICE_EXTENDER_REQUEST_TIME_TOO_NEW:
+			return EXIT_EXTEND_ERROR;
 		default:
 			return EXIT_FAILURE;
 	}

@@ -29,6 +29,7 @@
 #define EXIT_HMAC_ERROR 11
 #define EXIT_NO_PRIVILEGES 12
 #define EXIT_OUT_OF_MEMORY 13
+#define EXIT_AUTH_FAILURE 14
 
 #ifdef	__cplusplus
 extern "C" {
