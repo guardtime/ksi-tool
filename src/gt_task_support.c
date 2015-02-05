@@ -32,7 +32,6 @@ static int url_getHost(const char* url, char* buf, int len){
 	
 	strncpy(buf, startOfHost, hostLen);
 	buf[hostLen] = 0;
-	printf("host '%s'\n", buf);
 	return 0;
 }
 
@@ -174,10 +173,11 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 
 			/* Check Network transfer timeout. */
 			if (c) {
-				if(!useTCP){
-					res = KSI_HttpClient_setReadTimeoutSeconds((KSI_HttpClient*)net, networkTransferTimeout);
+					if(useTCP)
+						res = KSI_TcpClient_setTransferTimeoutSeconds((KSI_TcpClient*)net, networkTransferTimeout);
+					else
+						res = KSI_HttpClient_setReadTimeoutSeconds((KSI_HttpClient*)net, networkTransferTimeout);
 					ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set network transfer timeout %i.\n", networkTransferTimeout);
-				}
 			}
 
 			/* Set the new network provider. */
@@ -625,13 +625,13 @@ int getReturnValue(int error_code){
 #define THROWABLE3(_ctx,func, ...) \
 	int res = KSI_UNKNOWN_ERROR; \
 	char buf[1024]; \
-	char buf2[1500]; \
+	char buf2[1024]; \
 	const char *errstr; \
 	\
 	res = func;  \
 	if(res != KSI_OK) { \
+		KSI_ERR_getBaseErrorMessage(_ctx, buf, sizeof(buf),&res); \
 		errstr = KSI_getErrorString(res); \
-		KSI_ERR_getBaseErrorMessage(_ctx, buf, sizeof(buf)); \
 		if(strcmp(errstr, buf) == 0) \
 			snprintf(buf2, sizeof(buf2), "Error: %s", buf); \
 		else \
