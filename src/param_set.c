@@ -531,13 +531,6 @@ static int editDistance_levenshtein(const char *A, const char *B){
 	}
 	edit_distance = m[i-1][j-1];
 	
-//	printf("Matrix::\n");
-//	for(i=0; i<M_H; i++){
-//		for(j=0; j<M_W; j++){
-//			printf("%2i", m[i][j]);
-//		}
-//		printf("\n");
-//	}
 	
 cleanup:
 	if(m)					

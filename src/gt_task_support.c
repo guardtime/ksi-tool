@@ -626,16 +626,11 @@ int getReturnValue(int error_code){
 	int res = KSI_UNKNOWN_ERROR; \
 	char buf[1024]; \
 	char buf2[1024]; \
-	const char *errstr; \
 	\
 	res = func;  \
 	if(res != KSI_OK) { \
 		KSI_ERR_getBaseErrorMessage(_ctx, buf, sizeof(buf),&res); \
-		errstr = KSI_getErrorString(res); \
-		if(strcmp(errstr, buf) == 0) \
-			snprintf(buf2, sizeof(buf2), "Error: %s", buf); \
-		else \
-			snprintf(buf2, sizeof(buf2), "Error: %s %s", buf, errstr); \
+		snprintf(buf2, sizeof(buf2), "Error: %s (0x%x)", buf, res); \
 		appendMessage(buf2); \
 		THROW_MSG(KSI_EXCEPTION,getReturnValue(res), __VA_ARGS__); \
 	} \
