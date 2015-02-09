@@ -2,6 +2,7 @@
 #include <time.h>
 #include <ksi/net_http.h>
 #include <ksi/net_tcp.h>
+#include <ksi/hashchain.h>
 #include <stdio.h>
 #include "gt_task_support.h"
 #include "try-catch.h"

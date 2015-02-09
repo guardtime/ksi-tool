@@ -1,7 +1,7 @@
+#include <ksi/ksi.h>
 #include <ctype.h>
 #include <stdio.h>		//input output
 #include <string.h>
-
 
 #ifdef _WIN32 
 #	include <io.h>
@@ -12,6 +12,7 @@
 #endif
 #include <errno.h>
 #include "gt_cmd_control.h"
+
 
 #define CheckNullPtr(strn) if(strn==NULL) return PARAM_NULLPTR;
 #define CheckEmpty(strn) if(strlen(strn) == 0) return PARAM_NOCONTENT;
@@ -157,22 +158,8 @@ ContentStatus isOutputFileContOK(const char* path){
 }
 
 ContentStatus isHashAlgContOK(const char *alg){
-	if(strcmp("SHA-1" ,alg) == 0) return PARAM_OK;
-	else if(strcmp("SHA-256" ,alg) == 0) return PARAM_OK;
-	else if(strcmp("RIPEMD-160" ,alg) == 0) return PARAM_OK;
-	else if(strcmp("SHA-224" ,alg) == 0) return PARAM_OK;
-	else if(strcmp("SHA-384" ,alg) == 0) return PARAM_OK;
-	else if(strcmp("SHA-512" ,alg) == 0) return PARAM_OK;
-	else if(strcmp("RIPEMD-256" ,alg) == 0) return PARAM_OK;
-	else if(strcmp("SHA3-244" ,alg) == 0) return PARAM_OK;
-	else if(strcmp("SHA3-256" ,alg) == 0) return PARAM_OK;
-	else if(strcmp("SHA3-384" ,alg) == 0) return PARAM_OK;
-	else if(strcmp("SHA3-512" ,alg) == 0) return PARAM_OK;
-	else if(strcmp("SM3" ,alg) == 0) return PARAM_OK;
+	if(KSI_getHashAlgorithmByName(alg) != -1) return PARAM_OK;
 	else return HASH_ALG_INVALID_NAME;
-	
-	
-	
 }
 
 ContentStatus isImprintContOK(const char *imprint){
@@ -180,6 +167,7 @@ ContentStatus isImprintContOK(const char *imprint){
 	char *colon = NULL;
 	char *imp = NULL;
 	char *alg = NULL;
+	int alg_id = -1;
 	ContentStatus status = PARAM_INVALID;
 	unsigned len = 0;
 	unsigned expected_len = 0;
@@ -196,22 +184,13 @@ ContentStatus isImprintContOK(const char *imprint){
 	alg = tmp;
 	imp = colon+1;
 	
-	if(strcmp("SHA-1" ,alg) == 0) expected_len = 160/8;
-	else if(strcmp("SHA-256" ,alg) == 0) expected_len = 256/8;
-	else if(strcmp("RIPEMD-160" ,alg) == 0) expected_len = 160/8;
-	else if(strcmp("SHA-224" ,alg) == 0) expected_len = 224/8;
-	else if(strcmp("SHA-384" ,alg) == 0) expected_len = 384/8;
-	else if(strcmp("SHA-512" ,alg) == 0) expected_len = 512/8;
-	else if(strcmp("RIPEMD-256" ,alg) == 0) expected_len = 256/8;
-	else if(strcmp("SHA3-244" ,alg) == 0) expected_len = 224/8;
-	else if(strcmp("SHA3-256" ,alg) == 0) expected_len = 256/8;
-	else if(strcmp("SHA3-384" ,alg) == 0) expected_len = 384/8;
-	else if(strcmp("SHA3-512" ,alg) == 0) expected_len = 512/8;
-	else if(strcmp("SM3" ,alg) == 0) expected_len = 256/8;
-	else{
+	alg_id = KSI_getHashAlgorithmByName(alg);
+	if(alg_id == -1){
 		status = HASH_ALG_INVALID_NAME;
 		goto cleanup;
 	}
+	
+	expected_len = KSI_getHashLength(alg_id);
 	
 	len = (unsigned)strlen(imp);
 	
