@@ -5,6 +5,7 @@
 #include <string.h>
 #include <ksi/ksi.h>
 #include "task_def.h"
+#include <stdlib.h>
 #include "gt_cmd_common.h"
 
 
