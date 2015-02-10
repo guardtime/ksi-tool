@@ -106,10 +106,10 @@ static void GT_pritHelp(paramSet *set){
 			" -p\t\tdownload Publications file (-d -t):\n"
 			"\t\t-p -o download publications file.\n"
 			"\t\t-p -T create publication string.\n"
-			" -v --verify\tverify signature or publications file (-n -r -d -t):\n"
-			"\t\t-v -x -i (-f) verify signature (and signed document) online.\n"
-			"\t\t-v -b -i (-f) verify signature (and signed document) using specific\n"
-			"\t\tpublications file.\n"
+			" -v --verify\tverify signature or publications file. Use -f and -F\n"
+			"\t\tfor document and its hash verification (-n -r -d -t):\n"
+			"\t\t-v -x -i verify signature online.\n"
+			"\t\t-v -b -i verify signature using specific publications file.\n"
 			"\t\t-v -b verify publication file.\n"
 			" --aggre	use aggregator for (-n -t):\n"
 			"\t\t--aggre -htime display current aggregation root hash value and time.\n"
@@ -216,9 +216,9 @@ int main(int argc, char** argv, char **envp) {
 	TaskDefinition_new(extendTimestamp,			"Extend signature",				"-x",					"-i -o",	"-H-F-f-b-",		"-T-n-r-t",		"-s-p-v",			&taskDefArray[2]);
 	TaskDefinition_new(downloadPublicationsFile,"Download publication file",	"-p -o",				"",			"-H-F-f-i-T-n-r",	"-d-t",			"-s-x-v-T",			&taskDefArray[3]);
 	TaskDefinition_new(createPublicationString, "Create publication string",	"-p -T",				"",			"-H-F-f-i-n-r",		"-d-t",			"-s-x-v-o",			&taskDefArray[4]);
-	TaskDefinition_new(verifyTimestamp,			"Verify online",				"-v -x",				"-i",		"-F-H-T",			"-f-n-d-r-t",	"-s-p-b",			&taskDefArray[5]);
-	TaskDefinition_new(verifyTimestamp,			"Verify locally",				"-v -b -i",				"",			"-F-H-T",			"-f-n-d-r-t",	"-x-s-p",			&taskDefArray[6]);
-	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"-v -b",				"",			"-T-F-H",			"-n-d-r-t",		"-x-s-p-i-f",		&taskDefArray[7]);
+	TaskDefinition_new(verifyTimestamp,			"Verify online",				"-v -x",				"-i",		"-H-T",				"-f-F-n-d-r-t",	"-s-p-b",			&taskDefArray[5]);
+	TaskDefinition_new(verifyTimestamp,			"Verify locally",				"-v -b -i",				"",			"-H-T",				"-f-F-n-d-r-t",	"-x-s-p",			&taskDefArray[6]);
+	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"-v -b",				"",			"-T-H",				"-n-d-r-t",		"-x-s-p-i-f-F",		&taskDefArray[7]);
 	TaskDefinition_new(getRootH_T,				"Get Aggregator root hash",		"-aggre -htime",		"",			"",					"",				"-x-s-p-v",			&taskDefArray[8]);
 	TaskDefinition_new(setSysTime,				"Set system time",				"-aggre -setsystime",	"",			"",					"",				"-x-s-p-v",			&taskDefArray[9]);
 	

@@ -86,6 +86,27 @@ void printPublicationsFileCertificates(const KSI_PublicationsFile *pubfile);
 void printSignaturesRootHash_n_Time(const KSI_Signature *sig);
 
 /**
+ * Gives hash algorithm identifier by name.
+ * 
+ * @param[in] hashAlg Hash algorithm name.
+ * @return Hash algorithm identifier.
+ * 
+ * @throws KSI_EXCEPTION.
+ */
+int getHashAlgorithm_throws(const char *hashAlg);
+
+/**
+ * Reads hash from command line and creates the KSI_DataHash object.
+ * 
+ * @param[in] cmdparam Pointer to command line data object.
+ * @param[in] ksi Pointer to ksi context object.
+ * @param[out] hash Pointer to receiving pointer to KSI_DataHash object.
+ * 
+ * @throws KSI_EXCEPTION, INVALID_ARGUMENT_EXCEPTION.
+ */
+void getHashFromCommandLine_throws(const char *imprint,KSI_CTX *ksi, KSI_DataHash **hash);
+
+/**
  * Gives time difference between the current and last call in ms.
  * @return Time difference in ms.
  */

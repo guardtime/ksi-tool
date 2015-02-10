@@ -104,14 +104,15 @@ echo "****************** Sign raw hash with algorithm specified [-F SH1:<hash>] 
 ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -o %SH1_file%  -F SHA-1:%SH1_HASH%
 echo %errorlevel%
 sleep %WAIT%
-ksitool.exe -v %GLOBAL% %VERIFY_FLAGS% -x -i %SH1_file%
+ksitool.exe -v %GLOBAL% %VERIFY_FLAGS% -x -i %SH1_file% -F SHA-1:%SH1_HASH%
 echo %errorlevel%
+
 
 echo "****************** Sign raw hash with algorithm specified [-F SH256:<hash>] ******************" 
 ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -o %SH256_file% -F SHA-256:%SH256_HASH%
 echo %errorlevel%
 sleep %WAIT%
-ksitool.exe -v -x %GLOBAL% %VERIFY_FLAGS% -i %SH256_file% -f %SH256_DATA_FILE%
+ksitool.exe -v -x %GLOBAL% %VERIFY_FLAGS% -i %SH256_file% -f %SH256_DATA_FILE% -F SHA-256:%SH256_HASH%
 echo %errorlevel%
 
 echo "****************** Sign raw hash with algorithm specified [-F RIPMED160:<hash>] ******************" 
@@ -188,5 +189,12 @@ echo ****************** Error wrong E-mail******************
 ksitool.exe -p -t -o %PUBFILE%err %GLOBAL% -E magic@email.null 
 echo %errorlevel%
 
+echo ****************** Error verify wrong hash ******************
+ksitool.exe -v -x %GLOBAL% %VERIFY_FLAGS% -i %SH256_file% -f %SH256_DATA_FILE% -F SHA-256:c8ef6d57ac28d1b4e95a513959f5fcdd0688380a43d601a5ace1d2e96884690d
+echo %errorlevel%
+
+echo ****************** Error verify wrong document ******************
+ksitool.exe -v -x %GLOBAL% %VERIFY_FLAGS% -i %SH256_file% -f %TEST_FILE% -F SHA-256:%SH256_HASH%
+echo %errorlevel%
 
 pause

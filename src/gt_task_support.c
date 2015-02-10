@@ -7,6 +7,7 @@
 #include "gt_task_support.h"
 #include "try-catch.h"
 #include "param_set.h"
+#include <ctype.h>
 
 #define ON_ERROR_THROW_MSG(_exception, ...) \
 	if (res != KSI_OK){  \
@@ -510,6 +511,139 @@ cleanup:
 	return;	
 	}
 
+// helpers for hex decoding
+static int x(char c){
+	if (c >= '0' && c <= '9')
+		return c - '0';
+	if (c >= 'a' && c <= 'f')
+		return c - 'a' + 10;
+	if (c >= 'A' && c <= 'F')
+		return c - 'A' + 10;
+	abort(); // isxdigit lies.
+	return -1; // makes compiler happy
+}
+
+static int xx(char c1, char c2){
+	if(!isxdigit(c1) || !isxdigit(c2))
+		return -1;
+	return x(c1) * 16 + x(c2);
+}
+
+/**
+ * Converts a string into binary array.
+ * 
+ * @param[in] ksi Pointer to KSI KSI_CTX object.
+ * @param[in] hexin Pointer to string for conversion.
+ * @param[out] binout Pointer to receiving pointer to binary array.  
+ * @param[out] lenout Pointer to binary array length.
+ * 
+ * @throws INVALID_ARGUMENT_EXCEPTION, OUT_OF_MEMORY_EXCEPTION.
+ */
+static void getBinaryFromHexString(KSI_CTX *ksi, const char *hexin, unsigned char **binout, size_t *lenout){
+	size_t len = strlen(hexin);
+	unsigned char *tmp=NULL;
+	size_t arraySize = len/2;
+	int i,j;
+
+	if(hexin == NULL || binout == NULL || lenout == NULL)
+		THROW(INVALID_ARGUMENT_EXCEPTION,EXIT_FAILURE);
+	
+	if(len%2 != 0){
+		THROW_MSG(INVALID_ARGUMENT_EXCEPTION,EXIT_INVALID_FORMAT, "Error: The hash length is not even number!\n");
+	}
+
+	tmp = KSI_calloc(arraySize, sizeof(unsigned char));
+	if(tmp == NULL){
+		THROW_MSG(OUT_OF_MEMORY_EXCEPTION,EXIT_OUT_OF_MEMORY, "Error: Unable to get memory for parsing hex to binary.\n");
+	}
+
+	for(i=0,j=0; i<arraySize; i++, j+=2){
+		int res = xx(hexin[j], hexin[j+1]);
+		if(res == -1){
+			KSI_free(tmp);
+			tmp = NULL;
+			THROW_MSG(INVALID_ARGUMENT_EXCEPTION,EXIT_INVALID_FORMAT, "Error: The hex number is invalid: %c%c!\n", hexin[j], hexin[j+1]);
+		}
+		tmp[i] = res;
+		//printf("%c%c -> %i\n", hexin[j], hexin[j+1], tempBin[i]);
+	}
+
+	*lenout = arraySize;
+	*binout = tmp;
+
+	return;
+}
+
+static bool getHashAndAlgStrings(const char *instrn, char **strnAlgName, char **strnHash){
+	char *colon = NULL;
+	size_t algLen = 0;
+	size_t hahsLen = 0;
+	char *temp_strnAlg = NULL;
+	char *temp_strnHash = NULL;
+	
+	
+	if(strnAlgName == NULL || strnHash == NULL) return false;
+	*strnAlgName = NULL;
+	*strnHash = NULL;
+	if (instrn == NULL) return false;
+
+	colon = strchr(instrn, ':');
+	if (colon != NULL) {
+		algLen = (colon - instrn) / sizeof (char);
+		hahsLen = strlen(instrn) - algLen - 1;
+		temp_strnAlg = calloc(algLen + 1, sizeof (char));
+		temp_strnHash = calloc(hahsLen + 1, sizeof (char));
+		memcpy(temp_strnAlg, instrn, algLen);
+		temp_strnAlg[algLen] = 0;
+		memcpy(temp_strnHash, colon + 1, hahsLen);
+		temp_strnHash[hahsLen] = 0;
+	}
+
+	*strnAlgName = temp_strnAlg;
+	*strnHash = temp_strnHash;
+	//printf("Alg %s\nHash %s\n", *strnAlgName, *strnHash);
+	return true;
+}
+
+int getHashAlgorithm_throws(const char *hashAlg){
+	int hasAlgID = KSI_getHashAlgorithmByName(hashAlg);
+	if(hasAlgID == -1) THROW_MSG(KSI_EXCEPTION, EXIT_CRYPTO_ERROR, "Error: The hash algorithm \"%s\" is unknown\n", hashAlg);
+	return hasAlgID;
+}
+
+void getHashFromCommandLine_throws(const char *imprint,KSI_CTX *ksi, KSI_DataHash **hash){
+	unsigned char *data = NULL;
+	size_t len;
+	int res = KSI_UNKNOWN_ERROR;
+	int hasAlg = -1;
+
+	char *strAlg = NULL;
+	char *strHash = NULL;
+	try
+		CODE{
+			if(imprint == NULL) THROW_MSG(INVALID_ARGUMENT_EXCEPTION,EXIT_INVALID_CL_PARAMETERS, "");
+			getHashAndAlgStrings(imprint, &strAlg, &strHash);
+			if(strAlg == NULL || strHash== NULL ) THROW_MSG(INVALID_ARGUMENT_EXCEPTION,EXIT_INVALID_CL_PARAMETERS, "");
+			
+			getBinaryFromHexString(ksi, strHash, &data, &len);
+			hasAlg = getHashAlgorithm_throws(strAlg);
+			KSI_DataHash_fromDigest_throws(ksi, hasAlg, data, (unsigned int)len, hash);
+		}
+		CATCH_ALL{
+			free(strAlg);
+			free(strHash);
+			free(data);
+			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to get hash from command-line.\n");
+		}
+	end_try
+
+	free(strAlg);
+	free(strHash);
+	free(data);
+	return;
+}
+
+
 static unsigned int elapsed_time_ms;
 
 unsigned int measureLastCall(void){
@@ -691,7 +825,7 @@ int KSI_Signature_createDataHasher_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_
 int KSI_Signature_verifyDataHash_throws(KSI_Signature *sig, KSI_CTX *ksi, KSI_DataHash *hash){
 	THROWABLE3(ksi, KSI_Signature_verifyDataHash(sig, ksi,  hash), "Error: Wrong document or signature.");
 }
-/*To nearest publication available*/
+/*To earliest available publication available*/
 int KSI_extendSignature_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext){
 	THROWABLE3(ksi, KSI_extendSignature(ksi, sig, ext),"Error: Unable to extend signature.");
 }

@@ -3,12 +3,14 @@
 int GT_verifyTask(Task *task){
 	KSI_CTX *ksi = NULL;
 	KSI_Signature *sig = NULL;
-	KSI_DataHash *hsh = NULL;
+	KSI_DataHash *file_hsh = NULL;
+	KSI_DataHash *raw_hsh = NULL;
 	KSI_DataHasher *hsr = NULL;
 	KSI_PublicationsFile *publicationsFile = NULL;
+	char *imprint = NULL;
 	int retval = EXIT_SUCCESS;
 	
-	bool n,r, d,t, b, f;
+	bool n,r, d,t, b, f, F;
 	char *inPubFileName = NULL;
 	char *inSigFileName = NULL;
 	char *inDataFileName = NULL;
@@ -16,7 +18,8 @@ int GT_verifyTask(Task *task){
 	b = paramSet_getStrValueByNameAt(task->set, "b",0, &inPubFileName);
 	paramSet_getStrValueByNameAt(task->set, "i",0, &inSigFileName);
 	f = paramSet_getStrValueByNameAt(task->set, "f",0, &inDataFileName);
-	
+	F = paramSet_getStrValueByNameAt(task->set, "F",0, &imprint);
+
 	n = paramSet_isSetByName(task->set, "n");
 	r = paramSet_isSetByName(task->set, "r");
 	d = paramSet_isSetByName(task->set, "d");
@@ -51,15 +54,18 @@ int GT_verifyTask(Task *task){
 					printf("ok. %s\n",t ? str_measuredTime() : "");
 				}
 
-				/* If datafile is present compare hash of a datafile and timestamp */
-				if (f) {
-					/* Create hasher. */
+				/* If datafile or imprint is present compare hash and timestamp */
+				if(f){
 					printf("Verifying file's %s hash... ", inDataFileName);
 					KSI_Signature_createDataHasher_throws(ksi, sig, &hsr);
-					getFilesHash_throws(hsr, inDataFileName, &hsh);
+					getFilesHash_throws(hsr, inDataFileName, &file_hsh);
+					KSI_Signature_verifyDataHash_throws(sig, ksi, file_hsh);
 					printf("ok.\n");
-					printf("Verifying document hash... ");
-					KSI_Signature_verifyDataHash_throws(sig, ksi, hsh);
+				}
+				if(F){
+					printf("Verifying imprint... ");
+					getHashFromCommandLine_throws(imprint, ksi, &raw_hsh);
+					KSI_Signature_verifyDataHash_throws(sig, ksi, raw_hsh);
 					printf("ok.\n");
 				}
 			}
@@ -85,7 +91,8 @@ int GT_verifyTask(Task *task){
 	
 	KSI_Signature_free(sig);
 	KSI_DataHasher_free(hsr);
-	KSI_DataHash_free(hsh);
+	KSI_DataHash_free(raw_hsh);
+	KSI_DataHash_free(file_hsh);
 	closeTask(ksi);
 	
 	return retval;
