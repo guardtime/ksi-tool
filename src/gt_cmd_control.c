@@ -1,6 +1,6 @@
 #include <ksi/ksi.h>
 #include <ctype.h>
-#include <stdio.h>		//input output
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef _WIN32 
