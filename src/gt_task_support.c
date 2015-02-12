@@ -85,7 +85,7 @@ static int url_getScheme(const char* url, char* buf, int len){
 static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	int res = KSI_OK;
 	void *net;
-	bool S=false, P=false, X=false, C=false, c=false, bUser=false, bPass=false, s=false, x=false, p=false, T=false;
+	bool S, P, X, C, c, bUser, bPass, s, x, p, T, aggre;
 	char *signingService_url = NULL;
 	char *publicationsFile_url = NULL;
 	char *verificationService_url = NULL;
@@ -104,6 +104,7 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	
 	C = paramSet_getIntValueByNameAt(task->set, "C", 0,&networkConnectionTimeout);
 	c = paramSet_getIntValueByNameAt(task->set, "c", 0,&networkTransferTimeout);
+	aggre = paramSet_isSetByName(task->set, "aggre");
 	s = paramSet_isSetByName(task->set, "s");
 	x = paramSet_isSetByName(task->set, "x");
 	p = paramSet_isSetByName(task->set, "p");
@@ -121,7 +122,7 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 			url_getHost(verificationService_url, host, sizeof(host));
 		}
 	}
-	else if(s){
+	else if(s || aggre){
 		bUser = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "user") ? "user" : "sysvar_aggre_user",0,&user);
 		bPass = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "pass") ? "pass" : "sysvar_aggre_pass",0,&pass);
 		url_getScheme(signingService_url, scheme, sizeof(scheme));
@@ -151,7 +152,7 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 					
 				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set extender/verifier url '%s'.%s\n", verificationService_url, verificationService_url ? "" : " Define system variable \"KSI_EXTENDER\", read help (-h) for more information.");
 			}
-			else if(s){
+			else if(s || aggre){
 				if(useTCP)
 					res = KSI_TcpClient_setAggregator((KSI_TcpClient*)net, host, port, user, pass);
 				else
