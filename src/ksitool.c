@@ -55,19 +55,19 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp){
 		char *found = NULL;
         if(strncmp(*envp, "KSI_AGGREGATOR", sizeof("KSI_AGGREGATOR")-1)==0){
 			if(!getEnvValue(*envp, "url", tmp, sizeof(tmp))) return false;
-			paramSet_appendParameterByName(tmp, "sysvar_aggre_url", set);
+			paramSet_appendParameterByName("sysvar_aggre_url", tmp, "KSI_AGGREGATOR", set);
 			if(getEnvValue(*envp, "user", tmp, sizeof(tmp)))
-				paramSet_appendParameterByName(tmp, "sysvar_aggre_user", set);
+				paramSet_appendParameterByName("sysvar_aggre_user", tmp, "KSI_AGGREGATOR", set);
 			if(getEnvValue(*envp, "pass", tmp, sizeof(tmp)))
-				paramSet_appendParameterByName(tmp, "sysvar_aggre_pass", set);
+				paramSet_appendParameterByName("sysvar_aggre_pass", tmp, "KSI_AGGREGATOR", set);
 		}
         else if(strncmp(*envp, "KSI_EXTENDER", sizeof("KSI_EXTENDER")-1)==0){
 			if(!getEnvValue(*envp, "url", tmp, sizeof(tmp))) return false;
-			paramSet_appendParameterByName(tmp, "sysvar_ext_url", set);
+			paramSet_appendParameterByName("sysvar_ext_url", tmp, "KSI_EXTENDER", set);
 			if(getEnvValue(*envp, "user", tmp, sizeof(tmp)))
-				paramSet_appendParameterByName(tmp, "sysvar_ext_user", set);
+				paramSet_appendParameterByName("sysvar_ext_user", tmp, "KSI_EXTENDER", set);
 			if(getEnvValue(*envp, "pass", tmp, sizeof(tmp)))
-				paramSet_appendParameterByName(tmp, "sysvar_ext_pass", set);
+				paramSet_appendParameterByName("sysvar_ext_pass", tmp, "KSI_EXTENDER", set);
 		}
 		
         envp++;
@@ -112,8 +112,8 @@ static void GT_pritHelp(paramSet *set){
 			"\t\t-v -b -i verify signature using specific publications file.\n"
 			"\t\t-v -b verify publication file.\n"
 			" --aggre	use aggregator for (-n -t):\n"
-			"\t\t--aggre -htime display current aggregation root hash value and time.\n"
-			"\t\t--aggre -setsystime set system time from current aggregation.\n"
+			"\t\t--aggre --htime display current aggregation root hash value and time.\n"
+			"\t\t--aggre --setsystime set system time from current aggregation.\n"
 			
 			
 			"\nInput/output:\n"

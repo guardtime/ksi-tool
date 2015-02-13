@@ -1,12 +1,9 @@
-#include <stdio.h>		//input output
 #include <string.h>		
-#include <stdlib.h>		//malloc, random, int ja strn 
+#include <stdlib.h>
 #include <ctype.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include "gt_cmd_control.h"
 #include "param_set.h"
-#include "task_def.h"
 
 #define SINGLE false
 #define MULTIPLE true 
@@ -14,24 +11,33 @@
 #define UNKNOWN_PARAMETER_NAME "_UN_KNOWN_"
 #define TYPO_PARAMETER_NAME "_TYPO_"
 
-typedef struct paramValu_st paramValue;
+char *new_string(const char *str){
+	char *tmp = NULL;
+	if(str == NULL) return NULL;
+	tmp = (char*)malloc(strlen(str)*sizeof(char)+1);
+	if(tmp == NULL) return NULL;
+	return strcpy(tmp, str);
+}
 
-struct paramValu_st{
+typedef struct paramValu_st{
 	char *cstr_value;		//c-string value for raw argument
+	char *source;			//optional c-string describing the source of the value;
 	FormatStatus formatStatus;	//parameters status
 	ContentStatus contentStatus;
-	paramValue *next;		//link to the next value
-};
+	struct paramValu_st *next;		//link to the next value
+} paramValue;
 
 /**
  * Creates a new parameter value object.
  * @param value - value as c-string. Can be NULL.
- * @param newObj - reciving pointer.
- * @return
+ * @source source - describes the source e.g. file name or environment variable. Can be NULL.
+ * @param newObj - receiving pointer.
+ * @return true on success, false otherwise.
  */
-static bool paramValue_new(const char *value, paramValue **newObj){
+static bool paramValue_new(const char *value, const char* source, paramValue **newObj){
 	paramValue *tmp = NULL;
-	char *tmp_cstr = NULL;
+	char *tmp_value = NULL;
+	char *tmp_source = NULL;
 	bool status = false;
 	
 	if(newObj == NULL) return false;
@@ -41,30 +47,34 @@ static bool paramValue_new(const char *value, paramValue **newObj){
 	if(tmp == NULL) goto cleanup;
 	
 	tmp->cstr_value = NULL;
+	tmp->source = NULL;
 	tmp->formatStatus= FORMAT_UNKNOWN_ERROR;
 	tmp->contentStatus = PARAM_UNKNOWN_ERROR;
 	tmp->next = NULL;
-	
-	/*Make a buffer for a value and copy*/
+
 	if(value != NULL){
-		tmp_cstr = (char*)malloc(strlen(value)*sizeof(char)+1);
-		if(tmp_cstr == NULL) goto cleanup;
-		strcpy(tmp_cstr, value);
-	}
-	else{
-		tmp_cstr = NULL;
+		tmp_value = new_string(value);
+		if(tmp_value == NULL) goto cleanup;
 	}
 	
-	tmp->cstr_value = tmp_cstr;
+	if(source != NULL){
+		tmp_source = new_string(source);
+		if(tmp_source == NULL) goto cleanup;
+	}
+	
+	tmp->cstr_value = tmp_value;
+	tmp->source = tmp_source;
 	*newObj = tmp;
 
 	tmp = NULL;
-	tmp_cstr = NULL;
+	tmp_value = NULL;
+	tmp_source = NULL;
 	status = true;
 	
 cleanup:
 
-	free(tmp_cstr);
+	free(tmp_value);
+	free(tmp_source);
 	free(tmp);	
 	return status;
 }
@@ -72,24 +82,22 @@ cleanup:
 static void paramValue_recursiveFree(paramValue *rootValue){
 	if(rootValue == NULL) return;
 	
-	if(rootValue->next != NULL){
+	if(rootValue->next != NULL)
 		paramValue_recursiveFree(rootValue->next);
-	}
+
 	free(rootValue->cstr_value);
+	free(rootValue->source);
 	free(rootValue);
-	return;
 }
 
-static paramValue* paramValue_getElementAt(paramValue *rootValue, int at){
+static paramValue* paramValue_getElementAt(const paramValue *rootValue, unsigned at){
 	paramValue *tmp = NULL;
-	int i=0;
+	unsigned i=0;
 	
-	if(at < 0) return NULL;
 	if(rootValue == NULL) return NULL;
-	
-	if(at == 0) return rootValue;
-	
-	tmp = rootValue;
+	if(at == 0) return (paramValue*)rootValue;
+
+	tmp = (paramValue*)rootValue;
 	for(i=0; i<at;i++){
 		if(tmp->next == NULL) return NULL;
 		tmp = tmp->next;
@@ -103,19 +111,17 @@ static paramValue* paramValue_getElementAt(paramValue *rootValue, int at){
 typedef struct param_st{
 	char *flagName;
 	char *flagAlias;
-	bool flag;									//if the varible is set
-	bool isMultipleAllowed;						//If there is more than 1 parameters allowed
-	int arcCount;								//count of arguments in chain
-	paramValue *arg;							//argument(s)
+	bool isMultipleAllowed;							//If there is more than 1 parameters allowed
+	int argCount;									//count of arguments in chain
+	paramValue *arg;								//argument(s)
 	
-	FormatStatus (*controlFormat)(const char*);	//function pointer for format control
+	FormatStatus (*controlFormat)(const char*);		//function pointer for format control
 	ContentStatus (*controlContent)(const char*);	//function pointer for content control
 	bool (*convert)(const char*, char*, unsigned);	//function pointer to convert the content
 } parameter;
 
 static void parameter_free(parameter *obj){
 	if(obj == NULL) return;
-	
 	free(obj->flagName);
 	free(obj->flagAlias);
 	if(obj->arg) paramValue_recursiveFree(obj->arg);
@@ -136,25 +142,22 @@ static bool parameter_new(const char *flagName,const char *flagAlias, bool isMul
 	
 	tmp->flagName = NULL;
 	tmp->flagAlias = NULL;
+	tmp->arg = NULL;
 	
-	tmp->flagName = (char*)malloc(sizeof(char)*strlen(flagName)+1);
+	tmp->flagName = new_string(flagName);
 	if(tmp->flagName == NULL) goto cleanup;
-	strcpy(tmp->flagName, flagName);
 	
 	if(flagAlias){
-		tmp->flagAlias = (char*)malloc(sizeof(char)*strlen(flagAlias)+1);
+		tmp->flagAlias = new_string(flagAlias);
 		if(tmp->flagAlias == NULL) goto cleanup;
-		strcpy(tmp->flagAlias, flagAlias);
 	}
-	
-	tmp->flag = false;
-	tmp->isMultipleAllowed = isMultipleAllowed;
-	tmp->arcCount = 0;
-	tmp->arg = NULL;
 	
 	tmp->controlFormat = controlFormat;
 	tmp->controlContent = controlContent;
 	tmp->convert = convert;
+	tmp->isMultipleAllowed = isMultipleAllowed;
+	tmp->argCount = 0;
+
 	*newObj = tmp;
 	tmp = NULL;
 
@@ -167,31 +170,27 @@ cleanup:
 /**
  * Appends a argument to the parameter and performs a format check. Parameter
  * is copied.
- * @param param - parameter where the argument is inserted
- * @param argument - argument
- * @return 
+ * @param param - parameter where the argument is inserted.
+ * @param argument - argument.
+ * @source source - describes the source e.g. file name or environment variable. Can be NULL.
+ * @return Return true if successful, false otherwise.
  */
-static bool parameter_addArgument(parameter *param, const char *argument){
+static bool parameter_addArgument(parameter *param, const char *argument, const char* source){
 	paramValue *newValue = NULL;
-	paramValue *pNextValue = NULL;
+	paramValue *pLastValue = NULL;
 	bool status = false;
 	char *arg = NULL;
 	char buf[1024];
 	if(param == NULL) return false;
 
 	/*If conversion function exists convert the argument*/
-	if(param->convert){
-		if(param->convert(argument, buf, sizeof(buf)))
-			arg = buf;
-		else
-			arg = (char *)argument;
-	}
-	else{
+	if(param->convert)
+		arg = param->convert(argument, buf, sizeof(buf)) ? buf : arg;
+	else
 		arg = (char *)argument;
-	}
 	
 	/*Create new object and control the format*/
-	if(!paramValue_new(arg, &newValue)) goto cleanup;
+	if(!paramValue_new(arg, source, &newValue)) goto cleanup;
 	
 	if(param->controlFormat)
 		newValue->formatStatus = param->controlFormat(arg);
@@ -200,22 +199,13 @@ static bool parameter_addArgument(parameter *param, const char *argument){
 	
 	if(param->arg == NULL){
 		param->arg = newValue;
-		param->arcCount = 1;
-		param->flag = true;
 	}
 	else{
-		pNextValue = param->arg;
-		
-		do{
-			if(pNextValue->next == NULL){
-				pNextValue->next = newValue;
-				param->arcCount++;
-				break;
-			}
-			pNextValue = pNextValue->next;
-		}
-		while(pNextValue);
+		pLastValue = paramValue_getElementAt(param->arg, param->argCount-1);
+		if(pLastValue == NULL || pLastValue->next != NULL) goto cleanup;
+		pLastValue->next = newValue;
 	}
+	param->argCount++;
 		
 	newValue = NULL;
 	status = true;
@@ -227,7 +217,7 @@ cleanup:
 	return status;
 	}
 
-static void parameter_Print(parameter *param){
+static void parameter_Print(const parameter *param){
 	paramValue *pValue = NULL;
 	
 	if(param == NULL) return;
@@ -252,7 +242,7 @@ struct paramSet_st {
 	int count;
 };
 
-static char *getParametersName(const char* names, char *name,char *alias, short len, bool *isMultiple){
+static char *getParametersName(const char* names, char *name, char *alias, short len, bool *isMultiple){
 	char *pName = NULL;
 	int i = 0;
 	bool isAlias = false;
@@ -296,7 +286,7 @@ static char *getParametersName(const char* names, char *name,char *alias, short 
 	return &pName[i];
 }
 
-static void paramSet_getParameterByName(paramSet *set, char *name, parameter **param){
+static void paramSet_getParameterByName(const paramSet *set, const char *name, parameter **param){
 	int numOfElements = 0;
 	parameter **array = NULL;
 	parameter *tmp = NULL;
@@ -320,7 +310,7 @@ static void paramSet_getParameterByName(paramSet *set, char *name, parameter **p
 	return;
 }
 
-bool paramSet_appendParameterByName(const char *argument, char *name, paramSet *set){
+bool paramSet_appendParameterByName(const char *name, const char *value, const char *source, paramSet *set){
 	parameter *param = NULL;
 	
 	if(set == NULL || name == NULL) return false;
@@ -328,13 +318,10 @@ bool paramSet_appendParameterByName(const char *argument, char *name, paramSet *
 	paramSet_getParameterByName(set, name, &param);
 	if(param == NULL) return false;
 	
-	if(parameter_addArgument(param, argument))
-		return true;
-	else
-		return false;
+	return parameter_addArgument(param, value, source); 
 }
 
-void paramSet_removeParameterByName(paramSet *set, char *name){
+void paramSet_removeParameterByName(paramSet *set, const char *name){
 	int numOfElements = 0;
 	parameter **array = NULL;
 	parameter *tmp = NULL;
@@ -345,12 +332,12 @@ void paramSet_removeParameterByName(paramSet *set, char *name){
 	
 	array = set->parameter;
 	
+	
 	for(i=0; i<numOfElements; i++){
 		tmp = array[i];
 		if(tmp != NULL){
 			if(strcmp(tmp->flagName, name) == 0 || (tmp->flagAlias && strcmp(tmp->flagAlias, name) == 0)){
-				tmp->arcCount = 0;
-				tmp->flag = false;
+				tmp->argCount = 0;
 				if(tmp->arg) paramValue_recursiveFree(tmp->arg);
 				tmp->arg = NULL;
 				return;
@@ -358,10 +345,9 @@ void paramSet_removeParameterByName(paramSet *set, char *name){
 		}
 	}
 	return;
-	
 }
 
-static void paramSet_getFirstValueByName(paramSet *set, char *name, paramValue **value){
+static void paramSet_getFirstValueByName(const paramSet *set, const char *name, paramValue **value){
 	parameter *tmp = NULL;
 
 	if(set == NULL || value == NULL || name == NULL) return;
@@ -375,18 +361,16 @@ static void paramSet_getFirstValueByName(paramSet *set, char *name, paramValue *
 	return;	
 }
 
-static void paramSet_getValueByNameAt(paramSet *set, char *name,int at, paramValue **value){
+static void paramSet_getValueByNameAt(const paramSet *set, const char *name, unsigned at, paramValue **value){
 	paramValue *tmp = NULL;
 
 	if(set == NULL || value == NULL || name == NULL) return;
 	*value = NULL;
-	
+
 	paramSet_getFirstValueByName(set,name, &tmp);
 	if(tmp == NULL) return;
 	
 	tmp = paramValue_getElementAt(tmp, at);
-	if(tmp == NULL) return;
-	
 	*value = tmp;
 
 	return;
@@ -430,7 +414,6 @@ bool paramSet_new(const char *names, paramSet **set){
 	pName = names;
 	
 	while((pName = getParametersName(pName,buf,alias, len, &isMultiple)) != NULL){
-//		printf(">>> '%s'/'%s' : %i\n", buf,alias, isMultiple);
 		if(!parameter_new(buf,alias[0] ? alias : NULL,isMultiple, NULL, NULL, NULL, &tmp->parameter[iter]))
 			goto cleanup;
 		iter++;
@@ -540,7 +523,7 @@ cleanup:
 	return edit_distance;
 }
 
-static bool paramSet_couldItBeTypo(const char *str, paramSet *set){
+static bool paramSet_couldItBeTypo(const char *str, const paramSet *set){
 	int numOfElements = 0;
 	parameter **array = NULL;
 	int i =0;
@@ -581,9 +564,9 @@ static bool paramSet_couldItBeTypo(const char *str, paramSet *set){
  * @param arg
  * @param set
  */
-static void paramSet_addRawParameter(char *param, char *arg, paramSet *set){
+static void paramSet_addRawParameter(const char *param, const char *arg, const char *source, paramSet *set){
 	int i=0;
-	char *flag = NULL;
+	const char *flag = NULL;
 	unsigned len;
 	
 	len = (unsigned)strlen(param);
@@ -593,24 +576,24 @@ static void paramSet_addRawParameter(char *param, char *arg, paramSet *set){
 		/*It is long parameter*/
 		if(strncmp("--", param, 2)==0 && len >= 3){
 			if(param[3] == 0){
-				paramSet_appendParameterByName(flag,TYPO_PARAMETER_NAME,set);
+				paramSet_appendParameterByName(TYPO_PARAMETER_NAME, flag, source, set);
 				if(arg)
-					paramSet_appendParameterByName(arg,paramSet_couldItBeTypo(arg, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME,set);
+					paramSet_appendParameterByName(paramSet_couldItBeTypo(arg, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME, arg, source, set);
 				return;
 			}
 				
-			if(paramSet_appendParameterByName(arg,flag,set)==false){
-				paramSet_appendParameterByName(flag,paramSet_couldItBeTypo(flag, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME,set);
+			if(paramSet_appendParameterByName(flag, arg, source, set)==false){
+				paramSet_appendParameterByName(paramSet_couldItBeTypo(flag, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME, flag, source, set);
 				if(arg)
-					paramSet_appendParameterByName(arg,paramSet_couldItBeTypo(arg, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME,set);
+					paramSet_appendParameterByName(paramSet_couldItBeTypo(arg, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME, arg, source, set);
 			}
 		}
 		/*It is short parameter*/
 		else if(param[0] == '-' && len == 2){
-			if(paramSet_appendParameterByName(arg,flag,set)==false){
-				paramSet_appendParameterByName(flag,UNKNOWN_PARAMETER_NAME,set);
+			if(paramSet_appendParameterByName(flag, arg, source, set)==false){
+				paramSet_appendParameterByName(UNKNOWN_PARAMETER_NAME, flag, source, set);
 				if(arg)
-					paramSet_appendParameterByName(arg,paramSet_couldItBeTypo(arg, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME,set);
+					paramSet_appendParameterByName(paramSet_couldItBeTypo(arg, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME, arg, source, set);
 			}
 		}
 		/*It is bunch of flags*/
@@ -620,23 +603,23 @@ static void paramSet_addRawParameter(char *param, char *arg, paramSet *set){
 			int itr = 0;
 			
 			if(arg)
-				paramSet_appendParameterByName(arg,paramSet_couldItBeTypo(arg, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME,set);
+				paramSet_appendParameterByName(paramSet_couldItBeTypo(arg, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME, arg, source, set);
 			
 			while(str_flg[0] = flag[itr++]){
-				if(paramSet_appendParameterByName(NULL,str_flg,set)==false){
+				if(paramSet_appendParameterByName(str_flg, NULL, source, set)==false){
 					if(paramSet_couldItBeTypo(flag, set)){
-						paramSet_appendParameterByName(flag,TYPO_PARAMETER_NAME,set);
+						paramSet_appendParameterByName(TYPO_PARAMETER_NAME, flag, source, set);
 						break;
 					}
 					else
-						paramSet_appendParameterByName(str_flg,UNKNOWN_PARAMETER_NAME,set);
+						paramSet_appendParameterByName(UNKNOWN_PARAMETER_NAME, str_flg, source, set);
 				}
 			}
 
 		}
 	}
 	else{
-		paramSet_appendParameterByName(param,UNKNOWN_PARAMETER_NAME,set);
+		paramSet_appendParameterByName(UNKNOWN_PARAMETER_NAME, param, source, set);
 	}
 } 
 
@@ -656,12 +639,10 @@ void paramSet_readFromFile(const char *fname, paramSet *set){
 		ln = strchr(line, '\n');
 		if(ln != NULL) *ln = 0;
 
-		if(sscanf(line, "%s %s", flag, arg) == 2){
-			paramSet_addRawParameter(flag, arg, set);
-		}	
-		else{
-			paramSet_addRawParameter(line,NULL, set);
-		}
+		if(sscanf(line, "%s %s", flag, arg) == 2)
+			paramSet_addRawParameter(flag, arg, fname,set);
+		else
+			paramSet_addRawParameter(line,NULL, fname,set);
 	}
 	
 cleanup:
@@ -688,13 +669,13 @@ void paramSet_readFromCMD(int argc, char **argv, paramSet *set){
 				arg = argv[++i]; 
 		}
 		
-		paramSet_addRawParameter(tmp, arg, set);
+		paramSet_addRawParameter(tmp, arg, NULL, set);
 	}
 	
 	return;
 }
 
-bool paramSet_isFormatOK(paramSet *set){
+bool paramSet_isFormatOK(const paramSet *set){
 	parameter **array = NULL;
 	parameter *pParam = NULL;
 	int i = 0;
@@ -710,7 +691,7 @@ bool paramSet_isFormatOK(paramSet *set){
 			if(strcmp(pParam->flagName, UNKNOWN_PARAMETER_NAME)==0) continue;
 			if(strcmp(pParam->flagName, TYPO_PARAMETER_NAME)==0) continue;
 
-			if(pParam->arcCount > 1 && !(pParam->isMultipleAllowed)){
+			if(pParam->argCount > 1 && !(pParam->isMultipleAllowed)){
 				return false;
 			}
 			
@@ -733,11 +714,10 @@ bool paramSet_isFormatOK(paramSet *set){
 	return true;
 }
 
-bool paramSet_getIntValueByNameAt(paramSet *set, char *name,int at, int *value){
+bool paramSet_getIntValueByNameAt(const paramSet *set, const char *name, unsigned at, int *value){
 	paramValue *tmp = NULL;
 	
 	if(set == NULL || value == NULL || name == NULL) return false;
-	*value = 0;
 	
 	paramSet_getValueByNameAt(set, name, at, &tmp);
 	if(tmp == NULL) return false;
@@ -747,7 +727,7 @@ bool paramSet_getIntValueByNameAt(paramSet *set, char *name,int at, int *value){
 	return true;
 }
 
-bool paramSet_getStrValueByNameAt(paramSet *set, char *name,int at, char **value){
+bool paramSet_getStrValueByNameAt(const paramSet *set, const char *name, unsigned at, char **value){
 	paramValue *tmp = NULL;
 	
 	if(set == NULL || value == NULL || name == NULL) return false;
@@ -761,7 +741,7 @@ bool paramSet_getStrValueByNameAt(paramSet *set, char *name,int at, char **value
 	return true;
 }
 
-bool paramSet_getValueCountByName(paramSet *set, char *name, int *count){
+bool paramSet_getValueCountByName(const paramSet *set, const char *name, unsigned *count){
 	parameter *param = NULL;
 	
 	if(set == NULL || name == NULL) return false;
@@ -769,23 +749,23 @@ bool paramSet_getValueCountByName(paramSet *set, char *name, int *count){
 	paramSet_getParameterByName(set, name, &param);
 	
 	if(param == NULL) return false;
-	*count = param->arcCount;
+	*count = param->argCount;
 	
 	return true;
 }
 
-bool paramSet_isSetByName(paramSet *set, char *name){
+bool paramSet_isSetByName(const paramSet *set, const char *name){
 	parameter *param = NULL;
 	
 	if(set == NULL || name == NULL) return false;
 	
 	paramSet_getParameterByName(set, name, &param);
 	
-	if(param == NULL) return false;
-	return param->flag;
+	if(param != NULL && param->arg) return true;
+	else return false;
 }
 
-void paramSet_Print(paramSet *set){
+void paramSet_Print(const paramSet *set){
 	int numOfElements = 0;
 	parameter **array = NULL;
 	int i =0;
@@ -796,7 +776,7 @@ void paramSet_Print(paramSet *set){
 	array = set->parameter;
 	
 	for(i=0; i<numOfElements;i++){
-		if(array[i]->flag){
+		if(array[i]->arg){
 			parameter_Print(array[i]);
 		}
 	}
@@ -804,7 +784,7 @@ void paramSet_Print(paramSet *set){
 	return;
 	}
 
-void paramSet_PrintErrorMessages(paramSet *set){
+void paramSet_PrintErrorMessages(const paramSet *set){
 	parameter **array = NULL;
 	parameter *pParam = NULL;
 	int i = 0;
@@ -820,7 +800,7 @@ void paramSet_PrintErrorMessages(paramSet *set){
 			if(strcmp(pParam->flagName, UNKNOWN_PARAMETER_NAME)==0) continue;
 			if(strcmp(pParam->flagName, TYPO_PARAMETER_NAME)==0) continue;
 			
-			if(pParam->arcCount > 1 && !(pParam->isMultipleAllowed)){
+			if(pParam->argCount > 1 && !(pParam->isMultipleAllowed)){
 				printf("Error: Duplicate values '%s'!\n", pParam->flagName);
 			}
 			
@@ -828,11 +808,23 @@ void paramSet_PrintErrorMessages(paramSet *set){
 			while(value){
 				if(value->formatStatus == FORMAT_OK){
 					if(value->contentStatus != PARAM_OK){
-						printf("Content error: %s%s '%s' err: %s\n",strlen(pParam->flagName)>1 ? "--" : "-", pParam->flagName, value->cstr_value, getParameterContentErrorString(value->contentStatus));
+					printf("Content error:");
+					if(value->source) printf(" in '%s'", value->source);
+					printf(" %s%s '%s'. %s\n",
+								strlen(pParam->flagName)>1 ? "--" : "-",
+								pParam->flagName, value->cstr_value,
+								getParameterContentErrorString(value->contentStatus)
+								);
 					}
 				}
 				else{
-					printf("Format error: %s%s '%s' err: %s\n",strlen(pParam->flagName)>1 ? "--" : "-", pParam->flagName, value->cstr_value, getFormatErrorString(value->formatStatus));
+					printf("Format error:");
+					if(value->source) printf(" in '%s'", value->source);
+					printf(" %s%s '%s'. %s\n",
+							strlen(pParam->flagName)>1 ? "--" : "-",
+							pParam->flagName, value->cstr_value,
+							getFormatErrorString(value->formatStatus)
+							);
 				}
 				
 				value = value->next;
@@ -843,7 +835,7 @@ void paramSet_PrintErrorMessages(paramSet *set){
 	return;
 }
 
-void paramSet_printUnknownParameterWarnings(paramSet *set){
+void paramSet_printUnknownParameterWarnings(const paramSet *set){
 	int i = 0;
 	int count = 0;
 	char *tmp = NULL;
@@ -855,15 +847,18 @@ void paramSet_printUnknownParameterWarnings(paramSet *set){
 		for(i=0; i<count; i++){
 			paramValue *value = NULL;
 			paramSet_getValueByNameAt(set, UNKNOWN_PARAMETER_NAME, i, &value);
-			if(value)
-				printf("Warning: Unknown parameter '%s'\n", value->cstr_value);
+			if(value){
+				printf("Warning: Unknown parameter '%s'", value->cstr_value);
+				if(value->source) printf(" from '%s'", value->source);
+				printf(".\n");
+			}
 		}
 	}
 }
 
 
 
-static void paramSet_PrintSimilar(const char *str, paramSet *set){
+static void paramSet_PrintSimilar(const char *str, const paramSet *set){
 	int numOfElements = 0;
 	parameter **array = NULL;
 	int i =0;
@@ -894,7 +889,7 @@ static void paramSet_PrintSimilar(const char *str, paramSet *set){
 	return;
 }
 
-void paramSet_printTypoWarnings(paramSet *set){
+void paramSet_printTypoWarnings(const paramSet *set){
 	int i = 0;
 	int count = 0;
 	char *tmp = NULL;
@@ -911,7 +906,7 @@ void paramSet_printTypoWarnings(paramSet *set){
 	}
 }
 
-bool paramSet_isTypos(paramSet *set){
+bool paramSet_isTypos(const paramSet *set){
 	int count = 0;
 	paramSet_getValueCountByName(set, TYPO_PARAMETER_NAME,&count);
 	return count > 0 ? true : false; 
