@@ -4,6 +4,7 @@
 static void printSignaturesRootHash_and_Time(const KSI_Signature *sig);
 
 int GT_signTask(Task *task) {
+	paramSet *set = NULL;
 	KSI_CTX *ksi = NULL;
 	KSI_DataHasher *hsr = NULL;
 	KSI_DataHash *hash = NULL;
@@ -16,13 +17,14 @@ int GT_signTask(Task *task) {
 	char *outSigFileName = NULL;
 	char *imprint = NULL;
 	
-	H = paramSet_getStrValueByNameAt(task->set, "H", 0,&hashAlgName_H);	
-	paramSet_getStrValueByNameAt(task->set, "f", 0,&inDataFileName);
-	paramSet_getStrValueByNameAt(task->set, "o", 0,&outSigFileName);
-	paramSet_getStrValueByNameAt(task->set, "F", 0,&imprint);
-	n = paramSet_isSetByName(task->set, "n");
-	t = paramSet_isSetByName(task->set, "t");
-	d = paramSet_isSetByName(task->set, "d");
+	set = Task_getSet(task);
+	H = paramSet_getStrValueByNameAt(set, "H", 0,&hashAlgName_H);	
+	paramSet_getStrValueByNameAt(set, "f", 0,&inDataFileName);
+	paramSet_getStrValueByNameAt(set, "o", 0,&outSigFileName);
+	paramSet_getStrValueByNameAt(set, "F", 0,&imprint);
+	n = paramSet_isSetByName(set, "n");
+	t = paramSet_isSetByName(set, "t");
+	d = paramSet_isSetByName(set, "d");
 	
 	resetExceptionHandler();
 	try
@@ -30,7 +32,7 @@ int GT_signTask(Task *task) {
 			/*Initalization of KSI */
 			initTask_throws(task, &ksi);
 			/*Getting the hash for signing process*/
-			if(task->id == signDataFile){
+			if(Task_getID(task) == signDataFile){
 				char *hashAlg;
 				int hasAlgID=-1;
 				/*Choosing of hash algorithm and creation of data hasher*/
@@ -41,7 +43,7 @@ int GT_signTask(Task *task) {
 				getFilesHash_throws(hsr, inDataFileName, &hash );
 				printf("ok.\n");
 			}
-			else if(task->id == signHash){
+			else if(Task_getID(task) == signHash){
 				printf("Getting hash from input string for signing process... ");
 				getHashFromCommandLine_throws(imprint,ksi, &hash);
 				printf("ok.\n");

@@ -83,6 +83,7 @@ static int url_getScheme(const char* url, char* buf, int len){
  * @throws KSI_EXCEPTION
  */
 static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
+	paramSet *set = NULL;
 	int res = KSI_OK;
 	void *net;
 	bool S, P, X, C, c, bUser, bPass, s, x, p, T, aggre;
@@ -98,23 +99,24 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	int port;
 	bool useTCP = false;
 	
-	S = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "S") ? "S" : "sysvar_aggre_url",0,&signingService_url);
-	X = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "X") ? "X" : "sysvar_ext_url",0,&verificationService_url);
-	P = paramSet_getStrValueByNameAt(task->set, "P",0,&publicationsFile_url);
+	set = Task_getSet(task);
+	S = paramSet_getStrValueByNameAt(set, paramSet_isSetByName(set, "S") ? "S" : "sysvar_aggre_url",0,&signingService_url);
+	X = paramSet_getStrValueByNameAt(set, paramSet_isSetByName(set, "X") ? "X" : "sysvar_ext_url",0,&verificationService_url);
+	P = paramSet_getStrValueByNameAt(set, "P",0,&publicationsFile_url);
 	
-	C = paramSet_getIntValueByNameAt(task->set, "C", 0,&networkConnectionTimeout);
-	c = paramSet_getIntValueByNameAt(task->set, "c", 0,&networkTransferTimeout);
-	aggre = paramSet_isSetByName(task->set, "aggre");
-	s = paramSet_isSetByName(task->set, "s");
-	x = paramSet_isSetByName(task->set, "x");
-	p = paramSet_isSetByName(task->set, "p");
-	T = paramSet_isSetByName(task->set, "T");
+	C = paramSet_getIntValueByNameAt(set, "C", 0,&networkConnectionTimeout);
+	c = paramSet_getIntValueByNameAt(set, "c", 0,&networkTransferTimeout);
+	aggre = paramSet_isSetByName(set, "aggre");
+	s = paramSet_isSetByName(set, "s");
+	x = paramSet_isSetByName(set, "x");
+	p = paramSet_isSetByName(set, "p");
+	T = paramSet_isSetByName(set, "T");
 	
 	
 
 	if(x || (p && T)){
-		bUser = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "user") ? "user" : "sysvar_ext_user",0,&user);
-		bPass = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "pass") ? "pass" : "sysvar_ext_pass",0,&pass);
+		bUser = paramSet_getStrValueByNameAt(set, paramSet_isSetByName(set, "user") ? "user" : "sysvar_ext_user",0,&user);
+		bPass = paramSet_getStrValueByNameAt(set, paramSet_isSetByName(set, "pass") ? "pass" : "sysvar_ext_pass",0,&pass);
 		url_getScheme(verificationService_url, scheme, sizeof(scheme));
 		if(strcmp(scheme, "tcp") == 0){
 			useTCP = true;
@@ -123,8 +125,8 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 		}
 	}
 	else if(s || aggre){
-		bUser = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "user") ? "user" : "sysvar_aggre_user",0,&user);
-		bPass = paramSet_getStrValueByNameAt(task->set, paramSet_isSetByName(task->set, "pass") ? "pass" : "sysvar_aggre_pass",0,&pass);
+		bUser = paramSet_getStrValueByNameAt(set, paramSet_isSetByName(set, "user") ? "user" : "sysvar_aggre_user",0,&user);
+		bPass = paramSet_getStrValueByNameAt(set, paramSet_isSetByName(set, "pass") ? "pass" : "sysvar_aggre_pass",0,&pass);
 		url_getScheme(signingService_url, scheme, sizeof(scheme));
 		if(strcmp(scheme, "tcp") == 0){
 			useTCP = true;
@@ -201,6 +203,7 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 static FILE *logFile = NULL;
 
 void initTask_throws(Task *task ,KSI_CTX **ksi){
+	paramSet *set = NULL;
 	int res = KSI_UNKNOWN_ERROR;
 	KSI_CTX *tmpKsi = NULL;
 	KSI_PublicationsFile *tmpPubFile = NULL;
@@ -214,11 +217,12 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 	char *lookupDir = NULL;
 	char *magicEmail = NULL;
 
-	log = paramSet_getStrValueByNameAt(task->set, "log",0, &outLogfile);
-	b = paramSet_getStrValueByNameAt(task->set, "b",0, &inPubFileName);
-	V = paramSet_isSetByName(task->set,"V");
-	W = paramSet_getStrValueByNameAt(task->set, "W",0, &lookupDir);
-	E = paramSet_getStrValueByNameAt(task->set, "E",0, &magicEmail);
+	set = Task_getSet(task);
+	log = paramSet_getStrValueByNameAt(set, "log",0, &outLogfile);
+	b = paramSet_getStrValueByNameAt(set, "b",0, &inPubFileName);
+	V = paramSet_isSetByName(set,"V");
+	W = paramSet_getStrValueByNameAt(set, "W",0, &lookupDir);
+	E = paramSet_getStrValueByNameAt(set, "E",0, &magicEmail);
 	
 	try
 		CODE{
@@ -236,7 +240,7 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 			
 			configureNetworkProvider_throws(tmpKsi, task);
 			
-			if(b && (task->id != downloadPublicationsFile && task->id != verifyPublicationsFile)){
+			if(b && (Task_getID(task) != downloadPublicationsFile && Task_getID(task) != verifyPublicationsFile)){
 				KSI_LOG_debug(tmpKsi, "Setting publications file '%s'", inPubFileName);
 				KSI_PublicationsFile_fromFile_throws(tmpKsi, inPubFileName, &tmpPubFile);
 				KSI_setPublicationsFile(tmpKsi, tmpPubFile);
@@ -246,7 +250,7 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 			if(V || W){
 				KSI_getPKITruststore(tmpKsi, &refTrustStore);
 				if(V){
-					while(paramSet_getStrValueByNameAt(task->set, "V",i++,&lookupFile))
+					while(paramSet_getStrValueByNameAt(set, "V",i++,&lookupFile))
 						KSI_PKITruststore_addLookupFile_throws(tmpKsi, refTrustStore, lookupFile);
 				}
 				if(W){

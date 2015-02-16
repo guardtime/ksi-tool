@@ -14,6 +14,20 @@
 extern "C" {
 #endif
 
+typedef enum tasks_en{
+	noTask = 0,
+	downloadPublicationsFile,
+	createPublicationString,
+	signDataFile,
+	signHash,
+	extendTimestamp,
+	verifyPublicationsFile,
+	verifyTimestamp,
+	getRootH_T,
+	setSysTime,
+	showHelp,
+	invalid		
+} TaskID;
     
 /**
  * Configures KSI using parameters extracted from command line. 

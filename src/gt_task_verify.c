@@ -1,6 +1,7 @@
 #include "gt_task_support.h"
 #include "try-catch.h"
 int GT_verifyTask(Task *task){
+	paramSet *set = NULL;
 	KSI_CTX *ksi = NULL;
 	KSI_Signature *sig = NULL;
 	KSI_DataHash *file_hsh = NULL;
@@ -15,15 +16,16 @@ int GT_verifyTask(Task *task){
 	char *inSigFileName = NULL;
 	char *inDataFileName = NULL;
 	
-	b = paramSet_getStrValueByNameAt(task->set, "b",0, &inPubFileName);
-	paramSet_getStrValueByNameAt(task->set, "i",0, &inSigFileName);
-	f = paramSet_getStrValueByNameAt(task->set, "f",0, &inDataFileName);
-	F = paramSet_getStrValueByNameAt(task->set, "F",0, &imprint);
+	set = Task_getSet(task);
+	b = paramSet_getStrValueByNameAt(set, "b",0, &inPubFileName);
+	paramSet_getStrValueByNameAt(set, "i",0, &inSigFileName);
+	f = paramSet_getStrValueByNameAt(set, "f",0, &inDataFileName);
+	F = paramSet_getStrValueByNameAt(set, "F",0, &imprint);
 
-	n = paramSet_isSetByName(task->set, "n");
-	r = paramSet_isSetByName(task->set, "r");
-	d = paramSet_isSetByName(task->set, "d");
-	t = paramSet_isSetByName(task->set, "t");
+	n = paramSet_isSetByName(set, "n");
+	r = paramSet_isSetByName(set, "r");
+	d = paramSet_isSetByName(set, "d");
+	t = paramSet_isSetByName(set, "t");
 	
 	resetExceptionHandler();
 	try
@@ -31,7 +33,7 @@ int GT_verifyTask(Task *task){
 			/*Initalization of KSI */
 			initTask_throws(task, &ksi);
 
-			if (task->id == verifyPublicationsFile) {
+			if (Task_getID(task) == verifyPublicationsFile) {
 				printf("Reading publications file... ");
 				MEASURE_TIME(KSI_PublicationsFile_fromFile_throws(ksi, inPubFileName, &publicationsFile));
 				printf("ok. %s\n",t ? str_measuredTime() : "");
@@ -48,7 +50,7 @@ int GT_verifyTask(Task *task){
 				printf("ok.\n");
 		
 				/* Choosing between online and publications file signature verification */
-				if (task->id == verifyTimestamp) {
+				if (Task_getID(task) == verifyTimestamp) {
 					printf("Verifying signature %s ", b ? "using local publications file... " : "online... ");
 					MEASURE_TIME(KSI_Signature_verify_throws(sig, ksi));
 					printf("ok. %s\n",t ? str_measuredTime() : "");
@@ -71,8 +73,8 @@ int GT_verifyTask(Task *task){
 			}
 
 			printf("Verification of %s %s successful.\n",
-					(task->id == verifyPublicationsFile) ? "publications file" : "signature file",
-					(task->id == verifyPublicationsFile) ? inPubFileName : inSigFileName
+					(Task_getID(task) == verifyPublicationsFile) ? "publications file" : "signature file",
+					(Task_getID(task) == verifyPublicationsFile) ? inPubFileName : inSigFileName
 					);
 		}
 		CATCH_ALL{

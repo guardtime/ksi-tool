@@ -4,6 +4,7 @@
 void getPublicationString_throws(KSI_CTX *ctx, KSI_Integer *time);
 
 int GT_publicationsFileTask(Task *task){
+	paramSet *set = NULL;
 	KSI_CTX *ksi = NULL;
 	KSI_PublicationsFile *publicationsFile = NULL;
 	FILE *out = NULL;
@@ -32,11 +33,12 @@ int GT_publicationsFileTask(Task *task){
 	bool d,t;
 	char *outPubFileName = NULL;
 	int publicationTime = 0;
-		
-	paramSet_getStrValueByNameAt(task->set, "o",0,&outPubFileName);
-	paramSet_getIntValueByNameAt(task->set,"T",0,&publicationTime);
-	d = paramSet_isSetByName(task->set, "d");
-	t = paramSet_isSetByName(task->set, "t");
+	
+	set = Task_getSet(task);	
+	paramSet_getStrValueByNameAt(set, "o",0,&outPubFileName);
+	paramSet_getIntValueByNameAt(set,"T",0,&publicationTime);
+	d = paramSet_isSetByName(set, "d");
+	t = paramSet_isSetByName(set, "t");
 	
 	/*Initalization of KSI */
 	resetExceptionHandler();
@@ -44,7 +46,7 @@ int GT_publicationsFileTask(Task *task){
 		CODE{
 			initTask_throws(task ,&ksi);
 
-			if(task->id == downloadPublicationsFile){
+			if(Task_getID(task) == downloadPublicationsFile){
 				printf("Downloading publications file... ");
 				MEASURE_TIME(KSI_receivePublicationsFile_throws(ksi, &publicationsFile));
 				printf("ok. %s\n",t ? str_measuredTime() : "");
@@ -60,7 +62,7 @@ int GT_publicationsFileTask(Task *task){
 				bytesWritten = fwrite(rawPubfile, 1, rawLen, out);
 				if(bytesWritten != rawLen) THROW_MSG(IO_EXCEPTION,EXIT_IO_ERROR, "Error: Unable to write publications file '%s'.\n", outPubFileName);
 				printf("Publications file '%s' saved.\n", outPubFileName);
-			} else if(task->id == createPublicationString){
+			} else if(Task_getID(task) == createPublicationString){
 				printf("Sending extend request... ");
 				measureLastCall();
 				KSI_Integer_new_throws(ksi, publicationTime, &start);

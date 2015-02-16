@@ -11,18 +11,20 @@ static void printSignaturesRootHash_and_Time(const KSI_Signature *sig);
 static void setSystemTime_throws(const KSI_Signature *sig);
 
 int GT_other(Task *task){
+	paramSet *set = NULL;
 	KSI_CTX *ksi = NULL;
 	KSI_DataHasher *hsr = NULL;
 	KSI_DataHash *hsh = NULL;
 	KSI_Signature *sig = NULL;
 	int retval = EXIT_SUCCESS;
 	
-	bool n,r, d,t;
+	bool n, r, d, t;
 	
-	n = paramSet_isSetByName(task->set, "n");
-	r = paramSet_isSetByName(task->set, "r");
-	d = paramSet_isSetByName(task->set, "d");
-	t = paramSet_isSetByName(task->set, "t");
+	set = Task_getSet(task);
+	n = paramSet_isSetByName(set, "n");
+	r = paramSet_isSetByName(set, "r");
+	d = paramSet_isSetByName(set, "d");
+	t = paramSet_isSetByName(set, "t");
 	
 	resetExceptionHandler();
 	try
@@ -30,16 +32,16 @@ int GT_other(Task *task){
 			/*Initalization of KSI */
 			initTask_throws(task, &ksi);
 
-			if (task->id == getRootH_T || task->id == setSysTime) {
+			if (Task_getID(task) == getRootH_T || Task_getID(task) == setSysTime) {
 				KSI_DataHasher_open_throws(ksi, KSI_getHashAlgorithmByName("default"), &hsr);
 				KSI_DataHasher_add_throws(ksi, hsr, "tere",4);
 				KSI_DataHasher_close_throws(ksi, hsr, &hsh);
 				KSI_Signature_create_throws(ksi, hsh, &sig);
 				
-				if (task->id == getRootH_T) {
+				if (Task_getID(task) == getRootH_T) {
 					printSignaturesRootHash_and_Time(sig);
 				}
-				else if (task->id == setSysTime) {
+				else if (Task_getID(task) == setSysTime) {
 					setSystemTime_throws(sig);
 				}
 				

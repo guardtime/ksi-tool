@@ -210,17 +210,17 @@ int main(int argc, char** argv, char **envp) {
 	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{aggre}{htime}{setsystime}", isFlagFormatOK, contentIsOK, NULL);
 	
 	/*Define possible tasks*/
-	/*						ID							DESC					DEF						MAN			IGNORE				OPTIONAL		FORBIDDEN			NEW OBJ*/
-	TaskDefinition_new(signDataFile,			"Sign data file",				"-s -f",				"-o",		"-b-r-i-T",			"-H-n-d-t",		"-x-p-v-F",			&taskDefArray[0]);
-	TaskDefinition_new(signHash,				"Sign hash",					"-s -F",				"-o",		"-b-r-i-H-T",		"-n-d-t",		"-x-p-v-f",			&taskDefArray[1]);
-	TaskDefinition_new(extendTimestamp,			"Extend signature",				"-x",					"-i -o",	"-H-F-f-b-",		"-T-n-r-t",		"-s-p-v",			&taskDefArray[2]);
-	TaskDefinition_new(downloadPublicationsFile,"Download publication file",	"-p -o",				"",			"-H-F-f-i-T-n-r",	"-d-t",			"-s-x-v-T",			&taskDefArray[3]);
-	TaskDefinition_new(createPublicationString, "Create publication string",	"-p -T",				"",			"-H-F-f-i-n-r",		"-d-t",			"-s-x-v-o",			&taskDefArray[4]);
-	TaskDefinition_new(verifyTimestamp,			"Verify online",				"-v -x",				"-i",		"-H-T",				"-f-F-n-d-r-t",	"-s-p-b",			&taskDefArray[5]);
-	TaskDefinition_new(verifyTimestamp,			"Verify locally",				"-v -b -i",				"",			"-H-T",				"-f-F-n-d-r-t",	"-x-s-p",			&taskDefArray[6]);
-	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"-v -b",				"",			"-T-H",				"-n-d-r-t",		"-x-s-p-i-f-F",		&taskDefArray[7]);
-	TaskDefinition_new(getRootH_T,				"Get Aggregator root hash",		"-aggre -htime",		"",			"",					"",				"-x-s-p-v",			&taskDefArray[8]);
-	TaskDefinition_new(setSysTime,				"Set system time",				"-aggre -setsystime",	"",			"",					"",				"-x-s-p-v",			&taskDefArray[9]);
+	/*						ID							DESC					DEF					MAN		IGNORE				OPTIONAL		FORBIDDEN			NEW OBJ*/
+	TaskDefinition_new(signDataFile,			"Sign data file",				"s,f",				"o",	"b,r,i,T",			"H,n,d,t",		"x,p,v,F",			&taskDefArray[0]);
+	TaskDefinition_new(signHash,				"Sign hash",					"s,F",				"o",	"b,r,i,H,T",		"n,d,t",		"x,p,v,f",			&taskDefArray[1]);
+	TaskDefinition_new(extendTimestamp,			"Extend signature",				"x",				"i,o",	"H,F,f,b,",			"T,n,r,t",		"s,p,v",			&taskDefArray[2]);
+	TaskDefinition_new(downloadPublicationsFile,"Download publication file",	"p,o",				"",		"H,F,f,i,T,n,r",	"d,t",			",s,x,v,T",			&taskDefArray[3]);
+	TaskDefinition_new(createPublicationString, "Create publication string",	"p,T",				"",		"H,F,f,i,n,r",		"d,t",			"s,x,v,o",			&taskDefArray[4]);
+	TaskDefinition_new(verifyTimestamp,			"Verify online",				"v,x",				"i",	"H,T",				"f,F,n,d,r,t",	"s,p,b",			&taskDefArray[5]);
+	TaskDefinition_new(verifyTimestamp,			"Verify locally",				"v,b,i",			"",		"H,T",				"f,F,n,d,r,t",	"x,s,p",			&taskDefArray[6]);
+	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"v,b",				"",		"T,H",				"n,d,r,t",		"x,s,p,i,f,F",		&taskDefArray[7]);
+	TaskDefinition_new(getRootH_T,				"Get Aggregator root hash",		"aggre,htime",		"",		"",					"",				"x,s,p,v",			&taskDefArray[8]);
+	TaskDefinition_new(setSysTime,				"Set system time",				"aggre,setsystime",	"",		"",					"",				"x,s,p,v",			&taskDefArray[9]);
 	
 	/*Read parameter set*/
 	paramSet_readFromCMD(argc, argv,set);
@@ -250,22 +250,22 @@ int main(int argc, char** argv, char **envp) {
 	}
 	
 	/*DO*/
-	if(task->id == downloadPublicationsFile || task->id == createPublicationString){
+	if(Task_getID(task) == downloadPublicationsFile || Task_getID(task) == createPublicationString){
 		retval=GT_publicationsFileTask(task);
 	}
-	else if (task->id == verifyPublicationsFile){
+	else if (Task_getID(task) == verifyPublicationsFile){
 		retval=GT_verifyTask(task);
 	}
-	else if (task->id == signDataFile || task->id == signHash){
+	else if (Task_getID(task) == signDataFile || Task_getID(task) == signHash){
 		retval=GT_signTask(task);
 	}
-	else if(task->id == extendTimestamp){
+	else if(Task_getID(task) == extendTimestamp){
 		retval=GT_extendTask(task);
 	}
-	else if(task->id == getRootH_T || task->id == setSysTime){
+	else if(Task_getID(task) == getRootH_T || Task_getID(task) == setSysTime){
 		retval=GT_other(task);
 	}
-	else if(task->id == verifyTimestamp){
+	else if(Task_getID(task) == verifyTimestamp){
 		retval=GT_verifyTask(task);
 	}
 

@@ -12,14 +12,87 @@ struct taskdef_st{
 	const char *ignoredFlags;
 	const char *optionalFlags;
 	const char *forbittenFlags;
-	
+	char *toString;
 	bool isDefined;		
 	bool isConsistent;
 };
 
+struct task_st{
+	TaskDefinition *def;
+	int id;
+	paramSet *set;
+};
+
+
+/**
+ * Extracts one name frome category, formatted as "<name><ndn><name><ndn><name>",
+ * where <name> is parameter that belongs to category and <ndn> is character
+ * that is not a digit or letter (@ref #isalnum will return 0). For example
+ * "h, save, read, r".
+ *  
+ * @param[in]	category	category definition.
+ * @param[out]	buf			output buffer for extracted name.
+ * @param[in]	len			length of the buf.
+ * @return On error or at end of the category function returns NULL. Otherwise pointer to the next name (inside category) will be returned.
+ */
+static const char *category_getParametersName(const char* category, char *buf, short len){
+	int cat_i = 0;
+	int buf_i = 0;
+	
+	buf[0] = 0;
+	
+	if(category == NULL || buf == NULL || category[0] == 0) return NULL;
+	
+	/*Scan category for first name*/
+	while(category[cat_i] != 0){
+		if(len-1 <= buf_i) return NULL;
+		
+		if(isalnum(category[cat_i]))
+			buf[buf_i++] = category[cat_i];
+		else if(buf_i>0)
+			break;
+		
+		cat_i++;
+	}
+	
+	buf[buf_i] = 0;
+	return &category[cat_i];
+}
+
+static int category_getParameterCount(const char* categhory){
+	const char *c = categhory;
+	char buf[256];
+	int count = 0;
+	if(categhory == NULL) return 0;
+	
+	while((c = category_getParametersName(c,buf, sizeof(buf))) != NULL)
+		count++;
+
+	return count;
+}
+
+
+static char *TaskDefinition_toString(TaskDefinition *def, char *buf, int len){
+	const char *c = NULL;
+	char name[256];
+	int size = 0;
+	if(def == NULL || buf == NULL || len < 0) return NULL;
+	
+	c = def->taskDefinitionFlags;
+	while((c = category_getParametersName(c,name, sizeof(name))) != NULL){
+		size += snprintf(buf+size, len-size, "%s%s%s", size > 0 ? " " : "", strlen(name)>1 ? "--" : "-", name);
+	}
+	c = def->mandatoryFlags;
+	while((c = category_getParametersName(c,name, sizeof(name))) != NULL){
+		size += snprintf(buf+size, len-size, " %s%s", strlen(name)>1 ? "--" : "-", name);
+	}
+	
+	return buf;
+}
+
 void TaskDefinition_new(int id, const char *name, const char *def,const char *man, const char *ignore, const char *opt, const char *forb, TaskDefinition **new){
 	TaskDefinition *tmp = NULL;
-	
+	char buf[1024];
 	if(new == NULL) return;
 	
 	*new = NULL;
@@ -34,9 +107,17 @@ void TaskDefinition_new(int id, const char *name, const char *def,const char *ma
 	tmp->ignoredFlags = (ignore == NULL) ? "" : ignore;
 	tmp->optionalFlags = (opt == NULL) ? "" : opt;
 	tmp->forbittenFlags = (forb == NULL) ? "" : forb;
-
+	tmp->toString = NULL;
+	
 	tmp->isDefined = false;
 	tmp->isConsistent = false;
+	
+	
+	if(TaskDefinition_toString(tmp, buf, sizeof(buf)) != NULL){
+		tmp->toString = (char*)malloc(sizeof(char)*(strlen(buf) + 1));
+		if(tmp->toString != NULL)
+			strcpy(tmp->toString, buf);
+	}	
 	
 	*new = tmp;
 	return;
@@ -44,53 +125,8 @@ void TaskDefinition_new(int id, const char *name, const char *def,const char *ma
 
 void TaskDefinition_free(TaskDefinition *obj){
 	if(obj == NULL) return;
+	free(obj->toString);
 	free(obj);	
-}
-
-static const char *getParametersNameFromCateghory(const char* categhory, char *buf, short len){
-	int i = 1;
-	int j = 0;
-	
-	buf[0] = 0;
-	if(categhory == NULL || buf == NULL) return NULL;
-	if(categhory[0] == 0) {
-		buf[0]=0;
-		return NULL;
-	}
-	
-	while(categhory[i] != 0){
-		if(len-1 <= j){
-			buf[0]=0;
-			return NULL;
-		}
-		
-		if(isalpha(categhory[i]) || isalnum(categhory[i])){
-			buf[j] = categhory[i];
-			j++;
-		}
-		else if(j>0){
-			break;
-		}
-		
-		i++;
-	}
-	
-	buf[j] = 0;
-	return &categhory[i];
-}
-/*TODO*/
-static int getFlagCount(const char* categhory){
-	const char *c = NULL;
-	int count = 0;
-	if(categhory == NULL) return 0;
-	if(categhory[0] == 0) return 0;
-	
-	c = categhory;
-	while((c = strchr(c, '-'))){
-		count++;
-		c++;
-	}
-	return count;
 }
 
 static int TaskDefinition_getMissingFlagCount(const char* category, paramSet *set){
@@ -101,7 +137,7 @@ static int TaskDefinition_getMissingFlagCount(const char* category, paramSet *se
 	if(category == NULL || set == NULL) return -1;
 	
 	pName = category;		
-	while((pName = getParametersNameFromCateghory(pName,buf, sizeof(buf))) != NULL){
+	while((pName = category_getParametersName(pName,buf, sizeof(buf))) != NULL){
 		if(paramSet_isSetByName(set, buf) == false){
 			missedFlags++;
 		}
@@ -121,7 +157,7 @@ static bool TaskDefinition_analyse(TaskDefinition *def, paramSet *set){
 		def->isDefined = true;
 	
 	if(TaskDefinition_getMissingFlagCount(def->mandatoryFlags, set) > 0) state = false;
-	if(TaskDefinition_getMissingFlagCount(def->forbittenFlags, set) != getFlagCount(def->forbittenFlags)) state = false;
+	if(TaskDefinition_getMissingFlagCount(def->forbittenFlags, set) != category_getParameterCount(def->forbittenFlags)) state = false;
 	def->isConsistent = state;
 	
 	return state;
@@ -144,34 +180,34 @@ static void TaskDefinition_PrintErrors(TaskDefinition *def, paramSet *set){
 		return;
 	}
 	
-		pName = def->mandatoryFlags;		
-		while((pName = getParametersNameFromCateghory(pName,buf, sizeof(buf))) != NULL){
-			if(paramSet_isSetByName(set, buf) == false){
-				if(!def_printed){
-					fprintf(stderr, "Error: You have to define flag(s) '%s%s'",strlen(buf)>1 ? "--" : "-", buf);
-					def_printed = true;
-				}
-				else{
-					fprintf(stderr, ", '%s%s'",strlen(buf)>1 ? "--" : "-", buf);
-				}
+	pName = def->mandatoryFlags;		
+	while((pName = category_getParametersName(pName,buf, sizeof(buf))) != NULL){
+		if(paramSet_isSetByName(set, buf) == false){
+			if(!def_printed){
+				fprintf(stderr, "Error: You have to define flag(s) '%s%s'", strlen(buf)>1 ? "--" : "-", buf);
+				def_printed = true;
+			}
+			else{
+				fprintf(stderr, ", '%s%s'", strlen(buf)>1 ? "--" : "-", buf);
 			}
 		}
-		if(def_printed) fprintf(stderr, "\n");
-		
-		
-		pName = def->forbittenFlags;		
-		while((pName = getParametersNameFromCateghory(pName,buf, sizeof(buf))) != NULL){
-			if(paramSet_isSetByName(set, buf) == true){
-				if(!err_printed){
-					fprintf(stderr, "Error: You must not use flag(s) '%s%s'",strlen(buf)>1 ? "--" : "-", buf);
-					err_printed = true;
-				}
-				else{
-					fprintf(stderr, ", '%s%s'",strlen(buf)>1 ? "--" : "-", buf);
-				}
+	}
+	if(def_printed) fprintf(stderr, "\n");
+
+
+	pName = def->forbittenFlags;		
+	while((pName = category_getParametersName(pName,buf, sizeof(buf))) != NULL){
+		if(paramSet_isSetByName(set, buf) == true){
+			if(!err_printed){
+				fprintf(stderr, "Error: You must not use flag(s) '%s%s'", strlen(buf)>1 ? "--" : "-", buf);
+				err_printed = true;
+			}
+			else{
+				fprintf(stderr, ", '%s%s'", strlen(buf)>1 ? "--" : "-", buf);
 			}
 		}
-		if(err_printed) fprintf(stderr, "\n");
+	}
+	if(err_printed) fprintf(stderr, "\n");
 	
 	return;
 }
@@ -187,12 +223,47 @@ static void TaskDefinition_PrintWarnings(TaskDefinition *def, paramSet *set){
 	}
 
 	pName = def->ignoredFlags;		
-		while((pName = getParametersNameFromCateghory(pName,buf, sizeof(buf))) != NULL){
+		while((pName = category_getParametersName(pName,buf, sizeof(buf))) != NULL){
 			if(paramSet_isSetByName(set, buf) == true){
-				fprintf(stderr, "Warning: flag %s%s is ignored\n",strlen(buf)>1 ? "--" : "-", buf);
+				fprintf(stderr, "Warning: flag %s%s is ignored\n", strlen(buf)>1 ? "--" : "-", buf);
 			}
 		}
 	return;
+}
+
+static void TaskDefinition_printSuggestions(TaskDefinition **def, int count, paramSet *set){
+	int i;
+	TaskDefinition *tmp;
+	char first_flag[128];
+	int missing;
+	int all;
+	unsigned char *matchChart = NULL;
+	unsigned min = 101;
+	
+	matchChart = malloc(count*sizeof(unsigned char));
+	if(matchChart == NULL) return;
+	
+	
+	for(i=0; i<count; i++){
+		tmp = def[i];
+		
+		all = category_getParameterCount(tmp->taskDefinitionFlags )+category_getParameterCount(tmp->mandatoryFlags);
+		missing = TaskDefinition_getMissingFlagCount(tmp->taskDefinitionFlags, set)+TaskDefinition_getMissingFlagCount(tmp->mandatoryFlags, set);
+		category_getParametersName(tmp->taskDefinitionFlags, first_flag, sizeof(first_flag));
+		
+		matchChart[i] = (100*missing)/all;
+		min = matchChart[i] < min ? matchChart[i] : min; 
+	}
+	
+	if(min == 100) return;
+	
+	for(i=0; i<count; i++){
+		tmp = def[i];
+		if(matchChart[i] == min)
+			fprintf(stderr, "Maybe you want to: %s %s\n", tmp->name, tmp->toString);
+	}
+	
+	free(matchChart);
 }
 
 
@@ -207,7 +278,7 @@ static bool Task_new(Task **new){
 	if(tmp == NULL) return false;
 	
 	tmp->def = NULL;
-	tmp->id = noTask;
+	tmp->id = 0;
 	tmp->set = NULL;
 	
 	*new = tmp;
@@ -240,7 +311,7 @@ Task* Task_getConsistentTask(TaskDefinition **def, int count, paramSet *set){
 	
 	if(definedCount == 0){
 		fprintf(stderr, "Task is not defined. Use (-x, -s, -v, -p) and read help -h\n");
-		Task_printSuggestions(def, count, set);
+		TaskDefinition_printSuggestions(def, count, set);
 	}
 	
 	
@@ -248,13 +319,13 @@ Task* Task_getConsistentTask(TaskDefinition **def, int count, paramSet *set){
 		consistent = NULL;
 		if(definedCount > 1){
 			fprintf(stderr, "Task is not fully defined:\n");
-			Task_printSuggestions(def, count, set);
+			TaskDefinition_printSuggestions(def, count, set);
 		}
 		else{
 			for(i=0; i<count; i++){
 				tmp = def[i];
 				if(tmp->isDefined){
-					fprintf(stderr, "Error: Task '%s' (%s) is invalid:\n", tmp->name, tmp->taskDefinitionFlags);
+					fprintf(stderr, "Error: Task '%s' (%s) is invalid:\n", tmp->name, tmp->toString);
 					TaskDefinition_PrintErrors(tmp, set);
 					TaskDefinition_PrintWarnings(tmp, set);
 					break;
@@ -265,59 +336,32 @@ Task* Task_getConsistentTask(TaskDefinition **def, int count, paramSet *set){
 	}
 	
 	if(consistent){
-			if(TaskDefinition_getMissingFlagCount(consistent->ignoredFlags, set) != getFlagCount(consistent->ignoredFlags)){
-				TaskDefinition_PrintWarnings(consistent, set);
-			}
-				
-			pName = consistent->ignoredFlags;		
-			while((pName = getParametersNameFromCateghory(pName,buf, sizeof(buf))) != NULL){
-				paramSet_removeParameterByName(set, buf);
-			}
-	
-			Task_new(&tmpTask);
-			if(tmpTask == NULL) return NULL;
-			
-			tmpTask->def = consistent;
-			tmpTask->id = consistent->id;
-			tmpTask->set = set;
+		if(TaskDefinition_getMissingFlagCount(consistent->ignoredFlags, set) != category_getParameterCount(consistent->ignoredFlags)){
+			TaskDefinition_PrintWarnings(consistent, set);
 		}
+
+		pName = consistent->ignoredFlags;		
+		while((pName = category_getParametersName(pName,buf, sizeof(buf))) != NULL){
+			paramSet_removeParameterByName(set, buf);
+		}
+
+		Task_new(&tmpTask);
+		if(tmpTask == NULL) return NULL;
+
+		tmpTask->def = consistent;
+		tmpTask->id = consistent->id;
+		tmpTask->set = set;
+	}
 	
 	return tmpTask;
 }
 
+int Task_getID(Task *task){
+	if(task == NULL) return -1;
+	else return task->id;
+}
 
-void Task_printSuggestions(TaskDefinition **def, int count, paramSet *set){
-	int i;
-	TaskDefinition *tmp;
-	char first_flag[128];
-	int missing;
-	int all;
-	unsigned char *matchChart = NULL;
-	unsigned min = 101;
-	
-	matchChart = malloc(count*sizeof(unsigned char));
-	if(matchChart == NULL) return;
-	
-	
-	for(i=0; i<count; i++){
-		tmp = def[i];
-		
-		all = getFlagCount(tmp->taskDefinitionFlags )+getFlagCount(tmp->mandatoryFlags);
-		missing = TaskDefinition_getMissingFlagCount(tmp->taskDefinitionFlags, set)+TaskDefinition_getMissingFlagCount(tmp->mandatoryFlags, set);
-		getParametersNameFromCateghory(tmp->taskDefinitionFlags, first_flag, sizeof(first_flag));
-		
-		matchChart[i] = (100*missing)/all;
-		min = matchChart[i] < min ? matchChart[i] : min; 
-	}
-	
-	if(min == 100) return;
-	
-	for(i=0; i<count; i++){
-		tmp = def[i];
-		if(matchChart[i] == min)
-			fprintf(stderr, "Maybe you want to: %s %s %s\n", tmp->name, tmp->taskDefinitionFlags, tmp->mandatoryFlags);
-		
-	}
-	
-	free(matchChart);
+paramSet *Task_getSet(Task *task){
+	if(task == NULL) return NULL;
+	else return task->set;
 }

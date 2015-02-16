@@ -2,6 +2,7 @@
 #include "try-catch.h"
 
 int GT_extendTask(Task *task) {
+	paramSet *set = NULL;
 	KSI_CTX *ksi = NULL;
 	KSI_Signature *sig = NULL;
 	KSI_Signature *ext = NULL;
@@ -24,13 +25,14 @@ int GT_extendTask(Task *task) {
 	char *outSigFileName = NULL;
 	int publicationTime = 0;
 	
-	paramSet_getStrValueByNameAt(task->set, "i", 0,&inSigFileName);
-	paramSet_getStrValueByNameAt(task->set, "o", 0,&outSigFileName);
-	T = paramSet_getIntValueByNameAt(task->set,"T",0,&publicationTime);
-	n = paramSet_isSetByName(task->set, "n");
-	t = paramSet_isSetByName(task->set, "t");
-	r = paramSet_isSetByName(task->set, "r");
-	d = paramSet_isSetByName(task->set, "d");
+	set = Task_getSet(task);
+	paramSet_getStrValueByNameAt(set, "i", 0,&inSigFileName);
+	paramSet_getStrValueByNameAt(set, "o", 0,&outSigFileName);
+	T = paramSet_getIntValueByNameAt(set,"T",0,&publicationTime);
+	n = paramSet_isSetByName(set, "n");
+	t = paramSet_isSetByName(set, "t");
+	r = paramSet_isSetByName(set, "r");
+	d = paramSet_isSetByName(set, "d");
 	
 	resetExceptionHandler();
 	try
