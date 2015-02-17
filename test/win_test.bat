@@ -1,3 +1,24 @@
+GOTO copyrightend
+
+    GUARDTIME CONFIDENTIAL
+
+    Copyright (C) [2015] Guardtime, Inc
+    All Rights Reserved
+
+    NOTICE:  All information contained herein is, and remains, the
+    property of Guardtime Inc and its suppliers, if any.
+    The intellectual and technical concepts contained herein are
+    proprietary to Guardtime Inc and its suppliers and may be
+    covered by U.S. and Foreign Patents and patents in process,
+    and are protected by trade secret or copyright law.
+    Dissemination of this information or reproduction of this
+    material is strictly forbidden unless prior written permission
+    is obtained from Guardtime Inc.
+    "Guardtime" and "KSI" are trademarks or registered trademarks of
+    Guardtime Inc.
+
+:copyrightend
+
 @ECHO OFF
 cd ../bin
 
@@ -5,8 +26,8 @@ REM test configuration
 SET WAIT=5
 
 REM Services to use
-REM SET SIG_SERV_IP=http://ksigw.test.guardtime.com:3333/gt-signingservice 
-SET SIG_SERV_IP=htTp://192.168.100.29:1234/
+SET SIG_SERV_IP=http://ksigw.test.guardtime.com:3333/gt-signingservice 
+REM SET SIG_SERV_IP=htTp://192.168.100.29:1234/
 REM SET PUB_SERV_IP=http://172.20.20.7/publications.tlv
 set PUB_SERV_IP=Http://verify.guardtime.com/ksi-publications.bin
 REM SET SIG_SERV_IP=http://172.20.20.4:3333/
