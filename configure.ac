@@ -24,7 +24,8 @@ AC_PREREQ([2.59])
 AC_INIT([ksitool], m4_esyscmd([tr -d [:space:] <VERSION]), [support@guardtime.com])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AM_INIT_AUTOMAKE([foreign -Wall -Werror foreign])
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
