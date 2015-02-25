@@ -212,6 +212,11 @@ int KSI_NetworkClient_setExtenderUser_throws(KSI_CTX *ksi, KSI_NetworkClient *ne
 int KSI_NetworkClient_setExtenderPass_throws(KSI_CTX *ksi, KSI_NetworkClient *netProvider, const char *val);
 int KSI_NetworkClient_setAggregatorUser_throws(KSI_CTX *ksi, KSI_NetworkClient *netProvider, const char *val);
 int KSI_NetworkClient_setAggregatorPass_throws(KSI_CTX *ksi, KSI_NetworkClient *netProvider, const char *val);
+int KSI_CTX_setPublicationUrl_throws(KSI_CTX *ksi, const char *uri);
+int KSI_CTX_setAggregator_throws(KSI_CTX *ksi, const char *uri, const char *loginId, const char *key);
+int KSI_CTX_setExtender_throws(KSI_CTX *ksi, const char *uri, const char *loginId, const char *key);
+int KSI_CTX_setTransferTimeoutSeconds_throws(KSI_CTX *ksi, int timeout);
+int KSI_CTX_setConnectionTimeoutSeconds_throws(KSI_CTX *ksi, int timeout);
 
 #define MEASURE_TIME(code_here) \
 	{   \

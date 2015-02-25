@@ -105,7 +105,6 @@ static int url_getScheme(const char* url, char* buf, int len){
 static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	paramSet *set = NULL;
 	int res = KSI_OK;
-	void *net;
 	bool S, P, X, C, c, bUser, bPass, s, x, p, T, aggre;
 	char *signingService_url = NULL;
 	char *publicationsFile_url = NULL;
@@ -114,9 +113,6 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	int networkTransferTimeout = 0;
 	char *user = NULL;
 	char *pass = NULL;
-	char scheme[32];
-	char host[32];
-	int port;
 	bool useTCP = false;
 	
 	set = Task_getSet(task);
@@ -137,22 +133,10 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	if(x || (p && T)){
 		bUser = paramSet_getStrValueByNameAt(set, paramSet_isSetByName(set, "user") ? "user" : "sysvar_ext_user",0,&user);
 		bPass = paramSet_getStrValueByNameAt(set, paramSet_isSetByName(set, "pass") ? "pass" : "sysvar_ext_pass",0,&pass);
-		url_getScheme(verificationService_url, scheme, sizeof(scheme));
-		if(strcmp(scheme, "tcp") == 0){
-			useTCP = true;
-			url_getPort(verificationService_url, &port);
-			url_getHost(verificationService_url, host, sizeof(host));
-		}
 	}
 	else if(s || aggre){
 		bUser = paramSet_getStrValueByNameAt(set, paramSet_isSetByName(set, "user") ? "user" : "sysvar_aggre_user",0,&user);
 		bPass = paramSet_getStrValueByNameAt(set, paramSet_isSetByName(set, "pass") ? "pass" : "sysvar_aggre_pass",0,&pass);
-		url_getScheme(signingService_url, scheme, sizeof(scheme));
-		if(strcmp(scheme, "tcp") == 0){
-			useTCP = true;
-			url_getPort(signingService_url, &port);
-			url_getHost(signingService_url, host, sizeof(host));
-		}
 	}
 	
 	if(user == NULL) user = "anon";
@@ -160,54 +144,19 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	
 	try
 	   CODE{
-			/* Check if uri's are specified. */
-			res = useTCP ? KSI_TcpClient_new(ksi, (KSI_TcpClient**)&net) : KSI_HttpClient_new(ksi, (KSI_HttpClient**)&net);
+			if(x || (p && T))
+				KSI_CTX_setExtender_throws(ksi, verificationService_url, user, pass);
+			else if(s || aggre)
+				KSI_CTX_setAggregator_throws(ksi, signingService_url, user, pass);
 
-			ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to create new network provider.\n");
+			if (P)
+				KSI_CTX_setPublicationUrl_throws(ksi, publicationsFile_url);
 
-			/* Check aggregator url */
-			if(x || (p && T)){
-				if(useTCP)
-					res = KSI_TcpClient_setExtender((KSI_TcpClient*)net, host, port, user, pass);
-				else
-					res = KSI_HttpClient_setExtender((KSI_HttpClient*)net, verificationService_url, user, pass);
-					
-				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set extender/verifier url '%s'.%s\n", verificationService_url, verificationService_url ? "" : " Define system variable \"KSI_EXTENDER\", read help (-h) for more information.");
-			}
-			else if(s || aggre){
-				if(useTCP)
-					res = KSI_TcpClient_setAggregator((KSI_TcpClient*)net, host, port, user, pass);
-				else
-					res = KSI_HttpClient_setAggregator((KSI_HttpClient*)net, signingService_url, user, pass);
-				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set aggregator url '%s'.%s\n", signingService_url, verificationService_url ? "" : " Define system variable \"KSI_AGGREGATOR\", read help (-h) for more information.");
-			}
+			if (C)
+				KSI_CTX_setConnectionTimeoutSeconds_throws(ksi, networkConnectionTimeout);
 
-			/* Check publications file url. */
-			if (P) {
-				res = KSI_HttpClient_setPublicationUrl((KSI_HttpClient*)net, publicationsFile_url);
-				ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set publications file url '%s'.\n", publicationsFile_url);
-			}
-
-			/* Check Network connection timeout. */
-			if (C) {
-				if(!useTCP){
-					res = KSI_HttpClient_setConnectTimeoutSeconds((KSI_HttpClient*)net, networkConnectionTimeout);
-					ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set network connection timeout %i.\n", networkConnectionTimeout);
-				}
-			}
-
-			/* Check Network transfer timeout. */
-			if (c) {
-					if(useTCP)
-						res = KSI_TcpClient_setTransferTimeoutSeconds((KSI_TcpClient*)net, networkTransferTimeout);
-					else
-						res = KSI_HttpClient_setReadTimeoutSeconds((KSI_HttpClient*)net, networkTransferTimeout);
-					ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set network transfer timeout %i.\n", networkTransferTimeout);
-			}
-
-			/* Set the new network provider. */
-			res = KSI_setNetworkProvider(ksi, (KSI_NetworkClient *)net);
-			ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to set network provider.\n");
+			if (c)
+				KSI_CTX_setTransferTimeoutSeconds_throws(ksi, networkTransferTimeout);
 		} 
 		CATCH_ALL{
 			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to configure network provider.\n");
@@ -311,7 +260,7 @@ void getFilesHash_throws(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **
 			if (in == NULL) 
 				THROW_MSG(IO_EXCEPTION,EXIT_IO_ERROR, "Error: Unable to open input file '%s'\n", fname);
 
-			/* Read the input file and calculate the hash of its contents. */
+			/* Read the input file and calculate the hash from its contents. */
 			while (!feof(in)) {
 				buf_len = fread(buf, 1, sizeof (buf), in);
 				/* Add  next block to the calculation. */
@@ -973,4 +922,23 @@ int KSI_NetworkClient_setAggregatorUser_throws(KSI_CTX *ksi, KSI_NetworkClient *
 
 int KSI_NetworkClient_setAggregatorPass_throws(KSI_CTX *ksi, KSI_NetworkClient *netProvider, const char *val){
 	THROWABLE3(ksi, KSI_NetworkClient_setAggregatorPass(netProvider, val) , "Error: Unable set aggregator password.");
+}
+
+int KSI_CTX_setPublicationUrl_throws(KSI_CTX *ksi, const char *uri){
+	THROWABLE3(ksi, KSI_CTX_setPublicationUrl(ksi, uri) , "Error: Unable set publication URL.");
+}
+
+int KSI_CTX_setExtender_throws(KSI_CTX *ksi, const char *uri, const char *loginId, const char *key){
+	THROWABLE3(ksi, KSI_CTX_setExtender(ksi, uri, loginId, key) , "Error: Unable set extender.");
+}
+
+int KSI_CTX_setAggregator_throws(KSI_CTX *ksi, const char *uri, const char *loginId, const char *key){
+	THROWABLE3(ksi, KSI_CTX_setAggregator(ksi, uri, loginId, key) , "Error: Unable set aggregator.");
+}
+
+int KSI_CTX_setTransferTimeoutSeconds_throws(KSI_CTX *ksi, int timeout){
+	THROWABLE3(ksi, KSI_CTX_setTransferTimeoutSeconds(ksi, timeout) , "Error: Unable set transfer timeout.");
+}
+int KSI_CTX_setConnectionTimeoutSeconds_throws(KSI_CTX *ksi, int timeout){
+	THROWABLE3(ksi, KSI_CTX_setConnectionTimeoutSeconds(ksi, timeout) , "Error: Unable set connection timeout.");
 }
