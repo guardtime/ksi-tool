@@ -80,7 +80,7 @@ int GT_verifyTask(Task *task){
 				if(f){
 					printf("Verifying file's %s hash... ", inDataFileName);
 					KSI_Signature_createDataHasher_throws(ksi, sig, &hsr);
-					getFilesHash_throws(hsr, inDataFileName, &file_hsh);
+					getFilesHash_throws(ksi, hsr, inDataFileName, &file_hsh);
 					KSI_Signature_verifyDataHash_throws(sig, ksi, file_hsh);
 					printf("ok.\n");
 				}

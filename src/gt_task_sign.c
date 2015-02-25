@@ -60,7 +60,7 @@ int GT_signTask(Task *task) {
 				hashAlg = H ? (hashAlgName_H) : ("default");
 				hasAlgID = getHashAlgorithm_throws(hashAlg);
 				KSI_DataHasher_open_throws(ksi,hasAlgID , &hsr);
-				getFilesHash_throws(hsr, inDataFileName, &hash );
+				getFilesHash_throws(ksi, hsr, inDataFileName, &hash );
 				printf("ok.\n");
 			}
 			else if(Task_getID(task) == signHash){

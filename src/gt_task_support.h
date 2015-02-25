@@ -68,13 +68,14 @@ void closeTask(KSI_CTX *ksi);
 
 /**
  * Calculates the hash of an input file.
+ * @param[in] ksi KSI context.
  * @param[in] hsr Pointer to hasher object. 
  * @param[in] fname Pointer to file path.
  * @param[out] hash Pointer to the receiving pointer to the KSI hash object.
  * 
  * @throws KSI_EXCEPTION, IO_EXCEPTION.
  */
-void getFilesHash_throws(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash ); 
+void getFilesHash_throws(KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash); 
 
 /**
  * Saves signature object to file.

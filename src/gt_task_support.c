@@ -248,35 +248,30 @@ void closeTask(KSI_CTX *ksi){
 	KSI_CTX_free(ksi);
 }
 
-void getFilesHash_throws(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash){
+void getFilesHash_throws(KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash){
 	FILE *in = NULL;
-	int res = KSI_UNKNOWN_ERROR;
 	unsigned char buf[1024];
 	size_t buf_len;
+	
 	try
 		CODE{
-			/* Open Input file */
+			if(ksi == NULL || hsr == NULL || fname == NULL || hash == NULL)
+				THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_FAILURE, "Error: Invalid function parameters.");
+
 			in = fopen(fname, "rb");
 			if (in == NULL) 
 				THROW_MSG(IO_EXCEPTION,EXIT_IO_ERROR, "Error: Unable to open input file '%s'\n", fname);
 
-			/* Read the input file and calculate the hash from its contents. */
 			while (!feof(in)) {
 				buf_len = fread(buf, 1, sizeof (buf), in);
-				/* Add  next block to the calculation. */
-				res = KSI_DataHasher_add(hsr, buf, buf_len);
-				if(res != KSI_OK){
-					fclose(in);
-					ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to add data to hasher.\n");
-				}
+				KSI_DataHasher_add_throws(ksi, hsr, buf, buf_len);
 			}
 
 			if (in != NULL) fclose(in);
-			/* Close the data hasher and retreive the data hash. */
-			res = KSI_DataHasher_close(hsr, hash);
-			ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to create hash.\n");
+			KSI_DataHasher_close_throws(ksi, hsr, hash);
 		}
 		CATCH_ALL{
+			if(in) fclose(in);
 			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to hash file '%s'.\n", fname);
 		}
 	end_try
@@ -293,30 +288,23 @@ void saveSignatureFile_throws(KSI_Signature *sign, const char *fname){
 
 	try
 		CODE{
-			/* Serialize the extended signature. */
+			out = fopen(fname, "wb");
+			if (out == NULL)
+				THROW_MSG(IO_EXCEPTION,res, "Error: Unable to open output file '%s'\n",fname);
+
 			res = KSI_Signature_serialize(sign, &raw, &raw_len);
 			ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to serialize signature.\n");
 
-			/* Open output file. */
-			out = fopen(fname, "wb");
-			if (out == NULL) {
-				KSI_free(raw);
-				THROW_MSG(IO_EXCEPTION,res, "Error: Unable to open output file '%s'\n",fname);
-			}
-
 			count = fwrite(raw, 1, raw_len, out);
-			if (count != raw_len) {
-				fclose(out);
-				KSI_free(raw);
+			if (count != raw_len)
 				THROW_MSG(KSI_EXCEPTION,res, "Error: Failed to write output file.\n");
-			}
-
 		}
 		CATCH_ALL{
+			fclose(out);
+			KSI_free(raw);
 			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to save signature '%s'", fname);
 		}
 	end_try
-
 
 	fclose(out);
 	KSI_free(raw);
@@ -575,7 +563,6 @@ static bool getHashAndAlgStrings(const char *instrn, char **strnAlgName, char **
 
 	*strnAlgName = temp_strnAlg;
 	*strnHash = temp_strnHash;
-	//printf("Alg %s\nHash %s\n", *strnAlgName, *strnHash);
 	return true;
 }
 
