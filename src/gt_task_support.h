@@ -21,9 +21,14 @@
 #ifndef GT_TASK_SUPPORT_H
 #define	GT_TASK_SUPPORT_H
 
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
+#ifdef _WIN32
+#ifdef _DEBUG
+#   define _CRTDBG_MAP_ALLOC
+#   include <stdlib.h>
+#   include <crtdbg.h>
+#endif	
+#endif	
+
 
 #include <stdio.h>
 #include <string.h>
