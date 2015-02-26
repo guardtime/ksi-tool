@@ -90,7 +90,9 @@ int GT_publicationsFileTask(Task *task){
 				KSI_Integer_new_throws(ksi, (KSI_uint64_t)start, &reqID);
 				KSI_ExtendReq_new_throws(ksi, &extReq);
 				KSI_ExtendReq_setAggregationTime_throws(ksi, extReq, start);
+				start = NULL;
 				KSI_ExtendReq_setPublicationTime_throws(ksi, extReq, end);
+				end = NULL;
 				KSI_ExtendReq_setRequestId_throws(ksi, extReq, reqID);
 				KSI_sendExtendRequest_throws(ksi, extReq, &request);
 				
