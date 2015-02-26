@@ -18,11 +18,11 @@
  * Guardtime Inc.
  */
 
+#include "gt_task_support.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "task_def.h"
 #include "gt_task.h"
-#include "gt_task_support.h"
 #include <ksi/ksi.h>
 
 static bool includeParametersFromFile(paramSet *set){
@@ -198,15 +198,9 @@ int main(int argc, char** argv, char **envp) {
 	
 #ifdef _WIN32
 #ifdef _DEBUG
-//	TODO
-//	_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
-//	Send all reports to STDOUT
-//	_CrtSetReportMode( _CRT_WARN, _CRTDBG_MODE_FILE );
-//	_CrtSetReportFile( _CRT_WARN, _CRTDBG_FILE_STDOUT );
-//	_CrtSetReportMode( _CRT_ERROR, _CRTDBG_MODE_FILE );
-//	_CrtSetReportFile( _CRT_ERROR, _CRTDBG_FILE_STDOUT );
-//	_CrtSetReportMode( _CRT_ASSERT, _CRTDBG_MODE_FILE );
-//	_CrtSetReportFile( _CRT_ASSERT, _CRTDBG_FILE_STDOUT );
+	_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+	_CrtSetReportMode( _CRT_WARN, _CRTDBG_MODE_FILE );
+	_CrtSetReportFile( _CRT_WARN, _CRTDBG_FILE_STDOUT );
 #endif	
 #endif	
 
@@ -297,6 +291,6 @@ paramSet_free(set);
 		TaskDefinition_free(taskDefArray[i]);
 	Task_free(task);
 	/*TODO*/
-	//	_CrtDumpMemoryLeaks();
+//		_CrtDumpMemoryLeaks();
 	return retval;
 }

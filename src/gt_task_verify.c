@@ -115,6 +115,7 @@ int GT_verifyTask(Task *task){
 	KSI_DataHasher_free(hsr);
 	KSI_DataHash_free(raw_hsh);
 	KSI_DataHash_free(file_hsh);
+	KSI_PublicationsFile_free(publicationsFile);
 	closeTask(ksi);
 	
 	return retval;

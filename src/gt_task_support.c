@@ -847,6 +847,10 @@ int KSI_CalendarHashChain_getPublicationTime_throws(KSI_CTX *ksi, const KSI_Cale
 	THROWABLE3(ksi, KSI_CalendarHashChain_getPublicationTime(t, publicationTime), "Error: Unable to get publications time.");
 }
 
+int KSI_CalendarHashChain_setPublicationTime_throws(KSI_CTX *ksi, KSI_CalendarHashChain *t, KSI_Integer *publicationTime){
+	THROWABLE3(ksi, KSI_CalendarHashChain_setPublicationTime(t, publicationTime), "Error: Unable to set publications time.");
+}
+
 int KSI_PublicationData_new_throws(KSI_CTX *ksi, KSI_PublicationData **t){
 	THROWABLE3(ksi, KSI_PublicationData_new(ksi, t), "Error: Unable to construct publication data.");
 }

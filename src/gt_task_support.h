@@ -21,6 +21,10 @@
 #ifndef GT_TASK_SUPPORT_H
 #define	GT_TASK_SUPPORT_H
 
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+
 #include <stdio.h>
 #include <string.h>
 #include <ksi/ksi.h>
@@ -197,6 +201,7 @@ int KSI_ExtendResp_getStatus_throws(KSI_CTX *ksi, const KSI_ExtendResp *t, KSI_I
 int KSI_ExtendResp_getCalendarHashChain_throws(KSI_CTX *ksi, const KSI_ExtendResp *t, KSI_CalendarHashChain **calendarHashChain);
 int KSI_CalendarHashChain_aggregate_throws(KSI_CTX *ksi, KSI_CalendarHashChain *chain, KSI_DataHash **hsh);
 int KSI_CalendarHashChain_getPublicationTime_throws(KSI_CTX *ksi, const KSI_CalendarHashChain *t, KSI_Integer **publicationTime);
+int KSI_CalendarHashChain_setPublicationTime_throws(KSI_CTX *ksi, KSI_CalendarHashChain *t, KSI_Integer *publicationTime);
 int KSI_PublicationData_new_throws(KSI_CTX *ksi, KSI_PublicationData **t);
 int KSI_PublicationData_setImprint_throws(KSI_CTX *ksi, KSI_PublicationData *t, KSI_DataHash *imprint);
 int KSI_PublicationData_setTime_throws(KSI_CTX *ksi, KSI_PublicationData *t, KSI_Integer *time);

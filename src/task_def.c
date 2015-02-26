@@ -261,7 +261,7 @@ static void TaskDefinition_printSuggestions(TaskDefinition **def, int count, par
 	unsigned min = 101;
 	
 	matchChart = malloc(count*sizeof(unsigned char));
-	if(matchChart == NULL) return;
+	if(matchChart == NULL) goto cleanup;
 	
 	
 	for(i=0; i<count; i++){
@@ -275,13 +275,15 @@ static void TaskDefinition_printSuggestions(TaskDefinition **def, int count, par
 		min = matchChart[i] < min ? matchChart[i] : min; 
 	}
 	
-	if(min == 100) return;
+	if(min == 100) goto cleanup;
 	
 	for(i=0; i<count; i++){
 		tmp = def[i];
 		if(matchChart[i] == min)
 			fprintf(stderr, "Maybe you want to: %s %s\n", tmp->name, tmp->toString);
 	}
+	
+cleanup:
 	
 	free(matchChart);
 }

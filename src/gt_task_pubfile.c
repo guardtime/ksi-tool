@@ -117,6 +117,7 @@ int GT_publicationsFileTask(Task *task){
 				KSI_PublicationData_new_throws(ksi, &pubData);
 				KSI_PublicationData_setImprint_throws(ksi, pubData, extHsh);
 				KSI_PublicationData_setTime_throws(ksi, pubData, pubTime);
+				KSI_CalendarHashChain_setPublicationTime_throws(ksi, chain, NULL);
 				KSI_PublicationData_toBase32_throws(ksi, pubData, &base32);
 				printf("ok\n\n");
 
@@ -150,6 +151,7 @@ int GT_publicationsFileTask(Task *task){
 				
 	if (out != NULL) fclose(out);
 	
+	KSI_free(rawPubfile);
 	KSI_Integer_free(start);
 	KSI_Integer_free(end);
 	KSI_ExtendReq_free(extReq);
