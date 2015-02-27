@@ -173,6 +173,8 @@ char* str_measuredTime(void);
 
 int getReturnValue(int error_code);
 
+const char* getVersion(void);
+
 /*************************************************
  * KSI api functions capable throwing exceptions  *
  *************************************************/

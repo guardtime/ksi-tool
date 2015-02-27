@@ -108,12 +108,16 @@ static void printSupportedHashAlgorithms(void){
 static void GT_pritHelp(paramSet *set){
 	char *ext_url = NULL;
 	char *aggre_url = NULL;
+	const char *apiVersion = NULL;
+	const char *toolVersion = NULL;
 	
 	paramSet_getStrValueByNameAt(set, "sysvar_ext_url", 0, &ext_url);
 	paramSet_getStrValueByNameAt(set, "sysvar_aggre_url", 0, &aggre_url);
+	apiVersion = KSI_getVersion();
+	toolVersion = getVersion();
 	
 	fprintf(stderr,
-			"\nGuardTime command-line signing tool\n"
+			"\nGuardTime command-line signing tool (%s) using KSI API (%s).\n"
 			"Usage: <-s|-x|-p|-v> [more options]\n"
 			"Where recognized options are:\n"
 			" -s --sign\tsign data (-n -d -t):\n"
@@ -170,8 +174,8 @@ static void GT_pritHelp(paramSet *set){
 			"\t\tParameter must be written line by line."
 			
 			"\nHelp:\n"
-			" -h --help\tHelp (You are reading it now).\n"
-
+			" -h --help\tHelp (You are reading it now).\n",
+			toolVersion, apiVersion
 			);
 
 			fprintf(stderr, "\nDefault service access URL-s:\n"

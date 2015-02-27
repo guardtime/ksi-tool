@@ -80,6 +80,8 @@ LDFLAGS = $(LDFLAGS) /LIBPATH:"$(CURL_DIR)\dll"
 CCFLAGS = $(CCFLAGS) $(CCEXTRA)
 LDFLAGS = $(LDFLAGS) $(LDEXTRA)
 
+VER = \
+!INCLUDE <VERSION>
 
 #Making
 
@@ -94,7 +96,7 @@ $(BIN_DIR)\$(TOOL_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(CMDTOOL_OBJ)
 	
 #C file compilation  	
 {$(SRC_DIR)\}.c{$(OBJ_DIR)\}.obj:
-	cl /c /$(RTL) $(CCFLAGS) /Fo$@ $<
+	cl /c /$(RTL) $(CCFLAGS) /Fo$@ $< /DVERSION=\"$(VER)\"
 
 	
 #Folder factory	
