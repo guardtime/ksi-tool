@@ -627,13 +627,6 @@ char* str_measuredTime(void){
 	return buf;
 }
 
-const char* getVersion(void){
-#ifdef VERSION
-	return VERSION;
-#endif
-	return NULL;
-}
-
 int getReturnValue(int error_code){
 	switch (error_code) {
 		case KSI_OK:

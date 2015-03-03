@@ -25,6 +25,17 @@
 #include "gt_task.h"
 #include <ksi/ksi.h>
 
+#ifdef COMMIT_ID
+#  define KSITOOL_VERSION_STRING "ksitool " VERSION "-" COMMIT_ID
+#else
+#  define KSITOOL_VERSION_STRING "ksitool " VERSION
+#endif
+
+const char *getVersion(void) {
+	static const char versionString[] = KSITOOL_VERSION_STRING;
+	return versionString;
+}
+
 static bool includeParametersFromFile(paramSet *set){
 	/*Read command-line parameters from file*/
 	if(paramSet_isSetByName(set, "inc")){
@@ -117,8 +128,9 @@ static void GT_pritHelp(paramSet *set){
 	toolVersion = getVersion();
 	
 	fprintf(stderr,
-			"\nGuardTime command-line signing tool (%s).\n"
-			"Using KSI API (%s).\n"
+			"\nGuardTime command-line signing tool\n"
+			"%s.\n"
+			"%s.\n"
 			"Usage: <-s|-x|-p|-v> [more options]\n"
 			"Where recognized options are:\n"
 			" -s --sign\tsign data (-n -d -t):\n"

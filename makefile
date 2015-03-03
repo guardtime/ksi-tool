@@ -31,6 +31,8 @@ RTL = MD
 SRC_DIR = src
 OBJ_DIR = obj
 BIN_DIR = bin
+VERSION_FILE = VERSION
+COMM_ID_FILE = COMMIT_ID
 
 TOOL_NAME = ksitool
 
@@ -81,7 +83,27 @@ CCFLAGS = $(CCFLAGS) $(CCEXTRA)
 LDFLAGS = $(LDFLAGS) $(LDEXTRA)
 
 VER = \
-!INCLUDE <VERSION>
+!INCLUDE <$(VERSION_FILE)>
+
+
+!IF [git log -n1 --format="%H">$(COMM_ID_FILE)] == 0
+COM_ID = \
+!INCLUDE <$(COMM_ID_FILE)>
+!MESSAGE Git OK. Include commit ID.
+!IF [rm $(COMM_ID_FILE)] == 0
+!MESSAGE File $(COMM_ID_FILE) deleted.
+!ENDIF
+!ELSE
+!MESSAGE Git is not installed. 
+!ENDIF 
+
+!IF "$(COM_ID)" != ""
+CCFLAGS = $(CCFLAGS) /DCOMMIT_ID=\"$(COM_ID)\"
+!ENDIF
+!IF "$(VER)" != ""
+CCFLAGS = $(CCFLAGS) /DVERSION=\"$(VER)\"
+!ENDIF
+
 
 #Making
 
@@ -96,7 +118,7 @@ $(BIN_DIR)\$(TOOL_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(CMDTOOL_OBJ)
 	
 #C file compilation  	
 {$(SRC_DIR)\}.c{$(OBJ_DIR)\}.obj:
-	cl /c /$(RTL) $(CCFLAGS) /Fo$@ $< /DVERSION=\"$(VER)\"
+	cl /c /$(RTL) $(CCFLAGS) /Fo$@ $<
 
 	
 #Folder factory	
