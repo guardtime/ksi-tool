@@ -117,7 +117,8 @@ static void GT_pritHelp(paramSet *set){
 	toolVersion = getVersion();
 	
 	fprintf(stderr,
-			"\nGuardTime command-line signing tool (%s) using KSI API (%s).\n"
+			"\nGuardTime command-line signing tool (%s).\n"
+			"Using KSI API (%s).\n"
 			"Usage: <-s|-x|-p|-v> [more options]\n"
 			"Where recognized options are:\n"
 			" -s --sign\tsign data (-n -d -t):\n"
