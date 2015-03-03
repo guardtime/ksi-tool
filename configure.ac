@@ -29,6 +29,20 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
+AC_CHECK_PROG(git_installed,git,"yes", "no")
+
+# Define the git hash of the current version.
+AC_MSG_CHECKING([for commit id])
+commit_id=""
+if test "$git_installed" = "yes" -a -x ".git"; then
+    commit_id=$(git log -n 1 --format="%H")
+    AC_MSG_RESULT([$commit_id])
+    AC_DEFINE_UNQUOTED(COMMIT_ID, "$commit_id", [Commit id])
+else
+    AC_MSG_RESULT([no])
+fi
+
+# Checks for programs.
 AC_PROG_CC
 
 AC_PROG_LN_S

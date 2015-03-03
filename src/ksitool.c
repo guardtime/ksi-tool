@@ -25,6 +25,12 @@
 #include "gt_task.h"
 #include <ksi/ksi.h>
 
+#ifndef _WIN32
+#  ifdef HAVE_CONFIG_H
+#    include "config.h"
+#  endif
+#endif
+
 #ifdef COMMIT_ID
 #  define KSITOOL_VERSION_STRING "ksitool " VERSION "-" COMMIT_ID
 #else
