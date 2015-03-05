@@ -333,20 +333,23 @@ void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile){
 		if(res != KSI_OK) return;
 		
 		if(KSI_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
+
 		pStart = buf;
 		j=1;
 		h=0;
 		if(i) printf("\n");
 		while(pLineBreak = strchr(pStart, '\n')){
 			*pLineBreak = 0;
-			if(h++<3)
+			if(h++ < 3)
 				printf("%s %s\n", "  ", pStart);
 			else
 				printf("%s %2i) %s\n", "    ", j++, pStart);
 			pStart = pLineBreak+1;
 		}
+		
+		printf("%s %2i) %s\n", "    ", j++, pStart);
 	}
-
+	printf("\n");
 	return;
 }
 
@@ -357,6 +360,7 @@ void printSignaturePublicationReference(const KSI_Signature *sig){
 	char *pLineBreak = NULL;
 	char *pStart = buf;
 	int i=1;
+	int h=0;
 	if(sig == NULL) return;
 	
 	printf("Signatures publication references:\n");
@@ -364,7 +368,7 @@ void printSignaturePublicationReference(const KSI_Signature *sig){
 	if(res != KSI_OK)return ;
 	
 	if(publicationRecord == NULL) {
-		fprintf(stderr, "  (No publication records available)\n");
+		fprintf(stderr, "  (No publication records available)\n\n");
 		return;
 	}
 	
@@ -372,7 +376,6 @@ void printSignaturePublicationReference(const KSI_Signature *sig){
 	pStart = buf;
 	
 	while(pLineBreak = strchr(pStart, '\n')){
-		int h=0;
 		*pLineBreak = 0;
 
 		if(h++<3)
@@ -382,6 +385,9 @@ void printSignaturePublicationReference(const KSI_Signature *sig){
 
 		pStart = pLineBreak+1;
 	}
+	
+	printf("%s %2i) %s\n", "    ", i++, pStart);
+	printf("\n");
 	
 	return;
 }
@@ -399,8 +405,8 @@ void printSignerIdentity(KSI_Signature *sig){
 		goto cleanup;
 	}
 	
-	printf("'%s'\n", signerIdentity == NULL ? "Unknown" : signerIdentity);
-
+	printf("'%s'\n", signerIdentity == NULL || strlen(signerIdentity) == 0 ? "Unknown" : signerIdentity);
+	printf("\n");
 cleanup:	
 	
 	KSI_free(signerIdentity);
@@ -421,6 +427,7 @@ void printSignatureVerificationInfo(const KSI_Signature *sig){
 	printf("Verification steps:\n");
 	res = KSI_Signature_getVerificationResult((KSI_Signature*)sig, &sigVerification);
 	if(res != KSI_OK){
+		printf("Unable to get verification steps\n\n");
 		return;
 	}
 	
@@ -438,6 +445,7 @@ void printSignatureVerificationInfo(const KSI_Signature *sig){
 			printf("\n");
 		}
 	}
+	printf("\n");
 	return;
 }
 

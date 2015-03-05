@@ -106,7 +106,7 @@ int GT_verifyTask(Task *task){
 		}
 	end_try
 	
-	if(n || r || d) printf("\n");
+	if (n || r || d) printf("\n");
 	if (n) printSignerIdentity(sig);
 	if (r) printSignaturePublicationReference(sig);
 	if (d) printSignatureVerificationInfo(sig);
