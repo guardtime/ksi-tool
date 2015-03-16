@@ -306,3 +306,19 @@ bool convert_repairUrl(const char* arg, char* buf, unsigned len){
 	}
 	return true;
 }
+
+bool convert_repairPath(const char* arg, char* buf, unsigned len){
+	char *toBeReplaced = NULL;
+	
+	if(arg == NULL || buf == NULL) return false;
+	strncpy(buf, arg, len-1);
+
+	
+	toBeReplaced = buf;
+	while(toBeReplaced = strchr(toBeReplaced, '\\')){
+		*toBeReplaced = '/';
+		toBeReplaced++;
+	}
+	
+	return true;
+}

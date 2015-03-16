@@ -278,7 +278,7 @@ int main(int argc, char** argv, char **envp) {
 	
 	/*Configure parameter set*/
 	paramSet_addControl(set, "{o}{log}", isPathFormOk, isOutputFileContOK, NULL);
-	paramSet_addControl(set, "{i}{b}{f}{V}{W}{inc}", isPathFormOk, isInputFileContOK, NULL);
+	paramSet_addControl(set, "{i}{b}{f}{V}{W}{inc}", isPathFormOk, isInputFileContOK, convert_repairPath);
 	paramSet_addControl(set, "{F}", isImprintFormatOK, isImprintContOK, NULL);
 	paramSet_addControl(set, "{H}", isHashAlgFormatOK, isHashAlgContOK, NULL);
 	paramSet_addControl(set, "{S}{X}{P}", isURLFormatOK, contentIsOK, convert_repairUrl);

@@ -71,6 +71,7 @@ const char *getParameterContentErrorString(ContentStatus res);
 
 
 bool convert_repairUrl(const char* arg, char* buf, unsigned len);
+bool convert_repairPath(const char* arg, char* buf, unsigned len);
 #ifdef	__cplusplus
 }
 #endif
