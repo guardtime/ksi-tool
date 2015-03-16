@@ -660,19 +660,25 @@ int getReturnValue(int error_code){
 
 #define THROWABLE3(_ctx,func, ...) \
 	int res = KSI_UNKNOWN_ERROR; \
-	int extError = KSI_UNKNOWN_ERROR; \
 	char buf[1024]; \
 	char buf2[2048]; \
 	\
 	res = func;  \
 	if(res != KSI_OK) { \
-		KSI_ERR_getBaseErrorMessage(_ctx, buf, sizeof(buf),&res, &extError); \
-		if(extError) \
-			snprintf(buf2, sizeof(buf2), "Error: %s (KSI:0x%x, EXT:0x%x)", buf, res, extError); \
-		else \
-			snprintf(buf2, sizeof(buf2), "Error: %s (KSI:0x%x)", buf, res); \
-		appendMessage(buf2); \
-		THROW_MSG(KSI_EXCEPTION, getReturnValue(res), __VA_ARGS__); \
+		int baseError = KSI_UNKNOWN_ERROR; \
+		int extError = KSI_UNKNOWN_ERROR; \
+		KSI_ERR_getBaseErrorMessage(_ctx, buf, sizeof(buf),&baseError, &extError); \
+		if(strlen(buf) > 0){ \
+			if(extError) \
+				snprintf(buf2, sizeof(buf2), "Error: %s (KSI:0x%x, EXT:0x%x)", buf, baseError, extError); \
+			else \
+				snprintf(buf2, sizeof(buf2), "Error: %s (KSI:0x%x)", buf, baseError); \
+		} \
+		else { \
+			snprintf(buf2, sizeof(buf2), "Error: %s (KSI:0x%x)", KSI_getErrorString(res), res); \
+		} \
+	appendMessage(buf2); \
+	THROW_MSG(KSI_EXCEPTION, getReturnValue(res), __VA_ARGS__); \
 	} \
 	return res;	 \
 	
