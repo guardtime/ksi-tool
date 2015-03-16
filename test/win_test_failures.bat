@@ -77,9 +77,30 @@ SET VERIFY_FLAGS= -n -r -d -t
 SET EXTEND_FLAGS= -t -t
 
 echo ************************************************************************** 
+echo ************************** ENVIRONMENT VARIABLES ************************* 
+echo ************************************************************************** 
+
+SETLOCAL 
+echo 1) Invalid variable format
+set KSI_EXTENDER="http://ksigw.test.guardtime.com:8010/gt-extendingservice"
+ksitool.exe -x %GLOBAL% %EXTEND_FLAGS% -i %TEST_FILE_OUT%.ksig -o %TEST_EXTENDED_SIG%
+echo __________________________________________________________________________
+
+echo 2) Unknown url scheme from environment variable
+set KSI_EXTENDER="url=bugi://ksigw.test.guardtime.com:8010/gt-extendingservice"
+ksitool.exe -x %GLOBAL% %EXTEND_FLAGS% -i %TEST_FILE_OUT%.ksig -o %TEST_EXTENDED_SIG%
+echo __________________________________________________________________________
+
+echo 3) Empry Url
+set KSI_EXTENDER="" 
+ksitool.exe -x %GLOBAL% %EXTEND_FLAGS% -i %TEST_FILE_OUT%.ksig -o %TEST_EXTENDED_SIG%
+echo __________________________________________________________________________
+ENDLOCAL
+
+
+echo ************************************************************************** 
 echo ********************************** SIGN ********************************** 
 echo ************************************************************************** 
-echo __________________________________________________________________________
 echo 1) Sign data missing -f
 ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -o %TEST_FILE_OUT%.ksig 
 echo return %errorlevel%

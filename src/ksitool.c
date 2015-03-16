@@ -42,7 +42,7 @@ const char *getVersion(void) {
 	return versionString;
 }
 
-static bool includeParametersFromFile(paramSet *set){
+static bool includeParametersFromFile(paramSet *set, int priority){
 	/*Read command-line parameters from file*/
 	if(paramSet_isSetByName(set, "inc")){
 		char *fname = NULL;
@@ -63,7 +63,7 @@ static bool includeParametersFromFile(paramSet *set){
 				}
 			}
 			
-			paramSet_readFromFile(fname, set);
+			paramSet_readFromFile(fname, set, priority);
 			if(++i>255){
 				fprintf(stderr, "Error: Include file list is too long.");
 				return false;
@@ -85,31 +85,71 @@ static bool getEnvValue(const char *str, const char *value, char *buf, unsigned 
 	return true;
 }
 
-static bool includeParametersFromEnvironment(paramSet *set, char **envp){
+static char default_extenderUrl[1024] = "";
+static char default_aggreUrl[1024] = "";
+
+/*
+ * This function contains a little hack. As parameter set has 2 parameters for user
+ * and pass, there is no room where to put both aggregator and extender data. To avoid
+ * defining new parameters this function decides from which variable user and pass is
+ * extracted. This function MUST be called after reading files and command line to 
+ * make correct decisions.     
+ */
+static bool includeParametersFromEnvironment(paramSet *set, char **envp, int priority){
 	/*Read command line parameters from system variables*/
+	bool ret = true;
+	bool s, x, p, T, aggre;
+	
+	aggre = paramSet_isSetByName(set, "aggre");
+	s = paramSet_isSetByName(set, "s");
+	x = paramSet_isSetByName(set, "x");
+	p = paramSet_isSetByName(set, "p");
+	T = paramSet_isSetByName(set, "T");
+	
 	while(*envp!=NULL){
 		char tmp[1024];
 		char *found = NULL;
+
         if(strncmp(*envp, "KSI_AGGREGATOR", sizeof("KSI_AGGREGATOR")-1)==0){
-			if(!getEnvValue(*envp, "url", tmp, sizeof(tmp))) return false;
-			paramSet_appendParameterByName("sysvar_aggre_url", tmp, "KSI_AGGREGATOR", set);
-			if(getEnvValue(*envp, "user", tmp, sizeof(tmp)))
-				paramSet_appendParameterByName("sysvar_aggre_user", tmp, "KSI_AGGREGATOR", set);
-			if(getEnvValue(*envp, "pass", tmp, sizeof(tmp)))
-				paramSet_appendParameterByName("sysvar_aggre_pass", tmp, "KSI_AGGREGATOR", set);
+			if(!getEnvValue(*envp, "url", tmp, sizeof(tmp))) {
+				fprintf(stderr, "Error: Environment variable KSI_AGGREGATOR is invalid.\n");
+				fprintf(stderr, "Error: Invalid '%s'.\n", *envp);
+				ret = false;
+			}
+
+			paramSet_priorityAppendParameterByName("S", tmp, "KSI_AGGREGATOR", priority, set);
+			strcpy(default_aggreUrl, tmp);
+			
+			if(s || aggre){
+				if(getEnvValue(*envp, "user", tmp, sizeof(tmp)))
+					paramSet_priorityAppendParameterByName("user", tmp, "KSI_AGGREGATOR", priority, set);
+				if(getEnvValue(*envp, "pass", tmp, sizeof(tmp)))
+					paramSet_priorityAppendParameterByName("pass", tmp, "KSI_AGGREGATOR", priority, set);
+			}
+
 		}
         else if(strncmp(*envp, "KSI_EXTENDER", sizeof("KSI_EXTENDER")-1)==0){
-			if(!getEnvValue(*envp, "url", tmp, sizeof(tmp))) return false;
-			paramSet_appendParameterByName("sysvar_ext_url", tmp, "KSI_EXTENDER", set);
-			if(getEnvValue(*envp, "user", tmp, sizeof(tmp)))
-				paramSet_appendParameterByName("sysvar_ext_user", tmp, "KSI_EXTENDER", set);
-			if(getEnvValue(*envp, "pass", tmp, sizeof(tmp)))
-				paramSet_appendParameterByName("sysvar_ext_pass", tmp, "KSI_EXTENDER", set);
+			if(!getEnvValue(*envp, "url", tmp, sizeof(tmp))){
+				fprintf(stderr, "Error: Environment variable KSI_EXTENDER is invalid.\n");
+				fprintf(stderr, "Error: Invalid '%s'.\n", *envp);
+				ret  = false;
+			}
+			
+			paramSet_priorityAppendParameterByName("X", tmp, "KSI_EXTENDER", priority, set);
+			strcpy(default_extenderUrl, tmp);
+
+			if(x || (p && T)){
+				if(getEnvValue(*envp, "user", tmp, sizeof(tmp)))
+					paramSet_priorityAppendParameterByName("user", tmp, "KSI_EXTENDER", priority, set);
+				if(getEnvValue(*envp, "pass", tmp, sizeof(tmp)))
+					paramSet_priorityAppendParameterByName("pass", tmp, "KSI_EXTENDER", priority, set);
+			}
+
 		}
 		
         envp++;
     }
-	return true;
+	return ret;
 }
 
 static void printSupportedHashAlgorithms(void){
@@ -122,14 +162,15 @@ static void printSupportedHashAlgorithms(void){
 	}
 }
 
-static void GT_pritHelp(paramSet *set){
+static void GT_pritHelp(void){
 	char *ext_url = NULL;
 	char *aggre_url = NULL;
 	const char *apiVersion = NULL;
 	const char *toolVersion = NULL;
 	
-	paramSet_getStrValueByNameAt(set, "sysvar_ext_url", 0, &ext_url);
-	paramSet_getStrValueByNameAt(set, "sysvar_aggre_url", 0, &aggre_url);
+	ext_url = strlen(default_extenderUrl) > 0 ? default_extenderUrl : NULL;
+	aggre_url = strlen(default_aggreUrl) > 0 ? default_aggreUrl : NULL;
+	
 	apiVersion = KSI_getVersion();
 	toolVersion = getVersion();
 	
@@ -201,7 +242,8 @@ static void GT_pritHelp(paramSet *set){
 			"\tTo define default URL-s system variables must be defined.\n"
 			"\tFor aggregator define \"KSI_AGGREGATOR\"=\"url=<url> pass=<pass> user=<user>\".\n"
 			"\tFor extender define \"KSI_EXTENDER\"=\"url=<url> pass=<pass> user=<user>\".\n"
-			"\tOnly <url> part is mandatory. Default <pass> and <user> is \"anon\".\n\n"		
+			"\tOnly <url> part is mandatory. Default <pass> and <user> is \"anon\".\n"
+			"\tUsing includes (--inc) or defining urls on command-line will override defaults.\n\n"		
 			"\tSigning:		%s\n"
 			"\tExtending/Verifying:	%s\n"
 			"\tPublications file:	%s\n", (aggre_url ? aggre_url : "Not defined."), (ext_url ? ext_url : "Not defined."), KSI_DEFAULT_URI_PUBLICATIONS_FILE);
@@ -229,10 +271,9 @@ int main(int argc, char** argv, char **envp) {
 
 	/*Create parameter set*/
 	paramSet_new("{s|sign}*{x|extend}*{p}*{v|verify}*{t}*{r}*{d}*{n}*{h|help}*{o|out}{i}{f}{b}{c}{C}{V}*"
-				 "{W}{S}{X}{P}{F}{H}{T}{E}{inc}*{aggre}{htime}{setsystime}"
-				 "{user}{pass}{log}"
-				 "{sysvar_aggre_url}{sysvar_aggre_pass}{sysvar_aggre_user}"
-				 "{sysvar_ext_url}{sysvar_ext_pass}{sysvar_ext_user}", &set);
+				 "{W}{S}>{X}>{P}>{F}{H}{T}{E}{inc}*{aggre}{htime}{setsystime}"
+				 "{user}>{pass}>{log}"
+				 ,&set);
 	if(set == NULL) goto cleanup;
 	
 	/*Configure parameter set*/
@@ -240,10 +281,10 @@ int main(int argc, char** argv, char **envp) {
 	paramSet_addControl(set, "{i}{b}{f}{V}{W}{inc}", isPathFormOk, isInputFileContOK, NULL);
 	paramSet_addControl(set, "{F}", isImprintFormatOK, isImprintContOK, NULL);
 	paramSet_addControl(set, "{H}", isHashAlgFormatOK, isHashAlgContOK, NULL);
-	paramSet_addControl(set, "{S}{X}{P}{sysvar_aggre_url}{sysvar_ext_url}", isURLFormatOK, contentIsOK, convert_repairUrl);
+	paramSet_addControl(set, "{S}{X}{P}", isURLFormatOK, contentIsOK, convert_repairUrl);
 	paramSet_addControl(set, "{c}{C}{T}", isIntegerFormatOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{E}", isEmailFormatOK, contentIsOK, NULL);
-	paramSet_addControl(set, "{user}{pass}{sysvar_ext_pass}{sysvar_ext_user}{sysvar_aggre_pass}{sysvar_aggre_user}", isUserPassFormatOK, contentIsOK, NULL);
+	paramSet_addControl(set, "{user}{pass}", isUserPassFormatOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{aggre}{htime}{setsystime}", isFlagFormatOK, contentIsOK, NULL);
 	
 	/*Define possible tasks*/
@@ -260,11 +301,10 @@ int main(int argc, char** argv, char **envp) {
 	TaskDefinition_new(setSysTime,				"Set system time",				"aggre,setsystime",	"",		"",					"",				"x,s,p,v",			&taskDefArray[9]);
 	
 	/*Read parameter set*/
-	paramSet_readFromCMD(argc, argv,set);
-	if(set == NULL) goto cleanup;
+	paramSet_readFromCMD(argc, argv, set, 3);
 	
-	if(includeParametersFromFile(set) == false) goto cleanup;
-	if(includeParametersFromEnvironment(set, envp) == false) goto cleanup;
+	if(includeParametersFromFile(set, 2) == false) goto cleanup;
+	if(includeParametersFromEnvironment(set, envp, 1) == false) goto cleanup;
 	if(paramSet_isSetByName(set, "h")) goto cleanup;
 	
 	if(paramSet_isTypos(set)){
@@ -272,6 +312,7 @@ int main(int argc, char** argv, char **envp) {
 		retval = EXIT_INVALID_CL_PARAMETERS;
 		goto cleanup;
 	}
+	
 	
 	/*Extract task */
 	task = Task_getConsistentTask(taskDefArray, 10, set);
@@ -285,6 +326,8 @@ int main(int argc, char** argv, char **envp) {
 		retval = EXIT_INVALID_CL_PARAMETERS;
 		goto cleanup;
 	}
+	
+	paramSet_printIgnoredLowerPriorityWarnings(set);
 	
 	/*DO*/
 	if(Task_getID(task) == downloadPublicationsFile || Task_getID(task) == createPublicationString){
@@ -307,9 +350,9 @@ int main(int argc, char** argv, char **envp) {
 	}
 
 cleanup:
-	if(paramSet_isSetByName(set, "h")) GT_pritHelp(set);
+	if(paramSet_isSetByName(set, "h")) GT_pritHelp();
 
-paramSet_free(set);
+	paramSet_free(set);
 	for(i=0; i<11;i++)
 		TaskDefinition_free(taskDefArray[i]);
 	Task_free(task);

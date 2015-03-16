@@ -27,7 +27,7 @@ SET WAIT=5
 
 REM Services to use
 SET SIG_SERV_IP=http://ksigw.test.guardtime.com:3333/gt-signingservice 
-REM SET SIG_SERV_IP=htTp://192.168.100.29:1234/
+REM SET SIG_SERV_IP=http://192.168.100.36:3333/
 REM SET PUB_SERV_IP=http://172.20.20.7/publications.tlv
 set PUB_SERV_IP=Http://verify.guardtime.com/ksi-publications.bin
 REM SET SIG_SERV_IP=http://172.20.20.4:3333/

@@ -34,66 +34,6 @@
 		THROW_MSG(_exception,getReturnValue(res),__VA_ARGS__); \
 	}
 
-static int url_getHost(const char* url, char* buf, int len){
-	char *startOfHost = NULL;
-	char *endOfHost = NULL;
-	int hostLen = 0;
-	
-	if(url == NULL) return 1;
-	startOfHost = strstr(url, "://");
-	if(startOfHost == NULL) return 1;
-	startOfHost+=3;
-	
-	endOfHost = strstr(startOfHost, ":");
-	if(endOfHost == NULL)
-	endOfHost = strstr(startOfHost, "/");
-	if(endOfHost == NULL) return 1;
-	
-	hostLen = (int)(endOfHost - startOfHost);
-	if(len < hostLen+1 && hostLen > 0) return 1;
-	
-	strncpy(buf, startOfHost, hostLen);
-	buf[hostLen] = 0;
-	return 0;
-}
-
-static int url_getPort(const char* url, unsigned* port){
-	char *startOfHost = NULL;
-	char *startOfPort = NULL;
-	int tmp = 0;
-	
-	if(url == NULL) return 1;
-	startOfHost = strstr(url, "://");
-	if(startOfHost == NULL) return 1;
-	startOfHost+=3;
-	startOfPort = strstr(startOfHost, ":");
-	if(startOfPort == NULL) return 1;
-	startOfPort++;
-	
-	sscanf(startOfPort, "%i", &tmp);
-	
-	*port = tmp;
-	return 0;
-}
-
-static int url_getScheme(const char* url, char* buf, int len){
-	char *end;
-	int subLen;
-	
-	if(url == NULL || buf == NULL) return 1;
-	end = strstr(url, "://");
-	if(end == NULL) return 1;
-	
-	subLen = (int)(end - url);
-	if(len < subLen+1 && subLen > 0) return 1;
-	
-	strncpy(buf, url, subLen);
-	buf[subLen] = 0;
-	return 0;
-}
-
-
-
 /**
  * Configures NetworkProvider using info from command-line.
  * Sets urls and timeouts.
@@ -105,7 +45,7 @@ static int url_getScheme(const char* url, char* buf, int len){
 static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	paramSet *set = NULL;
 	int res = KSI_OK;
-	bool S, P, X, C, c, bUser, bPass, s, x, p, T, aggre;
+	bool S, P, X, C, c, s, x, p, T, aggre;
 	char *signingService_url = NULL;
 	char *publicationsFile_url = NULL;
 	char *verificationService_url = NULL;
@@ -116,8 +56,8 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	bool useTCP = false;
 	
 	set = Task_getSet(task);
-	S = paramSet_getStrValueByNameAt(set, paramSet_isSetByName(set, "S") ? "S" : "sysvar_aggre_url",0,&signingService_url);
-	X = paramSet_getStrValueByNameAt(set, paramSet_isSetByName(set, "X") ? "X" : "sysvar_ext_url",0,&verificationService_url);
+	S = paramSet_getHighestPriorityStrValueByName(set, "S", &signingService_url);
+	X = paramSet_getHighestPriorityStrValueByName(set, "X", &verificationService_url);
 	P = paramSet_getStrValueByNameAt(set, "P",0,&publicationsFile_url);
 	
 	C = paramSet_getIntValueByNameAt(set, "C", 0,&networkConnectionTimeout);
@@ -129,16 +69,9 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	T = paramSet_isSetByName(set, "T");
 	
 	
+	paramSet_getHighestPriorityStrValueByName(set, "user", &user);
+	paramSet_getHighestPriorityStrValueByName(set, "pass", &pass);
 
-	if(x || (p && T)){
-		bUser = paramSet_getStrValueByNameAt(set, paramSet_isSetByName(set, "user") ? "user" : "sysvar_ext_user",0,&user);
-		bPass = paramSet_getStrValueByNameAt(set, paramSet_isSetByName(set, "pass") ? "pass" : "sysvar_ext_pass",0,&pass);
-	}
-	else if(s || aggre){
-		bUser = paramSet_getStrValueByNameAt(set, paramSet_isSetByName(set, "user") ? "user" : "sysvar_aggre_user",0,&user);
-		bPass = paramSet_getStrValueByNameAt(set, paramSet_isSetByName(set, "pass") ? "pass" : "sysvar_aggre_pass",0,&pass);
-	}
-	
 	if(user == NULL) user = "anon";
 	if(pass == NULL) pass = "anon";
 	
@@ -729,7 +662,7 @@ int getReturnValue(int error_code){
 	int res = KSI_UNKNOWN_ERROR; \
 	int extError = KSI_UNKNOWN_ERROR; \
 	char buf[1024]; \
-	char buf2[1024]; \
+	char buf2[2048]; \
 	\
 	res = func;  \
 	if(res != KSI_OK) { \
@@ -739,7 +672,7 @@ int getReturnValue(int error_code){
 		else \
 			snprintf(buf2, sizeof(buf2), "Error: %s (KSI:0x%x)", buf, res); \
 		appendMessage(buf2); \
-		THROW_MSG(KSI_EXCEPTION,getReturnValue(res), __VA_ARGS__); \
+		THROW_MSG(KSI_EXCEPTION, getReturnValue(res), __VA_ARGS__); \
 	} \
 	return res;	 \
 	

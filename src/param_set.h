@@ -86,7 +86,7 @@ void paramSet_addControl(paramSet *set, const char *names, FormatStatus (*contro
  * @param[in]		argv	array of command line objects.
  * @param[in/out]	set		parameter set.
  */
-void paramSet_readFromCMD(int argc, char **argv, paramSet *set);
+void paramSet_readFromCMD(int argc, char **argv, paramSet *set, int priority);
 
 /**
  * Reads parameter values from file into predefined parameter set. File must be
@@ -99,7 +99,7 @@ void paramSet_readFromCMD(int argc, char **argv, paramSet *set);
  * @param[in]		fname	files path.
  * @param[in/out]	set		parameter set.
  */
-void paramSet_readFromFile(const char *fname, paramSet *set);
+void paramSet_readFromFile(const char *fname, paramSet *set,  int priority);
 
 /**
  * Controls if the format and content of the parameters is OK.
@@ -110,8 +110,9 @@ bool paramSet_isFormatOK(const paramSet *set);
 
 /**
  * Appends parameter to the set. Invalid value format or content is not handled
- * as error. If parameter can have only one value, it is still possible to add
- * more. See @ref #paramSet_isFormatOK, @ref #paramSet_isTypos.
+ * as error if it is possible to append it. If parameter can have only one value,
+ * it is still possible to add more. Internal format, content or count errors can 
+ * be detected - see @ref #paramSet_isFormatOK, @ref #paramSet_isTypos.
  * If parameters name dose not exist, function will fail. Only parameters defined 
  * in set can be used.
  * @param[in]	name		parameters value.
@@ -120,7 +121,9 @@ bool paramSet_isFormatOK(const paramSet *set);
  * @param[in]	set	pointer to parameter set.
  * @return true if successful, false otherwise.
  */
-bool paramSet_appendParameterByName(const char *name, const char *value, const char* source, paramSet *set);
+bool paramSet_appendParameterByName(const char *name, const char *value, const char *source, paramSet *set);
+
+bool paramSet_priorityAppendParameterByName(const char *name, const char *value, const char *source, int priority, paramSet *set);
 
 /**
  * Removes all values from the specified parameter.
@@ -183,11 +186,14 @@ bool paramSet_getIntValueByNameAt(const paramSet *set, const char *name, unsigne
  **/
 bool paramSet_getStrValueByNameAt(const paramSet *set, const char *name, unsigned at, char **value);
 
+bool paramSet_getHighestPriorityStrValueByName(const paramSet *set, const char *name, char **value);
+bool paramSet_getHighestPriorityIntValueByName(const paramSet *set, const char *name, int *value);
+
 void paramSet_Print(const paramSet *set);
 void paramSet_PrintErrorMessages(const paramSet *set);
 void paramSet_printUnknownParameterWarnings(const paramSet *set);
 void paramSet_printTypoWarnings(const paramSet *set);
-
+void paramSet_printIgnoredLowerPriorityWarnings(const paramSet *set);
 
 #ifdef	__cplusplus
 }
