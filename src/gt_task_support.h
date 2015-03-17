@@ -189,6 +189,7 @@ int KSI_DataHash_fromDigest_throws(KSI_CTX *ksi, int hasAlg, const unsigned char
 int KSI_PublicationsFile_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_PublicationsFile **pubFile);
 int KSI_Signature_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_Signature **sig);
 int KSI_Signature_verify_throws(KSI_Signature *sig, KSI_CTX *ksi);
+int KSI_Signature_verifyOnline_throws(KSI_CTX *ksi, KSI_Signature *sig);
 int KSI_Signature_createDataHasher_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_DataHasher **hsr);
 int KSI_Signature_create_throws(KSI_CTX *ksi, KSI_DataHash *hsh, KSI_Signature **signature);
 int KSI_Signature_verifyDataHash_throws(KSI_Signature *sig, KSI_CTX *ksi, KSI_DataHash *hash);

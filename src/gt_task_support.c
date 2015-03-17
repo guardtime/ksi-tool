@@ -724,6 +724,9 @@ int KSI_Signature_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_Signat
 int KSI_Signature_verify_throws(KSI_Signature *sig, KSI_CTX *ksi){
 	THROWABLE3(ksi, KSI_Signature_verify(sig, ksi), "Error: Unable to verify signature.");
 }
+int KSI_Signature_verifyOnline_throws(KSI_CTX *ksi, KSI_Signature *sig){
+	THROWABLE3(ksi, KSI_Signature_verifyOnline(sig, ksi), "Error: Unable to verify signature online.");
+}
 
 int KSI_Signature_create_throws(KSI_CTX *ksi, KSI_DataHash *hsh, KSI_Signature **signature){
 	THROWABLE3(ksi, KSI_Signature_create(ksi, hsh, signature), "Error: Unable to create signature.");

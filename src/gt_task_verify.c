@@ -31,7 +31,7 @@ int GT_verifyTask(Task *task){
 	char *imprint = NULL;
 	int retval = EXIT_SUCCESS;
 	
-	bool n,r, d,t, b, f, F;
+	bool n, r, d, t, b, f, F, x;
 	char *inPubFileName = NULL;
 	char *inSigFileName = NULL;
 	char *inDataFileName = NULL;
@@ -46,6 +46,7 @@ int GT_verifyTask(Task *task){
 	r = paramSet_isSetByName(set, "r");
 	d = paramSet_isSetByName(set, "d");
 	t = paramSet_isSetByName(set, "t");
+	x = paramSet_isSetByName(set, "x");
 	
 	resetExceptionHandler();
 	try
@@ -71,9 +72,17 @@ int GT_verifyTask(Task *task){
 		
 				/* Choosing between online and publications file signature verification */
 				if (Task_getID(task) == verifyTimestamp) {
-					printf("Verifying signature %s ", b ? "using local publications file... " : "online... ");
-					MEASURE_TIME(KSI_Signature_verify_throws(sig, ksi));
-					printf("ok. %s\n",t ? str_measuredTime() : "");
+					if(x){
+						printf("Verifying online...");
+						MEASURE_TIME(KSI_Signature_verifyOnline_throws(ksi, sig));
+						printf("ok. %s\n",t ? str_measuredTime() : "");
+					}
+					else{
+						printf("Verifying signature%s ", b ? " using local publications file... " : "... ");
+						MEASURE_TIME(KSI_Signature_verify_throws(sig, ksi));
+						printf("ok. %s\n",t ? str_measuredTime() : "");
+					}
+				
 				}
 
 				/* If datafile or imprint is present compare hash and timestamp */

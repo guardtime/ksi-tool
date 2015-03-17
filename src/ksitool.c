@@ -184,7 +184,7 @@ static void GT_pritHelp(void){
 			"\t\t-s -f -o sign data file.\n"
 			"\t\t-s -f -H -o sign data file with specific hash algorithm.\n"
 			"\t\t-s -F -o sign hash.\n"
-			" -x --extend\tuse online verification (eXtending) service (-n -r -t):\n"
+			" -x --extend\tuse online verification (eXtending) service (-n -r -d -t):\n"
 			"\t\t-x -i -o extend signature to the nearest publication.\n"
 			"\t\t-x -i -T -o extend signature to specified time.\n"
 			" -p\t\tdownload Publications file (-d -t):\n"
@@ -192,7 +192,8 @@ static void GT_pritHelp(void){
 			"\t\t-p -T create publication string.\n"
 			" -v --verify\tverify signature or publications file. Use -f and -F\n"
 			"\t\tfor document and its hash verification (-n -r -d -t):\n"
-			"\t\t-v -x -i verify signature online.\n"
+			"\t\t-v -x -i verify signature online (calendar-based verification).\n"
+			"\t\t-v -i verify signature.\n"
 			"\t\t-v -b -i verify signature using specific publications file.\n"
 			"\t\t-v -b verify publication file.\n"
 			" --aggre	use aggregator for (-n -t):\n"
@@ -294,11 +295,11 @@ int main(int argc, char** argv, char **envp) {
 	TaskDefinition_new(extendTimestamp,			"Extend signature",				"x",				"i,o",	"H,F,f,b,",			"T,n,r,t",		"s,p,v",			&taskDefArray[2]);
 	TaskDefinition_new(downloadPublicationsFile,"Download publication file",	"p,o",				"",		"H,F,f,i,T,n,r",	"d,t",			",s,x,v,T",			&taskDefArray[3]);
 	TaskDefinition_new(createPublicationString, "Create publication string",	"p,T",				"",		"H,F,f,i,n,r",		"d,t",			"s,x,v,o",			&taskDefArray[4]);
-	TaskDefinition_new(verifyTimestamp,			"Verify online",				"v,x",				"i",	"H,T",				"f,F,n,d,r,t",	"s,p,b",			&taskDefArray[5]);
-	TaskDefinition_new(verifyTimestamp,			"Verify locally",				"v,b,i",			"",		"H,T",				"f,F,n,d,r,t",	"x,s,p",			&taskDefArray[6]);
-	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"v,b",				"",		"T,H",				"n,d,r,t",		"x,s,p,i,f,F",		&taskDefArray[7]);
-	TaskDefinition_new(getRootH_T,				"Get Aggregator root hash",		"aggre,htime",		"",		"",					"",				"x,s,p,v",			&taskDefArray[8]);
-	TaskDefinition_new(setSysTime,				"Set system time",				"aggre,setsystime",	"",		"",					"",				"x,s,p,v",			&taskDefArray[9]);
+	TaskDefinition_new(verifyTimestamp,			"Verify signature",				"v,i",				"",		"H,T",				"f,F,n,d,r,t,x","s,p",			&taskDefArray[5]);
+//	TaskDefinition_new(verifyTimestamp,			"Verify locally",				"v,b,i",			"",		"H,T",				"f,F,n,d,r,t",	"x,s,p",			&taskDefArray[6]);
+	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"v,b",				"",		"T,H",				"n,d,r,t",		"x,s,p,i,f,F",		&taskDefArray[6]);
+	TaskDefinition_new(getRootH_T,				"Get Aggregator root hash",		"aggre,htime",		"",		"",					"",				"x,s,p,v",			&taskDefArray[7]);
+	TaskDefinition_new(setSysTime,				"Set system time",				"aggre,setsystime",	"",		"",					"",				"x,s,p,v",			&taskDefArray[8]);
 	
 	/*Read parameter set*/
 	paramSet_readFromCMD(argc, argv, set, 3);
@@ -315,7 +316,7 @@ int main(int argc, char** argv, char **envp) {
 	
 	
 	/*Extract task */
-	task = Task_getConsistentTask(taskDefArray, 10, set);
+	task = Task_getConsistentTask(taskDefArray, 9, set);
 	paramSet_printUnknownParameterWarnings(set);
 	if(task == NULL){
 		retval = EXIT_INVALID_CL_PARAMETERS;
