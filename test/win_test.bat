@@ -115,13 +115,23 @@ sleep %WAIT%
 ksitool.exe -v %GLOBAL% %VERIFY_FLAGS% -i %TEST_EXTENDED_SIG%
 echo %errorlevel%
 
-
-echo ****************** Extend old signature to 1418601600 ****************** 
-ksitool.exe -x %GLOBAL% %EXTEND_FLAGS% -i %TEST_OLD_SIG% -o %TEST_EXTENDED_SIG%2 -T 1418601600
+echo ****************** Extend old signature to 1418601800 (between publications)****************** 
+ksitool.exe -x %GLOBAL% %EXTEND_FLAGS% -i %TEST_OLD_SIG% -o %TEST_EXTENDED_SIG%2 -T 1418601800
 echo %errorlevel%
+
 sleep %WAIT%
 ksitool.exe -v %GLOBAL% %VERIFY_FLAGS% -i %TEST_EXTENDED_SIG%2
 echo %errorlevel%
+
+
+echo ****************** Extend old signature to publication 1418601600 ****************** 
+ksitool.exe -x %GLOBAL% %EXTEND_FLAGS% -i %TEST_OLD_SIG% -o %TEST_EXTENDED_SIG%3 -T 1418601600
+echo %errorlevel%
+
+sleep %WAIT%
+ksitool.exe -v %GLOBAL% %VERIFY_FLAGS% -i %TEST_EXTENDED_SIG%3
+echo %errorlevel%
+
 
 
 echo "****************** Sign raw hash with algorithm specified [-F SH1:<hash>] ******************" 

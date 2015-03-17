@@ -45,7 +45,7 @@
 static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	paramSet *set = NULL;
 	int res = KSI_OK;
-	bool S, P, X, C, c, s, x, p, T, aggre;
+	bool S, P, X, C, c, s, v, x, p, T, aggre;
 	char *signingService_url = NULL;
 	char *publicationsFile_url = NULL;
 	char *verificationService_url = NULL;
@@ -64,6 +64,7 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	c = paramSet_getIntValueByNameAt(set, "c", 0,&networkTransferTimeout);
 	aggre = paramSet_isSetByName(set, "aggre");
 	s = paramSet_isSetByName(set, "s");
+	v = paramSet_isSetByName(set, "v");
 	x = paramSet_isSetByName(set, "x");
 	p = paramSet_isSetByName(set, "p");
 	T = paramSet_isSetByName(set, "T");
@@ -77,7 +78,7 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	
 	try
 	   CODE{
-			if(x || (p && T))
+			if(x || v || (p && T))
 				KSI_CTX_setExtender_throws(ksi, verificationService_url, user, pass);
 			else if(s || aggre)
 				KSI_CTX_setAggregator_throws(ksi, signingService_url, user, pass);
@@ -667,6 +668,7 @@ int getReturnValue(int error_code){
 	if(res != KSI_OK) { \
 		int baseError = KSI_UNKNOWN_ERROR; \
 		int extError = KSI_UNKNOWN_ERROR; \
+		KSI_ERR_statusDump(_ctx, stderr); \
 		KSI_ERR_getBaseErrorMessage(_ctx, buf, sizeof(buf),&baseError, &extError); \
 		if(strlen(buf) > 0){ \
 			if(extError) \
@@ -746,6 +748,9 @@ int KSI_extendSignature_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature *
 /*To Publication record*/
 int KSI_Signature_extend_throws(const KSI_Signature *signature, KSI_CTX *ksi, const KSI_PublicationRecord *pubRec, KSI_Signature **extended){
 	THROWABLE3(ksi, KSI_Signature_extend(signature, ksi, pubRec, extended), "Error: Unable to extend signature.");
+}
+int KSI_Signature_extendTo_throws(const KSI_Signature *signature, KSI_CTX *ksi, KSI_Integer *to, KSI_Signature **extended){
+	THROWABLE3(ksi, KSI_Signature_extendTo(signature, ksi, to, extended), "Error: Unable to extend signature.");
 }
 
 int KSI_PKITruststore_addLookupFile_throws(KSI_CTX *ksi, KSI_PKITruststore *store, const char *path){

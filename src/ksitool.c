@@ -98,10 +98,11 @@ static char default_aggreUrl[1024] = "";
 static bool includeParametersFromEnvironment(paramSet *set, char **envp, int priority){
 	/*Read command line parameters from system variables*/
 	bool ret = true;
-	bool s, x, p, T, aggre;
+	bool s, v, x, p, T, aggre;
 	
 	aggre = paramSet_isSetByName(set, "aggre");
 	s = paramSet_isSetByName(set, "s");
+	v = paramSet_isSetByName(set, "v");
 	x = paramSet_isSetByName(set, "x");
 	p = paramSet_isSetByName(set, "p");
 	T = paramSet_isSetByName(set, "T");
@@ -138,7 +139,7 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp, int pri
 			paramSet_priorityAppendParameterByName("X", tmp, "KSI_EXTENDER", priority, set);
 			strcpy(default_extenderUrl, tmp);
 
-			if(x || (p && T)){
+			if(x || v || (p && T)){
 				if(getEnvValue(*envp, "user", tmp, sizeof(tmp)))
 					paramSet_priorityAppendParameterByName("user", tmp, "KSI_EXTENDER", priority, set);
 				if(getEnvValue(*envp, "pass", tmp, sizeof(tmp)))
