@@ -234,7 +234,7 @@ void saveSignatureFile_throws(KSI_Signature *sign, const char *fname){
 				THROW_MSG(KSI_EXCEPTION,res, "Error: Failed to write output file.\n");
 		}
 		CATCH_ALL{
-			fclose(out);
+			if(out != NULL) fclose(out);
 			KSI_free(raw);
 			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to save signature '%s'", fname);
 		}
