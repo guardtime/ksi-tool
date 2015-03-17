@@ -148,12 +148,12 @@ static void setSystemTime_throws(const KSI_Signature *sig){
 	gmtime_r(&pubTm, &tm);
 	
 #ifdef _WIN32
-	newTime.wYear = 1900 + tm.tm_year;
-	newTime.wMonth = 1 +tm.tm_mon;
-	newTime.wDay = tm.tm_mday;
-	newTime.wHour = tm.tm_hour;
-	newTime.wMinute = tm.tm_min;
-	newTime.wSecond = tm.tm_sec;
+	newTime.wYear = (WORD)(1900 + tm.tm_year);
+	newTime.wMonth = (WORD)(1 +tm.tm_mon);
+	newTime.wDay = (WORD)tm.tm_mday;
+	newTime.wHour = (WORD)tm.tm_hour;
+	newTime.wMinute = (WORD)tm.tm_min;
+	newTime.wSecond = (WORD)tm.tm_sec;
 	newTime.wMilliseconds = 0;
 	
 	if(!SetSystemTime(&newTime)){

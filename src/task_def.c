@@ -168,7 +168,6 @@ static int TaskDefinition_getMissingFlagCount(const char* category, paramSet *se
 
 static bool TaskDefinition_analyse(TaskDefinition *def, paramSet *set){
 	bool state = true;
-	const char *pName = NULL;
 	if(def == NULL || set == NULL) return false;
 	
 	if(TaskDefinition_getMissingFlagCount(def->taskDefinitionFlags, set) > 0)
@@ -184,7 +183,6 @@ static bool TaskDefinition_analyse(TaskDefinition *def, paramSet *set){
 }
 
 static void TaskDefinition_PrintErrors(TaskDefinition *def, paramSet *set){
-	int i=0;
 	char buf[256];
 	const char *pName = NULL;
 	bool def_printed = false;
@@ -233,7 +231,6 @@ static void TaskDefinition_PrintErrors(TaskDefinition *def, paramSet *set){
 }
 
 static void TaskDefinition_PrintWarnings(TaskDefinition *def, paramSet *set){
-	int i=0;
 	const char *pName = NULL;
 	char buf[256];
 	
@@ -271,7 +268,7 @@ static void TaskDefinition_printSuggestions(TaskDefinition **def, int count, par
 		missing = TaskDefinition_getMissingFlagCount(tmp->taskDefinitionFlags, set)+TaskDefinition_getMissingFlagCount(tmp->mandatoryFlags, set);
 		category_getParametersName(tmp->taskDefinitionFlags, first_flag, sizeof(first_flag));
 		
-		matchChart[i] = (100*missing)/all;
+		matchChart[i] = (unsigned char)((100*missing)/all);
 		min = matchChart[i] < min ? matchChart[i] : min; 
 	}
 	

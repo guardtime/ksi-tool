@@ -135,7 +135,6 @@ static paramValue* paramValue_getElementAt(const paramValue *rootValue, unsigned
 static paramValue* paramValue_getFirstHighestPriorityValue(const paramValue *rootValue){
 	paramValue *pValue = NULL;
 	paramValue *master = NULL;
-	int highestPriority = 0;
 	
 	if(rootValue == NULL) return NULL;
 
@@ -489,7 +488,6 @@ static void paramSet_getValueByNameAt(const paramSet *set, const char *name, uns
 bool paramSet_new(const char *names, paramSet **set){
 	paramSet *tmp = NULL;
 	bool status = false;
-	char *copyNames = NULL;
 	const char *pName = NULL;
 	int paramCount = 0;
 	int i = 0;
@@ -589,13 +587,14 @@ static unsigned min_of_3(unsigned A, unsigned B,unsigned C){
 #define LEFT(m,i,j) m[i][j-1] //ins
 #define DIAG(m,i,j) m[i-1][j-1] //rep
 
+/*TODO refactor*/
 static int editDistance_levenshtein(const char *A, const char *B){
 	unsigned lenA, lenB;
 	unsigned M_H, M_W;
 	unsigned i=0, j=0;
 	char **m;
 	unsigned rows_created = 0;
-	unsigned edit_distance = -1;
+	int edit_distance = -1;
 	
 	/*Get the size of each string*/
 	lenA = (unsigned)strlen(A);//vertical 
@@ -611,16 +610,16 @@ static int editDistance_levenshtein(const char *A, const char *B){
 	for(i=0; i<M_H; i++){
 		m[i]=(char*)malloc(M_W*sizeof(char));
 		if(m[i] == NULL) goto cleanup;
-		m[i][0] = i;
+		m[i][0] = 0xff & i;
 		rows_created++;
 	}
 	
-	for(j=0; j<M_W; j++) m[0][j] = j;
+	for(j=0; j<M_W; j++) m[0][j] = 0xff & j;
 	
 	for(j=1; j<M_W; j++){
 		for(i=1; i<M_H; i++){
 			if(A[i-1] == B[j-1]) m[i][j] = DIAG(m,i,j);
-			else m[i][j] = min_of_3(UP(m,i,j), LEFT(m,i,j), DIAG(m,i,j))+1;
+			else m[i][j] = 0xff & min_of_3(UP(m,i,j), LEFT(m,i,j), DIAG(m,i,j))+1;
 		}
 	}
 	edit_distance = m[i-1][j-1];
@@ -676,7 +675,6 @@ static bool paramSet_couldItBeTypo(const char *str, const paramSet *set){
  * @param set
  */
 static void paramSet_addRawParameter(const char *param, const char *arg, const char *source, paramSet *set, int priority){
-	int i=0;
 	const char *flag = NULL;
 	unsigned len;
 	
@@ -860,7 +858,7 @@ bool paramSet_getIntValueByNameAt(const paramSet *set, const char *name, unsigne
 	void *val = NULL;
 	bool stat;
 	stat = getValue(set, name, at, true, paramSet_getValueByNameAt, wrapper_returnInt, &val);
-	*value = (int)val;
+	*value = (int)(val);
 	return stat;
 }
 
@@ -970,15 +968,14 @@ void paramSet_PrintErrorMessages(const paramSet *set){
 }
 
 void paramSet_printUnknownParameterWarnings(const paramSet *set){
-	int i = 0;
-	int count = 0;
-	char *tmp = NULL;
+	unsigned i = 0;
+	unsigned count = 0;
 	
 	if(set == NULL) return;
 	
 	
-	if(paramSet_getValueCountByName(set, UNKNOWN_PARAMETER_NAME,&count)){
-		for(i=0; i<count; i++){
+	if(paramSet_getValueCountByName(set, UNKNOWN_PARAMETER_NAME, &count)){
+		for(i = 0; i < count; i++){
 			paramValue *value = NULL;
 			paramSet_getValueByNameAt(set, UNKNOWN_PARAMETER_NAME, i, &value);
 			if(value){
@@ -1053,13 +1050,12 @@ void paramSet_printIgnoredLowerPriorityWarnings(const paramSet *set){
 }
 
 void paramSet_printTypoWarnings(const paramSet *set){
-	int i = 0;
-	int count = 0;
-	char *tmp = NULL;
+	unsigned i = 0;
+	unsigned count = 0;
 	
 	if(set == NULL) return;
 	
-	if(paramSet_getValueCountByName(set, TYPO_PARAMETER_NAME,&count)){
+	if(paramSet_getValueCountByName(set, TYPO_PARAMETER_NAME, &count)){
 		for(i=0; i<count; i++){
 			paramValue *value = NULL;
 			paramSet_getValueByNameAt(set, TYPO_PARAMETER_NAME, i, &value);
@@ -1070,7 +1066,7 @@ void paramSet_printTypoWarnings(const paramSet *set){
 }
 
 bool paramSet_isTypos(const paramSet *set){
-	int count = 0;
-	paramSet_getValueCountByName(set, TYPO_PARAMETER_NAME,&count);
+	unsigned count = 0;
+	paramSet_getValueCountByName(set, TYPO_PARAMETER_NAME, &count);
 	return count > 0 ? true : false; 
 }

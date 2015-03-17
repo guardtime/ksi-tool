@@ -45,7 +45,6 @@ FormatStatus isPathFormOk(const char *path){
 FormatStatus isHexFormatOK(const char *hex){
 	int i = 0;
 	char C;
-	bool failure = false;
 
 	if(hex == NULL) return FORMAT_NULLPTR;
 	if(strlen(hex) == 0) return FORMAT_NOCONTENT;
@@ -68,8 +67,6 @@ FormatStatus isURLFormatOK(const char *url){
 		return FORMAT_OK;
 	else
 		return FORMAT_URL_UNKNOWN_SCHEME;
-	
-	return FORMAT_UNKNOWN_ERROR;
 }
 
 FormatStatus isIntegerFormatOK(const char *integer){
@@ -94,7 +91,6 @@ FormatStatus isHashAlgFormatOK(const char *hashAlg){
 
 FormatStatus isImprintFormatOK(const char *imprint){
 	char *colon; 
-	FormatStatus status = FORMAT_UNKNOWN_ERROR;
 	
 	if(imprint == NULL) return FORMAT_NULLPTR;
 	if(strlen(imprint) == 0) return FORMAT_NOCONTENT;
@@ -296,7 +292,7 @@ bool convert_repairUrl(const char* arg, char* buf, unsigned len){
 	else{
 		while(arg[i] && i < len - 1){
 			if(&arg[i] < scheme){
-				buf[i] = tolower(arg[i]);
+				buf[i] = (char)tolower(arg[i]);
 			}
 			else
 				buf[i] = arg[i];
@@ -315,7 +311,7 @@ bool convert_repairPath(const char* arg, char* buf, unsigned len){
 
 	
 	toBeReplaced = buf;
-	while(toBeReplaced = strchr(toBeReplaced, '\\')){
+	while((toBeReplaced = strchr(toBeReplaced, '\\')) != NULL){
 		*toBeReplaced = '/';
 		toBeReplaced++;
 	}

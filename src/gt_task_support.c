@@ -44,7 +44,6 @@
  */
 static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	paramSet *set = NULL;
-	int res = KSI_OK;
 	bool S, P, X, C, c, s, v, x, p, T, aggre;
 	char *signingService_url = NULL;
 	char *publicationsFile_url = NULL;
@@ -53,7 +52,6 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	int networkTransferTimeout = 0;
 	char *user = NULL;
 	char *pass = NULL;
-	bool useTCP = false;
 	
 	set = Task_getSet(task);
 	S = paramSet_getHighestPriorityStrValueByName(set, "S", &signingService_url);
@@ -216,7 +214,7 @@ void getFilesHash_throws(KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, K
 void saveSignatureFile_throws(KSI_Signature *sign, const char *fname){
 	int res = KSI_UNKNOWN_ERROR;
 	unsigned char *raw = NULL;
-	int raw_len = 0;
+	unsigned raw_len = 0;
 	size_t count = 0;
 	FILE *out = NULL;
 
@@ -272,7 +270,7 @@ void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile){
 		j=1;
 		h=0;
 		if(i) printf("\n");
-		while(pLineBreak = strchr(pStart, '\n')){
+		while((pLineBreak = strchr(pStart, '\n')) != NULL){
 			*pLineBreak = 0;
 			if(h++ < 3)
 				printf("%s %s\n", "  ", pStart);
@@ -309,7 +307,7 @@ void printSignaturePublicationReference(const KSI_Signature *sig){
 	if(KSI_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
 	pStart = buf;
 	
-	while(pLineBreak = strchr(pStart, '\n')){
+	while((pLineBreak = strchr(pStart, '\n')) != NULL){
 		*pLineBreak = 0;
 
 		if(h++<3)
@@ -443,9 +441,9 @@ static int xx(char c1, char c2){
  * 
  * @throws INVALID_ARGUMENT_EXCEPTION, OUT_OF_MEMORY_EXCEPTION.
  */
-static void getBinaryFromHexString(KSI_CTX *ksi, const char *hexin, unsigned char **binout, size_t *lenout){
+static void getBinaryFromHexString(const char *hexin, unsigned char **binout, size_t *lenout){
 	size_t len = strlen(hexin);
-	unsigned char *tmp=NULL;
+	unsigned char *tmp = NULL;
 	size_t arraySize = len/2;
 	int i,j;
 
@@ -468,8 +466,7 @@ static void getBinaryFromHexString(KSI_CTX *ksi, const char *hexin, unsigned cha
 			tmp = NULL;
 			THROW_MSG(INVALID_ARGUMENT_EXCEPTION,EXIT_INVALID_FORMAT, "Error: The hex number is invalid: %c%c!\n", hexin[j], hexin[j+1]);
 		}
-		tmp[i] = res;
-		//printf("%c%c -> %i\n", hexin[j], hexin[j+1], tempBin[i]);
+		tmp[i] = (unsigned char)res;
 	}
 
 	*lenout = arraySize;
@@ -517,7 +514,6 @@ int getHashAlgorithm_throws(const char *hashAlg){
 void getHashFromCommandLine_throws(const char *imprint,KSI_CTX *ksi, KSI_DataHash **hash){
 	unsigned char *data = NULL;
 	size_t len;
-	int res = KSI_UNKNOWN_ERROR;
 	int hasAlg = -1;
 
 	char *strAlg = NULL;
@@ -528,7 +524,7 @@ void getHashFromCommandLine_throws(const char *imprint,KSI_CTX *ksi, KSI_DataHas
 			getHashAndAlgStrings(imprint, &strAlg, &strHash);
 			if(strAlg == NULL || strHash== NULL ) THROW_MSG(INVALID_ARGUMENT_EXCEPTION,EXIT_INVALID_CL_PARAMETERS, "");
 			
-			getBinaryFromHexString(ksi, strHash, &data, &len);
+			getBinaryFromHexString(strHash, &data, &len);
 			hasAlg = getHashAlgorithm_throws(strAlg);
 			KSI_DataHash_fromDigest_throws(ksi, hasAlg, data, (unsigned int)len, hash);
 		}
@@ -692,7 +688,7 @@ int KSI_verifyPublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *public
 	THROWABLE3(ksi, KSI_verifyPublicationsFile(ksi, publicationsFile), "Error: Unable to verify publications file.");
 }
 
-int KSI_PublicationsFile_serialize_throws(KSI_CTX *ksi, KSI_PublicationsFile *publicationsFile, char **raw, int *raw_len){
+int KSI_PublicationsFile_serialize_throws(KSI_CTX *ksi, KSI_PublicationsFile *publicationsFile, char **raw, unsigned *raw_len){
 	THROWABLE3(ksi, KSI_PublicationsFile_serialize(ksi, publicationsFile, raw, raw_len), "Error: Unable serialize publications file.");
 }
 

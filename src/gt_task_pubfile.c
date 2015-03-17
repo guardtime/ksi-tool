@@ -30,7 +30,7 @@ int GT_publicationsFileTask(Task *task){
 	FILE *out = NULL;
 	size_t bytesWritten;
 	char *rawPubfile = NULL;
-	int rawLen = 0;
+	unsigned rawLen = 0;
 
 	KSI_Integer *end = NULL;
 	KSI_Integer *start = NULL;

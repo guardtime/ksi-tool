@@ -49,7 +49,7 @@ static bool includeParametersFromFile(paramSet *set, int priority){
 		char *fname2 = NULL;
 		int i=0;
 		int n=0;
-		int count=0;
+		unsigned count=0;
 		
 		while(paramSet_getStrValueByNameAt(set, "inc",i,&fname)){
 			paramSet_getValueCountByName(set, "inc", &count);
@@ -109,7 +109,6 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp, int pri
 	
 	while(*envp!=NULL){
 		char tmp[1024];
-		char *found = NULL;
 
         if(strncmp(*envp, "KSI_AGGREGATOR", sizeof("KSI_AGGREGATOR")-1)==0){
 			if(!getEnvValue(*envp, "url", tmp, sizeof(tmp))) {
