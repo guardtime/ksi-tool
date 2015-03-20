@@ -100,7 +100,7 @@ diag "--------------------------------------------------------------------------
 like "`src/ksitool -x -i ${SCRIPT_DIR}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Unable to read signature from file." "Error verify not suitable format"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -v -x -i ${tmp}/sha1.ksig -f ${SCRIPT_DIR}/resource/TestData.txt -V $url_c 2>&1`" "Wrong document or signature" "Error verifying signature and wrong file"
+like "`src/ksitool -v -x -i ${SCRIPT_DIR}/ok-sig-2014-04-30.1.ksig -f ${SCRIPT_DIR}/resource/TestData.txt -V $url_c 2>&1`" "Wrong document or signature" "Error verifying signature and wrong file"
 diag "------------------------------------------------------------------------------";
 
 like "`src/ksitool -s -F SHA-1:${SH1_HASH}FF -o ${tmp}/sha1.ksig 2>&1`" "Hash length is incorrect" "Error signing with SH1 and wrong hash"
