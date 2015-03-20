@@ -39,7 +39,7 @@
  * Sets urls and timeouts.
  * @param[in] cmdparam pointer to command-line parameters.
  * @param[in] ksi pointer to KSI context.
- * 
+ *
  * @throws KSI_EXCEPTION
  */
 static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
@@ -52,12 +52,12 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	int networkTransferTimeout = 0;
 	char *user = NULL;
 	char *pass = NULL;
-	
+
 	set = Task_getSet(task);
 	S = paramSet_getHighestPriorityStrValueByName(set, "S", &signingService_url);
 	X = paramSet_getHighestPriorityStrValueByName(set, "X", &verificationService_url);
 	P = paramSet_getStrValueByNameAt(set, "P",0,&publicationsFile_url);
-	
+
 	C = paramSet_getIntValueByNameAt(set, "C", 0,&networkConnectionTimeout);
 	c = paramSet_getIntValueByNameAt(set, "c", 0,&networkTransferTimeout);
 	aggre = paramSet_isSetByName(set, "aggre");
@@ -66,14 +66,14 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	x = paramSet_isSetByName(set, "x");
 	p = paramSet_isSetByName(set, "p");
 	T = paramSet_isSetByName(set, "T");
-	
-	
+
+
 	paramSet_getHighestPriorityStrValueByName(set, "user", &user);
 	paramSet_getHighestPriorityStrValueByName(set, "pass", &pass);
 
 	if(user == NULL) user = "anon";
 	if(pass == NULL) pass = "anon";
-	
+
 	try
 	   CODE{
 			if(x || v || (p && T))
@@ -89,7 +89,7 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 
 			if (c)
 				KSI_CTX_setTransferTimeoutSeconds_throws(ksi, networkTransferTimeout);
-		} 
+		}
 		CATCH_ALL{
 			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to configure network provider.\n");
 		}
@@ -110,7 +110,7 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 	KSI_PublicationsFile *tmpPubFile = NULL;
 	KSI_PKITruststore *refTrustStore = NULL;
 	int i=0;
-	
+
 	bool log, b,V, W, E;
 	char *outLogfile = NULL;
 	char *inPubFileName = NULL;
@@ -124,12 +124,12 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 	V = paramSet_isSetByName(set,"V");
 	W = paramSet_getStrValueByNameAt(set, "W",0, &lookupDir);
 	E = paramSet_getStrValueByNameAt(set, "E",0, &magicEmail);
-	
+
 	try
 		CODE{
 			res = KSI_CTX_new(&tmpKsi);
 			ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to initialize KSI context.\n");
-			
+
 			if(log){
 				logFile = fopen(outLogfile, "w");
 				if (logFile == NULL){
@@ -138,9 +138,9 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 				KSI_CTX_setLoggerCallback(tmpKsi, KSI_LOG_StreamLogger, logFile);
 				KSI_CTX_setLogLevel(tmpKsi, KSI_LOG_DEBUG);
 			}
-			
+
 			configureNetworkProvider_throws(tmpKsi, task);
-			
+
 			if(b && (Task_getID(task) != downloadPublicationsFile && Task_getID(task) != verifyPublicationsFile)){
 				KSI_LOG_debug(tmpKsi, "Setting publications file '%s'", inPubFileName);
 				KSI_PublicationsFile_fromFile_throws(tmpKsi, inPubFileName, &tmpPubFile);
@@ -158,11 +158,11 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 					KSI_PKITruststore_addLookupDir_throws(tmpKsi, refTrustStore, lookupDir);
 				}
 			}
-			
+
 			if(E){
 				KSI_setPublicationCertEmail_throws(tmpKsi, magicEmail);
 			}
-			
+
 			*ksi = tmpKsi;
 		}
 		CATCH_ALL{
@@ -184,14 +184,14 @@ void getFilesHash_throws(KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, K
 	FILE *in = NULL;
 	unsigned char buf[1024];
 	size_t buf_len;
-	
+
 	try
 		CODE{
 			if(ksi == NULL || hsr == NULL || fname == NULL || hash == NULL)
 				THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_FAILURE, "Error: Invalid function parameters.");
 
 			in = fopen(fname, "rb");
-			if (in == NULL) 
+			if (in == NULL)
 				THROW_MSG(IO_EXCEPTION,EXIT_IO_ERROR, "Error: Unable to open input file '%s'\n", fname);
 
 			while (!feof(in)) {
@@ -251,11 +251,11 @@ void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile){
 	int i, j;
 	char *pLineBreak = NULL;
 	char *pStart = NULL;
-	
+
 	if(pubFile == NULL) return;
-	
+
 	printf("Publications file references:\n");
-	
+
 	res = KSI_PublicationsFile_getPublications(pubFile, &list_publicationRecord);
 	if(res != KSI_OK) return;
 
@@ -263,7 +263,7 @@ void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile){
 		int h=0;
 		res = KSI_PublicationRecordList_elementAt(list_publicationRecord, i, &publicationRecord);
 		if(res != KSI_OK) return;
-		
+
 		if(KSI_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
 
 		pStart = buf;
@@ -278,7 +278,7 @@ void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile){
 				printf("%s %2i) %s\n", "    ", j++, pStart);
 			pStart = pLineBreak+1;
 		}
-		
+
 		printf("%s %2i) %s\n", "    ", j++, pStart);
 	}
 	printf("\n");
@@ -294,19 +294,19 @@ void printSignaturePublicationReference(const KSI_Signature *sig){
 	int i=1;
 	int h=0;
 	if(sig == NULL) return;
-	
+
 	printf("Signatures publication references:\n");
 	res = KSI_Signature_getPublicationRecord(sig, &publicationRecord);
 	if(res != KSI_OK)return ;
-	
+
 	if(publicationRecord == NULL) {
 		fprintf(stderr, "  (No publication records available)\n\n");
 		return;
 	}
-	
+
 	if(KSI_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
 	pStart = buf;
-	
+
 	while((pLineBreak = strchr(pStart, '\n')) != NULL){
 		*pLineBreak = 0;
 
@@ -317,10 +317,10 @@ void printSignaturePublicationReference(const KSI_Signature *sig){
 
 		pStart = pLineBreak+1;
 	}
-	
+
 	printf("%s %2i) %s\n", "    ", i++, pStart);
 	printf("\n");
-	
+
 	return;
 }
 
@@ -329,18 +329,18 @@ void printSignerIdentity(KSI_Signature *sig){
 	char *signerIdentity = NULL;
 
 	if(sig == NULL) goto cleanup;
-	
+
 	printf("Signer identity: ");
 	res = KSI_Signature_getSignerIdentity(sig, &signerIdentity);
 	if(res != KSI_OK){
 		fprintf(stderr, "Unable to get signer identity.\n");
 		goto cleanup;
 	}
-	
+
 	printf("'%s'\n", signerIdentity == NULL || strlen(signerIdentity) == 0 ? "Unknown" : signerIdentity);
 	printf("\n");
-cleanup:	
-	
+cleanup:
+
 	KSI_free(signerIdentity);
 	return;
 }
@@ -355,14 +355,14 @@ void printSignatureVerificationInfo(const KSI_Signature *sig){
 	if(sig == NULL){
 		return;
 	}
-	
+
 	printf("Verification steps:\n");
 	res = KSI_Signature_getVerificationResult((KSI_Signature*)sig, &sigVerification);
 	if(res != KSI_OK){
 		printf("Unable to get verification steps\n\n");
 		return;
 	}
-	
+
 	if(sigVerification != NULL){
 		for(i=0; i< KSI_VerificationResult_getStepResultCount(sigVerification); i++){
 			res = KSI_VerificationResult_getStepResult(sigVerification, i, &result);
@@ -388,17 +388,17 @@ void printPublicationsFileCertificates(const KSI_PublicationsFile *pubfile){
 	char buf[1024];
 	int i=0;
 	int res = 0;
-	
+
 	if(pubfile == NULL) goto cleanup;
 	printf("Publications file certificates::\n");
-	
+
 	res = KSI_PublicationsFile_getCertificates(pubfile, &certReclist);
 	if(res != KSI_OK || certReclist == NULL) goto cleanup;
-	
+
 	for(i=0; i<KSI_CertificateRecordList_length(certReclist); i++){
 		res = KSI_CertificateRecordList_elementAt(certReclist, i, &certRec);
 		if(res != KSI_OK || certRec == NULL) goto cleanup;
-		
+
 		res = KSI_CertificateRecord_getCert(certRec, &cert);
 		if(res != KSI_OK || cert == NULL) goto cleanup;
 
@@ -407,10 +407,10 @@ void printPublicationsFileCertificates(const KSI_PublicationsFile *pubfile){
 		else
 			printf("  %2i)  null\n",i);
 	}
-	
+
 cleanup:
-				
-	return;	
+
+	return;
 	}
 
 // helpers for hex decoding
@@ -433,12 +433,12 @@ static int xx(char c1, char c2){
 
 /**
  * Converts a string into binary array.
- * 
+ *
  * @param[in] ksi Pointer to KSI KSI_CTX object.
  * @param[in] hexin Pointer to string for conversion.
- * @param[out] binout Pointer to receiving pointer to binary array.  
+ * @param[out] binout Pointer to receiving pointer to binary array.
  * @param[out] lenout Pointer to binary array length.
- * 
+ *
  * @throws INVALID_ARGUMENT_EXCEPTION, OUT_OF_MEMORY_EXCEPTION.
  */
 static void getBinaryFromHexString(const char *hexin, unsigned char **binout, size_t *lenout){
@@ -449,7 +449,7 @@ static void getBinaryFromHexString(const char *hexin, unsigned char **binout, si
 
 	if(hexin == NULL || binout == NULL || lenout == NULL)
 		THROW(INVALID_ARGUMENT_EXCEPTION,EXIT_FAILURE);
-	
+
 	if(len%2 != 0){
 		THROW_MSG(INVALID_ARGUMENT_EXCEPTION,EXIT_INVALID_FORMAT, "Error: The hash length is not even number!\n");
 	}
@@ -481,8 +481,8 @@ static bool getHashAndAlgStrings(const char *instrn, char **strnAlgName, char **
 	size_t hahsLen = 0;
 	char *temp_strnAlg = NULL;
 	char *temp_strnHash = NULL;
-	
-	
+
+
 	if(strnAlgName == NULL || strnHash == NULL) return false;
 	*strnAlgName = NULL;
 	*strnHash = NULL;
@@ -523,7 +523,7 @@ void getHashFromCommandLine_throws(const char *imprint,KSI_CTX *ksi, KSI_DataHas
 			if(imprint == NULL) THROW_MSG(INVALID_ARGUMENT_EXCEPTION,EXIT_INVALID_CL_PARAMETERS, "");
 			getHashAndAlgStrings(imprint, &strAlg, &strHash);
 			if(strAlg == NULL || strHash== NULL ) THROW_MSG(INVALID_ARGUMENT_EXCEPTION,EXIT_INVALID_CL_PARAMETERS, "");
-			
+
 			getBinaryFromHexString(strHash, &data, &len);
 			hasAlg = getHashAlgorithm_throws(strAlg);
 			KSI_DataHash_fromDigest_throws(ksi, hasAlg, data, (unsigned int)len, hash);
@@ -664,7 +664,7 @@ int getReturnValue(int error_code){
 	if(res != KSI_OK) { \
 		int baseError = KSI_UNKNOWN_ERROR; \
 		int extError = KSI_UNKNOWN_ERROR; \
-		KSI_ERR_statusDump(_ctx, stderr); \
+		KSI_LOG_logCtxError(_ctx, KSI_LOG_DEBUG); \
 		KSI_ERR_getBaseErrorMessage(_ctx, buf, sizeof(buf),&baseError, &extError); \
 		if(strlen(buf) > 0){ \
 			if(extError) \
@@ -679,7 +679,7 @@ int getReturnValue(int error_code){
 	THROW_MSG(KSI_EXCEPTION, getReturnValue(res), __VA_ARGS__); \
 	} \
 	return res;	 \
-	
+
 int KSI_receivePublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile **publicationsFile){
 	THROWABLE3(ksi, KSI_receivePublicationsFile(ksi, publicationsFile), "Error: Unable to read publications file.");
 }
@@ -752,7 +752,7 @@ int KSI_Signature_extendTo_throws(const KSI_Signature *signature, KSI_CTX *ksi, 
 int KSI_PKITruststore_addLookupFile_throws(KSI_CTX *ksi, KSI_PKITruststore *store, const char *path){
 	THROWABLE3(ksi, KSI_PKITruststore_addLookupFile(store,path), "Error: Unable to set PKI trust store lookup file.");
 }
-		
+
 int KSI_PKITruststore_addLookupDir_throws(KSI_CTX *ksi, KSI_PKITruststore *store, const char *path){
 	THROWABLE3(ksi, KSI_PKITruststore_addLookupDir(store,path), "Error: Unable to set PKI trust store lookup directory.");
 }
