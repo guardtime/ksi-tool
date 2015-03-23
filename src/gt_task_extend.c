@@ -18,6 +18,8 @@
  * Guardtime Inc.
  */
 
+#include <stdlib.h>
+
 #include "gt_task_support.h"
 #include "try-catch.h"
 
@@ -27,14 +29,14 @@ int GT_extendTask(Task *task) {
 	KSI_Signature *sig = NULL;
 	KSI_Signature *ext = NULL;
 	int retval = EXIT_SUCCESS;
-	
+
 	KSI_Integer *pubTime = NULL;
-	
+
 	bool T,t, n, r, d;
 	char *inSigFileName = NULL;
 	char *outSigFileName = NULL;
 	int publicationTime = 0;
-	
+
 	set = Task_getSet(task);
 	paramSet_getStrValueByNameAt(set, "i", 0,&inSigFileName);
 	paramSet_getStrValueByNameAt(set, "o", 0,&outSigFileName);
@@ -43,7 +45,7 @@ int GT_extendTask(Task *task) {
 	t = paramSet_isSetByName(set, "t");
 	r = paramSet_isSetByName(set, "r");
 	d = paramSet_isSetByName(set, "d");
-	
+
 	resetExceptionHandler();
 	try
 		CODE{
@@ -56,7 +58,7 @@ int GT_extendTask(Task *task) {
 
 			/* Make sure the signature is ok. */
 			printf("Verifying old signature... ");
-			MEASURE_TIME(KSI_verifySignature(ksi, sig));
+			MEASURE_TIME(KSI_Signature_verify_throws(sig, ksi));
 			printf("ok. %s\n",t ? str_measuredTime() : "");
 
 			/* Extend the signature. */
@@ -74,7 +76,7 @@ int GT_extendTask(Task *task) {
 			printf("Verifying extended signature... ");
 			MEASURE_TIME(KSI_Signature_verify_throws(ext, ksi));
 			printf("ok. %s\n",t ? str_measuredTime() : "");
-			
+
 			/* Save signature. */
 			saveSignatureFile_throws(ext, outSigFileName);
 			printf("Extended signature saved.\n");
@@ -96,7 +98,7 @@ int GT_extendTask(Task *task) {
 	KSI_Signature_free(sig);
 	KSI_Signature_free(ext);
 	KSI_Integer_free(pubTime);
-	
+
 	closeTask(ksi);
 	return retval;
 }
