@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef _WIN32 
+#ifdef _WIN32
 #	include <io.h>
 #	define F_OK 0
 #else
@@ -60,10 +60,14 @@ FormatStatus isHexFormatOK(const char *hex){
 FormatStatus isURLFormatOK(const char *url){
 	if(url == NULL) return FORMAT_NULLPTR;
 	if(strlen(url) == 0) return FORMAT_NOCONTENT;
-	
-	if(strstr(url, "http://")==url)
+
+	if(strstr(url, "ksi://") == url)
 		return FORMAT_OK;
-	else if(strstr(url, "tcp://")==url)
+	else if(strstr(url, "http://") == url || strstr(url, "ksi+http://") == url)
+		return FORMAT_OK;
+	else if(strstr(url, "https://") == url || strstr(url, "ksi+https://") == url)
+		return FORMAT_OK;
+	else if(strstr(url, "tcp://") == url || strstr(url, "ksi+tcp://") == url)
 		return FORMAT_OK;
 	else
 		return FORMAT_URL_UNKNOWN_SCHEME;
@@ -90,23 +94,23 @@ FormatStatus isHashAlgFormatOK(const char *hashAlg){
 }
 
 FormatStatus isImprintFormatOK(const char *imprint){
-	char *colon; 
-	
+	char *colon;
+
 	if(imprint == NULL) return FORMAT_NULLPTR;
 	if(strlen(imprint) == 0) return FORMAT_NOCONTENT;
-	
+
 	colon = strchr(imprint, ':');
-	
+
 	if(colon == NULL || colon == imprint) return FORMAT_INVALID;
 	if((colon +1) == NULL) return FORMAT_INVALID;
-	
+
 	if(isHexFormatOK(colon+1) != FORMAT_OK) return FORMAT_INVALID;
-	
+
 	return FORMAT_OK;
 }
 
 FormatStatus isFlagFormatOK(const char *hashAlg){
-	if(hashAlg == NULL) return FORMAT_OK; 
+	if(hashAlg == NULL) return FORMAT_OK;
 	else return FORMAT_FLAG_HAS_ARGUMENT;
 }
 
@@ -115,13 +119,13 @@ FormatStatus isEmailFormatOK(const char *email){
 	char *dot = NULL;
 	if(email == NULL) return FORMAT_NULLPTR;
 	if(strlen(email) == 0) return FORMAT_NOCONTENT;
-	
+
 	if((at = strchr(email,'@')) == NULL) return FORMAT_INVALID;
 	if(at == email || *(at+1)==0) return FORMAT_INVALID;
-	
+
 	if((dot = strchr(email,'.')) == NULL) return FORMAT_INVALID;
 	if(dot == email || *(dot+1)==0 || (dot-1) == at) return FORMAT_INVALID;
-	
+
 	return FORMAT_OK;
 }
 
@@ -188,41 +192,41 @@ ContentStatus isImprintContOK(const char *imprint){
 	unsigned len = 0;
 	unsigned expected_len = 0;
 	if(imprint == NULL) return PARAM_INVALID;
-	
+
 	tmp = malloc(strlen(imprint)+1);
 	if(tmp == NULL)
 		exit(EXIT_OUT_OF_MEMORY);
-	
+
 	strcpy(tmp, imprint);
 	colon = strchr(tmp, ':');
-	
+
 	*colon = 0;
 	alg = tmp;
 	imp = colon+1;
-	
+
 	alg_id = KSI_getHashAlgorithmByName(alg);
 	if(alg_id == -1){
 		status = HASH_ALG_INVALID_NAME;
 		goto cleanup;
 	}
-	
+
 	expected_len = KSI_getHashLength(alg_id);
-	
+
 	len = (unsigned)strlen(imp);
-	
+
 	if(len%2 != 0){
 		status = HASH_IMPRINT_INVALID_LEN;
 		goto cleanup;
 	}
-	
+
 	if(len/2 != expected_len){
 		status = HASH_IMPRINT_INVALID_LEN;
 		goto cleanup;
 	}
-	
+
 	status = PARAM_OK;
 cleanup:
-		
+
 	free(tmp);
 	return status;
 }
@@ -281,7 +285,7 @@ bool convert_repairUrl(const char* arg, char* buf, unsigned len){
 	unsigned i = 0;
 	if(arg == NULL || buf == NULL) return false;
 	scheme = strstr(arg, "://");
-		
+
 	if(scheme == NULL){
 		strncpy(buf, "http://", len-1);
 		if(strlen(buf)+strlen(arg) < len)
@@ -305,16 +309,16 @@ bool convert_repairUrl(const char* arg, char* buf, unsigned len){
 
 bool convert_repairPath(const char* arg, char* buf, unsigned len){
 	char *toBeReplaced = NULL;
-	
+
 	if(arg == NULL || buf == NULL) return false;
 	strncpy(buf, arg, len-1);
 
-	
+
 	toBeReplaced = buf;
 	while((toBeReplaced = strchr(toBeReplaced, '\\')) != NULL){
 		*toBeReplaced = '/';
 		toBeReplaced++;
 	}
-	
+
 	return true;
 }
