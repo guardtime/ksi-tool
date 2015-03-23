@@ -91,9 +91,16 @@ int GT_extendTask(Task *task) {
 	end_try
 
 	if(n || r || d) printf("\n");
-	if (n) printSignerIdentity(ext);
-	if (r) printSignaturePublicationReference(ext);
-	if (d) printSignatureVerificationInfo(ext);
+	if(retval != EXIT_SUCCESS && sig != NULL && d){
+		printf("Old signature:\n");
+		printSignatureVerificationInfo(sig);
+	}
+	if(ext != NULL){
+		if(n || d || r) printf("Extended signature:\n");
+		if (d) printSignatureVerificationInfo(ext);
+		if (n) printSignerIdentity(ext);
+		if (r) printSignaturePublicationReference(ext);
+	}
 
 	KSI_Signature_free(sig);
 	KSI_Signature_free(ext);
