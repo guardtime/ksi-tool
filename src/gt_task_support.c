@@ -77,13 +77,22 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 
 	try
 	   CODE{
-			if(x || v || (p && T))
+			if(x || v || (p && T)){
+				if(verificationService_url == NULL)
+					THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_INVALID_CL_PARAMETERS, "Error: Extender url required.");
 				KSI_CTX_setExtender_throws(ksi, verificationService_url, user, pass);
-			else if(s || aggre)
+			}
+			else if(s || aggre){
+				if(signingService_url == NULL)
+					THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_INVALID_CL_PARAMETERS, "Error: Aggregator url required.");
 				KSI_CTX_setAggregator_throws(ksi, signingService_url, user, pass);
+			}
 
-			if (P)
+			if (P){
+				if(signingService_url == NULL)
+					THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_INVALID_CL_PARAMETERS, "Error: Publications file url required.");
 				KSI_CTX_setPublicationUrl_throws(ksi, publicationsFile_url);
+			}
 
 			if (C)
 				KSI_CTX_setConnectionTimeoutSeconds_throws(ksi, networkConnectionTimeout);
@@ -552,14 +561,14 @@ unsigned int measureLastCall(void){
     static clock_t lastCall = 0;
 
     thisCall = clock();
-    elapsed_time_ms = (thisCall - lastCall) * 1000.0 / CLOCKS_PER_SEC;
+    elapsed_time_ms = (thisCall - lastCall) * 1000 / CLOCKS_PER_SEC;
 #else
     static struct timespec thisCall = {0, 0};
     static struct timespec lastCall = {0, 0};
-    
+
     clock_gettime(CLOCK_REALTIME, &thisCall);
     elapsed_time_ms = (thisCall.tv_sec - lastCall.tv_sec) * 1000 + (thisCall.tv_nsec - lastCall.tv_nsec) / 1000000;
-#endif    
+#endif
 
     lastCall = thisCall;
     return elapsed_time_ms;

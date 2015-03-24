@@ -146,7 +146,12 @@ int GT_publicationsFileTask(Task *task){
 				retval = _EXP.exep.ret;
 				exceptionSolved();
 		}
-	end_try
+		CATCH(INVALID_ARGUMENT_EXCEPTION){
+				printErrorMessage();
+				retval = _EXP.exep.ret;
+				exceptionSolved();
+		}
+		end_try
 
 	if(d) printf("\n");
 	if(d) printPublicationsFileReferences(publicationsFile);
