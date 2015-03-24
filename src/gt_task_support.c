@@ -547,13 +547,22 @@ void getHashFromCommandLine_throws(const char *imprint,KSI_CTX *ksi, KSI_DataHas
 static unsigned int elapsed_time_ms;
 
 unsigned int measureLastCall(void){
-	static clock_t thisCall = 0;
-	static clock_t lastCall = 0;
+#ifdef _WIN32
+    static clock_t thisCall = 0;
+    static clock_t lastCall = 0;
 
-	thisCall = clock();
-	elapsed_time_ms = 1000*(thisCall - lastCall) / CLOCKS_PER_SEC;
-	lastCall = thisCall;
-	return elapsed_time_ms;
+    thisCall = clock();
+    elapsed_time_ms = (thisCall - lastCall) * 1000.0 / CLOCKS_PER_SEC;
+#else
+    static struct timespec thisCall = {0, 0};
+    static struct timespec lastCall = {0, 0};
+    
+    clock_gettime(CLOCK_REALTIME, &thisCall);
+    elapsed_time_ms = (thisCall.tv_sec - lastCall.tv_sec) * 1000 + (thisCall.tv_nsec - lastCall.tv_nsec) / 1000000;
+#endif    
+
+    lastCall = thisCall;
+    return elapsed_time_ms;
 }
 
 unsigned int measuredTime(void){
