@@ -20,6 +20,7 @@
 
 #include "gt_task_support.h"
 #include "try-catch.h"
+#include "ksi/net.h"
 
 void getPublicationString_throws(KSI_CTX *ctx, KSI_Integer *time);
 
@@ -46,20 +47,20 @@ int GT_publicationsFileTask(Task *task){
 	char *base32 = NULL;
 	char strTime[1024];
 	time_t pubTm;
-	struct tm tm;					
-	
+	struct tm tm;
+
 	int retval = EXIT_SUCCESS;
-	
+
 	bool d,t;
 	char *outPubFileName = NULL;
 	int publicationTime = 0;
-	
-	set = Task_getSet(task);	
+
+	set = Task_getSet(task);
 	paramSet_getStrValueByNameAt(set, "o",0,&outPubFileName);
 	paramSet_getIntValueByNameAt(set,"T",0,&publicationTime);
 	d = paramSet_isSetByName(set, "d");
 	t = paramSet_isSetByName(set, "t");
-	
+
 	/*Initalization of KSI */
 	resetExceptionHandler();
 	try
@@ -95,7 +96,7 @@ int GT_publicationsFileTask(Task *task){
 				end = NULL;
 				KSI_ExtendReq_setRequestId_throws(ksi, extReq, reqID);
 				KSI_sendExtendRequest_throws(ksi, extReq, &request);
-				
+
 				KSI_RequestHandle_getExtendResponse_throws(ksi, request, &extResp);
 				KSI_ExtendResp_getStatus_throws(ksi, extResp, &respStatus);
 
@@ -111,7 +112,7 @@ int GT_publicationsFileTask(Task *task){
 				measureLastCall();
 				printf("ok. %s\n",t ? str_measuredTime() : "");
 
-				
+
 				printf("Getting publication string... ");
 				KSI_ExtendResp_getCalendarHashChain_throws(ksi, extResp, &chain);
 				KSI_CalendarHashChain_aggregate_throws(ksi, chain, &extHsh);
@@ -123,8 +124,8 @@ int GT_publicationsFileTask(Task *task){
 				KSI_PublicationData_toBase32_throws(ksi, pubData, &base32);
 				printf("ok\n\n");
 
-				
-				
+
+
 				pubTm = (time_t)KSI_Integer_getUInt64(pubTime);
 				gmtime_r(&pubTm, &tm);
 				strftime(strTime, sizeof(strTime), "%Y-%m-%d %H:%M:%S", &tm);
@@ -148,11 +149,11 @@ int GT_publicationsFileTask(Task *task){
 	end_try
 
 	if(d) printf("\n");
-	if(d) printPublicationsFileReferences(publicationsFile);	
-	if(d) printPublicationsFileCertificates(publicationsFile);	
-				
+	if(d) printPublicationsFileReferences(publicationsFile);
+	if(d) printPublicationsFileCertificates(publicationsFile);
+
 	if (out != NULL) fclose(out);
-	
+
 	KSI_free(rawPubfile);
 	KSI_Integer_free(start);
 	KSI_Integer_free(end);
@@ -162,7 +163,7 @@ int GT_publicationsFileTask(Task *task){
 	KSI_PublicationData_free(pubData);
 	KSI_free(base32);
 	closeTask(ksi);
-	
+
 	return retval;
 }
 

@@ -87,7 +87,7 @@ echo %errorlevel%
 echo ****************** Sign data ******************
 ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -f %TEST_FILE% -o %TEST_FILE_OUT%.ksig -b %PUBFILE% 
 echo %errorlevel%
-sleep 10
+sleep 15
 
 
 echo ****************** Verify online ******************
@@ -140,7 +140,7 @@ echo %errorlevel%
 sleep %WAIT%
 
 echo "****************** Verify HASH [-F SH1:<hash>] ******************" 
-ksitool.exe -v %GLOBAL% %VERIFY_FLAGS% -x -i %SH1_file% -F SHA-1:%SH1_HASH%
+ksitool.exe -v %GLOBAL% %VERIFY_FLAGS% -i %SH1_file% -F SHA-1:%SH1_HASH%
 echo %errorlevel%
 
 

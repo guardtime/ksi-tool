@@ -20,9 +20,10 @@
 
 #include <string.h>
 #include <time.h>
-#include <ksi/net_http.h>
-#include <ksi/net_tcp.h>
+#include <ksi/ksi.h>
+#include <ksi/net.h>
 #include <ksi/hashchain.h>
+#include <ksi/pkitruststore.h>
 #include <stdio.h>
 #include "gt_task_support.h"
 #include "try-catch.h"
@@ -144,12 +145,12 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 			if(b && (Task_getID(task) != downloadPublicationsFile && Task_getID(task) != verifyPublicationsFile)){
 				KSI_LOG_debug(tmpKsi, "Setting publications file '%s'", inPubFileName);
 				KSI_PublicationsFile_fromFile_throws(tmpKsi, inPubFileName, &tmpPubFile);
-				KSI_setPublicationsFile(tmpKsi, tmpPubFile);
+				KSI_CTX_setPublicationsFile(tmpKsi, tmpPubFile);
 				tmpPubFile = NULL;
 			}
 
 			if(V || W){
-				KSI_getPKITruststore(tmpKsi, &refTrustStore);
+				KSI_CTX_getPKITruststore(tmpKsi, &refTrustStore);
 				if(V){
 					while(paramSet_getStrValueByNameAt(set, "V",i++,&lookupFile))
 						KSI_PKITruststore_addLookupFile_throws(tmpKsi, refTrustStore, lookupFile);
@@ -160,7 +161,7 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 			}
 
 			if(E){
-				KSI_setPublicationCertEmail_throws(tmpKsi, magicEmail);
+				KSI_CTX_setPublicationCertEmail_throws(tmpKsi, magicEmail);
 			}
 
 			*ksi = tmpKsi;
@@ -849,8 +850,8 @@ int KSI_PublicationRecord_clone_throws(KSI_CTX *ksi, const KSI_PublicationRecord
 	THROWABLE3(ksi, KSI_PublicationRecord_clone(rec, clone), "Error: Unable clone signatures publication record.");
 }
 
-int KSI_setPublicationCertEmail_throws(KSI_CTX *ksi, const char *email){
-	THROWABLE3(ksi, KSI_setPublicationCertEmail(ksi, email), "Error: Unable set publication certificate email.");
+int KSI_CTX_setPublicationCertEmail_throws(KSI_CTX *ksi, const char *email){
+	THROWABLE3(ksi, KSI_CTX_setPublicationCertEmail(ksi, email), "Error: Unable set publication certificate email.");
 }
 
 int KSI_NetworkClient_setExtenderUser_throws(KSI_CTX *ksi, KSI_NetworkClient *netProvider, const char *val){
