@@ -38,10 +38,12 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
 Requires: openssl
 Requires: curl
-Requires: libksi
+Requires: libksi >= 3.2
+Requires: libksi < 3.3
 BuildRequires: openssl-devel
 BuildRequires: curl-devel
-BuildRequires: libksi-devel 
+BuildRequires: libksi-devel >= 3.2
+BuildRequires: libksi-devel < 3.3 
 
 %description
 Guardtime signing and verification tool. Execute 
