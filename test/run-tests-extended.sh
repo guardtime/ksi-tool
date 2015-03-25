@@ -169,10 +169,10 @@ diag "--------------------------------------------------------------------------
 like "`src/ksitool -x -i ${SCRIPT_DIR}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Unable to read signature from file." "Error extend not suitable format"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -v -x -i ${tmp}/ext-t.ksig -f ${SCRIPT_DIR}/testFile -T 1413120674 2>&1`" "no suitable policy" "Error extend before calendar [-T]"
+like "`src/ksitool -x -i ${tlv_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig -T 1311120674 2>&1`" "no suitable policy" "Error extend before calendar [-T]"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -v -x -i ${tmp}/ext-t.ksig -f ${SCRIPT_DIR}/testFile -T ${DATE} 2>&1`" "no suitable policy" "Error extend to the future [-T]"
+like "`src/ksitool -x -i ${tlv_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig -T 1458914880 2>&1`" "no suitable policy" "Error extend to the future [-T]"
 diag "------------------------------------------------------------------------------";
 
 like "`src/ksitool -x -i ${SCRIPT_DIR}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Unable to read signature from file." "Error verify not suitable format"
