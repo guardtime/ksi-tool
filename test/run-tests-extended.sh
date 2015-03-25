@@ -72,28 +72,28 @@ diag "--------------------------------------------------------------------------
 
 diag "######    Sign and verify using algorithm: SHA1"
 okx src/ksitool -s -H SHA1 -f ${SCRIPT_DIR}/testFile -o ${tmp}/tmp.ksig 
-okx src/ksitool -v -x -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c -T ${DATE}
+okx src/ksitool -v -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c -T ${DATE}
 okx src/ksitool -v -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -b ${tmp}/pub.bin -V $url_c
 
 diag "######    Sign and verify using algorithm: SHA2-256"
 okx src/ksitool -s -H SHA2-256 -f ${SCRIPT_DIR}/testFile -o ${tmp}/tmp.ksig 
-okx src/ksitool -v -x -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
+okx src/ksitool -v -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
 
 diag "######    Sign and verify using algorithm: RIPEMD-160"
 okx src/ksitool -s -H RIPEMD-160 -f ${SCRIPT_DIR}/testFile -o ${tmp}/tmp.ksig 
-okx src/ksitool -v -x -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
+okx src/ksitool -v -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
 
 diag "######    Sign and verify using algorithm: SHA2-224"
 okx src/ksitool -s -H SHA2-224 -f ${SCRIPT_DIR}/testFile -o ${tmp}/tmp.ksig 
-okx src/ksitool -v -x -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
+okx src/ksitool -v -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
 
 diag "######    Sign and verify using algorithm: SHA2-384"
 okx src/ksitool -s -H SHA2-384 -f ${SCRIPT_DIR}/testFile -o ${tmp}/tmp.ksig 
-okx src/ksitool -v -x -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
+okx src/ksitool -v -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
 
 diag "######    Sign and verify using algorithm: SHA2-512"
 okx src/ksitool -s -H SHA2-512 -f ${SCRIPT_DIR}/testFile -o ${tmp}/tmp.ksig 
-okx src/ksitool -v -x -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
+okx src/ksitool -v -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
 diag "------------------------------------------------------------------------------";
 
 
