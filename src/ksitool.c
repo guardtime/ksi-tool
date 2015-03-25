@@ -255,7 +255,7 @@ static void GT_pritHelp(void){
 }
 
 int main(int argc, char** argv, char **envp) {
-	TaskDefinition *taskDefArray[11]={NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+	TaskDefinition *taskDefArray[10]={NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 	paramSet *set = NULL;
 	int retval = EXIT_SUCCESS;
 	Task *task = NULL;
@@ -302,6 +302,15 @@ int main(int argc, char** argv, char **envp) {
 
 	/*Read parameter set*/
 	paramSet_readFromCMD(argc, argv, set, 3);
+
+	/*Add default user and pass if S or X is defined and user or pass is not.*/
+	if(paramSet_isSetByName(set, "S") || paramSet_isSetByName(set, "X")){
+		if(paramSet_isSetByName(set, "user") == false)
+			paramSet_priorityAppendParameterByName("user", "anon", "default", 3, set);
+		if(paramSet_isSetByName(set, "pass") == false)
+			paramSet_priorityAppendParameterByName("pass", "anon", "default", 3, set);
+	}
+
 	if(includeParametersFromFile(set, 2) == false) goto cleanup;
 	if(includeParametersFromEnvironment(set, envp, 1) == false) goto cleanup;
 	if(paramSet_isSetByName(set, "h")) goto cleanup;
@@ -349,10 +358,11 @@ int main(int argc, char** argv, char **envp) {
 	}
 
 cleanup:
+
 	if(paramSet_isSetByName(set, "h")) GT_pritHelp();
 
 	paramSet_free(set);
-	for(i=0; i<11;i++)
+	for(i=0; i<9;i++)
 		TaskDefinition_free(taskDefArray[i]);
 	Task_free(task);
 	return retval;
