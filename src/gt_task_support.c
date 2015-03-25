@@ -78,9 +78,15 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 	try
 	   CODE{
 			if(x || v || (p && T)){
-				if(verificationService_url == NULL)
-					THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_INVALID_CL_PARAMETERS, "Error: Extender url required.");
-				KSI_CTX_setExtender_throws(ksi, verificationService_url, user, pass);
+				if(verificationService_url == NULL){
+					if((x && v) || (p && T)){
+						THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_INVALID_CL_PARAMETERS, "Error: Extender url required.");
+					}else if(v){
+						printf("Warning: verification may require extender url.\n");
+					}
+				}else{
+					KSI_CTX_setExtender_throws(ksi, verificationService_url, user, pass);
+				}
 			}
 			else if(s || aggre){
 				if(signingService_url == NULL)
@@ -89,8 +95,6 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 			}
 
 			if (P){
-				if(signingService_url == NULL)
-					THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_INVALID_CL_PARAMETERS, "Error: Publications file url required.");
 				KSI_CTX_setPublicationUrl_throws(ksi, publicationsFile_url);
 			}
 
