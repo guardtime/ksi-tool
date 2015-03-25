@@ -51,13 +51,14 @@ int GT_publicationsFileTask(Task *task){
 
 	int retval = EXIT_SUCCESS;
 
-	bool d,t;
+	bool d, t, r;
 	char *outPubFileName = NULL;
 	int publicationTime = 0;
 
 	set = Task_getSet(task);
 	paramSet_getStrValueByNameAt(set, "o",0,&outPubFileName);
 	paramSet_getIntValueByNameAt(set,"T",0,&publicationTime);
+	r = paramSet_isSetByName(set, "r");
 	d = paramSet_isSetByName(set, "d");
 	t = paramSet_isSetByName(set, "t");
 
@@ -153,8 +154,8 @@ int GT_publicationsFileTask(Task *task){
 		}
 		end_try
 
-	if(d) printf("\n");
-	if(d) printPublicationsFileReferences(publicationsFile);
+	if(d || r) printf("\n");
+	if(d || r) printPublicationsFileReferences(publicationsFile);
 	if(d) printPublicationsFileCertificates(publicationsFile);
 
 	if (out != NULL) fclose(out);

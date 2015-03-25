@@ -112,7 +112,7 @@ echo ****************** Extend old signature ******************
 ksitool.exe -x %GLOBAL% %EXTEND_FLAGS% -i %TEST_OLD_SIG% -o %TEST_EXTENDED_SIG%
 echo %errorlevel%
 sleep %WAIT%
-ksitool.exe -v %GLOBAL% %VERIFY_FLAGS% -i %TEST_EXTENDED_SIG%
+ksitool.exe -vrd -i %TEST_EXTENDED_SIG%
 echo %errorlevel%
 
 echo ****************** Extend old signature to 1418601800 (between publications)****************** 

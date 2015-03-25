@@ -30,12 +30,12 @@ int GT_verifyTask(Task *task){
 	KSI_PublicationsFile *publicationsFile = NULL;
 	char *imprint = NULL;
 	int retval = EXIT_SUCCESS;
-	
+
 	bool n, r, d, t, b, f, F, x;
 	char *inPubFileName = NULL;
 	char *inSigFileName = NULL;
 	char *inDataFileName = NULL;
-	
+
 	set = Task_getSet(task);
 	b = paramSet_getStrValueByNameAt(set, "b",0, &inPubFileName);
 	paramSet_getStrValueByNameAt(set, "i",0, &inSigFileName);
@@ -47,7 +47,7 @@ int GT_verifyTask(Task *task){
 	d = paramSet_isSetByName(set, "d");
 	t = paramSet_isSetByName(set, "t");
 	x = paramSet_isSetByName(set, "x");
-	
+
 	resetExceptionHandler();
 	try
 		CODE{
@@ -69,7 +69,7 @@ int GT_verifyTask(Task *task){
 				printf("Reading signature... ");
 				KSI_Signature_fromFile_throws(ksi, inSigFileName, &sig);
 				printf("ok.\n");
-		
+
 				/* Choosing between online and publications file signature verification */
 				if (Task_getID(task) == verifyTimestamp) {
 					if(x){
@@ -82,7 +82,7 @@ int GT_verifyTask(Task *task){
 						MEASURE_TIME(KSI_Signature_verify_throws(sig, ksi));
 						printf("ok. %s\n",t ? str_measuredTime() : "");
 					}
-				
+
 				}
 
 				/* If datafile or imprint is present compare hash and timestamp */
@@ -114,18 +114,26 @@ int GT_verifyTask(Task *task){
 			exceptionSolved();
 		}
 	end_try
-	
+
 	if (n || r || d) printf("\n");
-	if (n) printSignerIdentity(sig);
-	if (r) printSignaturePublicationReference(sig);
-	if (d) printSignatureVerificationInfo(sig);
-	
+
+	if ((n || r || d) &&  Task_getID(task) == verifyTimestamp){
+		if (n) printSignerIdentity(sig);
+		if (r) printSignaturePublicationReference(sig);
+		if (d) printSignatureVerificationInfo(sig);
+	}
+
+	if(d && Task_getID(task) == verifyPublicationsFile){
+		printPublicationsFileReferences(publicationsFile);
+		printPublicationsFileCertificates(publicationsFile);
+	}
+
 	KSI_Signature_free(sig);
 	KSI_DataHasher_free(hsr);
 	KSI_DataHash_free(raw_hsh);
 	KSI_DataHash_free(file_hsh);
 	KSI_PublicationsFile_free(publicationsFile);
 	closeTask(ksi);
-	
+
 	return retval;
 }
