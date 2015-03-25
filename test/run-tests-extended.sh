@@ -103,23 +103,23 @@ okx src/ksitool -v -i ${tmp}/sha1.ksig -f ${SCRIPT_DIR}/testFile -b ${tmp}/pub.b
 
 diag "######    Sign and verify raw hash using SHA-256"
 okx src/ksitool -s -F SHA-256:${SH256_HASH} -o ${tmp}/sha256.ksig 
-okx src/ksitool -v -x -i ${tmp}/sha256.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
+okx src/ksitool -v -i ${tmp}/sha256.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
 
 diag "######    Sign and verify raw hash using RIPEMD-160"
 okx src/ksitool -s -F RIPEMD-160:${RIPEMD160_HASH} -o ${tmp}/r160.ksig 
-okx src/ksitool -v -x -i ${tmp}/r160.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
+okx src/ksitool -v -i ${tmp}/r160.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
 
 diag "######    Sign and verify raw hash using SHA-224"
 okx src/ksitool -s -F SHA-224:${SHA224_HASH} -o ${tmp}/sha224.ksig 
-okx src/ksitool -v -x -i ${tmp}/sha224.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
+okx src/ksitool -v -i ${tmp}/sha224.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
 
 diag "######    Sign and verify raw hash using SHA2-384"
 okx src/ksitool -s -F SHA-384:${SHA384_HASH} -o ${tmp}/sha384.ksig 
-okx src/ksitool -v -x -i ${tmp}/sha384.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
+okx src/ksitool -v -i ${tmp}/sha384.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
 
 diag "######    Sign and verify raw hash using SHA-512"
 okx src/ksitool -s -F SHA-512:${SHA512_HASH} -o ${tmp}/sha512.ksig 
-okx src/ksitool -v -x -i ${tmp}/sha512.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
+okx src/ksitool -v -i ${tmp}/sha512.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
 diag "------------------------------------------------------------------------------";
 
 
