@@ -23,12 +23,14 @@ dir=`dirname $0`
 tmp=${TMPDIR:-'test/out'}
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 tlv_dir="${SCRIPT_DIR}/resource/tlv"
+DATE=`date +%s`
 
 # Test Anything Protocol, from http://testanything.org/
 . ${dir}/tap-functions
 host=${1:-'localhost'}
 
 echo \# Using $host as Guardtime Gateway Server. Specify custom server as 1st command-line argument.
+ 
 
 . ${dir}/endpoints.sh
 url_c="${tlv_dir}/mock.crt"
@@ -43,9 +45,9 @@ SHA224_HASH="d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f"
 SHA384_HASH="38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b"
 SHA512_HASH="cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
 
-echo \# Running tests on `uname -n` at `date '+%F %T %Z'`
+echo \# Running tests on `uname -n` at `date '+%F %T %Z'`, start time: ${DATE}
 
-plan_tests 55
+plan_tests 58
 
 
 diag "######    Publications file download"
@@ -70,28 +72,28 @@ diag "--------------------------------------------------------------------------
 
 diag "######    Sign and verify using algorithm: SHA1"
 okx src/ksitool -s -H SHA1 -f ${SCRIPT_DIR}/testFile -o ${tmp}/tmp.ksig 
-okx src/ksitool -v -x -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
+okx src/ksitool -v -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c -T ${DATE}
 okx src/ksitool -v -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -b ${tmp}/pub.bin -V $url_c
 
 diag "######    Sign and verify using algorithm: SHA2-256"
 okx src/ksitool -s -H SHA2-256 -f ${SCRIPT_DIR}/testFile -o ${tmp}/tmp.ksig 
-okx src/ksitool -v -x -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
+okx src/ksitool -v -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
 
 diag "######    Sign and verify using algorithm: RIPEMD-160"
 okx src/ksitool -s -H RIPEMD-160 -f ${SCRIPT_DIR}/testFile -o ${tmp}/tmp.ksig 
-okx src/ksitool -v -x -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
+okx src/ksitool -v -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
 
 diag "######    Sign and verify using algorithm: SHA2-224"
 okx src/ksitool -s -H SHA2-224 -f ${SCRIPT_DIR}/testFile -o ${tmp}/tmp.ksig 
-okx src/ksitool -v -x -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
+okx src/ksitool -v -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
 
 diag "######    Sign and verify using algorithm: SHA2-384"
 okx src/ksitool -s -H SHA2-384 -f ${SCRIPT_DIR}/testFile -o ${tmp}/tmp.ksig 
-okx src/ksitool -v -x -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
+okx src/ksitool -v -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
 
 diag "######    Sign and verify using algorithm: SHA2-512"
 okx src/ksitool -s -H SHA2-512 -f ${SCRIPT_DIR}/testFile -o ${tmp}/tmp.ksig 
-okx src/ksitool -v -x -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
+okx src/ksitool -v -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
 diag "------------------------------------------------------------------------------";
 
 
@@ -101,23 +103,23 @@ okx src/ksitool -v -i ${tmp}/sha1.ksig -f ${SCRIPT_DIR}/testFile -b ${tmp}/pub.b
 
 diag "######    Sign and verify raw hash using SHA-256"
 okx src/ksitool -s -F SHA-256:${SH256_HASH} -o ${tmp}/sha256.ksig 
-okx src/ksitool -v -x -i ${tmp}/sha256.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
+okx src/ksitool -v -i ${tmp}/sha256.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
 
 diag "######    Sign and verify raw hash using RIPEMD-160"
 okx src/ksitool -s -F RIPEMD-160:${RIPEMD160_HASH} -o ${tmp}/r160.ksig 
-okx src/ksitool -v -x -i ${tmp}/r160.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
+okx src/ksitool -v -i ${tmp}/r160.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
 
 diag "######    Sign and verify raw hash using SHA-224"
 okx src/ksitool -s -F SHA-224:${SHA224_HASH} -o ${tmp}/sha224.ksig 
-okx src/ksitool -v -x -i ${tmp}/sha224.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
+okx src/ksitool -v -i ${tmp}/sha224.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
 
 diag "######    Sign and verify raw hash using SHA2-384"
 okx src/ksitool -s -F SHA-384:${SHA384_HASH} -o ${tmp}/sha384.ksig 
-okx src/ksitool -v -x -i ${tmp}/sha384.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
+okx src/ksitool -v -i ${tmp}/sha384.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
 
 diag "######    Sign and verify raw hash using SHA-512"
 okx src/ksitool -s -F SHA-512:${SHA512_HASH} -o ${tmp}/sha512.ksig 
-okx src/ksitool -v -x -i ${tmp}/sha512.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
+okx src/ksitool -v -i ${tmp}/sha512.ksig -f ${SCRIPT_DIR}/testFile -V $url_c
 diag "------------------------------------------------------------------------------";
 
 
@@ -132,7 +134,7 @@ diag "######    Extend old signature to publication time [-T] "
 okx src/ksitool -x -i ${tlv_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig -T 1421280000 #  (GMT): Thu, 15 Jan 2015 00:00:00 GMT
 
 diag "######    Extend old signature to current time [-T] "
-okx src/ksitool -x -i ${tlv_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig -T $(date +%s)
+okx src/ksitool -x -i ${tlv_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig
 diag "------------------------------------------------------------------------------";
 
 
@@ -167,10 +169,10 @@ diag "--------------------------------------------------------------------------
 like "`src/ksitool -x -i ${SCRIPT_DIR}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Unable to read signature from file." "Error extend not suitable format"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -v -x -i ${tmp}/ext-t.ksig -f ${SCRIPT_DIR}/testFile -T 1413120674 2>&1`" "no suitable policy" "Error extend before calendar [-T]"
+like "`src/ksitool -x -i ${tlv_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig -T 1311120674 2>&1`" "no suitable policy" "Error extend before calendar [-T]"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -v -x -i ${tmp}/ext-t.ksig -f ${SCRIPT_DIR}/testFile -T $(date +%s) 2>&1`" "no suitable policy" "Error extend to the future [-T]"
+like "`src/ksitool -x -i ${tlv_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig -T 1458914880 2>&1`" "no suitable policy" "Error extend to the future [-T]"
 diag "------------------------------------------------------------------------------";
 
 like "`src/ksitool -x -i ${SCRIPT_DIR}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Unable to read signature from file." "Error verify not suitable format"
