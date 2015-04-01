@@ -87,7 +87,7 @@ echo %errorlevel%
 echo ****************** Sign data ******************
 ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -f %TEST_FILE% -o %TEST_FILE_OUT%.ksig -b %PUBFILE% 
 echo %errorlevel%
-sleep 15
+sleep 30
 
 
 echo ****************** Verify online ******************

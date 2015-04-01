@@ -27,7 +27,6 @@
 struct taskdef_st{
 	int id;
 	const char *name;
-	const char *taskDefinitionFlags;
 	const char *mandatoryFlags;
 	const char *ignoredFlags;
 	const char *optionalFlags;
@@ -35,6 +34,7 @@ struct taskdef_st{
 	char *toString;
 	bool isDefined;
 	bool isConsistent;
+	double consistency;
 };
 
 struct task_st{
@@ -48,7 +48,7 @@ struct task_st{
  * Extracts one name frome category, formatted as "<name><ndn><name><ndn><name>",
  * where <name> is parameter that belongs to category and <ndn> is character
  * that is not a digit or letter (@ref #isalnum will return 0). For example
- * "h, save, read, r".
+ * "h, save, read, r". If nothing is found buf will be empty string "".
  *
  * @param[in]	category	category definition.
  * @param[out]	buf			output buffer for extracted name.
@@ -59,7 +59,8 @@ static const char *category_getParametersName(const char* category, char *buf, s
 	int cat_i = 0;
 	int buf_i = 0;
 
-	buf[0] = 0;
+	if(buf != NULL)
+		buf[0] = 0;
 
 	if(category == NULL || buf == NULL || category[0] == 0) return NULL;
 
@@ -98,10 +99,6 @@ static char *TaskDefinition_toString(TaskDefinition *def, char *buf, int len){
 	int size = 0;
 	if(def == NULL || buf == NULL || len < 0) return NULL;
 
-	c = def->taskDefinitionFlags;
-	while((c = category_getParametersName(c,name, sizeof(name))) != NULL){
-		size += snprintf(buf+size, len-size, "%s%s%s", size > 0 ? " " : "", strlen(name)>1 ? "--" : "-", name);
-	}
 	c = def->mandatoryFlags;
 	while((c = category_getParametersName(c,name, sizeof(name))) != NULL){
 		size += snprintf(buf+size, len-size, " %s%s", strlen(name)>1 ? "--" : "-", name);
@@ -110,7 +107,7 @@ static char *TaskDefinition_toString(TaskDefinition *def, char *buf, int len){
 	return buf;
 }
 
-void TaskDefinition_new(int id, const char *name, const char *def,const char *man, const char *ignore, const char *opt, const char *forb, TaskDefinition **new){
+void TaskDefinition_new(int id, const char *name,const char *man, const char *ignore, const char *opt, const char *forb, TaskDefinition **new){
 	TaskDefinition *tmp = NULL;
 	char buf[1024];
 	if(new == NULL) return;
@@ -122,7 +119,6 @@ void TaskDefinition_new(int id, const char *name, const char *def,const char *ma
 
 	tmp->id = id;
 	tmp->name = name;
-	tmp->taskDefinitionFlags = (def == NULL) ? "" : def;
 	tmp->mandatoryFlags = (man == NULL) ? "" : man;
 	tmp->ignoredFlags = (ignore == NULL) ? "" : ignore;
 	tmp->optionalFlags = (opt == NULL) ? "" : opt;
@@ -131,7 +127,7 @@ void TaskDefinition_new(int id, const char *name, const char *def,const char *ma
 
 	tmp->isDefined = false;
 	tmp->isConsistent = false;
-
+	tmp->consistency = 0;
 
 	if(TaskDefinition_toString(tmp, buf, sizeof(buf)) != NULL){
 		tmp->toString = (char*)malloc(sizeof(char)*(strlen(buf) + 1));
@@ -166,20 +162,64 @@ static int TaskDefinition_getMissingFlagCount(const char* category, paramSet *se
 	return missedFlags;
 }
 
-static bool TaskDefinition_analyse(TaskDefinition *def, paramSet *set){
-	bool state = true;
-	if(def == NULL || set == NULL) return false;
+static bool taskDefinition_isFirstFlagSet(const char* category, paramSet *set){
+	char buf[1024];
+	category_getParametersName(category, buf, sizeof(buf));
+	return paramSet_isSetByName(set, buf);
+}
 
-	if(TaskDefinition_getMissingFlagCount(def->taskDefinitionFlags, set) > 0)
-		state = false;
-	else
+/**
+ * This function analysis a task definition according to given parameter set and
+ * determines if its consistent. During analysis some fields of the task definition
+ * are updated.
+ * @return true id task is consistent false otherwise.
+ */
+static bool taskDefinition_analyseConsistency(TaskDefinition *def, paramSet *set){
+	bool state = false;
+	int manMissing;
+	int manCount;
+	double defMan;
+	int forMissing;
+	int forCount;
+	int forbiddentSet;
+	double defFor;
+	bool isFirstFlagSet;
+
+
+	if (def == NULL || set == NULL)
+		goto cleanup;
+
+	isFirstFlagSet = taskDefinition_isFirstFlagSet(def->mandatoryFlags, set);
+	manMissing = TaskDefinition_getMissingFlagCount(def->mandatoryFlags, set);
+	manCount = category_getParameterCount(def->mandatoryFlags);
+	forMissing = TaskDefinition_getMissingFlagCount(def->forbittenFlags, set);
+	forCount = category_getParameterCount(def->forbittenFlags);
+	forbiddentSet = forCount - forMissing;
+
+	/**
+	 * First flag in category is most important and gives 0.5 of consistency and
+	 * another 0.5 comes from all other mandatory flags. Every forbidden flag
+	 * reduces the consistency.
+	 */
+	defMan = 0.5 * (manCount != 0 ? (1.0 - (double)manMissing / (double)manCount) : 0);
+	defMan += isFirstFlagSet ? 0.5 : 0;
+	defFor = manCount != 0 ? ((double)forbiddentSet / (double)manCount) : 0;
+
+	def->consistency = defMan - defFor;
+
+	if (isFirstFlagSet)
 		def->isDefined = true;
 
-	if(TaskDefinition_getMissingFlagCount(def->mandatoryFlags, set) > 0) state = false;
-	if(TaskDefinition_getMissingFlagCount(def->forbittenFlags, set) != category_getParameterCount(def->forbittenFlags)) state = false;
-	def->isConsistent = state;
+	if (manMissing == 0 && forbiddentSet == 0){
+		def->isDefined = true;
+		def->isConsistent = true;
+	} else{
+		def->isConsistent = false;
+	}
 
-	return state;
+cleanup:
+
+	return def->isConsistent;
 }
 
 static void TaskDefinition_PrintErrors(TaskDefinition *def, paramSet *set){
@@ -251,38 +291,12 @@ static void TaskDefinition_PrintWarnings(TaskDefinition *def, paramSet *set){
 static void TaskDefinition_printSuggestions(TaskDefinition **def, int count, paramSet *set){
 	int i;
 	TaskDefinition *tmp;
-	char first_flag[128];
-	int missing;
-	int all;
-	unsigned char *matchChart = NULL;
-	unsigned min = 101;
 
-	matchChart = malloc(count*sizeof(unsigned char));
-	if(matchChart == NULL) goto cleanup;
-
-
-	for(i=0; i<count; i++){
+	for (i = 0; i < count; i++){
 		tmp = def[i];
-
-		all = category_getParameterCount(tmp->taskDefinitionFlags )+category_getParameterCount(tmp->mandatoryFlags);
-		missing = TaskDefinition_getMissingFlagCount(tmp->taskDefinitionFlags, set)+TaskDefinition_getMissingFlagCount(tmp->mandatoryFlags, set);
-		category_getParametersName(tmp->taskDefinitionFlags, first_flag, sizeof(first_flag));
-
-		matchChart[i] = (unsigned char)((100*missing)/all);
-		min = matchChart[i] < min ? matchChart[i] : min;
-	}
-
-	if(min == 100) goto cleanup;
-
-	for(i=0; i<count; i++){
-		tmp = def[i];
-		if(matchChart[i] == min)
+		if (tmp->isDefined && tmp->consistency >= 0.25 || tmp->consistency >= 0.75)
 			fprintf(stderr, "Maybe you want to: %s %s\n", tmp->name, tmp->toString);
 	}
-
-cleanup:
-
-	free(matchChart);
 }
 
 
@@ -309,6 +323,48 @@ void Task_free(Task *obj){
 	free(obj);
 }
 
+static int taskDefinition_getDefManCount(TaskDefinition *def){
+	if (def == NULL)
+		return -1;
+
+	return category_getParameterCount(def->mandatoryFlags);
+}
+
+bool Task_analyse(TaskDefinition **def, int count, paramSet *set){
+	int i=0;
+	TaskDefinition *tmp = NULL;
+	bool stat = false;
+
+	if(def == NULL || set == NULL) return false;
+
+	for(i=0; i<count; i++){
+		tmp = def[i];
+		if(taskDefinition_analyseConsistency(tmp, set)){
+			stat = true;
+		}
+	}
+
+	return stat;
+}
+
+static TaskDefinition *taskDefinition_getConsistentTask(TaskDefinition **def, int count){
+	int i=0;
+	TaskDefinition *tmp = NULL;
+	TaskDefinition *consistent = NULL;
+
+	for (i = 0; i < count; i++){
+		tmp = def[i];
+		if (tmp->isConsistent){
+			if (consistent == NULL ||
+				taskDefinition_getDefManCount(consistent) < taskDefinition_getDefManCount(tmp)){
+				consistent = tmp;
+			}
+		}
+	}
+
+	return consistent;
+}
+
 Task* Task_getConsistentTask(TaskDefinition **def, int count, paramSet *set){
 	int i=0;
 	int definedCount = 0;
@@ -317,54 +373,24 @@ Task* Task_getConsistentTask(TaskDefinition **def, int count, paramSet *set){
 	Task *tmpTask = NULL;
 	TaskDefinition *tmp = NULL;
 	TaskDefinition *consistent = NULL;
+	TaskDefinition *invalidAttempt = NULL;
 
-	if(def == NULL || set == NULL) return NULL;
+	if (def == NULL || set == NULL) return NULL;
 
-	for(i=0; i<count; i++){
-		tmp = def[i];
-		if(TaskDefinition_analyse(tmp, set)){
-			consistent = tmp;
-		}
-		if(tmp->isDefined) definedCount++;
-	}
+	consistent = taskDefinition_getConsistentTask(def, count);
 
-	if(definedCount == 0){
-		fprintf(stderr, "Task is not defined. Use (-x, -s, -v, -p) and read help -h\n");
-		TaskDefinition_printSuggestions(def, count, set);
-	}
-
-
-	if(definedCount >= 1 && consistent == NULL){
-		consistent = NULL;
-		if(definedCount > 1){
-			fprintf(stderr, "Task is not fully defined:\n");
-			TaskDefinition_printSuggestions(def, count, set);
-		}
-		else{
-			for(i=0; i<count; i++){
-				tmp = def[i];
-				if(tmp->isDefined){
-					fprintf(stderr, "Error: Task '%s' (%s) is invalid:\n", tmp->name, tmp->toString);
-					TaskDefinition_PrintErrors(tmp, set);
-					TaskDefinition_PrintWarnings(tmp, set);
-					break;
-				}
-			}
-		}
-	}
-
-	if(consistent){
+	if (consistent){
 		if(TaskDefinition_getMissingFlagCount(consistent->ignoredFlags, set) != category_getParameterCount(consistent->ignoredFlags)){
 			TaskDefinition_PrintWarnings(consistent, set);
 		}
 
 		pName = consistent->ignoredFlags;
-		while((pName = category_getParametersName(pName,buf, sizeof(buf))) != NULL){
+		while ((pName = category_getParametersName(pName,buf, sizeof(buf))) != NULL){
 			paramSet_removeParameterByName(set, buf);
 		}
 
 		Task_new(&tmpTask);
-		if(tmpTask == NULL) return NULL;
+		if (tmpTask == NULL) return NULL;
 
 		tmpTask->def = consistent;
 		tmpTask->id = consistent->id;
@@ -373,6 +399,71 @@ Task* Task_getConsistentTask(TaskDefinition **def, int count, paramSet *set){
 
 	return tmpTask;
 }
+
+void Task_printError(TaskDefinition **def, int count, paramSet *set){
+	int i=0;
+	int definedCount = 0;
+	const char *pName = NULL;
+	Task *tmpTask = NULL;
+	TaskDefinition *tmp = NULL;
+	TaskDefinition *consistent = NULL;
+	TaskDefinition *invalidAttempt = NULL;
+	double highestConsistency;
+	int maxConsistencyCout;
+	bool isSimilarHighConsistencyTasks = false;
+
+	if(def == NULL || set == NULL) return;
+
+	/**
+	 * Examine if some task is consistent, find if there is highest consistency
+	 * invalid task attempt and what is the highest consistency. Count if there
+	 * are multiple highest consistency tasks.
+     */
+	for (i = 0; i < count; i++){
+		tmp = def[i];
+
+		if (tmp->isConsistent)
+			consistent = tmp;
+		else if (invalidAttempt == NULL || invalidAttempt->consistency < tmp->consistency){
+			invalidAttempt = tmp;
+			highestConsistency = tmp->consistency;
+			maxConsistencyCout = 0;
+		}
+
+		if(tmp->consistency == highestConsistency)
+			maxConsistencyCout++;
+
+		if (tmp->isDefined)
+			definedCount++;
+	}
+
+	/**
+	 * Examine if there are multiple tasks that have consistency very close to
+	 * the highest consistency.
+     */
+	for (i = 0; i < count; i++){
+		tmp = def[i];
+		if (tmp->consistency != highestConsistency &&
+			tmp->consistency / highestConsistency >= 0.8){
+			isSimilarHighConsistencyTasks = true;
+		}
+	}
+
+	if (definedCount == 0){
+		fprintf(stderr, "Task is not defined. Use (-x, -s, -v, -p) and read help -h\n");
+		TaskDefinition_printSuggestions(def, count, set);
+	}else if (definedCount > 1 && consistent == NULL && invalidAttempt->consistency < 0.5 ||
+			  maxConsistencyCout > 1 || isSimilarHighConsistencyTasks){
+		fprintf(stderr, "Task is not fully defined:\n");
+		TaskDefinition_printSuggestions(def, count, set);
+	}else{
+		fprintf(stderr, "Error: Task '%s' (%s) is invalid:\n", invalidAttempt->name, invalidAttempt->toString);
+		TaskDefinition_PrintErrors(invalidAttempt, set);
+		TaskDefinition_PrintWarnings(invalidAttempt, set);
+	}
+
+}
+
 
 int Task_getID(Task *task){
 	if(task == NULL) return -1;

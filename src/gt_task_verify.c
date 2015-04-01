@@ -71,19 +71,17 @@ int GT_verifyTask(Task *task){
 				printf("ok.\n");
 
 				/* Choosing between online and publications file signature verification */
-				if (Task_getID(task) == verifyTimestamp) {
-					if(x){
-						printf("Verifying online...");
-						MEASURE_TIME(KSI_Signature_verifyOnline_throws(ksi, sig));
-						printf("ok. %s\n",t ? str_measuredTime() : "");
-					}
-					else{
-						printf("Verifying signature%s ", b ? " using local publications file... " : "... ");
-						MEASURE_TIME(KSI_Signature_verify_throws(sig, ksi));
-						printf("ok. %s\n",t ? str_measuredTime() : "");
-					}
-
+				if (Task_getID(task) == verifyTimestampOnline) {
+					printf("Verifying online... ");
+					MEASURE_TIME(KSI_Signature_verifyOnline_throws(ksi, sig));
+					printf("ok. %s\n",t ? str_measuredTime() : "");
 				}
+				else if(Task_getID(task) == verifyTimestamp) {
+					printf("Verifying signature%s ", b ? " using local publications file... " : "... ");
+					MEASURE_TIME(KSI_Signature_verify_throws(sig, ksi));
+					printf("ok. %s\n",t ? str_measuredTime() : "");
+				}
+
 
 				/* If datafile or imprint is present compare hash and timestamp */
 				if(f){
@@ -117,7 +115,7 @@ int GT_verifyTask(Task *task){
 
 	if (n || r || d) printf("\n");
 
-	if ((n || r || d) &&  Task_getID(task) == verifyTimestamp){
+	if ((n || r || d) &&  Task_getID(task) == verifyTimestamp || Task_getID(task) == verifyTimestampOnline){
 		if (n) printSignerIdentity(sig);
 		if (r) printSignaturePublicationReference(sig);
 		if (d) printSignatureVerificationInfo(sig);

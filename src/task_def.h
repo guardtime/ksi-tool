@@ -56,9 +56,22 @@ typedef struct task_st Task;
  * @param[out]	new		New task.
  * @note TaskDefinition must be freed by the caller.
  */
-void TaskDefinition_new(int id, const char *name, const char *def,const char *man, const char *ignore, const char *opt, const char *forb, TaskDefinition **new);
+void TaskDefinition_new(int id, const char *name, const char *man, const char *ignore, const char *opt, const char *forb, TaskDefinition **new);
 
 void TaskDefinition_free(TaskDefinition *obj);
+
+
+/**
+ * Analysis task definitions against defined parameter set and determins if
+ * a consistent task exists. During analysis some data is updated in def 
+ * elements. It is used by @ref Task_getConsistentTask and @ref Task_printError.
+ * @param[in]	def		task definition array.
+ * @param[in]	count	size of the array.
+ * @param[in]	set		parameter set.
+ * @return True if consistent task exists, false otherwise.
+ */
+bool Task_analyse(TaskDefinition **def, int count, paramSet *set);
+
 
 /**
  * Using predefined task definition array and parameter set, extract consistent
@@ -71,8 +84,17 @@ void TaskDefinition_free(TaskDefinition *obj);
  */
 Task* Task_getConsistentTask(TaskDefinition **def, int count, paramSet *set);
 
-void Task_free(Task *obj);
 
+/**
+ * Can be used to print errors related to invalid task definitions.
+ * @param[in]	def		task definition array.
+ * @param[in]	count	size of the array.
+ * @param[in]	set		parameter set.
+ */
+void Task_printError(TaskDefinition **def, int count, paramSet *set);
+
+
+void Task_free(Task *obj);
 int Task_getID(Task *task);
 paramSet *Task_getSet(Task *task);
 
@@ -80,5 +102,5 @@ paramSet *Task_getSet(Task *task);
 }
 #endif
 
-#endif	/* GT_CMDPARAMETERS_H */
+#endif
 

@@ -288,17 +288,17 @@ int main(int argc, char** argv, char **envp) {
 	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{aggre}{htime}{setsystime}", isFlagFormatOK, contentIsOK, NULL);
 
 	/*Define possible tasks*/
-	/*						ID							DESC					DEF					MAN		IGNORE				OPTIONAL		FORBIDDEN			NEW OBJ*/
-	TaskDefinition_new(signDataFile,			"Sign data file",				"s,f",				"o",	"b,r,i,T",			"H,n,d,t",		"x,p,v,F",			&taskDefArray[0]);
-	TaskDefinition_new(signHash,				"Sign hash",					"s,F",				"o",	"b,r,i,H,T",		"n,d,t",		"x,p,v,f",			&taskDefArray[1]);
-	TaskDefinition_new(extendTimestamp,			"Extend signature",				"x",				"i,o",	"H,F,f,b,",			"T,n,r,t",		"s,p,v",			&taskDefArray[2]);
-	TaskDefinition_new(downloadPublicationsFile,"Download publication file",	"p,o",				"",		"H,F,f,i,T,n",		"d,t,r",			",s,x,v,T",			&taskDefArray[3]);
-	TaskDefinition_new(createPublicationString, "Create publication string",	"p,T",				"",		"H,F,f,i,n,r",		"d,t",			"s,x,v,o",			&taskDefArray[4]);
-	TaskDefinition_new(verifyTimestamp,			"Verify signature",				"v,i",				"",		"H,T",				"f,F,n,d,r,t,x","s,p",			&taskDefArray[5]);
-//	TaskDefinition_new(verifyTimestamp,			"Verify locally",				"v,b,i",			"",		"H,T",				"f,F,n,d,r,t",	"x,s,p",			&taskDefArray[6]);
-	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"v,b",				"",		"T,H",				"n,d,r,t",		"x,s,p,i,f,F",		&taskDefArray[6]);
-	TaskDefinition_new(getRootH_T,				"Get Aggregator root hash",		"aggre,htime",		"",		"",					"",				"x,s,p,v",			&taskDefArray[7]);
-	TaskDefinition_new(setSysTime,				"Set system time",				"aggre,setsystime",	"",		"",					"",				"x,s,p,v",			&taskDefArray[8]);
+	/*						ID							DESC							MAN		IGNORE	OPTIONAL		FORBIDDEN					NEW OBJ*/
+	TaskDefinition_new(signDataFile,			"Sign data file",				"s,f,o,S",		"b,r",	"H,n,d,t",		"x,p,v,aggre,F,i,T",		&taskDefArray[0]);
+	TaskDefinition_new(signHash,				"Sign hash",					"s,F,o,S",		"b,r",	"n,d,t",		"x,p,v,aggre,f,i,T,H",		&taskDefArray[1]);
+	TaskDefinition_new(extendTimestamp,			"Extend signature",				"x,i,o,X",		"b",	"T,n,d,r,t",	"s,p,v,aggre,f,F,H",		&taskDefArray[2]);
+	TaskDefinition_new(downloadPublicationsFile,"Download publication file",	"p,o",			"n",	"d,r,t",		"s,x,v,aggre,f,F,T,i,H",	&taskDefArray[3]);
+	TaskDefinition_new(createPublicationString, "Create publication string",	"p,T,X",		"n,r",	"d,t",			"s,x,v,aggre,f,F,o,i,H",	&taskDefArray[4]);
+	TaskDefinition_new(verifyTimestamp,			"Verify signature",				"v,i",			"",		"f,F,n,d,r,t",	"s,p,x,aggre,H",			&taskDefArray[5]);
+	TaskDefinition_new(verifyTimestampOnline,	"Verify online",				"v,x,i,X",		"",		"f,F,n,d,r,t",	"s,p,aggre,T,H",			&taskDefArray[6]);
+	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"v,b",			"",		"n,d,r,t",		"x,s,p,aggre,i,f,F,T,H",	&taskDefArray[7]);
+	TaskDefinition_new(getRootH_T,				"Get Aggregator root hash",		"aggre,htime,S","",		"",				"x,s,p,v,f,F,i,o,T,H,setsystime",		&taskDefArray[8]);
+	TaskDefinition_new(setSysTime,				"Set system time",				"aggre,setsystime,S","","",				"x,s,p,v,f,F,i,o,T,H,htime",		&taskDefArray[9]);
 
 	/*Read parameter set*/
 	paramSet_readFromCMD(argc, argv, set, 3);
@@ -323,12 +323,17 @@ int main(int argc, char** argv, char **envp) {
 
 
 	/*Extract task */
-	task = Task_getConsistentTask(taskDefArray, 9, set);
+	if (Task_analyse(taskDefArray, 10, set)){
+		task = Task_getConsistentTask(taskDefArray, 10, set);
+	}
+
 	paramSet_printUnknownParameterWarnings(set);
 	if(task == NULL){
+		Task_printError(taskDefArray, 10, set);
 		retval = EXIT_INVALID_CL_PARAMETERS;
 		goto cleanup;
 	}
+
 	if(paramSet_isFormatOK(set) == false){
 		paramSet_PrintErrorMessages(set);
 		retval = EXIT_INVALID_CL_PARAMETERS;
@@ -353,7 +358,7 @@ int main(int argc, char** argv, char **envp) {
 	else if(Task_getID(task) == getRootH_T || Task_getID(task) == setSysTime){
 		retval=GT_other(task);
 	}
-	else if(Task_getID(task) == verifyTimestamp){
+	else if(Task_getID(task) == verifyTimestamp || Task_getID(task) == verifyTimestampOnline){
 		retval=GT_verifyTask(task);
 	}
 
@@ -362,7 +367,7 @@ cleanup:
 	if(paramSet_isSetByName(set, "h")) GT_pritHelp();
 
 	paramSet_free(set);
-	for(i=0; i<9;i++)
+	for(i=0; i<10;i++)
 		TaskDefinition_free(taskDefArray[i]);
 	Task_free(task);
 	return retval;

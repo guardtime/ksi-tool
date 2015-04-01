@@ -95,6 +95,11 @@ echo 3) Empry Url
 set KSI_EXTENDER="" 
 ksitool.exe -x %GLOBAL% %EXTEND_FLAGS% -i %TEST_FILE_OUT%.ksig -o %TEST_EXTENDED_SIG%
 echo __________________________________________________________________________
+
+echo 4) Missing Url
+set KSI_EXTENDER="user=xanon pass=xanon" 
+ksitool.exe -x %GLOBAL% %EXTEND_FLAGS% -i %TEST_FILE_OUT%.ksig -o %TEST_EXTENDED_SIG%
+echo __________________________________________________________________________
 ENDLOCAL
 
 
