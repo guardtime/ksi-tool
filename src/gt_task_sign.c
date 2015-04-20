@@ -36,16 +36,16 @@ int GT_signTask(Task *task) {
 	char *inDataFileName = NULL;
 	char *outSigFileName = NULL;
 	char *imprint = NULL;
-	
+
 	set = Task_getSet(task);
-	H = paramSet_getStrValueByNameAt(set, "H", 0,&hashAlgName_H);	
+	H = paramSet_getStrValueByNameAt(set, "H", 0,&hashAlgName_H);
 	paramSet_getStrValueByNameAt(set, "f", 0,&inDataFileName);
 	paramSet_getStrValueByNameAt(set, "o", 0,&outSigFileName);
 	paramSet_getStrValueByNameAt(set, "F", 0,&imprint);
 	n = paramSet_isSetByName(set, "n");
 	t = paramSet_isSetByName(set, "t");
 	d = paramSet_isSetByName(set, "d");
-	
+
 	resetExceptionHandler();
 	try
 		CODE{
@@ -89,13 +89,13 @@ int GT_signTask(Task *task) {
 
 	if(n || d) printf("\n");
 	if (n) printSignerIdentity(sign);
-	
-				
+	if (d) printSignatureSigningTime(sign);
+
 	KSI_Signature_free(sign);
 	KSI_DataHash_free(hash);
 	KSI_DataHasher_free(hsr);
 	closeTask(ksi);
-	
+
 	return retval;
 }
 

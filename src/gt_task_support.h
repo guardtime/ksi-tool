@@ -131,6 +131,8 @@ void printPublicationsFileCertificates(const KSI_PublicationsFile *pubfile);
 
 void printSignaturesRootHash_n_Time(const KSI_Signature *sig);
 
+void printSignatureSigningTime(const KSI_Signature *sig);
+
 /**
  * Gives hash algorithm identifier by name.
  * 

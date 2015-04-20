@@ -118,7 +118,10 @@ int GT_verifyTask(Task *task){
 	if ((n || r || d) &&  Task_getID(task) == verifyTimestamp || Task_getID(task) == verifyTimestampOnline){
 		if (n) printSignerIdentity(sig);
 		if (r) printSignaturePublicationReference(sig);
-		if (d) printSignatureVerificationInfo(sig);
+		if (d) {
+			printSignatureVerificationInfo(sig);
+			printSignatureSigningTime(sig);
+		}
 	}
 
 	if(d && Task_getID(task) == verifyPublicationsFile){

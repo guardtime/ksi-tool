@@ -395,6 +395,37 @@ void printSignatureVerificationInfo(const KSI_Signature *sig){
 	return;
 }
 
+void printSignatureSigningTime(const KSI_Signature *sig) {
+	int res;
+	KSI_Integer *sigTime = NULL;
+	unsigned long signingTime = 0;
+	char date[1024];
+
+
+	if (sig == NULL) {
+		return;
+	}
+
+
+	res = KSI_Signature_getSigningTime(sig, &sigTime);
+	if (res != KSI_OK) {
+		return;
+	}
+
+	if (KSI_Integer_toDateString(sigTime, date, sizeof(date)) != date) {
+		return;
+	}
+
+	signingTime = (unsigned long)KSI_Integer_getUInt64(sigTime);
+
+	printf("Signing time:\n"
+			"UTC seconds:%i\n"
+			"Date %s\n", signingTime, date);
+
+	printf("\n");
+	return;
+}
+
 void printPublicationsFileCertificates(const KSI_PublicationsFile *pubfile){
 	KSI_CertificateRecordList *certReclist = NULL;
 	KSI_CertificateRecord *certRec = NULL;
