@@ -370,5 +370,8 @@ cleanup:
 	for(i=0; i<10;i++)
 		TaskDefinition_free(taskDefArray[i]);
 	Task_free(task);
+
+	/*Can be used in debug mode*/
+	//_CrtDumpMemoryLeaks();
 	return retval;
 }

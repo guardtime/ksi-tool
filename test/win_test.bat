@@ -43,6 +43,9 @@ SET TEST_FILE=../test/testFile
 SET TEST_OLD_SIG=../test/ok-sig-2014-04-30.1.ksig
 SET SH256_DATA_FILE=../test/data_sh256.txt
 SET INVALID_PUBFILE=../test/nok_pubfile
+SET OLD_TESTFILE=../test/old_testData-2015-01
+SET LEGACY_SIGNATURE=../test/old_testData-2015-01.gtts
+SET LEGACY_PRE_EXTENDED=../test/old_testdata-extended.2015-01.gtts
 
 REM input hash
 SET SH1_HASH=bf9661defa3daecacfde5bde0214c4a439351d4d
@@ -51,6 +54,7 @@ SET RIPMED160_HASH=0a89292560ae692d3d2f09a3676037e69630d022
 
 REM output files
 SET TEST_EXTENDED_SIG=../test/out/extended.ksig
+SET OLD_EXTENDED=../test/out/legacy_extended.gtts
 SET SH1_file=../test/out/sh1.ksig
 SET SH256_file=../test/out/SH256.ksig
 
@@ -74,6 +78,9 @@ SET VERIFY_FLAGS= -n -r -d -t
 SET EXTEND_FLAGS= -t -t
 
 
+ksitool.exe -vd -i test\testData-2015-01.gtts --log
+logi.txt
+
 echo ****************** Download publications file ******************
 ksitool.exe -p -t -o %PUBFILE% %GLOBAL% -d 
 echo %errorlevel%
@@ -83,6 +90,7 @@ echo %errorlevel%
 echo "****************** Get Publication string ******************" 
 ksitool.exe -p %GLOBAL% -T 1410848909
 echo %errorlevel%
+
 
 echo ****************** Sign data ******************
 ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -f %TEST_FILE% -o %TEST_FILE_OUT%.ksig -b %PUBFILE% 
@@ -161,6 +169,33 @@ echo %errorlevel%
 echo "****************** Test include. Must show ignored parameters and fail ******************" 
 ksitool.exe --inc ../test/conf1 --inc ../test/conf3
 echo %errorlevel%
+
+echo ****************** Verify legacy signature and file ******************
+ksitool.exe -v %GLOBAL% %VERIFY_FLAGS% -i %LEGACY_SIGNATURE% -f %OLD_TESTFILE% 
+echo %errorlevel%
+
+echo ****************** Verify legacy signature and file online******************
+ksitool.exe -vx %GLOBAL% %VERIFY_FLAGS% -i %LEGACY_SIGNATURE% -f %OLD_TESTFILE% 
+echo %errorlevel%
+
+echo ****************** Verify extended legacy signature and file ******************
+ksitool.exe -v %GLOBAL% %VERIFY_FLAGS% -i %LEGACY_PRE_EXTENDED% -f %OLD_TESTFILE% 
+echo %errorlevel%
+
+echo ****************** Verify extended legacy signature and file online******************
+ksitool.exe -vx %GLOBAL% %VERIFY_FLAGS% -i %LEGACY_PRE_EXTENDED% -f %OLD_TESTFILE% 
+echo %errorlevel%
+
+echo ****************** Extend legacy signature ****************** 
+ksitool.exe -x %GLOBAL% %EXTEND_FLAGS% -i %LEGACY_SIGNATURE% -o %OLD_EXTENDED%
+echo %errorlevel%
+sleep %WAIT%
+ksitool.exe -vrd -i %OLD_EXTENDED% -f %OLD_TESTFILE%
+echo %errorlevel%
+
+
+
+
 
 
 
