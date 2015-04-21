@@ -30,6 +30,13 @@
 #include "param_set.h"
 #include <ctype.h>
 
+#ifdef _WIN32
+#	include <windows.h>
+#else
+#	include <sys/time.h>
+#endif
+
+
 #define ON_ERROR_THROW_MSG(_exception, ...) \
 	if (res != KSI_OK){  \
 		THROW_MSG(_exception,getReturnValue(res),__VA_ARGS__); \
@@ -592,22 +599,28 @@ static unsigned int elapsed_time_ms;
 
 unsigned int measureLastCall(void){
 #ifdef _WIN32
-    static clock_t thisCall = 0;
-    static clock_t lastCall = 0;
+    static LARGE_INTEGER thisCall;
+    static LARGE_INTEGER lastCall;
+    LARGE_INTEGER frequency;        // ticks per second
 
-    thisCall = clock();
-    elapsed_time_ms = (thisCall - lastCall) * 1000 / CLOCKS_PER_SEC;
+	QueryPerformanceFrequency(&frequency);
+	QueryPerformanceCounter(&thisCall);
+
+    elapsed_time_ms = (unsigned)((thisCall.QuadPart - lastCall.QuadPart) * 1000.0 / frequency.QuadPart);
 #else
-    static struct timespec thisCall = {0, 0};
-    static struct timespec lastCall = {0, 0};
+	static timeval thisCall = {0, 0};
+    static timeval lastCall = {0, 0};
 
-    clock_gettime(CLOCK_REALTIME, &thisCall);
-    elapsed_time_ms = (thisCall.tv_sec - lastCall.tv_sec) * 1000 + (thisCall.tv_nsec - lastCall.tv_nsec) / 1000000;
+	gettimeofday(&thisCall, NULL);
+
+
+    elapsed_time_ms = (unsigned)((thisCall.tv_sec - lastCall.tv_sec) * 1000.0 + (thisCall.tv_usec - lastCall.tv_usec) / 1000.0);
 #endif
 
     lastCall = thisCall;
     return elapsed_time_ms;
 }
+
 
 unsigned int measuredTime(void){
 	return elapsed_time_ms;
