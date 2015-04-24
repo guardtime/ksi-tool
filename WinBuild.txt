@@ -38,6 +38,7 @@ Prerequisites
 			4.1) Lib Curl 7.37.0 (recommended).
 			4.2) Windows native WinINet.
 			4.3) Windows native WinHTTP.
+		5) WiX Toolset 3.9 for installer build. 
 	
 	Given versions are the same used in testing. It is strongly	recommended
 	to use exactly the same versions. 
@@ -110,7 +111,8 @@ Configuring build scripts
 	Make file has following tasks:
 	
 		1)default	- build ksitool executable.
-		2)clean 	- clean build.
+		2)installer - build ksitool Windows installer (KSI_LIB must be lib).
+		3)clean 	- clean build.
 	
 		
 	Make file has following options:
@@ -119,11 +121,14 @@ Configuring build scripts
 						Default is lib. 	
 		2) RTL			- select C run-time library (RTL) (MT, MTd, MD, MDd).
 						Default is MT.
-		3) CURL_DIR 	- Directory containing Curl library and include files.
-		4) OPENSSL_DIR 	- Directory containing OpenSLL library and include files.
-		5) KSI_DIR 		- Directory containing KSI API library and include files
-		5) LDEXTRA 		- extra flags for linker.
-		6) CCEXTRA 		- extra flags for compiler.
+		3) INSTALL_MACHINE - values 32 and 64 for configuring installer task.
+						to configure build environment for 32 on 64 bit build
+						setenv /x64 or /x86 must be called.
+		4) CURL_DIR 	- directory containing Curl library and include files.
+		5) OPENSSL_DIR 	- directory containing OpenSLL library and include files.
+		6) KSI_DIR 		- directory containing KSI API library and include files
+		7) LDEXTRA 		- extra flags for linker.
+		8) CCEXTRA 		- extra flags for compiler.
 		
 	When compiling one must know how the KSI API was linked - DLL and RTL must
 	be configured accordingly. The location of KSI_API must be specified by 

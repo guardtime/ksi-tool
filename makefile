@@ -27,6 +27,9 @@ RTL = MT
 RTL = MD
 !ENDIF
 !ENDIF
+!IF "$(INSTALL_MACHINE)" != "32" && "$(INSTALL_MACHINE)" != "64"
+INSTALL_MACHINE = 32
+!ENDIF
 
 SRC_DIR = src
 OBJ_DIR = obj
@@ -73,7 +76,7 @@ LDFLAGS = $(LDFLAGS) /DEBUG
 
 !IF "$(KSI_LIB)" == "lib"
 CCFLAGS = $(CCFLAGS) /DCURL_STATICLIB
-EXT_LIB = $(EXT_LIB) libcurl$(RTL).lib libeay32$(RTL).lib wininet.lib winhttp.lib
+EXT_LIB = $(EXT_LIB) libcurl$(RTL).lib libeay32$(RTL).lib wininet.lib winhttp.lib Ws2_32.lib
 
 !ELSE
 LDFLAGS = $(LDFLAGS) /LIBPATH:"$(OPENSSL_DIR)\dll" 
@@ -121,10 +124,26 @@ $(BIN_DIR)\$(TOOL_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(CMDTOOL_OBJ)
 	cl /c /$(RTL) $(CCFLAGS) /Fo$@ $<
 
 	
+
 #Folder factory	
 	
 $(OBJ_DIR) $(BIN_DIR):
 	@if not exist $@ mkdir $@
+
+!IF "$(KSI_LIB)" == "lib"
+
+installer:$(BIN_DIR) $(OBJ_DIR) $(BIN_DIR)\$(TOOL_NAME).exe
+!IF [candle.exe > nul] != 0
+!MESSAGE Please install WiX to build installer.
+!ELSE
+	cd installers
+	candle.exe ksitool.wxs -o ..\obj\ksitool.wixobj -dVersion=$(VER) -dName=$(TOOL_NAME) -dKsitool=$(BIN_DIR)\$(TOOL_NAME).exe -darch=$(INSTALL_MACHINE)
+	light.exe ..\obj\ksitool.wixobj -o ..\bin\ksitool -pdbout ..\bin\ksitool.wixpdb -cultures:en-us -ext WixUIExtension
+	cd ..
+!ENDIF
+
+!ENDIF
 	
 clean:
 	@for %i in ($(OBJ_DIR) $(BIN_DIR)) do @if exist .\%i rmdir /s /q .\%i
+

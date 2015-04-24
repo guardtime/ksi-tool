@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+
+<?if  $(var.arch) = 64 ?>
+    <?define platform = x64 ?>
+    <?define isWin64 = yes ?>
+    <?define programfilesfolder_platform = ProgramFiles64Folder ?>
+<?else ?>    
+    <?define platform = x86 ?>
+    <?define isWin64 = no ?>
+    <?define programfilesfolder_platform = ProgramFilesFolder ?>
+<?endif ?>
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Product Id="*" UpgradeCode="7648121A-FB57-4C02-8E5C-35E1426E14A1" Name="$(var.Name)" Version="$(var.Version)" Manufacturer="Guardtime AS" Language="1033">
+        <Package InstallerVersion="200" Compressed="yes" Comments="Windows Installer Package" Platform="$(var.platform)"/>
+        <Media Id="1" Cabinet="product.cab" EmbedCab="yes"/>
+        <Icon Id="ProductIcon" SourceFile="gt.ico"/>
+        <Property Id="ARPPRODUCTICON" Value="ProductIcon"/>
+        <Property Id="ARPHELPLINK" Value="http://www.guardtime.com"/>
+
+
+        
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id="$(var.programfilesfolder_platform)">
+                <Directory Id="Guardtime" Name="Guardtime">
+                    <Directory Id="INSTALLDIR" Name="$(var.Name)-$(var.Version)">
+                        <Component Id="ApplicationFiles" Guid="0492920C-5D5E-42B4-AA82-38F60BC9AB52" Win64="$(var.isWin64)">
+                            <File 
+                                Id="ApplicationFile1"
+                                Source="..\$(var.Ksitool)"
+                                ProcessorArchitecture="$(var.platform)">
+                            </File>
+                            
+                            <Environment Id="KSITOOL_PATH" Name="KSITOOL_PATH" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="no" />
+                            <Environment Id="Path" Name="Path" Value=";%KSITOOL_PATH%" Permanent="no" Part="last" Action="set" System="no" />
+                        </Component>
+                    </Directory>
+                </Directory>
+            </Directory>
+        </Directory>
+
+
+
+        <Feature Id="DefaultFeature" Level="1">
+            <ComponentRef Id="ApplicationFiles"/>
+        </Feature>
+        
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
+    <WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
+    <UIRef Id="WixUI_InstallDir" />
+        
+    </Product>
+
+</Wix>
