@@ -620,7 +620,7 @@ unsigned int measureLastCall(void){
 #else
     static struct timeval thisCall = {0, 0};
     static struct timeval lastCall = {0, 0};
-    
+
     gettimeofday(&thisCall, NULL);
 
     elapsed_time_ms = (unsigned)((thisCall.tv_sec - lastCall.tv_sec) * 1000.0 + (thisCall.tv_usec - lastCall.tv_usec) / 1000.0);
@@ -629,7 +629,6 @@ unsigned int measureLastCall(void){
     lastCall = thisCall;
     return elapsed_time_ms;
 }
-
 
 unsigned int measuredTime(void){
 	return elapsed_time_ms;
@@ -731,6 +730,11 @@ int getReturnValue(int error_code){
 	}
 }
 
+
+/**
+ * KSI C API WRAPPERS
+ */
+
 #define THROWABLE3(_ctx,func, ...) \
 	int res = KSI_UNKNOWN_ERROR; \
 	char buf[1024]; \
@@ -787,6 +791,7 @@ int KSI_DataHasher_close_throws(KSI_CTX *ksi, KSI_DataHasher *hasher, KSI_DataHa
 int KSI_createSignature_throws(KSI_CTX *ksi, KSI_DataHash *hash, KSI_Signature **sign){
 	 THROWABLE3(ksi, KSI_createSignature(ksi, hash, sign), "Error: Unable to sign.");
 }
+
 int KSI_DataHash_fromDigest_throws(KSI_CTX *ksi, int hasAlg, const unsigned char *digest, unsigned int len, KSI_DataHash **hash){
 	THROWABLE3(ksi, KSI_DataHash_fromDigest(ksi, hasAlg, digest, len, hash), "Error: Unable to create hash from digest.");
 }
@@ -834,6 +839,7 @@ int KSI_extendSignature_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature *
 int KSI_Signature_extend_throws(const KSI_Signature *signature, KSI_CTX *ksi, const KSI_PublicationRecord *pubRec, KSI_Signature **extended){
 	THROWABLE3(ksi, KSI_Signature_extend(signature, ksi, pubRec, extended), "Error: Unable to extend signature.");
 }
+
 int KSI_Signature_extendTo_throws(const KSI_Signature *signature, KSI_CTX *ksi, KSI_Integer *to, KSI_Signature **extended){
 	THROWABLE3(ksi, KSI_Signature_extendTo(signature, ksi, to, extended), "Error: Unable to extend signature.");
 }
@@ -905,6 +911,7 @@ int KSI_PublicationData_setImprint_throws(KSI_CTX *ksi, KSI_PublicationData *t, 
 int KSI_PublicationData_setTime_throws(KSI_CTX *ksi, KSI_PublicationData *t, KSI_Integer *time){
 	THROWABLE3(ksi, KSI_PublicationData_setTime(t, time), "Error: Unable to set publication data time attribute.");
 }
+
 int KSI_PublicationData_getTime_throws(KSI_CTX *ksi, const KSI_PublicationData *t, KSI_Integer **time){
 	THROWABLE3(ksi, KSI_PublicationData_getTime(t, time), "Error: Unable to get publication data time attribute.");
 }
@@ -917,28 +924,8 @@ int KSI_PublicationData_fromBase32_throws(KSI_CTX *ksi, const char *publication,
 	THROWABLE3(ksi, KSI_PublicationData_fromBase32(ksi, publication, published_data), "Error: Unable to parse publication data as base 32.");
 }
 
-int KSI_Signature_clone_throws(KSI_CTX *ksi, const KSI_Signature *sig, KSI_Signature **clone){
-	THROWABLE3(ksi, KSI_Signature_clone(sig, clone), "Error: Unable to clone signature.");
-}
-
 int KSI_Signature_getSigningTime_throws(KSI_CTX *ksi, const KSI_Signature *sig, KSI_Integer **signTime){
 	THROWABLE3(ksi, KSI_Signature_getSigningTime(sig, signTime), "Error: Unable to get signatures signing time.");
-}
-
-int KSI_ExtendResp_setCalendarHashChain_throws(KSI_CTX *ksi, KSI_ExtendResp *t, KSI_CalendarHashChain *calendarHashChain){
-	THROWABLE3(ksi, KSI_ExtendResp_setCalendarHashChain(t, calendarHashChain), "Error: Unable to get extension response signing time.");
-}
-
-int KSI_Signature_replaceCalendarChain_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_CalendarHashChain *calendarHashChain){
-	THROWABLE3(ksi, KSI_Signature_replaceCalendarChain(sig,calendarHashChain), "Error: Unable to replace signatures calender hash chain.");
-}
-
-int KSI_PublicationsFile_getPublicationDataByTime_throws(KSI_CTX *ksi, const KSI_PublicationsFile *pubFile, const KSI_Integer *pubTime, KSI_PublicationRecord **pubRec){
-	THROWABLE3(ksi, KSI_PublicationsFile_getPublicationDataByTime(pubFile, pubTime, pubRec), "Error: Unable to get publication date by time.");
-}
-
-int KSI_Signature_replacePublicationRecord_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_PublicationRecord *pubRec){
-	THROWABLE3(ksi, KSI_Signature_replacePublicationRecord(sig, pubRec), "Error: Unable set signatures publication record.");
 }
 
 int KSI_PublicationRecord_clone_throws(KSI_CTX *ksi, const KSI_PublicationRecord *rec, KSI_PublicationRecord **clone){
@@ -961,22 +948,6 @@ int KSI_CTX_setPublicationCertEmail_throws(KSI_CTX *ksi, const char *email){
 	THROWABLE3(ksi, KSI_CTX_setPublicationCertEmail(ksi, email), "Error: Unable set publication certificate email.");
 }
 
-int KSI_NetworkClient_setExtenderUser_throws(KSI_CTX *ksi, KSI_NetworkClient *netProvider, const char *val){
-	THROWABLE3(ksi,KSI_NetworkClient_setExtenderUser(netProvider, val) , "Error: Unable set extender user name.");
-}
-
-int KSI_NetworkClient_setExtenderPass_throws(KSI_CTX *ksi, KSI_NetworkClient *netProvider, const char *val){
-	THROWABLE3(ksi,KSI_NetworkClient_setExtenderPass(netProvider, val) , "Error: Unable set extender password.");
-}
-
-int KSI_NetworkClient_setAggregatorUser_throws(KSI_CTX *ksi, KSI_NetworkClient *netProvider, const char *val){
-	THROWABLE3(ksi,KSI_NetworkClient_setAggregatorUser(netProvider, val) , "Error: Unable set aggregator user name.");
-}
-
-int KSI_NetworkClient_setAggregatorPass_throws(KSI_CTX *ksi, KSI_NetworkClient *netProvider, const char *val){
-	THROWABLE3(ksi, KSI_NetworkClient_setAggregatorPass(netProvider, val) , "Error: Unable set aggregator password.");
-}
-
 int KSI_CTX_setPublicationUrl_throws(KSI_CTX *ksi, const char *uri){
 	THROWABLE3(ksi, KSI_CTX_setPublicationUrl(ksi, uri) , "Error: Unable set publication URL.");
 }
@@ -992,6 +963,7 @@ int KSI_CTX_setAggregator_throws(KSI_CTX *ksi, const char *uri, const char *logi
 int KSI_CTX_setTransferTimeoutSeconds_throws(KSI_CTX *ksi, int timeout){
 	THROWABLE3(ksi, KSI_CTX_setTransferTimeoutSeconds(ksi, timeout) , "Error: Unable set transfer timeout.");
 }
+
 int KSI_CTX_setConnectionTimeoutSeconds_throws(KSI_CTX *ksi, int timeout){
 	THROWABLE3(ksi, KSI_CTX_setConnectionTimeoutSeconds(ksi, timeout) , "Error: Unable set connection timeout.");
 }
