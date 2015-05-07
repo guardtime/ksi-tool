@@ -618,11 +618,10 @@ unsigned int measureLastCall(void){
 
     elapsed_time_ms = (unsigned)((thisCall.QuadPart - lastCall.QuadPart) * 1000.0 / frequency.QuadPart);
 #else
-	static timeval thisCall = {0, 0};
-    static timeval lastCall = {0, 0};
-
-	gettimeofday(&thisCall, NULL);
-
+    static struct timeval thisCall = {0, 0};
+    static struct timeval lastCall = {0, 0};
+    
+    gettimeofday(&thisCall, NULL);
 
     elapsed_time_ms = (unsigned)((thisCall.tv_sec - lastCall.tv_sec) * 1000.0 + (thisCall.tv_usec - lastCall.tv_usec) / 1000.0);
 #endif

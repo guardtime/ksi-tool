@@ -1,0 +1,478 @@
+.TH man 8 "27 April 2015" "1.0" "ksitool man page"
+
+
+
+.SH NAME
+ksitool - Guardtime command-line tool to access KSI service.
+
+
+
+.SH SYNOPSIS
+Sign data file or hash:
+.br
+.B -s -f
+.I file
+|
+.B -F
+.I hash
+.B -o
+.I out.ksig
+[
+.I more options
+]
+.br
+
+Extend signature:
+.br
+.B -x -i
+.I sig.ksig
+.B -o
+.I ext.ksig
+[
+.B -T
+][
+.I more options
+]
+.br
+
+Download publication file:
+.br
+.B -p -o
+.I pubfile
+[
+.I more options
+]
+.br
+
+Create publication string:
+.br
+.B -p -T
+[
+.I more options
+]
+.br
+
+Verify signature:
+.br
+.B -v -i
+.I sig.ksig
+.B -f
+.I file
+|
+.B -F
+.I hash
+[
+.B -x
+|
+.B -b
+.I pubfile 
+][
+.I more options
+]
+.br
+
+
+Verify publication file:
+.br
+.B -v -b
+.I pubfile
+[
+.I more options
+]
+.br
+
+Display current aggregation root hash value and time:
+.br
+.B --aggre --htime
+.br
+
+Set system time from current aggregation:
+.br
+.B --aggre --setsystime
+.br
+
+
+.SH DESCRIPTION
+
+This is a general signing and signature verification tool for Guardtime Keyless Signature services.
+
+
+
+.SH OPTIONS
+
+.TP
+.B Tasks:
+.TP
+.B \--aggre
+Use for getting root hash and time from aggregator.
+.TP
+.B \-p
+Use for downloading publication file and creating publication string.
+.TP
+.B \-s, --sign
+Use for signing document or hash.
+.TP
+.B \-v, --verify
+Use for signature and publication file verification.
+.TP
+.B \-x, --extend
+Use for online verification or signature extending.
+
+.TP
+.B Input/output:
+.TP
+.BI \-b\  file
+Use specified publication file.
+.TP
+.BI \-f\  file
+File to be signed / verified.
+.TP
+.BI \-F\  hash
+Data hash to be signed / verified. Hash format: <alg>:<hash in hex>.
+.TP
+.BI \-H\  alg
+Hash algorithm used to hash the file to be signed. Use when signing file (
+.B -s -f
+).
+.TP
+.BI \-i\  file
+Input signature token file to be extended / verified.
+.TP
+.BI \-o\  file
+Output file name to store signature token or publication file.
+.TP
+.BI \-T\  int
+Specific publication time to extend to as number of seconds since 1970-01-01 00:00:00 UTC. Use with 
+.B -x
+and
+.BR -p \.
+.br
+
+.TP
+.B Details:
+.TP
+.B -d
+Dump detailed information.
+.TP
+.BI \--log\  file
+Dump KSI log into file.
+.TP
+.B -n
+Print signer Name (identity).
+.TP
+.B -r
+Print publication References (use with -vx).
+.TP
+.B -t
+Print service Timing in ms.
+.br
+
+
+.TP
+.B Configuration:
+
+.TP
+.BI \-c\  int
+Network transfer timeout, after successful Connect.
+.TP
+.BI \-C\  int
+Network Connect timeout (is not supported with tcp client).
+.TP
+.BI \-E\  email
+Use specified publication certificate email.
+.TP
+.BI \--inc\  file
+Use configuration file containing command-line parameters. Parameter must be written line by line.
+.TP
+.BI \--pass\  str
+Password for authentication.
+.TP
+.BI \-P\  url
+Specify publication file URL.
+.TP
+.BI \-S\  url
+Specify Signing service URL.
+.TP
+.BI \--user\  str
+User name for authentication.
+.TP
+.BI \-V\  file
+Use specified OpenSSL-style trust store file for publication file verification. Can have multiple values (-V <file 1> -V <file 2>).
+.TP
+.BI \-W\  dir
+Use specified OpenSSL-style trust store directory for publication file verification.
+.TP
+.BI \-X\  url
+Specify verification (eXtending) service URL.
+.TP
+
+
+
+.TP
+.B Help:
+.TP
+.B -h, --help
+print ksitool help.
+
+			
+
+			
+
+.SH EXIT STATUS
+
+.TP
+.B 0
+Exit success. Returned if everything is OK.
+.br
+.TP
+.B 1
+Exit failure. A general failure occured.
+.br
+.TP
+.B 3
+Invalid command-line parameter. The content or format of command-line parameter is invalid. Also a parameter may be missing.
+.br
+.TP
+.B 4
+Invalid format. Input data to KSI library is invalid, for example signature or publication file format is invalid.
+.br
+.TP
+.B 5
+Network error. Ksitool is unable to connect to the service, connection is timed out or HTTP error is returned.
+.br
+.TP
+.B 6
+Verification error. Unable to verify signature or document / hash.
+.br
+.TP
+.B 7
+Extending error. Unable to extend signature. Most frequently it is caused because signature has no suitable publication yet. 
+.br
+.TP
+.B 8
+Aggregation error. Unable to generate signature.
+.br	
+.TP
+.B 9
+Input / output error. Unable to write or read file.
+.br
+.TP
+.B 10
+Cryptographic error. Error may be generated due to untrusted or unavailable hash algorithm and invalid PKI signature or untrusted certificate.
+.br
+.TP
+.B 11
+HMAC error. HMAC of aggregation or extend response is not matching. 
+.br
+.TP
+.B 12
+No privileges. Operating system is not giving privileges to perform an operation.
+.br
+.TP
+.B 13
+System out of memory.
+.br
+.TP
+.B 14
+Authentication error. Aggregation or extending service is not accepting user identification parameters.
+.br
+
+
+
+.SH EXAMPLES
+
+During following examples it is assumed that defaul service urls are defined as environment variables. Read example 1 to learn how to define service urls.
+
+.B 1
+To use ksitool, service urls must be specified. It can be done via system variables, command-line parameters or configuration file.
+
+.B 1.1
+To define default urls system variables KSI_AGGREGATOR and KSI_EXTENDER must be described as shown below: 
+
+.RS
+.br
+.B KSI_AGGREGATOR=
+.I url=http://test.com:3333/gt-signingservice pass=test_pass user=test_user
+.br
+.B KSI_EXTENDER=
+.I url=http://test.com:8010/gt-extendingservice pass=test_pass user=test_user
+.RE
+
+.B 1.2
+To define service urls on command-line or via configuration file, following parameters must be defined:
+.RS
+
+.br
+.B -X
+.I http://test.com:8010/gt-extendingservice
+.br
+.B -S
+.I http://test.com:3333/gt-signingservice
+.br
+.B --user
+.I test_user
+.br
+.B --pass
+.I test_pass
+.RE
+.br
+
+.B 1.3
+Using configuration file parameters must be written line by line (like example above) into file 
+.I conf
+and that must be included using option:
+.br
+
+.RS
+.B --inc
+.I conf  
+.RE
+.br
+
+
+
+.B 2
+To sign a file
+.I file
+and save signature to
+.I sig.ksig
+call:
+
+.RS
+.br
+.B ksitool -s -f 
+.I file
+.B -o
+-I sig.ksig
+.RE
+
+.B 3
+To sign a data hash (hashed with SHA256) and save signature to file
+.I sig.ksig
+call:
+
+.RS
+.br
+.B ksitool -s -o
+.I sig.ksig
+.B -F
+.I SHA-256:c8ef6d57ac28d1b4e95a513959f5fcdd0688380a43d601a5ace1d2e96884690a
+.RE
+
+.B 4
+To sign a data file
+.I file
+with nondefault algorithm
+.I SHA1
+call:
+
+.br
+.RS
+.B ksitool -s -f 
+.I file 
+.B -F
+.I SHA1
+.B -o
+.I sig.ksig 
+.RE
+
+.B 5
+To verify a signature
+.I sig.ksig
+and file
+.I file
+it belongs to call:
+
+.RS
+.B ksitool -v -i
+.I sig.ksig
+.B -f
+.I file
+.RE
+
+.B 6
+To verify a signature
+.I sig.ksig
+and hash it belongs to call:
+
+
+.RS
+.B ksitool -v -i
+.I sig.ksig
+.B -F
+.I SHA-256:c8ef6d57ac28d1b4e95a513959f5fcdd0688380a43d601a5ace1d2e96884690a
+.RE
+
+
+.B 7
+To verify a signature
+.I sig.ksig
+using online verification service call:
+
+
+.RS
+.B ksitool -vx -i
+.I sig.ksig
+.RE
+
+
+.B 8
+To extend a signature
+.I sig.ksig
+and save it as
+.I ext.ksig
+call:
+
+.RS
+.B ksitool -x -i
+.I sig.ksig
+.B -o
+.I ext.ksig 
+.RE
+
+
+.B 9
+To download a publication file
+.I pubfile
+call:
+
+.RS
+.B ksitool -p -o
+.I pubfile
+.RE
+
+.B 10
+To verify publication file
+.I pubfile
+call:
+
+.RS
+.B ksitool -v -b
+.I pubfile
+.RE
+
+
+.SH ENVIRONMENT	
+
+. B Default service access URL-s:
+
+To define default URLs system variables must be defined. For aggregator and extender define system variables
+.B KSI_AGGREGATOR
+and 
+.B KSI_EXTENDER
+with content
+.IR 'url=<url> pass=<pass> user=<user>' \.
+.R .
+Default
+.I <pass>
+and
+.I <user>
+is
+.IR 'anon' \.
+Using includes (
+.B --inc
+) or defining urls on command-line will override defaults.
+
+.SH AUTHOR
+
+Guardtime AS, http://www.guardtime.com/
