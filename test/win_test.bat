@@ -193,79 +193,16 @@ sleep %WAIT%
 ksitool.exe -vrd -i %OLD_EXTENDED% -f %OLD_TESTFILE%
 echo %errorlevel%
 
-
-
-
-
-
-
-
-echo ****************** Error extend no suitable publication ****************** 
-ksitool.exe -x %GLOBAL% %EXTEND_FLAGS% -i %TEST_FILE_OUT%.ksig -o %TEST_EXTENDED_SIG%
+echo ****************** Verify with user publication. ****************** 
+ksitool -vdr -i %TEST_EXTENDED_SIG% --ref AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
 echo %errorlevel%
 
-echo ****************** Error extend not suitable format ****************** 
-ksitool.exe -x %GLOBAL% %EXTEND_FLAGS% -i %TEST_FILE% -o %TEST_EXTENDED_SIG%
+echo ********** Verify with user publication - needs extending. Publication exists. ********** 
+ksitool -vdr -i %TEST_EXTENDED_SIG% --ref AAAAAA-CVFWVA-AAPV2S-SN3JLW-YEKPW3-AUSQP6-PF65K5-KVGZZA-7UYTOV-27VX54-VVJQFG-VCK6GR
 echo %errorlevel%
 
-echo ****************** Error verify not suitable format ****************** 
-ksitool.exe -v -x %GLOBAL% %VERIFY_FLAGS% -i %TEST_FILE% 
-echo %errorlevel%
-
-echo ****************** Error verifying signature and wrong file ****************** 
-ksitool.exe -v -x %GLOBAL% %VERIFY_FLAGS% -i %TEST_FILE_OUT%.ksig -f %TEST_FILE_OUT%.ksig
-echo %errorlevel%
-
-echo ****************** Error verifying signature (no references) and wrong file ****************** 
-ksitool.exe -v -x %GLOBAL% %VERIFY_FLAGS% -i %TEST_FILE_OUT%.ksig -f %TEST_FILE_OUT%.ksig
-echo %errorlevel%
-
-echo ****************** Error signing with SH1 and wrong hash ****************** 
-ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -o %TEST_FILE_OUT%err  -F SHA-1:%SH1_HASH%ff
-echo %errorlevel%
-
-echo ****************** Error signing with SH1 and invalid hash ****************** 
-ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -o %TEST_FILE_OUT%err  -F SHA-1:%SH1_HASH%f
-echo %errorlevel%
-
-echo ****************** Error signing with unknown algorithm and wrong hash ****************** 
-ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -o %TEST_FILE_OUT%err  -F _UNKNOWN:%SH1_HASH%
-echo %errorlevel%
-
-echo ****************** Error with CRYPTOAPI signing with unimplemented algorithm ****************** 
-ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -f %TEST_FILE% -o %TEST_FILE_OUT%err  -H RIPEMD-160
-echo %errorlevel%
-
-echo ****************** Error bad network provider ****************** 
-ksitool.exe -s %SIGN_FLAGS% -o %SH1_file%  -F SHA-1:%SH1_HASH% -S plaplaplaplpalpalap
-echo %errorlevel%
-
-echo ****************** Error Verify signature and missing file ****************** 
-ksitool.exe -v -x %GLOBAL% %VERIFY_FLAGS% -i %TEST_FILE_OUT%.ksig -f missing_file
-echo %errorlevel%
-
-echo ****************** Error missing cert files ****************** 
-ksitool.exe -p -o %PUBFILE% %CERTS% -V missing1 -V missing2 -V missing3 
-echo %errorlevel%
-
-echo ****************** Error Invalid publications file ******************
-ksitool.exe -v -t %GLOBAL% %VERIFY_FLAGS% -i %TEST_FILE_OUT%.ksig -b %INVALID_PUBFILE%
-echo %errorlevel%
-
-echo "****************** Error Unable to Get Publication string ******************" 
-ksitool.exe -p %GLOBAL% -T 969085709
-echo %errorlevel%
-
-echo ****************** Error wrong E-mail******************
-ksitool.exe -p -t -o %PUBFILE%err %GLOBAL% -E magic@email.null 
-echo %errorlevel%
-
-echo ****************** Error verify wrong hash ******************
-ksitool.exe -v -x %GLOBAL% %VERIFY_FLAGS% -i %SH256_file% -f %SH256_DATA_FILE% -F SHA-256:c8ef6d57ac28d1b4e95a513959f5fcdd0688380a43d601a5ace1d2e96884690d
-echo %errorlevel%
-
-echo ****************** Error verify wrong document ******************
-ksitool.exe -v -x %GLOBAL% %VERIFY_FLAGS% -i %SH256_file% -f %TEST_FILE% -F SHA-256:%SH256_HASH%
+echo ********** Verify with user publication - needs extending. No publication. ********** 
+ksitool -vdr -i %TEST_EXTENDED_SIG% --ref AAAAAA-CUBJQL-AAKVFD-VNJIK5-7DTJ6T-YYCOGP-N7J3RT-CRE5DU-WBB6AE-LANHHH-3CFEM4-7FM65J
 echo %errorlevel%
 
 pause

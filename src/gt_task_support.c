@@ -264,6 +264,16 @@ void saveSignatureFile_throws(KSI_Signature *sign, const char *fname){
 	return;
 }
 
+bool isSignatureExtended(const KSI_Signature *sig) {
+	int res;
+	KSI_PublicationRecord *pubRec = NULL;
+
+	if (sig == NULL) return false;
+	res = KSI_Signature_getPublicationRecord(sig, &pubRec);
+
+	return pubRec == NULL ? false : true;
+}
+
 void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile){
 	int res = KSI_UNKNOWN_ERROR;
 	KSI_LIST(KSI_PublicationRecord)* list_publicationRecord = NULL;
@@ -751,6 +761,10 @@ int KSI_receivePublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile **publ
 	THROWABLE3(ksi, KSI_receivePublicationsFile(ksi, publicationsFile), "Error: Unable to read publications file.");
 }
 
+int KSI_PublicationsFile_getPublicationDataByPublicationString_throws(KSI_CTX *ksi, const KSI_PublicationsFile *pubFile, const char *pubString, KSI_PublicationRecord **pubRec){
+	THROWABLE3(ksi, KSI_PublicationsFile_getPublicationDataByPublicationString(pubFile, pubString, pubRec), "Error: Unable to read publications file.");
+}
+
 int KSI_verifyPublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *publicationsFile){
 	THROWABLE3(ksi, KSI_verifyPublicationsFile(ksi, publicationsFile), "Error: Unable to verify publications file.");
 }
@@ -786,9 +800,18 @@ int KSI_Signature_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_Signat
 	THROWABLE3(ksi, KSI_Signature_fromFile(ksi, fileName, sig), "Error: Unable to read signature from file.");
 }
 
+int KSI_Signature_getPublicationRecord_throws(KSI_CTX *ksi, const KSI_Signature *sig, KSI_PublicationRecord **pubRec){
+	THROWABLE3(ksi, KSI_Signature_getPublicationRecord(sig, pubRec), "Error: Unable to get signatures publication record.");
+}
+
 int KSI_Signature_verify_throws(KSI_Signature *sig, KSI_CTX *ksi){
 	THROWABLE3(ksi, KSI_Signature_verify(sig, ksi), "Error: Unable to verify signature.");
 }
+
+int KSI_Signature_verifyWithPublication_throws(KSI_Signature *sig, KSI_CTX *ksi, const KSI_PublicationData *publication){
+	THROWABLE3(ksi, KSI_Signature_verifyWithPublication(sig, ksi, publication), "Error: Unable to verify signature with user publication.");
+}
+
 int KSI_Signature_verifyOnline_throws(KSI_CTX *ksi, KSI_Signature *sig){
 	THROWABLE3(ksi, KSI_Signature_verifyOnline(sig, ksi), "Error: Unable to verify signature online.");
 }
@@ -883,9 +906,16 @@ int KSI_PublicationData_setImprint_throws(KSI_CTX *ksi, KSI_PublicationData *t, 
 int KSI_PublicationData_setTime_throws(KSI_CTX *ksi, KSI_PublicationData *t, KSI_Integer *time){
 	THROWABLE3(ksi, KSI_PublicationData_setTime(t, time), "Error: Unable to set publication data time attribute.");
 }
+int KSI_PublicationData_getTime_throws(KSI_CTX *ksi, const KSI_PublicationData *t, KSI_Integer **time){
+	THROWABLE3(ksi, KSI_PublicationData_getTime(t, time), "Error: Unable to get publication data time attribute.");
+}
 
 int KSI_PublicationData_toBase32_throws(KSI_CTX *ksi, const KSI_PublicationData *published_data, char **publication){
 	THROWABLE3(ksi, KSI_PublicationData_toBase32(published_data, publication), "Error: Unable to convert publication data to base 32.");
+}
+
+int KSI_PublicationData_fromBase32_throws(KSI_CTX *ksi, const char *publication, KSI_PublicationData **published_data){
+	THROWABLE3(ksi, KSI_PublicationData_fromBase32(ksi, publication, published_data), "Error: Unable to parse publication data as base 32.");
 }
 
 int KSI_Signature_clone_throws(KSI_CTX *ksi, const KSI_Signature *sig, KSI_Signature **clone){
@@ -914,6 +944,18 @@ int KSI_Signature_replacePublicationRecord_throws(KSI_CTX *ksi, KSI_Signature *s
 
 int KSI_PublicationRecord_clone_throws(KSI_CTX *ksi, const KSI_PublicationRecord *rec, KSI_PublicationRecord **clone){
 	THROWABLE3(ksi, KSI_PublicationRecord_clone(rec, clone), "Error: Unable clone signatures publication record.");
+}
+
+int KSI_PublicationRecord_getPublishedData_throws(KSI_CTX *ksi, const KSI_PublicationRecord *t, KSI_PublicationData **publishedData){
+	THROWABLE3(ksi, KSI_PublicationRecord_getPublishedData(t, publishedData), "Error: Unable to set publication records published data.");
+}
+
+int KSI_PublicationRecord_setPublishedData_throws(KSI_CTX *ksi, KSI_PublicationRecord *t, KSI_PublicationData *publishedData){
+	THROWABLE3(ksi, KSI_PublicationRecord_setPublishedData(t, publishedData), "Error: Unable to set publication records published data.");
+}
+
+int KSI_PublicationRecord_new_throws(KSI_CTX *ksi, KSI_PublicationRecord **t){
+	THROWABLE3(ksi, KSI_PublicationRecord_new(ksi, t), "Error: Unable create new publication record.");
 }
 
 int KSI_CTX_setPublicationCertEmail_throws(KSI_CTX *ksi, const char *email){

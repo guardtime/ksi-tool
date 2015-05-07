@@ -195,6 +195,7 @@ static void GT_pritHelp(void){
 			"\t\t-v -x -i verify signature online (calendar-based verification).\n"
 			"\t\t-v -i verify signature.\n"
 			"\t\t-v -b -i verify signature using specific publications file.\n"
+			"\t\t-v --ref -i verify signature using publication string.\n"
 			"\t\t-v -b verify publication file.\n"
 			" --aggre	use aggregator for (-n -t):\n"
 			"\t\t--aggre --htime display current aggregation root hash value and time.\n"
@@ -206,6 +207,7 @@ static void GT_pritHelp(void){
 			" -F <hash>\tdata hash to be signed / verified. Hash format: <ALG>:<hash in hex>.\n"
 			" -o <file>\toutput filename to store signature token or publications file.\n"
 			" -i <file>\tinput signature token file to be extended / verified.\n"
+			" --ref <str>\tpublication string.\n"
 			" -b <file>\tuse specified publications file.\n"
 			" -H <ALG>\thash algorithm used to hash the file to be signed.\n"
 			" -T <UTC>\tspecific publication time to extend to (use with -x) as number\n"
@@ -222,8 +224,8 @@ static void GT_pritHelp(void){
 			" -S <url>\tspecify Signing service URL.\n"
 			" -X <url>\tspecify verification (eXtending) service URL.\n"
 			" -P <url>\tspecify Publications file URL.\n"
-			" --user\t\tuser name.\n"
-			" --pass\t\tpassword.\n"
+			" --user <str>\tuser name.\n"
+			" --pass <str>\tpassword.\n"
 			" -c <num>\tnetwork transfer timeout, after successful Connect.\n"
 			" -C <num>\tnetwork Connect timeout (is not supported with tcp client).\n"
 			" -V <file>\tuse specified OpenSSL-style trust store file for publications file\n"
@@ -271,7 +273,7 @@ int main(int argc, char** argv, char **envp) {
 
 	/*Create parameter set*/
 	paramSet_new("{s|sign}*{x|extend}*{p}*{v|verify}*{t}*{r}*{d}*{n}*{h|help}*{o|out}{i}{f}{b}{c}{C}{V}*"
-				 "{W}{S}>{X}>{P}>{F}{H}{T}{E}{inc}*{aggre}{htime}{setsystime}"
+				 "{W}{S}>{X}>{P}>{F}{H}{T}{E}{inc}*{aggre}{htime}{setsystime}{ref}"
 				 "{user}>{pass}>{log}"
 				 ,&set);
 	if(set == NULL) goto cleanup;
@@ -285,6 +287,7 @@ int main(int argc, char** argv, char **envp) {
 	paramSet_addControl(set, "{c}{C}{T}", isIntegerFormatOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{E}", isEmailFormatOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{user}{pass}", isUserPassFormatOK, contentIsOK, NULL);
+	paramSet_addControl(set, "{ref}", formatIsOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{aggre}{htime}{setsystime}", isFlagFormatOK, contentIsOK, NULL);
 
 	/*Define possible tasks*/

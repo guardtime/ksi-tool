@@ -203,6 +203,18 @@ ksitool.exe -v -x %GLOBAL% %VERIFY_FLAGS% -i %INVALID_SIG_CORPSIGLEN%
 echo return %errorlevel%
 echo __________________________________________________________________________
 
+echo 11) Verify with publication - bad publication string.
+ksitool -v -i %TEST_EXTENDED_SIG% --ref AAAAAA-CRRCTN-GALVLG-2SJOTG-A7AUES-LTWU4U-QF75UT-GVM7P3-G3T2SW-XN3ÄJX-Z5SGMS-6BO6Q5
+echo return %errorlevel%
+echo __________________________________________________________________________
+
+echo 12) Verify with publication - extending backwards. 
+ksitool -v -i %TEST_EXTENDED_SIG% --ref AAAAAA-CRRCTN-GALVLG-2SJOTG-A7AUES-LTWU4U-QF75UT-GVM7P3-G3T2SW-XN3MJX-Z5SGMS-6BO6Q5
+echo return %errorlevel%
+echo __________________________________________________________________________
+
+
+
 echo ************************************************************************** 
 echo ********************************* EXTEND ********************************* 
 echo **************************************************************************

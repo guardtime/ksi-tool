@@ -28,19 +28,25 @@ int GT_verifyTask(Task *task){
 	KSI_DataHash *raw_hsh = NULL;
 	KSI_DataHasher *hsr = NULL;
 	KSI_PublicationsFile *publicationsFile = NULL;
+	KSI_PublicationData *publication = NULL;
+	KSI_PublicationRecord *extendTo = NULL;
+	KSI_Signature *tmp_ext = NULL;
+	KSI_Signature *dumpBuf = NULL;
 	char *imprint = NULL;
 	int retval = EXIT_SUCCESS;
 
-	bool n, r, d, t, b, f, F, x;
+	bool n, r, d, t, b, f, F, x, ref;
 	char *inPubFileName = NULL;
 	char *inSigFileName = NULL;
 	char *inDataFileName = NULL;
+	char *refStrn = NULL;
 
 	set = Task_getSet(task);
 	b = paramSet_getStrValueByNameAt(set, "b",0, &inPubFileName);
 	paramSet_getStrValueByNameAt(set, "i",0, &inSigFileName);
 	f = paramSet_getStrValueByNameAt(set, "f",0, &inDataFileName);
 	F = paramSet_getStrValueByNameAt(set, "F",0, &imprint);
+	ref = paramSet_getStrValueByNameAt(set, "ref",0, &refStrn);
 
 	n = paramSet_isSetByName(set, "n");
 	r = paramSet_isSetByName(set, "r");
@@ -65,10 +71,13 @@ int GT_verifyTask(Task *task){
 			}
 			/* Verification of signature*/
 			else {
+				bool isExtended = false;
 				/* Reading signature file for verification. */
 				printf("Reading signature... ");
 				KSI_Signature_fromFile_throws(ksi, inSigFileName, &sig);
 				printf("ok.\n");
+
+				isExtended = isSignatureExtended(sig);
 
 				/* Choosing between online and publications file signature verification */
 				if (Task_getID(task) == verifyTimestampOnline) {
@@ -77,8 +86,53 @@ int GT_verifyTask(Task *task){
 					printf("ok. %s\n",t ? str_measuredTime() : "");
 				}
 				else if(Task_getID(task) == verifyTimestamp) {
-					printf("Verifying signature%s ", b ? " using local publications file... " : "... ");
-					MEASURE_TIME(KSI_Signature_verify_throws(sig, ksi));
+					if (ref && isExtended) {
+						KSI_PublicationRecord *pubRec = NULL;
+						KSI_PublicationData *pubData = NULL;
+						KSI_Integer *timeA = NULL;
+						KSI_Integer *timeB = NULL;
+
+						KSI_Signature_getPublicationRecord_throws(ksi, sig, &pubRec);
+						KSI_PublicationRecord_getPublishedData_throws(ksi, pubRec, &pubData);
+						KSI_PublicationData_fromBase32_throws(ksi, refStrn, &publication);
+						KSI_PublicationData_getTime_throws(ksi, pubData, &timeA);
+						KSI_PublicationData_getTime_throws(ksi, publication, &timeB);
+
+						if (KSI_Integer_equals(timeA, timeB)) {
+							printf("Verifying signature using user publication... ");
+							MEASURE_TIME(KSI_Signature_verifyWithPublication_throws(sig, ksi, publication));
+						} else {
+							KSI_PublicationRecord *pubRec = NULL;
+							KSI_PublicationsFile *pubFile = NULL;
+							printf("Warning: Publication time of publication string is not matching with signatures publication.\n");
+
+							KSI_receivePublicationsFile_throws(ksi, &pubFile);
+							KSI_PublicationsFile_getPublicationDataByPublicationString_throws(ksi, pubFile, refStrn, &pubRec);
+
+							if (pubRec == NULL) {
+								KSI_PublicationRecord_new_throws(ksi, &extendTo);
+								KSI_PublicationRecord_setPublishedData_throws(ksi, extendTo, publication);
+								publication = NULL;
+								KSI_PublicationData_fromBase32_throws(ksi, refStrn, &publication);
+							} else {
+								KSI_PublicationRecord_clone_throws(ksi, pubRec, &extendTo);
+							}
+
+							printf("Extending signature to publication time of publication string... ");
+							KSI_Signature_extend_throws(sig, ksi, extendTo, &tmp_ext);
+							printf("ok.\n");
+
+							printf("Verifying signature using user publication... ");
+							MEASURE_TIME(KSI_Signature_verifyWithPublication_throws(tmp_ext, ksi, publication));
+						}
+
+					} else {
+						if (ref) {
+							printf("Warning: Signature is not extended.");
+						}
+						printf("Verifying signature%s ", b && isExtended ? " using local publications file... " : "... ");
+						MEASURE_TIME(KSI_Signature_verify_throws(sig, ksi));
+					}
 					printf("ok. %s\n",t ? str_measuredTime() : "");
 				}
 
@@ -116,11 +170,11 @@ int GT_verifyTask(Task *task){
 	if (n || r || d) printf("\n");
 
 	if ((n || r || d) &&  Task_getID(task) == verifyTimestamp || Task_getID(task) == verifyTimestampOnline){
-		if (n) printSignerIdentity(sig);
-		if (r) printSignaturePublicationReference(sig);
+		if (n) printSignerIdentity(tmp_ext != NULL ? tmp_ext : sig);
+		if (r) printSignaturePublicationReference(tmp_ext != NULL ? tmp_ext : sig);
 		if (d) {
-			printSignatureVerificationInfo(sig);
-			printSignatureSigningTime(sig);
+			printSignatureVerificationInfo(tmp_ext != NULL ? tmp_ext : sig);
+			printSignatureSigningTime(tmp_ext != NULL ? tmp_ext : sig);
 		}
 	}
 
@@ -133,6 +187,9 @@ int GT_verifyTask(Task *task){
 	KSI_DataHasher_free(hsr);
 	KSI_DataHash_free(raw_hsh);
 	KSI_DataHash_free(file_hsh);
+	KSI_PublicationData_free(publication);
+	KSI_PublicationRecord_free(extendTo);
+	KSI_Signature_free(tmp_ext);
 	KSI_PublicationsFile_free(publicationsFile);
 	closeTask(ksi);
 
