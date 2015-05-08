@@ -141,6 +141,10 @@ Input signature token file to be extended / verified.
 .BI \-o\  file
 Output file name to store signature token or publication file.
 .TP
+.BI \--ref\  str
+Publication string as base 32 encoded string. Use with 
+.BR -v \. 
+.TP
 .BI \-T\  int
 Specific publication time to extend to as number of seconds since 1970-01-01 00:00:00 UTC. Use with 
 .B -x
@@ -246,11 +250,11 @@ Verification error. Unable to verify signature or document / hash.
 .br
 .TP
 .B 7
-Extending error. Unable to extend signature. Most frequently it is caused because signature has no suitable publication yet. 
+Extending error. Error in extending a signature or error returned by extender.
 .br
 .TP
 .B 8
-Aggregation error. Unable to generate signature.
+Aggregation error. Error returned by aggregator.
 .br	
 .TP
 .B 9
@@ -430,8 +434,20 @@ call:
 .I ext.ksig 
 .RE
 
-
 .B 9
+To verify an extended signature
+.I ext.ksig
+against publication from printed media call:
+
+.RS
+.B ksitool -v -i
+.I ext.ksig
+.B --ref
+.I AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4 
+.RE
+
+
+.B 10
 To download a publication file
 .I pubfile
 call:
@@ -441,7 +457,7 @@ call:
 .I pubfile
 .RE
 
-.B 10
+.B 11
 To verify publication file
 .I pubfile
 call:
@@ -461,9 +477,10 @@ To define default URLs system variables must be defined. For aggregator and exte
 and 
 .B KSI_EXTENDER
 with content
-.IR 'url=<url> pass=<pass> user=<user>' \.
-.R .
-Default
+.I 'url=<url> pass=<pass>
+.IR user=<user>' \.
+.R \.
+Only url part is mandatory thus user and pass can be left undefined. Default
 .I <pass>
 and
 .I <user>
