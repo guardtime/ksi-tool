@@ -65,5 +65,5 @@ AC_CHECK_FUNCS([strchr])
 
 
 
-AC_CONFIG_FILES([GNUmakefile src/GNUmakefile redhat/ksitool.spec])
+AC_CONFIG_FILES([GNUmakefile src/GNUmakefile packaging/redhat/ksitool.spec])
 AC_OUTPUT

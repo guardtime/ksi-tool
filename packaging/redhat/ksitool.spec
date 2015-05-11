@@ -18,7 +18,7 @@
 #
 
 
-%define	name	@PACKAGE@
+%define	name	ksitool
 
 %define upstream_release 0
 
