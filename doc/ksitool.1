@@ -3,14 +3,14 @@
 
 
 .SH NAME
-ksitool - Guardtime command-line tool to access KSI service.
-
+.B ksitool
+- Guardtime command-line tool to access KSI service.
 
 
 .SH SYNOPSIS
 Sign data file or hash:
 .br
-.B -s -f
+.B ksitool -s -f
 .I file
 |
 .B -F
@@ -24,7 +24,7 @@ Sign data file or hash:
 
 Extend signature:
 .br
-.B -x -i
+.B ksitool -x -i
 .I sig.ksig
 .B -o
 .I ext.ksig
@@ -37,7 +37,7 @@ Extend signature:
 
 Download publication file:
 .br
-.B -p -o
+.B ksitool -p -o
 .I pubfile
 [
 .I more options
@@ -46,7 +46,7 @@ Download publication file:
 
 Create publication string:
 .br
-.B -p -T
+.B ksitool -p -T
 [
 .I more options
 ]
@@ -54,7 +54,7 @@ Create publication string:
 
 Verify signature:
 .br
-.B -v -i
+.B ksitool -v -i
 .I sig.ksig
 .B -f
 .I file
@@ -71,10 +71,9 @@ Verify signature:
 ]
 .br
 
-
 Verify publication file:
 .br
-.B -v -b
+.B ksitool -v -b
 .I pubfile
 [
 .I more options
@@ -83,12 +82,12 @@ Verify publication file:
 
 Display current aggregation root hash value and time:
 .br
-.B --aggre --htime
+.B ksitool --aggre --htime
 .br
 
 Set system time from current aggregation:
 .br
-.B --aggre --setsystime
+.B ksitool --aggre --setsystime
 .br
 
 
@@ -97,55 +96,54 @@ Set system time from current aggregation:
 This is a general signing and signature verification tool for Guardtime Keyless Signature services.
 
 
-
 .SH OPTIONS
 
 .TP
 .B Tasks:
 .TP
-.B \--aggre
+.B --aggre
 Use for getting root hash and time from aggregator.
 .TP
-.B \-p
+.B -p
 Use for downloading publication file and creating publication string.
 .TP
-.B \-s, --sign
+.B -s, --sign
 Use for signing document or hash.
 .TP
-.B \-v, --verify
+.B -v, --verify
 Use for signature and publication file verification.
 .TP
-.B \-x, --extend
+.B -x, --extend
 Use for online verification or signature extending.
 
 .TP
 .B Input/output:
 .TP
-.BI \-b\  file
+.BI -b\  file
 Use specified publication file.
 .TP
-.BI \-f\  file
+.BI -f\  file
 File to be signed / verified.
 .TP
-.BI \-F\  hash
+.BI -F\  hash
 Data hash to be signed / verified. Hash format: <alg>:<hash in hex>.
 .TP
-.BI \-H\  alg
+.BI -H\  alg
 Hash algorithm used to hash the file to be signed. Use when signing file (
 .B -s -f
 ).
 .TP
-.BI \-i\  file
+.BI -i\  file
 Input signature token file to be extended / verified.
 .TP
-.BI \-o\  file
+.BI -o\  file
 Output file name to store signature token or publication file.
 .TP
-.BI \--ref\  str
+.BI --ref\  str
 Publication string as base 32 encoded string. Use with 
 .BR -v \. 
 .TP
-.BI \-T\  int
+.BI -T\  int
 Specific publication time to extend to as number of seconds since 1970-01-01 00:00:00 UTC. Use with 
 .B -x
 and
@@ -158,7 +156,7 @@ and
 .B -d
 Dump detailed information.
 .TP
-.BI \--log\  file
+.BI --log\  file
 Dump KSI log into file.
 .TP
 .B -n
@@ -171,56 +169,50 @@ Print publication References (use with -vx).
 Print service Timing in ms.
 .br
 
-
 .TP
 .B Configuration:
-
 .TP
-.BI \-c\  int
+.BI -c\  int
 Network transfer timeout, after successful Connect.
 .TP
-.BI \-C\  int
+.BI -C\  int
 Network Connect timeout (is not supported with tcp client).
 .TP
-.BI \-E\  email
+.BI -E\  email
 Use specified publication certificate email.
 .TP
-.BI \--inc\  file
+.BI --inc\  file
 Use configuration file containing command-line parameters. Parameter must be written line by line.
 .TP
-.BI \--pass\  str
+.BI --pass\  str
 Password for authentication.
 .TP
-.BI \-P\  url
+.BI -P\  url
 Specify publication file URL.
 .TP
-.BI \-S\  url
+.BI -S\  url
 Specify Signing service URL.
 .TP
-.BI \--user\  str
+.BI --user\  str
 User name for authentication.
 .TP
-.BI \-V\  file
+.BI -V\  file
 Use specified OpenSSL-style trust store file for publication file verification. Can have multiple values (-V <file 1> -V <file 2>).
 .TP
-.BI \-W\  dir
+.BI -W\  dir
 Use specified OpenSSL-style trust store directory for publication file verification.
 .TP
-.BI \-X\  url
+.BI -X\  url
 Specify verification (eXtending) service URL.
-.TP
-
-
+.br
 
 .TP
 .B Help:
 .TP
 .B -h, --help
 print ksitool help.
+.br			
 
-			
-
-			
 
 .SH EXIT STATUS
 
@@ -280,7 +272,6 @@ System out of memory.
 .B 14
 Authentication error. Aggregation or extending service is not accepting user identification parameters.
 .br
-
 
 
 .SH EXAMPLES
@@ -347,7 +338,7 @@ call:
 .B ksitool -s -f 
 .I file
 .B -o
--I sig.ksig
+.I sig.ksig
 .RE
 
 .B 3
@@ -374,7 +365,7 @@ call:
 .RS
 .B ksitool -s -f 
 .I file 
-.B -F
+.B -H
 .I SHA1
 .B -o
 .I sig.ksig 
@@ -399,7 +390,6 @@ To verify a signature
 .I sig.ksig
 and hash it belongs to call:
 
-
 .RS
 .B ksitool -v -i
 .I sig.ksig
@@ -407,18 +397,15 @@ and hash it belongs to call:
 .I SHA-256:c8ef6d57ac28d1b4e95a513959f5fcdd0688380a43d601a5ace1d2e96884690a
 .RE
 
-
 .B 7
 To verify a signature
 .I sig.ksig
 using online verification service call:
 
-
 .RS
 .B ksitool -vx -i
 .I sig.ksig
 .RE
-
 
 .B 8
 To extend a signature
@@ -445,7 +432,6 @@ against publication from printed media call:
 .B --ref
 .I AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4 
 .RE
-
 
 .B 10
 To download a publication file
