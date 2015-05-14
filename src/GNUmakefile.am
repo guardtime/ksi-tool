@@ -19,7 +19,9 @@
 
 bin_PROGRAMS = ksitool
 man_MANS = ../doc/ksitool.1
-EXTRA_DIST = $(man_MANS)
+dist_doc_DATA = ../license.txt
+
+EXTRA_DIST = $(man_MANS) $(dist_doc_DATA) 
 ksitool_SOURCES = \
 	ksitool.c	\
 	gt_cmd_common.h \
