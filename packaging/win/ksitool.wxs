@@ -27,10 +27,13 @@
                         <Component Id="ApplicationFiles" Guid="0492920C-5D5E-42B4-AA82-38F60BC9AB52" Win64="$(var.isWin64)">
                             <File 
                                 Id="ApplicationFile1"
-                                Source="..\$(var.Ksitool)"
+                                Source="..\..\$(var.Ksitool)"
                                 ProcessorArchitecture="$(var.platform)">
                             </File>
-                            
+                            <File 
+                                Id="doc_pdf"
+                                Source="..\..\doc\ksitool.pdf">
+                            </File>                          
                             <Environment Id="KSITOOL_PATH" Name="KSITOOL_PATH" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="no" />
                             <Environment Id="Path" Name="Path" Value=";%KSITOOL_PATH%" Permanent="no" Part="last" Action="set" System="no" />
                         </Component>

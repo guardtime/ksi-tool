@@ -136,10 +136,10 @@ installer:$(BIN_DIR) $(OBJ_DIR) $(BIN_DIR)\$(TOOL_NAME).exe
 !IF [candle.exe > nul] != 0
 !MESSAGE Please install WiX to build installer.
 !ELSE
-	cd installers
-	candle.exe ksitool.wxs -o ..\obj\ksitool.wixobj -dVersion=$(VER) -dName=$(TOOL_NAME) -dKsitool=$(BIN_DIR)\$(TOOL_NAME).exe -darch=$(INSTALL_MACHINE)
-	light.exe ..\obj\ksitool.wixobj -o ..\bin\ksitool -pdbout ..\bin\ksitool.wixpdb -cultures:en-us -ext WixUIExtension
-	cd ..
+	cd packaging\win
+	candle.exe ksitool.wxs -o ..\..\obj\ksitool.wixobj -dVersion=$(VER) -dName=$(TOOL_NAME) -dKsitool=$(BIN_DIR)\$(TOOL_NAME).exe -darch=$(INSTALL_MACHINE)
+	light.exe ..\..\obj\ksitool.wixobj -o ..\..\bin\ksitool -pdbout ..\..\bin\ksitool.wixpdb -cultures:en-us -ext WixUIExtension
+	cd ..\..
 !ENDIF
 
 !ENDIF
