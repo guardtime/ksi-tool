@@ -205,4 +205,12 @@ echo ********** Verify with user publication - needs extending. No publication. 
 ksitool -vdr -i %TEST_EXTENDED_SIG% --ref AAAAAA-CUBJQL-AAKVFD-VNJIK5-7DTJ6T-YYCOGP-N7J3RT-CRE5DU-WBB6AE-LANHHH-3CFEM4-7FM65J
 echo %errorlevel%
 
+echo ********** Verify with user publication - signature not extended. Needs extending.********** 
+ksitool -vdr -i %TEST_OLD_SIG% --ref AAAAAA-CUBJQL-AAKVFD-VNJIK5-7DTJ6T-YYCOGP-N7J3RT-CRE5DU-WBB6AE-LANHHH-3CFEM4-7FM65J
+echo %errorlevel%
+
+echo ********** Verify with user publication - signature not extended. Needs extending. No Publication.********** 
+ksitool -vdr -i %TEST_OLD_SIG% --ref AAAAAA-CUBJQL-AAKVFD-VNJIK5-7DTJ6T-YYCOGP-N7J3RT-CRE5DU-WBB6AE-LANHHH-3CFEM4-7FM65J
+echo %errorlevel%
+
 pause
