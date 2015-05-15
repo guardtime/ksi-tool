@@ -37,3 +37,4 @@ autom4te.cache
 build-aux
 stamp-h1
 
+/src/.libs/
