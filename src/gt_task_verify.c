@@ -86,25 +86,31 @@ int GT_verifyTask(Task *task){
 					printf("ok. %s\n",t ? str_measuredTime() : "");
 				}
 				else if(Task_getID(task) == verifyTimestamp) {
-					if (ref && isExtended) {
+					if (ref) {
 						KSI_PublicationRecord *pubRec = NULL;
 						KSI_PublicationData *pubData = NULL;
 						KSI_Integer *timeA = NULL;
 						KSI_Integer *timeB = NULL;
 
-						KSI_Signature_getPublicationRecord_throws(ksi, sig, &pubRec);
-						KSI_PublicationRecord_getPublishedData_throws(ksi, pubRec, &pubData);
 						KSI_PublicationData_fromBase32_throws(ksi, refStrn, &publication);
-						KSI_PublicationData_getTime_throws(ksi, pubData, &timeA);
 						KSI_PublicationData_getTime_throws(ksi, publication, &timeB);
 
-						if (KSI_Integer_equals(timeA, timeB)) {
+						if (isExtended) {
+							KSI_Signature_getPublicationRecord_throws(ksi, sig, &pubRec);
+							KSI_PublicationRecord_getPublishedData_throws(ksi, pubRec, &pubData);
+							KSI_PublicationData_getTime_throws(ksi, pubData, &timeA);
+						}
+
+						if (isExtended && KSI_Integer_equals(timeA, timeB)) {
 							printf("Verifying signature using user publication... ");
 							MEASURE_TIME(KSI_Signature_verifyWithPublication_throws(sig, ksi, publication));
 						} else {
 							KSI_PublicationRecord *pubRec = NULL;
 							KSI_PublicationsFile *pubFile = NULL;
-							printf("Warning: Publication time of publication string is not matching with signatures publication.\n");
+							if (isExtended)
+								printf("Warning: Publication time of publication string is not matching with signatures publication.\n");
+							else
+								printf("Warning: Signature is not extended.\n");
 
 							KSI_receivePublicationsFile_throws(ksi, &pubFile);
 							KSI_PublicationsFile_getPublicationDataByPublicationString_throws(ksi, pubFile, refStrn, &pubRec);
@@ -128,7 +134,7 @@ int GT_verifyTask(Task *task){
 
 					} else {
 						if (ref) {
-							printf("Warning: Signature is not extended.");
+							printf("Warning: Signature is not extended.\n");
 						}
 						printf("Verifying signature%s ", b && isExtended ? " using local publications file... " : "... ");
 						MEASURE_TIME(KSI_Signature_verify_throws(sig, ksi));
