@@ -33,6 +33,7 @@ typedef enum contentStatus {
 	PARAM_INVALID,
 	HASH_ALG_INVALID_NAME,
 	HASH_IMPRINT_INVALID_LEN,
+	INTEGER_TOO_LARGE,
 	FILE_ACCESS_DENIED,
 	FILE_DOES_NOT_EXIST,
 	FILE_INVALID_PATH,
@@ -64,6 +65,7 @@ ContentStatus isInputFileContOK(const char* path);
 ContentStatus isOutputFileContOK(const char* path);
 ContentStatus isHashAlgContOK(const char *alg);
 ContentStatus isImprintContOK(const char *imprint);
+ContentStatus isIntegerContOk(const char* integer);
 ContentStatus contentIsOK(const char *alg);
 
 const char *getFormatErrorString(FormatStatus res);

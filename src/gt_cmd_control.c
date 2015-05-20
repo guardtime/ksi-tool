@@ -231,6 +231,31 @@ cleanup:
 	return status;
 }
 
+ContentStatus isIntegerContOk(const char* integer) {
+	int i;
+	size_t len;
+	size_t int_max_len;
+	char tmp[32];
+
+
+	itoa(INT_MAX, tmp, 10);
+	len  = strlen(integer);
+	int_max_len = strlen(tmp);
+
+	if (len > int_max_len) {
+		return INTEGER_TOO_LARGE;
+	} else if (len == int_max_len) {
+
+		for (i = 0; i < int_max_len; i++) {
+			if (tmp[i] < integer[i])
+				return INTEGER_TOO_LARGE;
+			else if (tmp[i] > integer[i])
+				break;
+		}
+	}
+	return PARAM_OK;
+}
+
 ContentStatus contentIsOK(const char *alg){
 	return PARAM_OK;
 }
@@ -274,6 +299,8 @@ const char *getParameterContentErrorString(ContentStatus res){
 	case FILE_DOES_NOT_EXIST: return "(File does not exist)";
 		break;
 	case FILE_INVALID_PATH: return "(Invalid path)";
+		break;
+	case INTEGER_TOO_LARGE: return "(Integer value is too large)";
 		break;
 	}
 

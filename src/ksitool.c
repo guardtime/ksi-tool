@@ -284,7 +284,7 @@ int main(int argc, char** argv, char **envp) {
 	paramSet_addControl(set, "{F}", isImprintFormatOK, isImprintContOK, NULL);
 	paramSet_addControl(set, "{H}", isHashAlgFormatOK, isHashAlgContOK, NULL);
 	paramSet_addControl(set, "{S}{X}{P}", isURLFormatOK, contentIsOK, convert_repairUrl);
-	paramSet_addControl(set, "{c}{C}{T}", isIntegerFormatOK, contentIsOK, NULL);
+	paramSet_addControl(set, "{c}{C}{T}", isIntegerFormatOK, isIntegerContOk, NULL);
 	paramSet_addControl(set, "{E}", isEmailFormatOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{user}{pass}", isUserPassFormatOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{ref}", formatIsOK, contentIsOK, NULL);
