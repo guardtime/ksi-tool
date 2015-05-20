@@ -294,7 +294,7 @@ int main(int argc, char** argv, char **envp) {
 	/*						ID							DESC							MAN		IGNORE	OPTIONAL		FORBIDDEN					NEW OBJ*/
 	TaskDefinition_new(signDataFile,			"Sign data file",				"s,f,o,S",		"b,r",	"H,n,d,t",		"x,p,v,aggre,F,i,T",		&taskDefArray[0]);
 	TaskDefinition_new(signHash,				"Sign hash",					"s,F,o,S",		"b,r",	"n,d,t",		"x,p,v,aggre,f,i,T,H",		&taskDefArray[1]);
-	TaskDefinition_new(extendTimestamp,			"Extend signature",				"x,i,o,X",		"b",	"T,n,d,r,t",	"s,p,v,aggre,f,F,H",		&taskDefArray[2]);
+	TaskDefinition_new(extendTimestamp,			"Extend signature",				"x,i,o,X",		"",		"T,n,d,r,t",	"s,p,v,aggre,f,F,H",		&taskDefArray[2]);
 	TaskDefinition_new(downloadPublicationsFile,"Download publication file",	"p,o",			"n",	"d,r,t",		"s,x,v,aggre,f,F,T,i,H",	&taskDefArray[3]);
 	TaskDefinition_new(createPublicationString, "Create publication string",	"p,T,X",		"n,r",	"d,t",			"s,x,v,aggre,f,F,o,i,H",	&taskDefArray[4]);
 	TaskDefinition_new(verifyTimestamp,			"Verify signature",				"v,i",			"",		"f,F,n,d,r,t",	"s,p,x,aggre,H",			&taskDefArray[5]);
@@ -323,7 +323,6 @@ int main(int argc, char** argv, char **envp) {
 		retval = EXIT_INVALID_CL_PARAMETERS;
 		goto cleanup;
 	}
-
 
 	/*Extract task */
 	if (Task_analyse(taskDefArray, 10, set)){
