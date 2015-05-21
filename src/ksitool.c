@@ -218,6 +218,7 @@ static void GT_pritHelp(void){
 			" -n\t\tprint signer Name (identity).\n"
 			" -r\t\tprint publication References (use with -vx).\n"
 			" -d\t\tdump detailed information.\n"
+			" --tlv\t\tdump signature's TLV structure.\n"
 			" --log <file>\tdump KSI log into file.\n"
 
 			"\nConfiguration:\n"
@@ -274,7 +275,7 @@ int main(int argc, char** argv, char **envp) {
 	/*Create parameter set*/
 	paramSet_new("{s|sign}*{x|extend}*{p}*{v|verify}*{t}*{r}*{d}*{n}*{h|help}*{o|out}{i}{f}{b}{c}{C}{V}*"
 				 "{W}{S}>{X}>{P}>{F}{H}{T}{E}{inc}*{aggre}{htime}{setsystime}{ref}"
-				 "{user}>{pass}>{log}"
+				 "{user}>{pass}>{log}{tlv}"
 				 ,&set);
 	if(set == NULL) goto cleanup;
 
@@ -288,7 +289,7 @@ int main(int argc, char** argv, char **envp) {
 	paramSet_addControl(set, "{E}", isEmailFormatOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{user}{pass}", isUserPassFormatOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{ref}", formatIsOK, contentIsOK, NULL);
-	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{aggre}{htime}{setsystime}", isFlagFormatOK, contentIsOK, NULL);
+	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{aggre}{htime}{setsystime}{tlv}", isFlagFormatOK, contentIsOK, NULL);
 
 	/*Define possible tasks*/
 	/*						ID							DESC							MAN		IGNORE	OPTIONAL		FORBIDDEN					NEW OBJ*/

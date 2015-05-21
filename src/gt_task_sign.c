@@ -31,7 +31,7 @@ int GT_signTask(Task *task) {
 	KSI_Signature *sign = NULL;
 	int retval = EXIT_SUCCESS;
 
-	bool H, t, n, d;
+	bool H, t, n, d, tlv;
 	char *hashAlgName_H = NULL;
 	char *inDataFileName = NULL;
 	char *outSigFileName = NULL;
@@ -45,6 +45,7 @@ int GT_signTask(Task *task) {
 	n = paramSet_isSetByName(set, "n");
 	t = paramSet_isSetByName(set, "t");
 	d = paramSet_isSetByName(set, "d");
+	tlv = paramSet_isSetByName(set, "tlv");
 
 	resetExceptionHandler();
 	try
@@ -87,9 +88,10 @@ int GT_signTask(Task *task) {
 		}
 	end_try
 
-	if(n || d) printf("\n");
+	if(n || d || tlv) printf("\n");
 	if (n) printSignerIdentity(sign);
 	if (d) printSignatureSigningTime(sign);
+	if (tlv) printSignatureStructure(ksi, sign);
 
 	KSI_Signature_free(sign);
 	KSI_DataHash_free(hash);

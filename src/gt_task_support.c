@@ -29,6 +29,8 @@
 #include "try-catch.h"
 #include "param_set.h"
 #include <ctype.h>
+#include <ksi/tlv.h>
+#include <ksi/tlv_template.h>
 
 #ifdef _WIN32
 #	include <windows.h>
@@ -474,6 +476,35 @@ cleanup:
 
 	return;
 	}
+
+KSI_IMPORT_TLV_TEMPLATE(KSI_Signature);
+
+void printSignatureStructure(KSI_CTX *ksi, const KSI_Signature *sig) {
+	int res;
+	KSI_TLV *baseTlv = NULL;
+	char *tmp = NULL;
+	unsigned tmp_len;
+	char buf[8192];
+
+	res = KSI_Signature_serialize((KSI_Signature*)sig, &tmp, &tmp_len);
+	if (res != KSI_OK) goto cleanup;
+
+	res = KSI_TLV_new(ksi, KSI_TLV_PAYLOAD_TLV, 0x800, 0, 0, &baseTlv);
+	if (res != KSI_OK) goto cleanup;
+
+	res = KSI_TlvTemplate_construct(ksi, baseTlv, sig, KSI_Signature_template);
+	if (res != KSI_OK) goto cleanup;
+
+	if (KSI_TLV_toString(baseTlv, buf, sizeof(buf)) == NULL) return;
+	printf("Signature's TLV structure:\n%s\n", buf);
+
+cleanup:
+
+	KSI_free(tmp);
+	KSI_TLV_free(baseTlv);
+
+	return;
+}
 
 // helpers for hex decoding
 static int x(char c){

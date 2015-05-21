@@ -35,7 +35,7 @@ int GT_verifyTask(Task *task){
 	char *imprint = NULL;
 	int retval = EXIT_SUCCESS;
 
-	bool n, r, d, t, b, f, F, x, ref;
+	bool n, r, d, t, b, f, F, x, ref, tlv;
 	char *inPubFileName = NULL;
 	char *inSigFileName = NULL;
 	char *inDataFileName = NULL;
@@ -53,6 +53,7 @@ int GT_verifyTask(Task *task){
 	d = paramSet_isSetByName(set, "d");
 	t = paramSet_isSetByName(set, "t");
 	x = paramSet_isSetByName(set, "x");
+	tlv = paramSet_isSetByName(set, "tlv");
 
 	resetExceptionHandler();
 	try
@@ -173,16 +174,20 @@ int GT_verifyTask(Task *task){
 		}
 	end_try
 
-	if (n || r || d) printf("\n");
+	if (n || r || d || tlv) printf("\n");
 
-	if ((n || r || d) &&  Task_getID(task) == verifyTimestamp || Task_getID(task) == verifyTimestampOnline){
+	if ((n || r || d || tlv) &&  Task_getID(task) == verifyTimestamp || Task_getID(task) == verifyTimestampOnline){
 		if (n) printSignerIdentity(tmp_ext != NULL ? tmp_ext : sig);
 		if (r) printSignaturePublicationReference(tmp_ext != NULL ? tmp_ext : sig);
 		if (d) {
 			printSignatureVerificationInfo(tmp_ext != NULL ? tmp_ext : sig);
 			printSignatureSigningTime(tmp_ext != NULL ? tmp_ext : sig);
 		}
+		if (tlv) {
+			printSignatureStructure(ksi, tmp_ext != NULL ? tmp_ext : sig);
+		}
 	}
+
 
 	if(d && Task_getID(task) == verifyPublicationsFile){
 		printPublicationsFileReferences(publicationsFile);

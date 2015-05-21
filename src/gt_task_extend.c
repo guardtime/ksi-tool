@@ -32,7 +32,7 @@ int GT_extendTask(Task *task) {
 
 	KSI_Integer *pubTime = NULL;
 
-	bool T,t, n, r, d;
+	bool T, t, n, r, d, tlv;
 	char *inSigFileName = NULL;
 	char *outSigFileName = NULL;
 	int publicationTime = 0;
@@ -45,6 +45,7 @@ int GT_extendTask(Task *task) {
 	t = paramSet_isSetByName(set, "t");
 	r = paramSet_isSetByName(set, "r");
 	d = paramSet_isSetByName(set, "d");
+	tlv = paramSet_isSetByName(set, "tlv");
 
 	resetExceptionHandler();
 	try
@@ -90,16 +91,18 @@ int GT_extendTask(Task *task) {
 		}
 	end_try
 
-	if(n || r || d) printf("\n");
+	if(n || r || d || tlv) printf("\n");
 	if(retval != EXIT_SUCCESS && sig != NULL && d){
 		printf("Old signature:\n");
 		printSignatureVerificationInfo(sig);
+		printSignatureStructure(ksi, sig);
 	}
 	if(ext != NULL){
-		if(n || d || r) printf("Extended signature:\n");
+		if(n || d || r || tlv) printf("Extended signature:\n");
 		if (d) printSignatureVerificationInfo(ext);
 		if (n) printSignerIdentity(ext);
 		if (r) printSignaturePublicationReference(ext);
+		if (tlv) printSignatureStructure(ksi, ext);
 	}
 
 	KSI_Signature_free(sig);
