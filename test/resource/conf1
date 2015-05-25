@@ -1,0 +1,4 @@
+--inc ../test/resource/conf2
+--inc ../test/resource/conf1
+--inc ../test/resource/conf3
+--IGNORE_ME_C1

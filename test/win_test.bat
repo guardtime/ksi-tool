@@ -39,13 +39,13 @@ SET VER_SERV_IP=httP://ksigw.test.guardtime.com:8010/gt-extendingservice
 SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -P %PUB_SERV_IP% -C 5 -c 5 --user anon --pass anon --log KSI_LOGI.txt
 
 REM input files
-SET TEST_FILE=../test/testFile
-SET TEST_OLD_SIG=../test/ok-sig-2014-04-30.1.ksig
-SET SH256_DATA_FILE=../test/data_sh256.txt
-SET INVALID_PUBFILE=../test/nok_pubfile
-SET OLD_TESTFILE=../test/old_testData-2015-01
-SET LEGACY_SIGNATURE=../test/old_testData-2015-01.gtts
-SET LEGACY_PRE_EXTENDED=../test/old_testdata-extended.2015-01.gtts
+SET TEST_FILE=../test/resource/testFile
+SET TEST_OLD_SIG=../test/resource/ok-sig-2014-04-30.1.ksig
+SET SH256_DATA_FILE=../test/resource/data_sh256.txt
+SET INVALID_PUBFILE=../test/resource/nok_pubfile
+SET OLD_TESTFILE=../test/resource/old_testData-2015-01
+SET LEGACY_SIGNATURE=../test/resource/old_testData-2015-01.gtts
+SET LEGACY_PRE_EXTENDED=../test/resource/old_testdata-extended.2015-01.gtts
 
 REM input hash
 SET SH1_HASH=bf9661defa3daecacfde5bde0214c4a439351d4d
@@ -167,7 +167,7 @@ ksitool.exe -v %GLOBAL% %VERIFY_FLAGS% -i %RIPMED160_file%
 echo %errorlevel%
 
 echo "****************** Test include. Must show ignored parameters and fail ******************" 
-ksitool.exe --inc ../test/conf1 --inc ../test/conf3
+ksitool.exe --inc ../test/resource/conf1 --inc ../test/resource/conf3
 echo %errorlevel%
 
 echo ****************** Verify legacy signature and file ******************
