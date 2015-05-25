@@ -22,6 +22,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #ifdef _WIN32
 #	include <io.h>
@@ -237,8 +238,7 @@ ContentStatus isIntegerContOk(const char* integer) {
 	size_t int_max_len;
 	char tmp[32];
 
-
-	itoa(INT_MAX, tmp, 10);
+	sprintf(tmp, "%d", INT_MAX);
 	len  = strlen(integer);
 	int_max_len = strlen(tmp);
 

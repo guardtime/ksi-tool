@@ -482,7 +482,7 @@ KSI_IMPORT_TLV_TEMPLATE(KSI_Signature);
 void printSignatureStructure(KSI_CTX *ksi, const KSI_Signature *sig) {
 	int res;
 	KSI_TLV *baseTlv = NULL;
-	char *tmp = NULL;
+	unsigned char *tmp = NULL;
 	unsigned tmp_len;
 	char buf[8192];
 
