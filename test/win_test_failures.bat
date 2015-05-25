@@ -40,13 +40,13 @@ SET VER_SERV_IP=http://192.168.100.36:8081/
 SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -P %PUB_SERV_IP% -C 5 -c 5
 
 REM input files
-SET TEST_FILE=../test/testFile
-SET TEST_OLD_SIG=../test/ok-sig-2014-04-30.1.ksig
-SET SH256_DATA_FILE=../test/data_sh256.txt
-SET INVALID_PUBFILE=../test/nok_pubfile
-SET INVALID_SIG_CERTID=../test/invalid_cert_id.ksig
-SET INVALID_SIG_CORPSIG=../test/invalid_signature_value.ksig
-SET INVALID_SIG_CORPSIGLEN=../test/invalid_signature_len.ksig
+SET TEST_FILE=../test/resource/testFile
+SET TEST_OLD_SIG=../test/resource/ok-sig-2014-04-30.1.ksig
+SET SH256_DATA_FILE=../test/resource/data_sh256.txt
+SET INVALID_PUBFILE=../test/resource/nok_pubfile
+SET INVALID_SIG_CERTID=../test/resource/invalid_cert_id.ksig
+SET INVALID_SIG_CORPSIG=../test/resource/invalid_signature_value.ksig
+SET INVALID_SIG_CORPSIGLEN=../test/resource/invalid_signature_len.ksig
 
 REM input hash
 SET SH1_HASH=bf9661defa3daecacfde5bde0214c4a439351d4d
