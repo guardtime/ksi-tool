@@ -47,7 +47,7 @@ SHA512_HASH="cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d
 
 echo \# Running tests on `uname -n` at `date '+%F %T %Z'`, start time: ${DATE}
 
-plan_tests 58
+plan_tests 62
 
 
 diag "######    Publications file download"
@@ -133,7 +133,7 @@ okx src/ksitool -x -i ${tlv_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig -
 diag "######    Extend old signature to publication time [-T] "
 okx src/ksitool -x -i ${tlv_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig -T 1421280000 #  (GMT): Thu, 15 Jan 2015 00:00:00 GMT
 
-diag "######    Extend old signature to current time [-T] "
+diag "######    Extend old signature to nearest publication "
 okx src/ksitool -x -i ${tlv_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig
 diag "------------------------------------------------------------------------------";
 
@@ -147,6 +147,20 @@ okx src/ksitool -v -b ${tmp}/pub.bin -i ${tmp}/ext.ksig -V $url_c
 diag "######    Verify extended signature online"
 okx src/ksitool -v -x -i ${tmp}/ext.ksig -V $url_c --log ${tmp}/out.log
 like "`[ -f ${tmp}/out.log ] && echo 'Log file exists' || echo 'Log file does not exist' 2>&1`" "Log file exists"
+
+diag "######    Verify extended signature with pubstring. Bubstr points to exact publication."
+okx src/ksitool -v -i ${tmp}/ext.ksig -V $url_c --ref AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
+
+diag "######    Verify extended signature with pubstring. Bubstr points to newer publication."
+okx src/ksitool -v -i ${tmp}/ext.ksig -V $url_c --ref AAAAAA-CUM2LY-AANFLH-HIQ7FW-TGTOAL-VDVGBO-AN3SQO-5FOO7L-CYGQG6-FNMOBG-QGSTAG-K3VY6C
+
+diag "######    Verify extended signature with pubstring. Bubstr points between publications."
+okx src/ksitool -v -i ${tmp}/ext.ksig -V $url_c --ref AAAAAA-CUBJQL-AAKVFD-VNJIK5-7DTJ6T-YYCOGP-N7J3RT-CRE5DU-WBB6AE-LANHHH-3CFEM4-7FM65J
+
+diag "######    Verify signature with pubstring. Bubstr points to exact publication."
+okx src/ksitool -v -i ${tlv_dir}/ok-sig-2014-08-01.1.ksig -V $url_c --ref AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
+
+
 diag "------------------------------------------------------------------------------";
 
 
@@ -169,10 +183,10 @@ diag "--------------------------------------------------------------------------
 like "`src/ksitool -x -i ${SCRIPT_DIR}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Unable to read signature from file." "Error extend not suitable format"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -x -i ${tlv_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig -T 1311120674 2>&1`" "no suitable policy" "Error extend before calendar [-T]"
+like "`src/ksitool -x -i ${tlv_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig -T 1311120674 2>&1`" "Aggregation time may not be greater than the publication time" "Error extend before calendar [-T]"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -x -i ${tlv_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig -T 1458914880 2>&1`" "no suitable policy" "Error extend to the future [-T]"
+like "`src/ksitool -x -i ${tlv_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig -T 1458914880 2>&1`" "The request asked for hash values newer than the current real time" "Error extend to the future [-T]"
 diag "------------------------------------------------------------------------------";
 
 like "`src/ksitool -x -i ${SCRIPT_DIR}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Unable to read signature from file." "Error verify not suitable format"
