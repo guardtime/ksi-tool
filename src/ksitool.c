@@ -197,9 +197,11 @@ static void GT_pritHelp(void){
 			"\t\t-v -b -i verify signature using specific publications file.\n"
 			"\t\t-v --ref -i verify signature using publication string.\n"
 			"\t\t-v -b verify publication file.\n"
-			" --aggre	use aggregator for (-n -t):\n"
-			"\t\t--aggre --htime display current aggregation root hash value and time.\n"
-			"\t\t--aggre --setsystime set system time from current aggregation.\n"
+/*TODO: uncomment if implemented*/
+//			" --aggre	use aggregator for (-n -t):\n"
+
+//			"\t\t--aggre --htime display current aggregation root hash value and time.\n"
+//			"\t\t--aggre --setsystime set system time from current aggregation.\n"
 
 
 			"\nInput/output:\n"
@@ -256,9 +258,10 @@ static void GT_pritHelp(void){
 			printSupportedHashAlgorithms();
 			fprintf(stderr, "\n");
 }
+#define NUMBER_OF_TASKS 8
 
 int main(int argc, char** argv, char **envp) {
-	TaskDefinition *taskDefArray[10]={NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+	TaskDefinition *taskDefArray[NUMBER_OF_TASKS];
 	paramSet *set = NULL;
 	int retval = EXIT_SUCCESS;
 	Task *task = NULL;
@@ -272,10 +275,16 @@ int main(int argc, char** argv, char **envp) {
 #endif
 #endif
 
+	for (i = 0; i < NUMBER_OF_TASKS; i++) {
+		taskDefArray[i] = NULL;
+	}
+
 	/*Create parameter set*/
 	paramSet_new("{s|sign}*{x|extend}*{p}*{v|verify}*{t}*{r}*{d}*{n}*{h|help}*{o|out}{i}{f}{b}{c}{C}{V}*"
-				 "{W}{S}>{X}>{P}>{F}{H}{T}{E}{inc}*{aggre}{htime}{setsystime}{ref}"
-				 "{user}>{pass}>{log}{tlv}"
+				"{W}{S}>{X}>{P}>{F}{H}{T}{E}{inc}*"
+				/*TODO: uncomment if implemented*/
+//				"{aggre}{htime}{setsystime}"
+				"{ref}{user}>{pass}>{log}{tlv}"
 				 ,&set);
 	if(set == NULL) goto cleanup;
 
@@ -289,7 +298,9 @@ int main(int argc, char** argv, char **envp) {
 	paramSet_addControl(set, "{E}", isEmailFormatOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{user}{pass}", isUserPassFormatOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{ref}", formatIsOK, contentIsOK, NULL);
-	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{aggre}{htime}{setsystime}{tlv}", isFlagFormatOK, contentIsOK, NULL);
+	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{tlv}", isFlagFormatOK, contentIsOK, NULL);
+	/*TODO: uncomment if implemented*/
+	paramSet_addControl(set, "{aggre}{htime}{setsystime}", isFlagFormatOK, contentIsOK, NULL);
 
 	/*Define possible tasks*/
 	/*						ID							DESC							MAN		IGNORE	OPTIONAL		FORBIDDEN					NEW OBJ*/
@@ -301,8 +312,9 @@ int main(int argc, char** argv, char **envp) {
 	TaskDefinition_new(verifyTimestamp,			"Verify signature",				"v,i",			"",		"f,F,n,d,r,t",	"s,p,x,aggre,H",			&taskDefArray[5]);
 	TaskDefinition_new(verifyTimestampOnline,	"Verify online",				"v,x,i,X",		"",		"f,F,n,d,r,t",	"s,p,aggre,T,H",			&taskDefArray[6]);
 	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"v,b",			"",		"n,d,r,t",		"x,s,p,aggre,i,f,F,T,H",	&taskDefArray[7]);
-	TaskDefinition_new(getRootH_T,				"Get Aggregator root hash",		"aggre,htime,S","",		"",				"x,s,p,v,f,F,i,o,T,H,setsystime",		&taskDefArray[8]);
-	TaskDefinition_new(setSysTime,				"Set system time",				"aggre,setsystime,S","","",				"x,s,p,v,f,F,i,o,T,H,htime",		&taskDefArray[9]);
+	/*TODO: uncomment if implemented and set NUMBER_OF_TASKS+=2*/
+//	TaskDefinition_new(getRootH_T,				"Get Aggregator root hash",		"aggre,htime,S","",		"",				"x,s,p,v,f,F,i,o,T,H,setsystime",		&taskDefArray[8]);
+//	TaskDefinition_new(setSysTime,				"Set system time",				"aggre,setsystime,S","","",				"x,s,p,v,f,F,i,o,T,H,htime",		&taskDefArray[9]);
 
 	/*Read parameter set*/
 	paramSet_readFromCMD(argc, argv, set, 3);
@@ -326,13 +338,13 @@ int main(int argc, char** argv, char **envp) {
 	}
 
 	/*Extract task */
-	if (Task_analyse(taskDefArray, 10, set)){
-		task = Task_getConsistentTask(taskDefArray, 10, set);
+	if (Task_analyse(taskDefArray, NUMBER_OF_TASKS, set)){
+		task = Task_getConsistentTask(taskDefArray, NUMBER_OF_TASKS, set);
 	}
 
 	paramSet_printUnknownParameterWarnings(set);
 	if(task == NULL){
-		Task_printError(taskDefArray, 10, set);
+		Task_printError(taskDefArray, NUMBER_OF_TASKS, set);
 		retval = EXIT_INVALID_CL_PARAMETERS;
 		goto cleanup;
 	}
@@ -370,7 +382,7 @@ cleanup:
 	if(paramSet_isSetByName(set, "h")) GT_pritHelp();
 
 	paramSet_free(set);
-	for(i=0; i<10;i++)
+	for(i = 0; i < NUMBER_OF_TASKS; i++)
 		TaskDefinition_free(taskDefArray[i]);
 	Task_free(task);
 

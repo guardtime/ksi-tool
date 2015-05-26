@@ -163,11 +163,11 @@ okx src/ksitool -v -i ${resource_dir}/ok-sig-2014-08-01.1.ksig -V $url_c --ref A
 
 diag "------------------------------------------------------------------------------";
 
-
-diag "######    Use aggregator"
-okx src/ksitool -nt --aggre --setsystime 
-okx src/ksitool -nt --aggre --htime 
-diag "------------------------------------------------------------------------------";
+#TODO: uncomment if implemeneted
+# diag "######    Use aggregator"
+# okx src/ksitool -nt --aggre --setsystime 
+# okx src/ksitool -nt --aggre --htime 
+# diag "------------------------------------------------------------------------------";
 
 
 
