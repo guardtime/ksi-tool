@@ -25,6 +25,7 @@
 #include <windows.h>
 #else
 #include <sys/time.h>
+#include <errno.h>
 #endif
 
 static void printSignaturesRootHash_and_Time(const KSI_Signature *sig);
@@ -159,15 +160,23 @@ static void setSystemTime_throws(const KSI_Signature *sig){
 	if(!SetSystemTime(&newTime)){
 		DWORD err = GetLastError();
 		if(err == ERROR_PRIVILEGE_NOT_HELD){
-			THROW_MSG(NO_PRIVILEGES_EXCEPTION,EXIT_NO_PRIVILEGES, "User has no privileges to change date");
+			THROW_MSG(NO_PRIVILEGES_EXCEPTION, EXIT_NO_PRIVILEGES, "Error: User has no privileges to change system time.");
 		}
 		else{
-			THROW_MSG(NO_PRIVILEGES_EXCEPTION,EXIT_NO_PRIVILEGES, "Unable to set time");
+			THROW_MSG(NO_PRIVILEGES_EXCEPTION, EXIT_FAILURE, "Error: Unable to set system time.");
 		}
 	}
 #else
         tv.tv_sec = mktime(&tm);
-        settimeofday(&tv, 0);
+        if (settimeofday(&tv, 0) == -1) {
+            if (errno == EPERM) {
+                THROW_MSG(NO_PRIVILEGES_EXCEPTION, EXIT_NO_PRIVILEGES, "Error: User has no privileges to change system time.");
+                
+            } else {
+                THROW_MSG(NO_PRIVILEGES_EXCEPTION, EXIT_FAILURE, "Error: Unable to set system time.");
+            }
+        }
+                
 #endif
 	return;
 }
