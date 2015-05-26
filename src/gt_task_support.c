@@ -484,7 +484,7 @@ void printSignatureStructure(KSI_CTX *ksi, const KSI_Signature *sig) {
 	KSI_TLV *baseTlv = NULL;
 	unsigned char *tmp = NULL;
 	unsigned tmp_len;
-	char buf[8192];
+	char buf[0x6fff];
 
 	res = KSI_Signature_serialize((KSI_Signature*)sig, &tmp, &tmp_len);
 	if (res != KSI_OK) goto cleanup;
