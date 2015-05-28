@@ -271,20 +271,20 @@ cleanup:
 	return status;
 	}
 
-static void parameter_Print(const parameter *param){
+static void parameter_Print(const parameter *param, void (*print)(const char*, ...)){
 	paramValue *pValue = NULL;
 
 	if(param == NULL) return;
 
-	printf("%s\n", param->flagName);
+	print("%s\n", param->flagName);
 	pValue = param->arg;
 	do{
 		if(pValue != NULL){
-			printf("  '%s' p:%i  err: %2x %2x\n", pValue->cstr_value, pValue->priority, pValue->formatStatus, pValue->contentStatus);
+			print("  '%s' p:%i  err: %2x %2x\n", pValue->cstr_value, pValue->priority, pValue->formatStatus, pValue->contentStatus);
 			pValue = pValue->next;
 			}
 		else
-			printf("  <null>\n");
+			print("  <null>\n");
 	}while(pValue);
 
 }
@@ -325,6 +325,9 @@ static bool parameter_isDuplicateConflict(const parameter *param){
 struct paramSet_st {
 	parameter **parameter;
 	int count;
+	void (*printInfo)(const char*, ...);
+	void (*printWarning)(const char*, ...);
+	void (*printError)(const char*, ...);
 };
 
 static char *getParametersName(const char* names, char *name, char *alias, short len, bool *isMultiple, bool *isSingleHighestPriority){
@@ -485,7 +488,9 @@ static void paramSet_getValueByNameAt(const paramSet *set, const char *name, uns
 }
 
 
-bool paramSet_new(const char *names, paramSet **set){
+bool paramSet_new(const char *names,
+		void (*printInfo)(const char*, ...), void (*printWarnings)(const char*, ...), void (*printErrors)(const char*, ...),
+		paramSet **set){
 	paramSet *tmp = NULL;
 	bool status = false;
 	const char *pName = NULL;
@@ -499,7 +504,7 @@ bool paramSet_new(const char *names, paramSet **set){
 	bool isMultiple = false;
 	bool isSingleHighestPriority = false;
 
-	if(set == NULL || names == NULL) return false;
+	if(set == NULL || names == NULL || printInfo == NULL || printWarnings == NULL || printErrors == NULL) return false;
 
 	while(names[i]){
 		if(names[i] == '{') mem = names[i];
@@ -518,6 +523,10 @@ bool paramSet_new(const char *names, paramSet **set){
 	if(tmp->parameter == NULL) goto cleanup;
 
 	tmp->count = paramCount;
+
+	tmp->printInfo = printInfo;
+	tmp->printWarning = printWarnings;
+	tmp->printError = printErrors;
 
 	len = sizeof(buf);
 	pName = names;
@@ -539,6 +548,15 @@ cleanup:
 
 	paramSet_free(tmp);
 	return status;
+}
+
+
+void (*paramSet_getErrorPrinter(paramSet *set))(const char*, ...) {
+	return set->printError;
+}
+
+void (*paramSet_getWarningPrinter(paramSet *set))(const char*, ...) {
+	return set->printWarning;
 }
 
 void paramSet_free(paramSet *set){
@@ -901,12 +919,12 @@ void paramSet_Print(const paramSet *set){
 
 	if(set == NULL) return;
 	numOfElements = set->count;
-	printf("Raw param set (%i)::\n", numOfElements);
+	set->printInfo("Raw param set (%i)::\n", numOfElements);
 	array = set->parameter;
 
 	for(i=0; i<numOfElements;i++){
 		if(array[i]->arg){
-			parameter_Print(array[i]);
+			parameter_Print(array[i], set->printInfo);
 		}
 	}
 
@@ -931,18 +949,18 @@ void paramSet_PrintErrorMessages(const paramSet *set){
 			value = pParam->arg;
 
 			if(parameter_isDuplicateConflict(pParam) == true){
-				fprintf(stderr, "Error: Duplicate values '%s'", pParam->flagName);
-				if(value->source) fprintf(stderr, " from '%s'", value->source);
-				fprintf(stderr, "!\n");
-				parameter_Print(pParam);
+				set->printError("Error: Duplicate values '%s'", pParam->flagName);
+				if(value->source) set->printError(" from '%s'", value->source);
+				set->printError("!\n");
+				parameter_Print(pParam, set->printError);
 			}
 
 			while(value){
 				if(value->formatStatus == FORMAT_OK){
 					if(value->contentStatus != PARAM_OK){
-					fprintf(stderr, "Content error:");
-					if(value->source) fprintf(stderr, " from '%s'", value->source);
-					fprintf(stderr, " %s%s '%s'. %s\n",
+					set->printError("Content error:");
+					if(value->source) set->printError(" from '%s'", value->source);
+					set->printError(" %s%s '%s'. %s\n",
 								strlen(pParam->flagName)>1 ? "--" : "-",
 								pParam->flagName, value->cstr_value,
 								getParameterContentErrorString(value->contentStatus)
@@ -950,9 +968,9 @@ void paramSet_PrintErrorMessages(const paramSet *set){
 					}
 				}
 				else{
-					fprintf(stderr, "Format error:");
-					if(value->source) fprintf(stderr, " from '%s'", value->source);
-					fprintf(stderr, " %s%s '%s'. %s\n",
+					set->printError("Format error:");
+					if(value->source) set->printError(" from '%s'", value->source);
+					set->printError(" %s%s '%s'. %s\n",
 							strlen(pParam->flagName)>1 ? "--" : "-",
 							pParam->flagName, value->cstr_value,
 							getFormatErrorString(value->formatStatus)
@@ -979,9 +997,9 @@ void paramSet_printUnknownParameterWarnings(const paramSet *set){
 			paramValue *value = NULL;
 			paramSet_getValueByNameAt(set, UNKNOWN_PARAMETER_NAME, i, &value);
 			if(value){
-				printf("Warning: Unknown parameter '%s'", value->cstr_value);
-				if(value->source) printf(" from '%s'", value->source);
-				printf(".\n");
+				set->printWarning("Warning: Unknown parameter '%s'", value->cstr_value);
+				if(value->source) set->printWarning(" from '%s'", value->source);
+				set->printWarning(".\n");
 			}
 		}
 	}
@@ -1006,14 +1024,14 @@ static void paramSet_PrintSimilar(const char *str, const paramSet *set){
 		lenName = (unsigned)strlen(array[i]->flagName);
 
 		if((editDist*100)/lenName <= 49)
-			printf("Typo: Did You mean '%s%s'.\n",lenName>1 ? "--" : "-", array[i]->flagName);
+			set->printWarning("Typo: Did You mean '%s%s'.\n",lenName>1 ? "--" : "-", array[i]->flagName);
 
 		if(array[i]->flagAlias){
 			editDist = editDistance_levenshtein(array[i]->flagAlias, str);
 			lenName = (unsigned)strlen(array[i]->flagAlias);
 
 			if((editDist*100)/lenName <= 33)
-				printf("Typo: Did You mean '%s%s'.\n",lenName>1 ? "--" : "-", array[i]->flagAlias);
+				set->printWarning("Typo: Did You mean '%s%s'.\n",lenName>1 ? "--" : "-", array[i]->flagAlias);
 		}
 	}
 
@@ -1037,9 +1055,9 @@ void paramSet_printIgnoredLowerPriorityWarnings(const paramSet *set){
 
 			do{
 				if(pValue != NULL && pValue->priority < highestPriority){
-					printf("Warning: Lower priority parameter %s%s '%s'", strlen(array[i]->flagName) > 1 ? "--" : "-",  array[i]->flagName, pValue->cstr_value);
-					if(pValue->source) printf(" from '%s'", pValue->source);
-					printf(" is ignored.\n");
+					set->printWarning("Warning: Lower priority parameter %s%s '%s'", strlen(array[i]->flagName) > 1 ? "--" : "-",  array[i]->flagName, pValue->cstr_value);
+					if(pValue->source) set->printWarning(" from '%s'", pValue->source);
+					set->printWarning(" is ignored.\n");
 					}
 				if(pValue) pValue = pValue->next;
 			}while(pValue);

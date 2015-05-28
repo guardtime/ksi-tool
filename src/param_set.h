@@ -48,11 +48,16 @@ typedef struct paramSet_st paramSet;
  * alias - alias for the name,
  * '*' - can have multiple values.
  * Exampl: "{h|help}{file}*{o}*{n}".
- * @param[in]	names	pointer to parameter names.
- * @param[out]	set		pointer to recieving pointer to paramSet obj.
+ * @param[in]	names			pointer to parameter names.
+ * @param [in] printInfo		Function pointer to handle info messages. 
+ * @param [in] printWarnings	Function pointer to handle warning messages. 
+ * @param [in] printErrors		Function pointer to handle error messages. 
+ * @param[out]	set				pointer to recieving pointer to paramSet obj.
  * @return true if successful false otherwise.
  */
-bool paramSet_new(const char *names, paramSet **set);
+bool paramSet_new(const char *names,
+		void (*printInfo)(const char*, ...), void (*printWarnings)(const char*, ...), void (*printErrors)(const char*, ...),
+		paramSet **set);
 
 void paramSet_free(paramSet *set);
 
@@ -194,6 +199,9 @@ void paramSet_PrintErrorMessages(const paramSet *set);
 void paramSet_printUnknownParameterWarnings(const paramSet *set);
 void paramSet_printTypoWarnings(const paramSet *set);
 void paramSet_printIgnoredLowerPriorityWarnings(const paramSet *set);
+
+void (*paramSet_getErrorPrinter(paramSet *set))(const char*, ...);
+void (*paramSet_getWarningPrinter(paramSet *set))(const char*, ...);
 
 #ifdef	__cplusplus
 }

@@ -23,6 +23,7 @@
 #include <setjmp.h>
 #include <string.h>
 #include "try-catch.h"
+#include "printer.h"
 
 exp_handler _EXP;
 
@@ -43,7 +44,7 @@ char *Exception_toString(exceptions_t e){
 	default:
 		return "Unknown exception";
 	}
-} 
+}
 
 void _appendMessage(const char *msg, const char *fname, int lineN){
 	if((_EXP.exep.N +1 ) == JUMP_DEPTH ) return;
@@ -57,7 +58,7 @@ void _appendMessage(const char *msg, const char *fname, int lineN){
 void printErrorMessage(void){
 	int i=0;
 	for(i=_EXP.exep.N-1; i>=0; i--){
-		fprintf(stderr, "%i) %s%s",i+1,  _EXP.exep.message[i], (_EXP.exep.message[i][strlen(_EXP.exep.message[i])-1] == '\n') ? ("") : ("\n"));
+		print_errors("%i) %s%s",i+1,  _EXP.exep.message[i], (_EXP.exep.message[i][strlen(_EXP.exep.message[i])-1] == '\n') ? ("") : ("\n"));
 	}
 	return;
 	}
@@ -65,7 +66,7 @@ void printErrorMessage(void){
 void printErrorLocations(void){
 	int i=0;
 	for(i=_EXP.exep.N-1; i>=0; i--){
-		fprintf(stderr, "%i)[%s] %s (%i) %s%s",i+1, Exception_toString(_EXP.exep.exception), _EXP.exep.fileName[i], _EXP.exep.lineNumber[i],_EXP.exep.message[i],(_EXP.exep.message[i][strlen(_EXP.exep.message[i])-1] == '\n') ? ("") : ("\n") );
+		print_errors("%i)[%s] %s (%i) %s%s",i+1, Exception_toString(_EXP.exep.exception), _EXP.exep.fileName[i], _EXP.exep.lineNumber[i],_EXP.exep.message[i],(_EXP.exep.message[i][strlen(_EXP.exep.message[i])-1] == '\n') ? ("") : ("\n") );
 	}
 	return;
 }
@@ -83,15 +84,15 @@ void resetExceptionHandler(void){
 }
 
 void THROW(exceptions_t exception, int ret){
-	if(_EXP.jump_pos > 0){ 
-		_EXP.jump_pos--; 
+	if(_EXP.jump_pos > 0){
+		_EXP.jump_pos--;
 		_EXP.exep.exception = exception;
 		_EXP.exep.ret = ret;
-		//printf("Exception: %i Thrown at level %i.\n", _EXP.exep.exception, _EXP.jump_pos); 
-		longjmp(_EXP.array_jmp[_EXP.jump_pos],exception); 
+		//printf("Exception: %i Thrown at level %i.\n", _EXP.exep.exception, _EXP.jump_pos);
+		longjmp(_EXP.array_jmp[_EXP.jump_pos],exception);
 	}
 	else{
-		fprintf(stderr, "There is no catcher to catch. Nothing was thrown!\n");
+		print_errors("There is no catcher to catch. Nothing was thrown!\n");
 	}
 }
 

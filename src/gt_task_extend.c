@@ -53,52 +53,52 @@ int GT_extendTask(Task *task) {
 			/*Initialization of KSI */
 			initTask_throws(task, &ksi);
 			/* Read the signature. */
-			printf("Reading signature... ");
+			print_info("Reading signature... ");
 			KSI_Signature_fromFile_throws(ksi, inSigFileName, &sig);
-			printf("ok.\n");
+			print_info("ok.\n");
 
 			/* Make sure the signature is ok. */
-			printf("Verifying old signature... ");
+			print_info("Verifying old signature... ");
 			MEASURE_TIME(KSI_Signature_verify_throws(sig, ksi));
-			printf("ok. %s\n",t ? str_measuredTime() : "");
+			print_info("ok. %s\n",t ? str_measuredTime() : "");
 
 			/* Extend the signature. */
 			if(T){
-				printf("Extending old signature to %i... ", publicationTime);
+				print_info("Extending old signature to %i... ", publicationTime);
 				KSI_Integer_new_throws(ksi, publicationTime, &pubTime);
 				MEASURE_TIME(KSI_Signature_extendTo_throws(sig, ksi, pubTime, &ext));
 			}
 			else{
-				printf("Extending old signature... ");
+				print_info("Extending old signature... ");
 				MEASURE_TIME(KSI_extendSignature_throws(ksi, sig, &ext));
 			}
-			printf("ok. %s\n",t ? str_measuredTime() : "");
+			print_info("ok. %s\n",t ? str_measuredTime() : "");
 
-			printf("Verifying extended signature... ");
+			print_info("Verifying extended signature... ");
 			MEASURE_TIME(KSI_Signature_verify_throws(ext, ksi));
-			printf("ok. %s\n",t ? str_measuredTime() : "");
+			print_info("ok. %s\n",t ? str_measuredTime() : "");
 
 			/* Save signature. */
 			saveSignatureFile_throws(ext, outSigFileName);
-			printf("Extended signature saved.\n");
+			print_info("Extended signature saved.\n");
 		}
 		CATCH_ALL{
 			if(ksi)
-				printf("failed.\n");
+				print_errors("failed.\n");
 			printErrorMessage();
 			retval = _EXP.exep.ret;
 			exceptionSolved();
 		}
 	end_try
 
-	if(n || r || d || tlv) printf("\n");
+	if(n || r || d || tlv) print_info("\n");
 	if(retval != EXIT_SUCCESS && sig != NULL && d){
-		printf("Old signature:\n");
+		print_info("Old signature:\n");
 		printSignatureVerificationInfo(sig);
 		printSignatureStructure(ksi, sig);
 	}
 	if(ext != NULL){
-		if(n || d || r || tlv) printf("Extended signature:\n");
+		if(n || d || r || tlv) print_info("Extended signature:\n");
 		if (d) printSignatureVerificationInfo(ext);
 		if (n) printSignerIdentity(ext);
 		if (r) printSignaturePublicationReference(ext);

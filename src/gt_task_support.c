@@ -91,7 +91,7 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 					if((x && v) || (p && T)){
 						THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_INVALID_CL_PARAMETERS, "Error: Extender url required.");
 					}else if(v){
-						printf("Warning: verification may require extender url.\n");
+						print_warnings("Warning: verification may require extender url.\n");
 					}
 				}else{
 					KSI_CTX_setExtender_throws(ksi, verificationService_url, user, pass);
@@ -287,7 +287,7 @@ void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile){
 
 	if(pubFile == NULL) return;
 
-	printf("Publications file references:\n");
+	print_info("Publications file references:\n");
 
 	res = KSI_PublicationsFile_getPublications(pubFile, &list_publicationRecord);
 	if(res != KSI_OK) return;
@@ -302,19 +302,19 @@ void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile){
 		pStart = buf;
 		j=1;
 		h=0;
-		if(i) printf("\n");
+		if(i) print_info("\n");
 		while((pLineBreak = strchr(pStart, '\n')) != NULL){
 			*pLineBreak = 0;
 			if(h++ < 3)
-				printf("%s %s\n", "  ", pStart);
+				print_info("%s %s\n", "  ", pStart);
 			else
-				printf("%s %2i) %s\n", "    ", j++, pStart);
+				print_info("%s %2i) %s\n", "    ", j++, pStart);
 			pStart = pLineBreak+1;
 		}
 
-		printf("%s %2i) %s\n", "    ", j++, pStart);
+		print_info("%s %2i) %s\n", "    ", j++, pStart);
 	}
-	printf("\n");
+	print_info("\n");
 	return;
 }
 
@@ -328,12 +328,12 @@ void printSignaturePublicationReference(const KSI_Signature *sig){
 	int h=0;
 	if(sig == NULL) return;
 
-	printf("Signatures publication references:\n");
+	print_info("Signatures publication references:\n");
 	res = KSI_Signature_getPublicationRecord(sig, &publicationRecord);
 	if(res != KSI_OK)return ;
 
 	if(publicationRecord == NULL) {
-		fprintf(stderr, "  (No publication records available)\n\n");
+		print_info("  (No publication records available)\n\n");
 		return;
 	}
 
@@ -344,15 +344,15 @@ void printSignaturePublicationReference(const KSI_Signature *sig){
 		*pLineBreak = 0;
 
 		if(h++<3)
-			printf("%s %s\n", "  ", pStart);
+			print_info("%s %s\n", "  ", pStart);
 		else
-			printf("%s %2i) %s\n", "    ", i++, pStart);
+			print_info("%s %2i) %s\n", "    ", i++, pStart);
 
 		pStart = pLineBreak+1;
 	}
 
-	printf("%s %2i) %s\n", "    ", i++, pStart);
-	printf("\n");
+	print_info("%s %2i) %s\n", "    ", i++, pStart);
+	print_info("\n");
 
 	return;
 }
@@ -363,15 +363,15 @@ void printSignerIdentity(KSI_Signature *sig){
 
 	if(sig == NULL) goto cleanup;
 
-	printf("Signer identity: ");
+	print_info("Signer identity: ");
 	res = KSI_Signature_getSignerIdentity(sig, &signerIdentity);
 	if(res != KSI_OK){
-		fprintf(stderr, "Unable to get signer identity.\n");
+		print_info("Unable to get signer identity.\n");
 		goto cleanup;
 	}
 
-	printf("'%s'\n", signerIdentity == NULL || strlen(signerIdentity) == 0 ? "Unknown" : signerIdentity);
-	printf("\n");
+	print_info("'%s'\n", signerIdentity == NULL || strlen(signerIdentity) == 0 ? "Unknown" : signerIdentity);
+	print_info("\n");
 cleanup:
 
 	KSI_free(signerIdentity);
@@ -389,10 +389,10 @@ void printSignatureVerificationInfo(const KSI_Signature *sig){
 		return;
 	}
 
-	printf("Verification steps:\n");
+	print_info("Verification steps:\n");
 	res = KSI_Signature_getVerificationResult((KSI_Signature*)sig, &sigVerification);
 	if(res != KSI_OK){
-		printf("Unable to get verification steps\n\n");
+		print_info("Unable to get verification steps\n\n");
 		return;
 	}
 
@@ -402,15 +402,15 @@ void printSignatureVerificationInfo(const KSI_Signature *sig){
 			if(res != KSI_OK){
 				return;
 			}
-			printf("  0x%03x:\t%s", KSI_VerificationStepResult_getStep(result), KSI_VerificationStepResult_isSuccess(result) ? "OK" : "FAIL");
+			print_info("  0x%03x:\t%s", KSI_VerificationStepResult_getStep(result), KSI_VerificationStepResult_isSuccess(result) ? "OK" : "FAIL");
 			desc = KSI_VerificationStepResult_getDescription(result);
 			if (desc && *desc) {
-				printf(" (%s)", desc);
+				print_info(" (%s)", desc);
 			}
-			printf("\n");
+			print_info("\n");
 		}
 	}
-	printf("\n");
+	print_info("\n");
 	return;
 }
 
@@ -437,11 +437,11 @@ void printSignatureSigningTime(const KSI_Signature *sig) {
 
 	signingTime = (unsigned long)KSI_Integer_getUInt64(sigTime);
 
-	printf("Signing time:\n"
+	print_info("Signing time:\n"
 			"UTC seconds:%i\n"
 			"Date %s\n", signingTime, date);
 
-	printf("\n");
+	print_info("\n");
 	return;
 }
 
@@ -454,7 +454,7 @@ void printPublicationsFileCertificates(const KSI_PublicationsFile *pubfile){
 	int res = 0;
 
 	if(pubfile == NULL) goto cleanup;
-	printf("Publications file certificates::\n");
+	print_info("Publications file certificates::\n");
 
 	res = KSI_PublicationsFile_getCertificates(pubfile, &certReclist);
 	if(res != KSI_OK || certReclist == NULL) goto cleanup;
@@ -467,9 +467,9 @@ void printPublicationsFileCertificates(const KSI_PublicationsFile *pubfile){
 		if(res != KSI_OK || cert == NULL) goto cleanup;
 
 		if(KSI_PKICertificate_toString(cert, buf, sizeof(buf)) != NULL)
-			printf("  %2i)  %s\n",i, buf);
+			print_info("  %2i)  %s\n",i, buf);
 		else
-			printf("  %2i)  null\n",i);
+			print_info("  %2i)  null\n",i);
 	}
 
 cleanup:
@@ -496,7 +496,7 @@ void printSignatureStructure(KSI_CTX *ksi, const KSI_Signature *sig) {
 	if (res != KSI_OK) goto cleanup;
 
 	if (KSI_TLV_toString(baseTlv, buf, sizeof(buf)) == NULL) return;
-	printf("Signature's TLV structure:\n%s\n", buf);
+	print_info("Signature's TLV structure:\n%s\n", buf);
 
 cleanup:
 

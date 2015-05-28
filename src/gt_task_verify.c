@@ -62,29 +62,29 @@ int GT_verifyTask(Task *task){
 			initTask_throws(task, &ksi);
 
 			if (Task_getID(task) == verifyPublicationsFile) {
-				printf("Reading publications file... ");
+				print_info("Reading publications file... ");
 				MEASURE_TIME(KSI_PublicationsFile_fromFile_throws(ksi, inPubFileName, &publicationsFile));
-				printf("ok. %s\n",t ? str_measuredTime() : "");
+				print_info("ok. %s\n",t ? str_measuredTime() : "");
 
-				printf("Verifying  publications file... ");
+				print_info("Verifying  publications file... ");
 				KSI_verifyPublicationsFile_throws(ksi, publicationsFile);
-				printf("ok.\n");
+				print_info("ok.\n");
 			}
 			/* Verification of signature*/
 			else {
 				bool isExtended = false;
 				/* Reading signature file for verification. */
-				printf("Reading signature... ");
+				print_info("Reading signature... ");
 				KSI_Signature_fromFile_throws(ksi, inSigFileName, &sig);
-				printf("ok.\n");
+				print_info("ok.\n");
 
 				isExtended = isSignatureExtended(sig);
 
 				/* Choosing between online and publications file signature verification */
 				if (Task_getID(task) == verifyTimestampOnline) {
-					printf("Verifying online... ");
+					print_info("Verifying online... ");
 					MEASURE_TIME(KSI_Signature_verifyOnline_throws(ksi, sig));
-					printf("ok. %s\n",t ? str_measuredTime() : "");
+					print_info("ok. %s\n",t ? str_measuredTime() : "");
 				}
 				else if(Task_getID(task) == verifyTimestamp) {
 					if (ref) {
@@ -103,15 +103,15 @@ int GT_verifyTask(Task *task){
 						}
 
 						if (isExtended && KSI_Integer_equals(timeA, timeB)) {
-							printf("Verifying signature using user publication... ");
+							print_info("Verifying signature using user publication... ");
 							MEASURE_TIME(KSI_Signature_verifyWithPublication_throws(sig, ksi, publication));
 						} else {
 							KSI_PublicationRecord *pubRec = NULL;
 							KSI_PublicationsFile *pubFile = NULL;
 							if (isExtended)
-								printf("Warning: Publication time of publication string is not matching with signatures publication.\n");
+								print_warnings("Warning: Publication time of publication string is not matching with signatures publication.\n");
 							else
-								printf("Warning: Signature is not extended.\n");
+								print_warnings("Warning: Signature is not extended.\n");
 
 							KSI_receivePublicationsFile_throws(ksi, &pubFile);
 							KSI_PublicationsFile_getPublicationDataByPublicationString_throws(ksi, pubFile, refStrn, &pubRec);
@@ -125,56 +125,56 @@ int GT_verifyTask(Task *task){
 								KSI_PublicationRecord_clone_throws(ksi, pubRec, &extendTo);
 							}
 
-							printf("Extending signature to publication time of publication string... ");
+							print_info("Extending signature to publication time of publication string... ");
 							KSI_Signature_extend_throws(sig, ksi, extendTo, &tmp_ext);
-							printf("ok.\n");
+							print_info("ok.\n");
 
-							printf("Verifying signature using user publication... ");
+							print_info("Verifying signature using user publication... ");
 							MEASURE_TIME(KSI_Signature_verifyWithPublication_throws(tmp_ext, ksi, publication));
 						}
 
 					} else {
 						if (ref) {
-							printf("Warning: Signature is not extended.\n");
+							print_warnings("Warning: Signature is not extended.\n");
 						}
-						printf("Verifying signature%s ", b && isExtended ? " using local publications file... " : "... ");
+						print_info("Verifying signature%s ", b && isExtended ? " using local publications file... " : "... ");
 						MEASURE_TIME(KSI_Signature_verify_throws(sig, ksi));
 					}
-					printf("ok. %s\n",t ? str_measuredTime() : "");
+					print_info("ok. %s\n",t ? str_measuredTime() : "");
 				}
 
 
 				/* If datafile or imprint is present compare hash and timestamp */
 				if(f){
-					printf("Verifying file's %s hash... ", inDataFileName);
+					print_info("Verifying file's %s hash... ", inDataFileName);
 					KSI_Signature_createDataHasher_throws(ksi, sig, &hsr);
 					getFilesHash_throws(ksi, hsr, inDataFileName, &file_hsh);
 					KSI_Signature_verifyDataHash_throws(sig, ksi, file_hsh);
-					printf("ok.\n");
+					print_info("ok.\n");
 				}
 				if(F){
-					printf("Verifying imprint... ");
+					print_info("Verifying imprint... ");
 					getHashFromCommandLine_throws(imprint, ksi, &raw_hsh);
 					KSI_Signature_verifyDataHash_throws(sig, ksi, raw_hsh);
-					printf("ok.\n");
+					print_info("ok.\n");
 				}
 			}
 
-			printf("Verification of %s %s successful.\n",
+			print_info("Verification of %s %s successful.\n",
 					(Task_getID(task) == verifyPublicationsFile) ? "publications file" : "signature file",
 					(Task_getID(task) == verifyPublicationsFile) ? inPubFileName : inSigFileName
 					);
 		}
 		CATCH_ALL{
 			if(ksi)
-				printf("failed.\n");
+				print_errors("failed.\n");
 			printErrorMessage();
 			retval = _EXP.exep.ret;
 			exceptionSolved();
 		}
 	end_try
 
-	if (n || r || d || tlv) printf("\n");
+	if (n || r || d || tlv) print_info("\n");
 
 	if ((n || r || d || tlv) &&  Task_getID(task) == verifyTimestamp || Task_getID(task) == verifyTimestampOnline){
 		if (n) printSignerIdentity(tmp_ext != NULL ? tmp_ext : sig);

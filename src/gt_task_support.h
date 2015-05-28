@@ -36,7 +36,7 @@
 #include "task_def.h"
 #include <stdlib.h>
 #include "gt_cmd_common.h"
-
+#include "printer.h"
 
 
 #ifdef	__cplusplus

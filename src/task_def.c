@@ -227,6 +227,9 @@ static void TaskDefinition_PrintErrors(TaskDefinition *def, paramSet *set){
 	const char *pName = NULL;
 	bool def_printed = false;
 	bool err_printed = false;
+	void (*printError)(const char*, ...) = NULL;
+
+
 
 	if(def == NULL){
 		fprintf(stderr, "Error: Task is null pointer.\n");
@@ -238,34 +241,36 @@ static void TaskDefinition_PrintErrors(TaskDefinition *def, paramSet *set){
 		return;
 	}
 
+	printError = paramSet_getErrorPrinter(set);
+
 	pName = def->mandatoryFlags;
 	while((pName = category_getParametersName(pName,buf, sizeof(buf))) != NULL){
 		if(paramSet_isSetByName(set, buf) == false){
 			if(!def_printed){
-				fprintf(stderr, "Error: You have to define flag(s) '%s%s'", strlen(buf)>1 ? "--" : "-", buf);
+				printError("Error: You have to define flag(s) '%s%s'", strlen(buf)>1 ? "--" : "-", buf);
 				def_printed = true;
 			}
 			else{
-				fprintf(stderr, ", '%s%s'", strlen(buf)>1 ? "--" : "-", buf);
+				printError(", '%s%s'", strlen(buf)>1 ? "--" : "-", buf);
 			}
 		}
 	}
-	if(def_printed) fprintf(stderr, "\n");
+	if(def_printed) printError("\n");
 
 
 	pName = def->forbittenFlags;
 	while((pName = category_getParametersName(pName,buf, sizeof(buf))) != NULL){
 		if(paramSet_isSetByName(set, buf) == true){
 			if(!err_printed){
-				fprintf(stderr, "Error: You must not use flag(s) '%s%s'", strlen(buf)>1 ? "--" : "-", buf);
+				printError("Error: You must not use flag(s) '%s%s'", strlen(buf)>1 ? "--" : "-", buf);
 				err_printed = true;
 			}
 			else{
-				fprintf(stderr, ", '%s%s'", strlen(buf)>1 ? "--" : "-", buf);
+				printError(", '%s%s'", strlen(buf)>1 ? "--" : "-", buf);
 			}
 		}
 	}
-	if(err_printed) fprintf(stderr, "\n");
+	if(err_printed) printError("\n");
 
 	return;
 }
@@ -273,16 +278,19 @@ static void TaskDefinition_PrintErrors(TaskDefinition *def, paramSet *set){
 static void TaskDefinition_PrintWarnings(TaskDefinition *def, paramSet *set){
 	const char *pName = NULL;
 	char buf[256];
+	void (*printWarning)(const char*, ...) = NULL;
 
-	if(def == NULL){
+	if(def == NULL || set == NULL){
 		fprintf(stderr, "Error: Task is null pointer.\n");
 		return;
 	}
 
+	printWarning = paramSet_getWarningPrinter(set);
+
 	pName = def->ignoredFlags;
 		while((pName = category_getParametersName(pName,buf, sizeof(buf))) != NULL){
 			if(paramSet_isSetByName(set, buf) == true){
-				fprintf(stderr, "Warning: flag %s%s is ignored\n", strlen(buf)>1 ? "--" : "-", buf);
+				printWarning("Warning: flag %s%s is ignored\n", strlen(buf)>1 ? "--" : "-", buf);
 			}
 		}
 	return;
@@ -291,11 +299,16 @@ static void TaskDefinition_PrintWarnings(TaskDefinition *def, paramSet *set){
 static void TaskDefinition_printSuggestions(TaskDefinition **def, int count, paramSet *set){
 	int i;
 	TaskDefinition *tmp;
+	void (*printError)(const char*, ...) = NULL;
+
+	if(def == NULL || set == NULL || count == 0) return;
+
+	printError = paramSet_getErrorPrinter(set);
 
 	for (i = 0; i < count; i++){
 		tmp = def[i];
 		if (tmp->isDefined && tmp->consistency >= 0.25 || tmp->consistency >= 0.75)
-			fprintf(stderr, "Maybe you want to: %s %s\n", tmp->name, tmp->toString);
+			printError("Maybe you want to: %s %s\n", tmp->name, tmp->toString);
 	}
 }
 
@@ -411,8 +424,11 @@ void Task_printError(TaskDefinition **def, int count, paramSet *set){
 	double highestConsistency;
 	int maxConsistencyCout;
 	bool isSimilarHighConsistencyTasks = false;
+	void (*printError)(const char*, ...) = NULL;
 
 	if(def == NULL || set == NULL) return;
+
+	printError = paramSet_getErrorPrinter(set);
 
 	/**
 	 * Examine if some task is consistent, find if there is highest consistency
@@ -450,14 +466,14 @@ void Task_printError(TaskDefinition **def, int count, paramSet *set){
 	}
 
 	if (definedCount == 0){
-		fprintf(stderr, "Task is not defined. Use (-x, -s, -v, -p) and read help -h\n");
+		printError("Task is not defined. Use (-x, -s, -v, -p) and read help -h\n");
 		TaskDefinition_printSuggestions(def, count, set);
 	}else if (definedCount > 1 && consistent == NULL && invalidAttempt->consistency < 0.5 ||
 			  maxConsistencyCout > 1 || isSimilarHighConsistencyTasks){
-		fprintf(stderr, "Task is not fully defined:\n");
+		printError("Task is not fully defined:\n");
 		TaskDefinition_printSuggestions(def, count, set);
 	}else{
-		fprintf(stderr, "Error: Task '%s' (%s) is invalid:\n", invalidAttempt->name, invalidAttempt->toString);
+		printError("Error: Task '%s' (%s) is invalid:\n", invalidAttempt->name, invalidAttempt->toString);
 		TaskDefinition_PrintErrors(invalidAttempt, set);
 		TaskDefinition_PrintWarnings(invalidAttempt, set);
 	}

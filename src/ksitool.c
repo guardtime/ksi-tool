@@ -65,7 +65,7 @@ static bool includeParametersFromFile(paramSet *set, int priority){
 
 			paramSet_readFromFile(fname, set, priority);
 			if(++i>255){
-				fprintf(stderr, "Error: Include file list is too long.");
+				print_errors("Error: Include file list is too long.");
 				return false;
 			}
 		}
@@ -112,8 +112,8 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp, int pri
 
         if(strncmp(*envp, "KSI_AGGREGATOR", sizeof("KSI_AGGREGATOR") - 1) == 0){
 			if(!getEnvValue(*envp, "url", tmp, sizeof(tmp))) {
-				fprintf(stderr, "Error: Environment variable KSI_AGGREGATOR is invalid.\n");
-				fprintf(stderr, "Error: Invalid '%s'.\n", *envp);
+				print_errors("Error: Environment variable KSI_AGGREGATOR is invalid.\n");
+				print_errors("Error: Invalid '%s'.\n", *envp);
 				ret = false;
 			}
 
@@ -130,8 +130,8 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp, int pri
 		}
         else if(strncmp(*envp, "KSI_EXTENDER", sizeof("KSI_EXTENDER") - 1) == 0){
 			if(!getEnvValue(*envp, "url", tmp, sizeof(tmp))){
-				fprintf(stderr, "Error: Environment variable KSI_EXTENDER is invalid.\n");
-				fprintf(stderr, "Error: Invalid '%s'.\n", *envp);
+				print_errors("Error: Environment variable KSI_EXTENDER is invalid.\n");
+				print_errors("Error: Invalid '%s'.\n", *envp);
 				ret  = false;
 			}
 
@@ -157,7 +157,7 @@ static void printSupportedHashAlgorithms(void){
 
 	for(i=0; i< KSI_NUMBER_OF_KNOWN_HASHALGS; i++){
 		if(KSI_isHashAlgorithmSupported(i)){
-			fprintf(stderr,"%s ", KSI_getHashAlgorithmName(i));
+			print_info("%s ", KSI_getHashAlgorithmName(i));
 		}
 	}
 }
@@ -174,7 +174,7 @@ static void GT_pritHelp(void){
 	apiVersion = KSI_getVersion();
 	toolVersion = getVersion();
 
-	fprintf(stderr,
+	print_info(
 			"\nGuardTime command-line signing tool\n"
 			"%s.\n"
 			"%s.\n"
@@ -244,7 +244,7 @@ static void GT_pritHelp(void){
 			toolVersion, apiVersion
 			);
 
-			fprintf(stderr, "\nDefault service access URL-s:\n"
+			print_info("\nDefault service access URL-s:\n"
 			"\tTo define default URL-s system variables must be defined.\n"
 			"\tFor aggregator define \"KSI_AGGREGATOR\"=\"url=<url> pass=<pass> user=<user>\".\n"
 			"\tFor extender define \"KSI_EXTENDER\"=\"url=<url> pass=<pass> user=<user>\".\n"
@@ -254,9 +254,9 @@ static void GT_pritHelp(void){
 			"\tExtending/Verifying:	%s\n"
 			"\tPublications file:	%s\n", (aggre_url ? aggre_url : "Not defined."), (ext_url ? ext_url : "Not defined."), KSI_DEFAULT_URI_PUBLICATIONS_FILE);
 
-			fprintf(stderr, "\nSupported hash algorithms (-H, -F):\n\t");
+			print_info("\nSupported hash algorithms (-H, -F):\n\t");
 			printSupportedHashAlgorithms();
-			fprintf(stderr, "\n");
+			print_info("\n");
 }
 #define NUMBER_OF_TASKS 8
 
@@ -279,13 +279,16 @@ int main(int argc, char** argv, char **envp) {
 		taskDefArray[i] = NULL;
 	}
 
+	print_init();
+
 	/*Create parameter set*/
 	paramSet_new("{s|sign}*{x|extend}*{p}*{v|verify}*{t}*{r}*{d}*{n}*{h|help}*{o|out}{i}{f}{b}{c}{C}{V}*"
 				"{W}{S}>{X}>{P}>{F}{H}{T}{E}{inc}*"
 				/*TODO: uncomment if implemented*/
 //				"{aggre}{htime}{setsystime}"
-				"{ref}{user}>{pass}>{log}{tlv}"
-				 ,&set);
+				"{ref}{user}>{pass}>{log}{tlv}",
+				print_info, print_warnings, print_errors,
+				&set);
 	if(set == NULL) goto cleanup;
 
 	/*Configure parameter set*/

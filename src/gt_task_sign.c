@@ -57,38 +57,38 @@ int GT_signTask(Task *task) {
 				char *hashAlg;
 				int hasAlgID=-1;
 				/*Choosing of hash algorithm and creation of data hasher*/
-				printf("Getting hash from file for signing process... ");
+				print_info("Getting hash from file for signing process... ");
 				hashAlg = H ? (hashAlgName_H) : ("default");
 				hasAlgID = getHashAlgorithm_throws(hashAlg);
 				KSI_DataHasher_open_throws(ksi,hasAlgID , &hsr);
 				getFilesHash_throws(ksi, hsr, inDataFileName, &hash );
-				printf("ok.\n");
+				print_info("ok.\n");
 			}
 			else if(Task_getID(task) == signHash){
-				printf("Getting hash from input string for signing process... ");
+				print_info("Getting hash from input string for signing process... ");
 				getHashFromCommandLine_throws(imprint,ksi, &hash);
-				printf("ok.\n");
+				print_info("ok.\n");
 			}
 
 			/* Sign the data hash. */
-			printf("Creating signature from hash... ");
+			print_info("Creating signature from hash... ");
 			MEASURE_TIME(KSI_createSignature_throws(ksi, hash, &sign));
-			printf("ok. %s\n",t ? str_measuredTime() : "");
+			print_info("ok. %s\n",t ? str_measuredTime() : "");
 
 			/* Save signature file */
 			saveSignatureFile_throws(sign, outSigFileName);
-			printf("Signature saved.\n");
+			print_info("Signature saved.\n");
 		}
 		CATCH_ALL{
 			if(ksi)
-				printf("failed.\n");
+				print_errors("failed.\n");
 			printErrorMessage();
 			retval = _EXP.exep.ret;
 			exceptionSolved();
 		}
 	end_try
 
-	if(n || d || tlv) printf("\n");
+	if(n || d || tlv) print_info("\n");
 	if (n) printSignerIdentity(sign);
 	if (d) printSignatureSigningTime(sign);
 	if (tlv) printSignatureStructure(ksi, sign);

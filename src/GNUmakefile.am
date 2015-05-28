@@ -40,4 +40,6 @@ ksitool_SOURCES = \
 	try-catch.c \
 	try-catch.h \
 	param_set.c \
-	param_set.h
+	param_set.h \
+	printer.c \
+	printer.h
