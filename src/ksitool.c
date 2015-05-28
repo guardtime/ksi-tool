@@ -222,6 +222,8 @@ static void GT_pritHelp(void){
 			" -d\t\tdump detailed information.\n"
 			" --tlv\t\tdump signature's TLV structure.\n"
 			" --log <file>\tdump KSI log into file.\n"
+			" --silent\tsilent info and warning messages.\n"
+			" --nowarn\tsilent warning messages.\n"
 
 			"\nConfiguration:\n"
 			" -S <url>\tspecify Signing service URL.\n"
@@ -286,7 +288,7 @@ int main(int argc, char** argv, char **envp) {
 				"{W}{S}>{X}>{P}>{F}{H}{T}{E}{inc}*"
 				/*TODO: uncomment if implemented*/
 //				"{aggre}{htime}{setsystime}"
-				"{ref}{user}>{pass}>{log}{tlv}",
+				"{ref}{user}>{pass}>{log}{tlv}{silent}{nowarn}",
 				print_info, print_warnings, print_errors,
 				&set);
 	if(set == NULL) goto cleanup;
@@ -301,9 +303,9 @@ int main(int argc, char** argv, char **envp) {
 	paramSet_addControl(set, "{E}", isEmailFormatOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{user}{pass}", isUserPassFormatOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{ref}", formatIsOK, contentIsOK, NULL);
-	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{tlv}", isFlagFormatOK, contentIsOK, NULL);
+	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{tlv}{silent}{nowarn}", isFlagFormatOK, contentIsOK, NULL);
 	/*TODO: uncomment if implemented*/
-	paramSet_addControl(set, "{aggre}{htime}{setsystime}", isFlagFormatOK, contentIsOK, NULL);
+//	paramSet_addControl(set, "{aggre}{htime}{setsystime}", isFlagFormatOK, contentIsOK, NULL);
 
 	/*Define possible tasks*/
 	/*						ID							DESC							MAN		IGNORE	OPTIONAL		FORBIDDEN					NEW OBJ*/
@@ -321,6 +323,12 @@ int main(int argc, char** argv, char **envp) {
 
 	/*Read parameter set*/
 	paramSet_readFromCMD(argc, argv, set, 3);
+
+	if (paramSet_isSetByName(set, "silent")) {
+		print_disable(PRINT_WARNINGS | PRINT_INFO);
+	} else if (paramSet_isSetByName(set, "nowarn")) {
+		print_disable(PRINT_WARNINGS);
+	}
 
 	/*Add default user and pass if S or X is defined and user or pass is not.*/
 	if(paramSet_isSetByName(set, "S") || paramSet_isSetByName(set, "X")){
