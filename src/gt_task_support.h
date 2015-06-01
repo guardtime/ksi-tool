@@ -94,10 +94,13 @@ void getFilesHash_throws(KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, K
  * 
  * @throws KSI_EXCEPTION, IO_EXCEPTION.
  */
-void saveSignatureFile_throws(KSI_Signature *sign, const char *fname);
+void saveSignatureFile_throws(KSI_CTX *ctx, KSI_Signature *sign, const char *fname);
+
+void savePublicationFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *sign, const char *fname);
 
 bool isSignatureExtended(const KSI_Signature *sig);
 
+bool isPiping(paramSet *set);
 /**
  * Prints the signer identity. If sig == NULL does nothing.
  * @param[in] sig Pointer to KSI signature object.

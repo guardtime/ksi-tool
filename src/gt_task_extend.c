@@ -79,7 +79,7 @@ int GT_extendTask(Task *task) {
 			print_info("ok. %s\n",t ? str_measuredTime() : "");
 
 			/* Save signature. */
-			saveSignatureFile_throws(ext, outSigFileName);
+			saveSignatureFile_throws(ksi, ext, outSigFileName);
 			print_info("Extended signature saved.\n");
 		}
 		CATCH_ALL{

@@ -76,7 +76,7 @@ int GT_signTask(Task *task) {
 			print_info("ok. %s\n",t ? str_measuredTime() : "");
 
 			/* Save signature file */
-			saveSignatureFile_throws(sign, outSigFileName);
+			saveSignatureFile_throws(ksi, sign, outSigFileName);
 			print_info("Signature saved.\n");
 		}
 		CATCH_ALL{

@@ -150,7 +150,9 @@ ContentStatus isInputFileContOK(const char* path){
 	ContentStatus res = PARAM_UNKNOWN_ERROR;
 	int fileStatus = EINVAL;
 	res = isPathFormOk(path);
-	if (res == PARAM_OK)
+	if (strcmp(path, "-") == 0) {
+		return PARAM_OK;
+	}else if (res == PARAM_OK)
 		fileStatus = doFileExists(path);
 	else
 		return res;

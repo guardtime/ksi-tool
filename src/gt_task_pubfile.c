@@ -28,10 +28,6 @@ int GT_publicationsFileTask(Task *task){
 	paramSet *set = NULL;
 	KSI_CTX *ksi = NULL;
 	KSI_PublicationsFile *publicationsFile = NULL;
-	FILE *out = NULL;
-	size_t bytesWritten;
-	char *rawPubfile = NULL;
-	unsigned rawLen = 0;
 
 	KSI_Integer *end = NULL;
 	KSI_Integer *start = NULL;
@@ -77,12 +73,7 @@ int GT_publicationsFileTask(Task *task){
 				MEASURE_TIME(KSI_verifyPublicationsFile_throws(ksi, publicationsFile));
 				print_info("ok. %s\n",t ? str_measuredTime() : "");
 
-				KSI_PublicationsFile_serialize(ksi, publicationsFile, &rawPubfile, &rawLen);
-				out = fopen(outPubFileName, "wb");
-				if(out == NULL) THROW_MSG(IO_EXCEPTION,EXIT_IO_ERROR, "Error: Unable to ope publications file '%s' for writing.\n", outPubFileName);
-
-				bytesWritten = fwrite(rawPubfile, 1, rawLen, out);
-				if(bytesWritten != rawLen) THROW_MSG(IO_EXCEPTION,EXIT_IO_ERROR, "Error: Unable to write publications file '%s'.\n", outPubFileName);
+				savePublicationFile_throws(ksi, publicationsFile, outPubFileName);
 				print_info("Publications file '%s' saved.\n", outPubFileName);
 			} else if(Task_getID(task) == createPublicationString){
 				print_info("Sending extend request... ");
@@ -158,9 +149,7 @@ int GT_publicationsFileTask(Task *task){
 	if(d || r) printPublicationsFileReferences(publicationsFile);
 	if(d) printPublicationsFileCertificates(publicationsFile);
 
-	if (out != NULL) fclose(out);
 
-	KSI_free(rawPubfile);
 	KSI_Integer_free(start);
 	KSI_Integer_free(end);
 	KSI_ExtendReq_free(extReq);

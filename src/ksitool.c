@@ -342,6 +342,10 @@ int main(int argc, char** argv, char **envp) {
 	if(includeParametersFromEnvironment(set, envp, 1) == false) goto cleanup;
 	if(paramSet_isSetByName(set, "h")) goto cleanup;
 
+	if(isPiping(set)) {
+		print_disable(PRINT_WARNINGS | PRINT_INFO);
+	}
+
 	if(paramSet_isTypos(set)){
 		paramSet_printTypoWarnings(set);
 		retval = EXIT_INVALID_CL_PARAMETERS;

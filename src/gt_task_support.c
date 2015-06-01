@@ -34,6 +34,8 @@
 
 #ifdef _WIN32
 #	include <windows.h>
+#	include <io.h>
+#	include <fcntl.h>
 #else
 #	include <sys/time.h>
 #endif
@@ -132,6 +134,7 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 	KSI_CTX *tmpKsi = NULL;
 	KSI_PublicationsFile *tmpPubFile = NULL;
 	KSI_PKITruststore *refTrustStore = NULL;
+	FILE *writeLogTo = NULL;
 	int i=0;
 
 	bool log, b,V, W, E;
@@ -154,11 +157,17 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 			ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to initialize KSI context.\n");
 
 			if(log){
-				logFile = fopen(outLogfile, "w");
-				if (logFile == NULL){
-					THROW_MSG(IO_EXCEPTION, EXIT_IO_ERROR, "Error: Unable to open log file '%s'.\n", outLogfile);
+				if (strcmp(outLogfile, "-") == 0) {
+					writeLogTo = stdout;
+				} else {
+					logFile = fopen(outLogfile, "w");
+					if (logFile == NULL){
+						THROW_MSG(IO_EXCEPTION, EXIT_IO_ERROR, "Error: Unable to open log file '%s'.\n", outLogfile);
+					}
+					writeLogTo = logFile;
 				}
-				KSI_CTX_setLoggerCallback(tmpKsi, KSI_LOG_StreamLogger, logFile);
+
+				KSI_CTX_setLoggerCallback(tmpKsi, KSI_LOG_StreamLogger, writeLogTo);
 				KSI_CTX_setLogLevel(tmpKsi, KSI_LOG_DEBUG);
 			}
 
@@ -198,6 +207,26 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 	return;
 }
 
+bool isPiping(paramSet *set) {
+	bool f, i, o, log, b;
+	int j;
+	char *files[5] = {NULL, NULL, NULL, NULL, NULL};
+
+	f = paramSet_getStrValueByNameAt(set, "f",0, &files[0]);
+	i = paramSet_getStrValueByNameAt(set, "i",0, &files[1]);
+	o = paramSet_getStrValueByNameAt(set, "o",0, &files[2]);
+	log = paramSet_getStrValueByNameAt(set, "log",0, &files[3]);
+	b = paramSet_getStrValueByNameAt(set, "b",0, &files[4]);
+
+	for (j = 0; j < 5; j++) {
+		if (files[j] != NULL && strcmp(files[j], "-") == 0) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void closeTask(KSI_CTX *ksi){
 	if(logFile) fclose(logFile);
 	KSI_CTX_free(ksi);
@@ -213,9 +242,9 @@ void getFilesHash_throws(KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, K
 			if(ksi == NULL || hsr == NULL || fname == NULL || hash == NULL)
 				THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_FAILURE, "Error: Invalid function parameters.");
 
-			in = fopen(fname, "rb");
-			if (in == NULL)
-				THROW_MSG(IO_EXCEPTION,EXIT_IO_ERROR, "Error: Unable to open input file '%s'\n", fname);
+				in = fopen(fname, "rb");
+				if (in == NULL)
+					THROW_MSG(IO_EXCEPTION,EXIT_IO_ERROR, "Error: Unable to open input file '%s'\n", fname);
 
 			while (!feof(in)) {
 				buf_len = fread(buf, 1, sizeof (buf), in);
@@ -234,36 +263,80 @@ void getFilesHash_throws(KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, K
 	return;
 }
 
-void saveSignatureFile_throws(KSI_Signature *sign, const char *fname){
-	int res = KSI_UNKNOWN_ERROR;
+static int saveKsiObj(KSI_CTX *ksi, void *obj,
+							int (*serialize)(KSI_CTX *ksi, void *obj, unsigned char **raw, unsigned *raw_len),
+							const char *path) {
+	int res;
+	bool doPipe = false;
+	FILE *file = NULL;
+	FILE *writeInto = NULL;
 	unsigned char *raw = NULL;
-	unsigned raw_len = 0;
-	size_t count = 0;
-	FILE *out = NULL;
+	unsigned raw_len;
+	size_t count;
 
-	try
-		CODE{
-			out = fopen(fname, "wb");
-			if (out == NULL)
-				THROW_MSG(IO_EXCEPTION,res, "Error: Unable to open output file '%s'\n",fname);
+	doPipe = strcmp(path, "-") == 0 ? true : false;
 
-			res = KSI_Signature_serialize(sign, &raw, &raw_len);
-			ON_ERROR_THROW_MSG(KSI_EXCEPTION, "Error: Unable to serialize signature.\n");
+	if (ksi == NULL || obj == NULL || serialize == NULL || path == NULL) {
+		res = 1;
+		goto cleanup;
+	}
 
-			count = fwrite(raw, 1, raw_len, out);
-			if (count != raw_len)
-				THROW_MSG(KSI_EXCEPTION,res, "Error: Failed to write output file.\n");
+	res = serialize(ksi, obj, &raw, &raw_len);
+	if (res != KSI_OK) goto cleanup;
+
+	if (doPipe) {
+		writeInto = stdout;
+#ifdef _WIN32
+	res = _setmode(_fileno(stdout),_O_BINARY);
+	if (res == -1) {
+		res = 1;
+		goto cleanup;
+	}
+//	  setmode(fileno(stdin),O_BINARY);
+#endif
+	} else {
+		file = fopen(path, "wb");
+		if(file == NULL) {
+			res = 1;
+			goto cleanup;
 		}
-		CATCH_ALL{
-			if(out != NULL) fclose(out);
-			KSI_free(raw);
-			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to save signature '%s'", fname);
-		}
-	end_try
+		writeInto = file;
+	}
 
-	fclose(out);
+	count = fwrite(raw, 1, raw_len, writeInto);
+	if (count != raw_len) {
+		res = 1;
+		goto cleanup;
+	}
+
+	res = 0;
+
+cleanup:
+
 	KSI_free(raw);
-	return;
+	if (file != NULL) fclose(file);
+
+	return res;
+}
+
+int KSI_Signature_serialize_wrapper(KSI_CTX *ksi, KSI_Signature *sig, unsigned char **raw, unsigned *raw_len) {
+	return KSI_Signature_serialize(sig, raw, raw_len);
+}
+
+void saveSignatureFile_throws(KSI_CTX *ksi, KSI_Signature *sign, const char *fname) {
+	if (saveKsiObj(ksi, sign,
+				(int (*)(KSI_CTX *, void *, unsigned char **, unsigned *))KSI_Signature_serialize_wrapper,
+				fname) != 0) {
+	THROW_MSG(IO_EXCEPTION, EXIT_IO_ERROR, "Error: Unable to save signature to file '%s'.", fname);
+	}
+}
+
+void savePublicationFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *sign, const char *fname) {
+	if (saveKsiObj(ksi, sign,
+				(int (*)(KSI_CTX *, void *, unsigned char **, unsigned *))KSI_PublicationsFile_serialize_throws,
+				fname) != 0) {
+	THROW_MSG(IO_EXCEPTION, EXIT_IO_ERROR, "Error: Unable to save publication file to '%s'.", fname);
+	}
 }
 
 bool isSignatureExtended(const KSI_Signature *sig) {
