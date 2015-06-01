@@ -100,6 +100,10 @@ void savePublicationFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *sign, const 
 
 bool isSignatureExtended(const KSI_Signature *sig);
 
+void loadPublicationFile_throws(KSI_CTX *ksi, const char *path, KSI_PublicationsFile **pubfile);
+
+void loadSignatureFile_throws(KSI_CTX *ksi, const char *fname, KSI_Signature **sig);
+
 bool isPiping(paramSet *set);
 /**
  * Prints the signer identity. If sig == NULL does nothing.
@@ -195,8 +199,6 @@ int KSI_DataHasher_add_throws(KSI_CTX *ksi, KSI_DataHasher *hasher, const void *
 int KSI_DataHasher_close_throws(KSI_CTX *ksi, KSI_DataHasher *hasher, KSI_DataHash **hash);
 int KSI_createSignature_throws(KSI_CTX *ksi, KSI_DataHash *hash, KSI_Signature **sign);
 int KSI_DataHash_fromDigest_throws(KSI_CTX *ksi, int hasAlg, const unsigned char *digest, unsigned int len, KSI_DataHash **hash);
-int KSI_PublicationsFile_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_PublicationsFile **pubFile);
-int KSI_Signature_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_Signature **sig);
 int KSI_Signature_verify_throws(KSI_Signature *sig, KSI_CTX *ksi);
 int KSI_Signature_verifyWithPublication_throws(KSI_Signature *sig, KSI_CTX *ksi, const KSI_PublicationData *publication);
 int KSI_Signature_verifyOnline_throws(KSI_CTX *ksi, KSI_Signature *sig);

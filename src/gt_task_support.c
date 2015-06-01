@@ -36,6 +36,7 @@
 #	include <windows.h>
 #	include <io.h>
 #	include <fcntl.h>
+#include <stdlib.h>
 #else
 #	include <sys/time.h>
 #endif
@@ -175,7 +176,7 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 
 			if(b && (Task_getID(task) != downloadPublicationsFile && Task_getID(task) != verifyPublicationsFile)){
 				KSI_LOG_debug(tmpKsi, "Setting publications file '%s'", inPubFileName);
-				KSI_PublicationsFile_fromFile_throws(tmpKsi, inPubFileName, &tmpPubFile);
+				loadPublicationFile_throws(tmpKsi, inPubFileName, &tmpPubFile);
 				KSI_CTX_setPublicationsFile(tmpKsi, tmpPubFile);
 				tmpPubFile = NULL;
 			}
@@ -208,17 +209,14 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 }
 
 bool isPiping(paramSet *set) {
-	bool f, i, o, log, b;
+	bool o, log;
 	int j;
 	char *files[5] = {NULL, NULL, NULL, NULL, NULL};
 
-	f = paramSet_getStrValueByNameAt(set, "f",0, &files[0]);
-	i = paramSet_getStrValueByNameAt(set, "i",0, &files[1]);
-	o = paramSet_getStrValueByNameAt(set, "o",0, &files[2]);
-	log = paramSet_getStrValueByNameAt(set, "log",0, &files[3]);
-	b = paramSet_getStrValueByNameAt(set, "b",0, &files[4]);
+	o = paramSet_getStrValueByNameAt(set, "o",0, &files[0]);
+	log = paramSet_getStrValueByNameAt(set, "log",0, &files[1]);
 
-	for (j = 0; j < 5; j++) {
+	for (j = 0; j < 2; j++) {
 		if (files[j] != NULL && strcmp(files[j], "-") == 0) {
 			return true;
 		}
@@ -233,7 +231,9 @@ void closeTask(KSI_CTX *ksi){
 }
 
 void getFilesHash_throws(KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash){
+	int res;
 	FILE *in = NULL;
+	FILE *readFrom = NULL;
 	unsigned char buf[1024];
 	size_t buf_len;
 
@@ -242,12 +242,23 @@ void getFilesHash_throws(KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, K
 			if(ksi == NULL || hsr == NULL || fname == NULL || hash == NULL)
 				THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_FAILURE, "Error: Invalid function parameters.");
 
+			if (strcmp(fname, "-") == 0) {
+				readFrom = stdin;
+#ifdef _WIN32
+				res = _setmode(_fileno(stdin),_O_BINARY);
+				if (res == -1) {
+					THROW_MSG(IO_EXCEPTION, EXIT_IO_ERROR, "Error: Unable to configure stdin as binary input\n", fname);
+				}
+#endif
+			} else {
 				in = fopen(fname, "rb");
 				if (in == NULL)
 					THROW_MSG(IO_EXCEPTION,EXIT_IO_ERROR, "Error: Unable to open input file '%s'\n", fname);
+				readFrom = in;
+			}
 
-			while (!feof(in)) {
-				buf_len = fread(buf, 1, sizeof (buf), in);
+			while (!feof(readFrom)) {
+				buf_len = fread(buf, 1, sizeof (buf), readFrom);
 				KSI_DataHasher_add_throws(ksi, hsr, buf, buf_len);
 			}
 
@@ -261,6 +272,92 @@ void getFilesHash_throws(KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, K
 	end_try
 
 	return;
+}
+
+static int loadKsiObj(KSI_CTX *ksi, const char *path, void **obj,
+					int (*parse)(KSI_CTX *ksi, unsigned char *raw, unsigned raw_len, void **obj),
+					void (*obj_free)()){
+	int res;
+	FILE *readFrom = NULL;
+	FILE *in = NULL;
+	unsigned char *buf = NULL;
+	size_t buf_size = 0xffff;
+	size_t buf_len = 0;
+	void *tmp;
+
+	if (strcmp(path, "-") == 0) {
+		readFrom = stdin;
+#ifdef _WIN32
+		res = _setmode(_fileno(stdin),_O_BINARY);
+		if (res == -1) {
+			res = 1;
+			goto cleanup;
+		}
+#endif
+	} else {
+		in = fopen(path, "rb");
+		if (in == NULL) {
+			res = 1;
+			goto cleanup;
+		}
+		readFrom = in;
+	}
+
+	buf = (unsigned char*)malloc(buf_size);
+
+	while (!feof(readFrom)) {
+		if (buf_len + 1 >= buf_size) {
+			buf_size += 0xffff;
+			buf = realloc(buf, buf_size);
+			if (buf == NULL) {
+				res = 1;
+				goto cleanup;
+			}
+		}
+		buf_len += fread(buf + buf_len, 1, buf_size - buf_len, readFrom);
+	}
+
+	if (buf_len > UINT_MAX) {
+		res = 1;
+		goto cleanup;
+	}
+
+	res = parse(ksi, buf, (unsigned)buf_len, &tmp);
+	if (res != KSI_OK || tmp == NULL) {
+		res = 1;
+		goto cleanup;
+	}
+
+	*obj = tmp;
+	tmp = NULL;
+
+cleanup:
+
+	if (in != NULL) fclose(in);
+	free(buf);
+	obj_free(tmp);
+
+	return res;
+}
+
+void loadPublicationFile_throws(KSI_CTX *ksi, const char *fname, KSI_PublicationsFile **pubfile) {
+	int res;
+	res = loadKsiObj(ksi, fname, pubfile,
+				(int (*)(KSI_CTX *, unsigned char*, unsigned, void**))KSI_PublicationsFile_parse,
+				(void (*)(void *))KSI_PublicationsFile_free);
+	if (res != 0) {
+		THROW_MSG(IO_EXCEPTION, EXIT_IO_ERROR, "Error: Unable to load publication file from '%s'.", fname);
+	}
+}
+
+void loadSignatureFile_throws(KSI_CTX *ksi, const char *fname, KSI_Signature **sig) {
+	int res;
+	res = loadKsiObj(ksi, fname, sig,
+				(int (*)(KSI_CTX *, unsigned char*, unsigned, void**))KSI_Signature_parse,
+				(void (*)(void *))KSI_Signature_free);
+	if (res != 0) {
+		THROW_MSG(IO_EXCEPTION, EXIT_IO_ERROR, "Error: Unable to load signature from '%s'.", fname);
+	}
 }
 
 static int saveKsiObj(KSI_CTX *ksi, void *obj,
@@ -292,7 +389,6 @@ static int saveKsiObj(KSI_CTX *ksi, void *obj,
 		res = 1;
 		goto cleanup;
 	}
-//	  setmode(fileno(stdin),O_BINARY);
 #endif
 	} else {
 		file = fopen(path, "wb");
@@ -898,14 +994,6 @@ int KSI_createSignature_throws(KSI_CTX *ksi, KSI_DataHash *hash, KSI_Signature *
 
 int KSI_DataHash_fromDigest_throws(KSI_CTX *ksi, int hasAlg, const unsigned char *digest, unsigned int len, KSI_DataHash **hash){
 	THROWABLE3(ksi, KSI_DataHash_fromDigest(ksi, hasAlg, digest, len, hash), "Error: Unable to create hash from digest.");
-}
-
-int KSI_PublicationsFile_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_PublicationsFile **pubFile){
-	THROWABLE3(ksi, KSI_PublicationsFile_fromFile(ksi, fileName, pubFile), "Error: Unable to read publications file (%s).\n", fileName)
-}
-
-int KSI_Signature_fromFile_throws(KSI_CTX *ksi, const char *fileName, KSI_Signature **sig){
-	THROWABLE3(ksi, KSI_Signature_fromFile(ksi, fileName, sig), "Error: Unable to read signature from file.");
 }
 
 int KSI_Signature_getPublicationRecord_throws(KSI_CTX *ksi, const KSI_Signature *sig, KSI_PublicationRecord **pubRec){

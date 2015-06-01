@@ -54,7 +54,7 @@ int GT_extendTask(Task *task) {
 			initTask_throws(task, &ksi);
 			/* Read the signature. */
 			print_info("Reading signature... ");
-			KSI_Signature_fromFile_throws(ksi, inSigFileName, &sig);
+			loadSignatureFile_throws(ksi, inSigFileName, &sig);
 			print_info("ok.\n");
 
 			/* Make sure the signature is ok. */

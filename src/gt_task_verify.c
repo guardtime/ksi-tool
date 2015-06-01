@@ -63,7 +63,7 @@ int GT_verifyTask(Task *task){
 
 			if (Task_getID(task) == verifyPublicationsFile) {
 				print_info("Reading publications file... ");
-				MEASURE_TIME(KSI_PublicationsFile_fromFile_throws(ksi, inPubFileName, &publicationsFile));
+				MEASURE_TIME(loadPublicationFile_throws(ksi, inPubFileName, &publicationsFile));
 				print_info("ok. %s\n",t ? str_measuredTime() : "");
 
 				print_info("Verifying  publications file... ");
@@ -75,7 +75,7 @@ int GT_verifyTask(Task *task){
 				bool isExtended = false;
 				/* Reading signature file for verification. */
 				print_info("Reading signature... ");
-				KSI_Signature_fromFile_throws(ksi, inSigFileName, &sig);
+				loadSignatureFile_throws(ksi, inSigFileName, &sig);
 				print_info("ok.\n");
 
 				isExtended = isSignatureExtended(sig);
