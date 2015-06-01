@@ -169,7 +169,19 @@ diag "--------------------------------------------------------------------------
 # okx src/ksitool -nt --aggre --htime 
 # diag "------------------------------------------------------------------------------";
 
+diag "######    Test stdin and stdout 1."
+okx echo "TEST" | src/ksitool.exe -s -f - -o - > ${tmp}/pipe_file.ksig
+okx src/ksitool.exe -v -i - < ${tmp}/pipe_file.ksig
 
+diag "######    Test stdin and stdout 2."
+echo "TEST" > ${tmp}/pipeFileClone
+okx echo "TEST" | src/ksitool.exe -s -f - -o - | src/ksitool.exe -v -f ${tmp}/pipeFileClone -i - 
+
+diag "######    Test stdin and stdout 3."
+okx src/ksitool.exe -p -o - | src/ksitool.exe -v -b -
+
+
+diag "------------------------------------------------------------------------------";
 
 diag "====== Testing errors ======";
 

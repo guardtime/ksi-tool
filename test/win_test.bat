@@ -36,7 +36,7 @@ REM SET VER_SERV_IP=http://192.168.100.36:8081/
 SET VER_SERV_IP=httP://ksigw.test.guardtime.com:8010/gt-extendingservice
 
 
-SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -P %PUB_SERV_IP% -C 5 -c 5 --user anon --pass anon --log KSI_LOGI.txt
+SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -P %PUB_SERV_IP% -C 5 -c 5 --user anon --pass anon
 
 REM input files
 SET TEST_FILE=../test/resource/testFile
@@ -57,10 +57,15 @@ SET TEST_EXTENDED_SIG=../test/out/extended.ksig
 SET OLD_EXTENDED=../test/out/legacy_extended.gtts
 SET SH1_file=../test/out/sh1.ksig
 SET SH256_file=../test/out/SH256.ksig
+SET PIPE_FILE=../test/out/pipe.file
+SET PIPE_SIG=../test/out/pipe.sig
+SET PIPE_LOG_FILE../test/out/ksi.pipe.log
 
 SET RIPMED160_file=../test/out/RIPMED160.ksig
 SET TEST_FILE_OUT=../test/out/testFile
 SET PUBFILE=../test/out/pubfile
+
+
 
 rem ksitool.exe -x -i ..\test\out\testFile.ksig -o ..\test\out\__extended -X http://192.168.100.36:8081/gt-extendingservice -T 1410858222
 REM Cert files to use
@@ -84,6 +89,7 @@ logi.txt
 echo ****************** Download publications file ******************
 ksitool.exe -p -t -o %PUBFILE% %GLOBAL% -d 
 echo %errorlevel%
+
 ksitool.exe -v -t -b %PUBFILE% %GLOBAL%
 echo %errorlevel%
 
@@ -211,6 +217,25 @@ echo %errorlevel%
 
 echo ********** Verify with user publication - signature not extended. Needs extending. No Publication.********** 
 ksitool -vdr -i %TEST_OLD_SIG% --ref AAAAAA-CUBJQL-AAKVFD-VNJIK5-7DTJ6T-YYCOGP-N7J3RT-CRE5DU-WBB6AE-LANHHH-3CFEM4-7FM65J
+echo %errorlevel%
+
+echo ****************** Test stdin stdout 1******************
+echo "TEST" | ksitool.exe %GLOBAL% -s -f - -o - > %PIPE_SIG%
+echo %errorlevel%
+ksitool.exe %GLOBAL% -v -i - < %PIPE_SIG%
+echo %errorlevel%
+
+echo ****************** Test stdin stdout 2******************
+echo "TEST" > %PIPE_FILE%
+echo "TEST" | ksitool.exe %GLOBAL% -s -f - -o - | ksitool.exe %GLOBAL% -v -f %PIPE_FILE% -i - 
+echo %errorlevel%
+ 
+echo ****************** Test stdin stdout 3******************
+ksitool.exe %GLOBAL% -p -T 1410848909 --log - > PIPE_LOG_FILE
+echo %errorlevel%
+
+echo ****************** Test stdin stdout 4******************
+ksitool.exe %GLOBAL% -p -o - | ksitool.exe -v -b -
 echo %errorlevel%
 
 pause
