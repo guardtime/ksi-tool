@@ -30,7 +30,7 @@ DATE=`date +%s`
 host=${1:-'localhost'}
 
 echo \# Using $host as Guardtime Gateway Server. Specify custom server as 1st command-line argument.
- 
+
 
 . ${dir}/endpoints.sh
 url_c="${resource_dir}/mock.crt"
@@ -61,7 +61,7 @@ diag "######    Verify publications file using certificate email"
 okx src/ksitool -v -t -b ${tmp}/pub.bin -E publications@guardtime.com
 
 diag "######    Get Publications string"
-okx src/ksitool -p -t -T 1410848909  # GMT: Tue, 21 Oct 2014 13:31:15 GMT 
+okx src/ksitool -p -t -T 1410848909  # GMT: Tue, 21 Oct 2014 13:31:15 GMT
 diag "-------------------------------------------------------------------------------";
 
 diag "######    Sign and save log file"
@@ -71,54 +71,54 @@ diag "--------------------------------------------------------------------------
 
 
 diag "######    Sign and verify using algorithm: SHA1"
-okx src/ksitool -s -H SHA1 -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig 
+okx src/ksitool -s -H SHA1 -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig
 okx src/ksitool -v -i ${tmp}/tmp.ksig -f ${resource_dir}/testFile -V $url_c -T ${DATE}
 okx src/ksitool -v -i ${tmp}/tmp.ksig -f ${resource_dir}/testFile -b ${tmp}/pub.bin -V $url_c
 
 diag "######    Sign and verify using algorithm: SHA2-256"
-okx src/ksitool -s -H SHA2-256 -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig 
+okx src/ksitool -s -H SHA2-256 -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig
 okx src/ksitool -v -i ${tmp}/tmp.ksig -f ${resource_dir}/testFile -V $url_c
 
 diag "######    Sign and verify using algorithm: RIPEMD-160"
-okx src/ksitool -s -H RIPEMD-160 -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig 
+okx src/ksitool -s -H RIPEMD-160 -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig
 okx src/ksitool -v -i ${tmp}/tmp.ksig -f ${resource_dir}/testFile -V $url_c
 
 diag "######    Sign and verify using algorithm: SHA2-224"
-okx src/ksitool -s -H SHA2-224 -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig 
+okx src/ksitool -s -H SHA2-224 -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig
 okx src/ksitool -v -i ${tmp}/tmp.ksig -f ${resource_dir}/testFile -V $url_c
 
 diag "######    Sign and verify using algorithm: SHA2-384"
-okx src/ksitool -s -H SHA2-384 -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig 
+okx src/ksitool -s -H SHA2-384 -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig
 okx src/ksitool -v -i ${tmp}/tmp.ksig -f ${resource_dir}/testFile -V $url_c
 
 diag "######    Sign and verify using algorithm: SHA2-512"
-okx src/ksitool -s -H SHA2-512 -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig 
+okx src/ksitool -s -H SHA2-512 -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig
 okx src/ksitool -v -i ${tmp}/tmp.ksig -f ${resource_dir}/testFile -V $url_c
 diag "------------------------------------------------------------------------------";
 
 
 diag "######    Sign and verify raw hash using SHA-1"
-okx src/ksitool -s -F SHA-1:${SH1_HASH} -o ${tmp}/sha1.ksig 
+okx src/ksitool -s -F SHA-1:${SH1_HASH} -o ${tmp}/sha1.ksig
 okx src/ksitool -v -i ${tmp}/sha1.ksig -f ${resource_dir}/testFile -b ${tmp}/pub.bin -V $url_c
 
 diag "######    Sign and verify raw hash using SHA-256"
-okx src/ksitool -s -F SHA-256:${SH256_HASH} -o ${tmp}/sha256.ksig 
+okx src/ksitool -s -F SHA-256:${SH256_HASH} -o ${tmp}/sha256.ksig
 okx src/ksitool -v -i ${tmp}/sha256.ksig -f ${resource_dir}/testFile -V $url_c
 
 diag "######    Sign and verify raw hash using RIPEMD-160"
-okx src/ksitool -s -F RIPEMD-160:${RIPEMD160_HASH} -o ${tmp}/r160.ksig 
+okx src/ksitool -s -F RIPEMD-160:${RIPEMD160_HASH} -o ${tmp}/r160.ksig
 okx src/ksitool -v -i ${tmp}/r160.ksig -f ${resource_dir}/testFile -V $url_c
 
 diag "######    Sign and verify raw hash using SHA-224"
-okx src/ksitool -s -F SHA-224:${SHA224_HASH} -o ${tmp}/sha224.ksig 
+okx src/ksitool -s -F SHA-224:${SHA224_HASH} -o ${tmp}/sha224.ksig
 okx src/ksitool -v -i ${tmp}/sha224.ksig -f ${resource_dir}/testFile -V $url_c
 
 diag "######    Sign and verify raw hash using SHA2-384"
-okx src/ksitool -s -F SHA-384:${SHA384_HASH} -o ${tmp}/sha384.ksig 
+okx src/ksitool -s -F SHA-384:${SHA384_HASH} -o ${tmp}/sha384.ksig
 okx src/ksitool -v -i ${tmp}/sha384.ksig -f ${resource_dir}/testFile -V $url_c
 
 diag "######    Sign and verify raw hash using SHA-512"
-okx src/ksitool -s -F SHA-512:${SHA512_HASH} -o ${tmp}/sha512.ksig 
+okx src/ksitool -s -F SHA-512:${SHA512_HASH} -o ${tmp}/sha512.ksig
 okx src/ksitool -v -i ${tmp}/sha512.ksig -f ${resource_dir}/testFile -V $url_c
 diag "------------------------------------------------------------------------------";
 
@@ -165,23 +165,17 @@ diag "--------------------------------------------------------------------------
 
 #TODO: uncomment if implemeneted
 # diag "######    Use aggregator"
-# okx src/ksitool -nt --aggre --setsystime 
-# okx src/ksitool -nt --aggre --htime 
+# okx src/ksitool -nt --aggre --setsystime
+# okx src/ksitool -nt --aggre --htime
 # diag "------------------------------------------------------------------------------";
 
-diag "######    Test stdin and stdout 1."
-okx echo "TEST" | src/ksitool.exe -s -f - -o - > ${tmp}/pipe_file.ksig
-okx src/ksitool.exe -v -i - < ${tmp}/pipe_file.ksig
-
-diag "######    Test stdin and stdout 2."
+diag "######    Testing stdout and stdin"
 echo "TEST" > ${tmp}/pipeFileClone
-okx echo "TEST" | src/ksitool.exe -s -f - -o - | src/ksitool.exe -v -f ${tmp}/pipeFileClone -i - 
-
-diag "######    Test stdin and stdout 3."
-okx src/ksitool.exe -p -o - | src/ksitool.exe -v -b -
-
-
+like "`echo \"TEST\" | src/ksitool -s -f - -o - | src/ksitool -v -i - -f ${tmp}/pipeFileClone`" "Verification of signature file - successful"
+like "`src/ksitool -p -o - | src/ksitool -v -b -`" "Verification of publications file - successful."
 diag "------------------------------------------------------------------------------";
+
+
 
 diag "====== Testing errors ======";
 
@@ -192,7 +186,7 @@ diag "--------------------------------------------------------------------------
 like "`src/ksitool -x -i ${tmp}/tmp.ksig -o ${tmp}/ext.ksig -V $url_c 2>&1`" "There is no suitable publication yet" "Error extend no suitable publication"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -x -i ${resource_dir}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Unable to read signature from file." "Error extend not suitable format"
+like "`src/ksitool -x -i ${resource_dir}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to load signature from" "Error extend not suitable format"
 diag "------------------------------------------------------------------------------";
 
 like "`src/ksitool -x -i ${resource_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig -T 1311120674 2>&1`" "Aggregation time may not be greater than the publication time" "Error extend before calendar [-T]"
@@ -201,7 +195,7 @@ diag "--------------------------------------------------------------------------
 like "`src/ksitool -x -i ${resource_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig -T 1458914880 2>&1`" "The request asked for hash values newer than the current real time" "Error extend to the future [-T]"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -x -i ${resource_dir}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Unable to read signature from file." "Error verify not suitable format"
+like "`src/ksitool -x -i ${resource_dir}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to load signature from" "Error verify not suitable format"
 diag "------------------------------------------------------------------------------";
 
 like "`src/ksitool -v -x -i ${tmp}/sha1.ksig -f ${SCRIPT_DIR}/resource/TestData.txt -V $url_c 2>&1`" "Wrong document or signature" "Error verifying signature and wrong file"
@@ -222,7 +216,7 @@ diag "--------------------------------------------------------------------------
 like "`src/ksitool -v -t -b ${tmp}/pub.bin -V no_certificate 2>&1`" "File does not exist" "Error missing cert files"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -v -t -b ${resource_dir}/testFile -V $url_c 2>&1`" "Unable to read publications file" "Error Invalid publications file"
+like "`src/ksitool -v -t -b ${resource_dir}/testFile -V $url_c 2>&1`" "Error: Unable to load publication file" "Error Invalid publications file"
 diag "------------------------------------------------------------------------------";
 
 like "`src/ksitool -p -T 969085709 2>&1`" "The request asked for hash values older than the oldest round" "Error Unable to Get Publication string"

@@ -38,6 +38,7 @@
 #	include <fcntl.h>
 #include <stdlib.h>
 #else
+#       include <limits.h>
 #	include <sys/time.h>
 #endif
 
@@ -283,7 +284,7 @@ static int loadKsiObj(KSI_CTX *ksi, const char *path, void **obj,
 	unsigned char *buf = NULL;
 	size_t buf_size = 0xffff;
 	size_t buf_len = 0;
-	void *tmp;
+	void *tmp = NULL;
 
 	if (strcmp(path, "-") == 0) {
 		readFrom = stdin;
@@ -342,7 +343,8 @@ cleanup:
 
 void loadPublicationFile_throws(KSI_CTX *ksi, const char *fname, KSI_PublicationsFile **pubfile) {
 	int res;
-	res = loadKsiObj(ksi, fname, pubfile,
+	res = loadKsiObj(ksi, fname,
+                                (void**)pubfile,
 				(int (*)(KSI_CTX *, unsigned char*, unsigned, void**))KSI_PublicationsFile_parse,
 				(void (*)(void *))KSI_PublicationsFile_free);
 	if (res != 0) {
@@ -352,7 +354,8 @@ void loadPublicationFile_throws(KSI_CTX *ksi, const char *fname, KSI_Publication
 
 void loadSignatureFile_throws(KSI_CTX *ksi, const char *fname, KSI_Signature **sig) {
 	int res;
-	res = loadKsiObj(ksi, fname, sig,
+	res = loadKsiObj(ksi, fname,
+                                (void**)sig,
 				(int (*)(KSI_CTX *, unsigned char*, unsigned, void**))KSI_Signature_parse,
 				(void (*)(void *))KSI_Signature_free);
 	if (res != 0) {
