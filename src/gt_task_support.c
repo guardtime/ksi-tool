@@ -31,6 +31,7 @@
 #include <ctype.h>
 #include <ksi/tlv.h>
 #include <ksi/tlv_template.h>
+#include "ksitool_err.h"
 
 #ifdef _WIN32
 #	include <windows.h>
@@ -45,7 +46,7 @@
 
 #define ON_ERROR_THROW_MSG(_exception, ...) \
 	if (res != KSI_OK){  \
-		THROW_MSG(_exception,getReturnValue(res),__VA_ARGS__); \
+		THROW_MSG(_exception,ksiErrToExitcode(res),__VA_ARGS__); \
 	}
 
 /**
@@ -286,10 +287,15 @@ static int loadKsiObj(KSI_CTX *ksi, const char *path, void **obj,
 	size_t buf_len = 0;
 	void *tmp = NULL;
 
+	if (ksi == NULL || path == NULL || obj == NULL || parse == NULL || free == NULL) {
+		res = 1;
+		goto cleanup;
+	}
+
 	if (strcmp(path, "-") == 0) {
 		readFrom = stdin;
 #ifdef _WIN32
-		res = _setmode(_fileno(stdin),_O_BINARY);
+		res = _setmode(_fileno(stdin), _O_BINARY);
 		if (res == -1) {
 			res = 1;
 			goto cleanup;
@@ -305,6 +311,10 @@ static int loadKsiObj(KSI_CTX *ksi, const char *path, void **obj,
 	}
 
 	buf = (unsigned char*)malloc(buf_size);
+	if (buf == NULL) {
+		res = 1;
+		goto cleanup;
+	}
 
 	while (!feof(readFrom)) {
 		if (buf_len + 1 >= buf_size) {
@@ -342,24 +352,30 @@ cleanup:
 }
 
 void loadPublicationFile_throws(KSI_CTX *ksi, const char *fname, KSI_PublicationsFile **pubfile) {
-	int res;
-	res = loadKsiObj(ksi, fname,
-                                (void**)pubfile,
+	if (ksi == NULL || fname == NULL || pubfile == NULL) {
+		THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_FAILURE, NULL);
+	}
+
+	if (loadKsiObj(ksi, fname,
+				(void**)pubfile,
 				(int (*)(KSI_CTX *, unsigned char*, unsigned, void**))KSI_PublicationsFile_parse,
-				(void (*)(void *))KSI_PublicationsFile_free);
-	if (res != 0) {
-		THROW_MSG(IO_EXCEPTION, EXIT_IO_ERROR, "Error: Unable to load publication file from '%s'.", fname);
+				(void (*)(void *))KSI_PublicationsFile_free) != 0) {
+		KSI_LOG_logCtxError(ksi, KSI_LOG_DEBUG);
+		THROW_MSG(IO_EXCEPTION, EXIT_INVALID_FORMAT, "Error: Unable to load publication file from '%s'.", fname);
 	}
 }
 
 void loadSignatureFile_throws(KSI_CTX *ksi, const char *fname, KSI_Signature **sig) {
-	int res;
-	res = loadKsiObj(ksi, fname,
-                                (void**)sig,
+	if (ksi == NULL || fname == NULL || sig == NULL) {
+		THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_FAILURE, NULL);
+	}
+
+	if(loadKsiObj(ksi, fname,
+				(void**)sig,
 				(int (*)(KSI_CTX *, unsigned char*, unsigned, void**))KSI_Signature_parse,
-				(void (*)(void *))KSI_Signature_free);
-	if (res != 0) {
-		THROW_MSG(IO_EXCEPTION, EXIT_IO_ERROR, "Error: Unable to load signature from '%s'.", fname);
+				(void (*)(void *))KSI_Signature_free) != 0) {
+		KSI_LOG_logCtxError(ksi, KSI_LOG_DEBUG);
+		THROW_MSG(IO_EXCEPTION, EXIT_INVALID_FORMAT, "Error: Unable to load signature from '%s'.", fname);
 	}
 }
 
@@ -423,18 +439,28 @@ int KSI_Signature_serialize_wrapper(KSI_CTX *ksi, KSI_Signature *sig, unsigned c
 }
 
 void saveSignatureFile_throws(KSI_CTX *ksi, KSI_Signature *sign, const char *fname) {
+	if (ksi == NULL || fname == NULL || sign == NULL) {
+		THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_FAILURE, NULL);
+	}
+
 	if (saveKsiObj(ksi, sign,
 				(int (*)(KSI_CTX *, void *, unsigned char **, unsigned *))KSI_Signature_serialize_wrapper,
 				fname) != 0) {
-	THROW_MSG(IO_EXCEPTION, EXIT_IO_ERROR, "Error: Unable to save signature to file '%s'.", fname);
+		KSI_LOG_logCtxError(ksi, KSI_LOG_DEBUG);
+		THROW_MSG(IO_EXCEPTION, EXIT_INVALID_FORMAT, "Error: Unable to save signature to file '%s'.", fname);
 	}
 }
 
-void savePublicationFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *sign, const char *fname) {
-	if (saveKsiObj(ksi, sign,
+void savePublicationFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *fname) {
+	if (ksi == NULL || fname == NULL || pubfile == NULL) {
+		THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_FAILURE, NULL);
+	}
+
+	if (saveKsiObj(ksi, pubfile,
 				(int (*)(KSI_CTX *, void *, unsigned char **, unsigned *))KSI_PublicationsFile_serialize_throws,
 				fname) != 0) {
-	THROW_MSG(IO_EXCEPTION, EXIT_IO_ERROR, "Error: Unable to save publication file to '%s'.", fname);
+		KSI_LOG_logCtxError(ksi, KSI_LOG_DEBUG);
+		THROW_MSG(IO_EXCEPTION, EXIT_INVALID_FORMAT, "Error: Unable to save publication file to '%s'.", fname);
 	}
 }
 
@@ -843,95 +869,7 @@ char* str_measuredTime(void){
 	return buf;
 }
 
-int getReturnValue(int error_code){
-	switch (error_code) {
-		case KSI_OK:
-			return EXIT_SUCCESS;
-		case KSI_INVALID_ARGUMENT:
-			return EXIT_FAILURE;
-		case KSI_INVALID_FORMAT:
-			return EXIT_INVALID_FORMAT;
-		case KSI_UNTRUSTED_HASH_ALGORITHM:
-			return EXIT_CRYPTO_ERROR;
-		case KSI_UNAVAILABLE_HASH_ALGORITHM:
-			return EXIT_CRYPTO_ERROR;
-		case KSI_BUFFER_OVERFLOW:
-			return EXIT_FAILURE;
-		case KSI_TLV_PAYLOAD_TYPE_MISMATCH:
-			return EXIT_FAILURE;
-		case KSI_ASYNC_NOT_FINISHED:
-			return EXIT_FAILURE;
-		case KSI_INVALID_SIGNATURE:
-			return EXIT_INVALID_FORMAT;
-		case KSI_INVALID_PKI_SIGNATURE:
-			return EXIT_CRYPTO_ERROR;
-		case KSI_PKI_CERTIFICATE_NOT_TRUSTED:
-			return EXIT_CRYPTO_ERROR;
-		case KSI_OUT_OF_MEMORY:
-			return EXIT_OUT_OF_MEMORY;
-		case KSI_IO_ERROR:
-			return EXIT_IO_ERROR;
-		case KSI_NETWORK_ERROR:
-			return EXIT_NETWORK_ERROR;
-		case KSI_NETWORK_CONNECTION_TIMEOUT:
-			return EXIT_NETWORK_ERROR;
-		case KSI_NETWORK_SEND_TIMEOUT:
-			return EXIT_NETWORK_ERROR;
-		case KSI_NETWORK_RECIEVE_TIMEOUT:
-			return EXIT_NETWORK_ERROR;
-		case KSI_HTTP_ERROR:
-			return EXIT_NETWORK_ERROR;
-		case KSI_EXTEND_WRONG_CAL_CHAIN:
-			return EXIT_EXTEND_ERROR;
-		case KSI_EXTEND_NO_SUITABLE_PUBLICATION:
-			return EXIT_EXTEND_ERROR;
-		case KSI_VERIFICATION_FAILURE:
-			return EXIT_VERIFY_ERROR;
-		case KSI_INVALID_PUBLICATION:
-			return EXIT_INVALID_FORMAT;
-		case KSI_PUBLICATIONS_FILE_NOT_SIGNED_WITH_PKI:
-			return EXIT_CRYPTO_ERROR;
-		case KSI_CRYPTO_FAILURE:
-			return EXIT_CRYPTO_ERROR;
-		case KSI_HMAC_MISMATCH:
-			return EXIT_HMAC_ERROR;
-		case KSI_UNKNOWN_ERROR:
-			return EXIT_FAILURE;
-		case KSI_SERVICE_INVALID_REQUEST:
-			return 0;
-		/*generic*/
-		case KSI_SERVICE_AUTHENTICATION_FAILURE:
-			return EXIT_AUTH_FAILURE;
-		case KSI_SERVICE_INVALID_PAYLOAD:
-			return EXIT_INVALID_FORMAT;
-		case KSI_SERVICE_INTERNAL_ERROR:
-			return EXIT_FAILURE;
-		case KSI_SERVICE_UPSTREAM_ERROR:
-			return EXIT_FAILURE;
-		case KSI_SERVICE_UPSTREAM_TIMEOUT:
-			return EXIT_FAILURE;
-		case KSI_SERVICE_UNKNOWN_ERROR:
-			return EXIT_FAILURE;
-		/*aggre*/
-		case KSI_SERVICE_AGGR_REQUEST_TOO_LARGE:
-			return EXIT_AGGRE_ERROR;
-		case KSI_SERVICE_AGGR_REQUEST_OVER_QUOTA:
-			return EXIT_AGGRE_ERROR;
-		/*extender*/
-		case KSI_SERVICE_EXTENDER_INVALID_TIME_RANGE:
-			return EXIT_EXTEND_ERROR;
-		case KSI_SERVICE_EXTENDER_DATABASE_MISSING:
-			return EXIT_EXTEND_ERROR;
-		case KSI_SERVICE_EXTENDER_DATABASE_CORRUPT:
-			return EXIT_EXTEND_ERROR;
-		case KSI_SERVICE_EXTENDER_REQUEST_TIME_TOO_OLD:
-			return EXIT_EXTEND_ERROR;
-		case KSI_SERVICE_EXTENDER_REQUEST_TIME_TOO_NEW:
-			return EXIT_EXTEND_ERROR;
-		default:
-			return EXIT_FAILURE;
-	}
-}
+
 
 
 /**
@@ -959,7 +897,7 @@ int getReturnValue(int error_code){
 			snprintf(buf2, sizeof(buf2), "Error: %s (KSI:0x%x)", KSI_getErrorString(res), res); \
 		} \
 	appendMessage(buf2); \
-	THROW_MSG(KSI_EXCEPTION, getReturnValue(res), __VA_ARGS__); \
+	THROW_MSG(KSI_EXCEPTION, ksiErrToExitcode(res), __VA_ARGS__); \
 	} \
 	return res;	 \
 

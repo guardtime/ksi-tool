@@ -24,6 +24,7 @@
 #include "task_def.h"
 #include "gt_task.h"
 #include <ksi/ksi.h>
+#include "ksitool_err.h"
 
 #ifndef _WIN32
 #  ifdef HAVE_CONFIG_H

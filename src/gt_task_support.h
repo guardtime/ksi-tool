@@ -96,7 +96,7 @@ void getFilesHash_throws(KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, K
  */
 void saveSignatureFile_throws(KSI_CTX *ctx, KSI_Signature *sign, const char *fname);
 
-void savePublicationFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *sign, const char *fname);
+void savePublicationFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *fname);
 
 bool isSignatureExtended(const KSI_Signature *sig);
 
@@ -184,7 +184,6 @@ unsigned int measuredTime(void);
  */
 char* str_measuredTime(void);
 
-int getReturnValue(int error_code);
 
 
 /*************************************************

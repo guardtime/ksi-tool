@@ -53,7 +53,8 @@ CMDTOOL_OBJ = \
 	$(OBJ_DIR)\try-catch.obj \
 	$(OBJ_DIR)\task_def.obj \
 	$(OBJ_DIR)\param_set.obj \
-	$(OBJ_DIR)\printer.obj
+	$(OBJ_DIR)\printer.obj \
+	$(OBJ_DIR)\ksitool_err.obj
 	
 
 	

@@ -19,6 +19,7 @@
  */
 
 #include "gt_task_support.h"
+#include "ksitool_err.h"
 #include "try-catch.h"
 #include "ksi/net.h"
 

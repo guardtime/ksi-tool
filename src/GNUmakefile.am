@@ -42,4 +42,6 @@ ksitool_SOURCES = \
 	param_set.c \
 	param_set.h \
 	printer.c \
-	printer.h
+	printer.h \
+	ksitool_err.c \
+	ksitool_err.h
