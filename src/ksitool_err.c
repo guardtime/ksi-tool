@@ -2,7 +2,7 @@
 #include <ksi/ksi.h>
 #include "ksitool_err.h"
 
-int ksiErrToExitcode(int error_code){
+static int ksiErrToExitcode(int error_code){
 	switch (error_code) {
 		case KSI_OK:
 			return EXIT_SUCCESS;
@@ -90,4 +90,77 @@ int ksiErrToExitcode(int error_code){
 		default:
 			return EXIT_FAILURE;
 	}
+}
+
+static int ksitoolErrToExitcode(int error_code) {
+	switch (error_code) {
+		case KSI_OK:
+			return EXIT_SUCCESS;
+		case KT_OUT_OF_MEMORY:
+			return EXIT_OUT_OF_MEMORY;
+		case KT_INVALID_ARGUMENT:
+			return EXIT_FAILURE;
+		case KT_UNABLE_TO_SET_STREAM_MODE:
+			return EXIT_IO_ERROR;
+		case KT_IO_ERROR:
+			return EXIT_IO_ERROR;
+		case KT_INDEX_OVF:
+			return EXIT_FAILURE;
+		case KT_INVALID_INPUT_FORMAT:
+			return EXIT_INVALID_FORMAT;
+		case KT_UNKNOWN_HASH_ALG:
+			return EXIT_CRYPTO_ERROR;
+		default:
+			return EXIT_FAILURE;
+	}
+}
+
+static const char* ksitoolErrToString(int error_code) {
+	switch (error_code) {
+		case KSI_OK:
+			return "OK.";
+		case KT_OUT_OF_MEMORY:
+			return "Ksitool out of memory.";
+		case KT_INVALID_ARGUMENT:
+			return "Invalid argument.";
+		case KT_UNABLE_TO_SET_STREAM_MODE:
+			return "Unable to set stream mode.";
+		case KT_IO_ERROR:
+			return "IO error.";
+		case KT_INDEX_OVF:
+			return "Index is too large.";
+		case KT_INVALID_INPUT_FORMAT:
+			return "Invalid input data format";
+		case KT_HASH_LENGTH_IS_NOT_EVEN:
+			return "The hash length is not even number.";
+		case KT_INVALID_HEX_CHAR:
+			return "The hex data contains invalid characters.";
+		case KT_UNKNOWN_HASH_ALG:
+			return "The hash algorithm is unknown or unimplemented.";
+		default:
+			return "Unknown error.";
+	}
+}
+
+
+int errToExitCode(int error) {
+	int exit;
+
+	if(error < KSITOOL_ERR_BASE)
+		exit = ksiErrToExitcode(error);
+	else
+		exit = ksitoolErrToExitcode(error);
+
+	return exit;
+}
+
+const char* errToString(int error) {
+	const char* str;
+
+	if(error < KSITOOL_ERR_BASE)
+		str = KSI_getErrorString(error);
+	else
+		str = ksitoolErrToString(error);
+
+	return str;
 }

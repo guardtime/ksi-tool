@@ -65,12 +65,13 @@ extern "C" {
 	 */
 	typedef enum _exceptions_t{
 		_CODE = 0,
-		KSI_EXCEPTION = 100,
+		EXCEPTION,
 		NULLPTR_EXCEPTION,
 		INVALID_ARGUMENT_EXCEPTION,
 		OUT_OF_MEMORY_EXCEPTION,
 		NO_PRIVILEGES_EXCEPTION,		
-		IO_EXCEPTION
+		IO_EXCEPTION,
+		KSI_EXCEPTION = 100
 	}exceptions_t;
 
 	/**

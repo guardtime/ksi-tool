@@ -31,6 +31,8 @@ char *Exception_toString(exceptions_t e){
 	switch(e){
 	case KSI_EXCEPTION:
 		return "KSI exception";
+	case EXCEPTION:
+		return "Exception";
 	case NULLPTR_EXCEPTION:
 		return "Nullptr exception";
 	case INVALID_ARGUMENT_EXCEPTION:

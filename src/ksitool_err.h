@@ -1,29 +1,44 @@
 #ifndef KSITOOL_ERR_H
 #define	KSITOOL_ERR_H
 
-#define EXIT_INVALID_CL_PARAMETERS 3
-#define EXIT_INVALID_FORMAT 4
-#define EXIT_NETWORK_ERROR 5
-#define EXIT_VERIFY_ERROR 6
-/*Extending failure*/
-#define EXIT_EXTEND_ERROR 7
-/*Aggregation failure*/
-#define EXIT_AGGRE_ERROR 8	
-#define EXIT_IO_ERROR 9
-#define EXIT_CRYPTO_ERROR 10
-#define EXIT_HMAC_ERROR 11
-#define EXIT_NO_PRIVILEGES 12
-#define EXIT_OUT_OF_MEMORY 13
-#define EXIT_AUTH_FAILURE 14
 
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
-int ksiErrToExitcode(int error_code);
+#define KSITOOL_ERR_BASE 0x100001
+	
+enum Ksitool_exit {
+	EXIT_INVALID_CL_PARAMETERS = 3,
+	EXIT_INVALID_FORMAT = 4,
+	EXIT_NETWORK_ERROR = 5,
+	EXIT_VERIFY_ERROR = 6, 
+	EXIT_EXTEND_ERROR = 7, 
+	EXIT_AGGRE_ERROR = 8,
+	EXIT_IO_ERROR = 9,
+	EXIT_CRYPTO_ERROR = 10,
+	EXIT_HMAC_ERROR = 11,
+	EXIT_NO_PRIVILEGES = 12,
+	EXIT_OUT_OF_MEMORY = 13,
+	EXIT_AUTH_FAILURE = 14
+};
 
-
+enum Ksitool_errors {
+	KT_OK = 0,
+	KT_OUT_OF_MEMORY = KSITOOL_ERR_BASE,
+	KT_INVALID_ARGUMENT,
+	KT_UNABLE_TO_SET_STREAM_MODE,
+	KT_IO_ERROR,
+	KT_INDEX_OVF,
+	KT_INVALID_INPUT_FORMAT,
+	KT_HASH_LENGTH_IS_NOT_EVEN,
+	KT_INVALID_HEX_CHAR,
+	KT_UNKNOWN_HASH_ALG
+};	
+	
+int errToExitCode(int error);
+const char* errToString(int error);
 
 #ifdef	__cplusplus
 }

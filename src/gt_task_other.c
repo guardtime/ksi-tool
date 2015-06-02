@@ -138,13 +138,13 @@ static void setSystemTime_throws(const KSI_Signature *sig){
 #endif
 
 	res = KSI_Signature_getCalendarAuthRec(sig, &calAuthrec);
-	if(res != KSI_OK || calAuthrec == NULL ) THROW_MSG(KSI_EXCEPTION,ksiErrToExitcode(res), "Unable to get calendar authentication record");
+	if(res != KSI_OK || calAuthrec == NULL ) THROW_MSG(KSI_EXCEPTION, errToExitCode(res), "Unable to get calendar authentication record");
 
 	res = KSI_CalendarAuthRec_getPublishedData(calAuthrec, &pubData);
-	if(res != KSI_OK || pubData == NULL ) THROW_MSG(KSI_EXCEPTION,ksiErrToExitcode(res), "Unable to get published data");
+	if(res != KSI_OK || pubData == NULL ) THROW_MSG(KSI_EXCEPTION, errToExitCode(res), "Unable to get published data");
 
 	res = KSI_PublicationData_getTime(pubData, &time);
-	if(res != KSI_OK || time == NULL ) THROW_MSG(KSI_EXCEPTION,ksiErrToExitcode(res), "Unable to get time");
+	if(res != KSI_OK || time == NULL ) THROW_MSG(KSI_EXCEPTION, errToExitCode(res), "Unable to get time");
 
 	pubTm = (time_t)KSI_Integer_getUInt64(time);
 	gmtime_r(&pubTm, &tm);

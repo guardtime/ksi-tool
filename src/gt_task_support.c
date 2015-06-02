@@ -46,7 +46,7 @@
 
 #define ON_ERROR_THROW_MSG(_exception, ...) \
 	if (res != KSI_OK){  \
-		THROW_MSG(_exception,ksiErrToExitcode(res),__VA_ARGS__); \
+		THROW_MSG(_exception, errToExitCode(res),__VA_ARGS__); \
 	}
 
 /**
@@ -228,51 +228,94 @@ bool isPiping(paramSet *set) {
 }
 
 void closeTask(KSI_CTX *ksi){
+	if (ksi == NULL)
+		return;
 	if(logFile) fclose(logFile);
 	KSI_CTX_free(ksi);
 }
 
-void getFilesHash_throws(KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash){
+static int getStreamFromPath(const char *fname, const char *mode, FILE **stream, bool *close) {
 	int res;
 	FILE *in = NULL;
+	FILE *tmp = NULL;
+	bool doClose = false;
+
+	if (fname == NULL || mode == NULL || stream == NULL || close == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	if (strcmp(fname, "-") == 0) {
+		tmp = strcmp(mode, "rb") == 0 ? stdin : stdout;
+#ifdef _WIN32
+		res = _setmode(_fileno(tmp),_O_BINARY);
+		if (res == -1) {
+			res = KT_UNABLE_TO_SET_STREAM_MODE;
+			goto cleanup;
+		}
+#endif
+	} else {
+		in = fopen(fname, mode);
+		if (in == NULL) {
+			res = KT_IO_ERROR;
+			goto cleanup;
+		}
+
+		doClose = true;
+		tmp = in;
+	}
+
+	*stream = tmp;
+	in = NULL;
+	*close = doClose;
+
+	res = KT_OK;
+
+cleanup:
+
+	if (in) fclose(in);
+	return res;
+}
+
+void getFilesHash_throws(KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash){
+	int res;
 	FILE *readFrom = NULL;
 	unsigned char buf[1024];
 	size_t buf_len;
+	bool close;
+	KSI_DataHash *tmp = NULL;
 
-	try
-		CODE{
-			if(ksi == NULL || hsr == NULL || fname == NULL || hash == NULL)
-				THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_FAILURE, "Error: Invalid function parameters.");
+	if(ksi == NULL || hsr == NULL || fname == NULL || hash == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
 
-			if (strcmp(fname, "-") == 0) {
-				readFrom = stdin;
-#ifdef _WIN32
-				res = _setmode(_fileno(stdin),_O_BINARY);
-				if (res == -1) {
-					THROW_MSG(IO_EXCEPTION, EXIT_IO_ERROR, "Error: Unable to configure stdin as binary input\n", fname);
-				}
-#endif
-			} else {
-				in = fopen(fname, "rb");
-				if (in == NULL)
-					THROW_MSG(IO_EXCEPTION,EXIT_IO_ERROR, "Error: Unable to open input file '%s'\n", fname);
-				readFrom = in;
-			}
+	res = getStreamFromPath(fname, "rb", &readFrom, &close);
+	if (res != KT_OK) goto cleanup;
 
-			while (!feof(readFrom)) {
-				buf_len = fread(buf, 1, sizeof (buf), readFrom);
-				KSI_DataHasher_add_throws(ksi, hsr, buf, buf_len);
-			}
 
-			if (in != NULL) fclose(in);
-			KSI_DataHasher_close_throws(ksi, hsr, hash);
-		}
-		CATCH_ALL{
-			if(in) fclose(in);
-			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to hash file '%s'.\n", fname);
-		}
-	end_try
+	while (!feof(readFrom)) {
+		buf_len = fread(buf, 1, sizeof (buf), readFrom);
+		KSI_DataHasher_add_throws(ksi, hsr, buf, buf_len);
+	}
 
+	res = KSI_DataHasher_close(hsr, &tmp);
+	if (res != KSI_OK) goto cleanup;
+
+	*hash = tmp;
+	tmp = NULL;
+
+	res = KT_OK;
+
+cleanup:
+
+	if (close == true && readFrom != NULL) fclose(readFrom);
+	KSI_DataHash_free(tmp);
+
+	if (res != KT_OK) {
+		KSI_LOG_logCtxError(ksi, KSI_LOG_DEBUG);
+		THROW_MSG(EXCEPTION, errToExitCode(res), "Error: Unable to get files hash.")
+	}
 	return;
 }
 
@@ -281,38 +324,23 @@ static int loadKsiObj(KSI_CTX *ksi, const char *path, void **obj,
 					void (*obj_free)()){
 	int res;
 	FILE *readFrom = NULL;
-	FILE *in = NULL;
+	bool close = false;
 	unsigned char *buf = NULL;
 	size_t buf_size = 0xffff;
 	size_t buf_len = 0;
 	void *tmp = NULL;
 
 	if (ksi == NULL || path == NULL || obj == NULL || parse == NULL || free == NULL) {
-		res = 1;
+		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
-	if (strcmp(path, "-") == 0) {
-		readFrom = stdin;
-#ifdef _WIN32
-		res = _setmode(_fileno(stdin), _O_BINARY);
-		if (res == -1) {
-			res = 1;
-			goto cleanup;
-		}
-#endif
-	} else {
-		in = fopen(path, "rb");
-		if (in == NULL) {
-			res = 1;
-			goto cleanup;
-		}
-		readFrom = in;
-	}
+	res = getStreamFromPath(path, "rb", &readFrom, &close);
+	if (res != KT_OK) goto cleanup;
 
 	buf = (unsigned char*)malloc(buf_size);
 	if (buf == NULL) {
-		res = 1;
+		res = KT_OUT_OF_MEMORY;
 		goto cleanup;
 	}
 
@@ -321,7 +349,7 @@ static int loadKsiObj(KSI_CTX *ksi, const char *path, void **obj,
 			buf_size += 0xffff;
 			buf = realloc(buf, buf_size);
 			if (buf == NULL) {
-				res = 1;
+				res = KT_OUT_OF_MEMORY;
 				goto cleanup;
 			}
 		}
@@ -329,22 +357,23 @@ static int loadKsiObj(KSI_CTX *ksi, const char *path, void **obj,
 	}
 
 	if (buf_len > UINT_MAX) {
-		res = 1;
+		res = KT_INDEX_OVF;
 		goto cleanup;
 	}
 
 	res = parse(ksi, buf, (unsigned)buf_len, &tmp);
 	if (res != KSI_OK || tmp == NULL) {
-		res = 1;
 		goto cleanup;
 	}
 
 	*obj = tmp;
 	tmp = NULL;
+	res = KT_OK;
+
 
 cleanup:
 
-	if (in != NULL) fclose(in);
+	if (close == true && readFrom != NULL) fclose(readFrom);
 	free(buf);
 	obj_free(tmp);
 
@@ -352,30 +381,38 @@ cleanup:
 }
 
 void loadPublicationFile_throws(KSI_CTX *ksi, const char *fname, KSI_PublicationsFile **pubfile) {
+	int res;
+
 	if (ksi == NULL || fname == NULL || pubfile == NULL) {
 		THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_FAILURE, NULL);
 	}
 
-	if (loadKsiObj(ksi, fname,
+	res = loadKsiObj(ksi, fname,
 				(void**)pubfile,
 				(int (*)(KSI_CTX *, unsigned char*, unsigned, void**))KSI_PublicationsFile_parse,
-				(void (*)(void *))KSI_PublicationsFile_free) != 0) {
+				(void (*)(void *))KSI_PublicationsFile_free);
+
+	if (res) {
 		KSI_LOG_logCtxError(ksi, KSI_LOG_DEBUG);
-		THROW_MSG(IO_EXCEPTION, EXIT_INVALID_FORMAT, "Error: Unable to load publication file from '%s'.", fname);
+		THROW_MSG(IO_EXCEPTION, errToExitCode(res), "Error: Unable to load publication file from '%s'.", fname);
 	}
 }
 
 void loadSignatureFile_throws(KSI_CTX *ksi, const char *fname, KSI_Signature **sig) {
+	int res;
+
 	if (ksi == NULL || fname == NULL || sig == NULL) {
 		THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_FAILURE, NULL);
 	}
 
-	if(loadKsiObj(ksi, fname,
+	res = loadKsiObj(ksi, fname,
 				(void**)sig,
 				(int (*)(KSI_CTX *, unsigned char*, unsigned, void**))KSI_Signature_parse,
-				(void (*)(void *))KSI_Signature_free) != 0) {
+				(void (*)(void *))KSI_Signature_free);
+
+	if(res != 0) {
 		KSI_LOG_logCtxError(ksi, KSI_LOG_DEBUG);
-		THROW_MSG(IO_EXCEPTION, EXIT_INVALID_FORMAT, "Error: Unable to load signature from '%s'.", fname);
+		THROW_MSG(IO_EXCEPTION, errToExitCode(res), "Error: Unable to load signature from '%s'.", fname);
 	}
 }
 
@@ -384,52 +421,38 @@ static int saveKsiObj(KSI_CTX *ksi, void *obj,
 							const char *path) {
 	int res;
 	bool doPipe = false;
-	FILE *file = NULL;
 	FILE *writeInto = NULL;
+	bool close = false;
 	unsigned char *raw = NULL;
 	unsigned raw_len;
 	size_t count;
 
-	doPipe = strcmp(path, "-") == 0 ? true : false;
 
 	if (ksi == NULL || obj == NULL || serialize == NULL || path == NULL) {
-		res = 1;
+		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
+
+	doPipe = strcmp(path, "-") == 0 ? true : false;
 
 	res = serialize(ksi, obj, &raw, &raw_len);
 	if (res != KSI_OK) goto cleanup;
 
-	if (doPipe) {
-		writeInto = stdout;
-#ifdef _WIN32
-	res = _setmode(_fileno(stdout),_O_BINARY);
-	if (res == -1) {
-		res = 1;
-		goto cleanup;
-	}
-#endif
-	} else {
-		file = fopen(path, "wb");
-		if(file == NULL) {
-			res = 1;
-			goto cleanup;
-		}
-		writeInto = file;
-	}
+	res = getStreamFromPath(path, "wb", &writeInto, &close);
+	if (res != KT_OK) goto cleanup;
 
 	count = fwrite(raw, 1, raw_len, writeInto);
 	if (count != raw_len) {
-		res = 1;
+		res = KT_IO_ERROR;
 		goto cleanup;
 	}
 
-	res = 0;
+	res = KT_OK;
 
 cleanup:
 
 	KSI_free(raw);
-	if (file != NULL) fclose(file);
+	if (close == true && writeInto != NULL) fclose(writeInto);
 
 	return res;
 }
@@ -439,28 +462,36 @@ int KSI_Signature_serialize_wrapper(KSI_CTX *ksi, KSI_Signature *sig, unsigned c
 }
 
 void saveSignatureFile_throws(KSI_CTX *ksi, KSI_Signature *sign, const char *fname) {
+	int res;
+
 	if (ksi == NULL || fname == NULL || sign == NULL) {
 		THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_FAILURE, NULL);
 	}
 
-	if (saveKsiObj(ksi, sign,
+	res = saveKsiObj(ksi, sign,
 				(int (*)(KSI_CTX *, void *, unsigned char **, unsigned *))KSI_Signature_serialize_wrapper,
-				fname) != 0) {
+				fname);
+
+	if (res != 0) {
 		KSI_LOG_logCtxError(ksi, KSI_LOG_DEBUG);
-		THROW_MSG(IO_EXCEPTION, EXIT_INVALID_FORMAT, "Error: Unable to save signature to file '%s'.", fname);
+		THROW_MSG(IO_EXCEPTION, errToExitCode(res), "Error: Unable to save signature to file '%s'.", fname);
 	}
 }
 
 void savePublicationFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *fname) {
+	int res;
+
 	if (ksi == NULL || fname == NULL || pubfile == NULL) {
 		THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_FAILURE, NULL);
 	}
 
-	if (saveKsiObj(ksi, pubfile,
+	res = saveKsiObj(ksi, pubfile,
 				(int (*)(KSI_CTX *, void *, unsigned char **, unsigned *))KSI_PublicationsFile_serialize_throws,
-				fname) != 0) {
+				fname);
+
+	if (res != 0) {
 		KSI_LOG_logCtxError(ksi, KSI_LOG_DEBUG);
-		THROW_MSG(IO_EXCEPTION, EXIT_INVALID_FORMAT, "Error: Unable to save publication file to '%s'.", fname);
+		THROW_MSG(IO_EXCEPTION, errToExitCode(res), "Error: Unable to save publication file to '%s'.", fname);
 	}
 }
 
@@ -729,71 +760,110 @@ static int xx(char c1, char c2){
  * @param[in] hexin Pointer to string for conversion.
  * @param[out] binout Pointer to receiving pointer to binary array.
  * @param[out] lenout Pointer to binary array length.
- *
- * @throws INVALID_ARGUMENT_EXCEPTION, OUT_OF_MEMORY_EXCEPTION.
  */
-static void getBinaryFromHexString(const char *hexin, unsigned char **binout, size_t *lenout){
-	size_t len = strlen(hexin);
+static int getBinaryFromHexString(const char *hexin, unsigned char **binout, size_t *lenout){
+	int res;
+	size_t len;
 	unsigned char *tmp = NULL;
-	size_t arraySize = len/2;
-	int i,j;
+	size_t arraySize;
+	int i, j;
 
-	if(hexin == NULL || binout == NULL || lenout == NULL)
-		THROW(INVALID_ARGUMENT_EXCEPTION,EXIT_FAILURE);
+	if (hexin == NULL || binout == NULL || lenout == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
 
-	if(len%2 != 0){
-		THROW_MSG(INVALID_ARGUMENT_EXCEPTION,EXIT_INVALID_FORMAT, "Error: The hash length is not even number!\n");
+	len = strlen(hexin);
+	arraySize = len / 2;
+
+	if (len%2 != 0) {
+		res = KT_HASH_LENGTH_IS_NOT_EVEN;
+		goto cleanup;
 	}
 
 	tmp = KSI_calloc(arraySize, sizeof(unsigned char));
 	if(tmp == NULL){
-		THROW_MSG(OUT_OF_MEMORY_EXCEPTION,EXIT_OUT_OF_MEMORY, "Error: Unable to get memory for parsing hex to binary.\n");
+		res = KT_OUT_OF_MEMORY;
+		goto cleanup;
 	}
 
-	for(i=0,j=0; i<arraySize; i++, j+=2){
-		int res = xx(hexin[j], hexin[j+1]);
-		if(res == -1){
-			KSI_free(tmp);
-			tmp = NULL;
-			THROW_MSG(INVALID_ARGUMENT_EXCEPTION,EXIT_INVALID_FORMAT, "Error: The hex number is invalid: %c%c!\n", hexin[j], hexin[j+1]);
+	for (i = 0, j = 0; i < arraySize; i++, j += 2){
+		int value = xx(hexin[j], hexin[j+1]);
+		if(value == -1){
+			res = KT_INVALID_HEX_CHAR;
+			goto cleanup;
 		}
-		tmp[i] = (unsigned char)res;
+
+		tmp[i] = (unsigned char)value;
 	}
 
 	*lenout = arraySize;
 	*binout = tmp;
+	tmp = NULL;
+	res = KT_OK;
 
-	return;
+cleanup:
+
+	KSI_free(tmp);
+
+	return res;
 }
 
-static bool getHashAndAlgStrings(const char *instrn, char **strnAlgName, char **strnHash){
+static int getHashAndAlgStrings(const char *instrn, char **strnAlgName, char **strnHash){
+	int res ;
 	char *colon = NULL;
 	size_t algLen = 0;
 	size_t hahsLen = 0;
 	char *temp_strnAlg = NULL;
 	char *temp_strnHash = NULL;
-
-
-	if(strnAlgName == NULL || strnHash == NULL) return false;
 	*strnAlgName = NULL;
 	*strnHash = NULL;
-	if (instrn == NULL) return false;
+
+
+	if(instrn == NULL || strnAlgName == NULL || strnHash == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
 
 	colon = strchr(instrn, ':');
 	if (colon != NULL) {
 		algLen = (colon - instrn) / sizeof (char);
 		hahsLen = strlen(instrn) - algLen - 1;
+
 		temp_strnAlg = calloc(algLen + 1, sizeof (char));
+		if (temp_strnAlg == NULL) {
+			res = KT_OUT_OF_MEMORY;
+			goto cleanup;
+		}
+
 		temp_strnHash = calloc(hahsLen + 1, sizeof (char));
+		if (temp_strnHash == NULL) {
+			res = KT_OUT_OF_MEMORY;
+			goto cleanup;
+		}
+
 		memcpy(temp_strnAlg, instrn, algLen);
 		temp_strnAlg[algLen] = 0;
 		memcpy(temp_strnHash, colon + 1, hahsLen);
 		temp_strnHash[hahsLen] = 0;
+	} else {
+		res = KT_INVALID_INPUT_FORMAT;
+		goto cleanup;
 	}
 
 	*strnAlgName = temp_strnAlg;
 	*strnHash = temp_strnHash;
-	return true;
+	temp_strnAlg = NULL;
+	temp_strnHash = NULL;
+
+	res = KT_OK;
+
+cleanup:
+
+	free(temp_strnAlg);
+	free(temp_strnHash);
+
+	return res;
 }
 
 int getHashAlgorithm_throws(const char *hashAlg){
@@ -802,34 +872,51 @@ int getHashAlgorithm_throws(const char *hashAlg){
 	return hasAlgID;
 }
 
-void getHashFromCommandLine_throws(const char *imprint,KSI_CTX *ksi, KSI_DataHash **hash){
+void getHashFromCommandLine_throws(const char *imprint, KSI_CTX *ksi, KSI_DataHash **hash){
+	int res;
 	unsigned char *data = NULL;
 	size_t len;
-	int hasAlg = -1;
-
+	int hasAlg;
 	char *strAlg = NULL;
 	char *strHash = NULL;
-	try
-		CODE{
-			if(imprint == NULL) THROW_MSG(INVALID_ARGUMENT_EXCEPTION,EXIT_INVALID_CL_PARAMETERS, "");
-			getHashAndAlgStrings(imprint, &strAlg, &strHash);
-			if(strAlg == NULL || strHash== NULL ) THROW_MSG(INVALID_ARGUMENT_EXCEPTION,EXIT_INVALID_CL_PARAMETERS, "");
+	KSI_DataHash *tmp = NULL;
 
-			getBinaryFromHexString(strHash, &data, &len);
-			hasAlg = getHashAlgorithm_throws(strAlg);
-			KSI_DataHash_fromDigest_throws(ksi, hasAlg, data, (unsigned int)len, hash);
-		}
-		CATCH_ALL{
-			free(strAlg);
-			free(strHash);
-			free(data);
-			THROW_FORWARD_APPEND_MESSAGE("Error: Unable to get hash from command-line.\n");
-		}
-	end_try
+	if (imprint == NULL || ksi == NULL || hash == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	res = getHashAndAlgStrings(imprint, &strAlg, &strHash);
+	if (res != KT_OK) goto cleanup;
+
+	res = getBinaryFromHexString(strHash, &data, &len);
+	if (res != KT_OK) goto cleanup;
+
+	hasAlg = KSI_getHashAlgorithmByName(strAlg);
+	if (hasAlg == -1) {
+		res = KT_UNKNOWN_HASH_ALG;
+		goto cleanup;
+	}
+
+	res = KSI_DataHash_fromDigest(ksi, hasAlg, data, (unsigned int)len, &tmp);
+	if (res != KSI_OK) goto cleanup;
+
+	*hash = tmp;
+	tmp = NULL;
+	res = KT_OK;
+
+cleanup:
 
 	free(strAlg);
 	free(strHash);
 	free(data);
+	KSI_DataHash_free(tmp);
+
+	if (res != KT_OK) {
+		appendMessage("Error: Unable to get hash from command-line.\n");
+		THROW_MSG(EXCEPTION, errToExitCode(res), "Error: ", errToString(res));
+	}
+
 	return;
 }
 
@@ -897,7 +984,7 @@ char* str_measuredTime(void){
 			snprintf(buf2, sizeof(buf2), "Error: %s (KSI:0x%x)", KSI_getErrorString(res), res); \
 		} \
 	appendMessage(buf2); \
-	THROW_MSG(KSI_EXCEPTION, ksiErrToExitcode(res), __VA_ARGS__); \
+	THROW_MSG(KSI_EXCEPTION, errToExitCode(res), __VA_ARGS__); \
 	} \
 	return res;	 \
 
@@ -931,10 +1018,6 @@ int KSI_DataHasher_close_throws(KSI_CTX *ksi, KSI_DataHasher *hasher, KSI_DataHa
 
 int KSI_createSignature_throws(KSI_CTX *ksi, KSI_DataHash *hash, KSI_Signature **sign){
 	 THROWABLE3(ksi, KSI_createSignature(ksi, hash, sign), "Error: Unable to sign.");
-}
-
-int KSI_DataHash_fromDigest_throws(KSI_CTX *ksi, int hasAlg, const unsigned char *digest, unsigned int len, KSI_DataHash **hash){
-	THROWABLE3(ksi, KSI_DataHash_fromDigest(ksi, hasAlg, digest, len, hash), "Error: Unable to create hash from digest.");
 }
 
 int KSI_Signature_getPublicationRecord_throws(KSI_CTX *ksi, const KSI_Signature *sig, KSI_PublicationRecord **pubRec){
