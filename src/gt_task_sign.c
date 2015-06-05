@@ -19,90 +19,125 @@
  */
 
 #include "gt_task_support.h"
-#include "try-catch.h"
 
-static void printSignaturesRootHash_and_Time(const KSI_Signature *sig);
+static int  getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh);
 
 int GT_signTask(Task *task) {
+	int res;
 	paramSet *set = NULL;
+	bool t, n, d, tlv;
+	ERR_TRCKR *err = NULL;
 	KSI_CTX *ksi = NULL;
-	KSI_DataHasher *hsr = NULL;
 	KSI_DataHash *hash = NULL;
 	KSI_Signature *sign = NULL;
 	int retval = EXIT_SUCCESS;
-
-	bool H, t, n, d, tlv;
-	char *hashAlgName_H = NULL;
-	char *inDataFileName = NULL;
 	char *outSigFileName = NULL;
-	char *imprint = NULL;
+
 
 	set = Task_getSet(task);
-	H = paramSet_getStrValueByNameAt(set, "H", 0,&hashAlgName_H);
-	paramSet_getStrValueByNameAt(set, "f", 0,&inDataFileName);
 	paramSet_getStrValueByNameAt(set, "o", 0,&outSigFileName);
-	paramSet_getStrValueByNameAt(set, "F", 0,&imprint);
 	n = paramSet_isSetByName(set, "n");
 	t = paramSet_isSetByName(set, "t");
 	d = paramSet_isSetByName(set, "d");
 	tlv = paramSet_isSetByName(set, "tlv");
 
-	resetExceptionHandler();
-	try
-		CODE{
-			/*Initalization of KSI */
-			initTask_throws(task, &ksi);
-			/*Getting the hash for signing process*/
-			if(Task_getID(task) == signDataFile){
-				char *hashAlg;
-				int hasAlgID=-1;
-				/*Choosing of hash algorithm and creation of data hasher*/
-				print_info("Getting hash from file for signing process... ");
-				hashAlg = H ? (hashAlgName_H) : ("default");
-				hasAlgID = getHashAlgorithm_throws(hashAlg);
-				KSI_DataHasher_open_throws(ksi,hasAlgID , &hsr);
-				getFilesHash_throws(ksi, hsr, inDataFileName, &hash );
-				print_info("ok.\n");
-			}
-			else if(Task_getID(task) == signHash){
-				print_info("Getting hash from input string for signing process... ");
-				getHashFromCommandLine_throws(imprint,ksi, &hash);
-				print_info("ok.\n");
-			}
 
-			/* Sign the data hash. */
-			print_info("Creating signature from hash... ");
-			MEASURE_TIME(KSI_createSignature_throws(ksi, hash, &sign));
-			print_info("ok. %s\n",t ? str_measuredTime() : "");
+	res = initTask(task, &ksi, &err);
+	if (res != KT_OK) goto cleanup;
 
-			/* Save signature file */
-			saveSignatureFile_throws(ksi, sign, outSigFileName);
-			print_info("Signature saved.\n");
-		}
-		CATCH_ALL{
-			if(ksi)
-				print_errors("failed.\n");
-			printErrorMessage();
-			retval = _EXP.exep.ret;
-			exceptionSolved();
-		}
-	end_try
 
+	/*Get Hash*/
+	res = getHash(task, ksi, err, &hash);
+	if (res != KT_OK) goto cleanup;
+
+	/* Sign the data hash. */
+	print_info("Creating signature from hash... ");
+	MEASURE_TIME(res = KSI_createSignature(ksi, hash, &sign));
+	ERR_CATCH_KSI(ksi, "Error: Unable to create signature.");
+	print_info("ok. %s\n",t ? str_measuredTime() : "");
+
+	/* Save signature file */
+	res = saveSignatureFile(err, ksi, sign, outSigFileName);
+	if (res != KT_OK) goto cleanup;
+	print_info("Signature saved.\n");
+
+	/*Print info*/
 	if(n || d || tlv) print_info("\n");
 	if (n) printSignerIdentity(sign);
 	if (d) printSignatureSigningTime(sign);
 	if (tlv) printSignatureStructure(ksi, sign);
 
+
+cleanup:
+
+	if (res != KT_OK) {
+		print_errors("failed.\n");
+		ERR_TRCKR_printErrors(err);
+		retval = errToExitCode(res);
+	}
+
 	KSI_Signature_free(sign);
 	KSI_DataHash_free(hash);
-	KSI_DataHasher_free(hsr);
 	closeTask(ksi);
+	ERR_TRCKR_free(err);
 
 	return retval;
 }
 
+static int  getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh) {
+	int res;
+	paramSet *set = NULL;
+	bool H;
+	char *hashAlg;
+	int hasAlgID;
+	KSI_DataHasher *hsr = NULL;
+	KSI_DataHash *tmp = NULL;
+	char *inDataFileName = NULL;
+	char *imprint = NULL;
 
 
+	set = Task_getSet(task);
+	paramSet_getStrValueByNameAt(set, "f", 0,&inDataFileName);
+	paramSet_getStrValueByNameAt(set, "F", 0,&imprint);
+	H = paramSet_getStrValueByNameAt(set, "H", 0,&hashAlg);
 
 
+	if(Task_getID(task) == signDataFile){
+		print_info("Getting hash from file for signing process... ");
+		hashAlg = H ? (hashAlg) : ("default");
+		hasAlgID = KSI_getHashAlgorithmByName(hashAlg);
+		if (hasAlgID == -1) {
+			res = KT_UNKNOWN_HASH_ALG;
+			ERR_TRCKR_ADD(err, res, "Error: The hash algorithm \"%s\" is unknown.", hashAlg);
+			goto cleanup;
+		}
 
+		res = KSI_DataHasher_open(ksi, hasAlgID, &hsr);
+		ERR_CATCH_KSI(ksi, "Error: Unable to open hasher.");
+
+		res = getFilesHash(hsr, inDataFileName, &tmp);
+		if (res != KT_OK) {
+			ERR_TRCKR_ADD(err, res, "Error: Unable to hash file. (%s)", errToString(res));
+			goto cleanup;
+		}
+	}
+	else if(Task_getID(task) == signHash){
+		print_info("Getting hash from input string for signing process... ");
+		res = getHashFromCommandLine(imprint, ksi, err, &tmp);
+		if (res != KT_OK) goto cleanup;
+	}
+
+	*hsh = tmp;
+	tmp = NULL;
+
+	res = KT_OK;
+	print_info("ok.\n");
+
+
+cleanup:
+
+	KSI_DataHash_free(tmp);
+	KSI_DataHasher_free(hsr);
+
+	return res;
+}

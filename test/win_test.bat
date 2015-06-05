@@ -101,12 +101,7 @@ echo %errorlevel%
 echo ****************** Sign data ******************
 ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -f %TEST_FILE% -o %TEST_FILE_OUT%.ksig -b %PUBFILE% 
 echo %errorlevel%
-sleep 30
 
-
-echo ****************** Verify online ******************
-ksitool.exe -vx %GLOBAL% %VERIFY_FLAGS% -i %TEST_FILE_OUT%.ksig 
-echo %errorlevel%
 
 
 echo ****************** Verify using publications file ******************
@@ -117,7 +112,7 @@ echo %errorlevel%
 echo ****************** Sign data with algorithm [-H SH-1] ****************** 
 ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -f %TEST_FILE% -o %TEST_FILE_OUT%SH-1.ksig  -H SHA-1
 echo %errorlevel%
-sleep %WAIT%
+
 ksitool.exe -v %GLOBAL% %VERIFY_FLAGS% -i %TEST_FILE_OUT%SH-1.ksig
 echo %errorlevel%
 
@@ -125,7 +120,7 @@ echo %errorlevel%
 echo ****************** Extend old signature ****************** 
 ksitool.exe -x %GLOBAL% %EXTEND_FLAGS% -i %TEST_OLD_SIG% -o %TEST_EXTENDED_SIG%
 echo %errorlevel%
-sleep %WAIT%
+
 ksitool.exe -vrd -i %TEST_EXTENDED_SIG%
 echo %errorlevel%
 
@@ -133,7 +128,7 @@ echo ****************** Extend old signature to 1418601800 (between publications
 ksitool.exe -x %GLOBAL% %EXTEND_FLAGS% -i %TEST_OLD_SIG% -o %TEST_EXTENDED_SIG%2 -T 1418601800
 echo %errorlevel%
 
-sleep %WAIT%
+
 ksitool.exe -v %GLOBAL% %VERIFY_FLAGS% -i %TEST_EXTENDED_SIG%2
 echo %errorlevel%
 
@@ -142,7 +137,7 @@ echo ****************** Extend old signature to publication 1418601600 *********
 ksitool.exe -x %GLOBAL% %EXTEND_FLAGS% -i %TEST_OLD_SIG% -o %TEST_EXTENDED_SIG%3 -T 1418601600
 echo %errorlevel%
 
-sleep %WAIT%
+
 ksitool.exe -v %GLOBAL% %VERIFY_FLAGS% -i %TEST_EXTENDED_SIG%3
 echo %errorlevel%
 
@@ -151,7 +146,7 @@ echo %errorlevel%
 echo "****************** Sign raw hash with algorithm specified [-F SH1:<hash>] ******************" 
 ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -o %SH1_file%  -F SHA-1:%SH1_HASH%
 echo %errorlevel%
-sleep %WAIT%
+
 
 echo "****************** Verify HASH [-F SH1:<hash>] ******************" 
 ksitool.exe -v %GLOBAL% %VERIFY_FLAGS% -i %SH1_file% -F SHA-1:%SH1_HASH%
@@ -161,14 +156,14 @@ echo %errorlevel%
 echo "****************** Sign raw hash with algorithm specified [-F SH256:<hash>] ******************" 
 ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -o %SH256_file% -F SHA-256:%SH256_HASH%
 echo %errorlevel%
-sleep %WAIT%
+
 ksitool.exe -v %GLOBAL% %VERIFY_FLAGS% -i %SH256_file% -f %SH256_DATA_FILE% -F SHA-256:%SH256_HASH%
 echo %errorlevel%
 
 echo "****************** Sign raw hash with algorithm specified [-F RIPMED160:<hash>] ******************" 
 ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -o %RIPMED160_file% -F RIPEMD-160:%RIPMED160_HASH%
 echo %errorlevel%
-sleep %WAIT%
+
 ksitool.exe -v %GLOBAL% %VERIFY_FLAGS% -i %RIPMED160_file%
 echo %errorlevel%
 
@@ -195,7 +190,7 @@ echo %errorlevel%
 echo ****************** Extend legacy signature ****************** 
 ksitool.exe -x %GLOBAL% %EXTEND_FLAGS% -i %LEGACY_SIGNATURE% -o %OLD_EXTENDED%
 echo %errorlevel%
-sleep %WAIT%
+
 ksitool.exe -vrd -i %OLD_EXTENDED% -f %OLD_TESTFILE%
 echo %errorlevel%
 
@@ -236,6 +231,10 @@ echo %errorlevel%
 
 echo ****************** Test stdin stdout 4******************
 ksitool.exe %GLOBAL% -p -o - | ksitool.exe -v -b -
+echo %errorlevel%
+
+echo ****************** Verify online ******************
+ksitool.exe -vx %GLOBAL% %VERIFY_FLAGS% -i %TEST_FILE_OUT%.ksig 
 echo %errorlevel%
 
 pause

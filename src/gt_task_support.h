@@ -36,6 +36,7 @@
 #include "task_def.h"
 #include <stdlib.h>
 #include "gt_cmd_common.h"
+#include "ksitool_err.h"
 #include "printer.h"
 
 
@@ -68,6 +69,8 @@ typedef enum tasks_en{
  * @throws KSI_EXCEPTION.
  */
 void initTask_throws(Task *task ,KSI_CTX **ksi);
+int initTask(Task *task ,KSI_CTX **ksi, ERR_TRCKR **err);
+
 
 /**
  * Closes KSI and logging file.
@@ -86,6 +89,7 @@ void closeTask(KSI_CTX *ksi);
  * @throws KSI_EXCEPTION, IO_EXCEPTION.
  */
 void getFilesHash_throws(KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash); 
+int getFilesHash(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash);
 
 /**
  * Saves signature object to file.
@@ -95,13 +99,14 @@ void getFilesHash_throws(KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, K
  * @throws KSI_EXCEPTION, IO_EXCEPTION.
  */
 void saveSignatureFile_throws(KSI_CTX *ctx, KSI_Signature *sign, const char *fname);
+int saveSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *fname);
 
 void savePublicationFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *fname);
 
 bool isSignatureExtended(const KSI_Signature *sig);
 
 void loadPublicationFile_throws(KSI_CTX *ksi, const char *path, KSI_PublicationsFile **pubfile);
-
+int loadPublicationFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_PublicationsFile **pubfile);
 void loadSignatureFile_throws(KSI_CTX *ksi, const char *fname, KSI_Signature **sig);
 
 bool isPiping(paramSet *set);
@@ -163,7 +168,7 @@ int getHashAlgorithm_throws(const char *hashAlg);
  * @throws KSI_EXCEPTION, INVALID_ARGUMENT_EXCEPTION.
  */
 void getHashFromCommandLine_throws(const char *imprint,KSI_CTX *ksi, KSI_DataHash **hash);
-
+int getHashFromCommandLine(const char *imprint, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hash);
 /**
  * Gives time difference between the current and last call in ms.
  * @return Time difference in ms.
@@ -189,6 +194,11 @@ char* str_measuredTime(void);
 /*************************************************
  * KSI api functions capable throwing exceptions  *
  *************************************************/
+
+int ksi_error_wrapper(ERR_TRCKR *err, KSI_CTX *ksi, int res, const char *file, unsigned line, char *msg, ...);
+
+#define ERR_CATCH_KSI(ksi, msg, ...) if (ksi_error_wrapper(err, ksi, res, __FILE__, __LINE__, msg, __VA_ARGS__) != KSI_OK) goto cleanup
+//#define KSI_WRAPPER_GTC(err, ksi, func, msg, ...) if (func != KSI_OK) goto cleanup
 
 int KSI_receivePublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile **publicationsFile);
 int KSI_verifyPublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *publicationsFile);

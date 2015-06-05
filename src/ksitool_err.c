@@ -113,6 +113,8 @@ static int ksitoolErrToExitcode(int error_code) {
 			return EXIT_INVALID_FORMAT;
 		case KT_UNKNOWN_HASH_ALG:
 			return EXIT_CRYPTO_ERROR;
+		case KT_INVALID_CMD_PARAM:
+			return EXIT_INVALID_CL_PARAMETERS;
 		default:
 			return EXIT_FAILURE;
 	}
@@ -140,6 +142,8 @@ static const char* ksitoolErrToString(int error_code) {
 			return "The hex data contains invalid characters.";
 		case KT_UNKNOWN_HASH_ALG:
 			return "The hash algorithm is unknown or unimplemented.";
+		case KT_INVALID_CMD_PARAM:
+			return "The command-line parameters is invalid or missing.";
 		default:
 			return "Unknown error.";
 	}
@@ -249,7 +253,13 @@ void ERR_TRCKR_printExtendedErrors(ERR_TRCKR *err) {
 	if (err == NULL) return;
 
 	for (i = err->count - 1; i >= 0; i--) {
-		err->printErrors("%i) %s (%i) %s%s",i+1, err->err[i].fileName, err->err[i].line ,err->err[i].message,(err->err[i].message[strlen(err->err[i].message) - 1] == '\n') ? ("") : ("\n") );
+		err->printErrors("%i) %s (%i) %s [%s 0x%02x]%s",i+1,
+				err->err[i].fileName,
+				err->err[i].line,
+				err->err[i].message,
+				errToString(err->err[i].code),
+				err->err[i].code,
+				(err->err[i].message[strlen(err->err[i].message) - 1] == '\n') ? ("") : ("\n") );
 	}
 
 	return;

@@ -126,6 +126,8 @@ static void configureNetworkProvider_throws(KSI_CTX *ksi, Task *task){
 
 }
 
+
+
 /**
  * File object for logging
  */
@@ -210,30 +212,6 @@ void initTask_throws(Task *task ,KSI_CTX **ksi){
 	return;
 }
 
-bool isPiping(paramSet *set) {
-	bool o, log;
-	int j;
-	char *files[5] = {NULL, NULL, NULL, NULL, NULL};
-
-	o = paramSet_getStrValueByNameAt(set, "o",0, &files[0]);
-	log = paramSet_getStrValueByNameAt(set, "log",0, &files[1]);
-
-	for (j = 0; j < 2; j++) {
-		if (files[j] != NULL && strcmp(files[j], "-") == 0) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
-void closeTask(KSI_CTX *ksi){
-	if (ksi == NULL)
-		return;
-	if(logFile) fclose(logFile);
-	KSI_CTX_free(ksi);
-}
-
 static int getStreamFromPath(const char *fname, const char *mode, FILE **stream, bool *close) {
 	int res;
 	FILE *in = NULL;
@@ -277,6 +255,287 @@ cleanup:
 	return res;
 }
 
+static int ksitool_initLogger(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
+	int res;
+	paramSet *set = NULL;
+	FILE *writeLogTo = NULL;
+	bool log;
+	bool closeLogStream = false;
+	char *outLogfile = NULL;
+
+	if (task == NULL || ksi == NULL || err == NULL) {
+		return KT_INVALID_ARGUMENT;
+	}
+
+	set = Task_getSet(task);
+	log = paramSet_getStrValueByNameAt(set, "log",0, &outLogfile);
+
+	/*Set logging*/
+	if (log){
+		res = getStreamFromPath(outLogfile, "w", &writeLogTo, &closeLogStream);
+		if (res != KT_OK) {
+			ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
+			goto cleanup;
+		}
+
+		if (closeLogStream == true) logFile = writeLogTo;
+		res = KSI_CTX_setLoggerCallback(ksi, KSI_LOG_StreamLogger, writeLogTo);
+		ERR_CATCH_KSI(ksi, "Error: Unable to set logger callback.");
+		res = KSI_CTX_setLogLevel(ksi, KSI_LOG_DEBUG);
+		ERR_CATCH_KSI(ksi, "Error: Unable to set logger log level.");
+	}
+
+	res = KT_OK;
+
+cleanup:
+
+	return res;
+}
+
+static int ksitool_initNetworkProvider(Task *task, KSI_CTX *ksi, ERR_TRCKR *err){
+	int res;
+	paramSet *set = NULL;
+	bool S, P, X, C, c, s, v, x, p, T, aggre;
+	char *signingService_url = NULL;
+	char *publicationsFile_url = NULL;
+	char *verificationService_url = NULL;
+	int networkConnectionTimeout = 0;
+	int networkTransferTimeout = 0;
+	char *user = NULL;
+	char *pass = NULL;
+
+	set = Task_getSet(task);
+	S = paramSet_getHighestPriorityStrValueByName(set, "S", &signingService_url);
+	X = paramSet_getHighestPriorityStrValueByName(set, "X", &verificationService_url);
+	P = paramSet_getStrValueByNameAt(set, "P",0,&publicationsFile_url);
+
+	C = paramSet_getIntValueByNameAt(set, "C", 0,&networkConnectionTimeout);
+	c = paramSet_getIntValueByNameAt(set, "c", 0,&networkTransferTimeout);
+	aggre = paramSet_isSetByName(set, "aggre");
+	s = paramSet_isSetByName(set, "s");
+	v = paramSet_isSetByName(set, "v");
+	x = paramSet_isSetByName(set, "x");
+	p = paramSet_isSetByName(set, "p");
+	T = paramSet_isSetByName(set, "T");
+
+
+	paramSet_getHighestPriorityStrValueByName(set, "user", &user);
+	paramSet_getHighestPriorityStrValueByName(set, "pass", &pass);
+
+	if (user == NULL) user = "anon";
+	if (pass == NULL) pass = "anon";
+
+	if (x || v || (p && T)) {
+		if (verificationService_url == NULL){
+			if ((x && v) || (p && T)) {
+				ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: Extender url required.");
+				goto cleanup;
+			} else if (v) {
+				print_warnings("Warning: verification may require extender url.\n");
+			}
+		}else {
+			res = KSI_CTX_setExtender(ksi, verificationService_url, user, pass);
+			ERR_CATCH_KSI(ksi, "Error: Unable set extender.");
+		}
+	}else if (s || aggre) {
+		if (signingService_url == NULL) {
+			ERR_TRCKR_ADD(err, res  = KT_INVALID_CMD_PARAM, "Error: Aggregator url required.");
+			goto cleanup;
+		}
+
+		res = KSI_CTX_setAggregator(ksi, signingService_url, user, pass);
+		ERR_CATCH_KSI(ksi, "Error: Unable set aggregator.");
+	}
+
+	if (P){
+		res = KSI_CTX_setPublicationUrl(ksi, publicationsFile_url);
+		ERR_CATCH_KSI(ksi, "Error: Unable set publication URL.");
+	}
+
+	if (C) {
+		res = KSI_CTX_setConnectionTimeoutSeconds(ksi, networkConnectionTimeout);
+		ERR_CATCH_KSI(ksi, "Error: Unable set connection timeout.");
+	}
+
+	if (c) {
+		KSI_CTX_setTransferTimeoutSeconds(ksi, networkTransferTimeout);
+		ERR_CATCH_KSI(ksi, "Error: Unable set transfer timeout.");
+	}
+
+	res = KT_OK;
+
+cleanup:
+
+	return res;
+}
+
+static int ksitool_initTrustStore(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
+	int res;
+	paramSet *set = NULL;
+	KSI_PKITruststore *refTrustStore = NULL;
+	int i=0;
+	bool V, W, E;
+	char *lookupFile = NULL;
+	char *lookupDir = NULL;
+	char *magicEmail = NULL;
+
+	if (task == NULL || ksi == NULL || err == NULL) {
+		return KT_INVALID_ARGUMENT;
+	}
+
+	/*Get parameter values*/
+	set = Task_getSet(task);
+	V = paramSet_isSetByName(set,"V");
+	W = paramSet_getStrValueByNameAt(set, "W",0, &lookupDir);
+	E = paramSet_getStrValueByNameAt(set, "E",0, &magicEmail);
+
+	if(V || W) {
+		res = KSI_CTX_getPKITruststore(ksi, &refTrustStore);
+		ERR_CATCH_KSI(ksi, "Error: Unable to get PKI trust store.");
+		if(V){
+			while(paramSet_getStrValueByNameAt(set, "V", i++, &lookupFile)) {
+				res = KSI_PKITruststore_addLookupFile(refTrustStore, lookupFile);
+				ERR_CATCH_KSI(ksi, "Error: Unable to add cert to PKI trust store.");
+			}
+		}
+		if(W){
+			res = KSI_PKITruststore_addLookupDir(refTrustStore, lookupDir);
+			ERR_CATCH_KSI(ksi, "Error: Unable to add lookup dir to PKI trust store.");
+		}
+	}
+
+	if(E){
+		res = KSI_CTX_setPublicationCertEmail(ksi, magicEmail);
+		ERR_CATCH_KSI(ksi, "Error: Unable set publication certificate email.");
+	}
+
+	res = KT_OK;
+
+cleanup:
+
+	return res;
+}
+
+static int ksitool_initPublicationFile(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
+	int res = KSI_UNKNOWN_ERROR;
+	paramSet *set = NULL;
+	KSI_PublicationsFile *tmpPubFile = NULL;
+	bool b;
+	char *inPubFileName = NULL;
+
+	if (task == NULL || ksi == NULL || err == NULL) {
+		return KT_INVALID_ARGUMENT;
+	}
+
+	/*Get parameter values*/
+	set = Task_getSet(task);
+	b = paramSet_getStrValueByNameAt(set, "b",0, &inPubFileName);
+
+	if(b && (Task_getID(task) != downloadPublicationsFile && Task_getID(task) != verifyPublicationsFile)){
+		res = loadPublicationFile(err, ksi, inPubFileName, &tmpPubFile);
+		if (res != KT_OK) goto cleanup;
+
+		res = KSI_CTX_setPublicationsFile(ksi, tmpPubFile);
+		ERR_CATCH_KSI(ksi, "Error: Unable to configure publications file.");
+		tmpPubFile = NULL;
+	}
+
+	res = KT_OK;
+
+cleanup:
+
+	KSI_PublicationsFile_free(tmpPubFile);
+
+	return res;
+}
+
+int initTask(Task *task ,KSI_CTX **ksi, ERR_TRCKR **error) {
+	int res;
+	ERR_TRCKR *err = NULL;
+	KSI_CTX *tmpKsi = NULL;
+
+	if (task == NULL || ksi == NULL || error == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	/*Init error tracker*/
+	err = ERR_TRCKR_new(print_errors);
+	if (err == NULL) {
+		res = KT_OUT_OF_MEMORY;
+		print_errors("Error: Unable to initialize error tracker.");
+		goto cleanup;
+	}
+
+	*error = err;
+
+	/*Init KSI*/
+	res = KSI_CTX_new(&tmpKsi);
+	if (res != KSI_OK) {
+		ERR_TRCKR_ADD(err, res, "Error: Unable to initialize KSI context.");
+		goto cleanup;
+	}
+
+	res = ksitool_initLogger(task, tmpKsi, err);
+	if (res != KT_OK) {
+		ERR_TRCKR_ADD(err, res, "Error: Unable to configure KSI logger.");
+		goto cleanup;
+	}
+
+	res = ksitool_initNetworkProvider(task, tmpKsi, err);
+	if (res != KT_OK) {
+		ERR_TRCKR_ADD(err, res, "Error: Unable to configure network provider.");
+		goto cleanup;
+	}
+
+	res = ksitool_initPublicationFile(task, tmpKsi, err);
+	if (res != KT_OK) goto cleanup;
+
+
+	res = ksitool_initTrustStore(task, tmpKsi, err);
+	if (res != KT_OK) {
+		ERR_TRCKR_ADD(err, res, "Error: Unable to configure KSI trust store.");
+		goto cleanup;
+	}
+
+	*ksi = tmpKsi;
+	tmpKsi = NULL;
+	res = KT_OK;
+
+
+cleanup:
+
+	KSI_CTX_free(tmpKsi);
+
+	return res;
+}
+
+bool isPiping(paramSet *set) {
+	bool o, log;
+	int j;
+	char *files[5] = {NULL, NULL, NULL, NULL, NULL};
+
+	o = paramSet_getStrValueByNameAt(set, "o",0, &files[0]);
+	log = paramSet_getStrValueByNameAt(set, "log",0, &files[1]);
+
+	for (j = 0; j < 2; j++) {
+		if (files[j] != NULL && strcmp(files[j], "-") == 0) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void closeTask(KSI_CTX *ksi){
+	if (ksi == NULL)
+		return;
+	if(logFile) fclose(logFile);
+	KSI_CTX_free(ksi);
+}
+
+
+
 void getFilesHash_throws(KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash){
 	int res;
 	FILE *readFrom = NULL;
@@ -317,6 +576,44 @@ cleanup:
 		THROW_MSG(EXCEPTION, errToExitCode(res), "Error: Unable to get files hash.")
 	}
 	return;
+}
+
+int getFilesHash(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash){
+	int res;
+	FILE *readFrom = NULL;
+	unsigned char buf[1024];
+	size_t buf_len;
+	bool close;
+	KSI_DataHash *tmp = NULL;
+
+	if(hsr == NULL || fname == NULL || hash == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	res = getStreamFromPath(fname, "rb", &readFrom, &close);
+	if (res != KT_OK) goto cleanup;
+
+	while (!feof(readFrom)) {
+		buf_len = fread(buf, 1, sizeof (buf), readFrom);
+		res = KSI_DataHasher_add(hsr, buf, buf_len);
+		if (res != KSI_OK) goto cleanup;
+	}
+
+	res = KSI_DataHasher_close(hsr, &tmp);
+	if (res != KSI_OK) goto cleanup;
+
+	*hash = tmp;
+	tmp = NULL;
+
+	res = KT_OK;
+
+cleanup:
+
+	if (close == true && readFrom != NULL) fclose(readFrom);
+	KSI_DataHash_free(tmp);
+
+	return res;
 }
 
 static int loadKsiObj(KSI_CTX *ksi, const char *path, void **obj,
@@ -398,6 +695,26 @@ void loadPublicationFile_throws(KSI_CTX *ksi, const char *fname, KSI_Publication
 	}
 }
 
+int loadPublicationFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_PublicationsFile **pubfile) {
+	int res;
+
+	if (err == NULL || ksi == NULL || fname == NULL || pubfile == NULL) {
+		return KT_INVALID_ARGUMENT;
+	}
+
+	res = loadKsiObj(ksi, fname,
+				(void**)pubfile,
+				(int (*)(KSI_CTX *, unsigned char*, unsigned, void**))KSI_PublicationsFile_parse,
+				(void (*)(void *))KSI_PublicationsFile_free);
+
+	if (res) {
+		ERR_TRCKR_ADD(err, res, errToString(res));
+		ERR_TRCKR_ADD(err, res, "Error: Unable to load publication file from '%s'.", fname);
+	}
+
+	return res;
+}
+
 void loadSignatureFile_throws(KSI_CTX *ksi, const char *fname, KSI_Signature **sig) {
 	int res;
 
@@ -476,6 +793,25 @@ void saveSignatureFile_throws(KSI_CTX *ksi, KSI_Signature *sign, const char *fna
 		KSI_LOG_logCtxError(ksi, KSI_LOG_DEBUG);
 		THROW_MSG(IO_EXCEPTION, errToExitCode(res), "Error: Unable to save signature to file '%s'.", fname);
 	}
+}
+
+int saveSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *fname) {
+	int res;
+
+	if (ksi == NULL || fname == NULL || sign == NULL) {
+		return KT_INVALID_ARGUMENT;
+	}
+
+	res = saveKsiObj(ksi, sign,
+				(int (*)(KSI_CTX *, void *, unsigned char **, unsigned *))KSI_Signature_serialize_wrapper,
+				fname);
+
+	if (res) {
+		ERR_TRCKR_ADD(err, res, errToString(res));
+		ERR_TRCKR_ADD(err, res, "Error: Unable to save signature file to '%s'.", fname);
+	}
+
+	return res;
 }
 
 void savePublicationFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *fname) {
@@ -920,6 +1256,53 @@ cleanup:
 	return;
 }
 
+int getHashFromCommandLine(const char *imprint, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hash){
+	int res;
+	unsigned char *data = NULL;
+	size_t len;
+	int hasAlg;
+	char *strAlg = NULL;
+	char *strHash = NULL;
+	KSI_DataHash *tmp = NULL;
+
+	if (imprint == NULL || ksi == NULL || hash == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	res = getHashAndAlgStrings(imprint, &strAlg, &strHash);
+	if (res != KT_OK) goto cleanup;
+
+	res = getBinaryFromHexString(strHash, &data, &len);
+	if (res != KT_OK) goto cleanup;
+
+	hasAlg = KSI_getHashAlgorithmByName(strAlg);
+	if (hasAlg == -1) {
+		res = KT_UNKNOWN_HASH_ALG;
+		goto cleanup;
+	}
+
+	res = KSI_DataHash_fromDigest(ksi, hasAlg, data, (unsigned int)len, &tmp);
+	if (res != KSI_OK) goto cleanup;
+
+	*hash = tmp;
+	tmp = NULL;
+	res = KT_OK;
+
+cleanup:
+
+	free(strAlg);
+	free(strHash);
+	free(data);
+	KSI_DataHash_free(tmp);
+
+	if (res != KT_OK) {
+		ERR_TRCKR_ADD(err, res, "Error: Unable to get hash from command-line");
+		ERR_TRCKR_ADD(err, res, "Error: ", errToString(res));
+	}
+
+	return res;
+}
 
 static unsigned int elapsed_time_ms;
 
@@ -987,6 +1370,43 @@ char* str_measuredTime(void){
 	THROW_MSG(KSI_EXCEPTION, errToExitCode(res), __VA_ARGS__); \
 	} \
 	return res;	 \
+
+int ksi_error_wrapper(ERR_TRCKR *err, KSI_CTX *ksi, int res, const char *file, unsigned line, char *msg, ...) {
+	va_list va;
+	int extError = KSI_UNKNOWN_ERROR;
+	int baseError = KSI_UNKNOWN_ERROR;
+	char buf[1024];
+	char buf2[2048];
+
+	if (err == NULL || msg == NULL || file == NULL) return KT_INVALID_ARGUMENT;
+
+	if(res != KSI_OK) {
+		KSI_LOG_logCtxError(ksi, KSI_LOG_DEBUG);
+		KSI_ERR_getBaseErrorMessage(ksi, buf, sizeof(buf), &baseError, &extError);
+
+		if(strlen(buf) > 0){
+			if(extError)
+				snprintf(buf2, sizeof(buf2), "Error: %s (KSI:0x%x, EXT:0x%x)", buf, baseError, extError);
+			else
+				snprintf(buf2, sizeof(buf2), "Error: %s (KSI:0x%x)", buf, baseError);
+		}
+		else {
+			snprintf(buf2, sizeof(buf2), "Error: %s (KSI:0x%x)", KSI_getErrorString(res), res);
+		}
+
+		ERR_TRCKR_add(err, res, file, line, buf2);
+		if (msg != NULL) {
+			va_start(va, msg);
+			vsnprintf(buf2, sizeof(buf2), msg, va);
+			va_end(va);
+			ERR_TRCKR_add(err, res, file, line, buf2);
+		}
+	}
+
+	return res;
+}
+
+
 
 int KSI_receivePublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile **publicationsFile){
 	THROWABLE3(ksi, KSI_receivePublicationsFile(ksi, publicationsFile), "Error: Unable to read publications file.");
