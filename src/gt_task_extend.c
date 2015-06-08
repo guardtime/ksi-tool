@@ -21,16 +21,16 @@
 #include <stdlib.h>
 
 #include "gt_task_support.h"
-#include "try-catch.h"
 
 int GT_extendTask(Task *task) {
+	int res;
 	paramSet *set = NULL;
 	KSI_CTX *ksi = NULL;
+	ERR_TRCKR *err = NULL;
 	KSI_Signature *sig = NULL;
 	KSI_Signature *ext = NULL;
-	int retval = EXIT_SUCCESS;
-
 	KSI_Integer *pubTime = NULL;
+	int retval = EXIT_SUCCESS;
 
 	bool T, t, n, r, d, tlv;
 	char *inSigFileName = NULL;
@@ -47,52 +47,52 @@ int GT_extendTask(Task *task) {
 	d = paramSet_isSetByName(set, "d");
 	tlv = paramSet_isSetByName(set, "tlv");
 
-	resetExceptionHandler();
-	try
-		CODE{
-			/*Initialization of KSI */
-			initTask_throws(task, &ksi);
-			/* Read the signature. */
-			print_info("Reading signature... ");
-			loadSignatureFile_throws(ksi, inSigFileName, &sig);
-			print_info("ok.\n");
+	res = initTask(task, &ksi, &err);
+	if (res != KT_OK) goto cleanup;
 
-			/* Make sure the signature is ok. */
-			print_info("Verifying old signature... ");
-			MEASURE_TIME(KSI_Signature_verify_throws(sig, ksi));
-			print_info("ok. %s\n",t ? str_measuredTime() : "");
+	/* Read the signature. */
+	print_info("Reading signature... ");
+	res = loadSignatureFile(err, ksi, inSigFileName, &sig);
+	if (res != KT_OK) goto cleanup;
+	print_info("ok.\n");
 
-			/* Extend the signature. */
-			if(T){
-				print_info("Extending old signature to %i... ", publicationTime);
-				KSI_Integer_new_throws(ksi, publicationTime, &pubTime);
-				MEASURE_TIME(KSI_Signature_extendTo_throws(sig, ksi, pubTime, &ext));
-			}
-			else{
-				print_info("Extending old signature... ");
-				MEASURE_TIME(KSI_extendSignature_throws(ksi, sig, &ext));
-			}
-			print_info("ok. %s\n",t ? str_measuredTime() : "");
+	/* Make sure the signature is ok. */
+	print_info("Verifying old signature... ");
+	MEASURE_TIME(res = KSI_Signature_verify(sig, ksi));
+	ERR_CATCH_KSI(ksi, "Error: Unable to verify signature.");
+	print_info("ok. %s\n",t ? str_measuredTime() : "");
 
-			print_info("Verifying extended signature... ");
-			MEASURE_TIME(KSI_Signature_verify_throws(ext, ksi));
-			print_info("ok. %s\n",t ? str_measuredTime() : "");
+	/* Extend the signature. */
+	if(T){
+		print_info("Extending old signature to %i... ", publicationTime);
+		res = KSI_Integer_new(ksi, publicationTime, &pubTime);
+		ERR_CATCH_KSI(ksi, "Error: %s.", errToString(res));
+		MEASURE_TIME(res = KSI_Signature_extendTo(sig, ksi, pubTime, &ext));
+		ERR_CATCH_KSI(ksi, "Error: Unable to extend signature.");
+	}
+	else{
+		print_info("Extending old signature... ");
+		MEASURE_TIME(res = KSI_extendSignature(ksi, sig, &ext));
+		ERR_CATCH_KSI(ksi, "Error: Unable to extend signature.");
+	}
+	print_info("ok. %s\n",t ? str_measuredTime() : "");
 
-			/* Save signature. */
-			saveSignatureFile_throws(ksi, ext, outSigFileName);
-			print_info("Extended signature saved.\n");
-		}
-		CATCH_ALL{
-			if(ksi)
-				print_errors("failed.\n");
-			printErrorMessage();
-			retval = _EXP.exep.ret;
-			exceptionSolved();
-		}
-	end_try
+	print_info("Verifying extended signature... ");
+	MEASURE_TIME(res = KSI_Signature_verify(ext, ksi));
+	ERR_CATCH_KSI(ksi, "Error: Unable to verify extended signature.");
+	print_info("ok. %s\n",t ? str_measuredTime() : "");
+
+	/* Save signature. */
+	res = saveSignatureFile(err, ksi, ext, outSigFileName);
+	if (res != KT_OK) goto cleanup;
+	print_info("Extended signature saved.\n");
+
+
+
+cleanup:
 
 	if(n || r || d || tlv) print_info("\n");
-	if(retval != EXIT_SUCCESS && sig != NULL && d){
+	if(res != KT_OK && sig != NULL && d){
 		print_info("Old signature:\n");
 		printSignatureVerificationInfo(sig);
 		printSignatureStructure(ksi, sig);
@@ -105,11 +105,18 @@ int GT_extendTask(Task *task) {
 		if (tlv) printSignatureStructure(ksi, ext);
 	}
 
+	if (res != KT_OK) {
+		print_errors("failed.\n");
+		ERR_TRCKR_printErrors(err);
+		retval = errToExitCode(res);
+	}
+
 	KSI_Signature_free(sig);
 	KSI_Signature_free(ext);
 	KSI_Integer_free(pubTime);
-
+	ERR_TRCKR_free(err);
 	closeTask(ksi);
+
 	return retval;
 }
 

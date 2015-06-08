@@ -97,7 +97,6 @@ int getFilesHash(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash);
  * 
  * @throws KSI_EXCEPTION, IO_EXCEPTION.
  */
-void saveSignatureFile_throws(KSI_CTX *ctx, KSI_Signature *sign, const char *fname);
 int saveSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *fname);
 
 void savePublicationFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *fname);
@@ -106,7 +105,6 @@ bool isSignatureExtended(const KSI_Signature *sig);
 
 void loadPublicationFile_throws(KSI_CTX *ksi, const char *path, KSI_PublicationsFile **pubfile);
 int loadPublicationFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_PublicationsFile **pubfile);
-void loadSignatureFile_throws(KSI_CTX *ksi, const char *fname, KSI_Signature **sig);
 int loadSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signature **sig);
 
 bool isPiping(paramSet *set);
@@ -149,16 +147,6 @@ void printSignatureSigningTime(const KSI_Signature *sig);
 void printSignatureStructure(KSI_CTX *ksi, const KSI_Signature *sig);
 
 /**
- * Gives hash algorithm identifier by name.
- * 
- * @param[in] hashAlg Hash algorithm name.
- * @return Hash algorithm identifier.
- * 
- * @throws KSI_EXCEPTION.
- */
-int getHashAlgorithm_throws(const char *hashAlg);
-
-/**
  * Reads hash from command line and creates the KSI_DataHash object.
  * 
  * @param[in] cmdparam Pointer to command line data object.
@@ -167,7 +155,6 @@ int getHashAlgorithm_throws(const char *hashAlg);
  * 
  * @throws KSI_EXCEPTION, INVALID_ARGUMENT_EXCEPTION.
  */
-void getHashFromCommandLine_throws(const char *imprint,KSI_CTX *ksi, KSI_DataHash **hash);
 int getHashFromCommandLine(const char *imprint, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hash);
 /**
  * Gives time difference between the current and last call in ms.
@@ -206,11 +193,7 @@ int KSI_PublicationsFile_serialize_throws(KSI_CTX *ksi, KSI_PublicationsFile *pu
 int KSI_DataHasher_open_throws(KSI_CTX *ksi,int hasAlgID ,KSI_DataHasher **hsr);
 int KSI_DataHasher_add_throws(KSI_CTX *ksi, KSI_DataHasher *hasher, const void *data, size_t data_length);
 int KSI_DataHasher_close_throws(KSI_CTX *ksi, KSI_DataHasher *hasher, KSI_DataHash **hash);
-int KSI_Signature_verify_throws(KSI_Signature *sig, KSI_CTX *ksi);
-int KSI_Signature_verifyWithPublication_throws(KSI_Signature *sig, KSI_CTX *ksi, const KSI_PublicationData *publication);
 int KSI_Signature_create_throws(KSI_CTX *ksi, KSI_DataHash *hsh, KSI_Signature **signature);
-int KSI_extendSignature_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext);
-int KSI_Signature_extendTo_throws(const KSI_Signature *signature, KSI_CTX *ksi, KSI_Integer *to, KSI_Signature **extended);
 int KSI_PKITruststore_addLookupFile_throws(KSI_CTX *ksi, KSI_PKITruststore *store, const char *path);
 int KSI_PKITruststore_addLookupDir_throws(KSI_CTX *ksi, KSI_PKITruststore *store, const char *path);
 int KSI_Integer_new_throws(KSI_CTX *ksi, KSI_uint64_t value, KSI_Integer **kint);

@@ -692,24 +692,6 @@ int loadSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signa
 	return res;
 }
 
-void loadSignatureFile_throws(KSI_CTX *ksi, const char *fname, KSI_Signature **sig) {
-	int res;
-
-	if (ksi == NULL || fname == NULL || sig == NULL) {
-		THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_FAILURE, NULL);
-	}
-
-	res = loadKsiObj(ksi, fname,
-				(void**)sig,
-				(int (*)(KSI_CTX *, unsigned char*, unsigned, void**))KSI_Signature_parse,
-				(void (*)(void *))KSI_Signature_free);
-
-	if(res != 0) {
-		KSI_LOG_logCtxError(ksi, KSI_LOG_DEBUG);
-		THROW_MSG(IO_EXCEPTION, errToExitCode(res), "Error: Unable to load signature from '%s'.", fname);
-	}
-}
-
 static int saveKsiObj(KSI_CTX *ksi, void *obj,
 							int (*serialize)(KSI_CTX *ksi, void *obj, unsigned char **raw, unsigned *raw_len),
 							const char *path) {
@@ -753,23 +735,6 @@ cleanup:
 
 int KSI_Signature_serialize_wrapper(KSI_CTX *ksi, KSI_Signature *sig, unsigned char **raw, unsigned *raw_len) {
 	return KSI_Signature_serialize(sig, raw, raw_len);
-}
-
-void saveSignatureFile_throws(KSI_CTX *ksi, KSI_Signature *sign, const char *fname) {
-	int res;
-
-	if (ksi == NULL || fname == NULL || sign == NULL) {
-		THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_FAILURE, NULL);
-	}
-
-	res = saveKsiObj(ksi, sign,
-				(int (*)(KSI_CTX *, void *, unsigned char **, unsigned *))KSI_Signature_serialize_wrapper,
-				fname);
-
-	if (res != 0) {
-		KSI_LOG_logCtxError(ksi, KSI_LOG_DEBUG);
-		THROW_MSG(IO_EXCEPTION, errToExitCode(res), "Error: Unable to save signature to file '%s'.", fname);
-	}
 }
 
 int saveSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *fname) {
@@ -1179,60 +1144,6 @@ cleanup:
 	return res;
 }
 
-int getHashAlgorithm_throws(const char *hashAlg){
-	int hasAlgID = KSI_getHashAlgorithmByName(hashAlg);
-	if(hasAlgID == -1) THROW_MSG(KSI_EXCEPTION, EXIT_CRYPTO_ERROR, "Error: The hash algorithm \"%s\" is unknown\n", hashAlg);
-	return hasAlgID;
-}
-
-void getHashFromCommandLine_throws(const char *imprint, KSI_CTX *ksi, KSI_DataHash **hash){
-	int res;
-	unsigned char *data = NULL;
-	size_t len;
-	int hasAlg;
-	char *strAlg = NULL;
-	char *strHash = NULL;
-	KSI_DataHash *tmp = NULL;
-
-	if (imprint == NULL || ksi == NULL || hash == NULL) {
-		res = KT_INVALID_ARGUMENT;
-		goto cleanup;
-	}
-
-	res = getHashAndAlgStrings(imprint, &strAlg, &strHash);
-	if (res != KT_OK) goto cleanup;
-
-	res = getBinaryFromHexString(strHash, &data, &len);
-	if (res != KT_OK) goto cleanup;
-
-	hasAlg = KSI_getHashAlgorithmByName(strAlg);
-	if (hasAlg == -1) {
-		res = KT_UNKNOWN_HASH_ALG;
-		goto cleanup;
-	}
-
-	res = KSI_DataHash_fromDigest(ksi, hasAlg, data, (unsigned int)len, &tmp);
-	if (res != KSI_OK) goto cleanup;
-
-	*hash = tmp;
-	tmp = NULL;
-	res = KT_OK;
-
-cleanup:
-
-	free(strAlg);
-	free(strHash);
-	free(data);
-	KSI_DataHash_free(tmp);
-
-	if (res != KT_OK) {
-		appendMessage("Error: Unable to get hash from command-line.\n");
-		THROW_MSG(EXCEPTION, errToExitCode(res), "Error: ", errToString(res));
-	}
-
-	return;
-}
-
 int getHashFromCommandLine(const char *imprint, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hash){
 	int res;
 	unsigned char *data = NULL;
@@ -1409,21 +1320,8 @@ int KSI_DataHasher_close_throws(KSI_CTX *ksi, KSI_DataHasher *hasher, KSI_DataHa
 	 THROWABLE3(ksi, KSI_DataHasher_close(hasher, hash), "Error:Unable to close hasher.");
 }
 
-int KSI_Signature_verify_throws(KSI_Signature *sig, KSI_CTX *ksi){
-	THROWABLE3(ksi, KSI_Signature_verify(sig, ksi), "Error: Unable to verify signature.");
-}
-
 int KSI_Signature_create_throws(KSI_CTX *ksi, KSI_DataHash *hsh, KSI_Signature **signature){
 	THROWABLE3(ksi, KSI_Signature_create(ksi, hsh, signature), "Error: Unable to create signature.");
-}
-
-/*To earliest available publication available*/
-int KSI_extendSignature_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext){
-	THROWABLE3(ksi, KSI_extendSignature(ksi, sig, ext),"Error: Unable to extend signature.");
-}
-
-int KSI_Signature_extendTo_throws(const KSI_Signature *signature, KSI_CTX *ksi, KSI_Integer *to, KSI_Signature **extended){
-	THROWABLE3(ksi, KSI_Signature_extendTo(signature, ksi, to, extended), "Error: Unable to extend signature.");
 }
 
 int KSI_PKITruststore_addLookupFile_throws(KSI_CTX *ksi, KSI_PKITruststore *store, const char *path){
