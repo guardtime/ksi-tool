@@ -536,48 +536,6 @@ void closeTask(KSI_CTX *ksi){
 
 
 
-void getFilesHash_throws(KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash){
-	int res;
-	FILE *readFrom = NULL;
-	unsigned char buf[1024];
-	size_t buf_len;
-	bool close;
-	KSI_DataHash *tmp = NULL;
-
-	if(ksi == NULL || hsr == NULL || fname == NULL || hash == NULL) {
-		res = KT_INVALID_ARGUMENT;
-		goto cleanup;
-	}
-
-	res = getStreamFromPath(fname, "rb", &readFrom, &close);
-	if (res != KT_OK) goto cleanup;
-
-
-	while (!feof(readFrom)) {
-		buf_len = fread(buf, 1, sizeof (buf), readFrom);
-		KSI_DataHasher_add_throws(ksi, hsr, buf, buf_len);
-	}
-
-	res = KSI_DataHasher_close(hsr, &tmp);
-	if (res != KSI_OK) goto cleanup;
-
-	*hash = tmp;
-	tmp = NULL;
-
-	res = KT_OK;
-
-cleanup:
-
-	if (close == true && readFrom != NULL) fclose(readFrom);
-	KSI_DataHash_free(tmp);
-
-	if (res != KT_OK) {
-		KSI_LOG_logCtxError(ksi, KSI_LOG_DEBUG);
-		THROW_MSG(EXCEPTION, errToExitCode(res), "Error: Unable to get files hash.")
-	}
-	return;
-}
-
 int getFilesHash(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash){
 	int res;
 	FILE *readFrom = NULL;
@@ -708,10 +666,29 @@ int loadPublicationFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Pub
 				(void (*)(void *))KSI_PublicationsFile_free);
 
 	if (res) {
-		ERR_TRCKR_ADD(err, res, errToString(res));
+		ERR_TRCKR_ADD(err, res, "Error: %s", errToString(res));
 		ERR_TRCKR_ADD(err, res, "Error: Unable to load publication file from '%s'.", fname);
 	}
 
+	return res;
+}
+
+int loadSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signature **sig) {
+	int res;
+
+	if (ksi == NULL || fname == NULL || sig == NULL) {
+		return KT_INVALID_ARGUMENT;
+	}
+
+	res = loadKsiObj(ksi, fname,
+				(void**)sig,
+				(int (*)(KSI_CTX *, unsigned char*, unsigned, void**))KSI_Signature_parse,
+				(void (*)(void *))KSI_Signature_free);
+
+	if (res) {
+		ERR_TRCKR_ADD(err, res, "Error: %s", errToString(res));
+		ERR_TRCKR_ADD(err, res, "Error: Unable to load signature file from '%s'.", fname);
+	}
 	return res;
 }
 
@@ -807,7 +784,7 @@ int saveSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const c
 				fname);
 
 	if (res) {
-		ERR_TRCKR_ADD(err, res, errToString(res));
+		ERR_TRCKR_ADD(err, res, "Error: %s", errToString(res));
 		ERR_TRCKR_ADD(err, res, "Error: Unable to save signature file to '%s'.", fname);
 	}
 
@@ -1412,10 +1389,6 @@ int KSI_receivePublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile **publ
 	THROWABLE3(ksi, KSI_receivePublicationsFile(ksi, publicationsFile), "Error: Unable to read publications file.");
 }
 
-int KSI_PublicationsFile_getPublicationDataByPublicationString_throws(KSI_CTX *ksi, const KSI_PublicationsFile *pubFile, const char *pubString, KSI_PublicationRecord **pubRec){
-	THROWABLE3(ksi, KSI_PublicationsFile_getPublicationDataByPublicationString(pubFile, pubString, pubRec), "Error: Unable to read publications file.");
-}
-
 int KSI_verifyPublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *publicationsFile){
 	THROWABLE3(ksi, KSI_verifyPublicationsFile(ksi, publicationsFile), "Error: Unable to verify publications file.");
 }
@@ -1436,44 +1409,17 @@ int KSI_DataHasher_close_throws(KSI_CTX *ksi, KSI_DataHasher *hasher, KSI_DataHa
 	 THROWABLE3(ksi, KSI_DataHasher_close(hasher, hash), "Error:Unable to close hasher.");
 }
 
-int KSI_createSignature_throws(KSI_CTX *ksi, KSI_DataHash *hash, KSI_Signature **sign){
-	 THROWABLE3(ksi, KSI_createSignature(ksi, hash, sign), "Error: Unable to sign.");
-}
-
-int KSI_Signature_getPublicationRecord_throws(KSI_CTX *ksi, const KSI_Signature *sig, KSI_PublicationRecord **pubRec){
-	THROWABLE3(ksi, KSI_Signature_getPublicationRecord(sig, pubRec), "Error: Unable to get signatures publication record.");
-}
-
 int KSI_Signature_verify_throws(KSI_Signature *sig, KSI_CTX *ksi){
 	THROWABLE3(ksi, KSI_Signature_verify(sig, ksi), "Error: Unable to verify signature.");
-}
-
-int KSI_Signature_verifyWithPublication_throws(KSI_Signature *sig, KSI_CTX *ksi, const KSI_PublicationData *publication){
-	THROWABLE3(ksi, KSI_Signature_verifyWithPublication(sig, ksi, publication), "Error: Unable to verify signature with user publication.");
-}
-
-int KSI_Signature_verifyOnline_throws(KSI_CTX *ksi, KSI_Signature *sig){
-	THROWABLE3(ksi, KSI_Signature_verifyOnline(sig, ksi), "Error: Unable to verify signature online.");
 }
 
 int KSI_Signature_create_throws(KSI_CTX *ksi, KSI_DataHash *hsh, KSI_Signature **signature){
 	THROWABLE3(ksi, KSI_Signature_create(ksi, hsh, signature), "Error: Unable to create signature.");
 }
 
-int KSI_Signature_createDataHasher_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_DataHasher **hsr){
-	THROWABLE3(ksi, KSI_Signature_createDataHasher(sig, hsr), "Error: Unable to create data hasher.");
-}
-
-int KSI_Signature_verifyDataHash_throws(KSI_Signature *sig, KSI_CTX *ksi, KSI_DataHash *hash){
-	THROWABLE3(ksi, KSI_Signature_verifyDataHash(sig, ksi,  hash), "Error: Wrong document or signature.");
-}
 /*To earliest available publication available*/
 int KSI_extendSignature_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext){
 	THROWABLE3(ksi, KSI_extendSignature(ksi, sig, ext),"Error: Unable to extend signature.");
-}
-/*To Publication record*/
-int KSI_Signature_extend_throws(const KSI_Signature *signature, KSI_CTX *ksi, const KSI_PublicationRecord *pubRec, KSI_Signature **extended){
-	THROWABLE3(ksi, KSI_Signature_extend(signature, ksi, pubRec, extended), "Error: Unable to extend signature.");
 }
 
 int KSI_Signature_extendTo_throws(const KSI_Signature *signature, KSI_CTX *ksi, KSI_Integer *to, KSI_Signature **extended){
@@ -1554,30 +1500,6 @@ int KSI_PublicationData_getTime_throws(KSI_CTX *ksi, const KSI_PublicationData *
 
 int KSI_PublicationData_toBase32_throws(KSI_CTX *ksi, const KSI_PublicationData *published_data, char **publication){
 	THROWABLE3(ksi, KSI_PublicationData_toBase32(published_data, publication), "Error: Unable to convert publication data to base 32.");
-}
-
-int KSI_PublicationData_fromBase32_throws(KSI_CTX *ksi, const char *publication, KSI_PublicationData **published_data){
-	THROWABLE3(ksi, KSI_PublicationData_fromBase32(ksi, publication, published_data), "Error: Unable to parse publication data as base 32.");
-}
-
-int KSI_Signature_getSigningTime_throws(KSI_CTX *ksi, const KSI_Signature *sig, KSI_Integer **signTime){
-	THROWABLE3(ksi, KSI_Signature_getSigningTime(sig, signTime), "Error: Unable to get signatures signing time.");
-}
-
-int KSI_PublicationRecord_clone_throws(KSI_CTX *ksi, const KSI_PublicationRecord *rec, KSI_PublicationRecord **clone){
-	THROWABLE3(ksi, KSI_PublicationRecord_clone(rec, clone), "Error: Unable clone signatures publication record.");
-}
-
-int KSI_PublicationRecord_getPublishedData_throws(KSI_CTX *ksi, const KSI_PublicationRecord *t, KSI_PublicationData **publishedData){
-	THROWABLE3(ksi, KSI_PublicationRecord_getPublishedData(t, publishedData), "Error: Unable to set publication records published data.");
-}
-
-int KSI_PublicationRecord_setPublishedData_throws(KSI_CTX *ksi, KSI_PublicationRecord *t, KSI_PublicationData *publishedData){
-	THROWABLE3(ksi, KSI_PublicationRecord_setPublishedData(t, publishedData), "Error: Unable to set publication records published data.");
-}
-
-int KSI_PublicationRecord_new_throws(KSI_CTX *ksi, KSI_PublicationRecord **t){
-	THROWABLE3(ksi, KSI_PublicationRecord_new(ksi, t), "Error: Unable create new publication record.");
 }
 
 int KSI_CTX_setPublicationCertEmail_throws(KSI_CTX *ksi, const char *email){

@@ -28,33 +28,45 @@ extern "C" {
 #endif
 
 /**
- * Task that deals with signing operations.
+ * Task that deals with signing files and hash.
  * @param [in] task Pointer to task object.
- * @return True if successful, false otherwise.
+ * @return exit code.
  */
 int GT_signTask(Task *task);
 
 /**
- * Task that deals with verifying operations.
+ * Task that deals with signature verification.
  * @param [in] task Pointer to task object.
- * @return True if successful, false otherwise.
+ * @return exit code.
  */
-int GT_verifyTask(Task *task);
+int GT_verifySignatureTask(Task *task);
 
 /**
- * Task that deals with extending operations.
+ * Task that deals with publication file verification.
  * @param [in] task Pointer to task object.
- * @return True if successful, false otherwise.
+ * @return exit code.
+ */
+int GT_verifyPublicationFileTask(Task *task);
+
+/**
+ * Task that deals with signature extending.
+ * @param [in] task Pointer to task object.
+ * @return exit code.
  */
 int GT_extendTask(Task *task);
 
 /**
- * Task that deals with extending operations.
+ * Task that deals with publications file.
  * @param [in] task Pointer to task object.
- * @return True if successful, false otherwise.
+ * @return exit code.
  */
 int GT_publicationsFileTask(Task *task);
 
+/**
+ * Other tasks..
+ * @param [in] task Pointer to task object.
+ * @return exit code.
+ */
 int GT_other(Task *task);
 
 #ifdef	__cplusplus

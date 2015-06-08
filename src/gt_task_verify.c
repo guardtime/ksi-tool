@@ -19,160 +19,67 @@
  */
 
 #include "gt_task_support.h"
-#include "try-catch.h"
-int GT_verifyTask(Task *task){
-	paramSet *set = NULL;
+
+static int GT_verifyTask_verifySigOnline(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig);
+static int GT_verifyTask_verifyWithPublication(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig, KSI_Signature **out);
+static int GT_verifyTask_verify(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig);
+static int GT_verifyTask_verifyData(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig);
+
+int GT_verifySignatureTask(Task *task){
+	int res;
 	KSI_CTX *ksi = NULL;
+	ERR_TRCKR *err = NULL;
+	paramSet *set = NULL;
 	KSI_Signature *sig = NULL;
-	KSI_DataHash *file_hsh = NULL;
-	KSI_DataHash *raw_hsh = NULL;
-	KSI_DataHasher *hsr = NULL;
-	KSI_PublicationsFile *publicationsFile = NULL;
-	KSI_PublicationData *publication = NULL;
-	KSI_PublicationRecord *extendTo = NULL;
 	KSI_Signature *tmp_ext = NULL;
-	KSI_Signature *dumpBuf = NULL;
-	char *imprint = NULL;
 	int retval = EXIT_SUCCESS;
 
-	bool n, r, d, t, b, f, F, x, ref, tlv;
-	char *inPubFileName = NULL;
+
+	bool n, r, d, f, F, ref, tlv;
 	char *inSigFileName = NULL;
-	char *inDataFileName = NULL;
-	char *refStrn = NULL;
 
 	set = Task_getSet(task);
-	b = paramSet_getStrValueByNameAt(set, "b",0, &inPubFileName);
 	paramSet_getStrValueByNameAt(set, "i",0, &inSigFileName);
-	f = paramSet_getStrValueByNameAt(set, "f",0, &inDataFileName);
-	F = paramSet_getStrValueByNameAt(set, "F",0, &imprint);
-	ref = paramSet_getStrValueByNameAt(set, "ref",0, &refStrn);
 
+	ref = paramSet_isSetByName(set, "ref");
+	f = paramSet_isSetByName(set, "f");
+	F = paramSet_isSetByName(set, "F");
 	n = paramSet_isSetByName(set, "n");
 	r = paramSet_isSetByName(set, "r");
 	d = paramSet_isSetByName(set, "d");
-	t = paramSet_isSetByName(set, "t");
-	x = paramSet_isSetByName(set, "x");
 	tlv = paramSet_isSetByName(set, "tlv");
 
-	resetExceptionHandler();
-	try
-		CODE{
-			/*Initalization of KSI */
-			initTask_throws(task, &ksi);
-
-			if (Task_getID(task) == verifyPublicationsFile) {
-				print_info("Reading publications file... ");
-				MEASURE_TIME(loadPublicationFile_throws(ksi, inPubFileName, &publicationsFile));
-				print_info("ok. %s\n",t ? str_measuredTime() : "");
-
-				print_info("Verifying  publications file... ");
-				KSI_verifyPublicationsFile_throws(ksi, publicationsFile);
-				print_info("ok.\n");
-			}
-			/* Verification of signature*/
-			else {
-				bool isExtended = false;
-				/* Reading signature file for verification. */
-				print_info("Reading signature... ");
-				loadSignatureFile_throws(ksi, inSigFileName, &sig);
-				print_info("ok.\n");
-
-				isExtended = isSignatureExtended(sig);
-
-				/* Choosing between online and publications file signature verification */
-				if (Task_getID(task) == verifyTimestampOnline) {
-					print_info("Verifying online... ");
-					MEASURE_TIME(KSI_Signature_verifyOnline_throws(ksi, sig));
-					print_info("ok. %s\n",t ? str_measuredTime() : "");
-				}
-				else if(Task_getID(task) == verifyTimestamp) {
-					if (ref) {
-						KSI_PublicationRecord *pubRec = NULL;
-						KSI_PublicationData *pubData = NULL;
-						KSI_Integer *timeA = NULL;
-						KSI_Integer *timeB = NULL;
-
-						KSI_PublicationData_fromBase32_throws(ksi, refStrn, &publication);
-						KSI_PublicationData_getTime_throws(ksi, publication, &timeB);
-
-						if (isExtended) {
-							KSI_Signature_getPublicationRecord_throws(ksi, sig, &pubRec);
-							KSI_PublicationRecord_getPublishedData_throws(ksi, pubRec, &pubData);
-							KSI_PublicationData_getTime_throws(ksi, pubData, &timeA);
-						}
-
-						if (isExtended && KSI_Integer_equals(timeA, timeB)) {
-							print_info("Verifying signature using user publication... ");
-							MEASURE_TIME(KSI_Signature_verifyWithPublication_throws(sig, ksi, publication));
-						} else {
-							KSI_PublicationRecord *pubRec = NULL;
-							KSI_PublicationsFile *pubFile = NULL;
-							if (isExtended)
-								print_warnings("Warning: Publication time of publication string is not matching with signatures publication.\n");
-							else
-								print_warnings("Warning: Signature is not extended.\n");
-
-							KSI_receivePublicationsFile_throws(ksi, &pubFile);
-							KSI_PublicationsFile_getPublicationDataByPublicationString_throws(ksi, pubFile, refStrn, &pubRec);
-
-							if (pubRec == NULL) {
-								KSI_PublicationRecord_new_throws(ksi, &extendTo);
-								KSI_PublicationRecord_setPublishedData_throws(ksi, extendTo, publication);
-								publication = NULL;
-								KSI_PublicationData_fromBase32_throws(ksi, refStrn, &publication);
-							} else {
-								KSI_PublicationRecord_clone_throws(ksi, pubRec, &extendTo);
-							}
-
-							print_info("Extending signature to publication time of publication string... ");
-							KSI_Signature_extend_throws(sig, ksi, extendTo, &tmp_ext);
-							print_info("ok.\n");
-
-							print_info("Verifying signature using user publication... ");
-							MEASURE_TIME(KSI_Signature_verifyWithPublication_throws(tmp_ext, ksi, publication));
-						}
-
-					} else {
-						if (ref) {
-							print_warnings("Warning: Signature is not extended.\n");
-						}
-						print_info("Verifying signature%s ", b && isExtended ? " using local publications file... " : "... ");
-						MEASURE_TIME(KSI_Signature_verify_throws(sig, ksi));
-					}
-					print_info("ok. %s\n",t ? str_measuredTime() : "");
-				}
+	res = initTask(task, &ksi, &err);
+	if (res != KT_OK) goto cleanup;
 
 
-				/* If datafile or imprint is present compare hash and timestamp */
-				if(f){
-					print_info("Verifying file's %s hash... ", inDataFileName);
-					KSI_Signature_createDataHasher_throws(ksi, sig, &hsr);
-					getFilesHash_throws(ksi, hsr, inDataFileName, &file_hsh);
-					KSI_Signature_verifyDataHash_throws(sig, ksi, file_hsh);
-					print_info("ok.\n");
-				}
-				if(F){
-					print_info("Verifying imprint... ");
-					getHashFromCommandLine_throws(imprint, ksi, &raw_hsh);
-					KSI_Signature_verifyDataHash_throws(sig, ksi, raw_hsh);
-					print_info("ok.\n");
-				}
-			}
+	/* Reading signature file for verification. */
+	print_info("Reading signature... ");
+	res = loadSignatureFile(err, ksi, inSigFileName, &sig);
+	if (res != KT_OK) goto cleanup;
+	print_info("ok.\n");
 
-			print_info("Verification of %s %s successful.\n",
-					(Task_getID(task) == verifyPublicationsFile) ? "publications file" : "signature file",
-					(Task_getID(task) == verifyPublicationsFile) ? inPubFileName : inSigFileName
-					);
+
+	if (Task_getID(task) == verifyTimestampOnline) {
+		res = GT_verifyTask_verifySigOnline(task, ksi, err, sig);
+		if (res != KT_OK) goto cleanup;
+	} else if(Task_getID(task) == verifyTimestamp) {
+		if (ref) {
+			res = GT_verifyTask_verifyWithPublication(task, ksi, err, sig, &tmp_ext);
+			if (res != KT_OK) goto cleanup;
+		} else {
+			res = GT_verifyTask_verify(task, ksi, err, sig);
+			if (res != KT_OK) goto cleanup;
 		}
-		CATCH_ALL{
-			if(ksi)
-				print_errors("failed.\n");
-			printErrorMessage();
-			retval = _EXP.exep.ret;
-			exceptionSolved();
-		}
-	end_try
+	}
+
+	if (f || F) {
+		res = GT_verifyTask_verifyData(task, ksi, err, sig);
+		if (res != KT_OK) goto cleanup;
+	}
+
+	print_info("Verification of signature %s successful.\n", inSigFileName);
+
 
 	if (n || r || d || tlv) print_info("\n");
 
@@ -189,20 +96,284 @@ int GT_verifyTask(Task *task){
 	}
 
 
+
+cleanup:
+
+	if (res != KT_OK) {
+		print_errors("failed.\n");
+		ERR_TRCKR_printErrors(err);
+		retval = errToExitCode(res);
+	}
+
+	KSI_Signature_free(sig);
+	KSI_Signature_free(tmp_ext);
+	ERR_TRCKR_free(err);
+	closeTask(ksi);
+
+	return retval;
+}
+
+int GT_verifyPublicationFileTask(Task *task){
+	int res;
+	ERR_TRCKR *err = NULL;
+	KSI_CTX *ksi = NULL;
+	paramSet *set = NULL;
+	bool b, d, t;
+	char *inPubFileName = NULL;
+	KSI_PublicationsFile *publicationsFile = NULL;
+	int retval = EXIT_SUCCESS;
+
+
+	set = Task_getSet(task);
+	b = paramSet_getStrValueByNameAt(set, "b",0, &inPubFileName);
+	d = paramSet_isSetByName(set, "d");
+	t = paramSet_isSetByName(set, "t");
+
+	res = initTask(task, &ksi, &err);
+	if (res != KT_OK) goto cleanup;
+
+	print_info("Reading publications file... ");
+	MEASURE_TIME(res = loadPublicationFile(err, ksi, inPubFileName, &publicationsFile));
+	print_info("ok. %s\n",t ? str_measuredTime() : "");
+
+	print_info("Verifying  publications file... ");
+	res = KSI_verifyPublicationsFile(ksi, publicationsFile);
+	ERR_CATCH_KSI(ksi, "Error: Unable to verify publication file.");
+	print_info("ok.\n");
+
+	print_info("Verification of publication file %s successful.\n", inPubFileName);
+
+
 	if(d && Task_getID(task) == verifyPublicationsFile){
 		printPublicationsFileReferences(publicationsFile);
 		printPublicationsFileCertificates(publicationsFile);
 	}
 
-	KSI_Signature_free(sig);
-	KSI_DataHasher_free(hsr);
-	KSI_DataHash_free(raw_hsh);
-	KSI_DataHash_free(file_hsh);
-	KSI_PublicationData_free(publication);
-	KSI_PublicationRecord_free(extendTo);
-	KSI_Signature_free(tmp_ext);
+cleanup:
+
+	if (res != KT_OK) {
+		print_errors("failed.\n");
+		ERR_TRCKR_printErrors(err);
+		retval = errToExitCode(res);
+	}
+
 	KSI_PublicationsFile_free(publicationsFile);
+	ERR_TRCKR_free(err);
 	closeTask(ksi);
 
 	return retval;
+}
+
+
+static int GT_verifyTask_verifySigOnline(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig) {
+	int res;
+	paramSet *set = NULL;
+	bool t;
+
+	if (task == NULL || ksi == NULL || err == NULL || sig == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	set = Task_getSet(task);
+	t = paramSet_isSetByName(set, "t");
+
+	print_info("Verifying online... ");
+	MEASURE_TIME(res = KSI_Signature_verifyOnline(sig, ksi));
+	ERR_CATCH_KSI(ksi, "Error: Unable to verify signature online.");
+	print_info("ok. %s\n", t ? str_measuredTime() : "");
+
+	res = KT_OK;
+
+cleanup:
+
+	return res;
+}
+
+static int GT_verifyTask_verifyWithPublication(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig, KSI_Signature **out) {
+	int res;
+	paramSet *set = NULL;
+	KSI_PublicationData *publication = NULL;
+	KSI_PublicationRecord *extendTo = NULL;
+	KSI_Signature *tmp_ext = NULL;
+	int retval = EXIT_SUCCESS;
+	KSI_PublicationRecord *pubRec = NULL;
+	KSI_PublicationData *pubData = NULL;
+	KSI_PublicationsFile *pubFile = NULL;
+	KSI_Integer *timeA = NULL;
+	KSI_Integer *timeB = NULL;
+	bool n, r, d, t, ref, tlv, isExtended;
+	char *refStrn = NULL;
+	bool onErrorPrintFail = false;
+
+	if (task == NULL || ksi == NULL || err == NULL || sig == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	set = Task_getSet(task);
+	ref = paramSet_getStrValueByNameAt(set, "ref",0, &refStrn);
+
+	n = paramSet_isSetByName(set, "n");
+	r = paramSet_isSetByName(set, "r");
+	d = paramSet_isSetByName(set, "d");
+	t = paramSet_isSetByName(set, "t");
+	tlv = paramSet_isSetByName(set, "tlv");
+
+
+	isExtended = isSignatureExtended(sig);
+	res = KSI_PublicationData_fromBase32(ksi, refStrn, &publication);
+	ERR_CATCH_KSI(ksi, "Error: Unable parse publication string.");
+	res = KSI_PublicationData_getTime(publication, &timeB);
+	ERR_CATCH_KSI(ksi, "Error: Unable to get publication time from publication string.");
+
+	if (isExtended) {
+		res = KSI_Signature_getPublicationRecord(sig, &pubRec);
+		ERR_CATCH_KSI(ksi, "Error: Unable to extract publication record from signature.");
+		res = KSI_PublicationRecord_getPublishedData(pubRec, &pubData);
+		ERR_CATCH_KSI(ksi, "Error: Unable to get publication data from signatures publication record.");
+		res = KSI_PublicationData_getTime(pubData, &timeA);
+		ERR_CATCH_KSI(ksi, "Error: Unable to get publication time from signatures publication record.");
+	}
+
+	if (isExtended && KSI_Integer_equals(timeA, timeB)) {
+		print_info("Verifying signature using user publication... ");
+		MEASURE_TIME(res = KSI_Signature_verifyWithPublication(sig, ksi, publication));
+		ERR_CATCH_KSI(ksi, "Error: Unable to verify signature with user publication.");
+		print_info("ok. %s\n", t ? str_measuredTime() : "");
+	} else {
+		if (isExtended)
+			print_warnings("Warning: Publication time of publication string is not matching with signatures publication.\n");
+		else
+			print_warnings("Warning: Signature is not extended.\n");
+
+		res = KSI_receivePublicationsFile(ksi, &pubFile);
+		ERR_CATCH_KSI(ksi, "Error: Unable to receive publication file.");
+		res = KSI_PublicationsFile_getPublicationDataByPublicationString(pubFile, refStrn, &pubRec);
+		ERR_CATCH_KSI(ksi, "Error: Unable to get publication from publication file.");
+
+		if (pubRec == NULL) {
+			res = KSI_PublicationRecord_new(ksi, &extendTo);
+			ERR_CATCH_KSI(ksi, "Error: Unable to create new publication record.");
+			res = KSI_PublicationRecord_setPublishedData(extendTo, publication);
+			ERR_CATCH_KSI(ksi, "Error: Unable to set published data.");
+			publication = NULL;
+			res = KSI_PublicationData_fromBase32(ksi, refStrn, &publication);
+			ERR_CATCH_KSI(ksi, "Error: Unable to parse publication string.");
+		} else {
+			res = KSI_PublicationRecord_clone(pubRec, &extendTo);
+			ERR_CATCH_KSI(ksi, "Error: Unable to clone publication record.");
+		}
+
+		print_info("Extending signature to publication time of publication string... ");
+		MEASURE_TIME(res = KSI_Signature_extend(sig, ksi, extendTo, &tmp_ext));
+		ERR_CATCH_KSI(ksi, "Error: Unable to extend signature.");
+		print_info("ok. %s\n", t ? str_measuredTime() : "");
+
+		print_info("Verifying signature using user publication... ");
+		MEASURE_TIME(res = KSI_Signature_verifyWithPublication(tmp_ext, ksi, publication));
+		ERR_CATCH_KSI(ksi, "Error: Unable to verify signature with user publication.");
+		print_info("ok. %s\n", t ? str_measuredTime() : "");
+	}
+
+	if (out != NULL) {
+		*out = tmp_ext;
+		tmp_ext = NULL;
+	}
+
+	res = KT_OK;
+
+cleanup:
+
+	KSI_PublicationData_free(publication);
+	KSI_PublicationRecord_free(extendTo);
+	KSI_Signature_free(tmp_ext);
+
+	return res;
+}
+
+static int GT_verifyTask_verify(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig) {
+	int res;
+	paramSet *set = NULL;
+	bool b, t;
+	bool isExtended = false;
+
+
+	if (task == NULL || ksi == NULL || err == NULL || sig == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	set = Task_getSet(task);
+	t = paramSet_isSetByName(set, "t");
+	b = paramSet_isSetByName(set, "b");
+
+	isExtended = isSignatureExtended(sig);
+
+
+	print_info("Verifying signature%s ", b && isExtended ? " using local publications file... " : "... ");
+	MEASURE_TIME(res = KSI_Signature_verify(sig, ksi));
+	ERR_CATCH_KSI(ksi, "Error: Unable to verify signature.");
+	print_info("ok. %s\n",t ? str_measuredTime() : "");
+
+	res = KT_OK;
+
+cleanup:
+
+	return res;
+}
+
+static int GT_verifyTask_verifyData(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig) {
+	int res;
+	paramSet *set = NULL;
+	bool F, f, t;
+	bool isExtended = false;
+	char *imprint = NULL;
+	KSI_DataHash *file_hsh = NULL;
+	KSI_DataHash *raw_hsh = NULL;
+	KSI_DataHasher *hsr = NULL;
+	char *inDataFileName = NULL;
+
+	if (task == NULL || ksi == NULL || err == NULL || sig == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	set = Task_getSet(task);
+	t = paramSet_isSetByName(set, "t");
+	f = paramSet_getStrValueByNameAt(set, "f",0, &inDataFileName);
+	F = paramSet_getStrValueByNameAt(set, "F",0, &imprint);
+
+
+	if(f){
+		print_info("Verifying file's %s hash... ", inDataFileName);
+		res = KSI_Signature_createDataHasher(sig, &hsr);
+		ERR_CATCH_KSI(ksi, "Error: Unable to create data hasher.");
+		res = getFilesHash(hsr, inDataFileName, &file_hsh);
+		if (res != KT_OK) {
+			ERR_TRCKR_ADD(err, res, "Error: Unable to hash file. (%s)", errToString(res));
+			goto cleanup;
+		}
+		res = KSI_Signature_verifyDataHash(sig, ksi, file_hsh);
+		ERR_CATCH_KSI(ksi, "Error: Unable to verify files hash.");
+		print_info("ok.\n");
+	}
+	if(F){
+		print_info("Verifying imprint... ");
+		res = getHashFromCommandLine(imprint, ksi, err, &raw_hsh);
+		if (res != KT_OK) goto cleanup;
+		res = KSI_Signature_verifyDataHash(sig, ksi, raw_hsh);
+		ERR_CATCH_KSI(ksi, "Error: Unable to verify hash.");
+		print_info("ok.\n");
+	}
+
+	res = KT_OK;
+
+cleanup:
+
+	KSI_DataHasher_free(hsr);
+	KSI_DataHash_free(raw_hsh);
+	KSI_DataHash_free(file_hsh);
+
+	return res;
 }

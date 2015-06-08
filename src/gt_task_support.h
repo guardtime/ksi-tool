@@ -88,7 +88,6 @@ void closeTask(KSI_CTX *ksi);
  * 
  * @throws KSI_EXCEPTION, IO_EXCEPTION.
  */
-void getFilesHash_throws(KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash); 
 int getFilesHash(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash);
 
 /**
@@ -108,6 +107,7 @@ bool isSignatureExtended(const KSI_Signature *sig);
 void loadPublicationFile_throws(KSI_CTX *ksi, const char *path, KSI_PublicationsFile **pubfile);
 int loadPublicationFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_PublicationsFile **pubfile);
 void loadSignatureFile_throws(KSI_CTX *ksi, const char *fname, KSI_Signature **sig);
+int loadSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signature **sig);
 
 bool isPiping(paramSet *set);
 /**
@@ -206,16 +206,11 @@ int KSI_PublicationsFile_serialize_throws(KSI_CTX *ksi, KSI_PublicationsFile *pu
 int KSI_DataHasher_open_throws(KSI_CTX *ksi,int hasAlgID ,KSI_DataHasher **hsr);
 int KSI_DataHasher_add_throws(KSI_CTX *ksi, KSI_DataHasher *hasher, const void *data, size_t data_length);
 int KSI_DataHasher_close_throws(KSI_CTX *ksi, KSI_DataHasher *hasher, KSI_DataHash **hash);
-int KSI_createSignature_throws(KSI_CTX *ksi, KSI_DataHash *hash, KSI_Signature **sign);
 int KSI_Signature_verify_throws(KSI_Signature *sig, KSI_CTX *ksi);
 int KSI_Signature_verifyWithPublication_throws(KSI_Signature *sig, KSI_CTX *ksi, const KSI_PublicationData *publication);
-int KSI_Signature_verifyOnline_throws(KSI_CTX *ksi, KSI_Signature *sig);
-int KSI_Signature_createDataHasher_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_DataHasher **hsr);
 int KSI_Signature_create_throws(KSI_CTX *ksi, KSI_DataHash *hsh, KSI_Signature **signature);
-int KSI_Signature_verifyDataHash_throws(KSI_Signature *sig, KSI_CTX *ksi, KSI_DataHash *hash);
 int KSI_extendSignature_throws(KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext);
 int KSI_Signature_extendTo_throws(const KSI_Signature *signature, KSI_CTX *ksi, KSI_Integer *to, KSI_Signature **extended);
-int KSI_Signature_extend_throws(const KSI_Signature *signature, KSI_CTX *ksi, const KSI_PublicationRecord *pubRec, KSI_Signature **extended);
 int KSI_PKITruststore_addLookupFile_throws(KSI_CTX *ksi, KSI_PKITruststore *store, const char *path);
 int KSI_PKITruststore_addLookupDir_throws(KSI_CTX *ksi, KSI_PKITruststore *store, const char *path);
 int KSI_Integer_new_throws(KSI_CTX *ksi, KSI_uint64_t value, KSI_Integer **kint);
@@ -234,9 +229,6 @@ int KSI_PublicationData_new_throws(KSI_CTX *ksi, KSI_PublicationData **t);
 int KSI_PublicationData_setImprint_throws(KSI_CTX *ksi, KSI_PublicationData *t, KSI_DataHash *imprint);
 int KSI_PublicationData_setTime_throws(KSI_CTX *ksi, KSI_PublicationData *t, KSI_Integer *time);
 int KSI_PublicationData_toBase32_throws(KSI_CTX *ksi, const KSI_PublicationData *published_data, char **publication);
-int KSI_PublicationData_fromBase32_throws(KSI_CTX *ksi, const char *publication, KSI_PublicationData **published_data);
-int KSI_Signature_getSigningTime_throws(KSI_CTX *ksi, const KSI_Signature *sig, KSI_Integer **signTime);
-int KSI_PublicationRecord_clone_throws(KSI_CTX *ksi, const KSI_PublicationRecord *rec, KSI_PublicationRecord **clone);
 int KSI_CTX_setPublicationCertEmail_throws(KSI_CTX *ksi, const char *email);
 int KSI_CTX_setPublicationUrl_throws(KSI_CTX *ksi, const char *uri);
 int KSI_CTX_setAggregator_throws(KSI_CTX *ksi, const char *uri, const char *loginId, const char *key);
@@ -244,13 +236,7 @@ int KSI_CTX_setExtender_throws(KSI_CTX *ksi, const char *uri, const char *loginI
 int KSI_CTX_setTransferTimeoutSeconds_throws(KSI_CTX *ksi, int timeout);
 int KSI_CTX_setConnectionTimeoutSeconds_throws(KSI_CTX *ksi, int timeout);
 
-int KSI_PublicationsFile_getPublicationDataByPublicationString_throws(KSI_CTX *ksi, const KSI_PublicationsFile *pubFile, const char *pubString, KSI_PublicationRecord **pubRec);
-int KSI_PublicationRecord_getPublishedData_throws(KSI_CTX *ksi, const KSI_PublicationRecord *t, KSI_PublicationData **publishedData);
-int KSI_PublicationRecord_setPublishedData_throws(KSI_CTX *ksi, KSI_PublicationRecord *t, KSI_PublicationData *publishedData);
-int KSI_Signature_verifyWithPublication_throws(KSI_Signature *sig, KSI_CTX *ksi, const KSI_PublicationData *publication);
 int KSI_PublicationData_getTime_throws(KSI_CTX *ksi, const KSI_PublicationData *t, KSI_Integer **time);
-int KSI_PublicationRecord_new_throws(KSI_CTX *ksi, KSI_PublicationRecord **t);
-int KSI_Signature_getPublicationRecord_throws(KSI_CTX *ksi, const KSI_Signature *sig, KSI_PublicationRecord **pubRec);
 
 #define MEASURE_TIME(code_here) \
 	{   \

@@ -378,7 +378,7 @@ int main(int argc, char** argv, char **envp) {
 		retval=GT_publicationsFileTask(task);
 	}
 	else if (Task_getID(task) == verifyPublicationsFile){
-		retval=GT_verifyTask(task);
+		retval = GT_verifyPublicationFileTask(task);
 	}
 	else if (Task_getID(task) == signDataFile || Task_getID(task) == signHash){
 		retval=GT_signTask(task);
@@ -390,7 +390,7 @@ int main(int argc, char** argv, char **envp) {
 		retval=GT_other(task);
 	}
 	else if(Task_getID(task) == verifyTimestamp || Task_getID(task) == verifyTimestampOnline){
-		retval=GT_verifyTask(task);
+		retval = GT_verifySignatureTask(task);
 	}
 
 cleanup:
