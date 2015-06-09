@@ -756,21 +756,23 @@ int saveSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const c
 	return res;
 }
 
-void savePublicationFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *fname) {
+int savePublicationFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *fname) {
 	int res;
 
 	if (ksi == NULL || fname == NULL || pubfile == NULL) {
-		THROW_MSG(INVALID_ARGUMENT_EXCEPTION, EXIT_FAILURE, NULL);
+		return KT_INVALID_ARGUMENT;
 	}
 
 	res = saveKsiObj(ksi, pubfile,
-				(int (*)(KSI_CTX *, void *, unsigned char **, unsigned *))KSI_PublicationsFile_serialize_throws,
+				(int (*)(KSI_CTX *, void *, unsigned char **, unsigned *))KSI_PublicationsFile_serialize,
 				fname);
 
-	if (res != 0) {
-		KSI_LOG_logCtxError(ksi, KSI_LOG_DEBUG);
-		THROW_MSG(IO_EXCEPTION, errToExitCode(res), "Error: Unable to save publication file to '%s'.", fname);
+	if (res) {
+		ERR_TRCKR_ADD(err, res, "Error: %s", errToString(res));
+		ERR_TRCKR_ADD(err, res, "Error: Unable to save publication file to '%s'.", fname);
 	}
+
+	return res;
 }
 
 bool isSignatureExtended(const KSI_Signature *sig) {
@@ -1296,17 +1298,6 @@ int ksi_error_wrapper(ERR_TRCKR *err, KSI_CTX *ksi, int res, const char *file, u
 
 
 
-int KSI_receivePublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile **publicationsFile){
-	THROWABLE3(ksi, KSI_receivePublicationsFile(ksi, publicationsFile), "Error: Unable to read publications file.");
-}
-
-int KSI_verifyPublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *publicationsFile){
-	THROWABLE3(ksi, KSI_verifyPublicationsFile(ksi, publicationsFile), "Error: Unable to verify publications file.");
-}
-
-int KSI_PublicationsFile_serialize_throws(KSI_CTX *ksi, KSI_PublicationsFile *publicationsFile, char **raw, unsigned *raw_len){
-	THROWABLE3(ksi, KSI_PublicationsFile_serialize(ksi, publicationsFile, raw, raw_len), "Error: Unable serialize publications file.");
-}
 
 int KSI_DataHasher_open_throws(KSI_CTX *ksi,int hasAlgID ,KSI_DataHasher **hsr){
 	THROWABLE3(ksi, KSI_DataHasher_open(ksi, hasAlgID, hsr), "Error: Unable to create hasher.");
@@ -1330,74 +1321,6 @@ int KSI_PKITruststore_addLookupFile_throws(KSI_CTX *ksi, KSI_PKITruststore *stor
 
 int KSI_PKITruststore_addLookupDir_throws(KSI_CTX *ksi, KSI_PKITruststore *store, const char *path){
 	THROWABLE3(ksi, KSI_PKITruststore_addLookupDir(store,path), "Error: Unable to set PKI trust store lookup directory.");
-}
-
-int KSI_Integer_new_throws(KSI_CTX *ksi, KSI_uint64_t value, KSI_Integer **kint){
-	THROWABLE3(ksi, KSI_Integer_new(ksi, value, kint), "Error: Unable to construct KSI Integer.");
-}
-
-int KSI_ExtendReq_new_throws(KSI_CTX *ksi, KSI_ExtendReq **t){
-	THROWABLE3(ksi, KSI_ExtendReq_new(ksi, t);, "Error: Unable to construct KSI extend request.");
-}
-
-int KSI_ExtendReq_setAggregationTime_throws(KSI_CTX *ksi, KSI_ExtendReq *t, KSI_Integer *aggregationTime){
-	THROWABLE3(ksi, KSI_ExtendReq_setAggregationTime(t, aggregationTime);, "Error: Unable to set request aggregation time.");
-}
-
-int KSI_ExtendReq_setPublicationTime_throws(KSI_CTX *ksi, KSI_ExtendReq *t, KSI_Integer *publicationTime){
-	THROWABLE3(ksi, KSI_ExtendReq_setPublicationTime(t, publicationTime), "Error: Unable to set request publication time.");
-}
-
-int KSI_ExtendReq_setRequestId_throws(KSI_CTX *ksi, KSI_ExtendReq *t, KSI_Integer *requestId){
-	THROWABLE3(ksi, KSI_ExtendReq_setRequestId(t, requestId), "Error: Unable to set request ID.");
-}
-
-int KSI_sendExtendRequest_throws(KSI_CTX *ksi, KSI_ExtendReq *request, KSI_RequestHandle **handle){
-	THROWABLE3(ksi, KSI_sendExtendRequest(ksi, request, handle), "Error: Unable to send extend request.");
-}
-
-int KSI_RequestHandle_getExtendResponse_throws(KSI_CTX *ksi, KSI_RequestHandle *handle, KSI_ExtendResp **resp){
-	THROWABLE3(ksi, KSI_RequestHandle_getExtendResponse(handle, resp), "Error: Unable to get extend request.");
-}
-
-int KSI_ExtendResp_getStatus_throws(KSI_CTX *ksi, const KSI_ExtendResp *t, KSI_Integer **status){
-	THROWABLE3(ksi, KSI_ExtendResp_getStatus(t, status), "Error: Unable to get request response status.");
-}
-
-int KSI_ExtendResp_getCalendarHashChain_throws(KSI_CTX *ksi, const KSI_ExtendResp *t, KSI_CalendarHashChain **calendarHashChain){
-	THROWABLE3(ksi, KSI_ExtendResp_getCalendarHashChain(t, calendarHashChain), "Error: Unable to get calendar hash chain.");
-}
-
-int KSI_CalendarHashChain_aggregate_throws(KSI_CTX *ksi, KSI_CalendarHashChain *chain, KSI_DataHash **hsh){
-	THROWABLE3(ksi, KSI_CalendarHashChain_aggregate(chain, hsh), "Error: Unable to aggregate.");
-}
-
-int KSI_CalendarHashChain_getPublicationTime_throws(KSI_CTX *ksi, const KSI_CalendarHashChain *t, KSI_Integer **publicationTime){
-	THROWABLE3(ksi, KSI_CalendarHashChain_getPublicationTime(t, publicationTime), "Error: Unable to get publications time.");
-}
-
-int KSI_CalendarHashChain_setPublicationTime_throws(KSI_CTX *ksi, KSI_CalendarHashChain *t, KSI_Integer *publicationTime){
-	THROWABLE3(ksi, KSI_CalendarHashChain_setPublicationTime(t, publicationTime), "Error: Unable to set publications time.");
-}
-
-int KSI_PublicationData_new_throws(KSI_CTX *ksi, KSI_PublicationData **t){
-	THROWABLE3(ksi, KSI_PublicationData_new(ksi, t), "Error: Unable to construct publication data.");
-}
-
-int KSI_PublicationData_setImprint_throws(KSI_CTX *ksi, KSI_PublicationData *t, KSI_DataHash *imprint){
-	THROWABLE3(ksi, KSI_PublicationData_setImprint(t,imprint), "Error: Unable to set publication data imprint.");
-}
-
-int KSI_PublicationData_setTime_throws(KSI_CTX *ksi, KSI_PublicationData *t, KSI_Integer *time){
-	THROWABLE3(ksi, KSI_PublicationData_setTime(t, time), "Error: Unable to set publication data time attribute.");
-}
-
-int KSI_PublicationData_getTime_throws(KSI_CTX *ksi, const KSI_PublicationData *t, KSI_Integer **time){
-	THROWABLE3(ksi, KSI_PublicationData_getTime(t, time), "Error: Unable to get publication data time attribute.");
-}
-
-int KSI_PublicationData_toBase32_throws(KSI_CTX *ksi, const KSI_PublicationData *published_data, char **publication){
-	THROWABLE3(ksi, KSI_PublicationData_toBase32(published_data, publication), "Error: Unable to convert publication data to base 32.");
 }
 
 int KSI_CTX_setPublicationCertEmail_throws(KSI_CTX *ksi, const char *email){

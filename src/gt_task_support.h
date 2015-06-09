@@ -99,7 +99,7 @@ int getFilesHash(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash);
  */
 int saveSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *fname);
 
-void savePublicationFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *fname);
+int savePublicationFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *fname);
 
 bool isSignatureExtended(const KSI_Signature *sig);
 
@@ -187,31 +187,12 @@ int ksi_error_wrapper(ERR_TRCKR *err, KSI_CTX *ksi, int res, const char *file, u
 #define ERR_CATCH_KSI(ksi, msg, ...) if (ksi_error_wrapper(err, ksi, res, __FILE__, __LINE__, msg, __VA_ARGS__) != KSI_OK) goto cleanup
 //#define KSI_WRAPPER_GTC(err, ksi, func, msg, ...) if (func != KSI_OK) goto cleanup
 
-int KSI_receivePublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile **publicationsFile);
-int KSI_verifyPublicationsFile_throws(KSI_CTX *ksi, KSI_PublicationsFile *publicationsFile);
-int KSI_PublicationsFile_serialize_throws(KSI_CTX *ksi, KSI_PublicationsFile *publicationsFile, char **raw, unsigned *raw_len);
 int KSI_DataHasher_open_throws(KSI_CTX *ksi,int hasAlgID ,KSI_DataHasher **hsr);
 int KSI_DataHasher_add_throws(KSI_CTX *ksi, KSI_DataHasher *hasher, const void *data, size_t data_length);
 int KSI_DataHasher_close_throws(KSI_CTX *ksi, KSI_DataHasher *hasher, KSI_DataHash **hash);
 int KSI_Signature_create_throws(KSI_CTX *ksi, KSI_DataHash *hsh, KSI_Signature **signature);
 int KSI_PKITruststore_addLookupFile_throws(KSI_CTX *ksi, KSI_PKITruststore *store, const char *path);
 int KSI_PKITruststore_addLookupDir_throws(KSI_CTX *ksi, KSI_PKITruststore *store, const char *path);
-int KSI_Integer_new_throws(KSI_CTX *ksi, KSI_uint64_t value, KSI_Integer **kint);
-int KSI_ExtendReq_new_throws(KSI_CTX *ksi, KSI_ExtendReq **t);
-int KSI_ExtendReq_setAggregationTime_throws(KSI_CTX *ksi, KSI_ExtendReq *t, KSI_Integer *aggregationTime);
-int KSI_ExtendReq_setPublicationTime_throws(KSI_CTX *ksi, KSI_ExtendReq *t, KSI_Integer *publicationTime);
-int KSI_ExtendReq_setRequestId_throws(KSI_CTX *ksi, KSI_ExtendReq *t, KSI_Integer *requestId);
-int KSI_sendExtendRequest_throws(KSI_CTX *ksi, KSI_ExtendReq *request, KSI_RequestHandle **handle);
-int KSI_RequestHandle_getExtendResponse_throws(KSI_CTX *ksi, KSI_RequestHandle *handle, KSI_ExtendResp **resp);
-int KSI_ExtendResp_getStatus_throws(KSI_CTX *ksi, const KSI_ExtendResp *t, KSI_Integer **status);
-int KSI_ExtendResp_getCalendarHashChain_throws(KSI_CTX *ksi, const KSI_ExtendResp *t, KSI_CalendarHashChain **calendarHashChain);
-int KSI_CalendarHashChain_aggregate_throws(KSI_CTX *ksi, KSI_CalendarHashChain *chain, KSI_DataHash **hsh);
-int KSI_CalendarHashChain_getPublicationTime_throws(KSI_CTX *ksi, const KSI_CalendarHashChain *t, KSI_Integer **publicationTime);
-int KSI_CalendarHashChain_setPublicationTime_throws(KSI_CTX *ksi, KSI_CalendarHashChain *t, KSI_Integer *publicationTime);
-int KSI_PublicationData_new_throws(KSI_CTX *ksi, KSI_PublicationData **t);
-int KSI_PublicationData_setImprint_throws(KSI_CTX *ksi, KSI_PublicationData *t, KSI_DataHash *imprint);
-int KSI_PublicationData_setTime_throws(KSI_CTX *ksi, KSI_PublicationData *t, KSI_Integer *time);
-int KSI_PublicationData_toBase32_throws(KSI_CTX *ksi, const KSI_PublicationData *published_data, char **publication);
 int KSI_CTX_setPublicationCertEmail_throws(KSI_CTX *ksi, const char *email);
 int KSI_CTX_setPublicationUrl_throws(KSI_CTX *ksi, const char *uri);
 int KSI_CTX_setAggregator_throws(KSI_CTX *ksi, const char *uri, const char *loginId, const char *key);
@@ -219,7 +200,6 @@ int KSI_CTX_setExtender_throws(KSI_CTX *ksi, const char *uri, const char *loginI
 int KSI_CTX_setTransferTimeoutSeconds_throws(KSI_CTX *ksi, int timeout);
 int KSI_CTX_setConnectionTimeoutSeconds_throws(KSI_CTX *ksi, int timeout);
 
-int KSI_PublicationData_getTime_throws(KSI_CTX *ksi, const KSI_PublicationData *t, KSI_Integer **time);
 
 #define MEASURE_TIME(code_here) \
 	{   \

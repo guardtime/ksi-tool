@@ -19,15 +19,119 @@
  */
 
 #include "gt_task_support.h"
-#include "ksitool_err.h"
-#include "try-catch.h"
 #include "ksi/net.h"
+#include "ksi/hashchain.h"
 
-void getPublicationString_throws(KSI_CTX *ctx, KSI_Integer *time);
+static int GT_publicationsFileTask_downloadPublicationsFile(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_PublicationsFile **pubfile);
+static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, char **pubstring, time_t *time);
 
 int GT_publicationsFileTask(Task *task){
+	int res;
 	paramSet *set = NULL;
 	KSI_CTX *ksi = NULL;
+	ERR_TRCKR *err = NULL;
+	KSI_PublicationsFile *publicationsFile = NULL;
+	bool d, r;
+	char *outPubFileName = NULL;
+	char *pubstring = NULL;
+	char strTime[1024];
+	time_t pubTm;
+	struct tm tm;
+	int retval = EXIT_SUCCESS;
+
+
+	set = Task_getSet(task);
+	paramSet_getStrValueByNameAt(set, "o",0, &outPubFileName);
+	r = paramSet_isSetByName(set, "r");
+	d = paramSet_isSetByName(set, "d");
+
+
+	res = initTask(task ,&ksi, &err);
+	if (res != KT_OK) goto cleanup;
+
+	if(Task_getID(task) == downloadPublicationsFile){
+		res = GT_publicationsFileTask_downloadPublicationsFile(task, ksi, err, &publicationsFile);
+		if (res != KT_OK) goto cleanup;
+
+		res = savePublicationFile(err, ksi, publicationsFile, outPubFileName);
+		if (res != KT_OK) goto cleanup;
+		print_info("Publications file '%s' saved.\n", outPubFileName);
+
+		if(d || r) print_info("\n");
+		if(d || r) printPublicationsFileReferences(publicationsFile);
+		if(d) printPublicationsFileCertificates(publicationsFile);
+	} else if(Task_getID(task) == createPublicationString){
+		res = GT_publicationsFileTask_createPublicationString(task, ksi, err, &pubstring, &pubTm);
+		if (res != KT_OK) goto cleanup;
+
+		gmtime_r(&pubTm, &tm);
+		strftime(strTime, sizeof(strTime), "%Y-%m-%d %H:%M:%S", &tm);
+
+		print_result("[%s]\n", strTime);
+		print_result("pub=%s\n", pubstring);
+	}
+
+
+
+cleanup:
+
+	if (res != KT_OK) {
+		print_errors("failed.\n");
+		ERR_TRCKR_printErrors(err);
+		retval = errToExitCode(res);
+	}
+
+	KSI_free(pubstring);
+	ERR_TRCKR_free(err);
+	closeTask(ksi);
+
+	return retval;
+}
+
+
+static int GT_publicationsFileTask_downloadPublicationsFile(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_PublicationsFile **pubfile) {
+	int res;
+	paramSet *set = NULL;
+	KSI_PublicationsFile *tmp = NULL;
+	bool d, t, r;
+
+
+	if (task == NULL || ksi == NULL || err == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+
+	set = Task_getSet(task);
+	r = paramSet_isSetByName(set, "r");
+	d = paramSet_isSetByName(set, "d");
+	t = paramSet_isSetByName(set, "t");
+
+
+	print_info("Downloading publications file... ");
+	MEASURE_TIME(res = KSI_receivePublicationsFile(ksi, &tmp));
+	ERR_CATCH_KSI(ksi, "Error: Unable to get publication file.");
+	print_info("ok. %s\n",t ? str_measuredTime() : "");
+
+	print_info("Verifying publications file... ");
+	MEASURE_TIME(res = KSI_verifyPublicationsFile(ksi, tmp));
+	ERR_CATCH_KSI(ksi, "Error: Unable to verify publication file.");
+	print_info("ok. %s\n",t ? str_measuredTime() : "");
+
+	if (pubfile != NULL) {
+		*pubfile = tmp;
+	}
+
+	res = KT_OK;
+
+cleanup:
+
+	return res;
+}
+
+static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, char **pubstring, time_t *time) {
+	paramSet *set = NULL;
+	int res;
 	KSI_PublicationsFile *publicationsFile = NULL;
 
 	KSI_Integer *end = NULL;
@@ -38,118 +142,100 @@ int GT_publicationsFileTask(Task *task){
 	KSI_ExtendResp *extResp = NULL;
 	KSI_Integer *respStatus = NULL;
 	KSI_CalendarHashChain *chain = NULL;
-	KSI_DataHash *extHsh= NULL;
+	KSI_DataHash *extHsh = NULL;
 	KSI_PublicationData *pubData = NULL;
 	KSI_Integer *pubTime = NULL;
 	char *base32 = NULL;
-	char strTime[1024];
-	time_t pubTm;
-	struct tm tm;
-
-	int retval = EXIT_SUCCESS;
-
 	bool d, t, r;
-	char *outPubFileName = NULL;
 	int publicationTime = 0;
 
+
+	if (task == NULL || ksi == NULL || err == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+
 	set = Task_getSet(task);
-	paramSet_getStrValueByNameAt(set, "o",0,&outPubFileName);
-	paramSet_getIntValueByNameAt(set,"T",0,&publicationTime);
 	r = paramSet_isSetByName(set, "r");
 	d = paramSet_isSetByName(set, "d");
 	t = paramSet_isSetByName(set, "t");
+	paramSet_getIntValueByNameAt(set,"T",0,&publicationTime);
 
-	/*Initalization of KSI */
-	resetExceptionHandler();
-	try
-		CODE{
-			initTask_throws(task ,&ksi);
+	print_info("Sending extend request... ");
+	measureLastCall();
 
-			if(Task_getID(task) == downloadPublicationsFile){
-				print_info("Downloading publications file... ");
-				MEASURE_TIME(KSI_receivePublicationsFile_throws(ksi, &publicationsFile));
-				print_info("ok. %s\n",t ? str_measuredTime() : "");
+	res = KSI_Integer_new(ksi, publicationTime, &start);
+	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	res = KSI_Integer_new(ksi, publicationTime, &end);
+	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	res = KSI_Integer_new(ksi, (KSI_uint64_t)start, &reqID);
+	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	res = KSI_ExtendReq_new(ksi, &extReq);
+	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	res = KSI_ExtendReq_setAggregationTime(extReq, start);
+	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	start = NULL;
+	res = KSI_ExtendReq_setPublicationTime(extReq, end);
+	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	end = NULL;
 
-				print_info("Verifying publications file... ");
-				MEASURE_TIME(KSI_verifyPublicationsFile_throws(ksi, publicationsFile));
-				print_info("ok. %s\n",t ? str_measuredTime() : "");
+	res = KSI_ExtendReq_setRequestId(extReq, reqID);
+	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	res = KSI_sendExtendRequest(ksi, extReq, &request);
+	ERR_CATCH_KSI(ksi, "Error: Unable to send extend request.");
 
-				savePublicationFile_throws(ksi, publicationsFile, outPubFileName);
-				print_info("Publications file '%s' saved.\n", outPubFileName);
-			} else if(Task_getID(task) == createPublicationString){
-				print_info("Sending extend request... ");
-				measureLastCall();
-				KSI_Integer_new_throws(ksi, publicationTime, &start);
-				KSI_Integer_new_throws(ksi, publicationTime, &end);
-				KSI_Integer_new_throws(ksi, (KSI_uint64_t)start, &reqID);
-				KSI_ExtendReq_new_throws(ksi, &extReq);
-				KSI_ExtendReq_setAggregationTime_throws(ksi, extReq, start);
-				start = NULL;
-				KSI_ExtendReq_setPublicationTime_throws(ksi, extReq, end);
-				end = NULL;
-				KSI_ExtendReq_setRequestId_throws(ksi, extReq, reqID);
-				KSI_sendExtendRequest_throws(ksi, extReq, &request);
+	res = KSI_RequestHandle_getExtendResponse(request, &extResp);
+	ERR_CATCH_KSI(ksi, "Error: Unable to get extend response.");
+	res = KSI_ExtendResp_getStatus(extResp, &respStatus);
+	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
 
-				KSI_RequestHandle_getExtendResponse_throws(ksi, request, &extResp);
-				KSI_ExtendResp_getStatus_throws(ksi, extResp, &respStatus);
-
-				if (respStatus == NULL || !KSI_Integer_equalsUInt(respStatus, 0)) {
-					KSI_Utf8String *errm = NULL;
-					int res = KSI_ExtendResp_getErrorMsg(extResp, &errm);
-					if (res == KSI_OK && KSI_Utf8String_cstr(errm) != NULL) {
-						THROW_MSG(KSI_EXCEPTION,EXIT_EXTEND_ERROR, "Extender returned error %llu: '%s'.\n", (unsigned long long)KSI_Integer_getUInt64(respStatus), KSI_Utf8String_cstr(errm));
-					}else{
-						THROW_MSG(KSI_EXCEPTION,EXIT_EXTEND_ERROR, "Extender returned error %llu.\n", (unsigned long long)KSI_Integer_getUInt64(respStatus));
-					}
-				}
-				measureLastCall();
-				print_info("ok. %s\n",t ? str_measuredTime() : "");
-
-
-				print_info("Getting publication string... ");
-				KSI_ExtendResp_getCalendarHashChain_throws(ksi, extResp, &chain);
-				KSI_CalendarHashChain_aggregate_throws(ksi, chain, &extHsh);
-				KSI_CalendarHashChain_getPublicationTime_throws(ksi, chain, &pubTime);
-				KSI_PublicationData_new_throws(ksi, &pubData);
-				KSI_PublicationData_setImprint_throws(ksi, pubData, extHsh);
-				KSI_PublicationData_setTime_throws(ksi, pubData, pubTime);
-				KSI_CalendarHashChain_setPublicationTime_throws(ksi, chain, NULL);
-				KSI_PublicationData_toBase32_throws(ksi, pubData, &base32);
-				print_info("ok\n\n");
-
-
-
-				pubTm = (time_t)KSI_Integer_getUInt64(pubTime);
-				gmtime_r(&pubTm, &tm);
-				strftime(strTime, sizeof(strTime), "%Y-%m-%d %H:%M:%S", &tm);
-
-				print_result("[%s]\n", strTime);
-				print_result("pub=%s\n", base32);
-			}
+	if (respStatus == NULL || !KSI_Integer_equalsUInt(respStatus, 0)) {
+		KSI_Utf8String *errm = NULL;
+		res = KSI_ExtendResp_getErrorMsg(extResp, &errm);
+		if (res == KSI_OK && KSI_Utf8String_cstr(errm) != NULL) {
+			ERR_TRCKR_ADD(err, res, "Extender returned error %llu: '%s'.", (unsigned long long)KSI_Integer_getUInt64(respStatus), KSI_Utf8String_cstr(errm));
+		}else{
+			ERR_TRCKR_ADD(err, res, "Extender returned error %llu.", (unsigned long long)KSI_Integer_getUInt64(respStatus));
 		}
-		CATCH(KSI_EXCEPTION){
-				if(ksi)
-					print_errors("failed.\n");
-				printErrorMessage();
-				retval = _EXP.exep.ret;
-				exceptionSolved();
-		}
-		CATCH(IO_EXCEPTION){
-				printErrorMessage();
-				retval = _EXP.exep.ret;
-				exceptionSolved();
-		}
-		CATCH(INVALID_ARGUMENT_EXCEPTION){
-				printErrorMessage();
-				retval = _EXP.exep.ret;
-				exceptionSolved();
-		}
-		end_try
+	}
 
-	if(d || r) print_info("\n");
-	if(d || r) printPublicationsFileReferences(publicationsFile);
-	if(d) printPublicationsFileCertificates(publicationsFile);
+	measureLastCall();
+	print_info("ok. %s\n",t ? str_measuredTime() : "");
 
+
+	print_info("Getting publication string... ");
+
+	res = KSI_ExtendResp_getCalendarHashChain(extResp, &chain);
+	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	res = KSI_CalendarHashChain_aggregate(chain, &extHsh);
+	ERR_CATCH_KSI(ksi, "Error: Unable to aggregate calendar hash chain.");
+	res = KSI_CalendarHashChain_getPublicationTime(chain, &pubTime);
+	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	res = KSI_PublicationData_new(ksi, &pubData);
+	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	res = KSI_PublicationData_setImprint(pubData, extHsh);
+	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	res = KSI_PublicationData_setTime(pubData, pubTime);
+	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	res = KSI_CalendarHashChain_setPublicationTime(chain, NULL);
+	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	res = KSI_PublicationData_toBase32(pubData, &base32);
+	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+
+	print_info("ok\n\n");
+
+	if (pubstring != NULL) {
+		*pubstring = base32;
+		base32 = NULL;
+	}
+
+	if (time != NULL) {
+		*time = (time_t)KSI_Integer_getUInt64(pubTime);
+	}
+
+
+cleanup:
 
 	KSI_Integer_free(start);
 	KSI_Integer_free(end);
@@ -158,9 +244,7 @@ int GT_publicationsFileTask(Task *task){
 	KSI_RequestHandle_free(request);
 	KSI_PublicationData_free(pubData);
 	KSI_free(base32);
-	closeTask(ksi);
 
-	return retval;
+	return res;
 }
-
 
