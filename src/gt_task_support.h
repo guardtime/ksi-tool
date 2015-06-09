@@ -68,7 +68,6 @@ typedef enum tasks_en{
  * 
  * @throws KSI_EXCEPTION.
  */
-void initTask_throws(Task *task ,KSI_CTX **ksi);
 int initTask(Task *task ,KSI_CTX **ksi, ERR_TRCKR **err);
 
 
@@ -103,7 +102,6 @@ int savePublicationFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubf
 
 bool isSignatureExtended(const KSI_Signature *sig);
 
-void loadPublicationFile_throws(KSI_CTX *ksi, const char *path, KSI_PublicationsFile **pubfile);
 int loadPublicationFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_PublicationsFile **pubfile);
 int loadSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signature **sig);
 
@@ -187,18 +185,7 @@ int ksi_error_wrapper(ERR_TRCKR *err, KSI_CTX *ksi, int res, const char *file, u
 #define ERR_CATCH_KSI(ksi, msg, ...) if (ksi_error_wrapper(err, ksi, res, __FILE__, __LINE__, msg, __VA_ARGS__) != KSI_OK) goto cleanup
 //#define KSI_WRAPPER_GTC(err, ksi, func, msg, ...) if (func != KSI_OK) goto cleanup
 
-int KSI_DataHasher_open_throws(KSI_CTX *ksi,int hasAlgID ,KSI_DataHasher **hsr);
-int KSI_DataHasher_add_throws(KSI_CTX *ksi, KSI_DataHasher *hasher, const void *data, size_t data_length);
-int KSI_DataHasher_close_throws(KSI_CTX *ksi, KSI_DataHasher *hasher, KSI_DataHash **hash);
-int KSI_Signature_create_throws(KSI_CTX *ksi, KSI_DataHash *hsh, KSI_Signature **signature);
-int KSI_PKITruststore_addLookupFile_throws(KSI_CTX *ksi, KSI_PKITruststore *store, const char *path);
-int KSI_PKITruststore_addLookupDir_throws(KSI_CTX *ksi, KSI_PKITruststore *store, const char *path);
-int KSI_CTX_setPublicationCertEmail_throws(KSI_CTX *ksi, const char *email);
-int KSI_CTX_setPublicationUrl_throws(KSI_CTX *ksi, const char *uri);
-int KSI_CTX_setAggregator_throws(KSI_CTX *ksi, const char *uri, const char *loginId, const char *key);
-int KSI_CTX_setExtender_throws(KSI_CTX *ksi, const char *uri, const char *loginId, const char *key);
-int KSI_CTX_setTransferTimeoutSeconds_throws(KSI_CTX *ksi, int timeout);
-int KSI_CTX_setConnectionTimeoutSeconds_throws(KSI_CTX *ksi, int timeout);
+
 
 
 #define MEASURE_TIME(code_here) \

@@ -41,6 +41,8 @@ enum Ksitool_errors {
 	KT_INVALID_HEX_CHAR,
 	KT_UNKNOWN_HASH_ALG,
 	KT_INVALID_CMD_PARAM,
+	KT_NO_PRIVILEGES,
+	KT_UNKNOWN_ERROR,
 };	
 	
 int errToExitCode(int error);

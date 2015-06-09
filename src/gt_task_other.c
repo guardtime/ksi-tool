@@ -19,7 +19,6 @@
  */
 
 #include "gt_task_support.h"
-#include "try-catch.h"
 #include "ksitool_err.h"
 
 #ifdef _WIN32
@@ -30,63 +29,63 @@
 #endif
 
 static void printSignaturesRootHash_and_Time(const KSI_Signature *sig);
-static void setSystemTime_throws(const KSI_Signature *sig);
+static int setSystemTime(KSI_CTX *ksi, const KSI_Signature *sig, ERR_TRCKR *err);
 
 int GT_other(Task *task){
+	int res;
 	paramSet *set = NULL;
 	KSI_CTX *ksi = NULL;
 	KSI_DataHasher *hsr = NULL;
 	KSI_DataHash *hsh = NULL;
 	KSI_Signature *sig = NULL;
 	int retval = EXIT_SUCCESS;
+	ERR_TRCKR *err = NULL;
 
-	bool n, r, d, t;
+	bool n, d;
 
 	set = Task_getSet(task);
 	n = paramSet_isSetByName(set, "n");
-	r = paramSet_isSetByName(set, "r");
 	d = paramSet_isSetByName(set, "d");
-	t = paramSet_isSetByName(set, "t");
 
-	resetExceptionHandler();
-	try
-		CODE{
-			/*Initalization of KSI */
-			initTask_throws(task, &ksi);
+	/*Initalization of KSI */
+	res = initTask(task, &ksi, &err);
+	if (res != KT_OK) goto cleanup;
 
-			if (Task_getID(task) == getRootH_T || Task_getID(task) == setSysTime) {
-				KSI_DataHasher_open_throws(ksi, KSI_getHashAlgorithmByName("default"), &hsr);
-				KSI_DataHasher_add_throws(ksi, hsr, (void*)task,sizeof(Task*));
-				KSI_DataHasher_close_throws(ksi, hsr, &hsh);
-				KSI_Signature_create_throws(ksi, hsh, &sig);
+	if (Task_getID(task) == getRootH_T || Task_getID(task) == setSysTime) {
+		res = KSI_DataHasher_open(ksi, KSI_getHashAlgorithmByName("default"), &hsr);
+		ERR_CATCH_KSI(ksi, "Error: Unable to open hasher.");
+		res = KSI_DataHasher_add(hsr, (void*)task,sizeof(Task*));
+		ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+		res = KSI_DataHasher_close(hsr, &hsh);
+		ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+		res = KSI_Signature_create(ksi, hsh, &sig);
+		ERR_CATCH_KSI(ksi, "Error: Unable to create signature.");
 
-				if (Task_getID(task) == getRootH_T) {
-					printSignaturesRootHash_and_Time(sig);
-				}
-				else if (Task_getID(task) == setSysTime) {
-					setSystemTime_throws(sig);
-				}
-
-			}
-
+		if (Task_getID(task) == getRootH_T) {
+			printSignaturesRootHash_and_Time(sig);
 		}
-		CATCH_ALL{
-			printErrorMessage();
-			retval = _EXP.exep.ret;
-			exceptionSolved();
+		else if (Task_getID(task) == setSysTime) {
+			res = setSystemTime(ksi, sig, err);
+			if (res != KT_OK) goto cleanup;
 		}
-	end_try
+
+	}
+
 
 	if(n) print_info("\n");
 	if (n) printSignerIdentity(sig);
 
+cleanup:
+
 	KSI_DataHasher_free(hsr);
 	KSI_DataHash_free(hsh);
 	KSI_Signature_free(sig);
+	ERR_TRCKR_free(err);
 	closeTask(ksi);
 
 	return retval;
 }
+
 
 static void printSignaturesRootHash_and_Time(const KSI_Signature *sig){
 	int res;
@@ -123,7 +122,7 @@ static void printSignaturesRootHash_and_Time(const KSI_Signature *sig){
 	return;
 	}
 
-static void setSystemTime_throws(const KSI_Signature *sig){
+static int setSystemTime(KSI_CTX *ksi, const KSI_Signature *sig, ERR_TRCKR *err){
 	int res;
 	KSI_CalendarAuthRec *calAuthrec = NULL;
 	KSI_PublicationData *pubData = NULL;
@@ -134,17 +133,22 @@ static void setSystemTime_throws(const KSI_Signature *sig){
 #ifdef _WIN32
 	SYSTEMTIME newTime;
 #else
-        struct timeval tv ={0,0};
+	struct timeval tv ={0,0};
 #endif
 
+	if (ksi == NULL || sig == NULL || err == NULL) {
+		return KT_INVALID_ARGUMENT;
+	}
+
+
 	res = KSI_Signature_getCalendarAuthRec(sig, &calAuthrec);
-	if(res != KSI_OK || calAuthrec == NULL ) THROW_MSG(KSI_EXCEPTION, errToExitCode(res), "Unable to get calendar authentication record");
+	ERR_CATCH_KSI(ksi, "Error: Unable to get calendar authentication record.");
 
 	res = KSI_CalendarAuthRec_getPublishedData(calAuthrec, &pubData);
-	if(res != KSI_OK || pubData == NULL ) THROW_MSG(KSI_EXCEPTION, errToExitCode(res), "Unable to get published data");
+	ERR_CATCH_KSI(ksi, "Error: Unable to get published data.");
 
 	res = KSI_PublicationData_getTime(pubData, &time);
-	if(res != KSI_OK || time == NULL ) THROW_MSG(KSI_EXCEPTION, errToExitCode(res), "Unable to get time");
+	ERR_CATCH_KSI(ksi, "Error: Unable to get publication time.");
 
 	pubTm = (time_t)KSI_Integer_getUInt64(time);
 	gmtime_r(&pubTm, &tm);
@@ -159,25 +163,33 @@ static void setSystemTime_throws(const KSI_Signature *sig){
 	newTime.wMilliseconds = 0;
 
 	if(!SetSystemTime(&newTime)){
-		DWORD err = GetLastError();
-		if(err == ERROR_PRIVILEGE_NOT_HELD){
-			THROW_MSG(NO_PRIVILEGES_EXCEPTION, EXIT_NO_PRIVILEGES, "Error: User has no privileges to change system time.");
+		DWORD error = GetLastError();
+		if(error == ERROR_PRIVILEGE_NOT_HELD){
+			ERR_TRCKR_ADD(err, res = KT_NO_PRIVILEGES, "Error: User has no privileges to change system time.");
+			goto cleanup;
 		}
 		else{
-			THROW_MSG(NO_PRIVILEGES_EXCEPTION, EXIT_FAILURE, "Error: Unable to set system time.");
+			ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Unable to set system time.");
+			goto cleanup;
 		}
 	}
 #else
         tv.tv_sec = mktime(&tm);
         if (settimeofday(&tv, 0) == -1) {
             if (errno == EPERM) {
-                THROW_MSG(NO_PRIVILEGES_EXCEPTION, EXIT_NO_PRIVILEGES, "Error: User has no privileges to change system time.");
-
+				ERR_TRCKR_ADD(err, res = KT_NO_PRIVILEGES, "Error: User has no privileges to change system time.");
+				goto cleanup;
             } else {
-                THROW_MSG(NO_PRIVILEGES_EXCEPTION, EXIT_FAILURE, "Error: Unable to set system time.");
+				ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Unable to set system time.");
+				goto cleanup;
             }
         }
 
 #endif
-	return;
+
+	res = KT_OK;
+
+cleanup:
+
+	return res;
 }

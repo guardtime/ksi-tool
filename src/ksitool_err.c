@@ -115,6 +115,10 @@ static int ksitoolErrToExitcode(int error_code) {
 			return EXIT_CRYPTO_ERROR;
 		case KT_INVALID_CMD_PARAM:
 			return EXIT_INVALID_CL_PARAMETERS;
+		case KT_NO_PRIVILEGES:
+			return EXIT_NO_PRIVILEGES;
+		case KT_UNKNOWN_ERROR:
+			return EXIT_FAILURE;
 		default:
 			return EXIT_FAILURE;
 	}
@@ -144,6 +148,10 @@ static const char* ksitoolErrToString(int error_code) {
 			return "The hash algorithm is unknown or unimplemented.";
 		case KT_INVALID_CMD_PARAM:
 			return "The command-line parameters is invalid or missing.";
+		case KT_NO_PRIVILEGES:
+			return "User has no privileges.";
+		case KT_UNKNOWN_ERROR:
+			return "Unknown error.";
 		default:
 			return "Unknown error.";
 	}
