@@ -116,14 +116,10 @@ int GT_publicationsFileTask(Task *task){
 				KSI_PublicationData_toBase32_throws(ksi, pubData, &base32);
 				print_info("ok\n\n");
 
-
-
-				pubTm = (time_t)KSI_Integer_getUInt64(pubTime);
-				gmtime_r(&pubTm, &tm);
-				strftime(strTime, sizeof(strTime), "%Y-%m-%d %H:%M:%S", &tm);
-
-				print_result("[%s]\n", strTime);
-				print_result("pub=%s\n", base32);
+				char buf[1024];
+			        if(KSI_PublicationData_toString(pubData, buf,sizeof(buf))!= NULL) {
+					print_result("%s\n", buf);
+				}
 			}
 		}
 		CATCH(KSI_EXCEPTION){
