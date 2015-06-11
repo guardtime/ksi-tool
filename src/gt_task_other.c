@@ -53,13 +53,13 @@ int GT_other(Task *task){
 
 	if (Task_getID(task) == getRootH_T || Task_getID(task) == setSysTime) {
 		res = KSI_DataHasher_open(ksi, KSI_getHashAlgorithmByName("default"), &hsr);
-		ERR_CATCH_KSI(ksi, "Error: Unable to open hasher.");
+		ERR_CATCH_MSG(err, res, "Error: Unable to open hasher.");
 		res = KSI_DataHasher_add(hsr, (void*)task,sizeof(Task*));
-		ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+		ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 		res = KSI_DataHasher_close(hsr, &hsh);
-		ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+		ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 		res = KSI_Signature_create(ksi, hsh, &sig);
-		ERR_CATCH_KSI(ksi, "Error: Unable to create signature.");
+		ERR_CATCH_MSG(err, res, "Error: Unable to create signature.");
 
 		if (Task_getID(task) == getRootH_T) {
 			printSignaturesRootHash_and_Time(sig);
@@ -142,13 +142,13 @@ static int setSystemTime(KSI_CTX *ksi, const KSI_Signature *sig, ERR_TRCKR *err)
 
 
 	res = KSI_Signature_getCalendarAuthRec(sig, &calAuthrec);
-	ERR_CATCH_KSI(ksi, "Error: Unable to get calendar authentication record.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to get calendar authentication record.");
 
 	res = KSI_CalendarAuthRec_getPublishedData(calAuthrec, &pubData);
-	ERR_CATCH_KSI(ksi, "Error: Unable to get published data.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to get published data.");
 
 	res = KSI_PublicationData_getTime(pubData, &time);
-	ERR_CATCH_KSI(ksi, "Error: Unable to get publication time.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to get publication time.");
 
 	pubTm = (time_t)KSI_Integer_getUInt64(time);
 	gmtime_r(&pubTm, &tm);

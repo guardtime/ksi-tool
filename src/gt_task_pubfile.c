@@ -110,12 +110,12 @@ static int GT_publicationsFileTask_downloadPublicationsFile(Task *task, KSI_CTX 
 
 	print_info("Downloading publications file... ");
 	MEASURE_TIME(res = KSI_receivePublicationsFile(ksi, &tmp));
-	ERR_CATCH_KSI(ksi, "Error: Unable to get publication file.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to get publication file.");
 	print_info("ok. %s\n",t ? str_measuredTime() : "");
 
 	print_info("Verifying publications file... ");
 	MEASURE_TIME(res = KSI_verifyPublicationsFile(ksi, tmp));
-	ERR_CATCH_KSI(ksi, "Error: Unable to verify publication file.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to verify publication file.");
 	print_info("ok. %s\n",t ? str_measuredTime() : "");
 
 	if (pubfile != NULL) {
@@ -166,29 +166,29 @@ static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *
 	measureLastCall();
 
 	res = KSI_Integer_new(ksi, publicationTime, &start);
-	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 	res = KSI_Integer_new(ksi, publicationTime, &end);
-	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 	res = KSI_Integer_new(ksi, (KSI_uint64_t)start, &reqID);
-	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 	res = KSI_ExtendReq_new(ksi, &extReq);
-	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 	res = KSI_ExtendReq_setAggregationTime(extReq, start);
-	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 	start = NULL;
 	res = KSI_ExtendReq_setPublicationTime(extReq, end);
-	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 	end = NULL;
 
 	res = KSI_ExtendReq_setRequestId(extReq, reqID);
-	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 	res = KSI_sendExtendRequest(ksi, extReq, &request);
-	ERR_CATCH_KSI(ksi, "Error: Unable to send extend request.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to send extend request.");
 
 	res = KSI_RequestHandle_getExtendResponse(request, &extResp);
-	ERR_CATCH_KSI(ksi, "Error: Unable to get extend response.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to get extend response.");
 	res = KSI_ExtendResp_getStatus(extResp, &respStatus);
-	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 
 	if (respStatus == NULL || !KSI_Integer_equalsUInt(respStatus, 0)) {
 		KSI_Utf8String *errm = NULL;
@@ -207,21 +207,21 @@ static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *
 	print_info("Getting publication string... ");
 
 	res = KSI_ExtendResp_getCalendarHashChain(extResp, &chain);
-	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 	res = KSI_CalendarHashChain_aggregate(chain, &extHsh);
-	ERR_CATCH_KSI(ksi, "Error: Unable to aggregate calendar hash chain.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to aggregate calendar hash chain.");
 	res = KSI_CalendarHashChain_getPublicationTime(chain, &pubTime);
-	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 	res = KSI_PublicationData_new(ksi, &pubData);
-	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 	res = KSI_PublicationData_setImprint(pubData, extHsh);
-	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 	res = KSI_PublicationData_setTime(pubData, pubTime);
-	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 	res = KSI_CalendarHashChain_setPublicationTime(chain, NULL);
-	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 	res = KSI_PublicationData_toBase32(pubData, &base32);
-	ERR_CATCH_KSI(ksi, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 
 	print_info("ok\n\n");
 

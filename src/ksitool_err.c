@@ -10,7 +10,7 @@ static int ksiErrToExitcode(int error_code){
 		case KSI_OK:
 			return EXIT_SUCCESS;
 		case KSI_INVALID_ARGUMENT:
-			return EXIT_FAILURE;
+			return EXIT_INVALID_FORMAT;
 		case KSI_INVALID_FORMAT:
 			return EXIT_INVALID_FORMAT;
 		case KSI_UNTRUSTED_HASH_ALGORITHM:

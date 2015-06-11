@@ -61,87 +61,99 @@ typedef enum tasks_en{
 } TaskID;
     
 /**
- * Configures KSI using parameters extracted from command line. 
+ * Configures KSI using parameters extracted from command line.
  * 
  * @param[in] task Pointer to task object.
  * @param[out] ksi Pointer to receiving pointer to KSI context object.
  * 
- * @throws KSI_EXCEPTION.
+ * @return KT_OK if successful, error code otherwise.
  */
 int initTask(Task *task ,KSI_CTX **ksi, ERR_TRCKR **err);
 
 
 /**
  * Closes KSI and logging file.
- * @param[in] task Pointer to task object.
- * @param[in] ksi Pointer to receiving pointer to KSI context object.
+ * @param[in] task	Pointer to task object.
+ * @param[in] ksi	Pointer to receiving pointer to KSI context object.
  */
 void closeTask(KSI_CTX *ksi);
 
 /**
  * Calculates the hash of an input file.
- * @param[in] ksi KSI context.
- * @param[in] hsr Pointer to hasher object. 
- * @param[in] fname Pointer to file path.
- * @param[out] hash Pointer to the receiving pointer to the KSI hash object.
  * 
- * @throws KSI_EXCEPTION, IO_EXCEPTION.
+ * @param err	Error tracker.
+ * @param ksi	KSI Context.
+ * @param hsr	Hasher for file hashing.
+ * @param fname	Files name to be hashed.
+ * @param hash	Hash value of the file.
+ * 
+ * @return KT_OK if successful, error code otherwise.
  */
-int getFilesHash(KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash);
+int getFilesHash(ERR_TRCKR *err, KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash);
 
 /**
- * Saves signature object to file.
- * @param [in] sign Pointer to signature object for saving.
- * @param [in] fname Pointer to file path.
+ * Saves signature object to a file. If files name is -, file is written to stdout.
  * 
- * @throws KSI_EXCEPTION, IO_EXCEPTION.
+ * @param err	Error tracker.
+ * @param ksi	KSI Context.
+ * @param sign	Signature object.
+ * @param fname	Files name where the signature is saved.
+ * 
+ * @return KT_OK if successful, error code otherwise.
  */
 int saveSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *fname);
 
+/**
+ * Saves publication file object to a file. If files name is -, file is written to stdout.
+ * 
+ * @param err		Error tracker.
+ * @param ksi		KSI Context.
+ * @param pubfile	Publication file object.
+ * @param fname		Files name where the signature is saved.
+ * 
+ * @return KT_OK if successful, error code otherwise.
+ */
 int savePublicationFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *fname);
 
-bool isSignatureExtended(const KSI_Signature *sig);
-
+/**
+ * Reads publication file from file. If files name is -, file is read from stdin.
+ * 
+ * @param err		Error tracker.
+ * @param ksi		KSI Context.
+ * @param fname		Files name where the signature is saved.
+ * @param pubfile	Publication file object.
+ * 
+ * @return KT_OK if successful, error code otherwise.
+ */
 int loadPublicationFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_PublicationsFile **pubfile);
+
+/**
+ * Reads signature file from file. If files name is -, file is read from stdin.
+ * 
+ * @param err		Error tracker.
+ * @param ksi		KSI Context.
+ * @param fname		Files name where the signature is saved.
+ * @param sig		Signature file object.
+ * 
+ * @return KT_OK if successful, error code otherwise.
+ */
 int loadSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signature **sig);
 
+/**
+ * Returns true if signature is extended. False if not.
+ */
+bool isSignatureExtended(const KSI_Signature *sig);
+
+/*Controls parameter set and returns true if user wants to write data files to stdout*/
 bool isPiping(paramSet *set);
-/**
- * Prints the signer identity. If sig == NULL does nothing.
- * @param[in] sig Pointer to KSI signature object.
- * 
- */
+
 void printSignerIdentity(KSI_Signature *sig);
-
-/**
- * Prints publications file publications references.
- *  [date]
- *   list of references
- * 
- * @param[in] pubFile Pointer to KSI publications file object.
- * 
- */
 void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile);
-
-/**
- * Prints signatures publication references. If sig == NULL does nothing.
- * @param[in] sig Pointer to KSI signature object.
- * 
- */
 void printSignaturePublicationReference(const KSI_Signature *sig);
-
-/**
- * Prints signature verification info.  If sig == NULL does nothing.
- * @param[in] sig Pointer to KSI signature object.
- */
 void printSignatureVerificationInfo(const KSI_Signature *sig);
-
 void printPublicationsFileCertificates(const KSI_PublicationsFile *pubfile);
-
 void printSignaturesRootHash_n_Time(const KSI_Signature *sig);
-
 void printSignatureSigningTime(const KSI_Signature *sig);
-
 void printSignatureStructure(KSI_CTX *ksi, const KSI_Signature *sig);
 
 /**
@@ -180,12 +192,11 @@ char* str_measuredTime(void);
  * KSI api functions capable throwing exceptions  *
  *************************************************/
 
-int ksi_error_wrapper(ERR_TRCKR *err, KSI_CTX *ksi, int res, const char *file, unsigned line, char *msg, ...);
-
-#define ERR_CATCH_KSI(ksi, msg, ...) if (ksi_error_wrapper(err, ksi, res, __FILE__, __LINE__, msg, __VA_ARGS__) != KSI_OK) goto cleanup
-//#define KSI_WRAPPER_GTC(err, ksi, func, msg, ...) if (func != KSI_OK) goto cleanup
-
-
+#define ERR_CATCH_MSG(err, res, msg, ...) \
+	if (res != KT_OK) { \
+		ERR_TRCKR_add(err, res, __FILE__, __LINE__, msg, __VA_ARGS__); \
+		goto cleanup; \
+	}
 
 
 #define MEASURE_TIME(code_here) \

@@ -59,27 +59,28 @@ int GT_extendTask(Task *task) {
 	/* Make sure the signature is ok. */
 	print_info("Verifying old signature... ");
 	MEASURE_TIME(res = KSI_Signature_verify(sig, ksi));
-	ERR_CATCH_KSI(ksi, "Error: Unable to verify signature.");
+
+	ERR_CATCH_MSG(err, res, "Error: Unable to verify signature.");
 	print_info("ok. %s\n",t ? str_measuredTime() : "");
 
 	/* Extend the signature. */
 	if(T){
 		print_info("Extending old signature to %i... ", publicationTime);
 		res = KSI_Integer_new(ksi, publicationTime, &pubTime);
-		ERR_CATCH_KSI(ksi, "Error: %s.", errToString(res));
+		ERR_CATCH_MSG(err, res, "Error: %s.", errToString(res));
 		MEASURE_TIME(res = KSI_Signature_extendTo(sig, ksi, pubTime, &ext));
-		ERR_CATCH_KSI(ksi, "Error: Unable to extend signature.");
+		ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
 	}
 	else{
 		print_info("Extending old signature... ");
 		MEASURE_TIME(res = KSI_extendSignature(ksi, sig, &ext));
-		ERR_CATCH_KSI(ksi, "Error: Unable to extend signature.");
+		ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
 	}
 	print_info("ok. %s\n",t ? str_measuredTime() : "");
 
 	print_info("Verifying extended signature... ");
 	MEASURE_TIME(res = KSI_Signature_verify(ext, ksi));
-	ERR_CATCH_KSI(ksi, "Error: Unable to verify extended signature.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to verify extended signature.");
 	print_info("ok. %s\n",t ? str_measuredTime() : "");
 
 	/* Save signature. */

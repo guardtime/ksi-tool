@@ -138,7 +138,7 @@ int GT_verifyPublicationFileTask(Task *task){
 
 	print_info("Verifying  publications file... ");
 	res = KSI_verifyPublicationsFile(ksi, publicationsFile);
-	ERR_CATCH_KSI(ksi, "Error: Unable to verify publication file.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to verify publication file.");
 	print_info("ok.\n");
 
 	print_info("Verification of publication file %s successful.\n", inPubFileName);
@@ -180,7 +180,7 @@ static int GT_verifyTask_verifySigOnline(Task *task, KSI_CTX *ksi, ERR_TRCKR *er
 
 	print_info("Verifying online... ");
 	MEASURE_TIME(res = KSI_Signature_verifyOnline(sig, ksi));
-	ERR_CATCH_KSI(ksi, "Error: Unable to verify signature online.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to verify signature online.");
 	print_info("ok. %s\n", t ? str_measuredTime() : "");
 
 	res = KT_OK;
@@ -223,23 +223,23 @@ static int GT_verifyTask_verifyWithPublication(Task *task, KSI_CTX *ksi, ERR_TRC
 
 	isExtended = isSignatureExtended(sig);
 	res = KSI_PublicationData_fromBase32(ksi, refStrn, &publication);
-	ERR_CATCH_KSI(ksi, "Error: Unable parse publication string.");
+	ERR_CATCH_MSG(err, res, "Error: Unable parse publication string.");
 	res = KSI_PublicationData_getTime(publication, &timeB);
-	ERR_CATCH_KSI(ksi, "Error: Unable to get publication time from publication string.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to get publication time from publication string.");
 
 	if (isExtended) {
 		res = KSI_Signature_getPublicationRecord(sig, &pubRec);
-		ERR_CATCH_KSI(ksi, "Error: Unable to extract publication record from signature.");
+		ERR_CATCH_MSG(err, res, "Error: Unable to extract publication record from signature.");
 		res = KSI_PublicationRecord_getPublishedData(pubRec, &pubData);
-		ERR_CATCH_KSI(ksi, "Error: Unable to get publication data from signatures publication record.");
+		ERR_CATCH_MSG(err, res, "Error: Unable to get publication data from signatures publication record.");
 		res = KSI_PublicationData_getTime(pubData, &timeA);
-		ERR_CATCH_KSI(ksi, "Error: Unable to get publication time from signatures publication record.");
+		ERR_CATCH_MSG(err, res, "Error: Unable to get publication time from signatures publication record.");
 	}
 
 	if (isExtended && KSI_Integer_equals(timeA, timeB)) {
 		print_info("Verifying signature using user publication... ");
 		MEASURE_TIME(res = KSI_Signature_verifyWithPublication(sig, ksi, publication));
-		ERR_CATCH_KSI(ksi, "Error: Unable to verify signature with user publication.");
+		ERR_CATCH_MSG(err, res, "Error: Unable to verify signature with user publication.");
 		print_info("ok. %s\n", t ? str_measuredTime() : "");
 	} else {
 		if (isExtended)
@@ -248,31 +248,31 @@ static int GT_verifyTask_verifyWithPublication(Task *task, KSI_CTX *ksi, ERR_TRC
 			print_warnings("Warning: Signature is not extended.\n");
 
 		res = KSI_receivePublicationsFile(ksi, &pubFile);
-		ERR_CATCH_KSI(ksi, "Error: Unable to receive publication file.");
+		ERR_CATCH_MSG(err, res, "Error: Unable to receive publication file.");
 		res = KSI_PublicationsFile_getPublicationDataByPublicationString(pubFile, refStrn, &pubRec);
-		ERR_CATCH_KSI(ksi, "Error: Unable to get publication from publication file.");
+		ERR_CATCH_MSG(err, res, "Error: Unable to get publication from publication file.");
 
 		if (pubRec == NULL) {
 			res = KSI_PublicationRecord_new(ksi, &extendTo);
-			ERR_CATCH_KSI(ksi, "Error: Unable to create new publication record.");
+			ERR_CATCH_MSG(err, res, "Error: Unable to create new publication record.");
 			res = KSI_PublicationRecord_setPublishedData(extendTo, publication);
-			ERR_CATCH_KSI(ksi, "Error: Unable to set published data.");
+			ERR_CATCH_MSG(err, res, "Error: Unable to set published data.");
 			publication = NULL;
 			res = KSI_PublicationData_fromBase32(ksi, refStrn, &publication);
-			ERR_CATCH_KSI(ksi, "Error: Unable to parse publication string.");
+			ERR_CATCH_MSG(err, res, "Error: Unable to parse publication string.");
 		} else {
 			res = KSI_PublicationRecord_clone(pubRec, &extendTo);
-			ERR_CATCH_KSI(ksi, "Error: Unable to clone publication record.");
+			ERR_CATCH_MSG(err, res, "Error: Unable to clone publication record.");
 		}
 
 		print_info("Extending signature to publication time of publication string... ");
 		MEASURE_TIME(res = KSI_Signature_extend(sig, ksi, extendTo, &tmp_ext));
-		ERR_CATCH_KSI(ksi, "Error: Unable to extend signature.");
+		ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
 		print_info("ok. %s\n", t ? str_measuredTime() : "");
 
 		print_info("Verifying signature using user publication... ");
 		MEASURE_TIME(res = KSI_Signature_verifyWithPublication(tmp_ext, ksi, publication));
-		ERR_CATCH_KSI(ksi, "Error: Unable to verify signature with user publication.");
+		ERR_CATCH_MSG(err, res, "Error: Unable to verify signature with user publication.");
 		print_info("ok. %s\n", t ? str_measuredTime() : "");
 	}
 
@@ -313,7 +313,7 @@ static int GT_verifyTask_verify(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Si
 
 	print_info("Verifying signature%s ", b && isExtended ? " using local publications file... " : "... ");
 	MEASURE_TIME(res = KSI_Signature_verify(sig, ksi));
-	ERR_CATCH_KSI(ksi, "Error: Unable to verify signature.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to verify signature.");
 	print_info("ok. %s\n",t ? str_measuredTime() : "");
 
 	res = KT_OK;
@@ -348,14 +348,14 @@ static int GT_verifyTask_verifyData(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KS
 	if(f){
 		print_info("Verifying file's %s hash... ", inDataFileName);
 		res = KSI_Signature_createDataHasher(sig, &hsr);
-		ERR_CATCH_KSI(ksi, "Error: Unable to create data hasher.");
-		res = getFilesHash(hsr, inDataFileName, &file_hsh);
+		ERR_CATCH_MSG(err, res, "Error: Unable to create data hasher.");
+		res = getFilesHash(err, ksi, hsr, inDataFileName, &file_hsh);
 		if (res != KT_OK) {
 			ERR_TRCKR_ADD(err, res, "Error: Unable to hash file. (%s)", errToString(res));
 			goto cleanup;
 		}
 		res = KSI_Signature_verifyDataHash(sig, ksi, file_hsh);
-		ERR_CATCH_KSI(ksi, "Error: Unable to verify files hash.");
+		ERR_CATCH_MSG(err, res, "Error: Unable to verify files hash.");
 		print_info("ok.\n");
 	}
 	if(F){
@@ -363,7 +363,7 @@ static int GT_verifyTask_verifyData(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KS
 		res = getHashFromCommandLine(imprint, ksi, err, &raw_hsh);
 		if (res != KT_OK) goto cleanup;
 		res = KSI_Signature_verifyDataHash(sig, ksi, raw_hsh);
-		ERR_CATCH_KSI(ksi, "Error: Unable to verify hash.");
+		ERR_CATCH_MSG(err, res, "Error: Unable to verify hash.");
 		print_info("ok.\n");
 	}
 
