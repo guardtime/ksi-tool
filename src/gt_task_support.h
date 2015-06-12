@@ -26,8 +26,8 @@
 #   define _CRTDBG_MAP_ALLOC
 #   include <stdlib.h>
 #   include <crtdbg.h>
-#endif	
-#endif	
+#endif
+#endif
 
 
 #include <stdio.h>
@@ -57,15 +57,15 @@ typedef enum tasks_en{
 	getRootH_T,
 	setSysTime,
 	showHelp,
-	invalid		
+	invalid
 } TaskID;
-    
+
 /**
  * Configures KSI using parameters extracted from command line.
- * 
+ *
  * @param[in] task Pointer to task object.
  * @param[out] ksi Pointer to receiving pointer to KSI context object.
- * 
+ *
  * @return KT_OK if successful, error code otherwise.
  */
 int initTask(Task *task ,KSI_CTX **ksi, ERR_TRCKR **err);
@@ -80,61 +80,61 @@ void closeTask(KSI_CTX *ksi);
 
 /**
  * Calculates the hash of an input file.
- * 
+ *
  * @param err	Error tracker.
  * @param ksi	KSI Context.
  * @param hsr	Hasher for file hashing.
  * @param fname	Files name to be hashed.
  * @param hash	Hash value of the file.
- * 
+ *
  * @return KT_OK if successful, error code otherwise.
  */
 int getFilesHash(ERR_TRCKR *err, KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash);
 
 /**
  * Saves signature object to a file. If files name is -, file is written to stdout.
- * 
+ *
  * @param err	Error tracker.
  * @param ksi	KSI Context.
  * @param sign	Signature object.
  * @param fname	Files name where the signature is saved.
- * 
+ *
  * @return KT_OK if successful, error code otherwise.
  */
 int saveSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *fname);
 
 /**
  * Saves publication file object to a file. If files name is -, file is written to stdout.
- * 
+ *
  * @param err		Error tracker.
  * @param ksi		KSI Context.
  * @param pubfile	Publication file object.
  * @param fname		Files name where the signature is saved.
- * 
+ *
  * @return KT_OK if successful, error code otherwise.
  */
 int savePublicationFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *fname);
 
 /**
  * Reads publication file from file. If files name is -, file is read from stdin.
- * 
+ *
  * @param err		Error tracker.
  * @param ksi		KSI Context.
  * @param fname		Files name where the signature is saved.
  * @param pubfile	Publication file object.
- * 
+ *
  * @return KT_OK if successful, error code otherwise.
  */
 int loadPublicationFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_PublicationsFile **pubfile);
 
 /**
  * Reads signature file from file. If files name is -, file is read from stdin.
- * 
+ *
  * @param err		Error tracker.
  * @param ksi		KSI Context.
  * @param fname		Files name where the signature is saved.
  * @param sig		Signature file object.
- * 
+ *
  * @return KT_OK if successful, error code otherwise.
  */
 int loadSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signature **sig);
@@ -158,11 +158,11 @@ void printSignatureStructure(KSI_CTX *ksi, const KSI_Signature *sig);
 
 /**
  * Reads hash from command line and creates the KSI_DataHash object.
- * 
+ *
  * @param[in] cmdparam Pointer to command line data object.
  * @param[in] ksi Pointer to ksi context object.
  * @param[out] hash Pointer to receiving pointer to KSI_DataHash object.
- * 
+ *
  * @throws KSI_EXCEPTION, INVALID_ARGUMENT_EXCEPTION.
  */
 int getHashFromCommandLine(const char *imprint, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hash);
@@ -181,8 +181,8 @@ unsigned int measuredTime(void);
  * Gives a string representing string value of measured time by measureLastCall.
  * String format is (%i ms).
  * @return The pointer to the string
- * 
- * @note Pointer is always pointing to the same memory fields. 
+ *
+ * @note Pointer is always pointing to the same memory fields.
  */
 char* str_measuredTime(void);
 
@@ -194,7 +194,7 @@ char* str_measuredTime(void);
 
 #define ERR_CATCH_MSG(err, res, msg, ...) \
 	if (res != KT_OK) { \
-		ERR_TRCKR_add(err, res, __FILE__, __LINE__, msg, __VA_ARGS__); \
+		ERR_TRCKR_add(err, res, __FILE__, __LINE__, msg, ##__VA_ARGS__); \
 		goto cleanup; \
 	}
 
