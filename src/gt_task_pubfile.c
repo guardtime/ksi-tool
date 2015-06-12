@@ -23,7 +23,7 @@
 #include "ksi/hashchain.h"
 
 static int GT_publicationsFileTask_downloadPublicationsFile(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_PublicationsFile **pubfile);
-static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, char **pubstring, time_t *time);
+static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_PublicationData **pubData);
 
 int GT_publicationsFileTask(Task *task){
 	int res;
@@ -34,9 +34,8 @@ int GT_publicationsFileTask(Task *task){
 	bool d, r;
 	char *outPubFileName = NULL;
 	char *pubstring = NULL;
-	char strTime[1024];
-	time_t pubTm;
-	struct tm tm;
+	KSI_PublicationData *pubData = NULL;
+	char buf[1024];
 	int retval = EXIT_SUCCESS;
 
 
@@ -61,14 +60,12 @@ int GT_publicationsFileTask(Task *task){
 		if(d || r) printPublicationsFileReferences(publicationsFile);
 		if(d) printPublicationsFileCertificates(publicationsFile);
 	} else if(Task_getID(task) == createPublicationString){
-		res = GT_publicationsFileTask_createPublicationString(task, ksi, err, &pubstring, &pubTm);
+		res = GT_publicationsFileTask_createPublicationString(task, ksi, err, &pubData);
 		if (res != KT_OK) goto cleanup;
 
-		gmtime_r(&pubTm, &tm);
-		strftime(strTime, sizeof(strTime), "%Y-%m-%d %H:%M:%S", &tm);
-
-		print_result("[%s]\n", strTime);
-		print_result("pub=%s\n", pubstring);
+		if(KSI_PublicationData_toString(pubData, buf,sizeof(buf)) != NULL) {
+				print_result("%s\n", buf);
+		}
 	}
 
 
@@ -83,6 +80,7 @@ cleanup:
 
 	KSI_free(pubstring);
 	ERR_TRCKR_free(err);
+	KSI_PublicationData_free(pubData);
 	closeTask(ksi);
 
 	return retval;
@@ -129,7 +127,7 @@ cleanup:
 	return res;
 }
 
-static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, char **pubstring, time_t *time) {
+static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_PublicationData **pubData) {
 	paramSet *set = NULL;
 	int res;
 	KSI_PublicationsFile *publicationsFile = NULL;
@@ -143,14 +141,14 @@ static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *
 	KSI_Integer *respStatus = NULL;
 	KSI_CalendarHashChain *chain = NULL;
 	KSI_DataHash *extHsh = NULL;
-	KSI_PublicationData *pubData = NULL;
+	KSI_PublicationData *tmpPubData = NULL;
 	KSI_Integer *pubTime = NULL;
-	char *base32 = NULL;
+	int retval = EXIT_SUCCESS;
 	bool d, t, r;
 	int publicationTime = 0;
 
 
-	if (task == NULL || ksi == NULL || err == NULL) {
+	if (task == NULL || ksi == NULL || err == NULL || pubData == NULL) {
 		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
@@ -212,27 +210,20 @@ static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *
 	ERR_CATCH_MSG(err, res, "Error: Unable to aggregate calendar hash chain.");
 	res = KSI_CalendarHashChain_getPublicationTime(chain, &pubTime);
 	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
-	res = KSI_PublicationData_new(ksi, &pubData);
+	res = KSI_PublicationData_new(ksi, &tmpPubData);
 	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
-	res = KSI_PublicationData_setImprint(pubData, extHsh);
+	res = KSI_PublicationData_setImprint(tmpPubData, extHsh);
 	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
-	res = KSI_PublicationData_setTime(pubData, pubTime);
+	res = KSI_PublicationData_setTime(tmpPubData, pubTime);
 	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 	res = KSI_CalendarHashChain_setPublicationTime(chain, NULL);
-	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
-	res = KSI_PublicationData_toBase32(pubData, &base32);
 	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 
 	print_info("ok\n\n");
 
-	if (pubstring != NULL) {
-		*pubstring = base32;
-		base32 = NULL;
-	}
+	*pubData = tmpPubData;
+	tmpPubData = NULL;
 
-	if (time != NULL) {
-		*time = (time_t)KSI_Integer_getUInt64(pubTime);
-	}
 
 
 cleanup:
@@ -242,8 +233,7 @@ cleanup:
 	KSI_ExtendReq_free(extReq);
 	KSI_ExtendResp_free(extResp);
 	KSI_RequestHandle_free(request);
-	KSI_PublicationData_free(pubData);
-	KSI_free(base32);
+	KSI_PublicationData_free(tmpPubData);
 
 	return res;
 }
