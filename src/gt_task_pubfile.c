@@ -42,12 +42,8 @@ int GT_publicationsFileTask(Task *task){
 	KSI_PublicationData *pubData = NULL;
 	KSI_Integer *pubTime = NULL;
 	char *base32 = NULL;
-	char strTime[1024];
-	time_t pubTm;
-	struct tm tm;
-
+	char buf[1024];
 	int retval = EXIT_SUCCESS;
-
 	bool d, t, r;
 	char *outPubFileName = NULL;
 	int publicationTime = 0;
@@ -117,8 +113,7 @@ int GT_publicationsFileTask(Task *task){
 				KSI_PublicationData_toBase32_throws(ksi, pubData, &base32);
 				print_info("ok\n\n");
 
-				char buf[1024];
-			        if(KSI_PublicationData_toString(pubData, buf,sizeof(buf))!= NULL) {
+				if(KSI_PublicationData_toString(pubData, buf,sizeof(buf))!= NULL) {
 					print_result("%s\n", buf);
 				}
 			}
