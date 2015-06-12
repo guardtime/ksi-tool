@@ -56,7 +56,7 @@ typedef struct paramSet_st paramSet;
  * @return true if successful false otherwise.
  */
 bool paramSet_new(const char *names,
-		void (*printInfo)(const char*, ...), void (*printWarnings)(const char*, ...), void (*printErrors)(const char*, ...),
+		int (*printInfo)(const char*, ...), int (*printWarnings)(const char*, ...), int (*printErrors)(const char*, ...),
 		paramSet **set);
 
 void paramSet_free(paramSet *set);

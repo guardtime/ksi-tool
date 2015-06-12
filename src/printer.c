@@ -64,40 +64,48 @@ void print_init(void) {
 }
 
 
-void print_result(const char *format, ... ) {
+int print_result(const char *format, ... ) {
+	int res = 0;
 	if (printer_conf.print & PRINT_RESULT) {
 		va_list va;
 		va_start(va, format);
-		vfprintf(stdout, format, va);
+		res = vfprintf(stdout, format, va);
 		va_end(va);
 	}
+	return res;
 }
 
-void print_info(const char *format, ... ) {
+int print_info(const char *format, ... ) {
+	int res = 0;
 	if (printer_conf.print & PRINT_INFO) {
 		va_list va;
 		va_start(va, format);
-		vfprintf(stdout, format, va);
+		res = vfprintf(stdout, format, va);
 		va_end(va);
 	}
+	return res;
 }
 
-void print_warnings(const char *format, ... ) {
+int print_warnings(const char *format, ... ) {
+	int res = 0;
 	if (printer_conf.print & PRINT_WARNINGS) {
 		va_list va;
 		va_start(va, format);
-		vfprintf(stdout, format, va);
+		res = vfprintf(stdout, format, va);
 		va_end(va);
 	}
+	return res;
 }
 
-void print_errors(const char *format, ... ) {
+int print_errors(const char *format, ... ) {
+	int res = 0;
 	if (printer_conf.print & PRINT_ERRORS) {
 		va_list va;
 		va_start(va, format);
-		vfprintf(stderr, format, va);
+		res = vfprintf(stderr, format, va);
 		va_end(va);
 	}
+	return res;
 }
 
 

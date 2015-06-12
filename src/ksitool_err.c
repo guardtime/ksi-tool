@@ -192,13 +192,13 @@ typedef struct ERR_ENTRY_st {
 struct ERR_TRCKR_st {
 	ERR_ENTRY err[MAX_ERROR_COUNT];
 	unsigned count;
-	void (*printErrors)(const char*, ...);
+	int (*printErrors)(const char*, ...);
 };
 
 
 
 
-ERR_TRCKR *ERR_TRCKR_new(void (*printErrors)(const char*, ...)) {
+ERR_TRCKR *ERR_TRCKR_new(int (*printErrors)(const char*, ...)) {
 	ERR_TRCKR *tmp = NULL;
 
 	tmp = (ERR_TRCKR*)malloc(sizeof(ERR_TRCKR));

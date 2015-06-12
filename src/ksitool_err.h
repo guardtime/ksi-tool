@@ -48,7 +48,7 @@ enum Ksitool_errors {
 int errToExitCode(int error);
 const char* errToString(int error);
 
-ERR_TRCKR *ERR_TRCKR_new(void (*printErrors)(const char*, ...));
+ERR_TRCKR *ERR_TRCKR_new(int (*printErrors)(const char*, ...));
 void ERR_TRCKR_free(ERR_TRCKR *obj);
 void ERR_TRCKR_add(ERR_TRCKR *err, int code, const char *fname, int lineN, const char *msg, ...);
 #define ERR_TRCKR_ADD(err, code, msg, ...) ERR_TRCKR_add(err, code, __FILE__, __LINE__, msg, ##__VA_ARGS__)

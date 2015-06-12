@@ -271,7 +271,7 @@ cleanup:
 	return status;
 	}
 
-static void parameter_Print(const parameter *param, void (*print)(const char*, ...)){
+static void parameter_Print(const parameter *param, int (*print)(const char*, ...)){
 	paramValue *pValue = NULL;
 
 	if(param == NULL) return;
@@ -325,9 +325,9 @@ static bool parameter_isDuplicateConflict(const parameter *param){
 struct paramSet_st {
 	parameter **parameter;
 	int count;
-	void (*printInfo)(const char*, ...);
-	void (*printWarning)(const char*, ...);
-	void (*printError)(const char*, ...);
+	int (*printInfo)(const char*, ...);
+	int (*printWarning)(const char*, ...);
+	int (*printError)(const char*, ...);
 };
 
 static char *getParametersName(const char* names, char *name, char *alias, short len, bool *isMultiple, bool *isSingleHighestPriority){
@@ -489,7 +489,7 @@ static void paramSet_getValueByNameAt(const paramSet *set, const char *name, uns
 
 
 bool paramSet_new(const char *names,
-		void (*printInfo)(const char*, ...), void (*printWarnings)(const char*, ...), void (*printErrors)(const char*, ...),
+		int (*printInfo)(const char*, ...), int (*printWarnings)(const char*, ...), int (*printErrors)(const char*, ...),
 		paramSet **set){
 	paramSet *tmp = NULL;
 	bool status = false;

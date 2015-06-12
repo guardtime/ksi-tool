@@ -39,10 +39,10 @@ void print_init(void);
 void print_setStream(unsigned print, FILE *stream);
 void print_enable(unsigned print);
 void print_disable(unsigned print);
-void print_result(const char *format, ... );
-void print_info(const char *format, ... );
-void print_warnings(const char *format, ... );
-void print_errors(const char *format, ... );
+int print_result(const char *format, ... );
+int print_info(const char *format, ... );
+int print_warnings(const char *format, ... );
+int print_errors(const char *format, ... );
 
 #ifdef	__cplusplus
 }
