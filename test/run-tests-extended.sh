@@ -171,8 +171,8 @@ diag "--------------------------------------------------------------------------
 
 diag "######    Testing stdout and stdin"
 echo "TEST" > ${tmp}/pipeFileClone
-like "`echo \"TEST\" | src/ksitool -s -f - -o - | src/ksitool -v -i - -f ${tmp}/pipeFileClone`" "Verification of signature file - successful"
-like "`src/ksitool -p -o - | src/ksitool -v -b -`" "Verification of publications file - successful."
+like "`echo \"TEST\" | src/ksitool -s -f - -o - | src/ksitool -v -i - -f ${tmp}/pipeFileClone`" "Verification of signature - successful"
+like "`src/ksitool -p -o - | src/ksitool -v -b -`" "Verification of publication file - successful."
 diag "------------------------------------------------------------------------------";
 
 
@@ -180,25 +180,25 @@ diag "--------------------------------------------------------------------------
 diag "====== Testing errors ======";
 
 
-like "`src/ksitool -x -i ${tmp}/tmp.ksig -o ${tmp}/ext.ksig -V $url_c 2>&1`" "There is no suitable publication yet." "Extending freshly created signature token"
+like "`src/ksitool -x -i ${tmp}/tmp.ksig -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to extend signature." "Extending freshly created signature token"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -x -i ${tmp}/tmp.ksig -o ${tmp}/ext.ksig -V $url_c 2>&1`" "There is no suitable publication yet" "Error extend no suitable publication"
+like "`src/ksitool -x -i ${tmp}/tmp.ksig -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to extend signature." "Error extend no suitable publication"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -x -i ${resource_dir}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to load signature from" "Error extend not suitable format"
+like "`src/ksitool -x -i ${resource_dir}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to load signature file from" "Error extend not suitable format"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -x -i ${resource_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig -T 1311120674 2>&1`" "Aggregation time may not be greater than the publication time" "Error extend before calendar [-T]"
+like "`src/ksitool -x -i ${resource_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig -T 1311120674 2>&1`" "Error: Unable to extend signature" "Error extend before calendar [-T]"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -x -i ${resource_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig -T 1458914880 2>&1`" "The request asked for hash values newer than the current real time" "Error extend to the future [-T]"
+like "`src/ksitool -x -i ${resource_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig -T 1458914880 2>&1`" "Error: Unable to extend signature." "Error extend to the future [-T]"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -x -i ${resource_dir}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to load signature from" "Error verify not suitable format"
+like "`src/ksitool -x -i ${resource_dir}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to load signature file from" "Error verify not suitable format"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -v -x -i ${tmp}/sha1.ksig -f ${SCRIPT_DIR}/resource/TestData.txt -V $url_c 2>&1`" "Wrong document or signature" "Error verifying signature and wrong file"
+like "`src/ksitool -v -x -i ${tmp}/sha1.ksig -f ${SCRIPT_DIR}/resource/TestData.txt -V $url_c 2>&1`" "Error: Unable to verify files hash." "Error verifying signature and wrong file"
 diag "------------------------------------------------------------------------------";
 
 like "`src/ksitool -s -F SHA-1:${SH1_HASH}FF -o ${tmp}/sha1.ksig  2>&1`" "Hash length is incorrect" "Error signing with SH1 and wrong hash"
@@ -207,7 +207,7 @@ diag "--------------------------------------------------------------------------
 like "`src/ksitool -s -F DUNNO:${SH1_HASH} -o ${tmp}/sha1.ksig  2>&1`" "Algorithm name is incorrect" "Error signing with unknown algorithm and wrong hash"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -s -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig -S no_network_here 2>&1`" "no_network_here" "Error bad network provider"
+like "`src/ksitool -s -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig -S no_network_here 2>&1`" "Error: Unable to create signature." "Error bad network provider"
 diag "------------------------------------------------------------------------------";
 
 like "`src/ksitool -v -b ${tmp}/pub.bin -i ${tmp}/ext-t.ksig -f missing_file  2>&1`" "File does not exist" "Error Verify signature and missing file"
@@ -222,7 +222,7 @@ diag "--------------------------------------------------------------------------
 like "`src/ksitool -p -T 969085709 2>&1`" "The request asked for hash values older than the oldest round" "Error Unable to Get Publication string"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -p -t -o $tmp/tpub.bin -E wrong@email.mail 2>&1`" "Wrong subject name" "Error wrong E-mail"
+like "`src/ksitool -p -t -o $tmp/tpub.bin -E wrong@email.mail 2>&1`" "Error: Unable to verify publication file." "Error wrong E-mail"
 diag "------------------------------------------------------------------------------";
 
 
