@@ -166,28 +166,10 @@ void printSignatureStructure(KSI_CTX *ksi, const KSI_Signature *sig);
  * @throws KSI_EXCEPTION, INVALID_ARGUMENT_EXCEPTION.
  */
 int getHashFromCommandLine(const char *imprint, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hash);
-/**
- * Gives time difference between the current and last call in ms.
- * @return Time difference in ms.
- */
-unsigned int measureLastCall(void);
-/**
- * Gives time difference between the current and last call of function measureLastCall in ms
- * @return Time difference in ms.
- */
-unsigned int measuredTime(void);
 
-/**
- * Gives a string representing string value of measured time by measureLastCall.
- * String format is (%i ms).
- * @return The pointer to the string
- *
- * @note Pointer is always pointing to the same memory fields.
- */
-char* str_measuredTime(void);
+void print_progressDesc(bool showTiming, const char *msg, ...);
 
-
-
+void print_progressResult(int res);
 /*************************************************
  * KSI api functions capable throwing exceptions  *
  *************************************************/
@@ -196,14 +178,6 @@ char* str_measuredTime(void);
 	if (res != KT_OK) { \
 		ERR_TRCKR_add(err, res, __FILE__, __LINE__, msg, ##__VA_ARGS__); \
 		goto cleanup; \
-	}
-
-
-#define MEASURE_TIME(code_here) \
-	{   \
-	measureLastCall(); \
-	code_here; \
-	measureLastCall(); \
 	}
 
 

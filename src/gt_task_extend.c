@@ -51,37 +51,37 @@ int GT_extendTask(Task *task) {
 	if (res != KT_OK) goto cleanup;
 
 	/* Read the signature. */
-	print_info("Reading signature... ");
+	print_progressDesc(t, "Reading signature... ");
 	res = loadSignatureFile(err, ksi, inSigFileName, &sig);
 	if (res != KT_OK) goto cleanup;
-	print_info("ok.\n");
+	print_progressResult(res);
 
 	/* Make sure the signature is ok. */
-	print_info("Verifying old signature... ");
-	MEASURE_TIME(res = KSI_Signature_verify(sig, ksi));
+	print_progressDesc(t, "Verifying old signature... ");
+	res = KSI_Signature_verify(sig, ksi);
 
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify signature.");
-	print_info("ok. %s\n",t ? str_measuredTime() : "");
+	print_progressResult(res);
 
 	/* Extend the signature. */
 	if(T){
-		print_info("Extending old signature to %i... ", publicationTime);
+		print_progressDesc(t, "Extending old signature to %i... ", publicationTime);
 		res = KSI_Integer_new(ksi, publicationTime, &pubTime);
 		ERR_CATCH_MSG(err, res, "Error: %s.", errToString(res));
-		MEASURE_TIME(res = KSI_Signature_extendTo(sig, ksi, pubTime, &ext));
+		res = KSI_Signature_extendTo(sig, ksi, pubTime, &ext);
 		ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
 	}
 	else{
-		print_info("Extending old signature... ");
-		MEASURE_TIME(res = KSI_extendSignature(ksi, sig, &ext));
+		print_progressDesc(t, "Extending old signature... ");
+		res = KSI_extendSignature(ksi, sig, &ext);
 		ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
 	}
-	print_info("ok. %s\n",t ? str_measuredTime() : "");
+	print_progressResult(res);
 
-	print_info("Verifying extended signature... ");
-	MEASURE_TIME(res = KSI_Signature_verify(ext, ksi));
+	print_progressDesc(t, "Verifying extended signature... ");
+	res = KSI_Signature_verify(ext, ksi);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify extended signature.");
-	print_info("ok. %s\n",t ? str_measuredTime() : "");
+	print_progressResult(res);
 
 	/* Save signature. */
 	res = saveSignatureFile(err, ksi, ext, outSigFileName);
@@ -91,6 +91,7 @@ int GT_extendTask(Task *task) {
 
 
 cleanup:
+	print_progressResult(res);
 
 	if(n || r || d || tlv) print_info("\n");
 	if(res != KT_OK && sig != NULL && d){
@@ -107,7 +108,6 @@ cleanup:
 	}
 
 	if (res != KT_OK) {
-		print_errors("failed.\n");
 		ERR_TRCKR_printErrors(err);
 		retval = errToExitCode(res);
 	}

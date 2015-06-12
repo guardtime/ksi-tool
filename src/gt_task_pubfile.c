@@ -106,15 +106,15 @@ static int GT_publicationsFileTask_downloadPublicationsFile(Task *task, KSI_CTX 
 	t = paramSet_isSetByName(set, "t");
 
 
-	print_info("Downloading publications file... ");
-	MEASURE_TIME(res = KSI_receivePublicationsFile(ksi, &tmp));
+	print_progressDesc(t, "Downloading publications file... ");
+	res = KSI_receivePublicationsFile(ksi, &tmp);
 	ERR_CATCH_MSG(err, res, "Error: Unable to get publication file.");
-	print_info("ok. %s\n",t ? str_measuredTime() : "");
+	print_progressResult(res);
 
-	print_info("Verifying publications file... ");
-	MEASURE_TIME(res = KSI_verifyPublicationsFile(ksi, tmp));
+	print_progressDesc(t, "Verifying publications file... ");
+	res = KSI_verifyPublicationsFile(ksi, tmp);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify publication file.");
-	print_info("ok. %s\n",t ? str_measuredTime() : "");
+	print_progressResult(res);
 
 	if (pubfile != NULL) {
 		*pubfile = tmp;
@@ -123,6 +123,8 @@ static int GT_publicationsFileTask_downloadPublicationsFile(Task *task, KSI_CTX 
 	res = KT_OK;
 
 cleanup:
+
+	print_progressResult(res);
 
 	return res;
 }
@@ -160,8 +162,7 @@ static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *
 	t = paramSet_isSetByName(set, "t");
 	paramSet_getIntValueByNameAt(set,"T",0,&publicationTime);
 
-	print_info("Sending extend request... ");
-	measureLastCall();
+	print_progressDesc(t, "Sending extend request... ");
 
 	res = KSI_Integer_new(ksi, publicationTime, &start);
 	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
@@ -198,11 +199,10 @@ static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *
 		}
 	}
 
-	measureLastCall();
-	print_info("ok. %s\n",t ? str_measuredTime() : "");
+	print_progressResult(res);
 
 
-	print_info("Getting publication string... ");
+	print_progressDesc(false, "Getting publication string... ");
 
 	res = KSI_ExtendResp_getCalendarHashChain(extResp, &chain);
 	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
@@ -219,7 +219,8 @@ static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *
 	res = KSI_CalendarHashChain_setPublicationTime(chain, NULL);
 	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 
-	print_info("ok\n\n");
+	print_progressResult(res);
+	print_info("\n");
 
 	*pubData = tmpPubData;
 	tmpPubData = NULL;
@@ -227,6 +228,7 @@ static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *
 
 
 cleanup:
+	print_progressResult(res);
 
 	KSI_Integer_free(start);
 	KSI_Integer_free(end);

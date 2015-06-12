@@ -51,10 +51,10 @@ int GT_signTask(Task *task) {
 	if (res != KT_OK) goto cleanup;
 
 	/* Sign the data hash. */
-	print_info("Creating signature from hash... ");
-	MEASURE_TIME(res = KSI_createSignature(ksi, hash, &sign));
+	print_progressDesc(t, "Creating signature from hash... ");
+	res = KSI_createSignature(ksi, hash, &sign);
 	ERR_CATCH_MSG(err, res, "Error: Unable to create signature.");
-	print_info("ok. %s\n",t ? str_measuredTime() : "");
+	print_progressResult(res);
 
 	/* Save signature file */
 	res = saveSignatureFile(err, ksi, sign, outSigFileName);
@@ -103,7 +103,7 @@ static int  getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh
 
 
 	if(Task_getID(task) == signDataFile){
-		print_info("Getting hash from file for signing process... ");
+		print_progressDesc(false, "Getting hash from file for signing process... ");
 		hashAlg = H ? (hashAlg) : ("default");
 		hasAlgID = KSI_getHashAlgorithmByName(hashAlg);
 		if (hasAlgID == -1) {
@@ -122,7 +122,7 @@ static int  getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh
 		}
 	}
 	else if(Task_getID(task) == signHash){
-		print_info("Getting hash from input string for signing process... ");
+		print_progressDesc(false, "Getting hash from input string for signing process... ");
 		res = getHashFromCommandLine(imprint, ksi, err, &tmp);
 		if (res != KT_OK) goto cleanup;
 	}
@@ -131,10 +131,11 @@ static int  getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh
 	tmp = NULL;
 
 	res = KT_OK;
-	print_info("ok.\n");
+	print_progressResult(res);
 
 
 cleanup:
+	print_progressResult(res);
 
 	KSI_DataHash_free(tmp);
 	KSI_DataHasher_free(hsr);

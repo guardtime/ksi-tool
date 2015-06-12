@@ -1036,8 +1036,11 @@ cleanup:
 }
 
 static unsigned int elapsed_time_ms;
+static bool inProgress = false;
+static bool timerOn = false;
 
-unsigned int measureLastCall(void){
+
+static unsigned int measureLastCall(void){
 #ifdef _WIN32
     static LARGE_INTEGER thisCall;
     static LARGE_INTEGER lastCall;
@@ -1060,12 +1063,49 @@ unsigned int measureLastCall(void){
     return elapsed_time_ms;
 }
 
-unsigned int measuredTime(void){
-	return elapsed_time_ms;
+void print_progressDesc(bool showTiming, const char *msg, ...) {
+	va_list va;
+	char buf[1024];
+
+
+	if (inProgress == false) {
+		inProgress = true;
+		/*If timing info is needed, then measure time*/
+		if (showTiming == true) {
+			timerOn = true;
+			measureLastCall();
+		}
+
+		va_start(va, msg);
+		vsnprintf(buf, sizeof(buf), msg, va);
+		buf[sizeof(buf) - 1] = 0;
+		va_end(va);
+
+		print_info("%s", buf);
+	}
 }
 
-char* str_measuredTime(void){
-	static char buf[32];
-	snprintf(buf,32,"(%i ms)", elapsed_time_ms);
-	return buf;
+void print_progressResult(int res) {
+	static char time_str[32];
+
+	if (inProgress == true) {
+		inProgress = false;
+
+		if (timerOn == true) {
+			measureLastCall();
+
+			snprintf(time_str, sizeof(time_str), " (%i ms)", elapsed_time_ms);
+			time_str[sizeof(time_str) - 1] = 0;
+		}
+
+		if (res == KT_OK) {
+			print_info("ok.%s\n", timerOn ? time_str : "");
+		} else {
+			print_errors("failed.%s\n", timerOn ? time_str : "");
+		}
+
+		timerOn = false;
+	}
 }
+
+
