@@ -551,11 +551,11 @@ cleanup:
 }
 
 
-void (*paramSet_getErrorPrinter(paramSet *set))(const char*, ...) {
+int (*paramSet_getErrorPrinter(paramSet *set))(const char*, ...) {
 	return set->printError;
 }
 
-void (*paramSet_getWarningPrinter(paramSet *set))(const char*, ...) {
+int (*paramSet_getWarningPrinter(paramSet *set))(const char*, ...) {
 	return set->printWarning;
 }
 
@@ -881,19 +881,19 @@ bool paramSet_getIntValueByNameAt(const paramSet *set, const char *name, unsigne
 }
 
 bool paramSet_getStrValueByNameAt(const paramSet *set, const char *name, unsigned at, char **value){
-	return getValue(set, name, at, true, paramSet_getValueByNameAt, wrapper_returnStr, value);
+	return getValue(set, name, at, true, paramSet_getValueByNameAt, wrapper_returnStr, (void**)value);
 }
 
 bool paramSet_getHighestPriorityIntValueByName(const paramSet *set, const char *name, int *value){
 	void *val = NULL;
 	bool stat;
-	stat = getValue(set, name, 0xFFFF, true, wrapper_getHighestPriorityValueByName, wrapper_returnInt, &val);
+	stat = getValue(set, name, 0xFFFF, true, wrapper_getHighestPriorityValueByName, wrapper_returnInt, (void**)&val);
 	*value = (int)val;
 	return stat;
 }
 
 bool paramSet_getHighestPriorityStrValueByName(const paramSet *set, const char *name, char **value){
-	return getValue(set, name, 0xFFFF, true, wrapper_getHighestPriorityValueByName, wrapper_returnStr, value);
+	return getValue(set, name, 0xFFFF, true, wrapper_getHighestPriorityValueByName, wrapper_returnStr, (void**)value);
 }
 
 bool paramSet_getValueCountByName(const paramSet *set, const char *name, unsigned *count){

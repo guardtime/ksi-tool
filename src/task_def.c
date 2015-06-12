@@ -227,7 +227,7 @@ static void TaskDefinition_PrintErrors(TaskDefinition *def, paramSet *set){
 	const char *pName = NULL;
 	bool def_printed = false;
 	bool err_printed = false;
-	void (*printError)(const char*, ...) = NULL;
+	int (*printError)(const char*, ...) = NULL;
 
 
 
@@ -278,7 +278,7 @@ static void TaskDefinition_PrintErrors(TaskDefinition *def, paramSet *set){
 static void TaskDefinition_PrintWarnings(TaskDefinition *def, paramSet *set){
 	const char *pName = NULL;
 	char buf[256];
-	void (*printWarning)(const char*, ...) = NULL;
+	int (*printWarning)(const char*, ...) = NULL;
 
 	if(def == NULL || set == NULL){
 		fprintf(stderr, "Error: Task is null pointer.\n");
@@ -299,7 +299,7 @@ static void TaskDefinition_PrintWarnings(TaskDefinition *def, paramSet *set){
 static void TaskDefinition_printSuggestions(TaskDefinition **def, int count, paramSet *set){
 	int i;
 	TaskDefinition *tmp;
-	void (*printError)(const char*, ...) = NULL;
+	int (*printError)(const char*, ...) = NULL;
 
 	if(def == NULL || set == NULL || count == 0) return;
 
@@ -424,7 +424,7 @@ void Task_printError(TaskDefinition **def, int count, paramSet *set){
 	double highestConsistency;
 	int maxConsistencyCout;
 	bool isSimilarHighConsistencyTasks = false;
-	void (*printError)(const char*, ...) = NULL;
+	int (*printError)(const char*, ...) = NULL;
 
 	if(def == NULL || set == NULL) return;
 

@@ -20,6 +20,7 @@
 
 #include <string.h>
 #include <time.h>
+#include <stdarg.h>
 #include <ksi/ksi.h>
 #include <ksi/net.h>
 #include <ksi/hashchain.h>
