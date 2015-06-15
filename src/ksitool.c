@@ -223,8 +223,8 @@ static void GT_pritHelp(void){
 			" -d\t\tdump detailed information.\n"
 			" --tlv\t\tdump signature's TLV structure.\n"
 			" --log <file>\tdump KSI log into file.\n"
-			" --silent\tsilent info and warning messages.\n"
-			" --nowarn\tsilent warning messages.\n"
+			" --silent\tsilence info and warning messages.\n"
+			" --nowarn\tsilence warning messages.\n"
 
 			"\nConfiguration:\n"
 			" -S <url>\tspecify Signing service URL.\n"
