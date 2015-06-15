@@ -69,7 +69,7 @@ okx src/ksitool -v -b ${tmp}/pub.bin -i ${tmp}/tmp.ksig -f ${resource_dir}/testF
 diag "------------------------------------------------------------------------------";
 
 diag "###    Sign and verify raw hash using SHA-1"
-okx src/ksitool -s -F SHA-1:${SH1_HASH} -o ${tmp}/sha1.ksig 
+okx src/ksitool -s -F SHA-1:${SH1_HASH} -o ${tmp}/sha1.ksig
 diag "------------------------------------------------------------------------------";
 
 diag "### Extending signature";
@@ -88,19 +88,19 @@ diag "--------------------------------------------------------------------------
 diag "====== Testing errors ======";
 
 
-like "`src/ksitool -x -i ${tmp}/tmp.ksig -o ${tmp}/ext.ksig -V $url_c 2>&1`" "There is no suitable publication yet." "Extending freshly created signature token"
+like "`src/ksitool -x -i ${tmp}/tmp.ksig -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to extend signature." "Extending freshly created signature token"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -x -i ${tmp}/tmp.ksig -o ${tmp}/ext.ksig -V $url_c 2>&1`" "There is no suitable publication yet" "Error extend no suitable publication"
+like "`src/ksitool -x -i ${tmp}/tmp.ksig -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to extend signature." "Error extend no suitable publication"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -x -i ${resource_dir}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Unable to read signature from file." "Error extend not suitable format"
+like "`src/ksitool -x -i ${resource_dir}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to load signature file from" "Error extend not suitable format"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -x -i ${resource_dir}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Unable to read signature from file." "Error verify not suitable format"
+like "`src/ksitool -x -i ${resource_dir}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to load signature file from" "Error verify not suitable format"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -v -x -i ${resource_dir}/ok-sig-2014-04-30.1.ksig -f ${SCRIPT_DIR}/resource/TestData.txt -V $url_c 2>&1`" "Wrong document or signature" "Error verifying signature and wrong file"
+like "`src/ksitool -v -x -i ${resource_dir}/ok-sig-2014-04-30.1.ksig -f ${SCRIPT_DIR}/resource/TestData.txt -V $url_c 2>&1`" "Error: Unable to verify files hash." "Error verifying signature and wrong file"
 diag "------------------------------------------------------------------------------";
 
 like "`src/ksitool -s -F SHA-1:${SH1_HASH}FF -o ${tmp}/sha1.ksig 2>&1`" "Hash length is incorrect" "Error signing with SH1 and wrong hash"
@@ -109,13 +109,13 @@ diag "--------------------------------------------------------------------------
 like "`src/ksitool -s -F DUNNO:${SH1_HASH} -o ${tmp}/sha1.ksig 2>&1`" "Algorithm name is incorrect" "Error signing with unknown algorithm and wrong hash"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -s -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig -S no_network_here 2>&1`" "no_network_here" "Error bad network provider"
+like "`src/ksitool -s -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig -S no_network_here 2>&1`" "Error: Unable to create signature" "Error bad network provider"
 diag "------------------------------------------------------------------------------";
 
 like "`src/ksitool -v -b ${tmp}/pub.bin -i ${tmp}/ext-t.ksig -f missing_file  2>&1`" "File does not exist" "Error Verify signature and missing file"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -v -t -b ${resource_dir}/testFile -V $url_c 2>&1`" "Unable to read publications file" "Error Invalid publications file"
+like "`src/ksitool -v -t -b ${resource_dir}/testFile -V $url_c 2>&1`" "Error: Unable to load publication file from" "Error Invalid publications file"
 diag "------------------------------------------------------------------------------";
 
 
