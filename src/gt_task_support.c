@@ -828,6 +828,11 @@ cleanup:
 	return;
 	}
 
+#ifdef _WIN32
+#ifdef LINKEAGAINSTDLLKSI
+__declspec( dllimport )
+#endif
+#endif
 KSI_IMPORT_TLV_TEMPLATE(KSI_Signature);
 
 void printSignatureStructure(KSI_CTX *ksi, const KSI_Signature *sig) {

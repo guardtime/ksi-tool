@@ -61,12 +61,16 @@ CMDTOOL_OBJ = \
 
 
 EXT_LIB = libksiapi$(RTL).lib \
-	user32.lib gdi32.lib advapi32.lib crypt32.lib
+	user32.lib gdi32.lib advapi32.lib Ws2_32.lib
 	  
 	
 CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE  /I$(SRC_DIR) /I$(KSI_DIR)\include
-CCFLAGS = $(CCFLAGS) /I"$(OPENSSL_DIR)\include" /I"$(CURL_DIR)\include"
-LDFLAGS = /NOLOGO /LIBPATH:"$(KSI_DIR)\$(KSI_LIB)" /LIBPATH:"$(OPENSSL_DIR)\$(KSI_LIB)" /LIBPATH:"$(CURL_DIR)\$(KSI_LIB)"
+LDFLAGS = /NOLOGO /LIBPATH:"$(KSI_DIR)\$(KSI_LIB)"
+
+!IF "$(KSI_LIB)" == "dll"
+CCFLAGS = $(CCFLAGS) /DLINKEAGAINSTDLLKSI
+!MESSAGE LNINKING AGAINST DLL
+!ENDIF
 
 !IF "$(RTL)" == "MT" || "$(RTL)" == "MD"
 CCFLAGS = $(CCFLAGS) /DNDEBUG /O2
@@ -76,14 +80,32 @@ CCFLAGS = $(CCFLAGS) /D_DEBUG /Od /RTC1 /Zi
 LDFLAGS = $(LDFLAGS) /DEBUG
 !ENDIF
 
-!IF "$(KSI_LIB)" == "lib"
+!IF "$(LNK_CURL)" == "yes" || "$(LNK_CURL)" == "YES"
+LDFLAGS = $(LDFLAGS) /LIBPATH:"$(CURL_DIR)\$(KSI_LIB)"
+CCFLAGS = $(CCFLAGS) /I"$(CURL_DIR)\include"
 CCFLAGS = $(CCFLAGS) /DCURL_STATICLIB
-EXT_LIB = $(EXT_LIB) libcurl$(RTL).lib libeay32$(RTL).lib wininet.lib winhttp.lib Ws2_32.lib
-
-!ELSE
-LDFLAGS = $(LDFLAGS) /LIBPATH:"$(OPENSSL_DIR)\dll" 
-LDFLAGS = $(LDFLAGS) /LIBPATH:"$(CURL_DIR)\dll"
+EXT_LIB = $(EXT_LIB) libcurl$(RTL).lib
 !ENDIF
+
+!IF "$(LNK_OPENSSL)" == "yes" || "$(LNK_OPENSSL)" == "YES"
+LDFLAGS = $(LDFLAGS) /LIBPATH:"$(OPENSSL_DIR)\$(KSI_LIB)"
+CCFLAGS = $(CCFLAGS) /I"$(OPENSSL_DIR)\include"
+EXT_LIB = $(EXT_LIB) libeay32$(RTL).lib
+!ENDIF
+
+!IF "$(LNK_WININET)" == "yes" || "$(LNK_WININET)" == "YES"
+EXT_LIB = $(EXT_LIB) wininet.lib
+!ENDIF
+
+!IF "$(LNK_WINHTTP)" == "yes" || "$(LNK_WINHTTP)" == "YES"
+EXT_LIB = $(EXT_LIB) winhttp.lib
+!ENDIF
+
+!IF "$(LNK_CRYPTOAPI)" == "yes" || "$(LNK_CRYPTOAPI)" == "YES"
+EXT_LIB = $(EXT_LIB) crypt32.lib
+!ENDIF
+
+
 CCFLAGS = $(CCFLAGS) $(CCEXTRA)
 LDFLAGS = $(LDFLAGS) $(LDEXTRA)
 

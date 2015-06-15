@@ -126,20 +126,26 @@ Configuring build scripts
 						setenv /x64 or /x86 must be called.
 		4) CURL_DIR 	- directory containing Curl library and include files.
 		5) OPENSSL_DIR 	- directory containing OpenSLL library and include files.
-		6) KSI_DIR 		- directory containing KSI API library and include files
-		7) LDEXTRA 		- extra flags for linker.
-		8) CCEXTRA 		- extra flags for compiler.
+		6) KSI_DIR 		- directory containing KSI API library and include files.
+		7) LNK_CURL		- link against CURL library (yes/no).
+		8) LNK_OPENSSL	- link against OpenSLL library (yes/no).
+		9) LNK_WININET	- link against WinINet library (yes/no).
+		10) LNK_WINHTTP - link against WinHTTP library (yes/no).
+		11) LNK_CRYPTOAPI - link against CryptoAPI library (yes/no).
+		12) LDEXTRA 		- extra flags for linker.
+		13) CCEXTRA 		- extra flags for compiler.
 		
 	When compiling one must know how the KSI API was linked - DLL and RTL must
-	be configured accordingly. The location of KSI_API must be specified by 
+	be configured accordingly and LNK_<lib_name> must be defined for libraries
+	necessary for the build. The location of KSI_API must be specified by
 	defining KSI_DIR. If KSI API uses Curl or OpenSSL CURL_DIR and OPENSSL_DIR
-	must be specified.
+	must be specified. 
 
 	Examples
 	
 	KSI API is built as lib using MT RTL and windows native libraries:
-		nmake RTL=MT DLL=lib KSI_DIR="C:\KSI"
+		nmake RTL=MT DLL=lib KSI_DIR="C:\KSI" LNK_WININET=yes LNK_CRYPTOAPI=yes
 	KSI API is built as lib using MTd RTL and OpenSLL
-		nmake RTL=MTd DLL=lib KSI_DIR="C:\KSI" OPENSSL_DIR="C:\OPENSSL"
+		nmake RTL=MTd DLL=lib KSI_DIR="C:\KSI" OPENSSL_DIR="C:\OPENSSL" LNK_WININET=yes LNK_OPENSSL=yes
 	KSI API is built as dll using MD RTL and windows native libraries:
-	nmake RTL=MD DLL=dll KSI_DIR="C:\KSI" OPENSSL_DIR="C:\OPENSSL"
+	nmake RTL=MD DLL=dll KSI_DIR="C:\KSI" OPENSSL_DIR="C:\OPENSSL" LNK_WINHTTP=yes LNK_CRYPTOAPI=yes
