@@ -88,10 +88,10 @@ diag "--------------------------------------------------------------------------
 diag "====== Testing errors ======";
 
 
-like "`src/ksitool -x -i ${tmp}/tmp.ksig -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to extend signature." "Extending freshly created signature token"
+like "`src/ksitool -x -i ${tmp}/tmp.ksig -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: There is no suitable publication yet." "Extending freshly created signature token"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -x -i ${tmp}/tmp.ksig -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to extend signature." "Error extend no suitable publication"
+like "`src/ksitool -x -i ${tmp}/tmp.ksig -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: There is no suitable publication yet." "Error extend no suitable publication"
 diag "------------------------------------------------------------------------------";
 
 like "`src/ksitool -x -i ${resource_dir}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to load signature file from" "Error extend not suitable format"
@@ -100,7 +100,7 @@ diag "--------------------------------------------------------------------------
 like "`src/ksitool -x -i ${resource_dir}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to load signature file from" "Error verify not suitable format"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -v -x -i ${resource_dir}/ok-sig-2014-04-30.1.ksig -f ${SCRIPT_DIR}/resource/TestData.txt -V $url_c 2>&1`" "Error: Unable to verify files hash." "Error verifying signature and wrong file"
+like "`src/ksitool -v -x -i ${resource_dir}/ok-sig-2014-04-30.1.ksig -f ${SCRIPT_DIR}/resource/TestData.txt -V $url_c 2>&1`" " Error: Unable to verify file hash." "Error verifying signature and wrong file"
 diag "------------------------------------------------------------------------------";
 
 like "`src/ksitool -s -F SHA-1:${SH1_HASH}FF -o ${tmp}/sha1.ksig 2>&1`" "Hash length is incorrect" "Error signing with SH1 and wrong hash"

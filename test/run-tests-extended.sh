@@ -180,10 +180,10 @@ diag "--------------------------------------------------------------------------
 diag "====== Testing errors ======";
 
 
-like "`src/ksitool -x -i ${tmp}/tmp.ksig -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to extend signature." "Extending freshly created signature token"
+like "`src/ksitool -x -i ${tmp}/tmp.ksig -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: There is no suitable publication yet." "Extending freshly created signature token"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -x -i ${tmp}/tmp.ksig -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to extend signature." "Error extend no suitable publication"
+like "`src/ksitool -x -i ${tmp}/tmp.ksig -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: There is no suitable publication yet." "Error extend no suitable publication"
 diag "------------------------------------------------------------------------------";
 
 like "`src/ksitool -x -i ${resource_dir}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to load signature file from" "Error extend not suitable format"
@@ -192,7 +192,7 @@ diag "--------------------------------------------------------------------------
 like "`src/ksitool -x -i ${resource_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig -T 1311120674 2>&1`" "Error: Unable to extend signature" "Error extend before calendar [-T]"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -x -i ${resource_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig -T 1458914880 2>&1`" "Error: Unable to extend signature." "Error extend to the future [-T]"
+like "`src/ksitool -x -i ${resource_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext-t.ksig -T 1458914880 2>&1`" "Error: The request asked for hash values newer than the current real time" "Error extend to the future [-T]"
 diag "------------------------------------------------------------------------------";
 
 like "`src/ksitool -x -i ${resource_dir}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to load signature file from" "Error verify not suitable format"
@@ -222,7 +222,7 @@ diag "--------------------------------------------------------------------------
 like "`src/ksitool -p -T 969085709 2>&1`" "The request asked for hash values older than the oldest round" "Error Unable to Get Publication string"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -p -t -o $tmp/tpub.bin -E wrong@email.mail 2>&1`" "Error: Unable to verify publication file." "Error wrong E-mail"
+like "`src/ksitool -p -t -o $tmp/tpub.bin -E wrong@email.mail 2>&1`" "Error: The PKI certificate is not trusted." "Error wrong E-mail"
 diag "------------------------------------------------------------------------------";
 
 
