@@ -53,6 +53,7 @@ int GT_signTask(Task *task) {
 	/* Sign the data hash. */
 	print_progressDesc(t, "Creating signature from hash... ");
 	res = KSI_createSignature(ksi, hash, &sign);
+	ERR_APPEND_KSI_BASE_ERR(err, res, ksi);
 	ERR_CATCH_MSG(err, res, "Error: Unable to create signature.");
 	print_progressResult(res);
 
@@ -69,9 +70,9 @@ int GT_signTask(Task *task) {
 
 
 cleanup:
+	print_progressResult(res);
 
 	if (res != KT_OK) {
-		print_errors("failed.\n");
 		ERR_TRCKR_printErrors(err);
 		retval = errToExitCode(res);
 	}
@@ -113,6 +114,7 @@ static int  getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh
 		}
 
 		res = KSI_DataHasher_open(ksi, hasAlgID, &hsr);
+		ERR_APPEND_KSI_ERR(err, res, KSI_UNAVAILABLE_HASH_ALGORITHM);
 		ERR_CATCH_MSG(err, res, "Error: Unable to open hasher.");
 
 		res = getFilesHash(err, ksi, hsr, inDataFileName, &tmp);

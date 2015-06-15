@@ -69,11 +69,13 @@ int GT_extendTask(Task *task) {
 		res = KSI_Integer_new(ksi, publicationTime, &pubTime);
 		ERR_CATCH_MSG(err, res, "Error: %s.", errToString(res));
 		res = KSI_Signature_extendTo(sig, ksi, pubTime, &ext);
+		ERR_APPEND_KSI_ERR(err, res, KSI_EXTEND_NO_SUITABLE_PUBLICATION);
 		ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
 	}
 	else{
 		print_progressDesc(t, "Extending old signature... ");
 		res = KSI_extendSignature(ksi, sig, &ext);
+		ERR_APPEND_KSI_ERR(err, res, KSI_EXTEND_NO_SUITABLE_PUBLICATION);
 		ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
 	}
 	print_progressResult(res);

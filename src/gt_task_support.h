@@ -180,6 +180,18 @@ void print_progressResult(int res);
 		goto cleanup; \
 	}
 
+#define ERR_APPEND_KSI_ERR(err, res, ref_err) \
+		if (res == ref_err) { \
+			ERR_TRCKR_add(err, res, __FILE__, __LINE__, "Error: %s", KSI_getErrorString(res)); \
+		}
+
+#define ERR_APPEND_KSI_BASE_ERR(err, res, ksi) \
+		if (res != KSI_OK) { \
+			char buf[1024]; \
+			KSI_ERR_getBaseErrorMessage(ksi, buf, sizeof(buf), NULL, NULL); \
+			if (buf[0] != 0) \
+				ERR_TRCKR_add(err, res, __FILE__, __LINE__, "Error: %s", buf); \
+		}
 
 #ifdef	__cplusplus
 }

@@ -138,6 +138,7 @@ int GT_verifyPublicationFileTask(Task *task){
 
 	print_progressDesc(t, "Verifying  publications file... ");
 	res = KSI_verifyPublicationsFile(ksi, publicationsFile);
+	ERR_APPEND_KSI_ERR(err, res, KSI_PKI_CERTIFICATE_NOT_TRUSTED);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify publication file.");
 	print_progressResult(res);
 
@@ -268,6 +269,8 @@ static int GT_verifyTask_verifyWithPublication(Task *task, KSI_CTX *ksi, ERR_TRC
 
 		print_progressDesc(t, "Extending signature to publication time of publication string... ");
 		res = KSI_Signature_extend(sig, ksi, extendTo, &tmp_ext);
+		ERR_APPEND_KSI_ERR(err, res, KSI_EXTEND_NO_SUITABLE_PUBLICATION);
+		ERR_APPEND_KSI_BASE_ERR(err, res, ksi);
 		ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
 		print_progressResult(res);
 
@@ -358,7 +361,7 @@ static int GT_verifyTask_verifyData(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KS
 			goto cleanup;
 		}
 		res = KSI_Signature_verifyDataHash(sig, ksi, file_hsh);
-		ERR_CATCH_MSG(err, res, "Error: Unable to verify files hash.");
+		ERR_CATCH_MSG(err, res, "Error: Unable to verify file hash.");
 		print_progressResult(res);
 	}
 	if(F){

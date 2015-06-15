@@ -71,9 +71,9 @@ int GT_publicationsFileTask(Task *task){
 
 
 cleanup:
+	print_progressResult(res);
 
 	if (res != KT_OK) {
-		print_errors("failed.\n");
 		ERR_TRCKR_printErrors(err);
 		retval = errToExitCode(res);
 	}
@@ -113,6 +113,7 @@ static int GT_publicationsFileTask_downloadPublicationsFile(Task *task, KSI_CTX 
 
 	print_progressDesc(t, "Verifying publications file... ");
 	res = KSI_verifyPublicationsFile(ksi, tmp);
+	ERR_APPEND_KSI_ERR(err, res, KSI_PKI_CERTIFICATE_NOT_TRUSTED);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify publication file.");
 	print_progressResult(res);
 
@@ -185,6 +186,7 @@ static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *
 	ERR_CATCH_MSG(err, res, "Error: Unable to send extend request.");
 
 	res = KSI_RequestHandle_getExtendResponse(request, &extResp);
+	ERR_APPEND_KSI_ERR(err, res, KSI_NETWORK_ERROR);
 	ERR_CATCH_MSG(err, res, "Error: Unable to get extend response.");
 	res = KSI_ExtendResp_getStatus(extResp, &respStatus);
 	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
