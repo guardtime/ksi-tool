@@ -77,6 +77,12 @@ int GT_other(Task *task){
 
 cleanup:
 
+	if (res != KT_OK) {
+		ERR_TRCKR_printErrors(err);
+		if(d && ksi) KSI_ERR_statusDump(ksi, stderr);
+		retval = errToExitCode(res);
+	}
+
 	KSI_DataHasher_free(hsr);
 	KSI_DataHash_free(hsh);
 	KSI_Signature_free(sig);

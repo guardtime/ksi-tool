@@ -102,6 +102,7 @@ cleanup:
 
 	if (res != KT_OK) {
 		ERR_TRCKR_printErrors(err);
+		if(d && ksi) KSI_ERR_statusDump(ksi, stderr);
 		retval = errToExitCode(res);
 	}
 
