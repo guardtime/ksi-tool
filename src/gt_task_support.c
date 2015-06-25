@@ -370,13 +370,13 @@ bool isPiping(paramSet *set) {
 }
 
 void closeTask(KSI_CTX *ksi){
-	if (ksi == NULL)
-		return;
+	if (ksi == NULL) goto cleanup;
 
 	KSI_LOG_logCtxError(ksi, KSI_LOG_DEBUG);
-
-	if(logFile) fclose(logFile);
 	KSI_CTX_free(ksi);
+
+cleanup:
+	if(logFile != NULL) fclose(logFile);
 }
 
 
