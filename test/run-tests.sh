@@ -223,7 +223,7 @@ diag "--------------------------------------------------------------------------
 like "`$exec -x -i ${resource_dir}/$TESTSIG -o ${tmp}/tmp_n.ksig -T 1311120674 2>&1`" "Error: Unable to extend signature" "Error extend before calendar [-T]"
 diag "------------------------------------------------------------------------------";
 
-like "`$exec -x -i ${resource_dir}/$TESTSIG -o ${tmp}/tmp_n.ksig -T 1458914880 2>&1`" "Error: The request asked for hash values newer than the current real time" "Error extend to the future [-T]"
+like "`$exec -x -i ${resource_dir}/$TESTSIG -o ${tmp}/tmp_n.ksig -T $(date --date="+1 year" +"%s") 2>&1`" "Error: The request asked for hash values newer than the current real time" "Error extend to the future [-T]"
 diag "------------------------------------------------------------------------------";
 
 like "`$exec -x -i ${resource_dir}/testFile -o ${tmp}/tmp_n.ksig -V $url_c 2>&1`" "Error: Unable to load signature file from" "Error verify not suitable format"
