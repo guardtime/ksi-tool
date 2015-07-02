@@ -211,13 +211,13 @@ diag "--------------------------------------------------------------------------
 diag "====== Testing errors ======";
 
 
-like "`$exec -x -i ${tmp}/tmp.ksig -o ${tmp}/tmp_n.ksig -V $url_c 2>&1`" "Error: There is no suitable publication yet." "Extending freshly created signature token"
+like "`$exec -x -i ${tmp}/tmp.ksig -o ${tmp}/tmp_n.ksig 2>&1`" "Error: There is no suitable publication yet." "Extending freshly created signature token"
 diag "------------------------------------------------------------------------------";
 
-like "`$exec -x -i ${tmp}/tmp.ksig -o ${tmp}/tmp_n.ksig -V $url_c 2>&1`" "Error: There is no suitable publication yet." "Error extend no suitable publication"
+like "`$exec -x -i ${tmp}/tmp.ksig -o ${tmp}/tmp_n.ksig 2>&1`" "Error: There is no suitable publication yet." "Error extend no suitable publication"
 diag "------------------------------------------------------------------------------";
 
-like "`$exec -x -i ${resource_dir}/testFile -o ${tmp}/tmp_n.ksig -V $url_c 2>&1`" "Error: Unable to load signature file from" "Error extend not suitable format"
+like "`$exec -x -i ${resource_dir}/testFile -o ${tmp}/tmp_n.ksig 2>&1`" "Error: Unable to load signature file from" "Error extend not suitable format"
 diag "------------------------------------------------------------------------------";
 
 like "`$exec -x -i ${resource_dir}/$TESTSIG -o ${tmp}/tmp_n.ksig -T 1311120674 2>&1`" "Error: Unable to extend signature" "Error extend before calendar [-T]"
@@ -226,10 +226,10 @@ diag "--------------------------------------------------------------------------
 like "`$exec -x -i ${resource_dir}/$TESTSIG -o ${tmp}/tmp_n.ksig -T $(date --date="+1 year" +"%s") 2>&1`" "Error: The request asked for hash values newer than the current real time" "Error extend to the future [-T]"
 diag "------------------------------------------------------------------------------";
 
-like "`$exec -x -i ${resource_dir}/testFile -o ${tmp}/tmp_n.ksig -V $url_c 2>&1`" "Error: Unable to load signature file from" "Error verify not suitable format"
+like "`$exec -x -i ${resource_dir}/testFile -o ${tmp}/tmp_n.ksig 2>&1`" "Error: Unable to load signature file from" "Error verify not suitable format"
 diag "------------------------------------------------------------------------------";
 
-like "`$exec -v -x -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/resource/TestData.txt -V $url_c 2>&1`" "Error: Unable to verify file hash." "Error verifying signature and wrong file"
+like "`$exec -v -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/resource/TestData.txt 2>&1`" "Error: Unable to verify file hash." "Error verifying signature and wrong file"
 diag "------------------------------------------------------------------------------";
 
 like "`$exec -s -F SHA-1:${SH1_HASH}FF -o ${tmp}/tmp_n.ksig  2>&1`" "Hash length is incorrect" "Error signing with SH1 and wrong hash"
@@ -247,7 +247,7 @@ diag "--------------------------------------------------------------------------
 like "`$exec -v -t -b ${tmp}/pub.bin -V no_certificate 2>&1`" "File does not exist" "Error missing cert files"
 diag "------------------------------------------------------------------------------";
 
-like "`$exec -v -t -b ${resource_dir}/testFile -V $url_c 2>&1`" "Error: Unable to load publication file" "Error Invalid publications file"
+like "`$exec -v -t -b ${resource_dir}/testFile 2>&1`" "Error: Unable to load publication file" "Error Invalid publications file"
 diag "------------------------------------------------------------------------------";
 
 like "`$exec -p -T 969085709 2>&1`" "The request asked for hash values older than the oldest round" "Error Unable to Get Publication string"
@@ -256,16 +256,16 @@ diag "--------------------------------------------------------------------------
 like "`$exec -p -t -o $tmp/tpub.bin -E wrong@email.mail 2>&1`" "Error: The PKI certificate is not trusted." "Error wrong E-mail"
 diag "------------------------------------------------------------------------------";
 
-like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user nouserpresent --pass asd 2>&1`" "The request could not be authenticated" "Wrong user specified"
+like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user nouserpresent --pass asd 2>&1`" "The request could not be authenticated" "Error Wrong user specified"
 diag "------------------------------------------------------------------------------";
 
-like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user anon --pass asd 2>&1`" "The request could not be authenticated" "Wrong pass specified"
+like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user anon --pass asd 2>&1`" "The request could not be authenticated" "Error Wrong pass specified"
 diag "------------------------------------------------------------------------------";
 
-like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user  --pass anon 2>&1`" "Parameter has no content" "No user specified"
+like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user  --pass anon 2>&1`" "Parameter has no content" "Error No user specified"
 diag "------------------------------------------------------------------------------";
 
-like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user anon --pass  2>&1`" "Parameter has no content" "No pass specified"
+like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user anon --pass  2>&1`" "Parameter has no content" "Error No pass specified"
 diag "------------------------------------------------------------------------------";
 
 # cleanup
