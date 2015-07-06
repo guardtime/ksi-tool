@@ -20,20 +20,25 @@
 #
 
 dir=`dirname $0`
-tmp=${TMPDIR:-'test/out'}
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+tmp=${TMPDIR:=$SCRIPT_DIR/out}
 resource_dir="${SCRIPT_DIR}/resource"
+DATE=`date +%s`
+
+mkdir -p $tmp
+
+exec="src/ksitool"
+
+if [ ! -f src/ksitool ]; then
+	exec="ksitool"
+fi
 
 # Test Anything Protocol, from http://testanything.org/
 . ${dir}/tap-functions
 host=${1:-'localhost'}
 
-echo \# =============================================================================
-echo \#                 KSI Tool Test
-echo \# =============================================================================
-
-
 echo \# Using $host as Guardtime Gateway Server. Specify custom server as 1st command-line argument.
+
 
 . ${dir}/endpoints.sh
 url_c="${resource_dir}/mock.crt"
@@ -41,84 +46,228 @@ url_c="${resource_dir}/mock.crt"
 echo \# Certificate: $url_c
 
 # input hash
-SH1_HASH="da39a3ee5e6b4b0d3255bfef95601890afd80709"
-SH256_HASH="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-RIPEMD160_HASH="9c1185a5c5e9fc54612808977ee8f548b2258d31"
-SHA224_HASH="d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f"
-SHA384_HASH="38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b"
-SHA512_HASH="cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
+SH1_HASH="a7d2c6238a92878b2a578c2477e8a33f9d8591ab"
+SH256_HASH="11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d"
+RIPEMD160_HASH="e889d4393145736ebdfb3702dd3180f5c6cffade"
+SHA224_HASH="9b7ea5330761e8b50b36af0d61c10bc227c908ee57a545d40131cfa3"
+SHA384_HASH="a5ac3bb2fa156480d1cf437c54481d9c77a145b682879e92e30a8b79f0a45a001be7969ffa02d81af0610b784ae72f4f"
+SHA512_HASH="09e3fc9d3669eaf53d3afeb60e6a73af2c7c7b01a0fe49127253e0d466ba3d1c85ed541593775a12a880378335eeda5fc0ad5700920e11ed315f4b49f37c6d26"
 
-echo \# Running tests on `uname -n` at `date '+%F %T %Z'`
+TESTSIG="ok-sig-2014-08-01.1.ksig"
 
-plan_tests 18
+echo \# Running tests on `uname -n` at `date '+%F %T %Z'`, start time: ${DATE}
 
-diag "### Publications file download";
-okx src/ksitool -p -t -o ${tmp}/pub.bin -V $url_c
+plan_tests 72
+
+
+diag "######    Publications file download"
+okx $exec -p -t -o ${tmp}/pub.bin -V $url_c --log ${tmp}/out.log
+like "`[ -f ${tmp}/out.log ] && echo 'Log file exists' || echo 'Log file does not exist' 2>&1`" "Log file exists"
+
+diag "######    Verify Publications file"
+okx $exec -v -t -b ${tmp}/pub.bin
+
+diag "######    Verify Publications file using certificate"
+okx $exec -v -t -b ${resource_dir}/publications.tlv -V $url_c
+
+like "`$exec -v -t -b ${resource_dir}/publications.tlv 2>&1`" "The PKI certificate is not trusted." "Publications file certificate not in truststore"
+diag "------------------------------------------------------------------------------";
+
+diag "######    Verify publications file using certificate email"
+okx $exec -v -t -b ${tmp}/pub.bin -E publications@guardtime.com
+
+diag "######    Get Publications string"
+okx $exec -p -t -T 1410848909  # GMT: Tue, 21 Oct 2014 13:31:15 GMT
 diag "-------------------------------------------------------------------------------";
 
-diag "### Verify Publications file using certificate";
-okx src/ksitool -v -t -b ${tmp}/pub.bin -V $url_c
-diag "-------------------------------------------------------------------------------";
-
-diag "### Sign";
-okx src/ksitool -s -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig
+diag "######    Sign and save log file"
+okx $exec -s -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig --log ${tmp}/out.log
+like "`[ -f ${tmp}/out.log ] && echo 'Log file exists' || echo 'Log file does not exist' 2>&1`" "Log file exists"
 diag "------------------------------------------------------------------------------";
 
-diag "### Verify freshly created signature token";
-okx src/ksitool -v -b ${tmp}/pub.bin -i ${tmp}/tmp.ksig -f ${resource_dir}/testFile -V $url_c
+
+diag "######    Sign and verify using algorithm: SHA1"
+okx $exec -s -H SHA1 -f ${resource_dir}/testFile -o ${tmp}/f_sha1.ksig
+okx $exec -v -i ${tmp}/f_sha1.ksig -f ${resource_dir}/testFile
+
+diag "######    Sign and verify using algorithm: SHA2-256"
+okx $exec -s -H SHA2-256 -f ${resource_dir}/testFile -o ${tmp}/f_sha256.ksig
+okx $exec -v -i ${tmp}/f_sha256.ksig -f ${resource_dir}/testFile
+
+diag "######    Sign and verify using algorithm: RIPEMD-160"
+okx $exec -s -H RIPEMD-160 -f ${resource_dir}/testFile -o ${tmp}/f_ripemd160.ksig
+okx $exec -v -i ${tmp}/f_ripemd160.ksig -f ${resource_dir}/testFile
+
+diag "######    Sign and verify using algorithm: SHA2-224"
+okx $exec -s -H SHA2-224 -f ${resource_dir}/testFile -o ${tmp}/f_sha224.ksig
+okx $exec -v -i ${tmp}/f_sha224.ksig -f ${resource_dir}/testFile
+
+diag "######    Sign and verify using algorithm: SHA2-384"
+okx $exec -s -H SHA2-384 -f ${resource_dir}/testFile -o ${tmp}/f_sha384.ksig
+okx $exec -v -i ${tmp}/f_sha384.ksig -f ${resource_dir}/testFile
+
+diag "######    Sign and verify using algorithm: SHA2-512"
+okx $exec -s -H SHA2-512 -f ${resource_dir}/testFile -o ${tmp}/f_sha512.ksig
+okx $exec -v -i ${tmp}/f_sha512.ksig -f ${resource_dir}/testFile
 diag "------------------------------------------------------------------------------";
 
-diag "###    Sign and verify raw hash using SHA-1"
-okx src/ksitool -s -F SHA-1:${SH1_HASH} -o ${tmp}/sha1.ksig
+
+diag "######    Sign and verify raw hash using SHA-1"
+okx $exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/h_sha1.ksig
+okx $exec -v -i ${tmp}/h_sha1.ksig -f ${resource_dir}/testFile
+
+diag "######    Sign and verify raw hash using SHA-256"
+okx $exec -s -F SHA-256:${SH256_HASH} -o ${tmp}/h_sha256.ksig
+okx $exec -v -i ${tmp}/h_sha256.ksig -f ${resource_dir}/testFile
+
+diag "######    Sign and verify raw hash using RIPEMD-160"
+okx $exec -s -F RIPEMD-160:${RIPEMD160_HASH} -o ${tmp}/h_r160.ksig
+okx $exec -v -i ${tmp}/h_r160.ksig -f ${resource_dir}/testFile
+
+diag "######    Sign and verify raw hash using SHA-224"
+okx $exec -s -F SHA-224:${SHA224_HASH} -o ${tmp}/h_sha224.ksig
+okx $exec -v -i ${tmp}/h_sha224.ksig -f ${resource_dir}/testFile
+
+diag "######    Sign and verify raw hash using SHA2-384"
+okx $exec -s -F SHA-384:${SHA384_HASH} -o ${tmp}/h_sha384.ksig
+okx $exec -v -i ${tmp}/h_sha384.ksig -f ${resource_dir}/testFile
+
+diag "######    Sign and verify raw hash using SHA-512"
+okx $exec -s -F SHA-512:${SHA512_HASH} -o ${tmp}/h_sha512.ksig
+okx $exec -v -i ${tmp}/h_sha512.ksig -f ${resource_dir}/testFile
 diag "------------------------------------------------------------------------------";
 
-diag "### Extending signature";
-okx src/ksitool -x -i ${resource_dir}/ok-sig-2014-08-01.1.ksig -o ${tmp}/ext.ksig -V $url_c
+
+diag "######    Extend signature"
+okx $exec -x -i ${resource_dir}/$TESTSIG -o ${tmp}/ext.ksig --log ${tmp}/out.log
+like "`[ -f ${tmp}/out.log ] && echo 'Log file exists' || echo 'Log file does not exist' 2>&1`" "Log file exists"
+
+diag "######    Extend old signature before publication time [-T] "
+okx $exec -x -i ${resource_dir}/$TESTSIG -o ${tmp}/ext-t.ksig -T 1413120674 #  (GMT): Sun, 12 Oct 2014 13:31:14 GMT
+
+diag "######    Extend old signature to publication time [-T] "
+okx $exec -x -i ${resource_dir}/$TESTSIG -o ${tmp}/ext-t.ksig -T 1421280000 #  (GMT): Thu, 15 Jan 2015 00:00:00 GMT
+
+diag "######    Extend old signature to nearest publication "
+okx $exec -x -i ${resource_dir}/$TESTSIG -o ${tmp}/ext-t.ksig
 diag "------------------------------------------------------------------------------";
 
-diag "### Verifying extended signature";
-okx src/ksitool -v -b ${tmp}/pub.bin -i ${tmp}/ext.ksig -V $url_c
+
+diag "######    Verify freshly created signature token using publication file"
+okx $exec -v -b ${tmp}/pub.bin -i ${tmp}/tmp.ksig -f ${resource_dir}/testFile
+
+diag "######    Verifying extended signature using publication file"
+okx $exec -v -b ${tmp}/pub.bin -i ${tmp}/ext.ksig
+
+diag "######    Verify extended signature online"
+okx $exec -v -x -i ${tmp}/ext.ksig
+
+diag "######    Verify extended signature with pubstring. Bubstr points to exact publication."
+okx $exec -v -i ${tmp}/ext.ksig --ref AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
+
+diag "######    Verify extended signature with pubstring. Bubstr points to newer publication."
+okx $exec -v -i ${tmp}/ext.ksig --ref AAAAAA-CUM2LY-AANFLH-HIQ7FW-TGTOAL-VDVGBO-AN3SQO-5FOO7L-CYGQG6-FNMOBG-QGSTAG-K3VY6C
+
+diag "######    Verify extended signature with pubstring. Bubstr points between publications."
+okx $exec -v -i ${tmp}/ext.ksig --ref AAAAAA-CUBJQL-AAKVFD-VNJIK5-7DTJ6T-YYCOGP-N7J3RT-CRE5DU-WBB6AE-LANHHH-3CFEM4-7FM65J
+
+diag "######    Verify signature with pubstring. Bubstr points to exact publication."
+okx $exec -v -i ${resource_dir}/$TESTSIG --ref AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
+
+diag "######    Verify raw hash using SHA-1"
+okx $exec -v -i ${resource_dir}/sha1.ksig -f ${resource_dir}/testFile
+
+diag "######    Verify raw hash using SHA-224"
+okx $exec -v -i ${resource_dir}/sha224.ksig -f ${resource_dir}/testFile
+
+diag "######    Verify raw hash using SHA-256"
+okx $exec -v -i ${resource_dir}/sha256.ksig -f ${resource_dir}/testFile
+
+diag "######    Verify raw hash using SHA-384"
+okx $exec -v -i ${resource_dir}/sha384.ksig -f ${resource_dir}/testFile
+
+diag "######    Verify raw hash using SHA-512"
+okx $exec -v -i ${resource_dir}/sha512.ksig -f ${resource_dir}/testFile
+
+diag "######    Verify raw hash using RIPEMD-160"
+okx $exec -v -i ${resource_dir}/ripemd160.ksig -f ${resource_dir}/testFile
+
 diag "------------------------------------------------------------------------------";
 
-diag "### Online verifying extended signature";
-okx src/ksitool -v -x -i ${tmp}/ext.ksig -V $url_c
+#TODO: uncomment if implemeneted
+# diag "######    Use aggregator"
+# okx $exec -nt --aggre --setsystime
+# okx $exec -nt --aggre --htime
+# diag "------------------------------------------------------------------------------";
+
+diag "######    Testing stdout and stdin"
+echo "TEST" > ${tmp}/pipeFileClone
+like "`echo \"TEST\" | $exec -s -f - -o - | $exec -v -i - -f ${tmp}/pipeFileClone`" "Verification of signature - successful"
+like "`$exec -p -o - | $exec -v -b -`" "Verification of publication file - successful."
 diag "------------------------------------------------------------------------------";
+
 
 
 diag "====== Testing errors ======";
 
 
-like "`src/ksitool -x -i ${tmp}/tmp.ksig -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: There is no suitable publication yet." "Extending freshly created signature token"
+like "`$exec -x -i ${tmp}/tmp.ksig -o ${tmp}/tmp_n.ksig 2>&1`" "Error: There is no suitable publication yet." "Extending freshly created signature token"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -x -i ${tmp}/tmp.ksig -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: There is no suitable publication yet." "Error extend no suitable publication"
+like "`$exec -x -i ${tmp}/tmp.ksig -o ${tmp}/tmp_n.ksig 2>&1`" "Error: There is no suitable publication yet." "Error extend no suitable publication"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -x -i ${resource_dir}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to load signature file from" "Error extend not suitable format"
+like "`$exec -x -i ${resource_dir}/testFile -o ${tmp}/tmp_n.ksig 2>&1`" "Error: Unable to load signature file from" "Error extend not suitable format"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -x -i ${resource_dir}/testFile -o ${tmp}/ext.ksig -V $url_c 2>&1`" "Error: Unable to load signature file from" "Error verify not suitable format"
+like "`$exec -x -i ${resource_dir}/$TESTSIG -o ${tmp}/tmp_n.ksig -T 1311120674 2>&1`" "Error: Unable to extend signature" "Error extend before calendar [-T]"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -v -x -i ${resource_dir}/ok-sig-2014-04-30.1.ksig -f ${SCRIPT_DIR}/resource/TestData.txt -V $url_c 2>&1`" " Error: Unable to verify file hash." "Error verifying signature and wrong file"
+like "`$exec -x -i ${resource_dir}/$TESTSIG -o ${tmp}/tmp_n.ksig -T $(date --date="+1 year" +"%s") 2>&1`" "Error: The request asked for hash values newer than the current real time" "Error extend to the future [-T]"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -s -F SHA-1:${SH1_HASH}FF -o ${tmp}/sha1.ksig 2>&1`" "Hash length is incorrect" "Error signing with SH1 and wrong hash"
+like "`$exec -x -i ${resource_dir}/testFile -o ${tmp}/tmp_n.ksig 2>&1`" "Error: Unable to load signature file from" "Error verify not suitable format"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -s -F DUNNO:${SH1_HASH} -o ${tmp}/sha1.ksig 2>&1`" "Algorithm name is incorrect" "Error signing with unknown algorithm and wrong hash"
+like "`$exec -v -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/resource/TestData.txt 2>&1`" "Error: Unable to verify file hash." "Error verifying signature and wrong file"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -s -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig -S no_network_here 2>&1`" "Error: Unable to create signature" "Error bad network provider"
+like "`$exec -s -F SHA-1:${SH1_HASH}FF -o ${tmp}/tmp_n.ksig  2>&1`" "Hash length is incorrect" "Error signing with SH1 and wrong hash"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -v -b ${tmp}/pub.bin -i ${tmp}/ext-t.ksig -f missing_file  2>&1`" "File does not exist" "Error Verify signature and missing file"
+like "`$exec -s -F DUNNO:${SH1_HASH} -o ${tmp}/tmp_n.ksig  2>&1`" "Algorithm name is incorrect" "Error signing with unknown algorithm and wrong hash"
 diag "------------------------------------------------------------------------------";
 
-like "`src/ksitool -v -t -b ${resource_dir}/testFile -V $url_c 2>&1`" "Error: Unable to load publication file from" "Error Invalid publications file"
+like "`$exec -s -f ${resource_dir}/testFile -o ${tmp}/tmp_n.ksig -S no_network_here 2>&1`" "Error: Unable to create signature." "Error bad network provider"
 diag "------------------------------------------------------------------------------";
 
+like "`$exec -v -b ${tmp}/pub.bin -i ${tmp}/ext-t.ksig -f missing_file  2>&1`" "File does not exist" "Error Verify signature and missing file"
+diag "------------------------------------------------------------------------------";
+
+like "`$exec -v -t -b ${tmp}/pub.bin -V no_certificate 2>&1`" "File does not exist" "Error missing cert files"
+diag "------------------------------------------------------------------------------";
+
+like "`$exec -v -t -b ${resource_dir}/testFile 2>&1`" "Error: Unable to load publication file" "Error Invalid publications file"
+diag "------------------------------------------------------------------------------";
+
+like "`$exec -p -T 969085709 2>&1`" "The request asked for hash values older than the oldest round" "Error Unable to Get Publication string"
+diag "------------------------------------------------------------------------------";
+
+like "`$exec -p -t -o $tmp/tpub.bin -E wrong@email.mail 2>&1`" "Error: The PKI certificate is not trusted." "Error wrong E-mail"
+diag "------------------------------------------------------------------------------";
+
+like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user nouserpresent --pass asd 2>&1`" "The request could not be authenticated" "Error Wrong user specified"
+diag "------------------------------------------------------------------------------";
+
+like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user anon --pass asd 2>&1`" "The request could not be authenticated" "Error Wrong pass specified"
+diag "------------------------------------------------------------------------------";
+
+like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user  --pass anon 2>&1`" "Parameter has no content" "Error No user specified"
+diag "------------------------------------------------------------------------------";
+
+like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user anon --pass  2>&1`" "Parameter has no content" "Error No pass specified"
+diag "------------------------------------------------------------------------------";
 
 # cleanup
-# rm -f ${tmp}/pub.bin ${tmp}/tmp.ksig ${tmp}/ext.ksig ${tmp}/r160.ksig ${tmp}/sha1.ksig ${tmp}/sha256.ksig ${tmp}/sha224.ksig ${tmp}/sha384.ksig ${tmp}/sha512.ksig 2> /dev/null
+rm -f ${tmp} 2> /dev/null
 
