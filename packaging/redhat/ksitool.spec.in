@@ -26,7 +26,7 @@
 Summary: Command-line access to Guardtime Keyless Signature services
 Name: %{name}
 Version: %(cat VERSION)
-Release: STABLE 
+Release: STABLE
 License: Apache 2.0
 Group: Applications/Security
 Source:  http://download.guardtime.com/%{name}-%{version}.tar.gz
@@ -38,15 +38,15 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
 Requires: openssl
 Requires: curl
-Requires: libksi >= 3.2
-Requires: libksi < 3.3
+Requires: libksi >= 3.3
+Requires: libksi < 3.4
 BuildRequires: openssl-devel
 BuildRequires: curl-devel
-BuildRequires: libksi-devel >= 3.2
-BuildRequires: libksi-devel < 3.3 
+BuildRequires: libksi-devel >= 3.4
+BuildRequires: libksi-devel < 3.4
 
 %description
-Guardtime signing and verification tool. Execute 
+Guardtime signing and verification tool. Execute
 %{name} -h to view brief usage instructions.
 
 %prep

@@ -3,6 +3,6 @@ Version: @VER@
 Section: utils
 Priority: optional
 Architecture: @ARCH@
-Depends: libcurl3, libssl0.9.8 | libssl1.0.0, libksi (>= 3.2)
+Depends: libcurl3, libssl0.9.8 | libssl1.0.0, libksi (>= 3.3)
 Maintainer: Guardtime <support@guardtime.com>
 Description: Command-line tool to access Guardtime KSI service.
