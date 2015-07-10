@@ -531,14 +531,14 @@ int loadSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signa
 }
 
 static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, void *obj,
-							int (*serialize)(KSI_CTX *ksi, void *obj, unsigned char **raw, unsigned *raw_len),
+							int (*serialize)(KSI_CTX *ksi, void *obj, unsigned char **raw, size_t *raw_len),
 							const char *path) {
 	int res;
 	bool doPipe = false;
 	FILE *writeInto = NULL;
 	bool close = false;
 	unsigned char *raw = NULL;
-	unsigned raw_len;
+	size_t raw_len;
 	size_t count;
 
 
@@ -577,7 +577,7 @@ cleanup:
 	return res;
 }
 
-int KSI_Signature_serialize_wrapper(KSI_CTX *ksi, KSI_Signature *sig, unsigned char **raw, unsigned *raw_len) {
+static int KSI_Signature_serialize_wrapper(KSI_CTX *ksi, KSI_Signature *sig, unsigned char **raw, size_t *raw_len) {
 	return KSI_Signature_serialize(sig, raw, raw_len);
 }
 
@@ -589,7 +589,7 @@ int saveSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const c
 	}
 
 	res = saveKsiObj(err, ksi, sign,
-				(int (*)(KSI_CTX *, void *, unsigned char **, unsigned *))KSI_Signature_serialize_wrapper,
+				(int (*)(KSI_CTX *, void *, unsigned char **, size_t *))KSI_Signature_serialize_wrapper,
 				fname);
 
 	if (res) {
@@ -607,7 +607,7 @@ int savePublicationFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubf
 	}
 
 	res = saveKsiObj(err, ksi, pubfile,
-				(int (*)(KSI_CTX *, void *, unsigned char **, unsigned *))KSI_PublicationsFile_serialize,
+				(int (*)(KSI_CTX *, void *, unsigned char **, size_t *))KSI_PublicationsFile_serialize,
 				fname);
 
 	if (res) {
@@ -839,7 +839,7 @@ void printSignatureStructure(KSI_CTX *ksi, const KSI_Signature *sig) {
 	int res;
 	KSI_TLV *baseTlv = NULL;
 	unsigned char *tmp = NULL;
-	unsigned tmp_len;
+	size_t tmp_len;
 	char buf[0x6fff];
 
 	res = KSI_Signature_serialize((KSI_Signature*)sig, &tmp, &tmp_len);
