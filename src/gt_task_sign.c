@@ -91,7 +91,7 @@ static int  getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh
 	paramSet *set = NULL;
 	bool H;
 	char *hashAlg;
-	int hasAlgID;
+	KSI_HashAlgorithm hasAlgID;
 	KSI_DataHasher *hsr = NULL;
 	KSI_DataHash *tmp = NULL;
 	char *inDataFileName = NULL;

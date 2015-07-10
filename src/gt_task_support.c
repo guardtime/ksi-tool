@@ -997,7 +997,7 @@ int getHashFromCommandLine(const char *imprint, KSI_CTX *ksi, ERR_TRCKR *err, KS
 	int res;
 	unsigned char *data = NULL;
 	size_t len;
-	int hasAlg;
+	KSI_HashAlgorithm hasAlg;
 	char *strAlg = NULL;
 	char *strHash = NULL;
 	KSI_DataHash *tmp = NULL;

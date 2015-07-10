@@ -191,7 +191,7 @@ ContentStatus isImprintContOK(const char *imprint){
 	char *colon = NULL;
 	char *imp = NULL;
 	char *alg = NULL;
-	int alg_id = -1;
+	KSI_HashAlgorithm alg_id = -1;
 	ContentStatus status = PARAM_INVALID;
 	unsigned len = 0;
 	unsigned expected_len = 0;
