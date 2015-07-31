@@ -247,7 +247,7 @@ static int ksitool_initTrustStore(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	}
 
 	if(E){
-		res = KSI_CTX_setPublicationCertEmail(ksi, magicEmail);
+		res = KSI_CTX_putPubFileCertConstraint(ksi, KSI_CERT_EMAIL, magicEmail);
 		ERR_CATCH_MSG(err, res, "Error: Unable set publication certificate email.");
 	}
 
@@ -1107,7 +1107,7 @@ void print_progressResult(int res) {
 		if (res == KT_OK) {
 			print_info("ok.%s\n", timerOn ? time_str : "");
 		} else {
-			print_errors("failed.%s\n", timerOn ? time_str : "");
+			print_info("failed.%s\n", timerOn ? time_str : "");
 		}
 
 		timerOn = false;
