@@ -122,11 +122,15 @@ int GT_verifyPublicationFileTask(Task *task){
 	bool b, d, t;
 	char *inPubFileName = NULL;
 	KSI_PublicationsFile *publicationsFile = NULL;
+	KSI_PublicationRecord *pubRec = NULL;
+	KSI_PublicationData *pubData = NULL;
+	KSI_Integer *pubTime = NULL;
+	char pubTimeBuf[1024];
 	int retval = EXIT_SUCCESS;
 
 
 	set = Task_getSet(task);
-	b = paramSet_getStrValueByNameAt(set, "b",0, &inPubFileName);
+	b = paramSet_getStrValueByNameAt(set, "b", 0, &inPubFileName);
 	d = paramSet_isSetByName(set, "d");
 	t = paramSet_isSetByName(set, "t");
 
@@ -137,13 +141,24 @@ int GT_verifyPublicationFileTask(Task *task){
 	res = loadPublicationFile(err, ksi, inPubFileName, &publicationsFile);
 	print_progressResult(res);
 
-	print_progressDesc(t, "Verifying  publications file... ");
+	print_progressDesc(t, "Verifying publications file... ");
 	res = KSI_verifyPublicationsFile(ksi, publicationsFile);
 	ERR_APPEND_KSI_ERR(err, res, KSI_PKI_CERTIFICATE_NOT_TRUSTED);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify publication file.");
 	print_progressResult(res);
 
+	print_progressDesc(t, "Extracting latest publication time... ");
+	res = KSI_PublicationsFile_getLatestPublication(publicationsFile, NULL, &pubRec);
+	ERR_CATCH_MSG(err, res, "Error: Unable to extract publication record.");
+	res = KSI_PublicationRecord_getPublishedData(pubRec, &pubData);
+	ERR_CATCH_MSG(err, res, "Error: Unable to extract publication data.");
+	res = KSI_PublicationData_getTime(pubData, &pubTime);
+	ERR_CATCH_MSG(err, res, "Error: Unable to extract publication time.");
+	print_progressResult(res);
+
+	KSI_Integer_toDateString(pubTime, pubTimeBuf, sizeof(pubTimeBuf));
 	print_info("Verification of publication file %s successful.\n", inPubFileName);
+	print_info("Latest publication %s.\n", pubTimeBuf);
 
 
 	if(d && Task_getID(task) == verifyPublicationsFile){
@@ -159,6 +174,7 @@ cleanup:
 		retval = errToExitCode(res);
 	}
 
+	KSI_Integer_free(pubTime);
 	KSI_PublicationsFile_free(publicationsFile);
 	ERR_TRCKR_free(err);
 	closeTask(ksi);
