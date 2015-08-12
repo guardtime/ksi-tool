@@ -69,7 +69,7 @@ FormatStatus isURLFormatOK(const char *url){
 		return FORMAT_OK;
 	else if(strstr(url, "https://") == url || strstr(url, "ksi+https://") == url)
 		return FORMAT_OK;
-	else if(strstr(url, "tcp://") == url || strstr(url, "ksi+tcp://") == url)
+	else if(strstr(url, "ksi+tcp://") == url)
 		return FORMAT_OK;
 	else
 		return FORMAT_URL_UNKNOWN_SCHEME;
