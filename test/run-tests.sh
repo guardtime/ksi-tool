@@ -192,6 +192,9 @@ okx $exec -v -i ${resource_dir}/sha512.ksig -f ${resource_dir}/testFile
 diag "######    Verify raw hash using RIPEMD-160"
 okx $exec -v -i ${resource_dir}/ripemd160.ksig -f ${resource_dir}/testFile
 
+diag "######    Verify Publications file with constraints"
+okx $exec -v -b ${resource_dir}/publications.tlv -V ${resource_dir}/mock.crt --cnstr 2.5.4.10="Guardtime AS"
+
 diag "------------------------------------------------------------------------------";
 
 #TODO: uncomment if implemeneted
@@ -266,6 +269,9 @@ like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user  --pass anon 2>
 diag "------------------------------------------------------------------------------";
 
 like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user anon --pass  2>&1`" "Parameter has no content" "Error No pass specified"
+diag "------------------------------------------------------------------------------";
+
+like "`$exec -v -b ${resource_dir}/publications.tlv -V ${resource_dir}/mock.crt --cnstr 2.5.4.10="Fake company"  2>&1`" "Error: The PKI certificate is not trusted." "Error invalid constraint value"
 diag "------------------------------------------------------------------------------";
 
 # cleanup

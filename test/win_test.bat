@@ -237,4 +237,7 @@ echo ****************** Verify online ******************
 ksitool.exe -vx %GLOBAL% %VERIFY_FLAGS% -i %TEST_FILE_OUT%.ksig 
 echo %errorlevel%
 
+echo ****************** Verify pubfile with constraintsss ******************
+ksitool.exe -v %GLOBAL% -b ..\test\resource\publications.tlv --cnstr 2.5.4.10="Guardtime AS" -V ..\test\resource\mock.crt
+echo %errorlevel%
 pause
