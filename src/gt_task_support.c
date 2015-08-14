@@ -222,6 +222,7 @@ static int ksitool_initTrustStore(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	char *magicEmail = NULL;
 	char tmp[2048];
 	char *constraint = NULL;
+	KSI_CertConstraint constraintArray[2] = {{NULL, NULL}, {NULL, NULL}};
 
 	if (task == NULL || ksi == NULL || err == NULL) {
 		return KT_INVALID_ARGUMENT;
@@ -246,7 +247,10 @@ static int ksitool_initTrustStore(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 			*value = '\0';
 			value++;
 
-			res = KSI_CTX_putPubFileCertConstraint(ksi, oid, value);
+			constraintArray[0].oid = oid;
+			constraintArray[0].val = value;
+
+			res = KSI_CTX_setDefaultPubFileCertConstraints(ksi, constraintArray);
 			ERR_CATCH_MSG(err, res, "Error: Unable to add cert constraint.");
 		}
 	}
@@ -268,7 +272,9 @@ static int ksitool_initTrustStore(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	}
 
 	if(E){
-		res = KSI_CTX_putPubFileCertConstraint(ksi, KSI_CERT_EMAIL, magicEmail);
+		constraintArray[0].oid = KSI_CERT_EMAIL;
+		constraintArray[0].val = magicEmail;
+		res = KSI_CTX_setDefaultPubFileCertConstraints(ksi, constraintArray);
 		ERR_CATCH_MSG(err, res, "Error: Unable set publication certificate email.");
 	}
 
