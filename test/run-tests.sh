@@ -57,7 +57,7 @@ TESTSIG="ok-sig-2014-08-01.1.ksig"
 
 echo \# Running tests on `uname -n` at `date '+%F %T %Z'`, start time: ${DATE}
 
-plan_tests 72
+plan_tests 74
 
 
 diag "######    Publications file download"
@@ -193,7 +193,8 @@ diag "######    Verify raw hash using RIPEMD-160"
 okx $exec -v -i ${resource_dir}/ripemd160.ksig -f ${resource_dir}/testFile
 
 diag "######    Verify Publications file with constraints"
-okx $exec -v -b ${resource_dir}/publications.tlv -V ${resource_dir}/mock.crt --cnstr 2.5.4.10="Guardtime AS"
+$exec -v -b ${resource_dir}/publications.tlv -V ${resource_dir}/mock.crt --cnstr "2.5.4.10=Guardtime AS"
+okx [ "$?" == "0" ]
 
 diag "------------------------------------------------------------------------------";
 
