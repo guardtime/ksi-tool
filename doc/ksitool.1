@@ -194,6 +194,9 @@ Network Connect timeout (is not supported with tcp client).
 .BI -E\  email
 Use specified publication certificate email.
 .TP
+.BI --cnstr\  oid=value
+Use OID and its expected value to verify publications file PKI signature. If value part contains spaces use " " to wrap its contents. cnstr is allowed to have multiple values (--cnstr 1.2=test --cnstr 1.3="test test").
+.TP
 .BI --inc\  file
 Use configuration file containing command-line parameters. Parameter must be written line by line.
 .TP

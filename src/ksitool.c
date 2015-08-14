@@ -239,6 +239,10 @@ static void GT_pritHelp(void){
 			" -W <dir>\tuse specified OpenSSL-style trust store directory for publications\n"
 			"\t\tfile verification.\n"
 			" -E <mail>\tuse specified publication certificate email.\n"
+			" --cnstr <oid=value>\n"
+			"\t\tuse OID and its expected value to verify publications file PKI signature.\n"
+			"\t\tIf value part contains spaces use \" \" to wrap its contents. cnstr is allowed\n"
+			"\t\tto havemultiple values (--cnstr 1.2=test1 --cnstr 1.3=\"test test\")\n"
 			" --inc <file>\tuse configuration file containing command-line parameters.\n"
 			"\t\tParameter must be written line by line."
 
@@ -286,7 +290,7 @@ int main(int argc, char** argv, char **envp) {
 
 	/*Create parameter set*/
 	paramSet_new("{s|sign}*{x|extend}*{p}*{v|verify}*{t}*{r}*{d}*{n}*{h|help}*{o|out}{i}{f}{b}{c}{C}{V}*"
-				"{W}{S}>{X}>{P}>{F}{H}{T}{E}{inc}*"
+				"{W}{S}>{X}>{P}>{F}{H}{T}{E}{inc}*{cnstr}*"
 				/*TODO: uncomment if implemented*/
 //				"{aggre}{htime}{setsystime}"
 				"{ref}{user}>{pass}>{log}{tlv}{silent}{nowarn}",
@@ -304,6 +308,7 @@ int main(int argc, char** argv, char **envp) {
 	paramSet_addControl(set, "{E}", isEmailFormatOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{user}{pass}", isUserPassFormatOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{ref}", formatIsOK, contentIsOK, NULL);
+	paramSet_addControl(set, "{cnstr}", isConstraintFormatOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{tlv}{silent}{nowarn}", isFlagFormatOK, contentIsOK, NULL);
 	/*TODO: uncomment if implemented*/
 //	paramSet_addControl(set, "{aggre}{htime}{setsystime}", isFlagFormatOK, contentIsOK, NULL);

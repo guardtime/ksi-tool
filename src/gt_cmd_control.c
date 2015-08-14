@@ -131,6 +131,26 @@ FormatStatus isEmailFormatOK(const char *email){
 	return FORMAT_OK;
 }
 
+FormatStatus isConstraintFormatOK(const char *constraint) {
+	char *at = NULL;
+	unsigned i = 0;
+
+	if(constraint == NULL) return FORMAT_NULLPTR;
+	if(strlen(constraint) == 0) return FORMAT_NOCONTENT;
+
+	if((at = strchr(constraint,'=')) == NULL) return FORMAT_INVALID;
+	if(at == constraint || *(at+1)==0) return FORMAT_INVALID;
+
+	while (constraint[i] != 0 &&  constraint[i] != '=') {
+		if (!isdigit(constraint[i]) && constraint[i] != '.')
+			return FORMAT_INVALID_OID;
+		i++;
+	}
+
+
+	return FORMAT_OK;
+}
+
 FormatStatus isUserPassFormatOK(const char *uss_pass){
 	if(uss_pass == NULL) return FORMAT_NULLPTR;
 	if(strlen(uss_pass) == 0) return FORMAT_NOCONTENT;
@@ -277,6 +297,8 @@ const char *getFormatErrorString(FormatStatus res){
 	case FORMAT_NOCONTENT: return "(Parameter has no content)";
 		break;
 	case FORMAT_INVALID: return "(Parameter is invalid)";
+		break;
+	case FORMAT_INVALID_OID: return "(OID is invalid)";
 		break;
 	case FORMAT_URL_UNKNOWN_SCHEME: return "(URL scheme is unknown)";
 		break;

@@ -45,6 +45,7 @@ typedef enum formatStatus_enum{
 	FORMAT_NULLPTR,
 	FORMAT_NOCONTENT,
 	FORMAT_INVALID,
+	FORMAT_INVALID_OID,
 	FORMAT_URL_UNKNOWN_SCHEME,
 	FORMAT_FLAG_HAS_ARGUMENT,
 	FORMAT_UNKNOWN_ERROR
@@ -58,6 +59,7 @@ FormatStatus isHashAlgFormatOK(const char *hashAlg);
 FormatStatus isImprintFormatOK(const char *hashAlg);
 FormatStatus isFlagFormatOK(const char *hashAlg);
 FormatStatus isEmailFormatOK(const char *email);
+FormatStatus isConstraintFormatOK(const char *constraint);
 FormatStatus isUserPassFormatOK(const char *uss_pass);
 FormatStatus formatIsOK(const char *obj);
 

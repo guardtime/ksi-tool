@@ -216,10 +216,12 @@ static int ksitool_initTrustStore(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	paramSet *set = NULL;
 	KSI_PKITruststore *refTrustStore = NULL;
 	int i=0;
-	bool V, W, E;
+	bool V, W, E, cnstr;
 	char *lookupFile = NULL;
 	char *lookupDir = NULL;
 	char *magicEmail = NULL;
+	char tmp[2048];
+	char *constraint = NULL;
 
 	if (task == NULL || ksi == NULL || err == NULL) {
 		return KT_INVALID_ARGUMENT;
@@ -230,11 +232,30 @@ static int ksitool_initTrustStore(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	V = paramSet_isSetByName(set,"V");
 	W = paramSet_getStrValueByNameAt(set, "W",0, &lookupDir);
 	E = paramSet_getStrValueByNameAt(set, "E",0, &magicEmail);
+	cnstr = paramSet_isSetByName(set,"cnstr");
+
+
+	if (cnstr) {
+		i = 0;
+		while(paramSet_getStrValueByNameAt(set, "cnstr", i++, &constraint)) {
+			char *oid = NULL;
+			char *value = NULL;
+			strncpy(tmp, constraint, sizeof(tmp));
+			oid = tmp;
+			value = strchr(tmp, '=');
+			*value = '\0';
+			value++;
+
+			res = KSI_CTX_putPubFileCertConstraint(ksi, oid, value);
+			ERR_CATCH_MSG(err, res, "Error: Unable to add cert constraint.");
+		}
+	}
 
 	if(V || W) {
 		res = KSI_CTX_getPKITruststore(ksi, &refTrustStore);
 		ERR_CATCH_MSG(err, res, "Error: Unable to get PKI trust store.");
 		if(V){
+			i = 0;
 			while(paramSet_getStrValueByNameAt(set, "V", i++, &lookupFile)) {
 				res = KSI_PKITruststore_addLookupFile(refTrustStore, lookupFile);
 				ERR_CATCH_MSG(err, res, "Error: Unable to add cert to PKI trust store.");
