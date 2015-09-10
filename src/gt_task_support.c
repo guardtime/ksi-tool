@@ -690,7 +690,10 @@ void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile){
 			pStart = pLineBreak+1;
 		}
 
-		print_info("%s %2i) %s\n", "    ", j++, pStart);
+		if(h < 3)
+			print_info("%s %s\n", "  ", pStart);
+		else
+			print_info("%s %2i) %s\n", "    ", j++, pStart);
 	}
 	print_info("\n");
 	return;
@@ -721,7 +724,7 @@ void printSignaturePublicationReference(const KSI_Signature *sig){
 	while((pLineBreak = strchr(pStart, '\n')) != NULL){
 		*pLineBreak = 0;
 
-		if(h++<3)
+		if(h < 3)
 			print_info("%s %s\n", "  ", pStart);
 		else
 			print_info("%s %2i) %s\n", "    ", i++, pStart);
@@ -729,7 +732,10 @@ void printSignaturePublicationReference(const KSI_Signature *sig){
 		pStart = pLineBreak+1;
 	}
 
-	print_info("%s %2i) %s\n", "    ", i++, pStart);
+	if(h<3)
+		print_info("%s %s\n", "  ", pStart);
+	else
+		print_info("%s %2i) %s\n", "    ", i++, pStart);
 	print_info("\n");
 
 	return;
