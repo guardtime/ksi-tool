@@ -962,7 +962,8 @@ void paramSet_PrintErrorMessages(const paramSet *set){
 					if(value->source) set->printError(" from '%s'", value->source);
 					set->printError(" %s%s '%s'. %s\n",
 								strlen(pParam->flagName)>1 ? "--" : "-",
-								pParam->flagName, value->cstr_value,
+								pParam->flagName,
+								value->cstr_value ? value->cstr_value : "",
 								getParameterContentErrorString(value->contentStatus)
 								);
 					}
@@ -972,7 +973,8 @@ void paramSet_PrintErrorMessages(const paramSet *set){
 					if(value->source) set->printError(" from '%s'", value->source);
 					set->printError(" %s%s '%s'. %s\n",
 							strlen(pParam->flagName)>1 ? "--" : "-",
-							pParam->flagName, value->cstr_value,
+							pParam->flagName,
+							value->cstr_value ? value->cstr_value : "",
 							getFormatErrorString(value->formatStatus)
 							);
 				}

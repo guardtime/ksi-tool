@@ -292,7 +292,7 @@ const char *getFormatErrorString(FormatStatus res){
 	switch (res) {
 	case FORMAT_OK: return "(Parameter OK)";
 		break;
-	case FORMAT_NULLPTR: return "(Parameter has no content)";
+	case FORMAT_NULLPTR: return "(Parameter must have value)";
 		break;
 	case FORMAT_NOCONTENT: return "(Parameter has no content)";
 		break;
