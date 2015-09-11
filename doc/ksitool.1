@@ -474,23 +474,13 @@ call:
 
 . B Default service access URL-s:
 
-To define default URLs system variables must be defined. For aggregator and extender define system variables
-.B KSI_AGGREGATOR
-and 
-.B KSI_EXTENDER
-with content
-.I 'url=<url> pass=<pass>
-.IR user=<user>' \.
-.R \.
-Only url part is mandatory thus user and pass can be left undefined. Default
-.I <pass>
-and
-.I <user>
-is
-.IR 'anon' \.
-Using includes (
-.B --inc
-) or defining urls on command-line will override defaults.
+To define default URLs system variables must be defined. For aggregator and extender, define system variables \fB KSI_AGGREGATOR\fR and \fBKSI_EXTENDER\fR with content\fI 'url=<url> pass=<pass> user=<user>'\fR. Only url part is mandatory thus user and pass can be left undefined. Default \fI <pass> \fR and \fI <user> \fRis \fI 'anon'\fR and can be used if such user is available. 
+.br
+
+For publications file, define \fBKSI_PUBFILE\fR with content '\fIurl=<url> <constraint> <constraint> \fR...'. Constraint is formatted as  \fI<OID>="<value>"\fR where \fB""\fR can be omitted if 'value' does not contain any white-space characters. Publications file url is mandatory but constraints are not.
+.br
+
+Using includes (\fB --inc\fR) or defining urls on command-line will override defaults.
 
 .SH AUTHOR
 

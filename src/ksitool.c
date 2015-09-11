@@ -21,6 +21,7 @@
 #include "gt_task_support.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "task_def.h"
 #include "gt_task.h"
 #include <ksi/ksi.h>
@@ -74,17 +75,73 @@ static bool includeParametersFromFile(paramSet *set, int priority){
 	return true;
 }
 
-static bool getEnvValue(const char *str, const char *value, char *buf, unsigned bufLen){
+/**
+ * This functions takes a string that contains key, value pairs as input and returns
+ * the given key value.
+ * @param str		string that contains key value pairs.
+ * @param key		key value that is searched.
+ * @param buf		buffer that will contain after successful execution the key's value.
+ * @param bufLen	buffer length.
+ * @return	If successful, returns pointer to the first character of the key found, NULL otherwise.
+ */
+static const char* getEnvValue(const char *str, const char *key, char *buf, unsigned bufLen){
 	char *found = NULL;
 	char format[1024];
 
-	snprintf(format, sizeof(format),"%s=%%%is", value, bufLen);
+	snprintf(format, sizeof(format),"%s=%%%is", key, bufLen);
 
-	if((found = strstr(str, value)) == NULL) return false;
-	if(sscanf(found, format, buf) != 1) return false;
+	if((found = strstr(str, key)) == NULL) return NULL;
+	if(sscanf(found, format, buf) != 1) return NULL;
 
-	return true;
+	return found;
 }
+
+static const char* getPublicationsFileConstraint(const char *str, char *buf, unsigned bufLen) {
+	unsigned i = 0;
+	unsigned n = 0;
+
+	bool rec = false;
+	bool rec_done = false;
+	bool isQuoteMarkOpen = false;
+
+	buf[0] = '\0';
+	while (str[i] != '\0') {
+		if (rec == false && !isspace(str[i])) {
+			rec = true;
+		}
+		if (str[i] == '"') {
+			if (isQuoteMarkOpen == false) isQuoteMarkOpen = true;
+			else if (isQuoteMarkOpen == true) isQuoteMarkOpen = false;
+			i++;
+			continue;
+		}
+		if (isQuoteMarkOpen == false && isspace(str[i]) && rec == true)  rec_done = true;
+
+
+		if (rec == true && rec_done == false) {
+			if (n >= bufLen - 1) {
+				buf[n] = '\0';
+				return NULL;
+			}
+
+			buf[n] = str[i];
+			n++;
+		} else if (rec_done == true) {
+			break;
+		}
+
+		i++;
+	}
+	if (n == 0) return NULL;
+	buf[n] = '\0';
+	return &str[i];
+}
+
+#ifdef KSI_DEFAULT_URI_PUBLICATIONS_FILE
+static char default_pubUrl[1024] = KSI_DEFAULT_URI_PUBLICATIONS_FILE;
+#else
+static char default_pubUrl[1024] = "";
+#endif
 
 static char default_extenderUrl[1024] = "";
 static char default_aggreUrl[1024] = "";
@@ -99,7 +156,8 @@ static char default_aggreUrl[1024] = "";
 static bool includeParametersFromEnvironment(paramSet *set, char **envp, int priority){
 	/*Read command line parameters from system variables*/
 	bool ret = true;
-	bool s, v, x, p, T, aggre;
+	bool s, v, x, p, T, aggre, P;
+	const char *key = NULL;
 
 	aggre = paramSet_isSetByName(set, "aggre");
 	s = paramSet_isSetByName(set, "s");
@@ -107,12 +165,13 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp, int pri
 	x = paramSet_isSetByName(set, "x");
 	p = paramSet_isSetByName(set, "p");
 	T = paramSet_isSetByName(set, "T");
+	P = paramSet_isSetByName(set, "P");
 
 	while(*envp!=NULL){
 		char tmp[1024];
 
         if(strncmp(*envp, "KSI_AGGREGATOR", sizeof("KSI_AGGREGATOR") - 1) == 0){
-			if(!getEnvValue(*envp, "url", tmp, sizeof(tmp))) {
+			if(getEnvValue(*envp, "url", tmp, sizeof(tmp)) == NULL) {
 				print_errors("Error: Environment variable KSI_AGGREGATOR is invalid.\n");
 				print_errors("Error: Invalid '%s'.\n", *envp);
 				ret = false;
@@ -122,15 +181,15 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp, int pri
 			strcpy(default_aggreUrl, tmp);
 
 			if(s || aggre){
-				if(getEnvValue(*envp, "user", tmp, sizeof(tmp)))
+				if(getEnvValue(*envp, "user", tmp, sizeof(tmp)) != NULL)
 					paramSet_priorityAppendParameterByName("user", tmp, "KSI_AGGREGATOR", priority, set);
-				if(getEnvValue(*envp, "pass", tmp, sizeof(tmp)))
+				if(getEnvValue(*envp, "pass", tmp, sizeof(tmp)) != NULL)
 					paramSet_priorityAppendParameterByName("pass", tmp, "KSI_AGGREGATOR", priority, set);
 			}
 
 		}
         else if(strncmp(*envp, "KSI_EXTENDER", sizeof("KSI_EXTENDER") - 1) == 0){
-			if(!getEnvValue(*envp, "url", tmp, sizeof(tmp))){
+			if(getEnvValue(*envp, "url", tmp, sizeof(tmp)) == NULL){
 				print_errors("Error: Environment variable KSI_EXTENDER is invalid.\n");
 				print_errors("Error: Invalid '%s'.\n", *envp);
 				ret  = false;
@@ -140,11 +199,35 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp, int pri
 			strcpy(default_extenderUrl, tmp);
 
 			if(x || v || (p && T)){
-				if(getEnvValue(*envp, "user", tmp, sizeof(tmp)))
+				if(getEnvValue(*envp, "user", tmp, sizeof(tmp)) != NULL)
 					paramSet_priorityAppendParameterByName("user", tmp, "KSI_EXTENDER", priority, set);
-				if(getEnvValue(*envp, "pass", tmp, sizeof(tmp)))
+				if(getEnvValue(*envp, "pass", tmp, sizeof(tmp)) != NULL)
 					paramSet_priorityAppendParameterByName("pass", tmp, "KSI_EXTENDER", priority, set);
 			}
+
+		} else if(strncmp(*envp, "KSI_PUBFILE", sizeof("KSI_PUBFILE") - 1) == 0){
+			if((key = getEnvValue(*envp, "url", tmp, sizeof(tmp))) == NULL){
+				print_errors("Error: Environment variable KSI_PUBFILE is invalid.\n");
+				print_errors("Error: Invalid '%s'.\n", *envp);
+				ret  = false;
+			}
+
+			paramSet_priorityAppendParameterByName("P", tmp, "KSI_PUBFILE", priority, set);
+			strcpy(default_pubUrl, tmp);
+
+			/*If P is already set, don't load constraints.*/
+			if (P == false) {
+				key = getPublicationsFileConstraint(key, tmp, sizeof(tmp));
+				while (1) {
+					key = getPublicationsFileConstraint(key, tmp, sizeof(tmp));
+					if (key == NULL || tmp[0] == '\0') break;
+					if (paramSet_appendParameterByName("cnstr", tmp, "KSI_PUBFILE", set) == false) {
+						print_errors("Error: Unable to append -cnstr from environment variable KSI_PUBFILE.");
+						return false;
+					}
+				}
+			}
+
 
 		}
 
@@ -166,11 +249,14 @@ static void printSupportedHashAlgorithms(void){
 static void GT_pritHelp(void){
 	char *ext_url = NULL;
 	char *aggre_url = NULL;
+	char *pub_url = NULL;
 	const char *apiVersion = NULL;
 	const char *toolVersion = NULL;
 
 	ext_url = strlen(default_extenderUrl) > 0 ? default_extenderUrl : NULL;
 	aggre_url = strlen(default_aggreUrl) > 0 ? default_aggreUrl : NULL;
+	pub_url = strlen(default_pubUrl) > 0 ? default_pubUrl : NULL;;
+
 
 	apiVersion = KSI_getVersion();
 	toolVersion = getVersion();
@@ -257,11 +343,16 @@ static void GT_pritHelp(void){
 			"\tFor aggregator, define \"KSI_AGGREGATOR\"=\"url=<url> pass=<pass> user=<user>\".\n"
 			"\tFor extender, define \"KSI_EXTENDER\"=\"url=<url> pass=<pass> user=<user>\".\n"
 			"\tOnly the <url> part is mandatory. Default <pass> and <user> is \"anon\" and\n"
-			"\tcan be used if such user is supported. Using includes (--inc) or defining urls \n"
-			"\ton command-line will override defaults.\n\n"
+			"\tcan be used if such user is supported.\n\n"
+			"\tFor publications file, define \"KSI_PUBFILE\"=\"url=<url> <constraint>\n"
+			"\t<constraint> ...\". Constraint is formatted as <OID>=\"<value>\" where \"\"\n"
+			"\tcan be omitted if 'value does not contain any white-space characters.\n"
+			"\tPublications file url is mandatory but constraints are not.\n\n"
+			"\tUsing includes (--inc) or defining urls on command-line will\n"
+			"\toverride defaults.\n\n"
 			"\tSigning:		%s\n"
 			"\tExtending/Verifying:	%s\n"
-			"\tPublications file:	%s\n", (aggre_url ? aggre_url : "Not defined."), (ext_url ? ext_url : "Not defined."), KSI_DEFAULT_URI_PUBLICATIONS_FILE);
+			"\tPublications file:	%s\n", (aggre_url ? aggre_url : "Not defined."), (ext_url ? ext_url : "Not defined."), (pub_url ? pub_url : "Not defined."));
 
 			print_info("\nSupported hash algorithms (-H, -F):\n\t");
 			printSupportedHashAlgorithms();
@@ -349,6 +440,11 @@ int main(int argc, char** argv, char **envp) {
 	if(includeParametersFromFile(set, 2) == false) goto cleanup;
 	if(includeParametersFromEnvironment(set, envp, 1) == false) goto cleanup;
 	if(paramSet_isSetByName(set, "h")) goto cleanup;
+
+#ifdef KSI_DEFAULT_URI_PUBLICATIONS_FILE
+	if (paramSet_isSetByName(set, "P") == false)
+		paramSet_priorityAppendParameterByName("P", KSI_DEFAULT_URI_PUBLICATIONS_FILE, "API default", 0, set);
+#endif
 
 	if(isPiping(set)) {
 		print_disable(PRINT_WARNINGS | PRINT_INFO);
