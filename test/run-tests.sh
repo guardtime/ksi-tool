@@ -266,10 +266,10 @@ diag "--------------------------------------------------------------------------
 like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user anon --pass asd 2>&1`" "The request could not be authenticated" "Error Wrong pass specified"
 diag "------------------------------------------------------------------------------";
 
-like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user  --pass anon 2>&1`" "Parameter has no content" "Error No user specified"
+like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user  --pass anon 2>&1`" "Parameter must have value" "Error No user specified"
 diag "------------------------------------------------------------------------------";
 
-like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user anon --pass  2>&1`" "Parameter has no content" "Error No pass specified"
+like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user anon --pass  2>&1`" "Parameter must have value" "Error No pass specified"
 diag "------------------------------------------------------------------------------";
 
 like "`$exec -v -b ${resource_dir}/publications.tlv -V ${resource_dir}/mock.crt --cnstr 2.5.4.10="Fake company"  2>&1`" "Error: The PKI certificate is not trusted." "Error invalid constraint value"
