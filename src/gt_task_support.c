@@ -211,6 +211,84 @@ cleanup:
 	return res;
 }
 
+static int ksitool_addConstraints(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
+	int res;
+	paramSet *set = NULL;
+	unsigned i = 0;
+	bool cnstr;
+	char *constraint = NULL;
+	unsigned constraint_count = 0;
+	KSI_CertConstraint *constraintArray = NULL;
+
+	/*Get parameter values*/
+	set = Task_getSet(task);
+	cnstr = paramSet_isSetByName(set,"cnstr");
+
+
+	if (cnstr) {
+		if (paramSet_getValueCountByName(set,	"cnstr", &constraint_count) == false) {
+			ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, NULL);
+			goto cleanup;
+		}
+
+		constraintArray = KSI_malloc(sizeof(KSI_CertConstraint) * (1 + constraint_count));
+		if (constraintArray == NULL) {
+			ERR_TRCKR_ADD(err, res = KT_OUT_OF_MEMORY, NULL);
+			goto cleanup;
+		}
+
+		for (i = 0; i < constraint_count + 1; i++) {
+			constraintArray[i].oid = NULL;
+			constraintArray[i].val = NULL;
+		}
+
+		for (i = 0; i < constraint_count; i++) {
+			char *oid = NULL;
+			char *value = NULL;
+			char tmp[1024];
+
+			paramSet_getStrValueByNameAt(set, "cnstr", i, &constraint);
+			strncpy(tmp, constraint, sizeof(tmp));
+
+			oid = tmp;
+			value = strchr(tmp, '=');
+			if (value == NULL) {
+				ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: Unable to parse constraint.");
+				goto cleanup;
+			}
+
+			*value = '\0';
+			value++;
+
+			constraintArray[i].oid = KSI_malloc(strlen(oid) + 1);
+			constraintArray[i].val = KSI_malloc(strlen(value) + 1);
+			if (constraintArray[i].oid == NULL || constraintArray[i].val == NULL) {
+				ERR_TRCKR_ADD(err, res = KSI_OUT_OF_MEMORY, NULL);
+				goto cleanup;
+			}
+
+			strcpy(constraintArray[i].oid, oid);
+			strcpy(constraintArray[i].val, value);
+		}
+
+		res = KSI_CTX_setDefaultPubFileCertConstraints(ksi, constraintArray);
+		ERR_CATCH_MSG(err, res, "Error: Unable to add cert constraints.");
+	}
+
+cleanup:
+
+	if (constraintArray)  {
+		for (i = 0; i < constraint_count; i++) {
+			KSI_free(constraintArray[i].oid);
+			KSI_free(constraintArray[i].val);
+		}
+
+		KSI_free(constraintArray);
+	}
+
+	return res;
+}
+
 static int ksitool_initTrustStore(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	int res;
 	paramSet *set = NULL;
@@ -220,8 +298,6 @@ static int ksitool_initTrustStore(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	char *lookupFile = NULL;
 	char *lookupDir = NULL;
 	char *magicEmail = NULL;
-	char tmp[2048];
-	char *constraint = NULL;
 	KSI_CertConstraint constraintArray[2] = {{NULL, NULL}, {NULL, NULL}};
 
 	if (task == NULL || ksi == NULL || err == NULL) {
@@ -237,21 +313,9 @@ static int ksitool_initTrustStore(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 
 
 	if (cnstr) {
-		i = 0;
-		while(paramSet_getStrValueByNameAt(set, "cnstr", i++, &constraint)) {
-			char *oid = NULL;
-			char *value = NULL;
-			strncpy(tmp, constraint, sizeof(tmp));
-			oid = tmp;
-			value = strchr(tmp, '=');
-			*value = '\0';
-			value++;
-
-			constraintArray[0].oid = oid;
-			constraintArray[0].val = value;
-
-			res = KSI_CTX_setDefaultPubFileCertConstraints(ksi, constraintArray);
-			ERR_CATCH_MSG(err, res, "Error: Unable to add cert constraint.");
+		res = ksitool_addConstraints(task, ksi, err);
+		if (res != KT_OK) {
+			goto cleanup;
 		}
 	}
 
@@ -281,6 +345,7 @@ static int ksitool_initTrustStore(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	res = KT_OK;
 
 cleanup:
+
 
 	return res;
 }
