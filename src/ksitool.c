@@ -137,12 +137,7 @@ static const char* getPublicationsFileConstraint(const char *str, char *buf, uns
 	return &str[i];
 }
 
-#ifdef KSI_DEFAULT_URI_PUBLICATIONS_FILE
-static char default_pubUrl[1024] = KSI_DEFAULT_URI_PUBLICATIONS_FILE;
-#else
 static char default_pubUrl[1024] = "";
-#endif
-
 static char default_extenderUrl[1024] = "";
 static char default_aggreUrl[1024] = "";
 
@@ -441,10 +436,6 @@ int main(int argc, char** argv, char **envp) {
 	if(includeParametersFromEnvironment(set, envp, 1) == false) goto cleanup;
 	if(paramSet_isSetByName(set, "h")) goto cleanup;
 
-#ifdef KSI_DEFAULT_URI_PUBLICATIONS_FILE
-	if (paramSet_isSetByName(set, "P") == false)
-		paramSet_priorityAppendParameterByName("P", KSI_DEFAULT_URI_PUBLICATIONS_FILE, "API default", 0, set);
-#endif
 
 	if(isPiping(set)) {
 		print_disable(PRINT_WARNINGS | PRINT_INFO);
