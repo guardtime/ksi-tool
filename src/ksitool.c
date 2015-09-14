@@ -270,7 +270,7 @@ static void GT_pritHelp(void){
 			"\t\t-x -i -o extend signature to the nearest publication.\n"
 			"\t\t-x -i -T -o extend signature to specified time.\n"
 			" -p\t\tdownload Publications file (-r -d -t):\n"
-			"\t\t-p -o download publications file.\n"
+			"\t\t-p -o --cnstr download publications file.\n"
 			"\t\t-p -T create publication string.\n"
 			" -v --verify\tverify signature or publications file. Use -f to provide\n"
 			"\t\ta file or -F to use a pre-calculated hash value (-n -r -d -t):\n"
@@ -278,7 +278,7 @@ static void GT_pritHelp(void){
 			"\t\t-v -i verify a signature.\n"
 			"\t\t-v -b -i verify a signature using specific publications file.\n"
 			"\t\t-v --ref -i verify a signature using publication string.\n"
-			"\t\t-v -b verify publication file.\n"
+			"\t\t-v -b --cnstr verify publication file.\n"
 /*TODO: uncomment if implemented*/
 //			" --aggre	use aggregator for (-n -t):\n"
 
@@ -322,9 +322,10 @@ static void GT_pritHelp(void){
 			" -E <mail>\tspecify a publication certificate email.\n"
 			" --cnstr <oid=value>\n"
 			"\t\tuse OID and its expected value to verify publications file PKI\n"
-			"\t\tsignature. If value part contains spaces use \" \" to wrap its \n"
-			"\t\tcontents. cnstr is allowed to have multiple values (--cnstr 1.2=\n"
-			"\t\ttest1 --cnstr 1.3=\"test test\")\n"
+			"\t\tsignature. At least one constraint must be defined to be able to\n"
+			"\t\tverify publications file but it is possible to define more.\n"
+			"\t\tIf value part contains spaces use \" \" to wrap its contents.\n"
+			"\t\tExample --cnstr 1.2=test1 --cnstr 1.3=\"test test\".\n"
 			" --inc <file>\tuse configuration file containing command-line parameters.\n"
 			"\t\tParameter must be written line by line."
 
@@ -342,7 +343,8 @@ static void GT_pritHelp(void){
 			"\tFor publications file, define \"KSI_PUBFILE\"=\"url=<url> <constraint>\n"
 			"\t<constraint> ...\". Constraint is formatted as <OID>=\"<value>\" where \"\"\n"
 			"\tcan be omitted if 'value does not contain any white-space characters.\n"
-			"\tPublications file url is mandatory but constraints are not.\n\n"
+			"\tPublications file url is mandatory but constraints are not if at least\n"
+			"\tone constraint is defined on command-line (see --cnstr).\n\n"
 			"\tUsing includes (--inc) or defining urls on command-line will\n"
 			"\toverride defaults.\n\n"
 			"\tSigning:		%s\n"
@@ -406,11 +408,11 @@ int main(int argc, char** argv, char **envp) {
 	TaskDefinition_new(signDataFile,			"Sign data file",				"s,f,o,S",		"b,r",	"H,n,d,t",		"x,p,v,aggre,F,i,T",		&taskDefArray[0]);
 	TaskDefinition_new(signHash,				"Sign hash",					"s,F,o,S",		"b,r",	"n,d,t",		"x,p,v,aggre,f,i,T,H",		&taskDefArray[1]);
 	TaskDefinition_new(extendTimestamp,			"Extend signature",				"x,i,o,X",		"",		"T,n,d,r,t",	"s,p,v,aggre,f,F,H",		&taskDefArray[2]);
-	TaskDefinition_new(downloadPublicationsFile,"Download publication file",	"p,o",			"n",	"d,r,t",		"s,x,v,aggre,f,F,T,i,H",	&taskDefArray[3]);
+	TaskDefinition_new(downloadPublicationsFile,"Download publication file",	"p,o,cnstr",	"n",	"d,r,t",		"s,x,v,aggre,f,F,T,i,H",	&taskDefArray[3]);
 	TaskDefinition_new(createPublicationString, "Create publication string",	"p,T,X",		"n,r",	"d,t",			"s,x,v,aggre,f,F,o,i,H",	&taskDefArray[4]);
 	TaskDefinition_new(verifyTimestamp,			"Verify signature",				"v,i",			"",		"f,F,n,d,r,t",	"s,p,x,aggre,H",			&taskDefArray[5]);
 	TaskDefinition_new(verifyTimestampOnline,	"Verify online",				"v,x,i,X",		"",		"f,F,n,d,r,t",	"s,p,aggre,T,H",			&taskDefArray[6]);
-	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"v,b",			"",		"n,d,r,t",		"x,s,p,aggre,i,f,F,T,H",	&taskDefArray[7]);
+	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"v,b,cnstr",			"",		"n,d,r,t",		"x,s,p,aggre,i,f,F,T,H",	&taskDefArray[7]);
 	/*TODO: uncomment if implemented and set NUMBER_OF_TASKS+=2*/
 //	TaskDefinition_new(getRootH_T,				"Get Aggregator root hash",		"aggre,htime,S","",		"",				"x,s,p,v,f,F,i,o,T,H,setsystime",		&taskDefArray[8]);
 //	TaskDefinition_new(setSysTime,				"Set system time",				"aggre,setsystime,S","","",				"x,s,p,v,f,F,i,o,T,H,htime",		&taskDefArray[9]);

@@ -87,10 +87,10 @@ ksitool.exe -vd -i test\testData-2015-01.gtts --log
 logi.txt
 
 echo ****************** Download publications file ******************
-ksitool.exe -p -t -o %PUBFILE% %GLOBAL% -d 
+ksitool.exe -p -t -o %PUBFILE% %GLOBAL% -d --cnstr 1.2.840.113549.1.9.1=publications@guardtime.com
 echo %errorlevel%
 
-ksitool.exe -v -t -b %PUBFILE% %GLOBAL%
+ksitool.exe -v -t -b %PUBFILE% %GLOBAL% --cnstr 1.2.840.113549.1.9.1=publications@guardtime.com
 echo %errorlevel%
 
 echo "****************** Get Publication string ******************" 
@@ -230,7 +230,7 @@ ksitool.exe %GLOBAL% -p -T 1410848909 --log - > PIPE_LOG_FILE
 echo %errorlevel%
 
 echo ****************** Test stdin stdout 4******************
-ksitool.exe %GLOBAL% -p -o - | ksitool.exe -v -b -
+ksitool.exe %GLOBAL% -p --cnstr 1.2.840.113549.1.9.1=publications@guardtime.com -o - | ksitool.exe -v --cnstr 1.2.840.113549.1.9.1=publications@guardtime.com -b -
 echo %errorlevel%
 
 echo ****************** Verify online ******************
