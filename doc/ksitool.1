@@ -82,10 +82,10 @@ Use for online verification or signature extending.
 Use specified publication file.
 .TP
 .BI -f\  file
-File to be signed / verified.
+File to be signed or verified.
 .TP
 .BI -F\  hash
-Data hash to be signed / verified. Hash format: <alg>:<hash in hex>.
+Data hash to be signed or verified. Hash format: <alg>:<hash in hex>.
 .TP
 .BI -H\  alg
 Hash algorithm used to hash the file to be signed. Use when signing file (
@@ -93,7 +93,7 @@ Hash algorithm used to hash the file to be signed. Use when signing file (
 ).
 .TP
 .BI -i\  file
-Input signature token file to be extended / verified.
+Input signature token file to be extended or verified.
 .TP
 .BI -o\  file
 Output file name to store signature token or publication file.
@@ -111,7 +111,7 @@ Specify a publication time to extend to (use with \fB-x\fR) or a time to create 
 .B Details:
 .TP
 .B -d
-Dump detailed information.
+Print detailed information.
 .TP
 .BI --log\  file
 Dump KSI log into file.
@@ -142,10 +142,10 @@ Print signature's TLV structure.
 .B Configuration:
 .TP
 .BI -c\  int
-Network transfer timeout, after successful Connect.
+Network transfer timeout in seconds, after successful Connect.
 .TP
 .BI -C\  int
-Network Connect timeout (is not supported with tcp client).
+Network Connect timeout in seconds (is not supported with tcp client).
 .TP
 .BI -E\  email
 Use specified publication certificate email.
@@ -206,15 +206,15 @@ Invalid format. Input data to KSI library is invalid, for example signature or p
 .br
 .TP
 .B 5
-Network error. Ksitool is unable to connect to the service, connection is timed out or HTTP error is returned.
+Network error. Ksitool is unable to connect to the service, connection is timed out or an HTTP error was returned from the service url.
 .br
 .TP
 .B 6
-Verification error. Unable to verify signature or document / hash.
+Verification error. Verification of signature or document hash failed.
 .br
 .TP
 .B 7
-Extending error. Error in extending a signature or error returned by extender.
+Extending error. Error in extending a signature or an error was returned by extender.
 .br
 .TP
 .B 8
@@ -226,15 +226,15 @@ Input / output error. Unable to write or read file.
 .br
 .TP
 .B 10
-Cryptographic error. Error may be generated due to untrusted or unavailable hash algorithm and invalid PKI signature or untrusted certificate.
+Cryptographic error. Error may be generated due to untrusted or unavailable hash algorithm or by an invalid PKI signature or untrusted certificate.
 .br
 .TP
 .B 11
-HMAC error. HMAC of aggregation or extend response is not matching. 
+HMAC error. HMAC of aggregation or extend response does not match. 
 .br
 .TP
 .B 12
-No privileges. Operating system is not giving privileges to perform an operation.
+No privileges. Operating system did not grant privileges to perform an operation.
 .br
 .TP
 .B 13
@@ -242,19 +242,19 @@ System out of memory.
 .br
 .TP
 .B 14
-Authentication error. Aggregation or extending service is not accepting user identification parameters.
+Authentication error. Aggregation or extending service did not accept user identification parameters.
 .br
 
 
 .SH EXAMPLES
 
-During following examples it is assumed that default service urls are defined as environment variables. Read example 1 to learn how to define service urls.
+In the following examples it is assumed that default service urls are defined as environment variables. Read example 1 to learn how to define service urls.
 
 .B 1
-To use ksitool, service urls must be specified. It can be done via system variables, command-line parameters or configuration file.
+To use ksitool, service urls must be specified. It can be done via environment variables, command-line parameters or a configuration file.
 
 .B 1.1
-To define default urls system variables KSI_AGGREGATOR and KSI_EXTENDER must be described as shown below: 
+To define default urls as environment variables, KSI_AGGREGATOR and KSI_EXTENDER must be defined as shown below: 
 
 .RS
 .br
@@ -285,9 +285,7 @@ To define service urls on command-line or via configuration file, following para
 .br
 
 .B 1.3
-Using configuration file parameters must be written line by line (like example above) into file 
-.I conf
-and that must be included using option:
+To use a configuration file, parameters must be written on separate lines, into a file, as in the example above. \fI conf\fR and the configuration file must be included using option:
 .br
 
 .RS
@@ -314,9 +312,7 @@ call:
 .RE
 
 .B 3
-To sign a data hash (hashed with SHA256) and save signature to file
-.I sig.ksig
-call:
+To sign a data hash (hashed with SHA256) and save the resulting signature to file\fI sig.ksig\fR call:
 
 .RS
 .br
@@ -430,7 +426,7 @@ call:
 
 . B Default service access URL-s:
 
-To define default URLs system variables must be defined. For aggregator and extender, define system variables \fB KSI_AGGREGATOR\fR and \fBKSI_EXTENDER\fR with content\fI 'url=<url> pass=<pass> user=<user>'\fR. Only url part is mandatory thus user and pass can be left undefined. Default \fI <pass> \fR and \fI <user> \fRis \fI 'anon'\fR and can be used if such user is available. 
+To define default URL-s, they must be defined as environment variables. For aggregator and extender service, define environment variables \fB KSI_AGGREGATOR\fR and \fBKSI_EXTENDER\fR with content\fI 'url=<url> pass=<pass> user=<user>'\fR. Only url part is mandatory: user and pass can be left undefined if anonymous access is allowed by the service. Default \fI <pass> \fR and \fI <user> \fRis \fI 'anon'\fR. 
 .br
 
 For publications file, define \fBKSI_PUBFILE\fR with content '\fIurl=<url> <constraint> <constraint> \fR...'. Constraint is formatted as  \fI<OID>="<value>"\fR where \fB""\fR can be omitted if 'value' does not contain any white-space characters. Publications file url is mandatory but constraints are not if at least one constraint is defined on command-line (see \fB--cnstr\fR).
