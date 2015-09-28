@@ -247,18 +247,18 @@ static int ksitool_addConstraints(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 			char *value = NULL;
 			char tmp[1024];
 
-			paramSet_getStrValueByNameAt(set, "cnstr", i, &constraint);
-			strncpy(tmp, constraint, sizeof(tmp));
+				paramSet_getStrValueByNameAt(set, "cnstr", i, &constraint);
+				strncpy(tmp, constraint, sizeof(tmp));
 
-			oid = tmp;
-			value = strchr(tmp, '=');
-			if (value == NULL) {
-				ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: Unable to parse constraint.");
-				goto cleanup;
-			}
+				oid = tmp;
+				value = strchr(tmp, '=');
+				if (value == NULL) {
+					ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: Unable to parse constraint.");
+					goto cleanup;
+				}
 
-			*value = '\0';
-			value++;
+				*value = '\0';
+				value++;
 
 			constraintArray[i].oid = KSI_malloc(strlen(oid) + 1);
 			constraintArray[i].val = KSI_malloc(strlen(value) + 1);
@@ -294,10 +294,9 @@ static int ksitool_initTrustStore(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	paramSet *set = NULL;
 	KSI_PKITruststore *refTrustStore = NULL;
 	int i=0;
-	bool V, W, E, cnstr;
+	bool V, W, cnstr;
 	char *lookupFile = NULL;
 	char *lookupDir = NULL;
-	char *magicEmail = NULL;
 	KSI_CertConstraint constraintArray[2] = {{NULL, NULL}, {NULL, NULL}};
 
 	if (task == NULL || ksi == NULL || err == NULL) {
@@ -308,7 +307,6 @@ static int ksitool_initTrustStore(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	set = Task_getSet(task);
 	V = paramSet_isSetByName(set,"V");
 	W = paramSet_getStrValueByNameAt(set, "W",0, &lookupDir);
-	E = paramSet_getStrValueByNameAt(set, "E",0, &magicEmail);
 	cnstr = paramSet_isSetByName(set,"cnstr");
 
 
@@ -333,13 +331,6 @@ static int ksitool_initTrustStore(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 			res = KSI_PKITruststore_addLookupDir(refTrustStore, lookupDir);
 			ERR_CATCH_MSG(err, res, "Error: Unable to add lookup dir to PKI trust store.");
 		}
-	}
-
-	if(E){
-		constraintArray[0].oid = KSI_CERT_EMAIL;
-		constraintArray[0].val = magicEmail;
-		res = KSI_CTX_setDefaultPubFileCertConstraints(ksi, constraintArray);
-		ERR_CATCH_MSG(err, res, "Error: Unable set publication certificate email.");
 	}
 
 	res = KT_OK;

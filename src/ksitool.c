@@ -25,6 +25,7 @@
 #include "task_def.h"
 #include "gt_task.h"
 #include <ksi/ksi.h>
+#include <ksi/compatibility.h>
 #include "ksitool_err.h"
 
 #ifndef _WIN32
@@ -319,7 +320,6 @@ static void GT_pritHelp(void){
 			"\t\tverification. Can have multiple values (-V <file 1> -V <file 2>).\n"
 			" -W <dir>\tspecify an OpenSSL-style trust store directory for publications\n"
 			"\t\tfile verification.\n"
-			" -E <mail>\tspecify a publication certificate email.\n"
 			" --cnstr <oid=value>\n"
 			"\t\tuse OID and its expected value to verify publications file PKI\n"
 			"\t\tsignature. At least one constraint must be defined to be able to\n"
@@ -404,11 +404,11 @@ int main(int argc, char** argv, char **envp) {
 //	paramSet_addControl(set, "{aggre}{htime}{setsystime}", isFlagFormatOK, contentIsOK, NULL);
 
 	/*Define possible tasks*/
-	/*						ID							DESC							MAN		IGNORE	OPTIONAL		FORBIDDEN					NEW OBJ*/
+	/*						ID							DESC					MAN		IGNORE	OPTIONAL		FORBIDDEN					NEW OBJ*/
 	TaskDefinition_new(signDataFile,			"Sign data file",				"s,f,o,S",		"b,r",	"H,n,d,t",		"x,p,v,aggre,F,i,T",		&taskDefArray[0]);
 	TaskDefinition_new(signHash,				"Sign hash",					"s,F,o,S",		"b,r",	"n,d,t",		"x,p,v,aggre,f,i,T,H",		&taskDefArray[1]);
 	TaskDefinition_new(extendTimestamp,			"Extend signature",				"x,i,o,X",		"",		"T,n,d,r,t",	"s,p,v,aggre,f,F,H",		&taskDefArray[2]);
-	TaskDefinition_new(downloadPublicationsFile,"Download publication file",	"p,o,cnstr",	"n",	"d,r,t",		"s,x,v,aggre,f,F,T,i,H",	&taskDefArray[3]);
+	TaskDefinition_new(downloadPublicationsFile,"Download publication file",	"p,o,cnstr,P",	"n",	"d,r,t",		"s,x,v,aggre,f,F,T,i,H",	&taskDefArray[3]);
 	TaskDefinition_new(createPublicationString, "Create publication string",	"p,T,X",		"n,r",	"d,t",			"s,x,v,aggre,f,F,o,i,H",	&taskDefArray[4]);
 	TaskDefinition_new(verifyTimestamp,			"Verify signature",				"v,i",			"",		"f,F,n,d,r,t",	"s,p,x,aggre,H",			&taskDefArray[5]);
 	TaskDefinition_new(verifyTimestampOnline,	"Verify online",				"v,x,i,X",		"",		"f,F,n,d,r,t",	"s,p,aggre,T,H",			&taskDefArray[6]);
@@ -438,6 +438,26 @@ int main(int argc, char** argv, char **envp) {
 	if(includeParametersFromEnvironment(set, envp, 1) == false) goto cleanup;
 	if(paramSet_isSetByName(set, "h")) goto cleanup;
 
+	if (paramSet_isSetByName(set, "E")) {
+		char tmp[1024];
+		char *email = NULL;
+		print_warnings("Warning: Parameter E is deprecated and will be removed in later versions. Use --cnstr instead.\n");
+		if (paramSet_getStrValueByNameAt(set, "E", 0, &email) == false) {
+			print_errors("Error: Unable to convert parameter E to cnstr.\n");
+			retval = EXIT_FAILURE;
+			goto cleanup;
+		}
+
+		print_warnings("Warning: Converting E to '--cnstr %s=%s'.\n", KSI_CERT_EMAIL, email);
+
+		KSI_snprintf(tmp, sizeof(tmp), "%s=%s", KSI_CERT_EMAIL, email);
+
+		if (paramSet_appendParameterByName("cnstr", tmp, "E", set) == false) {
+			print_errors("Error: Unable to convert parameter E to cnstr.\n");
+			retval = EXIT_FAILURE;
+			goto cleanup;
+		}
+	}
 
 	if(isPiping(set)) {
 		print_disable(PRINT_WARNINGS | PRINT_INFO);

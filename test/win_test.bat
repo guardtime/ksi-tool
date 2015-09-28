@@ -30,13 +30,16 @@ SET SIG_SERV_IP=http://ksigw.test.guardtime.com:3333/gt-signingservice
 REM SET SIG_SERV_IP=http://192.168.100.36:3333/
 REM SET PUB_SERV_IP=http://172.20.20.7/publications.tlv
 set PUB_SERV_IP=Http://verify.guardtime.com/ksi-publications.bin
+SET PUB_CNSTR=--cnstr 1.2.840.113549.1.9.1=publications@guardtime.com
 REM SET SIG_SERV_IP=http://172.20.20.4:3333/
 REM SET VER_SERV_IP=http://192.168.100.36:8081/gt-extendingservice
 REM SET VER_SERV_IP=http://192.168.100.36:8081/
 SET VER_SERV_IP=httP://ksigw.test.guardtime.com:8010/gt-extendingservice
 
 
-SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -P %PUB_SERV_IP% -C 5 -c 5 --user anon --pass anon
+SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -P %PUB_SERV_IP% %PUB_CNSTR% -C 5 -c 5 --user anon --pass anon
+REM SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -C 5 -c 5 --user anon --pass anon
+
 
 REM input files
 SET TEST_FILE=../test/resource/testFile
@@ -83,14 +86,15 @@ SET VERIFY_FLAGS= -n -r -d -t
 SET EXTEND_FLAGS= -t -t
 
 
+
 ksitool.exe -vd -i test\testData-2015-01.gtts --log
 logi.txt
 
 echo ****************** Download publications file ******************
-ksitool.exe -p -t -o %PUBFILE% %GLOBAL% -d --cnstr 1.2.840.113549.1.9.1=publications@guardtime.com
+ksitool.exe -p -t -o %PUBFILE% %GLOBAL% -d 
 echo %errorlevel%
 
-ksitool.exe -v -t -b %PUBFILE% %GLOBAL% --cnstr 1.2.840.113549.1.9.1=publications@guardtime.com
+ksitool.exe -v -t -b %PUBFILE% %GLOBAL% 
 echo %errorlevel%
 
 echo "****************** Get Publication string ******************" 
@@ -121,7 +125,7 @@ echo ****************** Extend old signature ******************
 ksitool.exe -x %GLOBAL% %EXTEND_FLAGS% -i %TEST_OLD_SIG% -o %TEST_EXTENDED_SIG%
 echo %errorlevel%
 
-ksitool.exe -vrd -i %TEST_EXTENDED_SIG%
+ksitool.exe -vrd -i %TEST_EXTENDED_SIG% %GLOBAL%
 echo %errorlevel%
 
 echo ****************** Extend old signature to 1418601800 (between publications)****************** 
@@ -191,7 +195,7 @@ echo ****************** Extend legacy signature ******************
 ksitool.exe -x %GLOBAL% %EXTEND_FLAGS% -i %LEGACY_SIGNATURE% -o %OLD_EXTENDED%
 echo %errorlevel%
 
-ksitool.exe -vrd -i %OLD_EXTENDED% -f %OLD_TESTFILE%
+ksitool.exe -vrd %GLOBAL% -i %OLD_EXTENDED% -f %OLD_TESTFILE%
 echo %errorlevel%
 
 echo ****************** Verify with user publication. ****************** 
@@ -199,19 +203,19 @@ ksitool -vdr -i %TEST_EXTENDED_SIG% --ref AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXI
 echo %errorlevel%
 
 echo ********** Verify with user publication - needs extending. Publication exists. ********** 
-ksitool -vdr -i %TEST_EXTENDED_SIG% --ref AAAAAA-CVFWVA-AAPV2S-SN3JLW-YEKPW3-AUSQP6-PF65K5-KVGZZA-7UYTOV-27VX54-VVJQFG-VCK6GR
+ksitool -vdr -i %TEST_EXTENDED_SIG% %PUB_CNSTR% -P %PUB_SERV_IP% --ref AAAAAA-CVFWVA-AAPV2S-SN3JLW-YEKPW3-AUSQP6-PF65K5-KVGZZA-7UYTOV-27VX54-VVJQFG-VCK6GR
 echo %errorlevel%
 
 echo ********** Verify with user publication - needs extending. No publication. ********** 
-ksitool -vdr -i %TEST_EXTENDED_SIG% --ref AAAAAA-CUBJQL-AAKVFD-VNJIK5-7DTJ6T-YYCOGP-N7J3RT-CRE5DU-WBB6AE-LANHHH-3CFEM4-7FM65J
+ksitool -vdr -i %TEST_EXTENDED_SIG% %PUB_CNSTR% -P %PUB_SERV_IP% --ref AAAAAA-CUBJQL-AAKVFD-VNJIK5-7DTJ6T-YYCOGP-N7J3RT-CRE5DU-WBB6AE-LANHHH-3CFEM4-7FM65J
 echo %errorlevel%
 
 echo ********** Verify with user publication - signature not extended. Needs extending.********** 
-ksitool -vdr -i %TEST_OLD_SIG% --ref AAAAAA-CUBJQL-AAKVFD-VNJIK5-7DTJ6T-YYCOGP-N7J3RT-CRE5DU-WBB6AE-LANHHH-3CFEM4-7FM65J
+ksitool -vdr -i %TEST_OLD_SIG% %PUB_CNSTR% -P %PUB_SERV_IP% --ref AAAAAA-CUBJQL-AAKVFD-VNJIK5-7DTJ6T-YYCOGP-N7J3RT-CRE5DU-WBB6AE-LANHHH-3CFEM4-7FM65J
 echo %errorlevel%
 
 echo ********** Verify with user publication - signature not extended. Needs extending. No Publication.********** 
-ksitool -vdr -i %TEST_OLD_SIG% --ref AAAAAA-CUBJQL-AAKVFD-VNJIK5-7DTJ6T-YYCOGP-N7J3RT-CRE5DU-WBB6AE-LANHHH-3CFEM4-7FM65J
+ksitool -vdr -i %TEST_OLD_SIG% %PUB_CNSTR% -P %PUB_SERV_IP% --ref AAAAAA-CUBJQL-AAKVFD-VNJIK5-7DTJ6T-YYCOGP-N7J3RT-CRE5DU-WBB6AE-LANHHH-3CFEM4-7FM65J
 echo %errorlevel%
 
 echo ****************** Test stdin stdout 1******************
