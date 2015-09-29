@@ -19,6 +19,7 @@
  */
 
 #include <ksi/ksi.h>
+#include <ksi/compatibility.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
@@ -371,6 +372,33 @@ bool convert_repairPath(const char* arg, char* buf, unsigned len){
 		*toBeReplaced = '/';
 		toBeReplaced++;
 	}
+
+	return true;
+}
+
+bool convert_replaceWithOid(const char* arg, char* buf, unsigned len) {
+	char *value = NULL;
+	const char *oid = NULL;
+
+	if(arg == NULL || buf == NULL) return false;
+	strncpy(buf, arg, len-1);
+
+	value = strchr(arg, '=');
+	if (value == NULL) return false;
+	else value++;
+
+	if(strncmp(buf, "email=", 6) == 0) {
+		oid = KSI_CERT_EMAIL;
+	} else if (strncmp(buf, "country=", 8) == 0) {
+		oid = KSI_CERT_COUNTRY;
+	} else if (strncmp(buf, "org=", 4) == 0) {
+		oid = KSI_CERT_ORGANIZATION;
+	} else if (strncmp(buf, "common_name=", 12) == 0) {
+		oid = KSI_CERT_COMMON_NAME;
+	}
+
+	if (oid != NULL && value != NULL)
+		KSI_snprintf(buf, len, "%s=%s", oid, value);
 
 	return true;
 }

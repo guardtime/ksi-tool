@@ -280,7 +280,7 @@ static void GT_pritHelp(void){
 			"\t\t-v -b -i verify a signature using specific publications file.\n"
 			"\t\t-v --ref -i verify a signature using publication string.\n"
 			"\t\t-v -b --cnstr verify publication file.\n"
-/*TODO: uncomment if implemented*/
+			/*TODO: uncomment if implemented*/
 //			" --aggre	use aggregator for (-n -t):\n"
 
 //			"\t\t--aggre --htime display current aggregation root hash value and time.\n"
@@ -323,13 +323,16 @@ static void GT_pritHelp(void){
 			" --cnstr <oid=value>\n"
 			"\t\tuse OID and its expected value to verify publications file PKI\n"
 			"\t\tsignature. At least one constraint must be defined to be able to\n"
-			"\t\tverify publications file but it is possible to define more.\n"
-			"\t\tIf value part contains spaces use \" \" to wrap its contents.\n"
-			"\t\tExample --cnstr 1.2=test1 --cnstr 1.3=\"test test\".\n"
+			"\t\tverify publications file but it is possible to define more. If\n"
+			"\t\tvalue part contains spaces use \" \" to wrap its contents. For\n"
+            "\t\tcommon OID's there are string representations: 'email' for\n"
+			"\t\t1.2.840.113549.1.9.1, 'country' for 2.5.4.6, 'org' for 2.5.4.10\n"
+			"\t\tand 'common_name' for 2.5.4.3.\n"
+			"\t\tExample --cnstr 2.5.4.6=EE --cnstr org=\"Guardtime AS\".\n"
 			" --inc <file>\tuse configuration file containing command-line parameters.\n"
-			"\t\tParameter must be written line by line."
+			"\t\tParameter must be written line by line.\n"
 
-			"\nHelp:\n"
+			"Help:\n"
 			" -h --help\tHelp (You are reading it now).\n",
 			toolVersion, apiVersion
 			);
@@ -398,7 +401,7 @@ int main(int argc, char** argv, char **envp) {
 	paramSet_addControl(set, "{E}", isEmailFormatOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{user}{pass}", isUserPassFormatOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{ref}", formatIsOK, contentIsOK, NULL);
-	paramSet_addControl(set, "{cnstr}", isConstraintFormatOK, contentIsOK, NULL);
+	paramSet_addControl(set, "{cnstr}", isConstraintFormatOK, contentIsOK, convert_replaceWithOid);
 	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{tlv}{silent}{nowarn}", isFlagFormatOK, contentIsOK, NULL);
 	/*TODO: uncomment if implemented*/
 //	paramSet_addControl(set, "{aggre}{htime}{setsystime}", isFlagFormatOK, contentIsOK, NULL);

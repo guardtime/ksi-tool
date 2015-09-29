@@ -148,7 +148,7 @@ Network transfer timeout in seconds, after successful Connect.
 Network Connect timeout in seconds (is not supported with tcp client).
 .TP
 .BI --cnstr\  oid=value
-use OID and its expected value to verify publications file PKI signature. At least one constraint must be defined to be able to verify publications file but it is possible to define more. If value part contains spaces use " " to wrap its contents. Example \fB--cnstr \fI1.2=test1 \fB--cnstr \fI1.3="test test"\fR.
+use OID and its expected value to verify publications file PKI signature. At least one constraint must be defined to be able to verify publications file but it is possible to define more. If value part contains spaces use " " to wrap its contents. For common OID's there are string representations: '\fBemail\fR' for 1.2.840.113549.1.9.1, '\fBcountry\fR' for 2.5.4.6, '\fBorg\fR' for 2.5.4.10 and '\fBcommon_name\fR' for 2.5.4.3. Example \fB--cnstr \fI2.5.4.6=EE \fB--cnstr \fIorg="Guardtime AS"\fR.
 .TP
 .BI --inc\  file
 Use configuration file containing command-line parameters. Parameter must be written line by line.
