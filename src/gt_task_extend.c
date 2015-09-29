@@ -58,9 +58,9 @@ int GT_extendTask(Task *task) {
 
 	/* Make sure the signature is ok. */
 	print_progressDesc(t, "Verifying old signature... ");
-	res = KSI_Signature_verify(sig, ksi);
-
+	res = KSITOOL_Signature_verify(err, sig, ksi);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify signature.");
+
 	print_progressResult(res);
 
 	/* Extend the signature. */
@@ -68,28 +68,18 @@ int GT_extendTask(Task *task) {
 		print_progressDesc(t, "Extending old signature to %i... ", publicationTime);
 		res = KSI_Integer_new(ksi, publicationTime, &pubTime);
 		ERR_CATCH_MSG(err, res, "Error: %s.", errToString(res));
-		res = KSI_Signature_extendTo(sig, ksi, pubTime, &ext);
-		ERR_APPEND_KSI_ERR(err, res, KSI_EXTEND_NO_SUITABLE_PUBLICATION);
-		ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_DATABASE_CORRUPT);
-		ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_DATABASE_MISSING);
-		ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_REQUEST_TIME_IN_FUTURE);
-		ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_REQUEST_TIME_TOO_NEW);
-		ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_REQUEST_TIME_TOO_OLD);
-		ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_INVALID_TIME_RANGE);
+		res = KSITOOL_Signature_extendTo(err, sig, ksi, pubTime, &ext);
 		ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
 	}
 	else{
 		print_progressDesc(t, "Extending old signature... ");
-		res = KSI_extendSignature(ksi, sig, &ext);
-		ERR_APPEND_KSI_ERR(err, res, KSI_EXTEND_NO_SUITABLE_PUBLICATION);
-		ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_DATABASE_CORRUPT);
-		ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_DATABASE_MISSING);
+		res = KSITOOL_extendSignature(err, ksi, sig, &ext);
 		ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
 	}
 	print_progressResult(res);
 
 	print_progressDesc(t, "Verifying extended signature... ");
-	res = KSI_Signature_verify(ext, ksi);
+	res = KSITOOL_Signature_verify(err, ext, ksi);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify extended signature.");
 	print_progressResult(res);
 
@@ -104,11 +94,7 @@ cleanup:
 	print_progressResult(res);
 
 	if(n || r || d || tlv) print_info("\n");
-	if(res != KT_OK && sig != NULL && d){
-		print_info("Old signature:\n");
-		printSignatureVerificationInfo(sig);
-		printSignatureStructure(ksi, sig);
-	}
+
 	if(ext != NULL){
 		if(n || d || r || tlv) print_info("Extended signature:\n");
 		if (d) printSignatureVerificationInfo(ext);
@@ -118,10 +104,23 @@ cleanup:
 	}
 
 	if (res != KT_OK) {
+		print_errors("\n");
 		ERR_TRCKR_printErrors(err);
-		if(d && ksi) KSI_ERR_statusDump(ksi, stderr);
+		if(d && ksi) {
+			print_errors("\n");
+			KSI_ERR_statusDump(ksi, stderr);
+		}
+
+		if (sig != NULL && d){
+			print_errors("\nOld signature:\n");
+			printSignatureVerificationInfo(sig);
+			if (tlv) printSignatureStructure(ksi, sig);
+		}
+
 		retval = errToExitCode(res);
 	}
+
+
 
 	KSI_Signature_free(sig);
 	KSI_Signature_free(ext);

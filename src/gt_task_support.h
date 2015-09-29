@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include "gt_cmd_common.h"
 #include "ksitool_err.h"
+#include "api_wrapper.h"
 #include "printer.h"
 
 
@@ -163,35 +164,12 @@ void printSignatureStructure(KSI_CTX *ksi, const KSI_Signature *sig);
  * @param[in] ksi Pointer to ksi context object.
  * @param[out] hash Pointer to receiving pointer to KSI_DataHash object.
  *
- * @throws KSI_EXCEPTION, INVALID_ARGUMENT_EXCEPTION.
  */
 int getHashFromCommandLine(const char *imprint, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hash);
 
 void print_progressDesc(bool showTiming, const char *msg, ...);
 
 void print_progressResult(int res);
-/*************************************************
- * KSI api functions capable throwing exceptions  *
- *************************************************/
-
-#define ERR_CATCH_MSG(err, res, msg, ...) \
-	if (res != KT_OK) { \
-		ERR_TRCKR_add(err, res, __FILE__, __LINE__, msg, ##__VA_ARGS__); \
-		goto cleanup; \
-	}
-
-#define ERR_APPEND_KSI_ERR(err, res, ref_err) \
-		if (res == ref_err) { \
-			ERR_TRCKR_add(err, res, __FILE__, __LINE__, "Error: %s", KSI_getErrorString(res)); \
-		}
-
-#define ERR_APPEND_KSI_BASE_ERR(err, res, ksi) \
-		if (res != KSI_OK) { \
-			char buf[1024]; \
-			KSI_ERR_getBaseErrorMessage(ksi, buf, sizeof(buf), NULL, NULL); \
-			if (buf[0] != 0) \
-				ERR_TRCKR_add(err, res, __FILE__, __LINE__, "Error: %s", buf); \
-		}
 
 #ifdef	__cplusplus
 }

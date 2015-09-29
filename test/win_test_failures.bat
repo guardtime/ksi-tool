@@ -26,14 +26,10 @@ REM test configuration
 SET WAIT=5
 
 REM Services to use
-REM SET SIG_SERV_IP=http://192.168.100.29:1234/ 
-SET SIG_SERV_IP=Http://192.168.100.36:3333/
-rem SET VER_SERV_IP=http://192.168.100.29:1111/gt-extendingservice
-REM SET PUB_SERV_IP=http://172.20.20.7/publications.tlv
+SET SIG_SERV_IP=http://ksigw.test.guardtime.com:3333/gt-signingservice 
 set PUB_SERV_IP=http://verify.guardtime.com/ksi-publications.bin
-REM SET SIG_SERV_IP=http://172.20.20.4:3333/
-REM SET VER_SERV_IP=http://192.168.100.36:8081/gt-extendingservice
-SET VER_SERV_IP=http://192.168.100.36:8081/
+SET PUB_CNSTR=--cnstr 1.2.840.113549.1.9.1=publications@guardtime.com
+SET VER_SERV_IP=http://ksigw.test.guardtime.com:8010/gt-extendingservice
 
 
 
@@ -71,7 +67,7 @@ rem remove dir
 rm -r ..\test\out
 md ..\test\out\
 
-SET GLOBAL= %CERTS% %SERVICES%
+SET GLOBAL= %CERTS% %SERVICES% %PUB_CNSTR%
 SET SIGN_FLAGS= -t
 SET VERIFY_FLAGS= -n -r -d -t 
 SET EXTEND_FLAGS= -t -t
@@ -209,7 +205,7 @@ echo return %errorlevel%
 echo __________________________________________________________________________
 
 echo 12) Verify with publication - extending backwards. 
-ksitool -v -i %TEST_EXTENDED_SIG% --ref AAAAAA-CRRCTN-GALVLG-2SJOTG-A7AUES-LTWU4U-QF75UT-GVM7P3-G3T2SW-XN3MJX-Z5SGMS-6BO6Q5
+ksitool -v -i %TEST_EXTENDED_SIG% %GLOBAL% --ref AAAAAA-CRRCTN-GALVLG-2SJOTG-A7AUES-LTWU4U-QF75UT-GVM7P3-G3T2SW-XN3MJX-Z5SGMS-6BO6Q5
 echo return %errorlevel%
 echo __________________________________________________________________________
 

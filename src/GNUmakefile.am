@@ -42,4 +42,6 @@ ksitool_SOURCES = \
 	printer.c \
 	printer.h \
 	ksitool_err.c \
-	ksitool_err.h
+	api_wrapper.c \
+	api_wrapper.h
+	

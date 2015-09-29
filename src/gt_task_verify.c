@@ -197,7 +197,7 @@ static int GT_verifyTask_verifySigOnline(Task *task, KSI_CTX *ksi, ERR_TRCKR *er
 	t = paramSet_isSetByName(set, "t");
 
 	print_progressDesc(t, "Verifying online... ");
-	res = KSI_Signature_verifyOnline(sig, ksi);
+	res = KSITOOL_Signature_verifyOnline(err, sig, ksi);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify signature online.");
 	print_progressResult(res);
 
@@ -267,6 +267,7 @@ static int GT_verifyTask_verifyWithPublication(Task *task, KSI_CTX *ksi, ERR_TRC
 			print_warnings("Warning: Signature is not extended.\n");
 
 		res = KSI_receivePublicationsFile(ksi, &pubFile);
+		ERR_APPEND_KSI_ERR(err, res, KSI_PUBLICATIONS_FILE_NOT_CONFIGURED);
 		ERR_CATCH_MSG(err, res, "Error: Unable to receive publication file.");
 		res = KSI_PublicationsFile_getPublicationDataByPublicationString(pubFile, refStrn, &pubRec);
 		ERR_CATCH_MSG(err, res, "Error: Unable to get publication from publication file.");
@@ -287,6 +288,7 @@ static int GT_verifyTask_verifyWithPublication(Task *task, KSI_CTX *ksi, ERR_TRC
 		print_progressDesc(t, "Extending signature to publication time of publication string... ");
 		res = KSI_Signature_extend(sig, ksi, extendTo, &tmp_ext);
 		ERR_APPEND_KSI_ERR(err, res, KSI_EXTEND_NO_SUITABLE_PUBLICATION);
+		ERR_APPEND_KSI_ERR(err, res, KSI_PUBLICATIONS_FILE_NOT_CONFIGURED);
 		ERR_APPEND_KSI_BASE_ERR(err, res, ksi);
 		ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
 		print_progressResult(res);
@@ -334,7 +336,7 @@ static int GT_verifyTask_verify(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Si
 
 
 	print_progressDesc(t, "Verifying signature%s ", b && isExtended ? " using local publications file... " : "... ");
-	res = KSI_Signature_verify(sig, ksi);
+	res = KSITOOL_Signature_verify(err, sig, ksi);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify signature.");
 	print_progressResult(res);
 
@@ -377,15 +379,15 @@ static int GT_verifyTask_verifyData(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KS
 			ERR_TRCKR_ADD(err, res, "Error: Unable to hash file. (%s)", errToString(res));
 			goto cleanup;
 		}
-		res = KSI_Signature_verifyDataHash(sig, ksi, file_hsh);
-		ERR_CATCH_MSG(err, res, "Error: Unable to verify file hash.");
+		res = KSITOOL_Signature_verifyDataHash(err, sig, ksi, file_hsh);
+		ERR_CATCH_MSG(err, res, "Error: Unable to verify files hash.");
 		print_progressResult(res);
 	}
 	if(F){
 		print_progressDesc(false, "Verifying imprint... ");
 		res = getHashFromCommandLine(imprint, ksi, err, &raw_hsh);
 		if (res != KT_OK) goto cleanup;
-		res = KSI_Signature_verifyDataHash(sig, ksi, raw_hsh);
+		res = KSITOOL_Signature_verifyDataHash(err, sig, ksi, raw_hsh);
 		ERR_CATCH_MSG(err, res, "Error: Unable to verify hash.");
 		print_progressResult(res);
 	}

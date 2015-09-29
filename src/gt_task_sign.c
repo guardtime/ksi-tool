@@ -52,8 +52,7 @@ int GT_signTask(Task *task) {
 
 	/* Sign the data hash. */
 	print_progressDesc(t, "Creating signature from hash... ");
-	res = KSI_createSignature(ksi, hash, &sign);
-	ERR_APPEND_KSI_BASE_ERR(err, res, ksi);
+	res = KSITOOL_createSignature(err, ksi, hash, &sign);
 	ERR_CATCH_MSG(err, res, "Error: Unable to create signature.");
 	print_progressResult(res);
 

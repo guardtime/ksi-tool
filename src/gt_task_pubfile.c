@@ -109,11 +109,13 @@ static int GT_publicationsFileTask_downloadPublicationsFile(Task *task, KSI_CTX 
 
 	print_progressDesc(t, "Downloading publications file... ");
 	res = KSI_receivePublicationsFile(ksi, &tmp);
+	ERR_APPEND_KSI_ERR(err, res, KSI_PUBLICATIONS_FILE_NOT_CONFIGURED);
 	ERR_CATCH_MSG(err, res, "Error: Unable to get publication file.");
 	print_progressResult(res);
 
 	print_progressDesc(t, "Verifying publications file... ");
 	res = KSI_verifyPublicationsFile(ksi, tmp);
+	ERR_APPEND_KSI_ERR(err, res, KSI_PUBFILE_VERIFICATION_NOT_CONFIGURED);
 	ERR_APPEND_KSI_ERR(err, res, KSI_PKI_CERTIFICATE_NOT_TRUSTED);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify publication file.");
 	print_progressResult(res);
