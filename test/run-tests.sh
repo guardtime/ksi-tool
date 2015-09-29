@@ -24,6 +24,8 @@ SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 tmp=${TMPDIR:=$SCRIPT_DIR/out}
 resource_dir="${SCRIPT_DIR}/resource"
 DATE=`date +%s`
+TCP="ksi+tcp://ksigw.test.guardtime.com:3332"
+login="--user anon --pass anon"
 
 mkdir -p $tmp
 
@@ -57,7 +59,7 @@ TESTSIG="ok-sig-2014-08-01.1.ksig"
 
 echo \# Running tests on `uname -n` at `date '+%F %T %Z'`, start time: ${DATE}
 
-plan_tests 74
+plan_tests 82
 
 
 diag "######    Publications file download"
@@ -73,12 +75,34 @@ okx $exec -v -t -b ${resource_dir}/publications.tlv -V $url_c
 like "`$exec -v -t -b ${resource_dir}/publications.tlv 2>&1`" "The PKI certificate is not trusted." "Publications file certificate not in truststore"
 diag "------------------------------------------------------------------------------";
 
+
 diag "######    Verify publications file using certificate email"
 okx $exec -v -t -b ${tmp}/pub.bin -E publications@guardtime.com
 
 diag "######    Get Publications string"
 okx $exec -p -t -T 1410848909  # GMT: Tue, 21 Oct 2014 13:31:15 GMT
 diag "-------------------------------------------------------------------------------";
+
+
+diag "######    Sign data over TCP"
+okx $exec -s -f ${resource_dir}/testFile -o ${tmp}/data_over_tcp.ksig -S ${TCP} ${login}
+
+diag "######    Sign raw hash using SHA-256 over TCP"
+okx $exec -s -F SHA-256:${SH256_HASH} -o ${tmp}/h_sha256.ksig -S ${TCP} ${login}
+
+diag "######    Sign raw hash using RIPEMD-160 over TCP"
+okx $exec -s -F RIPEMD-160:${RIPEMD160_HASH} -o ${tmp}/h_r160.ksig -S ${TCP} ${login}
+
+diag "######    Sign raw hash using SHA-224 over TCP"
+okx $exec -s -F SHA-224:${SHA224_HASH} -o ${tmp}/h_sha224.ksig -S ${TCP} ${login}
+
+diag "######    Sign raw hash using SHA2-384 over TCP"
+okx $exec -s -F SHA-384:${SHA384_HASH} -o ${tmp}/h_sha384.ksig -S ${TCP} ${login}
+
+diag "######    Sign raw hash using SHA-512 over TCP"
+okx $exec -s -F SHA-512:${SHA512_HASH} -o ${tmp}/h_sha512.ksig -S ${TCP} ${login}
+diag "------------------------------------------------------------------------------";
+
 
 diag "######    Sign and save log file"
 okx $exec -s -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig --log ${tmp}/out.log
@@ -273,6 +297,11 @@ like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user anon --pass  2>
 diag "------------------------------------------------------------------------------";
 
 like "`$exec -v -b ${resource_dir}/publications.tlv -V ${resource_dir}/mock.crt --cnstr 2.5.4.10="Fake company"  2>&1`" "Error: The PKI certificate is not trusted." "Error invalid constraint value"
+diag "------------------------------------------------------------------------------";
+
+like "`$exec -s -F SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b877 -o ${tmp}/too_short_hash.ksig -S ${TCP} ${login} 2>&1`" "Content error: -F 'SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b877'. (Hash length is incorrect)"
+
+like "`$exec -s -F SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d56 -o ${tmp}/too_long_hash.ksig -S ${TCP} ${login} 2>&1`" "Content error: -F 'SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d56'. (Hash length is incorrect)"
 diag "------------------------------------------------------------------------------";
 
 # cleanup

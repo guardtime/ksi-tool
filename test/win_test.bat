@@ -39,7 +39,7 @@ SET VER_SERV_IP=httP://ksigw.test.guardtime.com:8010/gt-extendingservice
 
 SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -P %PUB_SERV_IP% %PUB_CNSTR% -C 5 -c 5 --user anon --pass anon
 REM SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -C 5 -c 5 --user anon --pass anon
-
+SET TCP_login=--user anon --pass anon
 
 REM input files
 SET TEST_FILE=../test/resource/testFile
@@ -54,6 +54,9 @@ REM input hash
 SET SH1_HASH=bf9661defa3daecacfde5bde0214c4a439351d4d
 SET SH256_HASH=c8ef6d57ac28d1b4e95a513959f5fcdd0688380a43d601a5ace1d2e96884690a
 SET RIPMED160_HASH=0a89292560ae692d3d2f09a3676037e69630d022
+SET SHA224_HASH=9b7ea5330761e8b50b36af0d61c10bc227c908ee57a545d40131cfa3
+SET SHA384_HASH=a5ac3bb2fa156480d1cf437c54481d9c77a145b682879e92e30a8b79f0a45a001be7969ffa02d81af0610b784ae72f4f
+SET SHA512_HASH=09e3fc9d3669eaf53d3afeb60e6a73af2c7c7b01a0fe49127253e0d466ba3d1c85ed541593775a12a880378335eeda5fc0ad5700920e11ed315f4b49f37c6d26
 
 REM output files
 SET TEST_EXTENDED_SIG=../test/out/extended.ksig
@@ -106,6 +109,27 @@ echo ****************** Sign data ******************
 ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -f %TEST_FILE% -o %TEST_FILE_OUT%.ksig -b %PUBFILE% 
 echo %errorlevel%
 
+
+echo ******************Sign data over TCP ******************
+ksitool.exe -s %SIGN_FLAGS% -f %TEST_FILE% -o %TEST_FILE_OUT%Tcp.ksig -S %TCP_SERV% %TCP_login%
+echo %errorlevel%
+
+
+echo ******************Sign different data hashes over TCP ******************
+ksitool.exe -s %SIGN_FLAGS% -F SHA-256:%SH256_HASH% -o %TEST_FILE_OUT%Sha-256Tcp.ksig -S %TCP_SERV% %TCP_login%
+echo %errorlevel%
+
+ksitool.exe -s %SIGN_FLAGS% -F RIPEMD-160:%RIPMED160_HASH% -o %TEST_FILE_OUT%Ripmed160Tcp.ksig -S %TCP_SERV% %TCP_login%
+echo %errorlevel%
+
+ksitool.exe -s %SIGN_FLAGS% -F SHA-224:%SHA224_HASH% -o %TEST_FILE_OUT%Sha224Tcp.ksig -S %TCP_SERV% %TCP_login%
+echo %errorlevel%
+
+ksitool.exe -s %SIGN_FLAGS% -F SHA-384:%SHA384_HASH% -o %TEST_FILE_OUT%Sha384Tcp.ksig -S %TCP_SERV% %TCP_login%
+echo %errorlevel%
+
+ksitool.exe -s %SIGN_FLAGS% -F SHA-512:%SHA512_HASH% -o %TEST_FILE_OUT%Sha512Tcp.ksig -S %TCP_SERV% %TCP_login%
+echo %errorlevel%
 
 
 echo ****************** Verify using publications file ******************
