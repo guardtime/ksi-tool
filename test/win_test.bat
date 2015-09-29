@@ -30,14 +30,15 @@ SET SIG_SERV_IP=http://ksigw.test.guardtime.com:3333/gt-signingservice
 REM SET SIG_SERV_IP=http://192.168.100.36:3333/
 REM SET PUB_SERV_IP=http://172.20.20.7/publications.tlv
 set PUB_SERV_IP=Http://verify.guardtime.com/ksi-publications.bin
+SET PUB_CNSTR=--cnstr 1.2.840.113549.1.9.1=publications@guardtime.com
 REM SET SIG_SERV_IP=http://172.20.20.4:3333/
 REM SET VER_SERV_IP=http://192.168.100.36:8081/gt-extendingservice
 REM SET VER_SERV_IP=http://192.168.100.36:8081/
 SET VER_SERV_IP=httP://ksigw.test.guardtime.com:8010/gt-extendingservice
-SET TCP_SERV=ksi+tcp://ksigw.test.guardtime.com:3332
 
 
-SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -P %PUB_SERV_IP% -C 5 -c 5 --user anon --pass anon
+SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -P %PUB_SERV_IP% %PUB_CNSTR% -C 5 -c 5 --user anon --pass anon
+REM SET SERVICES=-S %SIG_SERV_IP% -X %VER_SERV_IP% -C 5 -c 5 --user anon --pass anon
 SET TCP_login=--user anon --pass anon
 
 REM input files
@@ -76,27 +77,27 @@ rem ksitool.exe -x -i ..\test\out\testFile.ksig -o ..\test\out\__extended -X htt
 REM Cert files to use
 REM SET CERTS= -V "C:\Users\Taavi\Documents\GuardTime\certs\Symantec Class 1 Individual Subscriber CA(64).crt" 
 REM set CERTS= %CERTS% -V "C:\Users\Taavi\Documents\GuardTime\certs\VerSign Class 1 Public Primary Certification Authority - G3(64).crt"
-REM set CERTS= %CERTS% -V "C:\Users\Taavi\Documents\GuardTime\certs\ca-bundle.trust.crt"
+set CERTS= %CERTS% -V "C:\Users\Taavi\Documents\GuardTime\certs\ca-bundle.trust.crt"
 
 rem remove dir
 rm -r ..\test\out
 md ..\test\out\
 
-REM SET GLOBAL= %CERTS% %SERVICES%
-SET GLOBAL= %SERVICES%
+SET GLOBAL= %CERTS% %SERVICES%
 SET SIGN_FLAGS= -n -r -d -t
 SET VERIFY_FLAGS= -n -r -d -t 
 SET EXTEND_FLAGS= -t -t
+
 
 
 ksitool.exe -vd -i test\testData-2015-01.gtts --log
 logi.txt
 
 echo ****************** Download publications file ******************
-ksitool.exe -p -t -o %PUBFILE% %GLOBAL% -d --cnstr 1.2.840.113549.1.9.1=publications@guardtime.com
+ksitool.exe -p -t -o %PUBFILE% %GLOBAL% -d 
 echo %errorlevel%
 
-ksitool.exe -v -t -b %PUBFILE% %GLOBAL% --cnstr 1.2.840.113549.1.9.1=publications@guardtime.com
+ksitool.exe -v -t -b %PUBFILE% %GLOBAL% 
 echo %errorlevel%
 
 echo "****************** Get Publication string ******************" 
@@ -148,7 +149,7 @@ echo ****************** Extend old signature ******************
 ksitool.exe -x %GLOBAL% %EXTEND_FLAGS% -i %TEST_OLD_SIG% -o %TEST_EXTENDED_SIG%
 echo %errorlevel%
 
-ksitool.exe -vrd -i %TEST_EXTENDED_SIG%
+ksitool.exe -vrd -i %TEST_EXTENDED_SIG% %GLOBAL%
 echo %errorlevel%
 
 echo ****************** Extend old signature to 1418601800 (between publications)****************** 
@@ -164,8 +165,10 @@ echo ****************** Extend old signature to publication 1418601600 *********
 ksitool.exe -x %GLOBAL% %EXTEND_FLAGS% -i %TEST_OLD_SIG% -o %TEST_EXTENDED_SIG%3 -T 1418601600
 echo %errorlevel%
 
+
 ksitool.exe -v %GLOBAL% %VERIFY_FLAGS% -i %TEST_EXTENDED_SIG%3
 echo %errorlevel%
+
 
 
 echo "****************** Sign raw hash with algorithm specified [-F SH1:<hash>] ******************" 
@@ -216,7 +219,7 @@ echo ****************** Extend legacy signature ******************
 ksitool.exe -x %GLOBAL% %EXTEND_FLAGS% -i %LEGACY_SIGNATURE% -o %OLD_EXTENDED%
 echo %errorlevel%
 
-ksitool.exe -vrd -i %OLD_EXTENDED% -f %OLD_TESTFILE%
+ksitool.exe -vrd %GLOBAL% -i %OLD_EXTENDED% -f %OLD_TESTFILE%
 echo %errorlevel%
 
 echo ****************** Verify with user publication. ****************** 
@@ -224,19 +227,19 @@ ksitool -vdr -i %TEST_EXTENDED_SIG% --ref AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXI
 echo %errorlevel%
 
 echo ********** Verify with user publication - needs extending. Publication exists. ********** 
-ksitool -vdr -i %TEST_EXTENDED_SIG% --ref AAAAAA-CVFWVA-AAPV2S-SN3JLW-YEKPW3-AUSQP6-PF65K5-KVGZZA-7UYTOV-27VX54-VVJQFG-VCK6GR
+ksitool -vdr -i %TEST_EXTENDED_SIG% %PUB_CNSTR% -P %PUB_SERV_IP% --ref AAAAAA-CVFWVA-AAPV2S-SN3JLW-YEKPW3-AUSQP6-PF65K5-KVGZZA-7UYTOV-27VX54-VVJQFG-VCK6GR
 echo %errorlevel%
 
 echo ********** Verify with user publication - needs extending. No publication. ********** 
-ksitool -vdr -i %TEST_EXTENDED_SIG% --ref AAAAAA-CUBJQL-AAKVFD-VNJIK5-7DTJ6T-YYCOGP-N7J3RT-CRE5DU-WBB6AE-LANHHH-3CFEM4-7FM65J
+ksitool -vdr -i %TEST_EXTENDED_SIG% %PUB_CNSTR% -P %PUB_SERV_IP% --ref AAAAAA-CUBJQL-AAKVFD-VNJIK5-7DTJ6T-YYCOGP-N7J3RT-CRE5DU-WBB6AE-LANHHH-3CFEM4-7FM65J
 echo %errorlevel%
 
 echo ********** Verify with user publication - signature not extended. Needs extending.********** 
-ksitool -vdr -i %TEST_OLD_SIG% --ref AAAAAA-CUBJQL-AAKVFD-VNJIK5-7DTJ6T-YYCOGP-N7J3RT-CRE5DU-WBB6AE-LANHHH-3CFEM4-7FM65J
+ksitool -vdr -i %TEST_OLD_SIG% %PUB_CNSTR% -P %PUB_SERV_IP% --ref AAAAAA-CUBJQL-AAKVFD-VNJIK5-7DTJ6T-YYCOGP-N7J3RT-CRE5DU-WBB6AE-LANHHH-3CFEM4-7FM65J
 echo %errorlevel%
 
 echo ********** Verify with user publication - signature not extended. Needs extending. No Publication.********** 
-ksitool -vdr -i %TEST_OLD_SIG% --ref AAAAAA-CUBJQL-AAKVFD-VNJIK5-7DTJ6T-YYCOGP-N7J3RT-CRE5DU-WBB6AE-LANHHH-3CFEM4-7FM65J
+ksitool -vdr -i %TEST_OLD_SIG% %PUB_CNSTR% -P %PUB_SERV_IP% --ref AAAAAA-CUBJQL-AAKVFD-VNJIK5-7DTJ6T-YYCOGP-N7J3RT-CRE5DU-WBB6AE-LANHHH-3CFEM4-7FM65J
 echo %errorlevel%
 
 echo ****************** Test stdin stdout 1******************
