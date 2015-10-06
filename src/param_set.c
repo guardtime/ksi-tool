@@ -115,14 +115,14 @@ static void paramValue_recursiveFree(paramValue *rootValue){
 	free(rootValue);
 }
 
-static paramValue* paramValue_getElementAt(const paramValue *rootValue, unsigned at){
+static paramValue* paramValue_getElementAt(paramValue *rootValue, unsigned at){
 	paramValue *tmp = NULL;
 	unsigned i=0;
 
 	if(rootValue == NULL) return NULL;
-	if(at == 0) return (paramValue*)rootValue;
+	if(at == 0) return rootValue;
 
-	tmp = (paramValue*)rootValue;
+	tmp = rootValue;
 	for(i=0; i<at;i++){
 		if(tmp->next == NULL) return NULL;
 		tmp = tmp->next;
@@ -132,13 +132,13 @@ static paramValue* paramValue_getElementAt(const paramValue *rootValue, unsigned
 }
 
 
-static paramValue* paramValue_getFirstHighestPriorityValue(const paramValue *rootValue){
+static paramValue* paramValue_getFirstHighestPriorityValue(paramValue *rootValue){
 	paramValue *pValue = NULL;
 	paramValue *master = NULL;
 
 	if(rootValue == NULL) return NULL;
 
-	pValue = (paramValue*)rootValue;
+	pValue = rootValue;
 	master = pValue;
 	do{
 		if (pValue != NULL){
@@ -230,7 +230,7 @@ static bool parameter_addArgument(parameter *param, const char *argument, const 
 	paramValue *newValue = NULL;
 	paramValue *pLastValue = NULL;
 	bool status = false;
-	char *arg = NULL;
+	const char *arg = NULL;
 	char buf[1024];
 	if(param == NULL) return false;
 
@@ -238,7 +238,7 @@ static bool parameter_addArgument(parameter *param, const char *argument, const 
 	if(param->convert)
 		arg = param->convert(argument, buf, sizeof(buf)) ? buf : arg;
 	else
-		arg = (char *)argument;
+		arg = argument;
 
 	/*Create new object and control the format*/
 	if(!paramValue_new(arg, source, priority, &newValue)) goto cleanup;
@@ -252,7 +252,7 @@ static bool parameter_addArgument(parameter *param, const char *argument, const 
 		param->arg = newValue;
 	}
 	else{
-		pLastValue = paramValue_getElementAt(param->arg, param->argCount-1);
+		pLastValue = (paramValue*)paramValue_getElementAt(param->arg, param->argCount-1);
 		if(pLastValue == NULL || pLastValue->next != NULL) goto cleanup;
 		pLastValue->next = newValue;
 	}
@@ -468,7 +468,7 @@ static void paramSet_getHighestPriorityValueByName(const paramSet *set, const ch
 	paramSet_getParameterByName(set, name, &tmp);
 	if(tmp == NULL) return;
 
-	*value = paramValue_getFirstHighestPriorityValue(tmp->arg);
+	*value = (paramValue*)paramValue_getFirstHighestPriorityValue(tmp->arg);
 	return;
 }
 
@@ -637,7 +637,7 @@ static int editDistance_levenshtein(const char *A, const char *B){
 	for(j=1; j<M_W; j++){
 		for(i=1; i<M_H; i++){
 			if(A[i-1] == B[j-1]) m[i][j] = DIAG(m,i,j);
-			else m[i][j] = 0xff & min_of_3(UP(m,i,j), LEFT(m,i,j), DIAG(m,i,j))+1;
+			else m[i][j] = 0xff & min_of_3(UP(m,i,j), LEFT(m,i,j), DIAG(m,i,j)) + 1;
 		}
 	}
 	edit_distance = m[i-1][j-1];
@@ -845,7 +845,7 @@ bool paramSet_isFormatOK(const paramSet *set){
 
 static bool getValue(const paramSet *set, const char *name, unsigned at, bool controlFormat,
 	void (*getter)(const paramSet*, const char*, unsigned, paramValue**),
-	void* (*convert)(const void*),
+	void (*convert)(char*, void**),
 	void **value){
 
 	paramValue *tmp = NULL;
@@ -856,7 +856,7 @@ static bool getValue(const paramSet *set, const char *name, unsigned at, bool co
 	if (tmp == NULL) return false;
 	if (tmp->formatStatus != FORMAT_OK && controlFormat) return false;
 	/*Convert value->string into format*/
-	if(convert && value) *value = convert(tmp->cstr_value);
+	if(convert && value) convert(tmp->cstr_value, value);
 	return true;
 }
 
@@ -864,19 +864,21 @@ static void wrapper_getHighestPriorityValueByName(const paramSet *set, const cha
 	paramSet_getHighestPriorityValueByName(set, name, value);
 }
 
-void *wrapper_returnStr(const void* obj){
-	return (void*)obj;
+void wrapper_returnStr(char* str, void** obj){
+	*obj = (void*)str;
 }
 
-void *wrapper_returnInt(const void* obj){
-	return (void*) atoi(obj);
+typedef struct INT_st {int value;} INT;
+
+void wrapper_returnInt(char* str,  void** obj){
+	((INT*)obj)->value = atoi(str);
 }
 
 bool paramSet_getIntValueByNameAt(const paramSet *set, const char *name, unsigned at, int *value){
-	void *val = NULL;
+	INT val;
 	bool stat;
-	stat = getValue(set, name, at, true, paramSet_getValueByNameAt, wrapper_returnInt, &val);
-	*value = (int)(val);
+	stat = getValue(set, name, at, true, paramSet_getValueByNameAt, wrapper_returnInt, (void**)&val);
+	*value = val.value;
 	return stat;
 }
 
@@ -885,10 +887,10 @@ bool paramSet_getStrValueByNameAt(const paramSet *set, const char *name, unsigne
 }
 
 bool paramSet_getHighestPriorityIntValueByName(const paramSet *set, const char *name, int *value){
-	void *val = NULL;
+	INT val;
 	bool stat;
 	stat = getValue(set, name, 0xFFFF, true, wrapper_getHighestPriorityValueByName, wrapper_returnInt, (void**)&val);
-	*value = (int)val;
+	*value = val.value;
 	return stat;
 }
 
