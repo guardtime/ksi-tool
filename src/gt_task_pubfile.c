@@ -92,7 +92,7 @@ static int GT_publicationsFileTask_downloadPublicationsFile(Task *task, KSI_CTX 
 	int res;
 	paramSet *set = NULL;
 	KSI_PublicationsFile *tmp = NULL;
-	bool d, t, r;
+	bool t;
 
 
 	if (task == NULL || ksi == NULL || err == NULL) {
@@ -102,8 +102,6 @@ static int GT_publicationsFileTask_downloadPublicationsFile(Task *task, KSI_CTX 
 
 
 	set = Task_getSet(task);
-	r = paramSet_isSetByName(set, "r");
-	d = paramSet_isSetByName(set, "d");
 	t = paramSet_isSetByName(set, "t");
 
 
@@ -136,7 +134,6 @@ cleanup:
 static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_PublicationData **pubData) {
 	paramSet *set = NULL;
 	int res;
-	KSI_PublicationsFile *publicationsFile = NULL;
 
 	KSI_Integer *end = NULL;
 	KSI_Integer *start = NULL;
@@ -149,8 +146,7 @@ static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *
 	KSI_DataHash *extHsh = NULL;
 	KSI_PublicationData *tmpPubData = NULL;
 	KSI_Integer *pubTime = NULL;
-	int retval = EXIT_SUCCESS;
-	bool d, t, r;
+	bool t;
 	int publicationTime = 0;
 
 
@@ -161,8 +157,6 @@ static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *
 
 
 	set = Task_getSet(task);
-	r = paramSet_isSetByName(set, "r");
-	d = paramSet_isSetByName(set, "d");
 	t = paramSet_isSetByName(set, "t");
 	paramSet_getIntValueByNameAt(set,"T",0,&publicationTime);
 

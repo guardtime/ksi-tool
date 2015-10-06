@@ -20,7 +20,7 @@
 
 #include "gt_task_support.h"
 
-static int  getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh);
+static int getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh);
 
 int GT_signTask(Task *task) {
 	int res;
@@ -117,7 +117,7 @@ static int  getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh
 		ERR_APPEND_KSI_ERR(err, res, KSI_UNAVAILABLE_HASH_ALGORITHM);
 		ERR_CATCH_MSG(err, res, "Error: Unable to open hasher.");
 
-		res = getFilesHash(err, ksi, hsr, inDataFileName, &tmp);
+		res = getFilesHash(err, hsr, inDataFileName, &tmp);
 		if (res != KT_OK) {
 			ERR_TRCKR_ADD(err, res, "Error: Unable to hash file. (%s)", errToString(res));
 			goto cleanup;

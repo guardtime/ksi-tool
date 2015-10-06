@@ -732,7 +732,7 @@ static void paramSet_addRawParameter(const char *param, const char *arg, const c
 			if(arg)
 				paramSet_appendParameterByName(paramSet_couldItBeTypo(arg, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME, arg, source, set);
 
-			while(str_flg[0] = flag[itr++]){
+			while((str_flg[0] = flag[itr++]) != '\0'){
 				if(paramSet_priorityAppendParameterByName(str_flg, NULL, source, priority, set)==false){
 					if(paramSet_couldItBeTypo(flag, set)){
 						paramSet_appendParameterByName(TYPO_PARAMETER_NAME, flag, source, set);
@@ -781,7 +781,6 @@ cleanup:
 void paramSet_readFromCMD(int argc, char **argv, paramSet *set, int priority){
 	int i=0;
 	char *tmp = NULL;
-	char *flag = NULL;
 	char *arg = NULL;
 
 	if(set == NULL) return;
@@ -789,7 +788,6 @@ void paramSet_readFromCMD(int argc, char **argv, paramSet *set, int priority){
 	for (i = 1; i < argc; i++){
 		tmp = argv[i];
 		arg = NULL;
-		flag = NULL;
 
 		if (i + 1 < argc) {
 			if(argv[i + 1][0] != '-' || (argv[i + 1][0] == '-' && argv[i + 1][1] == 0))

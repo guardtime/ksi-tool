@@ -175,7 +175,6 @@ static bool taskDefinition_isFirstFlagSet(const char* category, paramSet *set){
  * @return true id task is consistent false otherwise.
  */
 static bool taskDefinition_analyseConsistency(TaskDefinition *def, paramSet *set){
-	bool state = false;
 	int manMissing;
 	int manCount;
 	double defMan;
@@ -307,7 +306,7 @@ static void TaskDefinition_printSuggestions(TaskDefinition **def, int count, par
 
 	for (i = 0; i < count; i++){
 		tmp = def[i];
-		if (tmp->isDefined && tmp->consistency >= 0.25 || tmp->consistency >= 0.75)
+		if ((tmp->isDefined && (tmp->consistency >= 0.25)) || tmp->consistency >= 0.75)
 			printError("Maybe you want to: %s %s\n", tmp->name, tmp->toString);
 	}
 }
@@ -379,14 +378,10 @@ static TaskDefinition *taskDefinition_getConsistentTask(TaskDefinition **def, in
 }
 
 Task* Task_getConsistentTask(TaskDefinition **def, int count, paramSet *set){
-	int i=0;
-	int definedCount = 0;
 	const char *pName = NULL;
 	char buf[256];
 	Task *tmpTask = NULL;
-	TaskDefinition *tmp = NULL;
 	TaskDefinition *consistent = NULL;
-	TaskDefinition *invalidAttempt = NULL;
 
 	if (def == NULL || set == NULL) return NULL;
 
@@ -416,13 +411,11 @@ Task* Task_getConsistentTask(TaskDefinition **def, int count, paramSet *set){
 void Task_printError(TaskDefinition **def, int count, paramSet *set){
 	int i=0;
 	int definedCount = 0;
-	const char *pName = NULL;
-	Task *tmpTask = NULL;
 	TaskDefinition *tmp = NULL;
 	TaskDefinition *consistent = NULL;
 	TaskDefinition *invalidAttempt = NULL;
-	double highestConsistency;
-	int maxConsistencyCout;
+	double highestConsistency = -1000;
+	int maxConsistencyCout = -1;
 	bool isSimilarHighConsistencyTasks = false;
 	int (*printError)(const char*, ...) = NULL;
 
@@ -468,7 +461,7 @@ void Task_printError(TaskDefinition **def, int count, paramSet *set){
 	if (definedCount == 0){
 		printError("Task is not defined. Use (-x, -s, -v, -p) and read help -h\n");
 		TaskDefinition_printSuggestions(def, count, set);
-	}else if (definedCount > 1 && consistent == NULL && invalidAttempt->consistency < 0.5 ||
+	}else if ((definedCount > 1 && consistent == NULL && invalidAttempt->consistency < 0.5) ||
 			  maxConsistencyCout > 1 || isSimilarHighConsistencyTasks){
 		printError("Task is not fully defined:\n");
 		TaskDefinition_printSuggestions(def, count, set);

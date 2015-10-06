@@ -83,7 +83,7 @@ int GT_verifySignatureTask(Task *task){
 
 	if (n || r || d || tlv) print_info("\n");
 
-	if ((n || r || d || tlv) &&  Task_getID(task) == verifyTimestamp || Task_getID(task) == verifyTimestampOnline){
+	if (((n || r || d || tlv) &&  (Task_getID(task) == verifyTimestamp)) || Task_getID(task) == verifyTimestampOnline){
 		if (n) printSignerIdentity(tmp_ext != NULL ? tmp_ext : sig);
 		if (r) printSignaturePublicationReference(tmp_ext != NULL ? tmp_ext : sig);
 		if (d) {
@@ -119,7 +119,7 @@ int GT_verifyPublicationFileTask(Task *task){
 	ERR_TRCKR *err = NULL;
 	KSI_CTX *ksi = NULL;
 	paramSet *set = NULL;
-	bool b, d, t;
+	bool d, t;
 	char *inPubFileName = NULL;
 	KSI_PublicationsFile *publicationsFile = NULL;
 	KSI_PublicationRecord *pubRec = NULL;
@@ -130,7 +130,7 @@ int GT_verifyPublicationFileTask(Task *task){
 
 
 	set = Task_getSet(task);
-	b = paramSet_getStrValueByNameAt(set, "b", 0, &inPubFileName);
+	paramSet_getStrValueByNameAt(set, "b", 0, &inPubFileName);
 	d = paramSet_isSetByName(set, "d");
 	t = paramSet_isSetByName(set, "t");
 
@@ -215,15 +215,13 @@ static int GT_verifyTask_verifyWithPublication(Task *task, KSI_CTX *ksi, ERR_TRC
 	KSI_PublicationData *publication = NULL;
 	KSI_PublicationRecord *extendTo = NULL;
 	KSI_Signature *tmp_ext = NULL;
-	int retval = EXIT_SUCCESS;
 	KSI_PublicationRecord *pubRec = NULL;
 	KSI_PublicationData *pubData = NULL;
 	KSI_PublicationsFile *pubFile = NULL;
 	KSI_Integer *timeA = NULL;
 	KSI_Integer *timeB = NULL;
-	bool n, r, d, t, ref, tlv, isExtended;
+	bool t, isExtended;
 	char *refStrn = NULL;
-	bool onErrorPrintFail = false;
 
 	if (task == NULL || ksi == NULL || err == NULL || sig == NULL) {
 		res = KT_INVALID_ARGUMENT;
@@ -231,13 +229,10 @@ static int GT_verifyTask_verifyWithPublication(Task *task, KSI_CTX *ksi, ERR_TRC
 	}
 
 	set = Task_getSet(task);
-	ref = paramSet_getStrValueByNameAt(set, "ref",0, &refStrn);
+	paramSet_getStrValueByNameAt(set, "ref",0, &refStrn);
 
-	n = paramSet_isSetByName(set, "n");
-	r = paramSet_isSetByName(set, "r");
-	d = paramSet_isSetByName(set, "d");
 	t = paramSet_isSetByName(set, "t");
-	tlv = paramSet_isSetByName(set, "tlv");
+	paramSet_isSetByName(set, "tlv");
 
 
 	isExtended = isSignatureExtended(sig);
@@ -351,8 +346,7 @@ cleanup:
 static int GT_verifyTask_verifyData(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig) {
 	int res;
 	paramSet *set = NULL;
-	bool F, f, t;
-	bool isExtended = false;
+	bool F, f;
 	char *imprint = NULL;
 	KSI_DataHash *file_hsh = NULL;
 	KSI_DataHash *raw_hsh = NULL;
@@ -365,7 +359,6 @@ static int GT_verifyTask_verifyData(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KS
 	}
 
 	set = Task_getSet(task);
-	t = paramSet_isSetByName(set, "t");
 	f = paramSet_getStrValueByNameAt(set, "f",0, &inDataFileName);
 	F = paramSet_getStrValueByNameAt(set, "F",0, &imprint);
 
@@ -374,7 +367,7 @@ static int GT_verifyTask_verifyData(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KS
 		print_progressDesc(false, "Verifying file's %s hash... ", inDataFileName);
 		res = KSI_Signature_createDataHasher(sig, &hsr);
 		ERR_CATCH_MSG(err, res, "Error: Unable to create data hasher.");
-		res = getFilesHash(err, ksi, hsr, inDataFileName, &file_hsh);
+		res = getFilesHash(err, hsr, inDataFileName, &file_hsh);
 		if (res != KT_OK) {
 			ERR_TRCKR_ADD(err, res, "Error: Unable to hash file. (%s)", errToString(res));
 			goto cleanup;

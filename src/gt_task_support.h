@@ -83,14 +83,13 @@ void closeTask(KSI_CTX *ksi);
  * Calculates the hash of an input file.
  *
  * @param err	Error tracker.
- * @param ksi	KSI Context.
  * @param hsr	Hasher for file hashing.
  * @param fname	Files name to be hashed.
  * @param hash	Hash value of the file.
  *
  * @return KT_OK if successful, error code otherwise.
  */
-int getFilesHash(ERR_TRCKR *err, KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash);
+int getFilesHash(ERR_TRCKR *err, KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash);
 
 /**
  * Saves signature object to a file. If files name is -, file is written to stdout.
@@ -150,12 +149,12 @@ bool isPiping(paramSet *set);
 
 void printSignerIdentity(KSI_Signature *sig);
 void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile);
-void printSignaturePublicationReference(const KSI_Signature *sig);
-void printSignatureVerificationInfo(const KSI_Signature *sig);
+void printSignaturePublicationReference(KSI_Signature *sig);
+void printSignatureVerificationInfo(KSI_Signature *sig);
 void printPublicationsFileCertificates(const KSI_PublicationsFile *pubfile);
 void printSignaturesRootHash_n_Time(const KSI_Signature *sig);
 void printSignatureSigningTime(const KSI_Signature *sig);
-void printSignatureStructure(KSI_CTX *ksi, const KSI_Signature *sig);
+void printSignatureStructure(KSI_CTX *ksi, KSI_Signature *sig);
 
 /**
  * Reads hash from command line and creates the KSI_DataHash object.

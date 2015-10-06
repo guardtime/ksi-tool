@@ -52,7 +52,7 @@ FormatStatus isHexFormatOK(const char *hex){
 	if(hex == NULL) return FORMAT_NULLPTR;
 	if(strlen(hex) == 0) return FORMAT_NOCONTENT;
 
-	while (C = hex[i++]) {
+	while ((C = hex[i++]) != '\0') {
 		if (!isxdigit(C)) {
 			return FORMAT_INVALID;
 		}
@@ -82,7 +82,7 @@ FormatStatus isIntegerFormatOK(const char *integer){
 	if(integer == NULL) return FORMAT_NULLPTR;
 	if(strlen(integer) == 0) return FORMAT_NOCONTENT;
 
-	while (C = integer[i++]) {
+	while ((C = integer[i++]) != '\0') {
 		if (isdigit(C) == 0) {
 			return FORMAT_INVALID;
 		}
@@ -169,15 +169,13 @@ static int doFileExists(const char* path){
 }
 
 ContentStatus isInputFileContOK(const char* path){
-	ContentStatus res = PARAM_UNKNOWN_ERROR;
 	int fileStatus = EINVAL;
-	res = isPathFormOk(path);
 	if (strcmp(path, "-") == 0) {
 		return PARAM_OK;
-	}else if (res == PARAM_OK)
+	}else if (isPathFormOk(path) == FORMAT_OK)
 		fileStatus = doFileExists(path);
 	else
-		return res;
+		return FILE_INVALID_PATH;
 
 	switch (fileStatus) {
 	case 0:
@@ -257,7 +255,7 @@ cleanup:
 }
 
 ContentStatus isIntegerContOk(const char* integer) {
-	int i;
+	unsigned int i;
 	size_t len;
 	size_t int_max_len;
 	char tmp[32];
@@ -291,23 +289,23 @@ ContentStatus contentIsOK(const char *alg){
 
 const char *getFormatErrorString(FormatStatus res){
 	switch (res) {
-	case FORMAT_OK: return "(Parameter OK)";
-		break;
-	case FORMAT_NULLPTR: return "(Parameter must have value)";
-		break;
-	case FORMAT_NOCONTENT: return "(Parameter has no content)";
-		break;
-	case FORMAT_INVALID: return "(Parameter is invalid)";
-		break;
-	case FORMAT_INVALID_OID: return "(OID is invalid)";
-		break;
-	case FORMAT_URL_UNKNOWN_SCHEME: return "(URL scheme is unknown)";
-		break;
-	case FORMAT_FLAG_HAS_ARGUMENT: return "(Parameter must not have arguments)";
-		break;
+		case FORMAT_OK: return "(Parameter OK)";
+			break;
+		case FORMAT_NULLPTR: return "(Parameter must have value)";
+			break;
+		case FORMAT_NOCONTENT: return "(Parameter has no content)";
+			break;
+		case FORMAT_INVALID: return "(Parameter is invalid)";
+			break;
+		case FORMAT_INVALID_OID: return "(OID is invalid)";
+			break;
+		case FORMAT_URL_UNKNOWN_SCHEME: return "(URL scheme is unknown)";
+			break;
+		case FORMAT_FLAG_HAS_ARGUMENT: return "(Parameter must not have arguments)";
+			break;
+		default: return "(Unknown error)";
+			break;
 	}
-
-	return "(Unknown error)";
 }
 
 const char *getParameterContentErrorString(ContentStatus res){
@@ -328,9 +326,9 @@ const char *getParameterContentErrorString(ContentStatus res){
 		break;
 	case INTEGER_TOO_LARGE: return "(Integer value is too large)";
 		break;
+	default: return "(Unknown error)";
+		break;
 	}
-
-	return "(Unknown error)";
 }
 
 bool convert_repairUrl(const char* arg, char* buf, unsigned len){

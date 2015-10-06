@@ -132,7 +132,7 @@ cleanup:
 static int ksitool_initNetworkProvider(Task *task, KSI_CTX *ksi, ERR_TRCKR *err){
 	int res;
 	paramSet *set = NULL;
-	bool S, P, X, C, c, s, v, x, p, T, aggre;
+	bool P, C, c, s, v, x, p, T, aggre;
 	char *signingService_url = NULL;
 	char *publicationsFile_url = NULL;
 	char *verificationService_url = NULL;
@@ -147,8 +147,8 @@ static int ksitool_initNetworkProvider(Task *task, KSI_CTX *ksi, ERR_TRCKR *err)
 	}
 
 	set = Task_getSet(task);
-	S = paramSet_getHighestPriorityStrValueByName(set, "S", &signingService_url);
-	X = paramSet_getHighestPriorityStrValueByName(set, "X", &verificationService_url);
+	paramSet_getHighestPriorityStrValueByName(set, "S", &signingService_url);
+	paramSet_getHighestPriorityStrValueByName(set, "X", &verificationService_url);
 	P = paramSet_getStrValueByNameAt(set, "P",0,&publicationsFile_url);
 
 	C = paramSet_getIntValueByNameAt(set, "C", 0,&networkConnectionTimeout);
@@ -200,7 +200,7 @@ static int ksitool_initNetworkProvider(Task *task, KSI_CTX *ksi, ERR_TRCKR *err)
 	}
 
 	if (c) {
-		KSI_CTX_setTransferTimeoutSeconds(ksi, networkTransferTimeout);
+		res = KSI_CTX_setTransferTimeoutSeconds(ksi, networkTransferTimeout);
 		ERR_CATCH_MSG(err, res, "Error: Unable set transfer timeout.");
 	}
 
@@ -297,7 +297,6 @@ static int ksitool_initTrustStore(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	bool V, W, cnstr;
 	char *lookupFile = NULL;
 	char *lookupDir = NULL;
-	KSI_CertConstraint constraintArray[2] = {{NULL, NULL}, {NULL, NULL}};
 
 	if (task == NULL || ksi == NULL || err == NULL) {
 		return KT_INVALID_ARGUMENT;
@@ -436,12 +435,11 @@ cleanup:
 }
 
 bool isPiping(paramSet *set) {
-	bool o, log;
 	int j;
 	char *files[5] = {NULL, NULL, NULL, NULL, NULL};
 
-	o = paramSet_getStrValueByNameAt(set, "o", 0, &files[0]);
-	log = paramSet_getStrValueByNameAt(set, "log", 0, &files[1]);
+	paramSet_getStrValueByNameAt(set, "o", 0, &files[0]);
+	paramSet_getStrValueByNameAt(set, "log", 0, &files[1]);
 
 	for (j = 0; j < 2; j++) {
 		if (files[j] != NULL && strcmp(files[j], "-") == 0) {
@@ -464,12 +462,12 @@ cleanup:
 
 
 
-int getFilesHash(ERR_TRCKR *err, KSI_CTX *ksi, KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash){
+int getFilesHash(ERR_TRCKR *err, KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash){
 	int res;
 	FILE *readFrom = NULL;
 	unsigned char buf[1024];
 	size_t buf_len;
-	bool close;
+	bool close = false;
 	KSI_DataHash *tmp = NULL;
 
 	if(err == NULL || hsr == NULL || fname == NULL || hash == NULL) {
@@ -521,7 +519,7 @@ static int loadKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **obj
 	size_t buf_len = 0;
 	void *tmp = NULL;
 
-	if (ksi == NULL || path == NULL || obj == NULL || parse == NULL || free == NULL) {
+	if (ksi == NULL || path == NULL || obj == NULL || parse == NULL || obj_free == NULL) {
 		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
@@ -534,7 +532,8 @@ static int loadKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **obj
 
 	buf = (unsigned char*)malloc(buf_size);
 	if (buf == NULL) {
-		ERR_TRCKR_ADD(err, res = KT_OUT_OF_MEMORY, "Error:%s.", errToString(res));
+		res = KT_OUT_OF_MEMORY;
+		ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
 		goto cleanup;
 	}
 
@@ -543,7 +542,8 @@ static int loadKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **obj
 			buf_size += 0xffff;
 			buf = realloc(buf, buf_size);
 			if (buf == NULL) {
-				ERR_TRCKR_ADD(err, res = KT_OUT_OF_MEMORY, "Error:%s.", errToString(res));
+				res = KT_OUT_OF_MEMORY;
+				ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
 				goto cleanup;
 			}
 		}
@@ -555,7 +555,8 @@ static int loadKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **obj
 	}
 
 	if (buf_len > UINT_MAX) {
-		ERR_TRCKR_ADD(err, res = KT_INDEX_OVF, "Error:%s.", errToString(res));
+		res = KT_INDEX_OVF;
+		ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
 		goto cleanup;
 	}
 
@@ -617,7 +618,6 @@ static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, void *obj,
 							int (*serialize)(KSI_CTX *ksi, void *obj, unsigned char **raw, size_t *raw_len),
 							const char *path) {
 	int res;
-	bool doPipe = false;
 	FILE *writeInto = NULL;
 	bool close = false;
 	unsigned char *raw = NULL;
@@ -630,7 +630,6 @@ static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, void *obj,
 		goto cleanup;
 	}
 
-	doPipe = strcmp(path, "-") == 0 ? true : false;
 
 	res = serialize(ksi, obj, &raw, &raw_len);
 	if (res != KSI_OK) {
@@ -701,11 +700,10 @@ int savePublicationFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubf
 }
 
 bool isSignatureExtended(const KSI_Signature *sig) {
-	int res;
 	KSI_PublicationRecord *pubRec = NULL;
 
 	if (sig == NULL) return false;
-	res = KSI_Signature_getPublicationRecord(sig, &pubRec);
+	KSI_Signature_getPublicationRecord(sig, &pubRec);
 
 	return pubRec == NULL ? false : true;
 }
@@ -715,7 +713,7 @@ void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile){
 	KSI_LIST(KSI_PublicationRecord)* list_publicationRecord = NULL;
 	KSI_PublicationRecord *publicationRecord = NULL;
 	char buf[1024];
-	int i, j;
+	unsigned int i, j;
 	char *pLineBreak = NULL;
 	char *pStart = NULL;
 
@@ -755,7 +753,7 @@ void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile){
 	return;
 }
 
-void printSignaturePublicationReference(const KSI_Signature *sig){
+void printSignaturePublicationReference(KSI_Signature *sig){
 	int res = KSI_UNKNOWN_ERROR;
 	KSI_PublicationRecord *publicationRecord;
 	char buf[1024];
@@ -818,19 +816,19 @@ cleanup:
 	return;
 }
 
-void printSignatureVerificationInfo(const KSI_Signature *sig){
+void printSignatureVerificationInfo(KSI_Signature *sig){
 	int res = KSI_UNKNOWN_ERROR;
 	const KSI_VerificationResult *sigVerification = NULL;
 	const KSI_VerificationStepResult *result = NULL;
 	const char *desc;
-	int i=0;
+	unsigned int i = 0;
 
 	if(sig == NULL){
 		return;
 	}
 
 	print_info("Verification steps:\n");
-	res = KSI_Signature_getVerificationResult((KSI_Signature*)sig, &sigVerification);
+	res = KSI_Signature_getVerificationResult(sig, &sigVerification);
 	if(res != KSI_OK){
 		print_info("Unable to get verification steps\n\n");
 		return;
@@ -890,7 +888,7 @@ void printPublicationsFileCertificates(const KSI_PublicationsFile *pubfile){
 	KSI_CertificateRecord *certRec = NULL;
 	KSI_PKICertificate *cert = NULL;
 	char buf[1024];
-	int i=0;
+	unsigned int i=0;
 	int res = 0;
 
 	if(pubfile == NULL) goto cleanup;
@@ -924,14 +922,14 @@ __declspec( dllimport )
 #endif
 KSI_IMPORT_TLV_TEMPLATE(KSI_Signature);
 
-void printSignatureStructure(KSI_CTX *ksi, const KSI_Signature *sig) {
+void printSignatureStructure(KSI_CTX *ksi, KSI_Signature *sig) {
 	int res;
 	KSI_TLV *baseTlv = NULL;
 	unsigned char *tmp = NULL;
 	size_t tmp_len;
 	char buf[0x6fff];
 
-	res = KSI_Signature_serialize((KSI_Signature*)sig, &tmp, &tmp_len);
+	res = KSI_Signature_serialize(sig, &tmp, &tmp_len);
 	if (res != KSI_OK) goto cleanup;
 
 	res = KSI_TLV_new(ksi, KSI_TLV_PAYLOAD_TLV, 0x800, 0, 0, &baseTlv);
@@ -982,7 +980,7 @@ static int getBinaryFromHexString(const char *hexin, unsigned char **binout, siz
 	size_t len;
 	unsigned char *tmp = NULL;
 	size_t arraySize;
-	int i, j;
+	unsigned int i, j;
 
 	if (hexin == NULL || binout == NULL || lenout == NULL) {
 		res = KT_INVALID_ARGUMENT;
