@@ -251,16 +251,17 @@ In the following examples it is assumed that default service urls are defined as
 To use ksitool, service urls must be specified. It can be done via environment variables, command-line parameters or a configuration file.
 
 .B 1.1
-To define default urls as environment variables, KSI_AGGREGATOR and KSI_EXTENDER must be defined as shown below: 
+To define default urls as environment variables, KSI_AGGREGATOR, KSI_EXTENDER and KSI_PUBFILE must be defined as shown below: 
 
 .RS
 .br
-.B KSI_AGGREGATOR=
-.I url=http://test.com:3333/gt-signingservice pass=test_pass user=test_user
+\fBKSI_AGGREGATOR\fR=\fIurl=http://test.com:3333/gt-signingservice pass=test_pass user=test_user\fR
 .br
-.B KSI_EXTENDER=
-.I url=http://test.com:8010/gt-extendingservice pass=test_pass user=test_user
+\fBKSI_EXTENDER\fR=\fIurl=http://test.com:8010/gt-extendingservice pass=test_pass user=test_user\fR
+.br
+\fBKSI_PUBFILE\fR=\fIurl=http://verify.guardtime.com/ksi-publications.bin 1.2.840.113549.1.9.1=publications@guardtime.com 2.5.4.10="Symantec Corporation"\fR
 .RE
+
 
 .B 1.2
 To define service urls on command-line or via configuration file, following parameters must be defined:
