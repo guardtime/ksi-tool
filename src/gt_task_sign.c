@@ -25,7 +25,7 @@ static int getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh)
 int GT_signTask(Task *task) {
 	int res;
 	paramSet *set = NULL;
-	bool t, n, d, tlv;
+	bool t, n, d;
 	ERR_TRCKR *err = NULL;
 	KSI_CTX *ksi = NULL;
 	KSI_DataHash *hash = NULL;
@@ -39,7 +39,6 @@ int GT_signTask(Task *task) {
 	n = paramSet_isSetByName(set, "n");
 	t = paramSet_isSetByName(set, "t");
 	d = paramSet_isSetByName(set, "d");
-	tlv = paramSet_isSetByName(set, "tlv");
 
 
 	res = initTask(task, &ksi, &err);
@@ -62,10 +61,9 @@ int GT_signTask(Task *task) {
 	print_info("Signature saved.\n");
 
 	/*Print info*/
-	if(n || d || tlv) print_info("\n");
+	if(n || d) print_info("\n");
 	if (n) printSignerIdentity(sign);
 	if (d) printSignatureSigningTime(sign);
-	if (tlv) printSignatureStructure(ksi, sign);
 
 
 cleanup:

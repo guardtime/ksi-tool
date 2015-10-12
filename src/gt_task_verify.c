@@ -35,7 +35,7 @@ int GT_verifySignatureTask(Task *task){
 	int retval = EXIT_SUCCESS;
 
 
-	bool n, r, d, f, F, ref, tlv;
+	bool n, r, d, f, F, ref;
 	char *inSigFileName = NULL;
 
 	set = Task_getSet(task);
@@ -47,7 +47,6 @@ int GT_verifySignatureTask(Task *task){
 	n = paramSet_isSetByName(set, "n");
 	r = paramSet_isSetByName(set, "r");
 	d = paramSet_isSetByName(set, "d");
-	tlv = paramSet_isSetByName(set, "tlv");
 
 	res = initTask(task, &ksi, &err);
 	if (res != KT_OK) goto cleanup;
@@ -81,17 +80,14 @@ int GT_verifySignatureTask(Task *task){
 	print_info("Verification of signature %s successful.\n", inSigFileName);
 
 
-	if (n || r || d || tlv) print_info("\n");
+	if (n || r || d) print_info("\n");
 
-	if (((n || r || d || tlv) &&  (Task_getID(task) == verifyTimestamp)) || Task_getID(task) == verifyTimestampOnline){
+	if (((n || r || d) &&  (Task_getID(task) == verifyTimestamp)) || Task_getID(task) == verifyTimestampOnline){
 		if (n) printSignerIdentity(tmp_ext != NULL ? tmp_ext : sig);
 		if (r) printSignaturePublicationReference(tmp_ext != NULL ? tmp_ext : sig);
 		if (d) {
 			printSignatureVerificationInfo(tmp_ext != NULL ? tmp_ext : sig);
 			printSignatureSigningTime(tmp_ext != NULL ? tmp_ext : sig);
-		}
-		if (tlv) {
-			printSignatureStructure(ksi, tmp_ext != NULL ? tmp_ext : sig);
 		}
 	}
 
@@ -232,7 +228,6 @@ static int GT_verifyTask_verifyWithPublication(Task *task, KSI_CTX *ksi, ERR_TRC
 	paramSet_getStrValueByNameAt(set, "ref",0, &refStrn);
 
 	t = paramSet_isSetByName(set, "t");
-	paramSet_isSetByName(set, "tlv");
 
 
 	isExtended = isSignatureExtended(sig);

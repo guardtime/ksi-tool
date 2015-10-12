@@ -32,7 +32,7 @@ int GT_extendTask(Task *task) {
 	KSI_Integer *pubTime = NULL;
 	int retval = EXIT_SUCCESS;
 
-	bool T, t, n, r, d, tlv;
+	bool T, t, n, r, d;
 	char *inSigFileName = NULL;
 	char *outSigFileName = NULL;
 	int publicationTime = 0;
@@ -45,7 +45,6 @@ int GT_extendTask(Task *task) {
 	t = paramSet_isSetByName(set, "t");
 	r = paramSet_isSetByName(set, "r");
 	d = paramSet_isSetByName(set, "d");
-	tlv = paramSet_isSetByName(set, "tlv");
 
 	res = initTask(task, &ksi, &err);
 	if (res != KT_OK) goto cleanup;
@@ -93,14 +92,13 @@ int GT_extendTask(Task *task) {
 cleanup:
 	print_progressResult(res);
 
-	if(n || r || d || tlv) print_info("\n");
+	if(n || r || d) print_info("\n");
 
 	if(ext != NULL){
-		if(n || d || r || tlv) print_info("Extended signature:\n");
+		if(n || d || r) print_info("Extended signature:\n");
 		if (d) printSignatureVerificationInfo(ext);
 		if (n) printSignerIdentity(ext);
 		if (r) printSignaturePublicationReference(ext);
-		if (tlv) printSignatureStructure(ksi, ext);
 	}
 
 	if (res != KT_OK) {
@@ -114,7 +112,6 @@ cleanup:
 		if (sig != NULL && d){
 			print_errors("\nOld signature:\n");
 			printSignatureVerificationInfo(sig);
-			if (tlv) printSignatureStructure(ksi, sig);
 		}
 
 		retval = errToExitCode(res);

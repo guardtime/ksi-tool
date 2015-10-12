@@ -303,7 +303,6 @@ static void GT_pritHelp(void){
 			" -n\t\tprint signer Name (identity).\n"
 			" -r\t\tprint publication References (use with -vx).\n"
 			" -d\t\tprint detailed information.\n"
-			" --tlv\t\tdump signature's TLV structure.\n"
 			" --log <file>\tdump KSI log into file.\n"
 			" --silent\tsilence info and warning messages.\n"
 			" --nowarn\tsilence warning messages.\n"
@@ -386,7 +385,7 @@ int main(int argc, char** argv, char **envp) {
 				"{W}{S}>{X}>{P}>{F}{H}{T}{E}{inc}*{cnstr}*"
 				/*TODO: uncomment if implemented*/
 //				"{aggre}{htime}{setsystime}"
-				"{ref}{user}>{pass}>{log}{tlv}{silent}{nowarn}",
+				"{ref}{user}>{pass}>{log}{silent}{nowarn}",
 				print_info, print_warnings, print_errors,
 				&set);
 	if(set == NULL) goto cleanup;
@@ -402,7 +401,7 @@ int main(int argc, char** argv, char **envp) {
 	paramSet_addControl(set, "{user}{pass}", isUserPassFormatOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{ref}", formatIsOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{cnstr}", isConstraintFormatOK, contentIsOK, convert_replaceWithOid);
-	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{tlv}{silent}{nowarn}", isFlagFormatOK, contentIsOK, NULL);
+	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{silent}{nowarn}", isFlagFormatOK, contentIsOK, NULL);
 	/*TODO: uncomment if implemented*/
 //	paramSet_addControl(set, "{aggre}{htime}{setsystime}", isFlagFormatOK, contentIsOK, NULL);
 
