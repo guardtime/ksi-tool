@@ -58,8 +58,8 @@ int GT_publicationsFileTask(Task *task){
 		print_info("Publications file '%s' saved.\n", outPubFileName);
 
 		if(d || r) print_info("\n");
-		if(d || r) printPublicationsFileReferences(publicationsFile);
-		if(d) printPublicationsFileCertificates(publicationsFile);
+		if(d || r) OBJPRINT_publicationsFileReferences(publicationsFile);
+		if(d) OBJPRINT_publicationsFileCertificates(publicationsFile);
 	} else if(Task_getID(task) == createPublicationString){
 		res = GT_publicationsFileTask_createPublicationString(task, ksi, err, &pubData);
 		if (res != KT_OK) goto cleanup;

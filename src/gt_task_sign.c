@@ -63,8 +63,8 @@ int GT_signTask(Task *task) {
 
 	/*Print info*/
 	if(n || d) print_info("\n");
-	if (n) printSignerIdentity(sign);
-	if (d) printSignatureSigningTime(sign);
+	if (n) OBJPRINT_signerIdentity(sign);
+	if (d) OBJPRINT_signatureSigningTime(sign);
 
 
 cleanup:

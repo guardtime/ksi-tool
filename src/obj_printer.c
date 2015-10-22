@@ -1,9 +1,9 @@
-#include "obj_printer.h"
-#include "printer.h"
 #include <ksi/pkitruststore.h>
 #include <string.h>
+#include "obj_printer.h"
+#include "printer.h"
 
-void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile){
+void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile){
 	int res = KSI_UNKNOWN_ERROR;
 	KSI_LIST(KSI_PublicationRecord)* list_publicationRecord = NULL;
 	KSI_PublicationRecord *publicationRecord = NULL;
@@ -48,7 +48,7 @@ void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile){
 	return;
 }
 
-void printSignaturePublicationReference(KSI_Signature *sig){
+void OBJPRINT_signaturePublicationReference(KSI_Signature *sig){
 	int res = KSI_UNKNOWN_ERROR;
 	KSI_PublicationRecord *publicationRecord;
 	char buf[1024];
@@ -90,7 +90,7 @@ void printSignaturePublicationReference(KSI_Signature *sig){
 	return;
 }
 
-void printSignerIdentity(KSI_Signature *sig){
+void OBJPRINT_signerIdentity(KSI_Signature *sig){
 	int res = KSI_UNKNOWN_ERROR;
 	char *signerIdentity = NULL;
 
@@ -111,7 +111,7 @@ cleanup:
 	return;
 }
 
-void printSignatureVerificationInfo(KSI_Signature *sig){
+void OBJPRINT_signatureVerificationInfo(KSI_Signature *sig){
 	int res = KSI_UNKNOWN_ERROR;
 	const KSI_VerificationResult *sigVerification = NULL;
 	const KSI_VerificationStepResult *result = NULL;
@@ -147,7 +147,7 @@ void printSignatureVerificationInfo(KSI_Signature *sig){
 	return;
 }
 
-void printSignatureSigningTime(const KSI_Signature *sig) {
+void OBJPRINT_signatureSigningTime(const KSI_Signature *sig) {
 	int res;
 	KSI_Integer *sigTime = NULL;
 	unsigned long signingTime = 0;
@@ -178,7 +178,7 @@ void printSignatureSigningTime(const KSI_Signature *sig) {
 	return;
 }
 
-void printPublicationsFileCertificates(const KSI_PublicationsFile *pubfile){
+void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile){
 	KSI_CertificateRecordList *certReclist = NULL;
 	KSI_CertificateRecord *certRec = NULL;
 	KSI_PKICertificate *cert = NULL;

@@ -84,11 +84,11 @@ int GT_verifySignatureTask(Task *task){
 	if (n || r || d) print_info("\n");
 
 	if (((n || r || d) &&  (Task_getID(task) == verifyTimestamp)) || Task_getID(task) == verifyTimestampOnline){
-		if (n) printSignerIdentity(tmp_ext != NULL ? tmp_ext : sig);
-		if (r) printSignaturePublicationReference(tmp_ext != NULL ? tmp_ext : sig);
+		if (n) OBJPRINT_signerIdentity(tmp_ext != NULL ? tmp_ext : sig);
+		if (r) OBJPRINT_signaturePublicationReference(tmp_ext != NULL ? tmp_ext : sig);
 		if (d) {
-			printSignatureVerificationInfo(tmp_ext != NULL ? tmp_ext : sig);
-			printSignatureSigningTime(tmp_ext != NULL ? tmp_ext : sig);
+			OBJPRINT_signatureVerificationInfo(tmp_ext != NULL ? tmp_ext : sig);
+			OBJPRINT_signatureSigningTime(tmp_ext != NULL ? tmp_ext : sig);
 		}
 	}
 
@@ -159,8 +159,8 @@ int GT_verifyPublicationFileTask(Task *task){
 
 
 	if(d && Task_getID(task) == verifyPublicationsFile){
-		printPublicationsFileReferences(publicationsFile);
-		printPublicationsFileCertificates(publicationsFile);
+		OBJPRINT_publicationsFileReferences(publicationsFile);
+		OBJPRINT_publicationsFileCertificates(publicationsFile);
 	}
 
 cleanup:

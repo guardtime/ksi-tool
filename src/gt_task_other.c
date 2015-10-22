@@ -74,7 +74,7 @@ int GT_other(Task *task){
 
 
 	if(n) print_info("\n");
-	if (n) printSignerIdentity(sig);
+	if (n) OBJPRINT_signerIdentity(sig);
 
 cleanup:
 

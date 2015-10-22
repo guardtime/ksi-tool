@@ -96,9 +96,9 @@ cleanup:
 
 	if(ext != NULL){
 		if(n || d || r) print_info("Extended signature:\n");
-		if (d) printSignatureVerificationInfo(ext);
-		if (n) printSignerIdentity(ext);
-		if (r) printSignaturePublicationReference(ext);
+		if (d) OBJPRINT_signatureVerificationInfo(ext);
+		if (n) OBJPRINT_signerIdentity(ext);
+		if (r) OBJPRINT_signaturePublicationReference(ext);
 	}
 
 	if (res != KT_OK) {
@@ -111,7 +111,7 @@ cleanup:
 
 		if (sig != NULL && d){
 			print_errors("\nOld signature:\n");
-			printSignatureVerificationInfo(sig);
+			OBJPRINT_signatureVerificationInfo(sig);
 		}
 
 		retval = errToExitCode(res);

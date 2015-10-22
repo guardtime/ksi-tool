@@ -14,14 +14,12 @@
 extern "C" {
 #endif
 
-void printSignerIdentity(KSI_Signature *sig);
-void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile);
-void printSignaturePublicationReference(KSI_Signature *sig);
-void printSignatureVerificationInfo(KSI_Signature *sig);
-void printPublicationsFileCertificates(const KSI_PublicationsFile *pubfile);
-void printSignaturesRootHash_n_Time(const KSI_Signature *sig);
-void printSignatureSigningTime(const KSI_Signature *sig);
-void printSignatureStructure(KSI_CTX *ksi, KSI_Signature *sig);
+void OBJPRINT_signerIdentity(KSI_Signature *sig);
+void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile);
+void OBJPRINT_signaturePublicationReference(KSI_Signature *sig);
+void OBJPRINT_signatureVerificationInfo(KSI_Signature *sig);
+void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile);
+void OBJPRINT_signatureSigningTime(const KSI_Signature *sig);
 
 
 #ifdef	__cplusplus
