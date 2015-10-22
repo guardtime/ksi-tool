@@ -19,7 +19,7 @@
  */
 
 #include <stdlib.h>
-
+#include "obj_printer.h"
 #include "gt_task_support.h"
 
 int GT_extendTask(Task *task) {

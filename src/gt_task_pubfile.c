@@ -19,6 +19,7 @@
  */
 
 #include "gt_task_support.h"
+#include "obj_printer.h"
 #include "ksi/net.h"
 #include "ksi/hashchain.h"
 

@@ -54,7 +54,8 @@ CMDTOOL_OBJ = \
 	$(OBJ_DIR)\param_set.obj \
 	$(OBJ_DIR)\printer.obj \
 	$(OBJ_DIR)\ksitool_err.obj \
-	$(OBJ_DIR)\api_wrapper.obj
+	$(OBJ_DIR)\api_wrapper.obj \
+	$(OBJ_DIR)\obj_printer.obj
 	
 
 	

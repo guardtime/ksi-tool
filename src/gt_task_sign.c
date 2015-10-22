@@ -19,6 +19,7 @@
  */
 
 #include "gt_task_support.h"
+#include "obj_printer.h"
 
 static int getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh);
 

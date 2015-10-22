@@ -19,6 +19,7 @@
  */
 
 #include "gt_task_support.h"
+#include "obj_printer.h"
 #include "ksitool_err.h"
 
 #ifdef _WIN32

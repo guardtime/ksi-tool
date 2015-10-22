@@ -147,15 +147,6 @@ bool isSignatureExtended(const KSI_Signature *sig);
 /*Controls parameter set and returns true if user wants to write data files to stdout*/
 bool isPiping(paramSet *set);
 
-void printSignerIdentity(KSI_Signature *sig);
-void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile);
-void printSignaturePublicationReference(KSI_Signature *sig);
-void printSignatureVerificationInfo(KSI_Signature *sig);
-void printPublicationsFileCertificates(const KSI_PublicationsFile *pubfile);
-void printSignaturesRootHash_n_Time(const KSI_Signature *sig);
-void printSignatureSigningTime(const KSI_Signature *sig);
-void printSignatureStructure(KSI_CTX *ksi, KSI_Signature *sig);
-
 /**
  * Reads hash from command line and creates the KSI_DataHash object.
  *
