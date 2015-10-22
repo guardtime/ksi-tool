@@ -28,11 +28,14 @@ extern "C" {
 #endif
 
 void OBJPRINT_signerIdentity(KSI_Signature *sig);
-void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile);
 void OBJPRINT_signaturePublicationReference(KSI_Signature *sig);
 void OBJPRINT_signatureVerificationInfo(KSI_Signature *sig);
-void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile);
 void OBJPRINT_signatureSigningTime(const KSI_Signature *sig);
+void OBJPRINT_signatureCertificate(const KSI_Signature *sig);
+
+void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile);
+void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile);
+void OBJPRINT_publicationsFileSigningCert(KSI_PublicationsFile *pubfile);
 
 
 #ifdef	__cplusplus

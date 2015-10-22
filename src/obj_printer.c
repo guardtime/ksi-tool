@@ -198,6 +198,44 @@ void OBJPRINT_signatureSigningTime(const KSI_Signature *sig) {
 	return;
 }
 
+void OBJPRINT_signatureCertificate(const KSI_Signature *sig) {
+	int res;
+	KSI_CalendarAuthRec *calAuthRec = NULL;
+	KSI_PKISignedData *pki_data = NULL;
+	KSI_OctetString *ID = NULL;
+	KSI_Utf8String *sig_type = NULL;
+
+	char str_id[1024];
+
+	char *ret;
+
+	if (sig == NULL) goto cleanup;
+
+	res = KSI_Signature_getCalendarAuthRec(sig, &calAuthRec);
+	if (res != KSI_OK || calAuthRec == NULL) goto cleanup;
+
+	res = KSI_CalendarAuthRec_getSignatureData(calAuthRec, &pki_data);
+	if (res != KSI_OK || pki_data == NULL) goto cleanup;
+
+	res = KSI_PKISignedData_getCertId(pki_data, &ID);
+	if (res != KSI_OK || ID == NULL) goto cleanup;
+
+	res = KSI_PKISignedData_getSigType(pki_data, &sig_type);
+	if (res != KSI_OK || sig_type == NULL) goto cleanup;
+
+	ret = KSI_OctetString_toString(ID, ':', str_id, sizeof(str_id));
+	if (ret != str_id) goto cleanup;
+
+	print_info("KSI SIgnatures Calendar authentication record PKI signature:\n");
+	print_info("Signing certificate ID: %s\n", str_id);
+	print_info("Signature type: %s\n", KSI_Utf8String_cstr(sig_type));
+
+cleanup:
+
+
+	return;
+}
+
 void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile){
 	KSI_CertificateRecordList *certReclist = NULL;
 	KSI_CertificateRecord *certRec = NULL;
@@ -226,5 +264,29 @@ void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile){
 cleanup:
 
 	return;
-	}
+}
 
+void OBJPRINT_publicationsFileSigningCert(KSI_PublicationsFile *pubfile) {
+	int res;
+	KSI_PKISignature *sig = NULL;
+	KSI_PKICertificate *cert = NULL;
+	char buf[2048];
+	char *tmp = NULL;
+
+	res = KSI_PublicationsFile_getSignature(pubfile, &sig);
+	if (res != KSI_OK) goto cleanup;
+
+	res = KSI_PKISignature_extractCertificate(sig, &cert);
+	if (res != KSI_OK) goto cleanup;
+
+	tmp = KSI_PKICertificate_toString(cert, buf, sizeof(buf));
+	if (tmp != buf) goto cleanup;
+
+	print_info("Publications file signing %s", buf);
+
+cleanup:
+
+	KSI_PKICertificate_free(cert);
+
+	return;
+}
