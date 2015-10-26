@@ -229,6 +229,7 @@ void OBJPRINT_signatureCertificate(const KSI_Signature *sig) {
 	print_info("KSI SIgnatures Calendar authentication record PKI signature:\n");
 	print_info("Signing certificate ID: %s\n", str_id);
 	print_info("Signature type: %s\n", KSI_Utf8String_cstr(sig_type));
+	print_info("\n");
 
 cleanup:
 
@@ -283,6 +284,7 @@ void OBJPRINT_publicationsFileSigningCert(KSI_PublicationsFile *pubfile) {
 	if (tmp != buf) goto cleanup;
 
 	print_info("Publications file signing %s", buf);
+	print_info("\n", buf);
 
 cleanup:
 

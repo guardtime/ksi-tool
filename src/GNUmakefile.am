@@ -45,5 +45,7 @@ ksitool_SOURCES = \
 	api_wrapper.c \
 	api_wrapper.h \
 	obj_printer.c \
-	obj_printer.h
+	obj_printer.h \
+	debug_print.c \
+	debug_print.h
 	
