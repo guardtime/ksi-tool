@@ -25,6 +25,7 @@
 #include <ksi/net.h>
 #include <ksi/hashchain.h>
 #include <ksi/pkitruststore.h>
+#include <ksi/compatibility.h>
 #include <stdio.h>
 #include "gt_task_support.h"
 #include "param_set.h"
@@ -958,4 +959,130 @@ void print_progressResult(int res) {
 	}
 }
 
+/**
+ * OID description array must have the following format:
+ * [OID][short name][long name][alias 1][..][alias N][NULL]
+ * where OID, short and long name are mandatory. Array must end with NULL.
+ */
+static char *OID_EMAIL[] = {KSI_CERT_EMAIL, "E", "email", "e-mail", "e_mail", "emailAddress", NULL};
+static char *OID_COMMON_NAME[] = {KSI_CERT_COMMON_NAME, "CN", "common name", "common_name", NULL};
+static char *OID_COUNTRY[] = {KSI_CERT_COUNTRY, "C", "country", NULL};
+static char *OID_ORGANIZATION[] = {KSI_CERT_ORGANIZATION, "O", "org", "organization", NULL};
 
+static char **OID_INFO[] = {OID_EMAIL, OID_COMMON_NAME, OID_COUNTRY, OID_ORGANIZATION, NULL};
+
+const char *OID_getShortDescriptionString(const char *OID) {
+	unsigned i = 0;
+
+	if (OID == NULL) return NULL;
+
+	while (OID_INFO[i] != NULL) {
+		if (strcmp(OID_INFO[i][0], OID) == 0) return OID_INFO[i][1];
+		i++;
+	}
+
+	return OID;
+}
+
+char *STRING_getBetweenWhitespace(const char *strn, char *buf, size_t buf_len) {
+	const char *beginning = NULL;
+	const char *end = NULL;
+	size_t strn_len;
+	size_t new_len;
+
+	if (strn == NULL || buf == NULL || buf_len == 0) return NULL;
+
+	strn_len = strlen(strn);
+	beginning = strn;
+	end = strn + strn_len; //End should be at terminating NUL
+
+
+	while(beginning != end && isspace(*beginning)) beginning++;
+	while(end != beginning && (isspace(*end) || *end == '\0')) end--;
+
+
+	new_len = end + 1 - beginning;
+	if (KSI_strncpy(buf, beginning, new_len + 1) == NULL) return NULL;
+
+	return buf;
+}
+
+const char * STRING_locateLastOccurance(const char *str, const char *findIt) {
+	const char * ret = NULL;
+	const char * isFound = NULL;
+	const char *searchFrom = NULL;
+
+	if (str == NULL || findIt == NULL) return NULL;
+	if(*str == '\0' && *findIt == '\0') return str;
+
+
+	searchFrom = str;
+
+	while (*searchFrom != '\0' && (isFound = strstr(searchFrom, findIt)) != NULL) {
+		searchFrom = isFound + 1;
+		ret = isFound;
+	}
+	return ret;
+}
+
+char *STRING_extract(const char *strn, const char *from, const char *to, char *buf, size_t buf_len) {
+	const char *beginning = NULL;
+	const char *end = NULL;
+	size_t from_len;
+	size_t to_len;
+	size_t strn_len;
+	size_t new_len;
+	if (strn == NULL || buf == NULL || buf_len == 0) return NULL;
+
+	strn_len = strlen(strn);
+
+	if (from != NULL) {
+		from_len = strlen(from);
+		beginning = strstr(strn, from);
+		if (beginning != NULL) beginning += from_len;
+	} else {
+		beginning = strn;
+	}
+
+	if (to != NULL) {
+		to_len = strlen(to);
+		end = STRING_locateLastOccurance(strn, to);
+		if (end != NULL) end = end -= 1;
+	} else {
+		end = strn + strn_len - 1;
+	}
+
+	if (beginning == NULL || end == NULL) return NULL;
+	if ((end + 1) < beginning) new_len = 0;
+	else new_len = end + 1 - beginning;
+
+	if (KSI_strncpy(buf, beginning, new_len + 1) == NULL) return NULL;
+
+	return buf;
+}
+
+char *STRING_extractRmWhite(const char *strn, const char *from, const char *to, char *buf, size_t buf_len) {
+	char *tmp = NULL;
+	size_t tmp_size = 0;
+	char *ret = NULL;
+	char *isBuf = NULL;
+
+	if (strn == NULL || buf == NULL || buf_len == 0) goto cleanup;
+
+	tmp = (char *)malloc(buf_len);
+	if (tmp == NULL) goto cleanup;
+
+	isBuf = STRING_extract(strn, from, to, tmp, buf_len);
+	if (isBuf != tmp) goto cleanup;
+
+	isBuf = STRING_getBetweenWhitespace(tmp, buf, buf_len);
+	if (isBuf != buf) goto cleanup;
+
+	ret = buf;
+
+cleanup:
+
+	free(tmp);
+
+	return ret;
+}
