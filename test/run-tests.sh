@@ -24,8 +24,6 @@ SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 tmp=${TMPDIR:=$SCRIPT_DIR/out}
 resource_dir="${SCRIPT_DIR}/resource"
 DATE=`date +%s`
-TCP="ksi+tcp://ksigw.test.guardtime.com:3332"
-login="--user anon --pass anon"
 
 mkdir -p $tmp
 
@@ -85,22 +83,22 @@ diag "--------------------------------------------------------------------------
 
 
 diag "######    Sign data over TCP"
-okx $exec -s -f ${resource_dir}/testFile -o ${tmp}/data_over_tcp.ksig -S ${TCP} ${login}
+okx $exec -s -f ${resource_dir}/testFile -o ${tmp}/data_over_tcp.ksig -S ${KSI_TCP_AGGREGATOR} ${KSI_TCP_LOGIN}
 
 diag "######    Sign raw hash using SHA-256 over TCP"
-okx $exec -s -F SHA-256:${SH256_HASH} -o ${tmp}/h_sha256.ksig -S ${TCP} ${login}
+okx $exec -s -F SHA-256:${SH256_HASH} -o ${tmp}/h_sha256.ksig -S ${KSI_TCP_AGGREGATOR} ${KSI_TCP_LOGIN}
 
 diag "######    Sign raw hash using RIPEMD-160 over TCP"
-okx $exec -s -F RIPEMD-160:${RIPEMD160_HASH} -o ${tmp}/h_r160.ksig -S ${TCP} ${login}
+okx $exec -s -F RIPEMD-160:${RIPEMD160_HASH} -o ${tmp}/h_r160.ksig -S ${KSI_TCP_AGGREGATOR} ${KSI_TCP_LOGIN}
 
 diag "######    Sign raw hash using SHA-224 over TCP"
-okx $exec -s -F SHA-224:${SHA224_HASH} -o ${tmp}/h_sha224.ksig -S ${TCP} ${login}
+okx $exec -s -F SHA-224:${SHA224_HASH} -o ${tmp}/h_sha224.ksig -S ${KSI_TCP_AGGREGATOR} ${KSI_TCP_LOGIN}
 
 diag "######    Sign raw hash using SHA2-384 over TCP"
-okx $exec -s -F SHA-384:${SHA384_HASH} -o ${tmp}/h_sha384.ksig -S ${TCP} ${login}
+okx $exec -s -F SHA-384:${SHA384_HASH} -o ${tmp}/h_sha384.ksig -S ${KSI_TCP_AGGREGATOR} ${KSI_TCP_LOGIN}
 
 diag "######    Sign raw hash using SHA-512 over TCP"
-okx $exec -s -F SHA-512:${SHA512_HASH} -o ${tmp}/h_sha512.ksig -S ${TCP} ${login}
+okx $exec -s -F SHA-512:${SHA512_HASH} -o ${tmp}/h_sha512.ksig -S ${KSI_TCP_AGGREGATOR} ${KSI_TCP_LOGIN}
 diag "------------------------------------------------------------------------------";
 
 
@@ -299,9 +297,9 @@ diag "--------------------------------------------------------------------------
 like "`$exec -v -b ${resource_dir}/publications.tlv -V ${resource_dir}/mock.crt --cnstr 2.5.4.10="Fake company"  2>&1`" "Error: The PKI certificate is not trusted." "Error invalid constraint value"
 diag "------------------------------------------------------------------------------";
 
-like "`$exec -s -F SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b877 -o ${tmp}/too_short_hash.ksig -S ${TCP} ${login} 2>&1`" "Content error: -F 'SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b877'. (Hash length is incorrect)"
+like "`$exec -s -F SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b877 -o ${tmp}/too_short_hash.ksig -S ${KSI_TCP_AGGREGATOR} ${KSI_TCP_LOGIN} 2>&1`" "Content error: -F 'SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b877'. (Hash length is incorrect)"
 
-like "`$exec -s -F SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d56 -o ${tmp}/too_long_hash.ksig -S ${TCP} ${login} 2>&1`" "Content error: -F 'SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d56'. (Hash length is incorrect)"
+like "`$exec -s -F SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d56 -o ${tmp}/too_long_hash.ksig -S ${KSI_TCP_AGGREGATOR} ${KSI_TCP_LOGIN} 2>&1`" "Content error: -F 'SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d56'. (Hash length is incorrect)"
 diag "------------------------------------------------------------------------------";
 
 # cleanup
