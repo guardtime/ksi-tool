@@ -139,8 +139,7 @@ int GT_verifyPublicationFileTask(Task *task){
 	print_progressResult(res);
 
 	print_progressDesc(t, "Verifying publications file... ");
-	res = KSI_verifyPublicationsFile(ksi, publicationsFile);
-	ERR_APPEND_KSI_ERR(err, res, KSI_PKI_CERTIFICATE_NOT_TRUSTED);
+	res = KSITOOL_verifyPublicationsFile(err, ksi, publicationsFile);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify publication file.");
 	print_progressResult(res);
 
