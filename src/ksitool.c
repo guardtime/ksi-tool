@@ -152,7 +152,7 @@ static char default_aggreUrl[1024] = "";
 static bool includeParametersFromEnvironment(paramSet *set, char **envp, int priority){
 	/*Read command line parameters from system variables*/
 	bool ret = true;
-	bool s, v, x, p, T, aggre, P;
+	bool s, v, x, p, T, aggre, P, cnstr;
 	const char *key = NULL;
 
 	aggre = paramSet_isSetByName(set, "aggre");
@@ -162,6 +162,7 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp, int pri
 	p = paramSet_isSetByName(set, "p");
 	T = paramSet_isSetByName(set, "T");
 	P = paramSet_isSetByName(set, "P");
+	cnstr = paramSet_isSetByName(set, "cnstr");
 
 	while(*envp!=NULL){
 		char tmp[1024];
@@ -212,7 +213,7 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp, int pri
 			strcpy(default_pubUrl, tmp);
 
 			/*If P is already set, don't load constraints.*/
-			if (P == false) {
+			if (P == false && cnstr == false) {
 				key = getPublicationsFileConstraint(key, tmp, sizeof(tmp));
 				while (1) {
 					key = getPublicationsFileConstraint(key, tmp, sizeof(tmp));
