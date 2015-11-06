@@ -272,6 +272,7 @@ static void GT_pritHelp(void){
 			"\t\t-x -i -T -o extend signature to specified time.\n"
 			" -p\t\tdownload Publications file (-r -d -t):\n"
 			"\t\t-p -o --cnstr download publications file.\n"
+			"\t\t-p -d dump publications file.\n"
 			"\t\t-p -T create publication string.\n"
 			" -v --verify\tverify signature or publications file. Use -f to provide\n"
 			"\t\ta file or -F to use a pre-calculated hash value (-n -r -d -t):\n"
@@ -357,7 +358,7 @@ static void GT_pritHelp(void){
 			printSupportedHashAlgorithms();
 			print_info("\n");
 }
-#define NUMBER_OF_TASKS 8
+#define NUMBER_OF_TASKS 9
 
 int main(int argc, char** argv, char **envp) {
 	TaskDefinition *taskDefArray[NUMBER_OF_TASKS];
@@ -406,15 +407,16 @@ int main(int argc, char** argv, char **envp) {
 //	paramSet_addControl(set, "{aggre}{htime}{setsystime}", isFlagFormatOK, contentIsOK, NULL);
 
 	/*Define possible tasks*/
-	/*						ID							DESC					MAN		IGNORE	OPTIONAL		FORBIDDEN					NEW OBJ*/
+	/*						ID							DESC					MAN				IGNORE	OPTIONAL		FORBIDDEN					NEW OBJ*/
 	TaskDefinition_new(signDataFile,			"Sign data file",				"s,f,o,S",		"b,r",	"H,n,d,t",		"x,p,v,aggre,F,i,T",		&taskDefArray[0]);
 	TaskDefinition_new(signHash,				"Sign hash",					"s,F,o,S",		"b,r",	"n,d,t",		"x,p,v,aggre,f,i,T,H",		&taskDefArray[1]);
-	TaskDefinition_new(extendTimestamp,			"Extend signature",				"x,i,o,P,X",		"",		"T,n,d,r,t",	"s,p,v,aggre,f,F,H",		&taskDefArray[2]);
-	TaskDefinition_new(downloadPublicationsFile,"Download publication file",	"p,o,P,cnstr",	"n",	"d,r,t",		"s,x,v,aggre,f,F,T,i,H",	&taskDefArray[3]);
+	TaskDefinition_new(extendTimestamp,			"Extend signature",				"x,i,o,P,X",	"",		"T,n,d,r,t",	"s,p,v,aggre,f,F,H",		&taskDefArray[2]);
+	TaskDefinition_new(downloadPublicationsFile,"Download publications file",	"p,o,P,cnstr",	"n,b",	"d,r,t",		"s,x,v,aggre,f,F,T,i,H",	&taskDefArray[3]);
 	TaskDefinition_new(createPublicationString, "Create publication string",	"p,T,X",		"n,r",	"d,t",			"s,x,v,aggre,f,F,o,i,H",	&taskDefArray[4]);
 	TaskDefinition_new(verifyTimestamp,			"Verify signature",				"v,i",			"",		"f,F,n,d,r,t",	"s,p,x,aggre,H",			&taskDefArray[5]);
 	TaskDefinition_new(verifyTimestampOnline,	"Verify online",				"v,x,i,X",		"",		"f,F,n,d,r,t",	"s,p,aggre,T,H",			&taskDefArray[6]);
-	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"v,b,cnstr",			"",		"n,d,r,t",		"x,s,p,aggre,i,f,F,T,H",	&taskDefArray[7]);
+	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"v,b,cnstr",	"",		"n,d,r,t",		"x,s,p,aggre,i,f,F,T,H",	&taskDefArray[7]);
+	TaskDefinition_new(dumpPublicationsFile,	"Dump publications file",		"p,d",			"",		"d,r,t",		"s,x,v,aggre,f,F,T,i,H,o",	&taskDefArray[8]);
 	/*TODO: uncomment if implemented and set NUMBER_OF_TASKS+=2*/
 //	TaskDefinition_new(getRootH_T,				"Get Aggregator root hash",		"aggre,htime,S","",		"",				"x,s,p,v,f,F,i,o,T,H,setsystime",		&taskDefArray[8]);
 //	TaskDefinition_new(setSysTime,				"Set system time",				"aggre,setsystime,S","","",				"x,s,p,v,f,F,i,o,T,H,htime",		&taskDefArray[9]);
@@ -492,7 +494,8 @@ int main(int argc, char** argv, char **envp) {
 	paramSet_printIgnoredLowerPriorityWarnings(set);
 
 	/*DO*/
-	if(Task_getID(task) == downloadPublicationsFile || Task_getID(task) == createPublicationString){
+	if(Task_getID(task) == downloadPublicationsFile || Task_getID(task) == createPublicationString
+			|| Task_getID(task) == dumpPublicationsFile) {
 		retval=GT_publicationsFileTask(task);
 	}
 	else if (Task_getID(task) == verifyPublicationsFile){

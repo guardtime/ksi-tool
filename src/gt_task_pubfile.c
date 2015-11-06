@@ -25,6 +25,7 @@
 
 static int GT_publicationsFileTask_downloadPublicationsFile(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_PublicationsFile **pubfile);
 static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_PublicationData **pubData);
+static int GT_publicationsFileTask_dumpPublicationsFile(Task *task, KSI_CTX *ksi, ERR_TRCKR *err);
 
 int GT_publicationsFileTask(Task *task){
 	int res;
@@ -49,7 +50,7 @@ int GT_publicationsFileTask(Task *task){
 	res = initTask(task ,&ksi, &err);
 	if (res != KT_OK) goto cleanup;
 
-	if(Task_getID(task) == downloadPublicationsFile){
+	if(Task_getID(task) == downloadPublicationsFile) {
 		res = GT_publicationsFileTask_downloadPublicationsFile(task, ksi, err, &publicationsFile);
 		if (res != KT_OK) goto cleanup;
 
@@ -67,6 +68,9 @@ int GT_publicationsFileTask(Task *task){
 		if(KSI_PublicationData_toString(pubData, buf,sizeof(buf)) != NULL) {
 				print_result("%s\n", buf);
 		}
+	} else if (Task_getID(task) == dumpPublicationsFile) {
+		res = GT_publicationsFileTask_dumpPublicationsFile(task, ksi, err);
+		if (res != KSI_OK) goto cleanup;
 	}
 
 
@@ -243,3 +247,24 @@ cleanup:
 	return res;
 }
 
+static int GT_publicationsFileTask_dumpPublicationsFile(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
+	int res;
+	KSI_PublicationsFile *pubfile = NULL;
+
+
+	if (task == NULL || ksi == NULL || err == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	res = KSI_receivePublicationsFile(ksi, &pubfile);
+	if (res != KSI_OK || pubfile == NULL);
+
+	OBJPRINT_publicationsFileReferences(pubfile);
+	OBJPRINT_publicationsFileCertificates(pubfile);
+	OBJPRINT_publicationsFileSigningCert(pubfile);
+
+cleanup:
+
+return res;
+}
