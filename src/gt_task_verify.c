@@ -20,6 +20,7 @@
 
 #include "gt_task_support.h"
 #include "obj_printer.h"
+#include "debug_print.h"
 
 static int GT_verifyTask_verifySigOnline(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig);
 static int GT_verifyTask_verifyWithPublication(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig, KSI_Signature **out);
@@ -98,10 +99,11 @@ cleanup:
 	print_progressResult(res);
 
 	if (res != KT_OK) {
+		DEBUG_verifySignature(ksi, task, res, sig);
 		ERR_TRCKR_printErrors(err);
-		if(d && ksi) KSI_ERR_statusDump(ksi, stderr);
 		retval = errToExitCode(res);
 	}
+
 
 	KSI_Signature_free(sig);
 	KSI_Signature_free(tmp_ext);
@@ -166,6 +168,8 @@ cleanup:
 	print_progressResult(res);
 
 	if (res != KT_OK) {
+		DEBUG_verifyPubfile(ksi, task, res, publicationsFile);
+		print_info("\n");
 		ERR_TRCKR_printErrors(err);
 		retval = errToExitCode(res);
 	}
