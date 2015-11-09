@@ -166,8 +166,14 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp, int pri
 
 	while(*envp!=NULL){
 		char tmp[1024];
+		char name[1024];
 
-        if(strncmp(*envp, "KSI_AGGREGATOR", sizeof("KSI_AGGREGATOR") - 1) == 0){
+		if (STRING_extract(*envp, NULL, "=url", name, sizeof(name)) == NULL) {
+			envp++;
+			continue;
+		}
+
+		if(strcmp(name, "KSI_AGGREGATOR") == 0){
 			if(getEnvValue(*envp, "url", tmp, sizeof(tmp)) == NULL) {
 				print_errors("Error: Environment variable KSI_AGGREGATOR is invalid.\n");
 				print_errors("Error: Invalid '%s'.\n", *envp);
@@ -185,7 +191,7 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp, int pri
 			}
 
 		}
-        else if(strncmp(*envp, "KSI_EXTENDER", sizeof("KSI_EXTENDER") - 1) == 0){
+        else if(strcmp(name, "KSI_EXTENDER") == 0){
 			if(getEnvValue(*envp, "url", tmp, sizeof(tmp)) == NULL){
 				print_errors("Error: Environment variable KSI_EXTENDER is invalid.\n");
 				print_errors("Error: Invalid '%s'.\n", *envp);
@@ -202,7 +208,7 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp, int pri
 					paramSet_priorityAppendParameterByName("pass", tmp, "KSI_EXTENDER", priority, set);
 			}
 
-		} else if(strncmp(*envp, "KSI_PUBFILE", sizeof("KSI_PUBFILE") - 1) == 0){
+		} else if(strcmp(name, "KSI_PUBFILE") == 0){
 			if((key = getEnvValue(*envp, "url", tmp, sizeof(tmp))) == NULL){
 				print_errors("Error: Environment variable KSI_PUBFILE is invalid.\n");
 				print_errors("Error: Invalid '%s'.\n", *envp);
