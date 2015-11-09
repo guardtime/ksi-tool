@@ -66,7 +66,7 @@ void DEBUG_verifySignature(KSI_CTX *ksi, Task *task, int res, KSI_Signature *sig
 	set = Task_getSet(task);
 	d = paramSet_isSetByName(set, "d");
 
-	if (d && sig != NULL && res == KSI_VERIFICATION_FAILURE) {
+	if (d && res == KSI_VERIFICATION_FAILURE) {
 		stepFailed = debug_getVerificationStepFailed(sig);
 		print_info("\n");
 		OBJPRINT_signatureVerificationInfo(sig);
@@ -79,8 +79,8 @@ void DEBUG_verifySignature(KSI_CTX *ksi, Task *task, int res, KSI_Signature *sig
 			if (res == KSI_OK && pubFile != NULL) {
 				OBJPRINT_publicationsFileCertificates(pubFile);
 			}
-
-
+		} else if (stepFailed == KSI_VERIFY_CALCHAIN_ONLINE) {
+			OBJPRINT_signatureSigningTime(sig);
 		}
 	}
 }
@@ -97,8 +97,7 @@ void DEBUG_verifyPubfile(KSI_CTX *ksi, Task *task, int res, KSI_PublicationsFile
 	set = Task_getSet(task);
 	d = paramSet_isSetByName(set, "d");
 
-	if (d && pub != NULL
-			&& (res == KSI_PKI_CERTIFICATE_NOT_TRUSTED || res == KSI_INVALID_PKI_SIGNATURE)) {
+	if (d && (res == KSI_PKI_CERTIFICATE_NOT_TRUSTED || res == KSI_INVALID_PKI_SIGNATURE)) {
 		print_info("\n");
 		OBJPRINT_publicationsFileSigningCert(pub);
 
