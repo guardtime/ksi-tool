@@ -85,8 +85,8 @@ int GT_verifySignatureTask(Task *task){
 	if (n || r || d) print_info("\n");
 
 	if (((n || r || d) &&  (Task_getID(task) == verifyTimestamp)) || Task_getID(task) == verifyTimestampOnline){
-		if (n) OBJPRINT_signerIdentity(tmp_ext != NULL ? tmp_ext : sig);
-		if (r) OBJPRINT_signaturePublicationReference(tmp_ext != NULL ? tmp_ext : sig);
+		if (d || n) OBJPRINT_signerIdentity(tmp_ext != NULL ? tmp_ext : sig);
+		if (d || r) OBJPRINT_signaturePublicationReference(tmp_ext != NULL ? tmp_ext : sig);
 		if (d) {
 			OBJPRINT_signatureVerificationInfo(tmp_ext != NULL ? tmp_ext : sig);
 			OBJPRINT_signatureSigningTime(tmp_ext != NULL ? tmp_ext : sig);
