@@ -1025,20 +1025,26 @@ const char * STRING_locateLastOccurance(const char *str, const char *findIt) {
 	return ret;
 }
 
-char *STRING_extract(const char *strn, const char *from, const char *to, char *buf, size_t buf_len) {
+char *STRING_extractAbstract(const char *strn, const char *from, const char *to, char *buf, size_t buf_len,
+		const char* (*find_from)(const char *str, const char *findIt),
+		const char* (*find_to)(const char *str, const char *findIt)) {
 	const char *beginning = NULL;
 	const char *end = NULL;
 	size_t from_len;
 	size_t to_len;
 	size_t strn_len;
 	size_t new_len;
+
 	if (strn == NULL || buf == NULL || buf_len == 0) return NULL;
+
+	if (find_to == NULL) find_to = strstr;
+	if (find_from == NULL) find_from = strstr;
 
 	strn_len = strlen(strn);
 
 	if (from != NULL) {
 		from_len = strlen(from);
-		beginning = strstr(strn, from);
+		beginning = find_from(strn, from);
 		if (beginning != NULL) beginning += from_len;
 	} else {
 		beginning = strn;
@@ -1046,7 +1052,7 @@ char *STRING_extract(const char *strn, const char *from, const char *to, char *b
 
 	if (to != NULL) {
 		to_len = strlen(to);
-		end = STRING_locateLastOccurance(strn, to);
+		end = find_to(strn, to);
 		if (end != NULL) end = end -= 1;
 	} else {
 		end = strn + strn_len - 1;
@@ -1059,6 +1065,12 @@ char *STRING_extract(const char *strn, const char *from, const char *to, char *b
 	if (KSI_strncpy(buf, beginning, new_len + 1) == NULL) return NULL;
 
 	return buf;
+}
+
+char *STRING_extract(const char *strn, const char *from, const char *to, char *buf, size_t buf_len) {
+	return STRING_extractAbstract(strn, from, to ,buf, buf_len,
+			NULL,
+			STRING_locateLastOccurance);
 }
 
 char *STRING_extractRmWhite(const char *strn, const char *from, const char *to, char *buf, size_t buf_len) {

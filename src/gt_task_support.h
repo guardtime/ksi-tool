@@ -179,10 +179,34 @@ const char * STRING_locateLastOccurance(const char *str, const char *findIt);
 /**
  * Extract a substring from given string. String is extracted using two substrings
  * from and to. Extracted string is located as <from><extracted string><to>.
+ * Strings from and to are located using abstract functions \find_from and \find_to.
+ * If one of the substrings is missing the result is not extracted. When from is
+ * set as NULL the string is extracted from the beginning of the input string.
+ * When to is set as NULL the string is extracted from <from> until the end of
+ * the input strings.
+ * 
+ * Abstract functions can be NULL as in this case strstr is used.
+ * 
+ * @param strn[in]		Input string.
+ * @param from[in]		The first border string.
+ * @param to[in]		The last border string.
+ * @param buf[in]		The buffer where substring is extracted.
+ * @param buf_len[in]	The size of the buffer.
+ * @param find_from[in]	Abstract function to find <from>. 	
+ * @param find_to[in]	Abstract functions to find <to>.
+ * @return 
+ */
+char *STRING_extractAbstract(const char *strn, const char *from, const char *to, char *buf, size_t buf_len,
+		const char* (*find_from)(const char *str, const char *findIt),
+		const char* (*find_to)(const char *str, const char *findIt));
+
+/**
+ * Extract a substring from given string. String is extracted using two substrings
+ * from and to. Extracted string is located as <from><extracted string><to>.
  * For example when using from as "[" and to as "]" on input string "[test]" the
  * extracted value is "test". If one of the substrings is missing the result is 
  * not extracted. When from is set as NULL the string is extracted from the
- * beginning of the input string. When ti is set as NULL the string is extracted
+ * beginning of the input string. When to is set as NULL the string is extracted
  * until the end of the input strings. For example from = "->", to = NULL, input
  * string is "->test test", the resulting output is "test test".
  * 
