@@ -187,18 +187,20 @@ const char * STRING_locateLastOccurance(const char *str, const char *findIt);
  * 
  * Abstract functions can be NULL as in this case strstr is used.
  * 
- * @param strn[in]		Input string.
- * @param from[in]		The first border string.
- * @param to[in]		The last border string.
- * @param buf[in]		The buffer where substring is extracted.
- * @param buf_len[in]	The size of the buffer.
- * @param find_from[in]	Abstract function to find <from>. 	
- * @param find_to[in]	Abstract functions to find <to>.
+ * @param strn[in]			Input string.
+ * @param from[in]			The first border string.
+ * @param to[in]			The last border string.
+ * @param buf[in/out]		The buffer where substring is extracted.
+ * @param buf_len[in]		The size of the buffer.
+ * @param find_from[in]		Abstract function to find <from>. 	
+ * @param find_to[in]		Abstract functions to find <to>.
+ * @param firstChar[in/out]	The pointer to the pointer of first character extracted from the orginal data. Can be NULL.
  * @return 
  */
 char *STRING_extractAbstract(const char *strn, const char *from, const char *to, char *buf, size_t buf_len,
 		const char* (*find_from)(const char *str, const char *findIt),
-		const char* (*find_to)(const char *str, const char *findIt));
+		const char* (*find_to)(const char *str, const char *findIt),
+		const char** firstChar);
 
 /**
  * Extract a substring from given string. String is extracted using two substrings

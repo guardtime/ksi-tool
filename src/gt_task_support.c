@@ -1027,7 +1027,8 @@ const char * STRING_locateLastOccurance(const char *str, const char *findIt) {
 
 char *STRING_extractAbstract(const char *strn, const char *from, const char *to, char *buf, size_t buf_len,
 		const char* (*find_from)(const char *str, const char *findIt),
-		const char* (*find_to)(const char *str, const char *findIt)) {
+		const char* (*find_to)(const char *str, const char *findIt),
+		const char** firstChar) {
 	const char *beginning = NULL;
 	const char *end = NULL;
 	size_t from_len;
@@ -1064,13 +1065,18 @@ char *STRING_extractAbstract(const char *strn, const char *from, const char *to,
 
 	if (KSI_strncpy(buf, beginning, new_len + 1) == NULL) return NULL;
 
+	if (firstChar != NULL) {
+		*firstChar = end + 1;
+	}
+
 	return buf;
 }
 
 char *STRING_extract(const char *strn, const char *from, const char *to, char *buf, size_t buf_len) {
 	return STRING_extractAbstract(strn, from, to ,buf, buf_len,
 			NULL,
-			STRING_locateLastOccurance);
+			STRING_locateLastOccurance,
+			NULL);
 }
 
 char *STRING_extractRmWhite(const char *strn, const char *from, const char *to, char *buf, size_t buf_len) {

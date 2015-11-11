@@ -168,7 +168,8 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp, int pri
 		char tmp[1024];
 		char name[1024];
 
-		if (STRING_extract(*envp, NULL, "=url", name, sizeof(name)) == NULL) {
+
+		if (STRING_extractAbstract(*envp, NULL, "=", name, sizeof(name), NULL, NULL, NULL) == NULL) {
 			envp++;
 			continue;
 		}
