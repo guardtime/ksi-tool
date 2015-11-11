@@ -238,6 +238,22 @@ char *STRING_extract(const char *strn, const char *from, const char *to, char *b
  */
 char *STRING_extractRmWhite(const char *strn, const char *from, const char *to, char *buf, size_t buf_len);
 
+/**
+ * This function extracts "chunks" from the input string. Input string is cut into
+ * peaces by whitespace characters. If there are opening '"' inside the input string
+ * next whitespace characters are ignored until closing '"'. Function returns a 
+ * pointer (inside input string) that can be feed to the same function to extract
+ * the next chunk. If the end of input string is reached NULL is returned.
+ * For example:
+ * 
+ * @param	strn[in]	Pointer to NUL terminated C string.
+ * @param	buf[out]	Pointer to receiving buffer.
+ * @param	buf_len[in]	The size of the buffer.
+ * 
+ * @return Pointer for next iteration or NULL on error or end of string.
+ */
+const char *STRING_getChunks(const char *strn, char *buf, size_t buf_len);
+
 #ifdef	__cplusplus
 }
 #endif

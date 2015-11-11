@@ -1104,3 +1104,52 @@ cleanup:
 
 	return ret;
 }
+
+static const char* find_group_start(const char *str, const char *ignore) {
+	size_t i = 0;
+	while (str[i] && isspace(str[i])) i++;
+	return (i == 0) ? str : &str[i];
+}
+
+static const char* find_group_end(const char *str, const char *ignore) {
+	int is_quato_opend = 0;
+	int is_firs_non_whsp_found = 0;
+	size_t i = 0;
+
+	while (str[i]) {
+		if (!isspace(str[i])) is_firs_non_whsp_found = 1;
+		if (isspace(str[i]) && is_quato_opend == 0 && is_firs_non_whsp_found) return &str[i];
+
+		if (str[i] == '"' && is_quato_opend == 0) is_quato_opend = 1;
+		else if (str[i] == '"' && is_quato_opend == 1) return &str[i + 1];
+
+		i++;
+	}
+
+	return i == 0 ? str : &str[i];
+}
+
+
+static void string_removeChars(char *str, char rem) {
+	size_t i = 0;
+	size_t str_index = 0;
+	char *itr = str;
+
+	if (itr == NULL) return;
+
+	while(itr[i]) {
+		if (itr[i] != rem) {
+			str[str_index] = itr[i];
+			str_index++;
+		}
+		i++;
+	}
+	str[str_index] = '\0';
+}
+
+const char *STRING_getChunks(const char *strn, char *buf, size_t buf_len) {
+	const char *next = NULL;
+	STRING_extractAbstract(strn, "", "", buf, buf_len, find_group_start, find_group_end, &next);
+	string_removeChars(buf, '"');
+	return (buf[0] == 0) ? NULL : next;
+}
