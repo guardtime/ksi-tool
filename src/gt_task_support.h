@@ -185,7 +185,13 @@ const char * STRING_locateLastOccurance(const char *str, const char *findIt);
  * When to is set as NULL the string is extracted from <from> until the end of
  * the input strings.
  * 
- * Abstract functions can be NULL as in this case strstr is used.
+ * Abstract functions must have following format:
+ * const char* (*find_to)(const char *str, const char *findIt)
+ * This function searches a location from str according to findIt and must return
+ * pointer to the first or last character that is extracted from the str or NULL if
+ * locations is not found or an error occurred. 
+ * 
+ * Abstract functions can be NULL as in this case default search is performed.
  * 
  * @param strn[in]			Input string.
  * @param from[in]			The first border string.
@@ -194,8 +200,9 @@ const char * STRING_locateLastOccurance(const char *str, const char *findIt);
  * @param buf_len[in]		The size of the buffer.
  * @param find_from[in]		Abstract function to find <from>. 	
  * @param find_to[in]		Abstract functions to find <to>.
- * @param firstChar[in/out]	The pointer to the pointer of first character extracted from the orginal data. Can be NULL.
- * @return 
+ * @param firstChar[in/out]	The pointer to the pointer of first character not extracted from string. Can be NULL.
+ * @return
+ * @note buf is only changed on successful extraction.
  */
 char *STRING_extractAbstract(const char *strn, const char *from, const char *to, char *buf, size_t buf_len,
 		const char* (*find_from)(const char *str, const char *findIt),
