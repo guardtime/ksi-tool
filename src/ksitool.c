@@ -76,84 +76,18 @@ static bool includeParametersFromFile(paramSet *set, int priority){
 	return true;
 }
 
-/**
- * This functions takes a string that contains key, value pairs as input and returns
- * the given key value.
- * @param str		string that contains key value pairs.
- * @param key		key value that is searched.
- * @param buf		buffer that will contain after successful execution the key's value.
- * @param bufLen	buffer length.
- * @return	If successful, returns pointer to the first character of the key found, NULL otherwise.
- */
-static const char* getEnvValue(const char *str, const char *key, char *buf, unsigned bufLen){
-	char *found = NULL;
-	char format[1024];
-
-	snprintf(format, sizeof(format),"%s=%%%is", key, bufLen);
-
-	if((found = strstr(str, key)) == NULL) return NULL;
-	if(sscanf(found, format, buf) != 1) return NULL;
-
-	return found;
-}
-
-static const char* getPublicationsFileConstraint(const char *str, char *buf, unsigned bufLen) {
-	unsigned i = 0;
-	unsigned n = 0;
-
-	bool rec = false;
-	bool rec_done = false;
-	bool isQuoteMarkOpen = false;
-
-	buf[0] = '\0';
-	while (str[i] != '\0') {
-		if (rec == false && !isspace(str[i])) {
-			rec = true;
-		}
-		if (str[i] == '"') {
-			if (isQuoteMarkOpen == false) isQuoteMarkOpen = true;
-			else if (isQuoteMarkOpen == true) isQuoteMarkOpen = false;
-			i++;
-			continue;
-		}
-		if (isQuoteMarkOpen == false && isspace(str[i]) && rec == true)  rec_done = true;
-
-
-		if (rec == true && rec_done == false) {
-			if (n >= bufLen - 1) {
-				buf[n] = '\0';
-				return NULL;
-			}
-
-			buf[n] = str[i];
-			n++;
-		} else if (rec_done == true) {
-			break;
-		}
-
-		i++;
-	}
-	if (n == 0) return NULL;
-	buf[n] = '\0';
-	return &str[i];
-}
-
 static char default_pubUrl[1024] = "";
 static char default_extenderUrl[1024] = "";
 static char default_aggreUrl[1024] = "";
 
-/*
- * This function contains a little hack. As parameter set has 2 parameters for user
- * and pass, there is no room where to put both aggregator and extender data. To avoid
- * defining new parameters this function decides from which variable user and pass is
- * extracted. This function MUST be called after reading files and command line to
- * make correct decisions.
- */
-static bool includeParametersFromEnvironment(paramSet *set, char **envp, int priority){
-	/*Read command line parameters from system variables*/
-	bool ret = true;
+static int ksitool_load_urls_from_env(paramSet *set, const char *line, const char *env_name, const char *param_name, int priority) {
+	const char *nxt = line;
+	char url[1024] = "";
+	char pass[1024] = "";
+	char user[1024] = "";
+	char chunk[1024];
+	int res = KT_OK;
 	bool s, v, x, p, T, aggre, P, cnstr;
-	const char *key = NULL;
 
 	aggre = paramSet_isSetByName(set, "aggre");
 	s = paramSet_isSetByName(set, "s");
@@ -164,79 +98,78 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp, int pri
 	P = paramSet_isSetByName(set, "P");
 	cnstr = paramSet_isSetByName(set, "cnstr");
 
+	while (1) {
+		int success = 0;
+		nxt = STRING_getChunks(nxt, chunk, sizeof(chunk));
+		if (url[0] == '\0' && STRING_extract(chunk, "url=", NULL, url, sizeof(url)) != NULL) success = 1;
+		if (pass[0] == '\0' && STRING_extract(chunk, "pass=", NULL, pass, sizeof(pass)) != NULL) success = 1;
+		if (user[0] == '\0' && STRING_extract(chunk, "user=", NULL, user, sizeof(user)) != NULL) success = 1;
+
+		/* Add publications file constraints */
+		if (success == 0 && (P == false && cnstr == false) && (strcmp(env_name, "KSI_PUBFILE") == 0)) {
+			paramSet_appendParameterByName("cnstr", chunk, env_name, set);
+		} else if (success == 0 && strcmp(env_name, "KSI_PUBFILE") != 0) {
+			print_warnings("Warning: Undefined field %s in %s.", chunk, env_name);
+		}
+
+		if (nxt == NULL) break;
+	}
+
+	if (url[0] == '\0') {
+		print_errors("Error: Environment variable %s is invalid.\n", env_name);
+		print_errors("Error: Invalid '%s'.\n", line);
+		res = KT_INVALID_INPUT_FORMAT;
+	}
+
+	/* ADD URL */
+	paramSet_priorityAppendParameterByName(param_name, url, env_name, priority, set);
+	if(strcmp(env_name, "KSI_AGGREGATOR") == 0) strcpy(default_aggreUrl, url);
+	else if(strcmp(env_name, "KSI_EXTENDER") == 0) strcpy(default_extenderUrl, url);
+	else if(strcmp(env_name, "KSI_PUBFILE") == 0) strcpy(default_pubUrl, url);
+
+
+	/* ADD password and user name */
+	if((s || aggre) && (strcmp(env_name, "KSI_AGGREGATOR") == 0)
+		|| (x || v || (p && T)) && (strcmp(env_name, "KSI_EXTENDER") == 0)) {
+		if (user[0]) paramSet_priorityAppendParameterByName("user", user, env_name, priority, set);
+		if (pass[0])paramSet_priorityAppendParameterByName("pass", pass, env_name, priority, set);
+	}
+
+	return res;
+}
+
+/*
+ * This function contains a little hack. As parameter set has 2 parameters for user
+ * and pass, there is no room where to put both aggregator and extender data. To avoid
+ * defining new parameters this function decides from which variable user and pass is
+ * extracted. This function MUST be called after reading files and command line to
+ * make correct decisions.
+ */
+static bool includeParametersFromEnvironment(paramSet *set, char **envp, int priority){
+	bool ret = true;
+	const char *key = NULL;
+	char name[1024];
+	int res = KT_OK;
+
 	while(*envp!=NULL){
-		char tmp[1024];
-		char name[1024];
-
-
 		if (STRING_extractAbstract(*envp, NULL, "=", name, sizeof(name), NULL, NULL, NULL) == NULL) {
 			envp++;
 			continue;
 		}
 
 		if(strcmp(name, "KSI_AGGREGATOR") == 0){
-			if(getEnvValue(*envp, "url", tmp, sizeof(tmp)) == NULL) {
-				print_errors("Error: Environment variable KSI_AGGREGATOR is invalid.\n");
-				print_errors("Error: Invalid '%s'.\n", *envp);
-				ret = false;
-			}
-
-			paramSet_priorityAppendParameterByName("S", tmp, "KSI_AGGREGATOR", priority, set);
-			strcpy(default_aggreUrl, tmp);
-
-			if(s || aggre){
-				if(getEnvValue(*envp, "user", tmp, sizeof(tmp)) != NULL)
-					paramSet_priorityAppendParameterByName("user", tmp, "KSI_AGGREGATOR", priority, set);
-				if(getEnvValue(*envp, "pass", tmp, sizeof(tmp)) != NULL)
-					paramSet_priorityAppendParameterByName("pass", tmp, "KSI_AGGREGATOR", priority, set);
-			}
-
-		}
-        else if(strcmp(name, "KSI_EXTENDER") == 0){
-			if(getEnvValue(*envp, "url", tmp, sizeof(tmp)) == NULL){
-				print_errors("Error: Environment variable KSI_EXTENDER is invalid.\n");
-				print_errors("Error: Invalid '%s'.\n", *envp);
-				ret  = false;
-			}
-
-			paramSet_priorityAppendParameterByName("X", tmp, "KSI_EXTENDER", priority, set);
-			strcpy(default_extenderUrl, tmp);
-
-			if(x || v || (p && T)){
-				if(getEnvValue(*envp, "user", tmp, sizeof(tmp)) != NULL)
-					paramSet_priorityAppendParameterByName("user", tmp, "KSI_EXTENDER", priority, set);
-				if(getEnvValue(*envp, "pass", tmp, sizeof(tmp)) != NULL)
-					paramSet_priorityAppendParameterByName("pass", tmp, "KSI_EXTENDER", priority, set);
-			}
-
+			res = ksitool_load_urls_from_env(set, *envp, "KSI_AGGREGATOR", "S", priority);
+		} else if(strcmp(name, "KSI_EXTENDER") == 0){
+			res = ksitool_load_urls_from_env(set, *envp, "KSI_EXTENDER", "X", priority);
 		} else if(strcmp(name, "KSI_PUBFILE") == 0){
-			if((key = getEnvValue(*envp, "url", tmp, sizeof(tmp))) == NULL){
-				print_errors("Error: Environment variable KSI_PUBFILE is invalid.\n");
-				print_errors("Error: Invalid '%s'.\n", *envp);
-				ret  = false;
-			}
-
-			paramSet_priorityAppendParameterByName("P", tmp, "KSI_PUBFILE", priority, set);
-			strcpy(default_pubUrl, tmp);
-
-			/*If P is already set, don't load constraints.*/
-			if (P == false && cnstr == false) {
-				key = getPublicationsFileConstraint(key, tmp, sizeof(tmp));
-				while (1) {
-					key = getPublicationsFileConstraint(key, tmp, sizeof(tmp));
-					if (key == NULL || tmp[0] == '\0') break;
-					if (paramSet_appendParameterByName("cnstr", tmp, "KSI_PUBFILE", set) == false) {
-						print_errors("Error: Unable to append -cnstr from environment variable KSI_PUBFILE.");
-						return false;
-					}
-				}
-			}
-
-
+			res = ksitool_load_urls_from_env(set, *envp, "KSI_PUBFILE", "P", priority);
 		}
+
+		if (res != KT_OK) ret = false;
 
         envp++;
     }
+
 	return ret;
 }
 
