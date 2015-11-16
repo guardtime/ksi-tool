@@ -48,6 +48,7 @@ extern "C" {
 typedef enum tasks_en{
 	noTask = 0,
 	downloadPublicationsFile,
+	dumpPublicationsFile,
 	createPublicationString,
 	signDataFile,
 	signHash,
@@ -147,15 +148,6 @@ bool isSignatureExtended(const KSI_Signature *sig);
 /*Controls parameter set and returns true if user wants to write data files to stdout*/
 bool isPiping(paramSet *set);
 
-void printSignerIdentity(KSI_Signature *sig);
-void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile);
-void printSignaturePublicationReference(KSI_Signature *sig);
-void printSignatureVerificationInfo(KSI_Signature *sig);
-void printPublicationsFileCertificates(const KSI_PublicationsFile *pubfile);
-void printSignaturesRootHash_n_Time(const KSI_Signature *sig);
-void printSignatureSigningTime(const KSI_Signature *sig);
-void printSignatureStructure(KSI_CTX *ksi, KSI_Signature *sig);
-
 /**
  * Reads hash from command line and creates the KSI_DataHash object.
  *
@@ -169,6 +161,56 @@ int getHashFromCommandLine(const char *imprint, KSI_CTX *ksi, ERR_TRCKR *err, KS
 void print_progressDesc(bool showTiming, const char *msg, ...);
 
 void print_progressResult(int res);
+
+/**
+ * Returns short string representing OID. If string representation is not found
+ * the same OID is returned.
+ * 
+ * @param	OID[in]		OID value.
+ * @return OID string representation if successful, NULL otherwise. If short string is not found
+ * the input value is returned.
+ */
+const char *OID_getShortDescriptionString(const char *OID);
+
+char *STRING_getBetweenWhitespace(const char *strn, char *buf, size_t buf_len);
+
+const char * STRING_locateLastOccurance(const char *str, const char *findIt);
+
+/**
+ * Extract a substring from given string. String is extracted using two substrings
+ * from and to. Extracted string is located as <from><extracted string><to>.
+ * For example when using from as "[" and to as "]" on input string "[test]" the
+ * extracted value is "test". If one of the substrings is missing the result is 
+ * not extracted. When from is set as NULL the string is extracted from the
+ * beginning of the input string. When ti is set as NULL the string is extracted
+ * until the end of the input strings. For example from = "->", to = NULL, input
+ * string is "->test test", the resulting output is "test test".
+ * 
+ * When searching "from" substring always the first occurrence is used, when searching
+ * "to" string, always the last one is used.
+ * 
+ * @param strn[in]		Input string.
+ * @param from[in]		The first border string.
+ * @param to[in]		The last border string.
+ * @param buf[in]		The buffer where substring is extracted.
+ * @param buf_len[in]	The size of the buffer.
+ * 
+ * @return Returns buf is successful, NULL otherwise.
+ */
+char *STRING_extract(const char *strn, const char *from, const char *to, char *buf, size_t buf_len);
+
+/**
+ * Same as STRING_extract, but the white space characters from the beginning and
+ * end are removed.
+ * @param strn[in]		Input string.
+ * @param from[in]		The first border string.
+ * @param to[in]		The last border string.
+ * @param buf[in]		The buffer where substring is extracted.
+ * @param buf_len[in]	The size of the buffer.
+ * 
+ * @return Returns buf is successful, NULL otherwise.
+ */
+char *STRING_extractRmWhite(const char *strn, const char *from, const char *to, char *buf, size_t buf_len);
 
 #ifdef	__cplusplus
 }

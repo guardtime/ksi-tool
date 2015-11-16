@@ -60,7 +60,7 @@ int KSITOOL_Signature_verify(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx);
 int KSITOOL_Signature_verifyOnline(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx);
 int KSITOOL_Signature_verifyDataHash(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, const KSI_DataHash *docHash);
 int KSITOOL_createSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_DataHash *dataHash, KSI_Signature **sig);
-
+int KSITOOL_verifyPublicationsFile(ERR_TRCKR *err, KSI_CTX *ctx, KSI_PublicationsFile *pubfile);
 #ifdef	__cplusplus
 }
 #endif

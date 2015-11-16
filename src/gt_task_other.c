@@ -19,6 +19,7 @@
  */
 
 #include "gt_task_support.h"
+#include "obj_printer.h"
 #include "ksitool_err.h"
 
 #ifdef _WIN32
@@ -73,7 +74,7 @@ int GT_other(Task *task){
 
 
 	if(n) print_info("\n");
-	if (n) printSignerIdentity(sig);
+	if (n) OBJPRINT_signerIdentity(sig);
 
 cleanup:
 

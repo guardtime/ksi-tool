@@ -152,7 +152,7 @@ static char default_aggreUrl[1024] = "";
 static bool includeParametersFromEnvironment(paramSet *set, char **envp, int priority){
 	/*Read command line parameters from system variables*/
 	bool ret = true;
-	bool s, v, x, p, T, aggre, P;
+	bool s, v, x, p, T, aggre, P, cnstr;
 	const char *key = NULL;
 
 	aggre = paramSet_isSetByName(set, "aggre");
@@ -162,11 +162,18 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp, int pri
 	p = paramSet_isSetByName(set, "p");
 	T = paramSet_isSetByName(set, "T");
 	P = paramSet_isSetByName(set, "P");
+	cnstr = paramSet_isSetByName(set, "cnstr");
 
 	while(*envp!=NULL){
 		char tmp[1024];
+		char name[1024];
 
-        if(strncmp(*envp, "KSI_AGGREGATOR", sizeof("KSI_AGGREGATOR") - 1) == 0){
+		if (STRING_extract(*envp, NULL, "=url", name, sizeof(name)) == NULL) {
+			envp++;
+			continue;
+		}
+
+		if(strcmp(name, "KSI_AGGREGATOR") == 0){
 			if(getEnvValue(*envp, "url", tmp, sizeof(tmp)) == NULL) {
 				print_errors("Error: Environment variable KSI_AGGREGATOR is invalid.\n");
 				print_errors("Error: Invalid '%s'.\n", *envp);
@@ -184,7 +191,7 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp, int pri
 			}
 
 		}
-        else if(strncmp(*envp, "KSI_EXTENDER", sizeof("KSI_EXTENDER") - 1) == 0){
+        else if(strcmp(name, "KSI_EXTENDER") == 0){
 			if(getEnvValue(*envp, "url", tmp, sizeof(tmp)) == NULL){
 				print_errors("Error: Environment variable KSI_EXTENDER is invalid.\n");
 				print_errors("Error: Invalid '%s'.\n", *envp);
@@ -201,7 +208,7 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp, int pri
 					paramSet_priorityAppendParameterByName("pass", tmp, "KSI_EXTENDER", priority, set);
 			}
 
-		} else if(strncmp(*envp, "KSI_PUBFILE", sizeof("KSI_PUBFILE") - 1) == 0){
+		} else if(strcmp(name, "KSI_PUBFILE") == 0){
 			if((key = getEnvValue(*envp, "url", tmp, sizeof(tmp))) == NULL){
 				print_errors("Error: Environment variable KSI_PUBFILE is invalid.\n");
 				print_errors("Error: Invalid '%s'.\n", *envp);
@@ -212,7 +219,7 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp, int pri
 			strcpy(default_pubUrl, tmp);
 
 			/*If P is already set, don't load constraints.*/
-			if (P == false) {
+			if (P == false && cnstr == false) {
 				key = getPublicationsFileConstraint(key, tmp, sizeof(tmp));
 				while (1) {
 					key = getPublicationsFileConstraint(key, tmp, sizeof(tmp));
@@ -272,6 +279,7 @@ static void GT_pritHelp(void){
 			"\t\t-x -i -T -o extend signature to specified time.\n"
 			" -p\t\tdownload Publications file (-r -d -t):\n"
 			"\t\t-p -o --cnstr download publications file.\n"
+			"\t\t-p -d dump publications file.\n"
 			"\t\t-p -T create publication string.\n"
 			" -v --verify\tverify signature or publications file. Use -f to provide\n"
 			"\t\ta file or -F to use a pre-calculated hash value (-n -r -d -t):\n"
@@ -357,7 +365,7 @@ static void GT_pritHelp(void){
 			printSupportedHashAlgorithms();
 			print_info("\n");
 }
-#define NUMBER_OF_TASKS 8
+#define NUMBER_OF_TASKS 9
 
 int main(int argc, char** argv, char **envp) {
 	TaskDefinition *taskDefArray[NUMBER_OF_TASKS];
@@ -406,15 +414,16 @@ int main(int argc, char** argv, char **envp) {
 //	paramSet_addControl(set, "{aggre}{htime}{setsystime}", isFlagFormatOK, contentIsOK, NULL);
 
 	/*Define possible tasks*/
-	/*						ID							DESC					MAN		IGNORE	OPTIONAL		FORBIDDEN					NEW OBJ*/
+	/*						ID							DESC					MAN				IGNORE	OPTIONAL		FORBIDDEN					NEW OBJ*/
 	TaskDefinition_new(signDataFile,			"Sign data file",				"s,f,o,S",		"b,r",	"H,n,d,t",		"x,p,v,aggre,F,i,T",		&taskDefArray[0]);
 	TaskDefinition_new(signHash,				"Sign hash",					"s,F,o,S",		"b,r",	"n,d,t",		"x,p,v,aggre,f,i,T,H",		&taskDefArray[1]);
-	TaskDefinition_new(extendTimestamp,			"Extend signature",				"x,i,o,P,X",		"",		"T,n,d,r,t",	"s,p,v,aggre,f,F,H",		&taskDefArray[2]);
-	TaskDefinition_new(downloadPublicationsFile,"Download publication file",	"p,o,P,cnstr",	"n",	"d,r,t",		"s,x,v,aggre,f,F,T,i,H",	&taskDefArray[3]);
+	TaskDefinition_new(extendTimestamp,			"Extend signature",				"x,i,o,P,X",	"",		"T,n,d,r,t",	"s,p,v,aggre,f,F,H",		&taskDefArray[2]);
+	TaskDefinition_new(downloadPublicationsFile,"Download publications file",	"p,o,P,cnstr",	"n,b",	"d,r,t",		"s,x,v,aggre,f,F,T,i,H",	&taskDefArray[3]);
 	TaskDefinition_new(createPublicationString, "Create publication string",	"p,T,X",		"n,r",	"d,t",			"s,x,v,aggre,f,F,o,i,H",	&taskDefArray[4]);
 	TaskDefinition_new(verifyTimestamp,			"Verify signature",				"v,i",			"",		"f,F,n,d,r,t",	"s,p,x,aggre,H",			&taskDefArray[5]);
 	TaskDefinition_new(verifyTimestampOnline,	"Verify online",				"v,x,i,X",		"",		"f,F,n,d,r,t",	"s,p,aggre,T,H",			&taskDefArray[6]);
-	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"v,b,cnstr",			"",		"n,d,r,t",		"x,s,p,aggre,i,f,F,T,H",	&taskDefArray[7]);
+	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"v,b,cnstr",	"",		"n,d,r,t",		"x,s,p,aggre,i,f,F,T,H",	&taskDefArray[7]);
+	TaskDefinition_new(dumpPublicationsFile,	"Dump publications file",		"p,d",			"",		"d,r,t",		"s,x,v,aggre,f,F,T,i,H,o",	&taskDefArray[8]);
 	/*TODO: uncomment if implemented and set NUMBER_OF_TASKS+=2*/
 //	TaskDefinition_new(getRootH_T,				"Get Aggregator root hash",		"aggre,htime,S","",		"",				"x,s,p,v,f,F,i,o,T,H,setsystime",		&taskDefArray[8]);
 //	TaskDefinition_new(setSysTime,				"Set system time",				"aggre,setsystime,S","","",				"x,s,p,v,f,F,i,o,T,H,htime",		&taskDefArray[9]);
@@ -492,7 +501,8 @@ int main(int argc, char** argv, char **envp) {
 	paramSet_printIgnoredLowerPriorityWarnings(set);
 
 	/*DO*/
-	if(Task_getID(task) == downloadPublicationsFile || Task_getID(task) == createPublicationString){
+	if(Task_getID(task) == downloadPublicationsFile || Task_getID(task) == createPublicationString
+			|| Task_getID(task) == dumpPublicationsFile) {
 		retval=GT_publicationsFileTask(task);
 	}
 	else if (Task_getID(task) == verifyPublicationsFile){

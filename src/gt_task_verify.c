@@ -19,6 +19,8 @@
  */
 
 #include "gt_task_support.h"
+#include "obj_printer.h"
+#include "debug_print.h"
 
 static int GT_verifyTask_verifySigOnline(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig);
 static int GT_verifyTask_verifyWithPublication(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig, KSI_Signature **out);
@@ -83,11 +85,11 @@ int GT_verifySignatureTask(Task *task){
 	if (n || r || d) print_info("\n");
 
 	if (((n || r || d) &&  (Task_getID(task) == verifyTimestamp)) || Task_getID(task) == verifyTimestampOnline){
-		if (n) printSignerIdentity(tmp_ext != NULL ? tmp_ext : sig);
-		if (r) printSignaturePublicationReference(tmp_ext != NULL ? tmp_ext : sig);
+		if (d || n) OBJPRINT_signerIdentity(tmp_ext != NULL ? tmp_ext : sig);
+		if (d || r) OBJPRINT_signaturePublicationReference(tmp_ext != NULL ? tmp_ext : sig);
 		if (d) {
-			printSignatureVerificationInfo(tmp_ext != NULL ? tmp_ext : sig);
-			printSignatureSigningTime(tmp_ext != NULL ? tmp_ext : sig);
+			OBJPRINT_signatureVerificationInfo(tmp_ext != NULL ? tmp_ext : sig);
+			OBJPRINT_signatureSigningTime(tmp_ext != NULL ? tmp_ext : sig);
 		}
 	}
 
@@ -97,10 +99,11 @@ cleanup:
 	print_progressResult(res);
 
 	if (res != KT_OK) {
+		DEBUG_verifySignature(ksi, task, res, sig);
 		ERR_TRCKR_printErrors(err);
-		if(d && ksi) KSI_ERR_statusDump(ksi, stderr);
 		retval = errToExitCode(res);
 	}
+
 
 	KSI_Signature_free(sig);
 	KSI_Signature_free(tmp_ext);
@@ -138,8 +141,7 @@ int GT_verifyPublicationFileTask(Task *task){
 	print_progressResult(res);
 
 	print_progressDesc(t, "Verifying publications file... ");
-	res = KSI_verifyPublicationsFile(ksi, publicationsFile);
-	ERR_APPEND_KSI_ERR(err, res, KSI_PKI_CERTIFICATE_NOT_TRUSTED);
+	res = KSITOOL_verifyPublicationsFile(err, ksi, publicationsFile);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify publication file.");
 	print_progressResult(res);
 
@@ -158,14 +160,16 @@ int GT_verifyPublicationFileTask(Task *task){
 
 
 	if(d && Task_getID(task) == verifyPublicationsFile){
-		printPublicationsFileReferences(publicationsFile);
-		printPublicationsFileCertificates(publicationsFile);
+		OBJPRINT_publicationsFileReferences(publicationsFile);
+		OBJPRINT_publicationsFileCertificates(publicationsFile);
 	}
 
 cleanup:
 	print_progressResult(res);
 
 	if (res != KT_OK) {
+		DEBUG_verifyPubfile(ksi, task, res, publicationsFile);
+		print_info("\n");
 		ERR_TRCKR_printErrors(err);
 		retval = errToExitCode(res);
 	}

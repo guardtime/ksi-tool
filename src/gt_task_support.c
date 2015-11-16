@@ -25,6 +25,7 @@
 #include <ksi/net.h>
 #include <ksi/hashchain.h>
 #include <ksi/pkitruststore.h>
+#include <ksi/compatibility.h>
 #include <stdio.h>
 #include "gt_task_support.h"
 #include "param_set.h"
@@ -706,213 +707,6 @@ bool isSignatureExtended(const KSI_Signature *sig) {
 	return pubRec == NULL ? false : true;
 }
 
-void printPublicationsFileReferences(const KSI_PublicationsFile *pubFile){
-	int res = KSI_UNKNOWN_ERROR;
-	KSI_LIST(KSI_PublicationRecord)* list_publicationRecord = NULL;
-	KSI_PublicationRecord *publicationRecord = NULL;
-	char buf[1024];
-	unsigned int i, j;
-	char *pLineBreak = NULL;
-	char *pStart = NULL;
-
-	if(pubFile == NULL) return;
-
-	print_info("Publications file references:\n");
-
-	res = KSI_PublicationsFile_getPublications(pubFile, &list_publicationRecord);
-	if(res != KSI_OK) return;
-
-	for (i = 0; i < KSI_PublicationRecordList_length(list_publicationRecord); i++) {
-		int h=0;
-		res = KSI_PublicationRecordList_elementAt(list_publicationRecord, i, &publicationRecord);
-		if(res != KSI_OK) return;
-
-		if(KSI_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
-
-		pStart = buf;
-		j=1;
-		h=0;
-		if(i) print_info("\n");
-		while((pLineBreak = strchr(pStart, '\n')) != NULL){
-			*pLineBreak = 0;
-			if(h++ < 3)
-				print_info("%s %s\n", "  ", pStart);
-			else
-				print_info("%s %2i) %s\n", "    ", j++, pStart);
-			pStart = pLineBreak+1;
-		}
-
-		if(h < 3)
-			print_info("%s %s\n", "  ", pStart);
-		else
-			print_info("%s %2i) %s\n", "    ", j++, pStart);
-	}
-	print_info("\n");
-	return;
-}
-
-void printSignaturePublicationReference(KSI_Signature *sig){
-	int res = KSI_UNKNOWN_ERROR;
-	KSI_PublicationRecord *publicationRecord;
-	char buf[1024];
-	char *pLineBreak = NULL;
-	char *pStart = buf;
-	int i=1;
-	int h=0;
-	if(sig == NULL) return;
-
-	print_info("Signatures publication references:\n");
-	res = KSI_Signature_getPublicationRecord(sig, &publicationRecord);
-	if(res != KSI_OK)return ;
-
-	if(publicationRecord == NULL) {
-		print_info("  (No publication records available)\n\n");
-		return;
-	}
-
-	if(KSI_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
-	pStart = buf;
-
-	while((pLineBreak = strchr(pStart, '\n')) != NULL){
-		*pLineBreak = 0;
-
-		if(h < 3)
-			print_info("%s %s\n", "  ", pStart);
-		else
-			print_info("%s %2i) %s\n", "    ", i++, pStart);
-
-		pStart = pLineBreak+1;
-	}
-
-	if(h<3)
-		print_info("%s %s\n", "  ", pStart);
-	else
-		print_info("%s %2i) %s\n", "    ", i++, pStart);
-	print_info("\n");
-
-	return;
-}
-
-void printSignerIdentity(KSI_Signature *sig){
-	int res = KSI_UNKNOWN_ERROR;
-	char *signerIdentity = NULL;
-
-	if(sig == NULL) goto cleanup;
-
-	print_info("Signer identity: ");
-	res = KSI_Signature_getSignerIdentity(sig, &signerIdentity);
-	if(res != KSI_OK){
-		print_info("Unable to get signer identity.\n");
-		goto cleanup;
-	}
-
-	print_info("'%s'\n", signerIdentity == NULL || strlen(signerIdentity) == 0 ? "Unknown" : signerIdentity);
-	print_info("\n");
-cleanup:
-
-	KSI_free(signerIdentity);
-	return;
-}
-
-void printSignatureVerificationInfo(KSI_Signature *sig){
-	int res = KSI_UNKNOWN_ERROR;
-	const KSI_VerificationResult *sigVerification = NULL;
-	const KSI_VerificationStepResult *result = NULL;
-	const char *desc;
-	unsigned int i = 0;
-
-	if(sig == NULL){
-		return;
-	}
-
-	print_info("Verification steps:\n");
-	res = KSI_Signature_getVerificationResult(sig, &sigVerification);
-	if(res != KSI_OK){
-		print_info("Unable to get verification steps\n\n");
-		return;
-	}
-
-	if(sigVerification != NULL){
-		for(i=0; i< KSI_VerificationResult_getStepResultCount(sigVerification); i++){
-			res = KSI_VerificationResult_getStepResult(sigVerification, i, &result);
-			if(res != KSI_OK){
-				return;
-			}
-			print_info("  0x%03x:\t%s", KSI_VerificationStepResult_getStep(result), KSI_VerificationStepResult_isSuccess(result) ? "OK" : "FAIL");
-			desc = KSI_VerificationStepResult_getDescription(result);
-			if (desc && *desc) {
-				print_info(" (%s)", desc);
-			}
-			print_info("\n");
-		}
-	}
-	print_info("\n");
-	return;
-}
-
-void printSignatureSigningTime(const KSI_Signature *sig) {
-	int res;
-	KSI_Integer *sigTime = NULL;
-	unsigned long signingTime = 0;
-	char date[1024];
-
-
-	if (sig == NULL) {
-		return;
-	}
-
-
-	res = KSI_Signature_getSigningTime(sig, &sigTime);
-	if (res != KSI_OK) {
-		return;
-	}
-
-	if (KSI_Integer_toDateString(sigTime, date, sizeof(date)) != date) {
-		return;
-	}
-
-	signingTime = (unsigned long)KSI_Integer_getUInt64(sigTime);
-
-	print_info("Signing time:\n"
-			"UTC seconds:%i\n"
-			"Date %s\n", signingTime, date);
-
-	print_info("\n");
-	return;
-}
-
-void printPublicationsFileCertificates(const KSI_PublicationsFile *pubfile){
-	KSI_CertificateRecordList *certReclist = NULL;
-	KSI_CertificateRecord *certRec = NULL;
-	KSI_PKICertificate *cert = NULL;
-	char buf[1024];
-	unsigned int i=0;
-	int res = 0;
-
-	if(pubfile == NULL) goto cleanup;
-	print_info("Publications file certificates::\n");
-
-	res = KSI_PublicationsFile_getCertificates(pubfile, &certReclist);
-	if(res != KSI_OK || certReclist == NULL) goto cleanup;
-
-	for(i=0; i<KSI_CertificateRecordList_length(certReclist); i++){
-		res = KSI_CertificateRecordList_elementAt(certReclist, i, &certRec);
-		if(res != KSI_OK || certRec == NULL) goto cleanup;
-
-		res = KSI_CertificateRecord_getCert(certRec, &cert);
-		if(res != KSI_OK || cert == NULL) goto cleanup;
-
-		if(KSI_PKICertificate_toString(cert, buf, sizeof(buf)) != NULL)
-			print_info("  %2i)  %s\n",i, buf);
-		else
-			print_info("  %2i)  null\n",i);
-	}
-
-cleanup:
-
-	return;
-	}
-
 // helpers for hex decoding
 static int x(char c){
 	if (c >= '0' && c <= '9')
@@ -1165,4 +959,130 @@ void print_progressResult(int res) {
 	}
 }
 
+/**
+ * OID description array must have the following format:
+ * [OID][short name][long name][alias 1][..][alias N][NULL]
+ * where OID, short and long name are mandatory. Array must end with NULL.
+ */
+static char *OID_EMAIL[] = {KSI_CERT_EMAIL, "E", "email", "e-mail", "e_mail", "emailAddress", NULL};
+static char *OID_COMMON_NAME[] = {KSI_CERT_COMMON_NAME, "CN", "common name", "common_name", NULL};
+static char *OID_COUNTRY[] = {KSI_CERT_COUNTRY, "C", "country", NULL};
+static char *OID_ORGANIZATION[] = {KSI_CERT_ORGANIZATION, "O", "org", "organization", NULL};
 
+static char **OID_INFO[] = {OID_EMAIL, OID_COMMON_NAME, OID_COUNTRY, OID_ORGANIZATION, NULL};
+
+const char *OID_getShortDescriptionString(const char *OID) {
+	unsigned i = 0;
+
+	if (OID == NULL) return NULL;
+
+	while (OID_INFO[i] != NULL) {
+		if (strcmp(OID_INFO[i][0], OID) == 0) return OID_INFO[i][1];
+		i++;
+	}
+
+	return OID;
+}
+
+char *STRING_getBetweenWhitespace(const char *strn, char *buf, size_t buf_len) {
+	const char *beginning = NULL;
+	const char *end = NULL;
+	size_t strn_len;
+	size_t new_len;
+
+	if (strn == NULL || buf == NULL || buf_len == 0) return NULL;
+
+	strn_len = strlen(strn);
+	beginning = strn;
+	end = strn + strn_len; //End should be at terminating NUL
+
+
+	while(beginning != end && isspace(*beginning)) beginning++;
+	while(end != beginning && (isspace(*end) || *end == '\0')) end--;
+
+
+	new_len = end + 1 - beginning;
+	if (KSI_strncpy(buf, beginning, new_len + 1) == NULL) return NULL;
+
+	return buf;
+}
+
+const char * STRING_locateLastOccurance(const char *str, const char *findIt) {
+	const char * ret = NULL;
+	const char * isFound = NULL;
+	const char *searchFrom = NULL;
+
+	if (str == NULL || findIt == NULL) return NULL;
+	if(*str == '\0' && *findIt == '\0') return str;
+
+
+	searchFrom = str;
+
+	while (*searchFrom != '\0' && (isFound = strstr(searchFrom, findIt)) != NULL) {
+		searchFrom = isFound + 1;
+		ret = isFound;
+	}
+	return ret;
+}
+
+char *STRING_extract(const char *strn, const char *from, const char *to, char *buf, size_t buf_len) {
+	const char *beginning = NULL;
+	const char *end = NULL;
+	size_t from_len;
+	size_t to_len;
+	size_t strn_len;
+	size_t new_len;
+	if (strn == NULL || buf == NULL || buf_len == 0) return NULL;
+
+	strn_len = strlen(strn);
+
+	if (from != NULL) {
+		from_len = strlen(from);
+		beginning = strstr(strn, from);
+		if (beginning != NULL) beginning += from_len;
+	} else {
+		beginning = strn;
+	}
+
+	if (to != NULL) {
+		to_len = strlen(to);
+		end = STRING_locateLastOccurance(strn, to);
+		if (end != NULL) end = end -= 1;
+	} else {
+		end = strn + strn_len - 1;
+	}
+
+	if (beginning == NULL || end == NULL) return NULL;
+	if ((end + 1) < beginning) new_len = 0;
+	else new_len = end + 1 - beginning;
+
+	if (KSI_strncpy(buf, beginning, new_len + 1) == NULL) return NULL;
+
+	return buf;
+}
+
+char *STRING_extractRmWhite(const char *strn, const char *from, const char *to, char *buf, size_t buf_len) {
+	char *tmp = NULL;
+	size_t tmp_size = 0;
+	char *ret = NULL;
+	char *isBuf = NULL;
+
+	if (strn == NULL || buf == NULL || buf_len == 0) goto cleanup;
+
+	tmp = (char *)malloc(buf_len);
+	if (tmp == NULL) goto cleanup;
+
+	isBuf = STRING_extract(strn, from, to, tmp, buf_len);
+	if (isBuf != tmp) goto cleanup;
+
+	isBuf = STRING_getBetweenWhitespace(tmp, buf, buf_len);
+	if (isBuf != buf) goto cleanup;
+
+	ret = buf;
+
+cleanup:
+
+	free(tmp);
+
+	return ret;
+}

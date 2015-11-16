@@ -38,11 +38,11 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
 Requires: openssl
 Requires: curl
-Requires: libksi >= 3.4
+Requires: libksi >= 3.5
 Requires: libksi < 3.6
 BuildRequires: openssl-devel
 BuildRequires: curl-devel
-BuildRequires: libksi-devel >= 3.4
+BuildRequires: libksi-devel >= 3.5
 BuildRequires: libksi-devel < 3.6
 
 %description

@@ -19,6 +19,7 @@
  */
 
 #include "gt_task_support.h"
+#include "obj_printer.h"
 
 static int getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh);
 
@@ -62,8 +63,8 @@ int GT_signTask(Task *task) {
 
 	/*Print info*/
 	if(n || d) print_info("\n");
-	if (n) printSignerIdentity(sign);
-	if (d) printSignatureSigningTime(sign);
+	if (n) OBJPRINT_signerIdentity(sign);
+	if (d) OBJPRINT_signatureSigningTime(sign);
 
 
 cleanup:
