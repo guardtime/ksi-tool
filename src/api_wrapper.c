@@ -21,6 +21,11 @@
 #include "api_wrapper.h"
 #include <ksi/ksi.h>
 
+#define ERR_APPEND_KSI_ERR_EXT_MSG(err, res, ref_err, msg) \
+		if (res == ref_err) { \
+			ERR_TRCKR_add(err, res, __FILE__, __LINE__, "Error: %s", msg); \
+		}	
+
 /**
  * Returns 1 if base error was appended.
  */
@@ -81,7 +86,10 @@ static void appendPubFileErros(ERR_TRCKR *err, int res) {
 
 int KSITOOL_extendSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Signature *sig, KSI_Signature **ext) {
 	int res;
+
 	res = KSI_extendSignature(ctx, sig, ext);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
+
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
 		appendNetworkErrors(err, res);
 		appendExtenderErrors(err, res);
@@ -92,7 +100,10 @@ int KSITOOL_extendSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Signature *sig, KS
 
 int KSITOOL_Signature_extendTo(ERR_TRCKR *err, const KSI_Signature *signature, KSI_CTX *ctx, KSI_Integer *to, KSI_Signature **extended) {
 	int res;
+
 	res = KSI_Signature_extendTo(signature, ctx, to, extended);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
+
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
 		appendNetworkErrors(err, res);
 		appendExtenderErrors(err, res);
@@ -104,6 +115,7 @@ int KSITOOL_Signature_extend(ERR_TRCKR *err, const KSI_Signature *signature, KSI
 	int res;
 
 	res = KSI_Signature_extend(signature, ctx, pubRec, extended);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
 		appendNetworkErrors(err, res);
@@ -115,7 +127,10 @@ int KSITOOL_Signature_extend(ERR_TRCKR *err, const KSI_Signature *signature, KSI
 
 int KSITOOL_Signature_verify(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx) {
 	int res;
+
 	res = KSI_Signature_verify(sig, ctx);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
+
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
 		appendNetworkErrors(err, res);
 		appendExtenderErrors(err, res);
@@ -126,7 +141,10 @@ int KSITOOL_Signature_verify(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx) {
 
 int KSITOOL_Signature_verifyOnline(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx) {
 	int res;
+
 	res = KSI_Signature_verifyOnline(sig, ctx);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
+
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
 		appendNetworkErrors(err, res);
 		appendExtenderErrors(err, res);
@@ -136,7 +154,10 @@ int KSITOOL_Signature_verifyOnline(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *
 
 int KSITOOL_Signature_verifyDataHash(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *docHash) {
 	int res;
+
 	res = KSI_Signature_verifyDataHash(sig, ctx, docHash);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
+
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
 		appendNetworkErrors(err, res);
 		appendExtenderErrors(err, res);
@@ -147,6 +168,7 @@ int KSITOOL_Signature_verifyDataHash(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX
 int KSITOOL_createSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_DataHash *dataHash, KSI_Signature **sig) {
 	int res;
 	res = KSI_createSignature(ctx, dataHash, sig);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
 		appendNetworkErrors(err, res);
@@ -157,7 +179,30 @@ int KSITOOL_createSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_DataHash *dataHash
 
 int KSITOOL_verifyPublicationsFile(ERR_TRCKR *err, KSI_CTX *ctx, KSI_PublicationsFile *pubfile) {
 	int res;
+
 	res = KSI_verifyPublicationsFile(ctx, pubfile);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
+
 	appendPubFileErros(err, res);
 	return res;
+}
+
+char err_buf[0x2000] = "";
+
+void KSITOOL_KSI_ERRTrace_save(KSI_CTX *ctx) {
+	static int lock = 0;
+	int error = KSI_UNKNOWN_ERROR;
+	char dummybuf[1];
+
+	if (lock) return;
+
+	KSI_ERR_getBaseErrorMessage(ctx, dummybuf, sizeof(dummybuf), &error, NULL);
+	if (error != KSI_OK) {
+		KSI_ERR_toString(ctx, err_buf, sizeof(err_buf));
+		lock = 1;
+	}
+}
+
+const char *KSITOOL_KSI_ERRTrace_get(void) {
+	return err_buf;
 }

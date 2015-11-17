@@ -77,10 +77,10 @@ int GT_publicationsFileTask(Task *task){
 
 cleanup:
 	print_progressResult(res);
+	KSITOOL_KSI_ERRTrace_save(ksi);
 
 	if (res != KT_OK) {
 		ERR_TRCKR_printErrors(err);
-		if(d && ksi) KSI_ERR_statusDump(ksi, stderr);
 		retval = errToExitCode(res);
 	}
 
@@ -265,5 +265,5 @@ static int GT_publicationsFileTask_dumpPublicationsFile(Task *task, KSI_CTX *ksi
 
 cleanup:
 
-return res;
+	return res;
 }

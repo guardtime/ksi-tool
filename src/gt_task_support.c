@@ -452,7 +452,7 @@ bool isPiping(paramSet *set) {
 void closeTask(KSI_CTX *ksi){
 	if (ksi == NULL) goto cleanup;
 
-	KSI_LOG_logCtxError(ksi, KSI_LOG_DEBUG);
+	KSI_LOG_debug(ksi, "%s", KSITOOL_KSI_ERRTrace_get());
 	KSI_CTX_free(ksi);
 
 cleanup:

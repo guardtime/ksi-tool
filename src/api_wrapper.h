@@ -41,19 +41,6 @@ extern "C" {
 			ERR_TRCKR_add(err, res, __FILE__, __LINE__, "Error: %s", KSI_getErrorString(res)); \
 		}
 
-#define ERR_APPEND_KSI_ERR_EXT_MSG(err, res, ref_err, msg) \
-		if (res == ref_err) { \
-			ERR_TRCKR_add(err, res, __FILE__, __LINE__, "Error: %s", msg); \
-		}	
-	
-#define ERR_APPEND_KSI_BASE_ERR(err, res, ksi) \
-		if (res != KSI_OK) { \
-			char buf[1024]; \
-			KSI_ERR_getBaseErrorMessage(ksi, buf, sizeof(buf), NULL, NULL); \
-			if (buf[0] != 0) \
-				ERR_TRCKR_add(err, res, __FILE__, __LINE__, "Error: %s", buf); \
-		}	
-
 int KSITOOL_extendSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Signature *sig, KSI_Signature **ext);	
 int KSITOOL_Signature_extendTo(ERR_TRCKR *err, const KSI_Signature *signature, KSI_CTX *ctx, KSI_Integer *to, KSI_Signature **extended);	
 int KSITOOL_Signature_extend(ERR_TRCKR *err, const KSI_Signature *signature, KSI_CTX *ctx, const KSI_PublicationRecord *pubRec, KSI_Signature **extended);
@@ -62,6 +49,9 @@ int KSITOOL_Signature_verifyOnline(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *
 int KSITOOL_Signature_verifyDataHash(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *docHash);
 int KSITOOL_createSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_DataHash *dataHash, KSI_Signature **sig);
 int KSITOOL_verifyPublicationsFile(ERR_TRCKR *err, KSI_CTX *ctx, KSI_PublicationsFile *pubfile);
+void KSITOOL_KSI_ERRTrace_save(KSI_CTX *ctx);
+const char *KSITOOL_KSI_ERRTrace_get(void);
+
 #ifdef	__cplusplus
 }
 #endif

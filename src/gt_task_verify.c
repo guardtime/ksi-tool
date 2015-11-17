@@ -97,6 +97,7 @@ int GT_verifySignatureTask(Task *task){
 
 cleanup:
 	print_progressResult(res);
+	KSITOOL_KSI_ERRTrace_save(ksi);
 
 	if (res != KT_OK) {
 		DEBUG_verifySignature(ksi, task, res, sig);
@@ -166,6 +167,7 @@ int GT_verifyPublicationFileTask(Task *task){
 
 cleanup:
 	print_progressResult(res);
+	KSITOOL_KSI_ERRTrace_save(ksi);
 
 	if (res != KT_OK) {
 		DEBUG_verifyPubfile(ksi, task, res, publicationsFile);

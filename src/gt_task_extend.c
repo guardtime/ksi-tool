@@ -91,6 +91,7 @@ int GT_extendTask(Task *task) {
 
 cleanup:
 	print_progressResult(res);
+	KSITOOL_KSI_ERRTrace_save(ksi);
 
 	if(n || r || d) print_info("\n");
 
@@ -104,10 +105,6 @@ cleanup:
 	if (res != KT_OK) {
 		print_errors("\n");
 		ERR_TRCKR_printErrors(err);
-		if(d && ksi) {
-			print_errors("\n");
-			KSI_ERR_statusDump(ksi, stderr);
-		}
 
 		if (sig != NULL && d){
 			print_errors("\nOld signature:\n");
