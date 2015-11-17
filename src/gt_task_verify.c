@@ -280,10 +280,7 @@ static int GT_verifyTask_verifyWithPublication(Task *task, KSI_CTX *ksi, ERR_TRC
 		}
 
 		print_progressDesc(t, "Extending signature to publication time of publication string... ");
-		res = KSI_Signature_extend(sig, ksi, extendTo, &tmp_ext);
-		ERR_APPEND_KSI_ERR(err, res, KSI_EXTEND_NO_SUITABLE_PUBLICATION);
-		ERR_APPEND_KSI_ERR(err, res, KSI_PUBLICATIONS_FILE_NOT_CONFIGURED);
-		ERR_APPEND_KSI_BASE_ERR(err, res, ksi);
+		res = KSITOOL_Signature_extend(err, sig, ksi, extendTo, &tmp_ext);
 		ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
 		print_progressResult(res);
 

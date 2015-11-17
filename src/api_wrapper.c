@@ -100,6 +100,19 @@ int KSITOOL_Signature_extendTo(ERR_TRCKR *err, const KSI_Signature *signature, K
 	return res;
 }
 
+int KSITOOL_Signature_extend(ERR_TRCKR *err, const KSI_Signature *signature, KSI_CTX *ctx, const KSI_PublicationRecord *pubRec, KSI_Signature **extended) {
+	int res;
+
+	res = KSI_Signature_extend(signature, ctx, pubRec, extended);
+
+	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
+		appendNetworkErrors(err, res);
+		appendExtenderErrors(err, res);
+		appendPubFileErros(err, res);
+	}
+	return res;
+}
+
 int KSITOOL_Signature_verify(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx) {
 	int res;
 	res = KSI_Signature_verify(sig, ctx);
@@ -121,7 +134,7 @@ int KSITOOL_Signature_verifyOnline(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *
 	return res;
 }
 
-int KSITOOL_Signature_verifyDataHash(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, const KSI_DataHash *docHash) {
+int KSITOOL_Signature_verifyDataHash(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *docHash) {
 	int res;
 	res = KSI_Signature_verifyDataHash(sig, ctx, docHash);
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
