@@ -189,7 +189,7 @@ static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *
 	res = KSI_RequestHandle_perform(request);
 	ERR_CATCH_MSG(err, res, "Error: Unable to send extend request.");
 
-	res = KSI_RequestHandle_getExtendResponse(request, &extResp);
+	res = KSITOOL_RequestHandle_getExtendResponse(err, ksi, request, &extResp);
 	ERR_APPEND_KSI_ERR(err, res, KSI_NETWORK_ERROR);
 	ERR_CATCH_MSG(err, res, "Error: Unable to get extend response.");
 	res = KSI_ExtendResp_getStatus(extResp, &respStatus);
