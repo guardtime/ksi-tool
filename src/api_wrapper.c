@@ -244,7 +244,6 @@ int KSITOOL_receivePublicationsFile(ERR_TRCKR *err ,KSI_CTX *ctx, KSI_Publicatio
 		appendPubFileErros(err, res);
 		appendNetworkErrors(err, res);
 	}
-	appendInvalidPubfileUrlOrFileError(err, res, ctx, __LINE__);
 	return res;
 }
 
