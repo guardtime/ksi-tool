@@ -952,7 +952,6 @@ void paramSet_PrintErrorMessages(const paramSet *set){
 				set->printError("Error: Duplicate values '%s'", pParam->flagName);
 				if(value->source) set->printError(" from '%s'", value->source);
 				set->printError("!\n");
-				parameter_Print(pParam, set->printError);
 			}
 
 			while(value){
