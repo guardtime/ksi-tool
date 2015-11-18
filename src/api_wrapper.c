@@ -19,23 +19,66 @@
  */
 
 #include "api_wrapper.h"
+#include "gt_task_support.h"
 #include <ksi/ksi.h>
+#include "ksi/net.h"
 
 #define ERR_APPEND_KSI_ERR_EXT_MSG(err, res, ref_err, msg) \
 		if (res == ref_err) { \
 			ERR_TRCKR_add(err, res, __FILE__, __LINE__, "Error: %s", msg); \
-		}	
+		}
+static int appendInvalidPubfileUrlOrFileError(ERR_TRCKR *err, int res, KSI_CTX *ksi, long line) {
+	char buf[2048];
+	char *ret = NULL;
+
+	if (res == KSI_OK) return 0;
+
+	KSI_ERR_getBaseErrorMessage(ksi, buf, sizeof(buf), NULL, NULL);
+
+	if (res == KSI_INVALID_FORMAT) {
+		if (strcmp(buf, "Unrecognized header.") == 0) {
+			ERR_TRCKR_add(err, res, __FILE__, line, "Error: Unable to parse publications file. Check URL or file!");
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static int appendInvalidServiceUrlError(ERR_TRCKR *err, int res, int ext, char *msg, KSI_CTX *ksi, long line) {
+	char serviceName[2048];
+	char *ret = NULL;
+
+	if (res == KSI_OK) return 0;
+
+	/* If is HTTP error with code 4 */
+	if (res == KSI_HTTP_ERROR && ext == 400) {
+		ret = STRING_extractRmWhite(msg, "Unable to parse", "pdu", serviceName, sizeof(serviceName));
+		if (ret == NULL) return 0;
+		if (strcmp(serviceName, "aggregation") == 0 || strcmp(serviceName, "extend") == 0) {
+			ERR_TRCKR_add(err, res, __FILE__, line, "Error: Service returned unknown PDU and HTTP error 400. Check the service URL!", serviceName);
+			return 1;
+		}
+	} else {
+		appendInvalidPubfileUrlOrFileError(err, res, ksi, line);
+	}
+
+	return 0;
+}
+
+
 
 /**
  * Returns 1 if base error was appended.
  */
 static int appendBaseErrorIfPresent(ERR_TRCKR *err, int res, KSI_CTX *ksi, long line) {
 	char buf[2048];
+	int ext = 0;
 
 	if (res != KSI_OK) {
-		KSI_ERR_getBaseErrorMessage(ksi, buf, sizeof(buf), NULL, NULL);
+		KSI_ERR_getBaseErrorMessage(ksi, buf, sizeof(buf), NULL, &ext);
 		if (buf[0] != 0) {
 			ERR_TRCKR_add(err, res, __FILE__, line, "Error: %s", buf);
+			appendInvalidServiceUrlError(err, res, ext, buf, ksi, line);
 			return 1;
 		} else {
 			return 0;
@@ -95,6 +138,7 @@ int KSITOOL_extendSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Signature *sig, KS
 		appendExtenderErrors(err, res);
 		appendPubFileErros(err, res);
 	}
+
 	return res;
 }
 
