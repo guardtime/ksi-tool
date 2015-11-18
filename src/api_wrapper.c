@@ -235,6 +235,19 @@ int KSITOOL_createSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_DataHash *dataHash
 	return res;
 }
 
+int KSITOOL_receivePublicationsFile(ERR_TRCKR *err ,KSI_CTX *ctx, KSI_PublicationsFile **pubFile) {
+	int res;
+	res = KSI_receivePublicationsFile(ctx, pubFile);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
+
+	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
+		appendPubFileErros(err, res);
+		appendNetworkErrors(err, res);
+	}
+	appendInvalidPubfileUrlOrFileError(err, res, ctx, __LINE__);
+	return res;
+}
+
 int KSITOOL_verifyPublicationsFile(ERR_TRCKR *err, KSI_CTX *ctx, KSI_PublicationsFile *pubfile) {
 	int res;
 

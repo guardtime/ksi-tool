@@ -111,8 +111,7 @@ static int GT_publicationsFileTask_downloadPublicationsFile(Task *task, KSI_CTX 
 
 
 	print_progressDesc(t, "Downloading publications file... ");
-	res = KSI_receivePublicationsFile(ksi, &tmp);
-	ERR_APPEND_KSI_ERR(err, res, KSI_PUBLICATIONS_FILE_NOT_CONFIGURED);
+	res = KSITOOL_receivePublicationsFile(err, ksi, &tmp);
 	ERR_CATCH_MSG(err, res, "Error: Unable to get publication file.");
 	print_progressResult(res);
 
@@ -250,14 +249,15 @@ static int GT_publicationsFileTask_dumpPublicationsFile(Task *task, KSI_CTX *ksi
 	int res;
 	KSI_PublicationsFile *pubfile = NULL;
 
-
 	if (task == NULL || ksi == NULL || err == NULL) {
 		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
-	res = KSI_receivePublicationsFile(ksi, &pubfile);
-	if (res != KSI_OK || pubfile == NULL);
+	print_progressDesc(false, "Downloading publications file... ");
+	res = KSITOOL_receivePublicationsFile(err, ksi, &pubfile);
+	ERR_CATCH_MSG(err, res, "Error: Unable to get publication file.");
+	print_progressResult(res);
 
 	OBJPRINT_publicationsFileReferences(pubfile);
 	OBJPRINT_publicationsFileCertificates(pubfile);
