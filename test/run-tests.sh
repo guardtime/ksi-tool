@@ -57,7 +57,7 @@ TESTSIG="ok-sig-2014-08-01.1.ksig"
 
 echo \# Running tests on `uname -n` at `date '+%F %T %Z'`, start time: ${DATE}
 
-plan_tests 82
+plan_tests 89
 
 
 diag "######    Publications file download"
@@ -300,6 +300,29 @@ diag "--------------------------------------------------------------------------
 like "`$exec -s -F SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b877 -o ${tmp}/too_short_hash.ksig -S ${KSI_TCP_AGGREGATOR} ${KSI_TCP_LOGIN} 2>&1`" "Content error: -F 'SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b877'. (Hash length is incorrect)"
 
 like "`$exec -s -F SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d56 -o ${tmp}/too_long_hash.ksig -S ${KSI_TCP_AGGREGATOR} ${KSI_TCP_LOGIN} 2>&1`" "Content error: -F 'SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d56'. (Hash length is incorrect)"
+diag "------------------------------------------------------------------------------";
+
+diag "====== Testing exchanged services ======";
+
+like "`$exec -p -T 1410848909 -X ${KSI_AGGREGATOR:4} 2>&1`" "Error: Service returned unknown PDU and HTTP error 400. Check the service URL!" "Error extend request 1 to aggregator."
+diag "------------------------------------------------------------------------------";
+
+like "`$exec -x -i ${resource_dir}/$TESTSIG -o ${tmp}/ext2.ksig -X ${KSI_AGGREGATOR:4} 2>&1`" "Error: Service returned unknown PDU and HTTP error 400. Check the service URL!" "Error extend request 2 to aggregator."
+diag "------------------------------------------------------------------------------";
+
+like "`$exec -vx -i ${tmp}/ext.ksig -X ${KSI_AGGREGATOR:4} 2>&1`" "Error: Service returned unknown PDU and HTTP error 400. Check the service URL!" "Error extend request 3 to aggregator."
+diag "------------------------------------------------------------------------------";
+
+like "`$exec -s -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig -S ${KSI_EXTENDER:4} 2>&1`" "Error: Service returned unknown PDU and HTTP error 400. Check the service URL!" "Error sign request 1 to extender."
+diag "------------------------------------------------------------------------------";
+
+like "`$exec -pd -P ${KSI_AGGREGATOR:4} 2>&1`" "Error: Unable to parse publications file. Check URL or file!" "Error pubfile 1 from aggregator url."
+diag "------------------------------------------------------------------------------";
+
+like "`$exec -p -o ${tmp}/pub.bin -P ${KSI_AGGREGATOR:4} --cnstr email=test 2>&1`" "Error: Unable to parse publications file. Check URL or file!" "Error pubfile 2 from aggregator url."
+diag "------------------------------------------------------------------------------";
+
+like "`$exec -v -i ${tmp}/ext.ksig -P ${KSI_AGGREGATOR:4} 2>&1`" "Error: Unable to parse publications file. Check URL or file!" "Error pubfile 3 from aggregator url."
 diag "------------------------------------------------------------------------------";
 
 # cleanup
