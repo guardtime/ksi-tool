@@ -44,15 +44,15 @@ static int appendInvalidPubfileUrlOrFileError(ERR_TRCKR *err, int res, KSI_CTX *
 	return 0;
 }
 
-static int appendInvalidServiceUrlError(ERR_TRCKR *err, int res, int ext, char *msg, KSI_CTX *ksi, long line) {
+static int appendInvalidServiceUrlError(ERR_TRCKR *err, int res, KSI_CTX *ksi, long line) {
+	char errTrcae[8192];
 	char serviceName[2048];
 	char *ret = NULL;
-
 	if (res == KSI_OK) return 0;
 
 	/* If is HTTP error with code 4 */
-	if (res == KSI_HTTP_ERROR && ext == 400) {
-		ret = STRING_extractRmWhite(msg, "Unable to parse", "pdu", serviceName, sizeof(serviceName));
+	if (res == KSI_HTTP_ERROR) {
+		ret = STRING_extractRmWhite(KSI_ERR_toString(ksi, errTrcae, sizeof(errTrcae)), "Unable to parse", "pdu", serviceName, sizeof(serviceName));
 		if (ret == NULL) return 0;
 		if (strcmp(serviceName, "aggregation") == 0 || strcmp(serviceName, "extend") == 0) {
 			ERR_TRCKR_add(err, res, __FILE__, line, "Error: Service returned unknown PDU and HTTP error 400. Check the service URL!", serviceName);
@@ -78,7 +78,9 @@ static int appendBaseErrorIfPresent(ERR_TRCKR *err, int res, KSI_CTX *ksi, long 
 		KSI_ERR_getBaseErrorMessage(ksi, buf, sizeof(buf), NULL, &ext);
 		if (buf[0] != 0) {
 			ERR_TRCKR_add(err, res, __FILE__, line, "Error: %s", buf);
-			appendInvalidServiceUrlError(err, res, ext, buf, ksi, line);
+			appendInvalidServiceUrlError(err, res, ksi, line);
+			return 1;
+		} else if (appendInvalidServiceUrlError(err, res, ksi, line) ) {
 			return 1;
 		} else {
 			return 0;
