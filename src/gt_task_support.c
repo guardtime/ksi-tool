@@ -1025,40 +1025,64 @@ const char * STRING_locateLastOccurance(const char *str, const char *findIt) {
 	return ret;
 }
 
-char *STRING_extract(const char *strn, const char *from, const char *to, char *buf, size_t buf_len) {
+static const char* find_charAfterStrn(const char *str, const char *findIt) {
+	size_t findIt_len = 0;
+	const char * beginning = NULL;
+	findIt_len = strlen(findIt);
+	beginning = strstr(str, findIt);
+	return (beginning == NULL) ? NULL : beginning + findIt_len;
+}
+
+static const char* find_charBefore_abstract(const char *str, const char *findIt, const char* (*find)(const char *str, const char *findIt)) {
+	const char *right = NULL;
+	right = find(str, findIt);
+	right = (right == str || right == NULL) ? right : right - 1;
+	return right;
+}
+
+static const char* find_charBeforeStrn(const char* str, const char* findIt) {
+	return find_charBefore_abstract(str, findIt, strstr);
+}
+
+static const char* find_charBeforeLastStrn(const char* str, const char* findIt) {
+	return find_charBefore_abstract(str, findIt, STRING_locateLastOccurance);
+}
+
+char *STRING_extractAbstract(const char *strn, const char *from, const char *to, char *buf, size_t buf_len,
+		const char* (*find_from)(const char *str, const char *findIt),
+		const char* (*find_to)(const char *str, const char *findIt),
+		const char** firstChar) {
 	const char *beginning = NULL;
 	const char *end = NULL;
-	size_t from_len;
-	size_t to_len;
-	size_t strn_len;
 	size_t new_len;
+
 	if (strn == NULL || buf == NULL || buf_len == 0) return NULL;
 
-	strn_len = strlen(strn);
+	if (find_from == NULL) find_from = find_charAfterStrn;
+	if (find_to == NULL) find_to = find_charBeforeStrn;
 
-	if (from != NULL) {
-		from_len = strlen(from);
-		beginning = strstr(strn, from);
-		if (beginning != NULL) beginning += from_len;
-	} else {
-		beginning = strn;
-	}
-
-	if (to != NULL) {
-		to_len = strlen(to);
-		end = STRING_locateLastOccurance(strn, to);
-		if (end != NULL) end = end -= 1;
-	} else {
-		end = strn + strn_len - 1;
-	}
+	beginning = (from == NULL) ? strn : find_from(strn, from);
+	end = (to == NULL) ? (strn + strlen(strn) - 1) : find_to(strn, to);
 
 	if (beginning == NULL || end == NULL) return NULL;
+
 	if ((end + 1) < beginning) new_len = 0;
 	else new_len = end + 1 - beginning;
 
 	if (KSI_strncpy(buf, beginning, new_len + 1) == NULL) return NULL;
 
+	if (firstChar != NULL) {
+		*firstChar = (*end == '\0') ? NULL : end + 1;
+	}
+
 	return buf;
+}
+
+char *STRING_extract(const char *strn, const char *from, const char *to, char *buf, size_t buf_len) {
+	return STRING_extractAbstract(strn, from, to ,buf, buf_len,
+			NULL,
+			find_charBeforeLastStrn,
+			NULL);
 }
 
 char *STRING_extractRmWhite(const char *strn, const char *from, const char *to, char *buf, size_t buf_len) {
@@ -1085,4 +1109,53 @@ cleanup:
 	free(tmp);
 
 	return ret;
+}
+
+static const char* find_group_start(const char *str, const char *ignore) {
+	size_t i = 0;
+	while (str[i] && isspace(str[i])) i++;
+	return (i == 0) ? str : &str[i];
+}
+
+static const char* find_group_end(const char *str, const char *ignore) {
+	int is_quato_opend = 0;
+	int is_firs_non_whsp_found = 0;
+	size_t i = 0;
+
+	while (str[i]) {
+		if (!isspace(str[i])) is_firs_non_whsp_found = 1;
+		if (isspace(str[i]) && is_quato_opend == 0 && is_firs_non_whsp_found) return &str[i - 1];
+
+		if (str[i] == '"' && is_quato_opend == 0) is_quato_opend = 1;
+		else if (str[i] == '"' && is_quato_opend == 1) return &str[i];
+
+		i++;
+	}
+
+	return i == 0 ? str : &str[i];
+}
+
+
+static void string_removeChars(char *str, char rem) {
+	size_t i = 0;
+	size_t str_index = 0;
+	char *itr = str;
+
+	if (itr == NULL) return;
+
+	while(itr[i]) {
+		if (itr[i] != rem) {
+			str[str_index] = itr[i];
+			str_index++;
+		}
+		i++;
+	}
+	str[str_index] = '\0';
+}
+
+const char *STRING_getChunks(const char *strn, char *buf, size_t buf_len) {
+	const char *next = NULL;
+	STRING_extractAbstract(strn, "", "", buf, buf_len, find_group_start, find_group_end, &next);
+	string_removeChars(buf, '"');
+	return next;
 }

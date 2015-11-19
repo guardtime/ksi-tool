@@ -179,10 +179,43 @@ const char * STRING_locateLastOccurance(const char *str, const char *findIt);
 /**
  * Extract a substring from given string. String is extracted using two substrings
  * from and to. Extracted string is located as <from><extracted string><to>.
+ * Strings from and to are located using abstract functions \find_from and \find_to.
+ * If one of the substrings is missing the result is not extracted. When from is
+ * set as NULL the string is extracted from the beginning of the input string.
+ * When to is set as NULL the string is extracted from <from> until the end of
+ * the input strings.
+ * 
+ * Abstract functions must have following format:
+ * const char* (*find_to)(const char *str, const char *findIt)
+ * This function searches a location from str according to findIt and must return
+ * pointer to the first or last character that is extracted from the str or NULL if
+ * locations is not found or an error occurred. 
+ * 
+ * Abstract functions can be NULL as in this case default search is performed.
+ * 
+ * @param strn[in]			Input string.
+ * @param from[in]			The first border string.
+ * @param to[in]			The last border string.
+ * @param buf[in/out]		The buffer where substring is extracted.
+ * @param buf_len[in]		The size of the buffer.
+ * @param find_from[in]		Abstract function to find <from>. 	
+ * @param find_to[in]		Abstract functions to find <to>.
+ * @param firstChar[in/out]	The pointer to the pointer of first character not extracted from string. Can be NULL.
+ * @return
+ * @note buf is only changed on successful extraction.
+ */
+char *STRING_extractAbstract(const char *strn, const char *from, const char *to, char *buf, size_t buf_len,
+		const char* (*find_from)(const char *str, const char *findIt),
+		const char* (*find_to)(const char *str, const char *findIt),
+		const char** firstChar);
+
+/**
+ * Extract a substring from given string. String is extracted using two substrings
+ * from and to. Extracted string is located as <from><extracted string><to>.
  * For example when using from as "[" and to as "]" on input string "[test]" the
  * extracted value is "test". If one of the substrings is missing the result is 
  * not extracted. When from is set as NULL the string is extracted from the
- * beginning of the input string. When ti is set as NULL the string is extracted
+ * beginning of the input string. When to is set as NULL the string is extracted
  * until the end of the input strings. For example from = "->", to = NULL, input
  * string is "->test test", the resulting output is "test test".
  * 
@@ -211,6 +244,22 @@ char *STRING_extract(const char *strn, const char *from, const char *to, char *b
  * @return Returns buf is successful, NULL otherwise.
  */
 char *STRING_extractRmWhite(const char *strn, const char *from, const char *to, char *buf, size_t buf_len);
+
+/**
+ * This function extracts "chunks" from the input string. Input string is cut into
+ * peaces by whitespace characters. If there are opening '"' inside the input string
+ * next whitespace characters are ignored until closing '"'. Function returns a 
+ * pointer (inside input string) that can be feed to the same function to extract
+ * the next chunk. If the end of input string is reached NULL is returned.
+ * For example:
+ * 
+ * @param	strn[in]	Pointer to NUL terminated C string.
+ * @param	buf[out]	Pointer to receiving buffer.
+ * @param	buf_len[in]	The size of the buffer.
+ * 
+ * @return Pointer for next iteration or NULL on error or end of string.
+ */
+const char *STRING_getChunks(const char *strn, char *buf, size_t buf_len);
 
 #ifdef	__cplusplus
 }
