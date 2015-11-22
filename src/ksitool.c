@@ -239,7 +239,8 @@ static void GT_pritHelp(void){
 			" -H <ALG>\tuse a specific hash algorithm to hash the file to be signed.\n"
 			" -T <UTC>\tspecify a publication time to extend to (use with -x) or a time\n"
 			"\t\tto create a new publication code for (use with -p) as the number of\n"
-			"\t\tseconds since 1970-01-01 00:00:00 UTC.\n"
+			"\t\tseconds since 1970-01-01 00:00:00 UTC or time string formatted as\n"
+			"\t\t\"YYYY-MM-DD hh:mm:ss\"\n"
 			"\nDetails:\n"
 			" -t\t\tprint service response Timing in ms.\n"
 			" -n\t\tprint signer Name (identity).\n"
@@ -338,7 +339,8 @@ int main(int argc, char** argv, char **envp) {
 	paramSet_addControl(set, "{F}", isImprintFormatOK, isImprintContOK, NULL);
 	paramSet_addControl(set, "{H}", isHashAlgFormatOK, isHashAlgContOK, NULL);
 	paramSet_addControl(set, "{S}{X}{P}", isURLFormatOK, contentIsOK, convert_repairUrl);
-	paramSet_addControl(set, "{c}{C}{T}", isIntegerFormatOK, isIntegerContOk, NULL);
+	paramSet_addControl(set, "{c}{C}", isIntegerFormatOK, isIntegerContOk, NULL);
+	paramSet_addControl(set, "{T}", isUTCTimeFormatOk, contentIsOK, convert_UTC_to_UNIX);
 	paramSet_addControl(set, "{E}", isEmailFormatOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{user}{pass}", isUserPassFormatOK, contentIsOK, NULL);
 	paramSet_addControl(set, "{ref}", formatIsOK, contentIsOK, NULL);
