@@ -236,7 +236,7 @@ static bool parameter_addArgument(parameter *param, const char *argument, const 
 
 	/*If conversion function exists convert the argument*/
 	if(param->convert)
-		arg = param->convert(argument, buf, sizeof(buf)) ? buf : arg;
+		arg = param->convert(argument, buf, sizeof(buf)) ? buf : argument;
 	else
 		arg = argument;
 
