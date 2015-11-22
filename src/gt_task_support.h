@@ -261,6 +261,31 @@ char *STRING_extractRmWhite(const char *strn, const char *from, const char *to, 
  */
 const char *STRING_getChunks(const char *strn, char *buf, size_t buf_len);
 
+/**
+ * Functions for using with STRING_extractAbstract
+ */
+
+/**
+ * Searching		XX
+ * From				aXXbcXXd
+ * Return value points to b.
+ */
+const char* find_charAfterStrn(const char *str, const char *findIt);
+
+/**
+ * Searching		XX
+ * From				aXXbcXXd
+ * Return value points to a.
+ */
+const char* find_charBeforeStrn(const char* str, const char* findIt);
+
+/**
+ * Searching		XX
+ * From				aXXbcXXd
+ * Return value points to c.
+ */
+const char* find_charBeforeLastStrn(const char* str, const char* findIt);
+
 #ifdef	__cplusplus
 }
 #endif
