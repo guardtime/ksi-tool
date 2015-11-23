@@ -243,11 +243,9 @@ Authentication error. Aggregation or extending service did not accept user ident
 
 In the following examples it is assumed that default service urls are defined as environment variables. Read example 1 to learn how to define service urls.
 
-.B 1
-To use ksitool, service urls must be specified. It can be done via environment variables, command-line parameters or a configuration file.
+\fB1\fR To use ksitool, service urls must be specified. It can be done via environment variables, command-line parameters or a configuration file.
 
-.B 1.1
-To define default urls as environment variables, KSI_AGGREGATOR, KSI_EXTENDER and KSI_PUBFILE must be defined as shown below: 
+\fB1.1\fR To define default urls as environment variables, KSI_AGGREGATOR, KSI_EXTENDER and KSI_PUBFILE must be defined as shown below: 
 
 .RS
 .br
@@ -259,160 +257,77 @@ To define default urls as environment variables, KSI_AGGREGATOR, KSI_EXTENDER an
 .RE
 
 
-.B 1.2
-To define service urls on command-line or via configuration file, following parameters must be defined:
+\fB1.2\fR To define service urls on command-line or via configuration file, following parameters must be defined:
 .RS
-
 .br
-.B -X
-.I http://test.com:8010/gt-extendingservice
+\fB-X\fI http://test.com:8010/gt-extendingservice
 .br
-.B -S
-.I http://test.com:3333/gt-signingservice
+\fB-S\fI http://test.com:3333/gt-signingservice
 .br
-.B --user
-.I test_user
+\fB--user\fI test_user
 .br
-.B --pass
-.I test_pass
+\fB--pass\fI test_pass
 .RE
 .br
 
-.B 1.3
-To use a configuration file, parameters must be written on separate lines, into a file, as in the example above. \fI conf\fR and the configuration file must be included using option:
+\fB1.3\fR To use a configuration file, parameters must be written on separate lines, into a file, as in the example above. Configuration file \fIconf\fR  must be included using option:
 .br
-
 .RS
-.B --inc
-.I conf  
+\fB--inc\fI conf  
 .RE
 .br
 
-
-
-.B 2
-To sign a file
-.I file
-and save signature to
-.I sig.ksig
-call:
-
+\fB2\fR To sign a file \fIfile\fR and save signature to \fIsig.ksig\fR call:
 .RS
 .br
-.B ksitool -s -f 
-.I file
-.B -o
-.I sig.ksig
+\fBksitool -s -f \fIfile\fR \fBB-o \fIsig.ksig\fR
 .RE
 
-.B 3
-To sign a data hash (hashed with SHA256) and save the resulting signature to file\fI sig.ksig\fR call:
-
+\fB3\fR To sign a data hash (hashed with SHA256) and save the resulting signature to file \fIsig.ksig\fR call:
 .RS
 .br
-.B ksitool -s -o
-.I sig.ksig
-.B -F
-.I SHA-256:c8ef6d57ac28d1b4e95a513959f5fcdd0688380a43d601a5ace1d2e96884690a
+\fBksitool -s -o \fIsig.ksig\fB -F\fI SHA-256:c8ef6d57ac28d1b4e95a513959f5fcdd0688380a43d601a5ace1d2e96884690a\fR
 .RE
 
-.B 4
-To sign a data file
-.I file
-with non-default algorithm
-.I SHA1
-call:
-
+\fB4\fR To sign a data file \fIfile\fR with non-default algorithm \fI SHA1\fR call:
 .br
 .RS
-.B ksitool -s -f 
-.I file 
-.B -H
-.I SHA1
-.B -o
-.I sig.ksig 
+\fBksitool -s -f \fIfile\fB -H\fI SHA1\fB -o\fI sig.ksig\fR 
 .RE
 
-.B 5
-To verify a signature
-.I sig.ksig
-and file
-.I file
-it belongs to call:
-
+\fB5\fR To verify a signature \fIsig.ksig\fR and file \fIfile\fR it belongs to call:
 .RS
-.B ksitool -v -i
-.I sig.ksig
-.B -f
-.I file
+\fBksitool -v -i \fIsig.ksig\fB -f\fI file\fR
 .RE
 
-.B 6
-To verify a signature
-.I sig.ksig
-and hash it belongs to call:
-
+\fB6\fR To verify a signature \fIsig.ksig\fR and hash it belongs to call:
 .RS
-.B ksitool -v -i
-.I sig.ksig
-.B -F
-.I SHA-256:c8ef6d57ac28d1b4e95a513959f5fcdd0688380a43d601a5ace1d2e96884690a
+\fBksitool -v -i\fI sig.ksig \fB-F\fI SHA-256:c8ef6d57ac28d1b4e95a513959f5fcdd0688380a43d601a5ace1d2e96884690a\fR
 .RE
 
-.B 7
-To verify a signature
-.I sig.ksig
-using online verification service call:
-
+\fB7\fR To verify a signature \fI sig.ksig\fR using online verification service call:
 .RS
-.B ksitool -vx -i
-.I sig.ksig
+\fBksitool -vx -i\fI sig.ksig\fR
 .RE
 
-.B 8
-To extend a signature
-.I sig.ksig
-and save it as
-.I ext.ksig
-call:
-
+\fB8\fR To extend a signature \fIsig.ksig\fR and save it as \fIext.ksig\fR call:
 .RS
-.B ksitool -x -i
-.I sig.ksig
-.B -o
-.I ext.ksig 
+\fBksitool -x -i \fIsig.ksig\fR \fB-o\fI ext.ksig\fR 
 .RE
 
-.B 9
-To verify an extended signature
-.I ext.ksig
-against publication from printed media call:
-
+\fB9\fR To verify an extended signature \fI ext.ksig\fR against publication from printed media call:
 .RS
-.B ksitool -v -i
-.I ext.ksig
-.B --ref
-.I AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4 
+\fBksitool -v -i \fIext.ksig\fB --ref\fI AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4 
 .RE
 
-.B 10
-To download a publication file
-.I pubfile
-call:
-
+\fB10\fR To download a publication file \fIpubfile\fR call:
 .RS
-.B ksitool -p -o
-.I pubfile
+\fBksitool -p -o\fI pubfile\fR
 .RE
 
-.B 11
-To verify publication file
-.I pubfile
-call:
-
+\fB11\fR To verify publication file \fIpubfile\fR call:
 .RS
-.B ksitool -v -b
-.I pubfile
+\fBksitool -v -b \fIpubfile\fR
 .RE
 
 
