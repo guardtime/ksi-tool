@@ -10,12 +10,22 @@
 .SH SYNOPSIS
 Sign data file or hash:
 .br
-\fBksitool -s -f\fI file\fR |\fB -F\fI hash\fB -o\fI out.ksig\fR [\fI more options\fR]
+\fBksitool -s -f\fI file\fR | [\fB-F\fI hash\fR]\fB -o\fI out.ksig\fR [\fI more options\fR]
 .br
 
 Extend signature:
 .br
 \fBksitool -x -i\fI sig.ksig\fB -o\fI ext.ksig\fR [\fB-T\fR] [\fI more options\fR]
+.br
+
+Download and verify publication file:
+.br
+\fBksitool -p -o \fI pubfile\fB --cnstr \fIoid=value \fR... [\fI more options\fR]
+.br
+
+Dump publication file:
+.br
+\fBksitool -p -d -P\fI url\fR | [\fB-b \fIpubfile\fR]\fR
 .br
 
 Download publication file:
