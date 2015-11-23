@@ -1,0 +1,74 @@
+2015-11-24 release (1.6.0)
+* New task dump publications file implemented (-pd -P <url> | [-b <file>]).
+* Ksi error trace is not printed with flag -d to stdrerr. Errot trace is pushed to ksi log.
+* When verifying signature signer identity (-n) and publication references (-r) are printed with flag -d.  
+* Windows installer build supports INSTALL_MACHINE as x86, x64, 32 or 64.
+* When aggregator url is used for extending or vice versa, helpful error message is printed.
+* Debug messages related to PKI signature are improved (use with -d).
+* ChangeLog added. 
+* Bug fix. When defining publications file constraints on command-line (--cnstr) default constraints are ignored. 
+* Bug fix. Environment variables with similar prefix to the correct one are ignored.
+
+2015-09-30 release (1.5.0)
+* Help text and man page improved.
+* Missing parameters value error message improved. "Parameter has no content" replaced with "Parameter must have content".
+* New parameter --cnstr oid=value introduced.
+* Tcp scheme removed from the list of correct uri schemes and replaced with ksi+tcp.
+* Verification of publications file outputs the time of the latest publication in the file.
+* Using flag -d KSI error stack is printed to stderr.
+* Flag --tlv removed. Use gttlvdump instead.
+* Deprecated parameter -E is supported but not documented in help nor man page. It is converted to --cnstr and warning is printed.
+* Default values taken from API removed from ksitool.
+* New environment variable KSI_PUBFILE implemented for default publications file.
+* Bug fix. It is possible to choose libs when linking under Windows.
+* Bug fix. Ksitool allows verification of not extended signature using pub. string.
+* Bug fix. Debian packages allow libssl0.9.8 or libssl1.0.0.
+* Bug fix. Publications file publication printing fixed when reference is missing.
+
+2015-06-12 release (1.3.0a)
+* Man page and pdf updated.
+* Help updated.
+* Error handling refactored. 
+* Using input file name as '-', it is possible to read data from stdin.
+* Using output file name as '-', it is possible to output data to stdout.
+* New flags --silent and --nowarn to silent all info and warning or just warning messages.
+* --aggre --htime and --setsystime temporarily removed.
+* Command-line int type parameters range is [0:INT_MAX].
+* Verification with publications string (--ref) implemented.
+* New flag --tlv introduced to print signatures tlv structure.
+* Bug fix. Parameter -b (publication file) is allowed with -x.
+
+2015-05-15 release (1.3.0)
+* Signatures signing time is printed when signing (-s) and verifying (-v) with flag -d.
+* Windows packaging supported.
+* Windows packaging installs pdf help file.
+* DEB packaging implemented.
+* Man page for ksitool creaed and packaged.
+* License file license.txt added and packaged.
+* It is possible to verify against publication string using --ref.
+
+2015-03-31 release (1.2.0)
+* Long parameters are defined with -- and short parameters with -.
+* Error messages changed.
+* Help message changed.
+* KSI library and ksitool versions are printed in help.
+* Command-line engine is detecting typos and generating corresponding error messages.
+* Publication reference format changed.
+* Parameters -X and -S can be defined as system variables.
+* When overriding service urls on command-line default user and pass is ignored and warning is printed.
+* It is possible to extended to a given publication time set as seconds since 1970-01-01 00:00:00 UTC.
+* KSI error trace is logged with parameter --log.
+* Tcp client supported with url scheme tcp://.
+* Url scheme ksi:// is supported.
+* Bug fix. Extended signature is actually verified online when using -vx. 
+* Bug fix. Service timing measurement fixed.
+* Bug fix. When downloading publications file (-p -o -P), parameter -X is not required.
+* Bug fix. When extending invalid signature verification result is shown correctly.
+* Bug fix. When verifying correctly extended signature, extender url (-X) is not mandatory if correct publications file is available.
+
+2014-12-15 release (1.1.0)
+* New parameter -log added to dump KSI library log into file.
+* Error messages changed.
+
+2014-11-28 Initial release (1.0.0)
+* First release.

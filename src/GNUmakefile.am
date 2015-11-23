@@ -19,7 +19,7 @@
 
 bin_PROGRAMS = ksitool
 man_MANS = ../doc/ksitool.1
-dist_doc_DATA = ../license.txt
+dist_doc_DATA = ../license.txt ../doc/ChangeLog
 
 EXTRA_DIST = $(man_MANS) $(dist_doc_DATA) 
 ksitool_SOURCES = \
