@@ -92,6 +92,32 @@ FormatStatus isIntegerFormatOK(const char *integer){
 	return FORMAT_OK;
 }
 
+static int date_isValid(struct tm *time_st) {
+    int days = 31;
+    int dd = time_st->tm_mday;
+    int mm = time_st->tm_mon + 1;
+    int yy = time_st->tm_year + 1900;
+
+	if (mm < 1 || mm > 12 || dd < 1 || yy < 1900) {
+        return 0;
+    }
+
+    if (mm == 2) {
+        days = 28;
+		/* Its a leap year */
+        if (yy % 400 == 0 || (yy % 4 == 0 && yy % 100 != 0)) {
+            days = 29;
+        }
+    } else if (mm == 4 || mm == 6 || mm == 9 || mm == 11) {
+        days = 30;
+    }
+
+    if (dd > days) {
+        return 0;
+    }
+    return 1;
+}
+
 static int string_to_tm(const char *time, struct tm *time_st) {
 	const char *ret = NULL;
 	const char *next = NULL;
@@ -107,17 +133,16 @@ static int string_to_tm(const char *time, struct tm *time_st) {
 	ret = STRING_extractAbstract(next, NULL, "-", buf, sizeof(buf), NULL, find_charBeforeStrn, &next);
 	if (ret != buf || next == NULL || *buf == '\0' || strlen(buf) > 4 || isIntegerFormatOK(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
 	time_st->tm_year = atoi(buf) - 1900;
-	if (time_st->tm_year < 0) return FORMAT_INVALID_UTC_OUT_OF_RANGE;
 
 	ret = STRING_extractAbstract(next, "-", "-", buf, sizeof(buf), find_charAfterStrn, find_charBeforeLastStrn, &next);
 	if (ret != buf || next == NULL || strlen(buf) > 2 || isIntegerFormatOK(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
 	time_st->tm_mon = atoi(buf) - 1;
-	if (time_st->tm_mon < 0 || time_st->tm_mon > 11) return FORMAT_INVALID_UTC_OUT_OF_RANGE;
 
 	ret = STRING_extractAbstract(next, "-", " ", buf, sizeof(buf), find_charAfterStrn, find_charBeforeLastStrn, &next);
 	if (ret != buf || next == NULL || strlen(buf) > 2 || isIntegerFormatOK(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
 	time_st->tm_mday = atoi(buf);
-	if (time_st->tm_mday < 1 || time_st->tm_mday > 31) return FORMAT_INVALID_UTC_OUT_OF_RANGE;
+
+	if (date_isValid(time_st) == 0) return FORMAT_INVALID_UTC_OUT_OF_RANGE;
 
 	ret = STRING_extractAbstract(next, " ", ":", buf, sizeof(buf), find_charAfterStrn, find_charBeforeStrn, &next);
 	if (ret != buf || next == NULL || *buf == '\0' || strlen(buf) > 2 || isIntegerFormatOK(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
@@ -132,7 +157,7 @@ static int string_to_tm(const char *time, struct tm *time_st) {
 	ret = STRING_extractAbstract(next, ":", NULL, buf, sizeof(buf), find_charAfterStrn, find_charBeforeLastStrn, &next);
 	if (ret != buf || strlen(buf) > 2 || isIntegerFormatOK(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
 	time_st->tm_sec = atoi(buf);
-	if (time_st->tm_sec < 0 || time_st->tm_sec > 60) return FORMAT_INVALID_UTC_OUT_OF_RANGE;
+	if (time_st->tm_sec < 0 || time_st->tm_sec > 59) return FORMAT_INVALID_UTC_OUT_OF_RANGE;
 
 	return FORMAT_OK;
 }
