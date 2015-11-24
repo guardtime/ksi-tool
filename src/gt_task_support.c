@@ -1041,7 +1041,8 @@ static const char* find_charBefore_abstract(const char *str, const char *findIt,
 }
 
 const char* find_charBeforeStrn(const char* str, const char* findIt) {
-	return find_charBefore_abstract(str, findIt, strstr);
+	return find_charBefore_abstract(str, findIt,
+			(const char* (*)(const char *, const char *))strstr);
 }
 
 const char* find_charBeforeLastStrn(const char* str, const char* findIt) {
