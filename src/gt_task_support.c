@@ -1025,7 +1025,7 @@ const char * STRING_locateLastOccurance(const char *str, const char *findIt) {
 	return ret;
 }
 
-static const char* find_charAfterStrn(const char *str, const char *findIt) {
+const char* find_charAfterStrn(const char *str, const char *findIt) {
 	size_t findIt_len = 0;
 	const char * beginning = NULL;
 	findIt_len = strlen(findIt);
@@ -1040,11 +1040,11 @@ static const char* find_charBefore_abstract(const char *str, const char *findIt,
 	return right;
 }
 
-static const char* find_charBeforeStrn(const char* str, const char* findIt) {
+const char* find_charBeforeStrn(const char* str, const char* findIt) {
 	return find_charBefore_abstract(str, findIt, strstr);
 }
 
-static const char* find_charBeforeLastStrn(const char* str, const char* findIt) {
+const char* find_charBeforeLastStrn(const char* str, const char* findIt) {
 	return find_charBefore_abstract(str, findIt, STRING_locateLastOccurance);
 }
 

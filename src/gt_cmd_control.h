@@ -48,6 +48,8 @@ typedef enum formatStatus_enum{
 	FORMAT_INVALID_OID,
 	FORMAT_URL_UNKNOWN_SCHEME,
 	FORMAT_FLAG_HAS_ARGUMENT,
+	FORMAT_INVALID_UTC,		
+	FORMAT_INVALID_UTC_OUT_OF_RANGE,		
 	FORMAT_UNKNOWN_ERROR
 } FormatStatus;
 
@@ -62,6 +64,7 @@ FormatStatus isEmailFormatOK(const char *email);
 FormatStatus isConstraintFormatOK(const char *constraint);
 FormatStatus isUserPassFormatOK(const char *uss_pass);
 FormatStatus formatIsOK(const char *obj);
+FormatStatus isUTCTimeFormatOk(const char *time);
 
 ContentStatus isInputFileContOK(const char* path);
 ContentStatus isOutputFileContOK(const char* path);
@@ -77,6 +80,7 @@ const char *getParameterContentErrorString(ContentStatus res);
 bool convert_repairUrl(const char* arg, char* buf, unsigned len);
 bool convert_repairPath(const char* arg, char* buf, unsigned len);
 bool convert_replaceWithOid(const char* arg, char* buf, unsigned len);
+bool convert_UTC_to_UNIX(const char* arg, char* buf, unsigned len);
 #ifdef	__cplusplus
 }
 #endif

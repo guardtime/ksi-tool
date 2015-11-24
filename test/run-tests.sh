@@ -57,7 +57,7 @@ TESTSIG="ok-sig-2014-08-01.1.ksig"
 
 echo \# Running tests on `uname -n` at `date '+%F %T %Z'`, start time: ${DATE}
 
-plan_tests 89
+plan_tests 101
 
 
 diag "######    Publications file download"
@@ -81,6 +81,9 @@ diag "######    Get Publications string"
 okx $exec -p -t -T 1410848909  # GMT: Tue, 21 Oct 2014 13:31:15 GMT
 diag "-------------------------------------------------------------------------------";
 
+diag "######    Get Publications string from date string"
+like "`$exec -p  -T \"2015-10-15 00:00:00\"  2>&1`" "AAAAAA-CWD3WI-AAN5NF-5TTMUX-ZZ2OTP-REOQ2Q-WRNPQ7-IT7AYI-FML6EG-IAR3LT-LXM37S-23I5MA" "Get Publication string from date string."
+like "`$exec -p  -T \"2012-2-29 00:00:00\"  2>&1`" "AAAAAA-CPJVVI-AAICRV-UGJPHG-2SGNWH-WKQQS5-ZZTZWZ-K7OO2P-TW5VOY-FVRA5N-UULCBC-7JQYZE" "Its a leap year!"
 
 diag "######    Sign data over TCP"
 okx $exec -s -f ${resource_dir}/testFile -o ${tmp}/data_over_tcp.ksig -S ${KSI_TCP_AGGREGATOR} ${KSI_TCP_LOGIN}
@@ -324,6 +327,20 @@ diag "--------------------------------------------------------------------------
 
 like "`$exec -v -i ${tmp}/ext.ksig -P ${KSI_AGGREGATOR:4} 2>&1`" "Error: Unable to parse publications file. Check URL or file!" "Error pubfile 3 from aggregator url."
 diag "------------------------------------------------------------------------------";
+
+diag "######    Invalid date string format and content"
+like "`$exec -p  -T \"1899-12-12 00:00:00\"  2>&1`" "(Time out of range)" "Invalid year."
+like "`$exec -p  -T \"2015-13-15 00:00:00\"  2>&1`" "(Time out of range)" "Invalid month."
+like "`$exec -p  -T \"2015-0-31 00:00:00\"  2>&1`" "(Time out of range)" "Invalid month."
+like "`$exec -p  -T \"2013-2-29 00:00:00\"  2>&1`" "(Time out of range)" "Invalid Day - not a leap year."
+like "`$exec -p  -T \"2015-09-31 00:00:00\"  2>&1`" "(Time out of range)" "Invalid Day."
+like "`$exec -p  -T \"2015-09-0 00:00:00\"  2>&1`" "(Time out of range)" "Invalid Day."
+like "`$exec -p  -T \"2015-10-30 24:00:00\"  2>&1`" "(Time out of range)" "Invalid Hour."
+like "`$exec -p  -T \"2015-10-30 00:60:00\"  2>&1`" "(Time out of range)" "Invalid Min."
+like "`$exec -p  -T \"2015-10-30 00:00:60\"  2>&1`" "(Time out of range)" "Invalid Sec."
+like "`$exec -p  -T \"12-15-2015 00:00:00\"  2>&1`" "(Time not formatted as YYYY-MM-DD hh:mm:ss)" "Invalid Format."
+diag "------------------------------------------------------------------------------";
+
 
 # cleanup
 rm -f ${tmp} 2> /dev/null
