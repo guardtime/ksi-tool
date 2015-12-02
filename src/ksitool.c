@@ -26,6 +26,7 @@
 #include "gt_task.h"
 #include <ksi/ksi.h>
 #include <ksi/compatibility.h>
+#include <ksi/net.h>
 #include "ksitool_err.h"
 
 #ifndef _WIN32
@@ -80,11 +81,19 @@ static char default_pubUrl[1024] = "";
 static char default_extenderUrl[1024] = "";
 static char default_aggreUrl[1024] = "";
 
+static int ksitool_mightItBeUri(const char *uri) {
+	if (uri == NULL) return 0;
+	return KSI_UriSplitBasic(uri, NULL, NULL, NULL, NULL) == KSI_OK ? 1 : 0;
+}
+
 static int ksitool_load_urls_from_env(paramSet *set, const char *line, const char *env_name, const char *param_name, int priority) {
 	const char *nxt = line;
 	char url[1024] = "";
+	unsigned url_count = 0;
 	char pass[1024] = "";
+	unsigned pass_count = 0;
 	char user[1024] = "";
+	unsigned user_count = 0;
 	char chunk[1024];
 	int res = KT_OK;
 	bool s, v, x, p, T, aggre, P, cnstr;
@@ -101,22 +110,44 @@ static int ksitool_load_urls_from_env(paramSet *set, const char *line, const cha
 	while (1) {
 		int success = 0;
 		nxt = STRING_getChunks(nxt, chunk, sizeof(chunk));
-		if (url[0] == '\0' && STRING_extract(chunk, "url=", NULL, url, sizeof(url)) != NULL) success = 1;
-		if (pass[0] == '\0' && STRING_extract(chunk, "pass=", NULL, pass, sizeof(pass)) != NULL) success = 1;
-		if (user[0] == '\0' && STRING_extract(chunk, "user=", NULL, user, sizeof(user)) != NULL) success = 1;
+		if (STRING_extract(chunk, "url=", NULL, url, sizeof(url)) != NULL) {
+			success = 1;
+			url_count++;
+		}
+		if (STRING_extract(chunk, "pass=", NULL, pass, sizeof(pass)) != NULL) {
+			success = 1;
+			pass_count++;
+		}
+		if (STRING_extract(chunk, "user=", NULL, user, sizeof(user)) != NULL) {
+			success = 1;
+			user_count++;
+		}
 
 		/* Add publications file constraints */
 		if (success == 0 && (P == false && cnstr == false) && (strcmp(env_name, "KSI_PUBFILE") == 0)) {
 			paramSet_appendParameterByName("cnstr", chunk, env_name, set);
 		} else if (success == 0 && strcmp(env_name, "KSI_PUBFILE") != 0) {
-			print_warnings("Warning: Undefined field %s in %s.", chunk, env_name);
+			if (ksitool_mightItBeUri(chunk)) {
+				print_warnings("Warning: It seems that 'url=' is missing before %s in %s.\n", chunk, env_name);
+			} else {
+				print_warnings("Warning: Undefined field %s in %s.\n", chunk, env_name);
+			}
 		}
 
 		if (nxt == NULL) break;
 	}
 
+	if (url_count > 1 || user_count > 1 || pass_count > 1) {
+		print_errors("Error: Environment variable %s is invalid. Multiple %s%s%s defined.\n", env_name,
+				url_count > 1 ? "url-s" : "",
+				user_count > 1 ? " users" : "",
+				pass_count > 1 ? " passwords" : "");
+		print_errors("Error: Invalid '%s'.\n", line);
+		res = KT_INVALID_INPUT_FORMAT;
+	}
+
 	if (url[0] == '\0') {
-		print_errors("Error: Environment variable %s is invalid.\n", env_name);
+		print_errors("Error: Environment variable %s is invalid.%s\n", env_name, strstr("url=", line) != NULL ? "" : " Tag 'url=' is missing.");
 		print_errors("Error: Invalid '%s'.\n", line);
 		res = KT_INVALID_INPUT_FORMAT;
 	}
@@ -149,6 +180,7 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp, int pri
 	bool ret = true;
 	const char *key = NULL;
 	char name[1024];
+	char value[2024];
 	int res = KT_OK;
 
 	while(*envp!=NULL){
@@ -158,11 +190,11 @@ static bool includeParametersFromEnvironment(paramSet *set, char **envp, int pri
 		}
 
 		if(strcmp(name, "KSI_AGGREGATOR") == 0){
-			res = ksitool_load_urls_from_env(set, *envp, "KSI_AGGREGATOR", "S", priority);
+			res = ksitool_load_urls_from_env(set, STRING_extract(*envp, "=", NULL, value, sizeof(value)), name, "S", priority);
 		} else if(strcmp(name, "KSI_EXTENDER") == 0){
-			res = ksitool_load_urls_from_env(set, *envp, "KSI_EXTENDER", "X", priority);
+			res = ksitool_load_urls_from_env(set, STRING_extract(*envp, "=", NULL, value, sizeof(value)), name, "X", priority);
 		} else if(strcmp(name, "KSI_PUBFILE") == 0){
-			res = ksitool_load_urls_from_env(set, *envp, "KSI_PUBFILE", "P", priority);
+			res = ksitool_load_urls_from_env(set, STRING_extract(*envp, "=", NULL, value, sizeof(value)), name, "P", priority);
 		}
 
 		if (res != KT_OK) ret = false;

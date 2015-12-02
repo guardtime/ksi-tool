@@ -1,12 +1,15 @@
+* Parameter -T supports date represented as "YYYY-MM-DD hh:mm:ss" or as seconds since 1970-01-01 00:00:00 UTC.
+* When environment variables are defined incorrectly warnings and helpful error messages are printed.
+
 2015-11-24 release (1.6.0)
 * New task dump publications file implemented (-pd -P <url> | [-b <file>]).
 * Ksi error trace is not printed with flag -d to stdrerr. Errot trace is pushed to ksi log.
-* When verifying signature signer identity (-n) and publication references (-r) are printed with flag -d.  
+* When verifying signature signer identity (-n) and publication references (-r) are printed with flag -d.
 * Windows installer build supports INSTALL_MACHINE as x86, x64, 32 or 64.
 * When aggregator url is used for extending or vice versa, helpful error message is printed.
 * Debug messages related to PKI signature are improved (use with -d).
 * ChangeLog added. 
-* Bug fix. When defining publications file constraints on command-line (--cnstr) default constraints are ignored. 
+* Bug fix. When defining publications file constraints on command-line (--cnstr) default constraints are ignored.
 * Bug fix. Environment variables with similar prefix to the correct one are ignored.
 
 2015-09-30 release (1.5.0)
@@ -28,7 +31,7 @@
 2015-06-12 release (1.3.0a)
 * Man page and pdf updated.
 * Help updated.
-* Error handling refactored. 
+* Error handling refactored.
 * Using input file name as '-', it is possible to read data from stdin.
 * Using output file name as '-', it is possible to output data to stdout.
 * New flags --silent and --nowarn to silent all info and warning or just warning messages.
