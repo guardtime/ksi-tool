@@ -128,9 +128,9 @@ static int ksitool_load_urls_from_env(paramSet *set, const char *line, const cha
 			paramSet_appendParameterByName("cnstr", chunk, env_name, set);
 		} else if (success == 0 && strcmp(env_name, "KSI_PUBFILE") != 0) {
 			if (ksitool_mightItBeUri(chunk)) {
-				print_warnings("Warning: It seems that 'url=' is missing before %s in %s.\n", chunk, env_name);
+				print_warnings("Warning: It seems that 'url=' is missing before '%s' in %s.\n", chunk, env_name);
 			} else {
-				print_warnings("Warning: Undefined field %s in %s.\n", chunk, env_name);
+				print_warnings("Warning: Undefined field '%s' in %s.\n", chunk, env_name);
 			}
 		}
 
