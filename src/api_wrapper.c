@@ -58,6 +58,8 @@ static int appendInvalidServiceUrlError(ERR_TRCKR *err, int res, KSI_CTX *ksi, l
 			ERR_TRCKR_add(err, res, __FILE__, line, "Error: Service returned unknown PDU and HTTP error 400. Check the service URL!", serviceName);
 			return 1;
 		}
+	} else if (res == KSI_PUBLICATIONS_FILE_NOT_CONFIGURED) {
+			ERR_TRCKR_add(err, res, __FILE__, line, "Error: Publications file must be configured (-b <file> or -P <url>)!", serviceName);
 	} else {
 		appendInvalidPubfileUrlOrFileError(err, res, ksi, line);
 	}
