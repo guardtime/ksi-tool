@@ -256,8 +256,9 @@ int KSITOOL_verifyPublicationsFile(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Publication
 
 	res = KSI_verifyPublicationsFile(ctx, pubfile);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
-
+	appendBaseErrorIfPresent(err, res, ctx, __LINE__);
 	appendPubFileErros(err, res);
+
 	return res;
 }
 

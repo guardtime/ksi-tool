@@ -96,7 +96,10 @@ static int ksitool_load_urls_from_env(paramSet *set, const char *line, const cha
 	unsigned user_count = 0;
 	char chunk[1024];
 	int res = KT_OK;
-	bool s, v, x, p, T, aggre, P, cnstr;
+	bool s, v, x, p, T, E, aggre, P, cnstr, cnstr_warn;
+	bool constraintsAlreadySet;
+	bool isUrlTagOk;
+
 
 	aggre = paramSet_isSetByName(set, "aggre");
 	s = paramSet_isSetByName(set, "s");
@@ -105,7 +108,13 @@ static int ksitool_load_urls_from_env(paramSet *set, const char *line, const cha
 	p = paramSet_isSetByName(set, "p");
 	T = paramSet_isSetByName(set, "T");
 	P = paramSet_isSetByName(set, "P");
+	E = paramSet_isSetByName(set, "E");
 	cnstr = paramSet_isSetByName(set, "cnstr");
+
+	/* It should indicate if constraints have been defined on command-line. */
+	constraintsAlreadySet = (E || cnstr || P) ? true : false;
+	cnstr_warn = true;
+	isUrlTagOk = (strstr(line, "url=") != NULL) ? true : false;
 
 	while (1) {
 		int success = 0;
@@ -124,8 +133,15 @@ static int ksitool_load_urls_from_env(paramSet *set, const char *line, const cha
 		}
 
 		/* Add publications file constraints */
-		if (success == 0 && (P == false && cnstr == false) && (strcmp(env_name, "KSI_PUBFILE") == 0)) {
-			paramSet_appendParameterByName("cnstr", chunk, env_name, set);
+		if (success == 0 && (strcmp(env_name, "KSI_PUBFILE") == 0)) {
+				if (constraintsAlreadySet) {
+					if (cnstr_warn && isUrlTagOk) {
+						print_warnings("Warning: Ignoring constraints from environment variable '%s'.\n", env_name);
+						cnstr_warn = false;
+					}
+				} else {
+					paramSet_appendParameterByName("cnstr", chunk, env_name, set);
+				}
 		} else if (success == 0 && strcmp(env_name, "KSI_PUBFILE") != 0) {
 			if (ksitool_mightItBeUri(chunk)) {
 				print_warnings("Warning: It seems that 'url=' is missing before '%s' in %s.\n", chunk, env_name);
@@ -147,7 +163,7 @@ static int ksitool_load_urls_from_env(paramSet *set, const char *line, const cha
 	}
 
 	if (url[0] == '\0') {
-		print_errors("Error: Environment variable %s is invalid.%s\n", env_name, strstr("url=", line) != NULL ? "" : " Tag 'url=' is missing.");
+		print_errors("Error: Environment variable %s is invalid.%s\n", env_name, isUrlTagOk ? "" : " Tag 'url=' is missing.");
 		print_errors("Error: Invalid '%s'.\n", line);
 		res = KT_INVALID_INPUT_FORMAT;
 	}
@@ -422,7 +438,7 @@ int main(int argc, char** argv, char **envp) {
 		char *email = NULL;
 		print_warnings("Warning: Parameter E is deprecated and will be removed in later versions. Use --cnstr instead.\n");
 		if (paramSet_getStrValueByNameAt(set, "E", 0, &email) == false) {
-			print_errors("Error: Unable to convert parameter E to cnstr.\n");
+			print_errors("Error: Unable to convert parameter E to cnstr. Check email format.\n");
 			retval = EXIT_FAILURE;
 			goto cleanup;
 		}

@@ -282,7 +282,7 @@ diag "--------------------------------------------------------------------------
 like "`$exec -p -T 969085709 2>&1`" "The request asked for hash values older than the oldest round" "Error Unable to Get Publication string"
 diag "------------------------------------------------------------------------------";
 
-like "`$exec -p -t -o $tmp/tpub.bin -E wrong@email.mail 2>&1`" "Error: The PKI certificate is not trusted." "Error wrong E-mail"
+like "`$exec -p -t -o $tmp/tpub.bin -E wrong@email.mail 2>&1`" "Error: Unexpected OID value for PKI Certificate constraint." "Error wrong E-mail"
 diag "------------------------------------------------------------------------------";
 
 like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user nouserpresent --pass asd 2>&1`" "The request could not be authenticated" "Error Wrong user specified"
@@ -297,7 +297,7 @@ diag "--------------------------------------------------------------------------
 like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user anon --pass  2>&1`" "Parameter must have value" "Error No pass specified"
 diag "------------------------------------------------------------------------------";
 
-like "`$exec -v -b ${resource_dir}/publications.tlv -V ${resource_dir}/mock.crt --cnstr 2.5.4.10="Fake company"  2>&1`" "Error: The PKI certificate is not trusted." "Error invalid constraint value"
+like "`$exec -v -b ${resource_dir}/publications.tlv -V ${resource_dir}/mock.crt --cnstr 2.5.4.10="Fake company"  2>&1`" "Error: Unexpected OID value for PKI Certificate constraint." "Error invalid constraint value"
 diag "------------------------------------------------------------------------------";
 
 like "`$exec -s -F SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b877 -o ${tmp}/too_short_hash.ksig -S ${KSI_TCP_AGGREGATOR} ${KSI_TCP_LOGIN} 2>&1`" "Content error: -F 'SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b877'. (Hash length is incorrect)"
