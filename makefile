@@ -50,6 +50,8 @@ TOOL_NAME = ksitool
 #Objects for making command-line tool
 
 PARAMSET_OBJ = \
+	$(PARAMSET_OBJ_DIR)\ParamValue.obj \
+	$(PARAMSET_OBJ_DIR)\Parameter.obj \
 	$(PARAMSET_OBJ_DIR)\param_set.obj
 
 CMDTOOL_OBJ = \

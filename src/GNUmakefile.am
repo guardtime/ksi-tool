@@ -37,6 +37,10 @@ ksitool_SOURCES = \
 	task_def.h \
 	gt_cmd_control.c \
 	gt_cmd_control.h \
+	ParamSet/ParamValue.c \
+	ParamSet/ParamValue.h \
+	ParamSet/Parameter.c \
+	ParamSet/Parameter.h \
 	ParamSet/param_set.c \
 	ParamSet/param_set.h \
 	printer.c \
