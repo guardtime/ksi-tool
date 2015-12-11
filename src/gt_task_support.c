@@ -28,7 +28,7 @@
 #include <ksi/compatibility.h>
 #include <stdio.h>
 #include "gt_task_support.h"
-#include "param_set.h"
+#include "ParamSet/param_set.h"
 #include <ctype.h>
 #include "ksitool_err.h"
 

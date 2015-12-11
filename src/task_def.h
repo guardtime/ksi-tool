@@ -22,7 +22,7 @@
 #define	TASK_DEF_H
 
 #include "gt_cmd_common.h"
-#include "param_set.h"
+#include "ParamSet/param_set.h"
 
 #ifdef	__cplusplus
 extern "C" {

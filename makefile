@@ -38,12 +38,19 @@ INSTALL_MACHINE = 32
 SRC_DIR = src
 OBJ_DIR = obj
 BIN_DIR = bin
+
+PARAMSET_SRC_DIR = $(SRC_DIR)\ParamSet
+PARAMSET_OBJ_DIR = $(OBJ_DIR)\ParamSet
+
 VERSION_FILE = VERSION
 COMM_ID_FILE = COMMIT_ID
 
 TOOL_NAME = ksitool
 
 #Objects for making command-line tool
+
+PARAMSET_OBJ = \
+	$(PARAMSET_OBJ_DIR)\param_set.obj
 
 CMDTOOL_OBJ = \
 	$(OBJ_DIR)\gt_task_support.obj \
@@ -55,7 +62,6 @@ CMDTOOL_OBJ = \
 	$(OBJ_DIR)\ksitool.obj \
 	$(OBJ_DIR)\gt_cmd_control.obj \
 	$(OBJ_DIR)\task_def.obj \
-	$(OBJ_DIR)\param_set.obj \
 	$(OBJ_DIR)\printer.obj \
 	$(OBJ_DIR)\ksitool_err.obj \
 	$(OBJ_DIR)\api_wrapper.obj \
@@ -71,7 +77,7 @@ EXT_LIB = libksiapi$(RTL).lib \
 	user32.lib gdi32.lib advapi32.lib Ws2_32.lib
 	  
 	
-CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE  /I$(SRC_DIR) /I$(KSI_DIR)\include
+CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE  /I$(SRC_DIR) /I$(PARAMSET_SRC_DIR) /I$(KSI_DIR)\include
 LDFLAGS = /NOLOGO /LIBPATH:"$(KSI_DIR)\$(KSI_LIB)"
 
 !IF "$(KSI_LIB)" == "dll"
@@ -144,8 +150,8 @@ CCFLAGS = $(CCFLAGS) /DVERSION=\"$(VER)\"
 default: $(BIN_DIR)\$(TOOL_NAME).exe 
 
 #Linking 
-$(BIN_DIR)\$(TOOL_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(CMDTOOL_OBJ)
-	link $(LDFLAGS) /OUT:$@ $(CMDTOOL_OBJ) $(EXT_LIB) 
+$(BIN_DIR)\$(TOOL_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(PARAMSET_OBJ_DIR) $(CMDTOOL_OBJ) $(PARAMSET_OBJ)
+	link $(LDFLAGS) /OUT:$@ $(CMDTOOL_OBJ) $(PARAMSET_OBJ) $(EXT_LIB)
 !IF "$(KSI_LIB)" == "dll"
 	xcopy "$(KSI_DIR)\$(KSI_LIB)\libksiapi$(RTL).dll" "$(BIN_DIR)\" /Y
 !ENDIF
@@ -154,11 +160,14 @@ $(BIN_DIR)\$(TOOL_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(CMDTOOL_OBJ)
 {$(SRC_DIR)\}.c{$(OBJ_DIR)\}.obj:
 	cl /c /$(RTL) $(CCFLAGS) /Fo$@ $<
 
+{$(PARAMSET_SRC_DIR)\}.c{$(PARAMSET_OBJ_DIR)\}.obj:
+	cl /c /$(RTL) $(CCFLAGS) /Fo$@ $<
+
 	
 
 #Folder factory	
 	
-$(OBJ_DIR) $(BIN_DIR):
+$(OBJ_DIR) $(PARAMSET_OBJ_DIR) $(BIN_DIR):
 	@if not exist $@ mkdir $@
 
 !IF "$(KSI_LIB)" == "lib"

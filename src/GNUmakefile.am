@@ -37,8 +37,8 @@ ksitool_SOURCES = \
 	task_def.h \
 	gt_cmd_control.c \
 	gt_cmd_control.h \
-	param_set.c \
-	param_set.h \
+	ParamSet/param_set.c \
+	ParamSet/param_set.h \
 	printer.c \
 	printer.h \
 	ksitool_err.c \
