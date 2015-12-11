@@ -34,6 +34,8 @@ static char *new_string(const char *str) {
 	return strcpy(tmp, str);
 }
 
+#define UNKNOW_FORMAT_STATUS -1
+#define UNKNOW_CONTENT_STATUS -1
 
 /**
  * Creates a new parameter value object.
@@ -43,33 +45,45 @@ static char *new_string(const char *str) {
  * @param newObj - receiving pointer.
  * @return true on success, false otherwise.
  */
-bool PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL **newObj) {
+int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL **newObj) {
+	int res;
 	PARAM_VAL *tmp = NULL;
 	char *tmp_value = NULL;
 	char *tmp_source = NULL;
-	bool status = false;
 
-	if(newObj == NULL) return false;
+	if(newObj == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
 
 	/*Create obj itself*/
 	tmp = (PARAM_VAL*)malloc(sizeof(PARAM_VAL));
-	if(tmp == NULL) goto cleanup;
+	if(tmp == NULL) {
+		res = PST_OUT_OF_MEMORY;
+		goto cleanup;
+	}
 
 	tmp->cstr_value = NULL;
 	tmp->source = NULL;
-	tmp->formatStatus= -1;
-	tmp->contentStatus = -1;
+	tmp->formatStatus= UNKNOW_FORMAT_STATUS;
+	tmp->contentStatus = UNKNOW_CONTENT_STATUS;
 	tmp->next = NULL;
 	tmp->priority = priority;
 
 	if(value != NULL){
 		tmp_value = new_string(value);
-		if(tmp_value == NULL) goto cleanup;
+		if(tmp_value == NULL) {
+			res = PST_OUT_OF_MEMORY;
+			goto cleanup;
+		}
 	}
 
 	if(source != NULL){
 		tmp_source = new_string(source);
-		if(tmp_source == NULL) goto cleanup;
+		if(tmp_source == NULL) {
+			res = PST_OUT_OF_MEMORY;
+			goto cleanup;
+		}
 	}
 
 	tmp->cstr_value = tmp_value;
@@ -79,14 +93,15 @@ bool PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VA
 	tmp = NULL;
 	tmp_value = NULL;
 	tmp_source = NULL;
-	status = true;
+
+	res = PST_OK;
 
 cleanup:
 
 	free(tmp_value);
 	free(tmp_source);
-	free(tmp);
-	return status;
+	PARAM_VAL_free(tmp);
+	return res;
 }
 
 void PARAM_VAL_free(PARAM_VAL *rootValue) {

@@ -22,13 +22,12 @@
 #define	PARAM_VALUE_H
 
 #include "types.h"
-#include "../gt_cmd_common.h"	//Tmp usage for bool
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
-bool PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL **newObj);
+int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL **newObj);
 void PARAM_VAL_free(PARAM_VAL *rootValue);
 PARAM_VAL* PARAM_VAL_getElementAt(PARAM_VAL *rootValue, unsigned at);
 PARAM_VAL* PARAM_VAL_getFirstHighestPriorityValue(PARAM_VAL *rootValue);
