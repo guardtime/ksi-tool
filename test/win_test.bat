@@ -115,6 +115,19 @@ echo ******************Sign data over TCP ******************
 ksitool.exe -s %SIGN_FLAGS% -f %TEST_FILE% -o %TEST_FILE_OUT%Tcp.ksig -S %TCP_SERV% %TCP_login%
 echo %errorlevel%
 
+echo ******************Sign data with specific algorithm over TCP ******************
+ksitool.exe -s %SIGN_FLAGS% -f %TEST_FILE% -H SHA1 -o %TEST_FILE_OUT%Tcp.ksig -S %TCP_SERV% %TCP_login%
+echo %errorlevel%
+
+ksitool.exe -s %SIGN_FLAGS% -f %TEST_FILE% -H SHA2-256 -o %TEST_FILE_OUT%Tcp.ksig -S %TCP_SERV% %TCP_login%
+echo %errorlevel%
+
+ksitool.exe -s %SIGN_FLAGS% -f %TEST_FILE% -H SHA2-384 -o %TEST_FILE_OUT%Tcp.ksig -S %TCP_SERV% %TCP_login%
+echo %errorlevel%
+
+ksitool.exe -s %SIGN_FLAGS% -f %TEST_FILE% -H SHA2-512 -o %TEST_FILE_OUT%Tcp.ksig -S %TCP_SERV% %TCP_login%
+echo %errorlevel%
+
 
 echo ******************Sign different data hashes over TCP ******************
 ksitool.exe -s %SIGN_FLAGS% -F SHA-256:%SH256_HASH% -o %TEST_FILE_OUT%Sha-256Tcp.ksig -S %TCP_SERV% %TCP_login%

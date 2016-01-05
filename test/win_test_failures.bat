@@ -156,6 +156,12 @@ echo __________________________________________________________________________
 echo 11) Error bad network provider 
 ksitool.exe -s %SIGN_FLAGS% -o %SH1_file% -F SHA-1:%SH1_HASH% -S plaplaplaplpalpalap
 echo return %errorlevel%
+
+echo __________________________________________________________________________
+echo 12) Sign data with unknown hash algorithm
+ksitool.exe -s %SIGN_FLAGS% -o %SH1_file% -H SHA-11 -f %TEST_FILE% 
+echo return %errorlevel%
+
 echo __________________________________________________________________________
 
 
