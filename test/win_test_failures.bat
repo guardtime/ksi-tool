@@ -27,6 +27,7 @@ SET WAIT=5
 
 REM Services to use
 SET SIG_SERV_IP=http://ksigw.test.guardtime.com:3333/gt-signingservice 
+SET TCP_SERV=ksi+tcp://ksigw.test.guardtime.com:3332
 set PUB_SERV_IP=http://verify.guardtime.com/ksi-publications.bin
 SET PUB_CNSTR=--cnstr 1.2.840.113549.1.9.1=publications@guardtime.com
 SET VER_SERV_IP=http://ksigw.test.guardtime.com:8010/gt-extendingservice
@@ -61,7 +62,7 @@ rem ksitool.exe -x -i ..\test\out\testFile.ksig -o ..\test\out\__extended -X htt
 REM Cert files to use
 REM SET CERTS= -V "C:\Users\Taavi\Documents\GuardTime\certs\Symantec Class 1 Individual Subscriber CA(64).crt" 
 REM set CERTS= %CERTS% -V "C:\Users\Taavi\Documents\GuardTime\certs\VerSign Class 1 Public Primary Certification Authority - G3(64).crt"
-set CERTS= %CERTS% -V "C:\Users\Taavi\Documents\GuardTime\certs\ca-bundle.trust.crt"
+REM set CERTS= %CERTS% -V "C:\Users\Taavi\Documents\GuardTime\certs\ca-bundle.trust.crt"
 
 rem remove dir
 rm -r ..\test\out
@@ -117,28 +118,43 @@ ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -f %TEST_FILE% -o %TEST_FILE_OUT%.ksig --us
 echo return %errorlevel%
 
 echo __________________________________________________________________________
-echo 4) Error signing with SH1 and wrong hash 
-ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -o %TEST_FILE_OUT%err  -F SHA-1:%SH1_HASH%ff
+echo 4) Sign data wrong user or pass over TCP
+ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -f %TEST_FILE% -o %TEST_FILE_OUT%.ksig -S %TCP_SERV% --user anon --pass ano
 echo return %errorlevel%
 
 echo __________________________________________________________________________
-echo 5) Error signing with SH1 and invalid hash 
-ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -o %TEST_FILE_OUT%err  -F SHA-1:%SH1_HASH%f
+echo 5) Error signing with SH1 and wrong hash 
+ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -o %TEST_FILE_OUT%err -F SHA-1:%SH1_HASH%ff
 echo return %errorlevel%
 
 echo __________________________________________________________________________
-echo 6) Error signing with unknown algorithm and wrong hash 
-ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -o %TEST_FILE_OUT%err  -F _UNKNOWN:%SH1_HASH%
+echo 6) Error signing with SH1 and wrong hash over TCP
+ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -o %TEST_FILE_OUT%err -S %TCP_SERV% -F SHA-1:%SH1_HASH%ff
 echo return %errorlevel%
 
 echo __________________________________________________________________________
-echo 7) Error with CRYPTOAPI signing with unimplemented algorithm  
-ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -f %TEST_FILE% -o %TEST_FILE_OUT%err  -H RIPEMD-160
+echo 7) Error signing with SH1 and invalid hash 
+ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -o %TEST_FILE_OUT%err -F SHA-1:%SH1_HASH%f
 echo return %errorlevel%
 
 echo __________________________________________________________________________
-echo 8) Error bad network provider 
-ksitool.exe -s %SIGN_FLAGS% -o %SH1_file%  -F SHA-1:%SH1_HASH% -S plaplaplaplpalpalap
+echo 8) Error signing with SH1 and invalid hash over TCP
+ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -o %TEST_FILE_OUT%err -S %TCP_SERV% -F SHA-1:%SH1_HASH%f
+echo return %errorlevel%
+
+echo __________________________________________________________________________
+echo 9) Error signing with unknown algorithm and wrong hash 
+ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -o %TEST_FILE_OUT%err -F _UNKNOWN:%SH1_HASH%
+echo return %errorlevel%
+
+echo __________________________________________________________________________
+echo 10) Error with CRYPTOAPI signing with unimplemented algorithm  
+ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -f %TEST_FILE% -o %TEST_FILE_OUT%err -H RIPEMD-160
+echo return %errorlevel%
+
+echo __________________________________________________________________________
+echo 11) Error bad network provider 
+ksitool.exe -s %SIGN_FLAGS% -o %SH1_file% -F SHA-1:%SH1_HASH% -S plaplaplaplpalpalap
 echo return %errorlevel%
 echo __________________________________________________________________________
 
