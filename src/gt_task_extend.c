@@ -21,10 +21,12 @@
 #include <stdlib.h>
 #include "obj_printer.h"
 #include "gt_task_support.h"
+#include "ParamSet/ParamValue.h"
+#include "ParamSet/types.h"
 
 int GT_extendTask(Task *task) {
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	KSI_CTX *ksi = NULL;
 	ERR_TRCKR *err = NULL;
 	KSI_Signature *sig = NULL;
@@ -38,9 +40,9 @@ int GT_extendTask(Task *task) {
 	int publicationTime = 0;
 
 	set = Task_getSet(task);
-	paramSet_getStrValueByNameAt(set, "i", 0,&inSigFileName);
-	paramSet_getStrValueByNameAt(set, "o", 0,&outSigFileName);
-	T = paramSet_getIntValueByNameAt(set,"T",0,&publicationTime);
+	paramSet_getStrValue(set, "i", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inSigFileName);
+	paramSet_getStrValue(set, "o", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &outSigFileName);
+	T = paramSet_getIntValue(set, "T", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &publicationTime) == PST_OK ? true : false;
 	n = paramSet_isSetByName(set, "n");
 	t = paramSet_isSetByName(set, "t");
 	r = paramSet_isSetByName(set, "r");

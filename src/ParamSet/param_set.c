@@ -23,23 +23,22 @@
 #include <ctype.h>
 #include <stdio.h>
 #include "gt_cmd_control.h"
-#include "param_set.h"
 #include "param_set_obj_impl.h"
 #include "Parameter.h"
 #include "ParamValue.h"
-
-#define SINGLE false
-#define MULTIPLE true
+#include "param_set.h"
+#include "types.h"
 
 #define UNKNOWN_PARAMETER_NAME "_UN_KNOWN_"
 #define TYPO_PARAMETER_NAME "_TYPO_"
 
 
-static char *getParametersName(const char* names, char *name, char *alias, short len, bool *isMultiple, bool *isSingleHighestPriority){
+static char *getParametersName(const char* names, char *name, char *alias, short len, int *isMultiple, int *isSingleHighestPriority){
 	char *pName = NULL;
 	int i = 0;
-	bool isAlias = false;
-	short i_name=0, i_alias=0;
+	int isAlias = 0;
+	short i_name = 0;
+	short i_alias = 0;
 
 	if(names == NULL || name == NULL) return NULL;
 	if(names[0] == 0) return NULL;
@@ -53,7 +52,7 @@ static char *getParametersName(const char* names, char *name, char *alias, short
 		}
 
 		if(pName[i] == '|'){
-			isAlias = true;
+			isAlias = 1;
 			i++;
 		}
 
@@ -66,15 +65,15 @@ static char *getParametersName(const char* names, char *name, char *alias, short
 	}
 	if(isMultiple != NULL && pName[i] == '}'){
 		if(pName[i+1] == '*')
-			*isMultiple = true;
+			*isMultiple = 1;
 		else
-			*isMultiple = false;
+			*isMultiple = 0;
 	}
 	if(isSingleHighestPriority != NULL && pName[i] == '}'){
 		if(pName[i+1] == '>')
-			*isSingleHighestPriority = true;
+			*isSingleHighestPriority = 1;
 		else
-			*isSingleHighestPriority = false;
+			*isSingleHighestPriority = 0;
 	}
 
 
@@ -85,131 +84,136 @@ static char *getParametersName(const char* names, char *name, char *alias, short
 	return &pName[i];
 }
 
-static void paramSet_getParameterByName(const PARAM_SET *set, const char *name, PARAM **param){
-	int numOfElements = 0;
-	PARAM **array = NULL;
+static int paramSet_getParameterByName(const PARAM_SET *set, const char *name, PARAM **param){
+	int res = 0;
+	PARAM *parameter = NULL;
 	PARAM *tmp = NULL;
-	int i =0;
+	int i = 0;
 
-	if(set == NULL || param == NULL || name == NULL) return;
-	*param = NULL;
-	numOfElements = set->count;
+	if (set == NULL || param == NULL || name == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
 
-	array = set->parameter;
 
-	for(i=0; i<numOfElements; i++){
-		tmp = array[i];
-		if(tmp != NULL){
-			if(strcmp(tmp->flagName, name) == 0 || (tmp->flagAlias && strcmp(tmp->flagAlias, name) == 0)){
-				*param = tmp;
-				return;
+	for(i = 0; i < set->count; i++) {
+		parameter = set->parameter[i];
+		if(parameter != NULL){
+			if(strcmp(parameter->flagName, name) == 0 || (parameter->flagAlias && strcmp(parameter->flagAlias, name) == 0)) {
+				tmp = parameter;
+				break;
 			}
 		}
 	}
-	return;
+
+	if (tmp == NULL) {
+		res = PST_PARAMETER_NOT_FOUND;
+		goto cleanup;
+	}
+
+	*param = parameter;
+	res = PST_OK;
+
+cleanup:
+
+	return res;
 }
 
-bool paramSet_priorityAppendParameterByName(const char *name, const char *value, const char *source, int priority, PARAM_SET *set){
+int paramSet_priorityAppendParameterByName(const char *name, const char *value, const char *source, int priority, PARAM_SET *set){
+	int res;
 	PARAM *param = NULL;
 
-	if(set == NULL || name == NULL) return false;
+	if (set == NULL || name == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;;
+	}
 
-	paramSet_getParameterByName(set, name, &param);
-	if(param == NULL) return false;
+	res = paramSet_getParameterByName(set, name, &param);
+	if(res != PST_OK) goto cleanup;
 
-	return parameter_addArgument(param, value, source, priority);
+	res = PARAM_addArgument(param, value, source, priority);
+	if(res != PST_OK) goto cleanup;
+
+	res = PST_OK;
+
+cleanup:
+
+	return res;
 }
 
-bool paramSet_appendParameterByName(const char *name, const char *value, const char *source, PARAM_SET *set){
-	return paramSet_priorityAppendParameterByName(name, value, source, 0, set);
+int paramSet_appendParameterByName(const char *name, const char *value, const char *source, PARAM_SET *set) {
+	return paramSet_priorityAppendParameterByName(name, value, source, PST_PRIORITY_VALID_BASE, set);
 }
 
-void paramSet_removeParameterByName(PARAM_SET *set, const char *name){
-	int numOfElements = 0;
-	PARAM **array = NULL;
+int paramSet_removeParameterByName(PARAM_SET *set, const char *name){
+	int res;
 	PARAM *tmp = NULL;
+	PARAM_VAL *rem = NULL;
 	int i =0;
 
-	if(set == NULL || name == NULL) return;
-	numOfElements = set->count;
-
-	array = set->parameter;
-
-
-	for(i=0; i<numOfElements; i++){
-		tmp = array[i];
-		if(tmp != NULL){
-			if(strcmp(tmp->flagName, name) == 0 || (tmp->flagAlias && strcmp(tmp->flagAlias, name) == 0)){
-				tmp->argCount = 0;
-				if(tmp->arg) PARAM_VAL_free(tmp->arg);
-				tmp->arg = NULL;
-				return;
-			}
-		}
+	if (set == NULL || name == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
 	}
-	return;
+
+	res = paramSet_getParameterByName(set, name, &tmp);
+	if (res != PST_OK) goto cleanup;
+
+	tmp->argCount = 0;
+	if(tmp->arg) PARAM_VAL_free(tmp->arg);
+	res = PST_OK;
+
+cleanup:
+
+	return res;
 }
 
-static void paramSet_getFirstValueByName(const PARAM_SET *set, const char *name, PARAM_VAL **value){
-	PARAM *tmp = NULL;
-
-	if(set == NULL || value == NULL || name == NULL) return;
-	*value = NULL;
-
-	paramSet_getParameterByName(set, name, &tmp);
-	if(tmp == NULL) return;
-
-	*value = tmp->arg;
-
-	return;
-}
-
-static void paramSet_getHighestPriorityValueByName(const PARAM_SET *set, const char *name, PARAM_VAL **value){
-	PARAM *tmp = NULL;
-
-	if(set == NULL || value == NULL || name == NULL) return;
-	*value = NULL;
-
-	paramSet_getParameterByName(set, name, &tmp);
-	if(tmp == NULL) return;
-
-	*value = (PARAM_VAL*)PARAM_VAL_getFirstHighestPriorityValue(tmp->arg);
-	return;
-}
-
-static void paramSet_getValueByNameAt(const PARAM_SET *set, const char *name, unsigned at, PARAM_VAL **value){
+static int paramSet_getValue(const PARAM_SET *set, const char *name, const char *source, int prio, unsigned at, PARAM_VAL **value){
+	int res;
 	PARAM_VAL *tmp = NULL;
+	PARAM *parameter = NULL;
 
-	if(set == NULL || value == NULL || name == NULL) return;
-	*value = NULL;
+	if (set == NULL || value == NULL || name == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
 
-	paramSet_getFirstValueByName(set,name, &tmp);
-	if(tmp == NULL) return;
+	res = paramSet_getParameterByName(set, name, &parameter);
+	if (res != PST_OK) goto cleanup;
 
-	tmp = PARAM_VAL_getElementAt(tmp, at);
+	res = PARAM_getValue(parameter, name, source, prio, at, &tmp);
+	if (res != PST_OK) goto cleanup;
+
 	*value = tmp;
+	tmp = NULL;
+	res = PST_OK;
 
-	return;
+cleanup:
+
+	return res;
 }
 
 
-bool paramSet_new(const char *names,
+int paramSet_new(const char *names,
 		int (*printInfo)(const char*, ...), int (*printWarnings)(const char*, ...), int (*printErrors)(const char*, ...),
 		PARAM_SET **set){
+	int res;
 	PARAM_SET *tmp = NULL;
-	bool status = false;
+	PARAM **tmp_param = NULL;
 	const char *pName = NULL;
 	int paramCount = 0;
 	int i = 0;
-	int iter = 0;
 	char mem = 0;
-	char buf[256];
-	char alias[256];
-	short len = 0;
-	bool isMultiple = false;
-	bool isSingleHighestPriority = false;
+	char buf[1024];
+	char alias[1024];
+	int isMultiple = 0;
+	int isSingleHighestPriority = 0;
 
-	if(set == NULL || names == NULL || printInfo == NULL || printWarnings == NULL || printErrors == NULL) return false;
+	if (set == NULL || names == NULL
+			|| printInfo == NULL|| printWarnings == NULL || printErrors == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
 
 	while(names[i]){
 		if(names[i] == '{') mem = names[i];
@@ -219,40 +223,54 @@ bool paramSet_new(const char *names,
 		}
 		i++;
 	}
-	/*Add extra count for Unknowns and Typos*/
-	paramCount+=2;
+	/* Add extra count for Unknowns and Typos. */
+	paramCount += 2;
 
-	tmp = (PARAM_SET*)calloc(sizeof(PARAM_SET), 1);
-	if(tmp == NULL) goto cleanup;
-	tmp->parameter = (PARAM**)calloc(paramCount, sizeof(PARAM*));
-	if(tmp->parameter == NULL) goto cleanup;
-
-	tmp->count = paramCount;
-
-	tmp->printInfo = printInfo;
-	tmp->printWarning = printWarnings;
-	tmp->printError = printErrors;
-
-	len = sizeof(buf);
-	pName = names;
-
-	while((pName = getParametersName(pName, buf, alias, len, &isMultiple, &isSingleHighestPriority)) != NULL){
-		if(!parameter_new(buf,alias[0] ? alias : NULL, isMultiple, isSingleHighestPriority, NULL, NULL, NULL, &tmp->parameter[iter]))
-			goto cleanup;
-		iter++;
+	tmp = (PARAM_SET*)malloc(sizeof(PARAM_SET));
+	if(tmp == NULL) {
+		res = PST_OUT_OF_MEMORY;
+		goto cleanup;
 	}
 
-	parameter_new(UNKNOWN_PARAMETER_NAME, NULL,MULTIPLE, false,  NULL, NULL, NULL, &tmp->parameter[iter++]);
-	parameter_new(TYPO_PARAMETER_NAME, NULL,MULTIPLE, false, NULL, NULL, NULL, &tmp->parameter[iter]);
+	tmp_param = (PARAM**)calloc(paramCount, sizeof(PARAM*));
+	if(tmp == NULL) {
+		res = PST_OUT_OF_MEMORY;
+		goto cleanup;
+	}
+
+	tmp->count = paramCount;
+	tmp->printError = printErrors;
+	tmp->printInfo = printInfo;
+	tmp->printWarning = printWarnings;
+	tmp->parameter = tmp_param;
+
+	tmp_param = NULL;
+
+	i = 0;
+	pName = names;
+	while((pName = getParametersName(pName, buf, alias, sizeof(buf), &isMultiple, &isSingleHighestPriority)) != NULL){
+		res = PARAM_new(buf, alias[0] ? alias : NULL, isMultiple, isSingleHighestPriority, NULL, NULL, NULL, &tmp->parameter[i]);
+		if(res != PST_OK) goto cleanup;
+
+		i++;
+	}
+
+	res = PARAM_new(UNKNOWN_PARAMETER_NAME, NULL, 1, 0,  NULL, NULL, NULL, &tmp->parameter[i++]);
+	if(res != PST_OK) goto cleanup;
+
+	res = PARAM_new(TYPO_PARAMETER_NAME, NULL, 1, 0, NULL, NULL, NULL, &tmp->parameter[i]);
+	if(res != PST_OK) goto cleanup;
 
 	*set = tmp;
 	tmp = NULL;
-	status = true;
+	res = PST_OK;
 
 cleanup:
 
 	paramSet_free(tmp);
-	return status;
+	free(tmp_param);
+
+	return res;
 }
 
 
@@ -274,7 +292,7 @@ void paramSet_free(PARAM_SET *set){
 	array = set->parameter;
 
 	for(i=0; i<numOfElements;i++)
-		parameter_free(array[i]);
+		PARAM_free(array[i]);
 	free(set->parameter);
 
 	free(set);
@@ -284,15 +302,16 @@ void paramSet_free(PARAM_SET *set){
 void paramSet_addControl(PARAM_SET *set, const char *names,
 		int (*controlFormat)(const char *),
 		int (*controlContent)(const char *),
-		bool (*convert)(const char*, char*, unsigned)){
+		int (*convert)(const char*, char*, unsigned)){
+	int res;
 	PARAM *tmp = NULL;
 	const char *pName = NULL;
 	char buf[256];
 
 	pName = names;
 	while((pName = getParametersName(pName,buf, NULL, sizeof(buf), NULL, NULL)) != NULL){
-		paramSet_getParameterByName(set, buf, &tmp);
-		if(tmp != NULL){
+		res = paramSet_getParameterByName(set, buf, &tmp);
+		if (res == PST_OK) {
 			tmp->controlFormat = controlFormat;
 			tmp->controlContent = controlContent;
 			tmp->convert = convert;
@@ -356,12 +375,12 @@ cleanup:
 	return edit_distance;
 }
 
-static bool paramSet_couldItBeTypo(const char *str, const PARAM_SET *set){
+static int paramSet_couldItBeTypo(const char *str, const PARAM_SET *set){
 	int numOfElements = 0;
 	PARAM **array = NULL;
 	int i =0;
 
-	if(set == NULL) return false;
+	if(set == NULL) return 0;
 	numOfElements = set->count;
 	array = set->parameter;
 
@@ -373,18 +392,18 @@ static bool paramSet_couldItBeTypo(const char *str, const PARAM_SET *set){
 		lenName = (unsigned)strlen(array[i]->flagName);
 
 		if((editDist*100)/lenName <= 49)
-			return true;
+			return 1;
 
 		if(array[i]->flagAlias){
 			editDist = editDistance_levenshtein(array[i]->flagAlias, str);
 			lenName = (unsigned)strlen(array[i]->flagAlias);
 
 			if((editDist*100)/lenName <= 49)
-				return true;
+				return 1;
 		}
 	}
 
-	return false;
+	return 0;
 }
 
 /**
@@ -408,50 +427,49 @@ static void paramSet_addRawParameter(const char *param, const char *arg, const c
 		/*It is long parameter*/
 		if(strncmp("--", param, 2)==0 && len >= 3){
 			if(param[3] == 0){
-				paramSet_appendParameterByName(TYPO_PARAMETER_NAME, flag, source, set);
+				paramSet_priorityAppendParameterByName(TYPO_PARAMETER_NAME, flag, source, PST_PRIORITY_VALID_BASE, set);
 				if(arg)
-					paramSet_appendParameterByName(paramSet_couldItBeTypo(arg, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME, arg, source, set);
+					paramSet_priorityAppendParameterByName(paramSet_couldItBeTypo(arg, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME, arg, source, PST_PRIORITY_VALID_BASE, set);
 				return;
 			}
 
-			if(paramSet_priorityAppendParameterByName(flag, arg, source, priority, set)==false){
-				paramSet_appendParameterByName(paramSet_couldItBeTypo(flag, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME, flag, source, set);
+			if (paramSet_priorityAppendParameterByName(flag, arg, source, priority, set) != PST_OK){
+				paramSet_priorityAppendParameterByName(paramSet_couldItBeTypo(flag, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME, flag, source, PST_PRIORITY_VALID_BASE, set);
 				if(arg)
-					paramSet_appendParameterByName(paramSet_couldItBeTypo(arg, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME, arg, source, set);
+					paramSet_priorityAppendParameterByName(paramSet_couldItBeTypo(arg, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME, arg, source, PST_PRIORITY_VALID_BASE, set);
 			}
 		}
 		/*It is short parameter*/
 		else if(param[0] == '-' && len == 2){
-			if(paramSet_priorityAppendParameterByName(flag, arg, source, priority, set)==false){
-				paramSet_appendParameterByName(UNKNOWN_PARAMETER_NAME, flag, source, set);
+			if (paramSet_priorityAppendParameterByName(flag, arg, source, priority, set) != PST_OK) {
+				paramSet_priorityAppendParameterByName(UNKNOWN_PARAMETER_NAME, flag, source, PST_PRIORITY_VALID_BASE, set);
 				if(arg)
-					paramSet_appendParameterByName(paramSet_couldItBeTypo(arg, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME, arg, source, set);
+					paramSet_priorityAppendParameterByName(paramSet_couldItBeTypo(arg, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME, arg, source, PST_PRIORITY_VALID_BASE, set);
 			}
 		}
 		/*It is bunch of flags*/
 		else{
-			//paramSet_appendParameterByName(arg,flag,set)==false
 			char str_flg[2] = {255,0};
 			int itr = 0;
 
 			if(arg)
-				paramSet_appendParameterByName(paramSet_couldItBeTypo(arg, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME, arg, source, set);
+				paramSet_priorityAppendParameterByName(paramSet_couldItBeTypo(arg, set) ? TYPO_PARAMETER_NAME : UNKNOWN_PARAMETER_NAME, arg, source, PST_PRIORITY_VALID_BASE, set);
 
 			while((str_flg[0] = flag[itr++]) != '\0'){
-				if(paramSet_priorityAppendParameterByName(str_flg, NULL, source, priority, set)==false){
+				if (paramSet_priorityAppendParameterByName(str_flg, NULL, source, priority, set) != PST_OK) {
 					if(paramSet_couldItBeTypo(flag, set)){
-						paramSet_appendParameterByName(TYPO_PARAMETER_NAME, flag, source, set);
+						paramSet_priorityAppendParameterByName(TYPO_PARAMETER_NAME, flag, source, PST_PRIORITY_VALID_BASE, set);
 						break;
 					}
 					else
-						paramSet_appendParameterByName(UNKNOWN_PARAMETER_NAME, str_flg, source, set);
+						paramSet_priorityAppendParameterByName(UNKNOWN_PARAMETER_NAME, str_flg, source, PST_PRIORITY_VALID_BASE, set);
 				}
 			}
 
 		}
 	}
 	else{
-		paramSet_appendParameterByName(UNKNOWN_PARAMETER_NAME, param, source, set);
+		paramSet_priorityAppendParameterByName(UNKNOWN_PARAMETER_NAME, param, source, PST_PRIORITY_VALID_BASE, set);
 	}
 }
 
@@ -505,14 +523,14 @@ void paramSet_readFromCMD(int argc, char **argv, PARAM_SET *set, int priority){
 	return;
 }
 
-bool paramSet_isFormatOK(const PARAM_SET *set){
+int paramSet_isFormatOK(const PARAM_SET *set){
 	PARAM **array = NULL;
 	PARAM *pParam = NULL;
 	int i = 0;
 	int numOfElements = 0;
 	PARAM_VAL *value = NULL;
 
-	if(set == NULL) return false;
+	if(set == NULL) return 0;
 	numOfElements = set->count;
 	array = set->parameter;
 
@@ -522,20 +540,19 @@ bool paramSet_isFormatOK(const PARAM_SET *set){
 			if(strcmp(pParam->flagName, TYPO_PARAMETER_NAME)==0) continue;
 
 			/*Control duplicate conflicts*/
-			if(parameter_isDuplicateConflict(pParam) == true){
-
-				return false;
+			if (PARAM_isDuplicateConflict(pParam)) {
+				return 0;
 			}
 
 			value = pParam->arg;
 			while(value){
 				if(value->formatStatus == FORMAT_OK){
 					if(value->contentStatus != PARAM_OK){
-						return false;
+						return 0;
 					}
 				}
 				else{
-					return false;
+					return 0;
 				}
 
 				value = value->next;
@@ -543,78 +560,111 @@ bool paramSet_isFormatOK(const PARAM_SET *set){
 		}
 	}
 
-	return true;
+	return 1;
 }
 
-static bool getValue(const PARAM_SET *set, const char *name, unsigned at, bool controlFormat,
-	void (*getter)(const PARAM_SET*, const char*, unsigned, PARAM_VAL**),
-	void (*convert)(char*, void**),
+static int getValue(const PARAM_SET *set, const char *name, const char *source, int prio, unsigned at, int controlFormat,
+	int (*getter)(const PARAM_SET *, const char *, const char *, int, unsigned , PARAM_VAL **value),
+	int (*convert)(char*, void**),
 	void **value){
-
+	int res;
 	PARAM_VAL *tmp = NULL;
 
-	if(set == NULL || name == NULL || getter == NULL) return false;
+	if(set == NULL || name == NULL || getter == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
 	/*Get parameter->value at position*/
-	getter(set, name, at, &tmp);
-	if (tmp == NULL) return false;
-	if (tmp->formatStatus != FORMAT_OK && controlFormat) return false;
+	res = getter(set, name, source, prio, at, &tmp);
+	if (res != PST_OK) goto cleanup;
+	if (tmp->formatStatus != FORMAT_OK && controlFormat) {
+		res = PST_PARAMETER_INVALID_FORMAT;
+		goto cleanup;
+	}
 	/*Convert value->string into format*/
-	if(convert && value) convert(tmp->cstr_value, value);
-	return true;
+	if(convert && value) {
+		res = convert(tmp->cstr_value, value);
+		if (res != PST_OK) goto cleanup;
+	}
+
+	res = PST_OK;
+
+cleanup:
+	return res;
 }
 
-static void wrapper_getHighestPriorityValueByName(const PARAM_SET *set, const char *name, unsigned at, PARAM_VAL **value){
-	paramSet_getHighestPriorityValueByName(set, name, value);
-}
-
-void wrapper_returnStr(char* str, void** obj){
+int wrapper_returnStr(char* str, void** obj){
 	*obj = (void*)str;
+	return PST_OK;
 }
 
 typedef struct INT_st {int value;} INT;
 
-void wrapper_returnInt(char* str,  void** obj){
+int wrapper_returnInt(char* str,  void** obj){
 	((INT*)obj)->value = atoi(str);
+	return PST_OK;
 }
-
-bool paramSet_getIntValueByNameAt(const PARAM_SET *set, const char *name, unsigned at, int *value){
+//const PARAM_SET *set, const char *name, const char *source, int prio, unsigned at, PARAM_VAL **value
+int paramSet_getIntValue(const PARAM_SET *set, const char *name, const char *source, int prio, unsigned at, int *value) {
 	INT val;
-	bool stat;
-	stat = getValue(set, name, at, true, paramSet_getValueByNameAt, wrapper_returnInt, (void**)&val);
+	int res;
+	res = getValue(set, name, source, prio, at, 1, paramSet_getValue, wrapper_returnInt, (void**)&val);
 	*value = val.value;
-	return stat;
+	return res;
 }
 
-bool paramSet_getStrValueByNameAt(const PARAM_SET *set, const char *name, unsigned at, char **value){
-	return getValue(set, name, at, true, paramSet_getValueByNameAt, wrapper_returnStr, (void**)value);
+int paramSet_getStrValue(const PARAM_SET *set, const char *name, const char *source, int prio, unsigned at, char **value) {
+	return getValue(set, name, source, prio, at, 1, paramSet_getValue, wrapper_returnStr, (void**)value);
 }
 
-bool paramSet_getHighestPriorityIntValueByName(const PARAM_SET *set, const char *name, int *value){
-	INT val;
-	bool stat;
-	stat = getValue(set, name, 0xFFFF, true, wrapper_getHighestPriorityValueByName, wrapper_returnInt, (void**)&val);
-	*value = val.value;
-	return stat;
-}
+//bool paramSet_getIntValueByNameAt(const PARAM_SET *set, const char *name, unsigned at, int *value){
+//	INT val;
+//	int res;
+//	res = getValue(set, name, NULL, PST_PRIORITY_NONE, at, true, paramSet_getValueByNameAt, wrapper_returnInt, (void**)&val);
+//	*value = val.value;
+//	return res == PST_OK ? true : false;;
+//}
 
-bool paramSet_getHighestPriorityStrValueByName(const PARAM_SET *set, const char *name, char **value){
-	return getValue(set, name, 0xFFFF, true, wrapper_getHighestPriorityValueByName, wrapper_returnStr, (void**)value);
-}
+//bool paramSet_getStrValueByNameAt(const PARAM_SET *set, const char *name, unsigned at, char **value){
+//	return getValue(set, name, NULL, PST_PRIORITY_NONE, at, true, paramSet_getValueByNameAt, wrapper_returnStr, (void**)value) == PST_OK ? true : false;
+//}
 
-bool paramSet_getValueCountByName(const PARAM_SET *set, const char *name, unsigned *count){
+//bool paramSet_getHighestPriorityIntValueByName(const PARAM_SET *set, const char *name, int *value){
+//	INT val;
+//	int res;
+//	res = getValue(set, name, NULL, PST_PRIORITY_HIGHEST, PST_INDEX_FIRST, true, paramSet_getValueByNameAt, wrapper_returnInt, (void**)&val);
+//	*value = val.value;
+//	return res == PST_OK ? true : false;
+//}
+
+//bool paramSet_getHighestPriorityStrValueByName(const PARAM_SET *set, const char *name, char **value){
+//	return getValue(set, name, NULL, PST_PRIORITY_HIGHEST, PST_INDEX_FIRST, true, paramSet_getValueByNameAt, wrapper_returnStr, (void**)value) == PST_OK ? true : false;
+//}
+
+
+
+int paramSet_getValueCountByName(const PARAM_SET *set, const char *name, unsigned *count){
+	int res;
 	PARAM *param = NULL;
-	if(set == NULL || name == NULL) return false;
 
-	paramSet_getParameterByName(set, name, &param);
+	if(set == NULL || name == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
 
-	if(param == NULL) return false;
+	res = paramSet_getParameterByName(set, name, &param);
+	if(res != PST_OK) goto cleanup;
+
 	*count = param->argCount;
+	res = PST_OK;
 
-	return true;
+cleanup:
+
+	return res;
 }
 
-bool paramSet_isSetByName(const PARAM_SET *set, const char *name){
-	return getValue(set, name, 0, false, paramSet_getValueByNameAt, NULL, NULL);
+int paramSet_isSetByName(const PARAM_SET *set, const char *name){
+	return getValue(set, name, NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, 0, paramSet_getValue, NULL, NULL) == PST_OK ? 1 : 0;
 }
 
 void paramSet_Print(const PARAM_SET *set){
@@ -629,7 +679,7 @@ void paramSet_Print(const PARAM_SET *set){
 
 	for(i=0; i<numOfElements;i++){
 		if(array[i]->arg){
-			parameter_Print(array[i], set->printInfo);
+			PARAM_print(array[i], set->printInfo);
 		}
 	}
 
@@ -653,7 +703,7 @@ void paramSet_PrintErrorMessages(const PARAM_SET *set){
 			if(strcmp(pParam->flagName, TYPO_PARAMETER_NAME)==0) continue;
 			value = pParam->arg;
 
-			if(parameter_isDuplicateConflict(pParam) == true){
+			if (PARAM_isDuplicateConflict(pParam)) {
 				set->printError("Error: Duplicate values '%s'", pParam->flagName);
 				if(value->source) set->printError(" from '%s'", value->source);
 				set->printError("!\n");
@@ -698,10 +748,10 @@ void paramSet_printUnknownParameterWarnings(const PARAM_SET *set){
 	if(set == NULL) return;
 
 
-	if(paramSet_getValueCountByName(set, UNKNOWN_PARAMETER_NAME, &count)){
+	if(paramSet_getValueCountByName(set, UNKNOWN_PARAMETER_NAME, &count) == PST_OK){
 		for(i = 0; i < count; i++){
 			PARAM_VAL *value = NULL;
-			paramSet_getValueByNameAt(set, UNKNOWN_PARAMETER_NAME, i, &value);
+			paramSet_getValue(set, UNKNOWN_PARAMETER_NAME, NULL, PST_PRIORITY_NONE, i, &value);
 			if(value){
 				set->printWarning("Warning: Unknown parameter '%s'", value->cstr_value);
 				if(value->source) set->printWarning(" from '%s'", value->source);
@@ -756,7 +806,7 @@ void paramSet_printIgnoredLowerPriorityWarnings(const PARAM_SET *set){
 
 	for (i = 0; i < numOfElements; i++){
 		PARAM_VAL *pValue = array[i]->arg;
-		if(array[i]->isSingleHighestPriority == true){
+		if (array[i]->isSingleHighestPriority) {
 			highestPriority = array[i]->highestPriority;
 
 			do{
@@ -779,18 +829,18 @@ void paramSet_printTypoWarnings(const PARAM_SET *set){
 
 	if(set == NULL) return;
 
-	if(paramSet_getValueCountByName(set, TYPO_PARAMETER_NAME, &count)){
+	if(paramSet_getValueCountByName(set, TYPO_PARAMETER_NAME, &count) == PST_OK){
 		for(i=0; i<count; i++){
 			PARAM_VAL *value = NULL;
-			paramSet_getValueByNameAt(set, TYPO_PARAMETER_NAME, i, &value);
+			paramSet_getValue(set, TYPO_PARAMETER_NAME, NULL, PST_PRIORITY_NONE, i, &value);
 			if(value)
 				paramSet_PrintSimilar(value->cstr_value, set);
 		}
 	}
 }
 
-bool paramSet_isTypos(const PARAM_SET *set){
+int paramSet_isTypos(const PARAM_SET *set){
 	unsigned count = 0;
 	paramSet_getValueCountByName(set, TYPO_PARAMETER_NAME, &count);
-	return count > 0 ? true : false;
+	return count > 0 ? 1 : 0;
 }

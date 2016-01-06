@@ -22,6 +22,8 @@
 #include "obj_printer.h"
 #include "ksi/net.h"
 #include "ksi/hashchain.h"
+#include "ParamSet/ParamValue.h"
+#include "ParamSet/types.h"
 
 static int GT_publicationsFileTask_downloadPublicationsFile(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_PublicationsFile **pubfile);
 static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_PublicationData **pubData);
@@ -29,7 +31,7 @@ static int GT_publicationsFileTask_dumpPublicationsFile(Task *task, KSI_CTX *ksi
 
 int GT_publicationsFileTask(Task *task){
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	KSI_CTX *ksi = NULL;
 	ERR_TRCKR *err = NULL;
 	KSI_PublicationsFile *publicationsFile = NULL;
@@ -42,7 +44,7 @@ int GT_publicationsFileTask(Task *task){
 
 
 	set = Task_getSet(task);
-	paramSet_getStrValueByNameAt(set, "o",0, &outPubFileName);
+	paramSet_getStrValue(set, "o", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &outPubFileName);
 	r = paramSet_isSetByName(set, "r");
 	d = paramSet_isSetByName(set, "d");
 
@@ -95,7 +97,7 @@ cleanup:
 
 static int GT_publicationsFileTask_downloadPublicationsFile(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_PublicationsFile **pubfile) {
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	KSI_PublicationsFile *tmp = NULL;
 	bool t;
 
@@ -134,7 +136,7 @@ cleanup:
 }
 
 static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_PublicationData **pubData) {
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	int res;
 
 	KSI_Integer *end = NULL;
@@ -160,7 +162,7 @@ static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *
 
 	set = Task_getSet(task);
 	t = paramSet_isSetByName(set, "t");
-	paramSet_getIntValueByNameAt(set,"T",0,&publicationTime);
+	paramSet_getIntValue(set, "T", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &publicationTime);
 
 	print_progressDesc(t, "Sending extend request... ");
 

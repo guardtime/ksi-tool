@@ -28,7 +28,7 @@ extern "C" {
 #endif
 
 
-typedef enum contentStatus {
+enum contentStatus {
 	PARAM_OK,
 	PARAM_INVALID,
 	HASH_ALG_INVALID_NAME,
@@ -38,9 +38,9 @@ typedef enum contentStatus {
 	FILE_DOES_NOT_EXIST,
 	FILE_INVALID_PATH,
 	PARAM_UNKNOWN_ERROR
-} ContentStatus;
+};
 
-typedef enum formatStatus_enum{
+enum formatStatus_enum{
 	FORMAT_OK,
 	FORMAT_NULLPTR,
 	FORMAT_NOCONTENT,
@@ -51,7 +51,10 @@ typedef enum formatStatus_enum{
 	FORMAT_INVALID_UTC,		
 	FORMAT_INVALID_UTC_OUT_OF_RANGE,		
 	FORMAT_UNKNOWN_ERROR
-} FormatStatus;
+};
+
+typedef int FormatStatus;
+typedef int ContentStatus;
 
 FormatStatus isPathFormOk(const char *path);
 FormatStatus isHexFormatOK(const char *hex);
@@ -77,10 +80,10 @@ const char *getFormatErrorString(FormatStatus res);
 const char *getParameterContentErrorString(ContentStatus res);
 
 
-bool convert_repairUrl(const char* arg, char* buf, unsigned len);
-bool convert_repairPath(const char* arg, char* buf, unsigned len);
-bool convert_replaceWithOid(const char* arg, char* buf, unsigned len);
-bool convert_UTC_to_UNIX(const char* arg, char* buf, unsigned len);
+int convert_repairUrl(const char* arg, char* buf, unsigned len);
+int convert_repairPath(const char* arg, char* buf, unsigned len);
+int convert_replaceWithOid(const char* arg, char* buf, unsigned len);
+int convert_UTC_to_UNIX(const char* arg, char* buf, unsigned len);
 #ifdef	__cplusplus
 }
 #endif

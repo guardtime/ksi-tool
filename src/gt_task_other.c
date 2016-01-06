@@ -34,7 +34,7 @@ static int setSystemTime(KSI_CTX *ksi, const KSI_Signature *sig, ERR_TRCKR *err)
 
 int GT_other(Task *task){
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	KSI_CTX *ksi = NULL;
 	KSI_DataHasher *hsr = NULL;
 	KSI_DataHash *hsh = NULL;

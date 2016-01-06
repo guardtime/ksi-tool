@@ -21,6 +21,8 @@
 #include "gt_task_support.h"
 #include "obj_printer.h"
 #include "debug_print.h"
+#include "ParamSet/ParamValue.h"
+#include "ParamSet/types.h"
 
 static int GT_verifyTask_verifySigOnline(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig);
 static int GT_verifyTask_verifyWithPublication(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig, KSI_Signature **out);
@@ -31,7 +33,7 @@ int GT_verifySignatureTask(Task *task){
 	int res;
 	KSI_CTX *ksi = NULL;
 	ERR_TRCKR *err = NULL;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	KSI_Signature *sig = NULL;
 	KSI_Signature *tmp_ext = NULL;
 	int retval = EXIT_SUCCESS;
@@ -41,7 +43,7 @@ int GT_verifySignatureTask(Task *task){
 	char *inSigFileName = NULL;
 
 	set = Task_getSet(task);
-	paramSet_getStrValueByNameAt(set, "i",0, &inSigFileName);
+	paramSet_getStrValue(set, "i", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inSigFileName);
 
 	ref = paramSet_isSetByName(set, "ref");
 	f = paramSet_isSetByName(set, "f");
@@ -118,7 +120,7 @@ int GT_verifyPublicationFileTask(Task *task){
 	int res;
 	ERR_TRCKR *err = NULL;
 	KSI_CTX *ksi = NULL;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	bool d, t;
 	char *inPubFileName = NULL;
 	KSI_PublicationsFile *publicationsFile = NULL;
@@ -130,7 +132,7 @@ int GT_verifyPublicationFileTask(Task *task){
 
 
 	set = Task_getSet(task);
-	paramSet_getStrValueByNameAt(set, "b", 0, &inPubFileName);
+	paramSet_getStrValue(set, "b", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inPubFileName);
 	d = paramSet_isSetByName(set, "d");
 	t = paramSet_isSetByName(set, "t");
 
@@ -187,7 +189,7 @@ cleanup:
 
 static int GT_verifyTask_verifySigOnline(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig) {
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	bool t;
 
 	if (task == NULL || ksi == NULL || err == NULL || sig == NULL) {
@@ -213,7 +215,7 @@ cleanup:
 
 static int GT_verifyTask_verifyWithPublication(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig, KSI_Signature **out) {
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	KSI_PublicationData *publication = NULL;
 	KSI_PublicationRecord *extendTo = NULL;
 	KSI_Signature *tmp_ext = NULL;
@@ -231,7 +233,7 @@ static int GT_verifyTask_verifyWithPublication(Task *task, KSI_CTX *ksi, ERR_TRC
 	}
 
 	set = Task_getSet(task);
-	paramSet_getStrValueByNameAt(set, "ref",0, &refStrn);
+	paramSet_getStrValue(set, "ref", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &refStrn);
 
 	t = paramSet_isSetByName(set, "t");
 
@@ -311,7 +313,7 @@ cleanup:
 
 static int GT_verifyTask_verify(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig) {
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	bool b, t;
 	bool isExtended = false;
 
@@ -343,7 +345,7 @@ cleanup:
 
 static int GT_verifyTask_verifyData(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig) {
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	bool F, f;
 	char *imprint = NULL;
 	KSI_DataHash *file_hsh = NULL;
@@ -357,8 +359,8 @@ static int GT_verifyTask_verifyData(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KS
 	}
 
 	set = Task_getSet(task);
-	f = paramSet_getStrValueByNameAt(set, "f",0, &inDataFileName);
-	F = paramSet_getStrValueByNameAt(set, "F",0, &imprint);
+	f = paramSet_getStrValue(set, "f", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inDataFileName) == PST_OK ? true : false;
+	F = paramSet_getStrValue(set, "F", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &imprint) == PST_OK ? true : false;
 
 
 	if(f){

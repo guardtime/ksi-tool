@@ -146,7 +146,7 @@ int loadSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signa
 bool isSignatureExtended(const KSI_Signature *sig);
 
 /*Controls parameter set and returns true if user wants to write data files to stdout*/
-bool isPiping(paramSet *set);
+bool isPiping(PARAM_SET *set);
 
 /**
  * Reads hash from command line and creates the KSI_DataHash object.

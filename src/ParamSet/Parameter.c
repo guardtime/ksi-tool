@@ -22,8 +22,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "ParamValue.h"
 #include "param_set_obj_impl.h"
+#include "ParamValue.h"
+#include "Parameter.h"
 
 
 #define FORMAT_OK 0
@@ -36,7 +37,73 @@ static char *new_string(const char *str) {
 	return strcpy(tmp, str);
 }
 
-void parameter_free(PARAM *obj) {
+int PARAM_new(const char *flagName,const char *flagAlias, int isMultipleAllowed, int isSingleHighestPriority,
+		int (*controlFormat)(const char *),
+		int (*controlContent)(const char *),
+		int (*convert)(const char*, char*, unsigned),
+		PARAM **newObj){
+	int res;
+	PARAM *tmp = NULL;
+	char *tmpFlagName = NULL;
+	char *tmpAlias = NULL;
+
+	if (flagName == NULL || newObj == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	tmp = (PARAM*)malloc(sizeof(PARAM));
+	if (tmp == NULL) {
+		res = PST_OUT_OF_MEMORY;
+		goto cleanup;
+	}
+
+	tmp->flagName = NULL;
+	tmp->flagAlias = NULL;
+	tmp->arg = NULL;
+	tmp->highestPriority = 0;
+	tmp->isMultipleAllowed = isMultipleAllowed;
+	tmp->isSingleHighestPriority = isSingleHighestPriority;
+	tmp->argCount = 0;
+	tmp->controlFormat = controlFormat;
+	tmp->controlContent = controlContent;
+	tmp->convert = convert;
+
+
+	tmpFlagName = new_string(flagName);
+	if (tmpFlagName == NULL) {
+		res = PST_OUT_OF_MEMORY;
+		goto cleanup;
+	}
+
+	if (flagAlias) {
+		tmpAlias = new_string(flagAlias);
+		if(tmpAlias == NULL) {
+			res = PST_OUT_OF_MEMORY;
+			goto cleanup;
+		}
+	}
+
+	tmp->flagAlias = tmpAlias;
+	tmp->flagName = tmpFlagName;
+	*newObj = tmp;
+
+	tmpAlias = NULL;
+	tmpFlagName = NULL;
+	tmp = NULL;
+
+	res = PST_OK;
+
+cleanup:
+
+	free(tmpFlagName);
+	free(tmpAlias);
+	PARAM_free(tmp);
+	return res;
+}
+
+
+void PARAM_free(PARAM *obj) {
 	if(obj == NULL) return;
 	free(obj->flagName);
 	free(obj->flagAlias);
@@ -44,64 +111,17 @@ void parameter_free(PARAM *obj) {
 	free(obj);
 }
 
-bool parameter_new(const char *flagName,const char *flagAlias, bool isMultipleAllowed, bool isSingleHighestPriority,
-		int (*controlFormat)(const char *),
-		int (*controlContent)(const char *),
-		bool (*convert)(const char*, char*, unsigned),
-		PARAM **newObj){
-	PARAM *tmp = NULL;
-
-	if(newObj == NULL || flagName == NULL) return false;
-
-	tmp = (PARAM*)malloc(sizeof(PARAM));
-	if(tmp == NULL) goto cleanup;
-
-	tmp->flagName = NULL;
-	tmp->flagAlias = NULL;
-	tmp->arg = NULL;
-
-	tmp->flagName = new_string(flagName);
-	if(tmp->flagName == NULL) goto cleanup;
-
-	if(flagAlias){
-		tmp->flagAlias = new_string(flagAlias);
-		if(tmp->flagAlias == NULL) goto cleanup;
-	}
-
-	tmp->controlFormat = controlFormat;
-	tmp->controlContent = controlContent;
-	tmp->convert = convert;
-	tmp->isMultipleAllowed = isMultipleAllowed;
-	tmp->isSingleHighestPriority = isSingleHighestPriority;
-	tmp->highestPriority = 0;
-	tmp->argCount = 0;
-
-	*newObj = tmp;
-	tmp = NULL;
-
-cleanup:
-
-	parameter_free(tmp);
-	return true;
-}
-
-/**
- * Appends a argument to the parameter and performs a format check. Parameter
- * is copied.
- * @param param - parameter where the argument is inserted.
- * @param argument - argument.
- * @param source - describes the source e.g. file name or environment variable. Can be NULL.
- * @param priority - priority of the parameter.
-
- * @return Return true if successful, false otherwise.
- */
-bool parameter_addArgument(PARAM *param, const char *argument, const char* source, int priority){
+int PARAM_addArgument(PARAM *param, const char *argument, const char* source, int priority){
+	int res;
 	PARAM_VAL *newValue = NULL;
 	PARAM_VAL *pLastValue = NULL;
-	bool status = false;
 	const char *arg = NULL;
 	char buf[1024];
-	if(param == NULL) return false;
+
+	if(param == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
 
 	/*If conversion function exists convert the argument*/
 	if(param->convert)
@@ -110,19 +130,25 @@ bool parameter_addArgument(PARAM *param, const char *argument, const char* sourc
 		arg = argument;
 
 	/*Create new object and control the format*/
-	if(!PARAM_VAL_new(arg, source, priority, &newValue)) goto cleanup;
+	res = PARAM_VAL_new(arg, source, priority, &newValue);
+	if(res != PST_OK) goto cleanup;
 
-	if(param->controlFormat)
+	if (param->controlFormat)
 		newValue->formatStatus = param->controlFormat(arg);
-	if(newValue->formatStatus == FORMAT_OK && param->controlContent)
+	if (newValue->formatStatus == FORMAT_OK && param->controlContent)
 		newValue->contentStatus = param->controlContent(arg);
 
-	if(param->arg == NULL){
+	if (param->arg == NULL) {
 		param->arg = newValue;
-	}
-	else{
-		pLastValue = (PARAM_VAL*)PARAM_VAL_getElementAt(param->arg, param->argCount-1);
-		if(pLastValue == NULL || pLastValue->next != NULL) goto cleanup;
+	} else{
+		res = PARAM_VAL_getElement(param->arg, NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, &pLastValue);
+		if(res != PST_OK) goto cleanup;
+
+		/* The last element must exists and its next value must be NULL. */
+		if(pLastValue == NULL || pLastValue->next != NULL) {
+			res = PST_UNDEFINED_BEHAVIOUR;
+			goto cleanup;
+		}
 		pLastValue->next = newValue;
 	}
 	param->argCount++;
@@ -131,44 +157,48 @@ bool parameter_addArgument(PARAM *param, const char *argument, const char* sourc
 		param->highestPriority = priority;
 
 	newValue = NULL;
-	status = true;
+	res = PST_OK;
 
 cleanup:
 
 	PARAM_VAL_free(newValue);
 
-	return status;
+	return res;
+}
+
+int PARAM_getValue(PARAM *param, const char *name, const char *source, int prio, unsigned at, PARAM_VAL **value) {
+	int res;
+	PARAM_VAL *tmp = NULL;
+
+	if (param == NULL || name == NULL || value == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
 	}
 
-void parameter_Print(const PARAM *param, int (*print)(const char*, ...)){
-	PARAM_VAL *pValue = NULL;
+	if (param->arg == NULL) {
+		res = PST_PARAMETER_EMPTY;
+		goto cleanup;
+	}
 
-	if(param == NULL) return;
+	res = PARAM_VAL_getElement(param->arg, source, prio, at, &tmp);
+	if (res != PST_OK) goto cleanup;
 
-	print("%s\n", param->flagName);
-	pValue = param->arg;
-	do{
-		if(pValue != NULL){
-			print("  '%s' p:%i  err: %2x %2x\n", pValue->cstr_value, pValue->priority, pValue->formatStatus, pValue->contentStatus);
-			pValue = pValue->next;
-			}
-		else
-			print("  <null>\n");
-	}while(pValue);
+	*value = tmp;
+	tmp = NULL;
+	res = PST_OK;
 
+cleanup:
+
+	return res;
 }
-/*
- * Duplicate conflict is defined when flag \isMultipleAllowed is not set and value count
- * is > 1 OR flag \isSingleHighestPriority is set and there is more than one highest
- * priority values present.
- */
-bool parameter_isDuplicateConflict(const PARAM *param) {
+
+int PARAM_isDuplicateConflict(const PARAM *param) {
 	int highestPriority = 0;
 	int count = 0;
 	PARAM_VAL *value = NULL;
 
 	if(param->argCount > 1 && !(param->isMultipleAllowed || param->isSingleHighestPriority)){
-		return true;
+		return 1;
 	}
 	else if(param->isSingleHighestPriority){
 		value = param->arg;
@@ -185,7 +215,25 @@ bool parameter_isDuplicateConflict(const PARAM *param) {
 			}
 		}while (value);
 		if(count > 1)
-			return true;
+			return 1;
 	}
-	return false;
+	return 0;
+}
+
+void PARAM_print(const PARAM *param, int (*print)(const char*, ...)){
+	PARAM_VAL *pValue = NULL;
+
+	if(param == NULL) return;
+
+	print("%s\n", param->flagName);
+	pValue = param->arg;
+	do{
+		if(pValue != NULL){
+			print("  '%s' p:%i  err: %2x %2x\n", pValue->cstr_value, pValue->priority, pValue->formatStatus, pValue->contentStatus);
+			pValue = pValue->next;
+			}
+		else
+			print("  <null>\n");
+	}while(pValue);
+
 }

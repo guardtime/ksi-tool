@@ -22,9 +22,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "ParamValue.h"
-#include "../gt_cmd_common.h"		//Temp usage for bool
 #include "param_set_obj_impl.h"
+#include "ParamValue.h"
 
 static char *new_string(const char *str) {
 	char *tmp = NULL;
@@ -37,14 +36,7 @@ static char *new_string(const char *str) {
 #define UNKNOW_FORMAT_STATUS -1
 #define UNKNOW_CONTENT_STATUS -1
 
-/**
- * Creates a new parameter value object.
- * @param value - value as c-string. Can be NULL.
- * @param source - describes the source e.g. file name or environment variable. Can be NULL.
- * @param priority - priority of the parameter.
- * @param newObj - receiving pointer.
- * @return true on success, false otherwise.
- */
+
 int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL **newObj) {
 	int res;
 	PARAM_VAL *tmp = NULL;
@@ -53,6 +45,11 @@ int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL
 
 	if(newObj == NULL) {
 		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	if (priority < PST_PRIORITY_VALID_BASE) {
+		res = PST_NEGATIVE_PRIORITY;
 		goto cleanup;
 	}
 
@@ -115,38 +112,92 @@ void PARAM_VAL_free(PARAM_VAL *rootValue) {
 	free(rootValue);
 }
 
-PARAM_VAL* PARAM_VAL_getElementAt(PARAM_VAL *rootValue, unsigned at) {
-	PARAM_VAL *tmp = NULL;
-	unsigned i=0;
+static int param_val_getPriority(PARAM_VAL *rootValue, int type, int *prio) {
+	int res;
+	PARAM_VAL *nxt = NULL;
+	int tmp = 0;
 
-	if(rootValue == NULL) return NULL;
-	if(at == 0) return rootValue;
-
-	tmp = rootValue;
-	for(i=0; i<at;i++){
-		if(tmp->next == NULL) return NULL;
-		tmp = tmp->next;
+	if (rootValue == NULL || prio == NULL || type <= PST_PRIORITY_NOTDEFINED) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
 	}
 
-	return tmp;
+	/**
+	 * If the priority is not counted (\PST_PRIORITY_NONE) or in valid REAL
+	 * priority range return the type.
+	 */
+	if (type == PST_PRIORITY_NONE || type >= PST_PRIORITY_VALID_BASE) {
+		tmp = type;
+	}
+
+	/* If priority asked is the highest or the lowest extract it. */
+	nxt = rootValue;
+	tmp = nxt->priority;
+	while (nxt != NULL) {
+		if ((type == PST_PRIORITY_HIGHEST && tmp < nxt->priority)
+			|| (type == PST_PRIORITY_LOWEST && tmp > nxt->priority)) {
+			tmp = nxt->priority;
+		}
+
+		nxt = nxt->next;
+	}
+
+	*prio = tmp;
+	res = PST_OK;
+
+cleanup:
+
+	return res;
 }
 
+int PARAM_VAL_getElement(PARAM_VAL *rootValue, const char* source, int priority, int at, PARAM_VAL** val) {
+	int res;
+	PARAM_VAL *current = NULL;
+	PARAM_VAL *tmp = NULL;
+	PARAM_VAL *lastAtGivenConstraints = NULL;
+	unsigned i = 0;
+	int prio = 0;
 
-PARAM_VAL* PARAM_VAL_getFirstHighestPriorityValue(PARAM_VAL *rootValue) {
-	PARAM_VAL *pValue = NULL;
-	PARAM_VAL *master = NULL;
+	if (rootValue == NULL || priority <= PST_PRIORITY_NOTDEFINED || at < PST_INDEX_LAST || val == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
 
-	if(rootValue == NULL) return NULL;
+	 /* Extract the real priority value to be used. */
+	res = param_val_getPriority(rootValue, priority, &prio);
+	if (res != PST_OK) goto cleanup;
 
-	pValue = rootValue;
-	master = pValue;
-	do{
-		if (pValue != NULL){
-			if(pValue->priority > master->priority)
-				master = pValue;
-			pValue = pValue->next;
+	/**
+	 * If at == i return value at the given position.
+	 * If at is \PST_INDEX_LAST return the last.
+	 */
+	current = rootValue;
+	while (current != NULL) {
+		/* Increase count if (priority matches AND source matches). */
+		if ((prio == PST_PRIORITY_NONE || prio == current->priority)
+				&& (source == NULL || (source != NULL && strcmp(source, current->source)))) {
+
+			if ((at >= PST_INDEX_FIRST && i == at)
+				|| (at == PST_INDEX_LAST && current->next == NULL)) {
+				tmp =  current;
+				break;
+			}
+
+			i++;
 		}
-	}while (pValue);
 
-	return master;
+		current = current->next;
+	}
+
+	if (tmp == NULL) {
+		res = PST_PARAMETER_VALUE_NOT_FOUND;
+		goto cleanup;
+	}
+
+	*val = tmp;
+	res = PST_OK;
+
+cleanup:
+
+	return res;
 }

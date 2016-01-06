@@ -417,7 +417,7 @@ const char *getParameterContentErrorString(ContentStatus res){
 	}
 }
 
-bool convert_repairUrl(const char* arg, char* buf, unsigned len){
+int convert_repairUrl(const char* arg, char* buf, unsigned len){
 	char *scheme = NULL;
 	unsigned i = 0;
 	if(arg == NULL || buf == NULL) return false;
@@ -444,7 +444,7 @@ bool convert_repairUrl(const char* arg, char* buf, unsigned len){
 	return true;
 }
 
-bool convert_repairPath(const char* arg, char* buf, unsigned len){
+int convert_repairPath(const char* arg, char* buf, unsigned len){
 	char *toBeReplaced = NULL;
 
 	if(arg == NULL || buf == NULL) return false;
@@ -460,7 +460,7 @@ bool convert_repairPath(const char* arg, char* buf, unsigned len){
 	return true;
 }
 
-bool convert_replaceWithOid(const char* arg, char* buf, unsigned len) {
+int convert_replaceWithOid(const char* arg, char* buf, unsigned len) {
 	char *value = NULL;
 	const char *oid = NULL;
 
@@ -487,7 +487,7 @@ bool convert_replaceWithOid(const char* arg, char* buf, unsigned len) {
 	return true;
 }
 
-bool convert_UTC_to_UNIX(const char* arg, char* buf, unsigned len) {
+int convert_UTC_to_UNIX(const char* arg, char* buf, unsigned len) {
 	const char *ret = NULL;
 	const char *next = NULL;
 	struct tm time_st;

@@ -28,6 +28,10 @@
 #include <ksi/compatibility.h>
 #include <ksi/net.h>
 #include "ksitool_err.h"
+#include "gt_cmd_control.h"
+#include "ParamSet/ParamValue.h"
+#include "ParamSet/types.h"
+
 
 #ifndef _WIN32
 #  ifdef HAVE_CONFIG_H
@@ -46,7 +50,7 @@ const char *getVersion(void) {
 	return versionString;
 }
 
-static bool includeParametersFromFile(paramSet *set, int priority){
+static bool includeParametersFromFile(PARAM_SET *set, int priority){
 	/*Read command-line parameters from file*/
 	if(paramSet_isSetByName(set, "inc")){
 		char *fname = NULL;
@@ -55,11 +59,11 @@ static bool includeParametersFromFile(paramSet *set, int priority){
 		int n=0;
 		unsigned count=0;
 
-		while(paramSet_getStrValueByNameAt(set, "inc",i,&fname)){
+		while (paramSet_getStrValue(set, "inc", NULL, PST_PRIORITY_NONE, i, &fname) == PST_OK) {
 			paramSet_getValueCountByName(set, "inc", &count);
 
 			for(n=0; n<i; n++){
-				paramSet_getStrValueByNameAt(set, "inc",n,&fname2);
+				paramSet_getStrValue(set, "inc", NULL, PST_PRIORITY_NONE, n, &fname2);
 
 				if(strcmp(fname, fname2)==0){
 					fname = NULL;
@@ -86,7 +90,7 @@ static int ksitool_mightItBeUri(const char *uri) {
 	return KSI_UriSplitBasic(uri, NULL, NULL, NULL, NULL) == KSI_OK ? 1 : 0;
 }
 
-static int ksitool_load_urls_from_env(paramSet *set, const char *line, const char *env_name, const char *param_name, int priority) {
+static int ksitool_load_urls_from_env(PARAM_SET *set, const char *line, const char *env_name, const char *param_name, int priority) {
 	const char *nxt = line;
 	char url[1024] = "";
 	unsigned url_count = 0;
@@ -192,7 +196,7 @@ static int ksitool_load_urls_from_env(paramSet *set, const char *line, const cha
  * extracted. This function MUST be called after reading files and command line to
  * make correct decisions.
  */
-static bool includeParametersFromEnvironment(paramSet *set, char **envp, int priority){
+static bool includeParametersFromEnvironment(PARAM_SET *set, char **envp, int priority){
 	bool ret = true;
 	const char *key = NULL;
 	char name[1024];
@@ -352,11 +356,10 @@ static void GT_pritHelp(void){
 
 int main(int argc, char** argv, char **envp) {
 	TaskDefinition *taskDefArray[NUMBER_OF_TASKS];
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	int retval = EXIT_SUCCESS;
 	Task *task = NULL;
 	int i;
-
 #ifdef _WIN32
 #ifdef _DEBUG
 	_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
@@ -423,9 +426,9 @@ int main(int argc, char** argv, char **envp) {
 
 	/*Add default user and pass if S or X is defined and user or pass is not.*/
 	if(paramSet_isSetByName(set, "S") || paramSet_isSetByName(set, "X")){
-		if(paramSet_isSetByName(set, "user") == false)
+		if(!paramSet_isSetByName(set, "user"))
 			paramSet_priorityAppendParameterByName("user", "anon", "default", 3, set);
-		if(paramSet_isSetByName(set, "pass") == false)
+		if(!paramSet_isSetByName(set, "pass"))
 			paramSet_priorityAppendParameterByName("pass", "anon", "default", 3, set);
 	}
 
@@ -437,7 +440,7 @@ int main(int argc, char** argv, char **envp) {
 		char tmp[1024];
 		char *email = NULL;
 		print_warnings("Warning: Parameter E is deprecated and will be removed in later versions. Use --cnstr instead.\n");
-		if (paramSet_getStrValueByNameAt(set, "E", 0, &email) == false) {
+		if (paramSet_getStrValue(set, "E", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &email) != PST_OK) {
 			print_errors("Error: Unable to convert parameter E to cnstr. Check email format.\n");
 			retval = EXIT_FAILURE;
 			goto cleanup;
@@ -447,7 +450,7 @@ int main(int argc, char** argv, char **envp) {
 
 		KSI_snprintf(tmp, sizeof(tmp), "%s=%s", KSI_CERT_EMAIL, email);
 
-		if (paramSet_appendParameterByName("cnstr", tmp, "E", set) == false) {
+		if (paramSet_appendParameterByName("cnstr", tmp, "E", set) != PST_OK) {
 			print_errors("Error: Unable to convert parameter E to cnstr.\n");
 			retval = EXIT_FAILURE;
 			goto cleanup;
@@ -476,7 +479,7 @@ int main(int argc, char** argv, char **envp) {
 		goto cleanup;
 	}
 
-	if(paramSet_isFormatOK(set) == false){
+	if(!paramSet_isFormatOK(set)){
 		paramSet_PrintErrorMessages(set);
 		retval = EXIT_INVALID_CL_PARAMETERS;
 		goto cleanup;

@@ -21,7 +21,7 @@
 #ifndef PARAM_SET_H
 #define	PARAM_SET_H
 
-#include "gt_cmd_control.h"
+//#include "gt_cmd_control.h"
 #include "types.h"
 #ifdef	__cplusplus
 extern "C" {
@@ -55,7 +55,7 @@ extern "C" {
  * @param[out]	set				pointer to recieving pointer to paramSet obj.
  * @return true if successful false otherwise.
  */
-bool paramSet_new(const char *names,
+int paramSet_new(const char *names,
 		int (*printInfo)(const char*, ...), int (*printWarnings)(const char*, ...), int (*printErrors)(const char*, ...),
 		PARAM_SET **set);
 
@@ -78,7 +78,10 @@ void paramSet_free(PARAM_SET *set);
  * @param[in]	controlContent	function for content control.
  * @param[in]	convert			function for argument conversion.
  */
-void paramSet_addControl(PARAM_SET *set, const char *names, int (*controlFormat)(const char *), int (*controlContent)(const char *), bool (*convert)(const char*, char*, unsigned));
+void paramSet_addControl(PARAM_SET *set, const char *names,
+		int (*controlFormat)(const char *),
+		int (*controlContent)(const char *),
+		int (*convert)(const char*, char*, unsigned));
 
 /**
  * Reads parameter values from command-line into predefined parameter set.
@@ -111,7 +114,7 @@ void paramSet_readFromFile(const char *fname, PARAM_SET *set,  int priority);
  * @param[in]	set	pointer to parameter set.
  * @return true if format and content is OK, false otherwise.
  */
-bool paramSet_isFormatOK(const PARAM_SET *set);
+int paramSet_isFormatOK(const PARAM_SET *set);
 
 /**
  * Appends parameter to the set. Invalid value format or content is not handled
@@ -126,16 +129,16 @@ bool paramSet_isFormatOK(const PARAM_SET *set);
  * @param[in]	set	pointer to parameter set.
  * @return true if successful, false otherwise.
  */
-bool paramSet_appendParameterByName(const char *name, const char *value, const char *source, PARAM_SET *set);
+int paramSet_appendParameterByName(const char *name, const char *value, const char *source, PARAM_SET *set);
 
-bool paramSet_priorityAppendParameterByName(const char *name, const char *value, const char *source, int priority, PARAM_SET *set);
+int paramSet_priorityAppendParameterByName(const char *name, const char *value, const char *source, int priority, PARAM_SET *set);
 
 /**
  * Removes all values from the specified parameter.
  * @param[in]	set	pointer to parameter set.
  * @param[in] name
  */
-void paramSet_removeParameterByName(PARAM_SET *set, const char *name);
+int paramSet_removeParameterByName(PARAM_SET *set, const char *name);
 
 /**
  * Controls if there are some undefined parameters red from command-line or
@@ -143,7 +146,7 @@ void paramSet_removeParameterByName(PARAM_SET *set, const char *name);
  * @param[in]	set	pointer to parameter set.
  * @return true if there are some possible typos, false otherwise.
  */
-bool paramSet_isTypos(const PARAM_SET *set);
+int paramSet_isTypos(const PARAM_SET *set);
 
 /**
  * Searches for a parameter by name and gives its value count. Even the
@@ -154,7 +157,7 @@ bool paramSet_isTypos(const PARAM_SET *set);
  * @param[out]	count	pointer to receiving pointer to variable.
  * @return true if successful false otherwise.
  */
-bool paramSet_getValueCountByName(const PARAM_SET *set, const char *name, unsigned *count);
+int paramSet_getValueCountByName(const PARAM_SET *set, const char *name, unsigned *count);
 
 /**
  * Searches for a parameter by name and checks if its value is present. Even if
@@ -163,7 +166,7 @@ bool paramSet_getValueCountByName(const PARAM_SET *set, const char *name, unsign
  * @param[in]	name	pointer to parameters name.
  * @return true if parameter and its value exists, false otherwise.
  */
-bool paramSet_isSetByName(const PARAM_SET *set, const char *name);
+int paramSet_isSetByName(const PARAM_SET *set, const char *name);
 
 /**
  * Search for a integer value from parameter set by name at index. If parameter
@@ -178,6 +181,8 @@ bool paramSet_isSetByName(const PARAM_SET *set, const char *name);
  **/
 bool paramSet_getIntValueByNameAt(const PARAM_SET *set, const char *name, unsigned at, int *value);
 
+int paramSet_getIntValue(const PARAM_SET *set, const char *name, const char *source, int prio, unsigned at, int *value);
+int paramSet_getStrValue(const PARAM_SET *set, const char *name, const char *source, int prio, unsigned at, char **value);
 /**
  * Searches for a c string value from parameter set by name at index. If parameter
  * has format or content error, function fails even if some kind of information

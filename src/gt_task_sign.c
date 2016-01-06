@@ -20,12 +20,14 @@
 
 #include "gt_task_support.h"
 #include "obj_printer.h"
+#include "ParamSet/ParamValue.h"
+#include "ParamSet/types.h"
 
 static int getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh);
 
 int GT_signTask(Task *task) {
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	bool t, n, d;
 	ERR_TRCKR *err = NULL;
 	KSI_CTX *ksi = NULL;
@@ -36,7 +38,7 @@ int GT_signTask(Task *task) {
 
 
 	set = Task_getSet(task);
-	paramSet_getStrValueByNameAt(set, "o", 0,&outSigFileName);
+	paramSet_getStrValue(set, "o", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &outSigFileName);
 	n = paramSet_isSetByName(set, "n");
 	t = paramSet_isSetByName(set, "t");
 	d = paramSet_isSetByName(set, "d");
@@ -86,7 +88,7 @@ cleanup:
 
 static int  getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh) {
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	bool H;
 	char *hashAlg;
 	KSI_HashAlgorithm hasAlgID;
@@ -97,9 +99,9 @@ static int  getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh
 
 
 	set = Task_getSet(task);
-	paramSet_getStrValueByNameAt(set, "f", 0,&inDataFileName);
-	paramSet_getStrValueByNameAt(set, "F", 0,&imprint);
-	H = paramSet_getStrValueByNameAt(set, "H", 0,&hashAlg);
+	paramSet_getStrValue(set, "f", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inDataFileName);
+	paramSet_getStrValue(set, "F", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &imprint);
+	H = paramSet_getStrValue(set, "H", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &hashAlg) == PST_OK ? true : false;
 
 
 	if(Task_getID(task) == signDataFile){

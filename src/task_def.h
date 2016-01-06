@@ -70,7 +70,7 @@ void TaskDefinition_free(TaskDefinition *obj);
  * @param[in]	set		parameter set.
  * @return True if consistent task exists, false otherwise.
  */
-bool Task_analyse(TaskDefinition **def, int count, paramSet *set);
+bool Task_analyse(TaskDefinition **def, int count, PARAM_SET *set);
 
 
 /**
@@ -82,7 +82,7 @@ bool Task_analyse(TaskDefinition **def, int count, paramSet *set);
  * @return consistent task if it exists, NULL otherwise.
  * @note Task must be freed by the caller.
  */
-Task* Task_getConsistentTask(TaskDefinition **def, int count, paramSet *set);
+Task* Task_getConsistentTask(TaskDefinition **def, int count, PARAM_SET *set);
 
 
 /**
@@ -91,12 +91,12 @@ Task* Task_getConsistentTask(TaskDefinition **def, int count, paramSet *set);
  * @param[in]	count	size of the array.
  * @param[in]	set		parameter set.
  */
-void Task_printError(TaskDefinition **def, int count, paramSet *set);
+void Task_printError(TaskDefinition **def, int count, PARAM_SET *set);
 
 
 void Task_free(Task *obj);
 int Task_getID(Task *task);
-paramSet *Task_getSet(Task *task);
+PARAM_SET *Task_getSet(Task *task);
 
 #ifdef	__cplusplus
 }
