@@ -129,16 +129,14 @@ int PARAM_SET_isFormatOK(const PARAM_SET *set);
  * @param[in]	set	pointer to parameter set.
  * @return true if successful, false otherwise.
  */
-int PARAM_SET_appendParameterByName(const char *name, const char *value, const char *source, PARAM_SET *set);
-
-int PARAM_SET_priorityAppendParameterByName(const char *name, const char *value, const char *source, int priority, PARAM_SET *set);
+int PARAM_SET_add(PARAM_SET *set, const char *name, const char *value, const char *source, int priority);
 
 /**
  * Removes all values from the specified parameter.
  * @param[in]	set	pointer to parameter set.
  * @param[in] name
  */
-int PARAM_SET_removeParameterByName(PARAM_SET *set, const char *name);
+int PARAM_SET_clear(PARAM_SET *set, const char *name);
 
 /**
  * Controls if there are some undefined parameters red from command-line or

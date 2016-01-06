@@ -394,7 +394,7 @@ Task* Task_getConsistentTask(TaskDefinition **def, int count, PARAM_SET *set){
 
 		pName = consistent->ignoredFlags;
 		while ((pName = category_getParametersName(pName,buf, sizeof(buf))) != NULL){
-			PARAM_SET_removeParameterByName(set, buf);
+			PARAM_SET_clear(set, buf);
 		}
 
 		Task_new(&tmpTask);

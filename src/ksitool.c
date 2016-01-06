@@ -144,7 +144,7 @@ static int ksitool_load_urls_from_env(PARAM_SET *set, const char *line, const ch
 						cnstr_warn = false;
 					}
 				} else {
-					PARAM_SET_appendParameterByName("cnstr", chunk, env_name, set);
+					PARAM_SET_add(set, "cnstr", chunk, env_name, PST_PRIORITY_VALID_BASE);
 				}
 		} else if (success == 0 && strcmp(env_name, "KSI_PUBFILE") != 0) {
 			if (ksitool_mightItBeUri(chunk)) {
@@ -173,7 +173,7 @@ static int ksitool_load_urls_from_env(PARAM_SET *set, const char *line, const ch
 	}
 
 	/* ADD URL */
-	PARAM_SET_priorityAppendParameterByName(param_name, url, env_name, priority, set);
+	PARAM_SET_add(set, param_name, url, env_name, priority);
 	if(strcmp(env_name, "KSI_AGGREGATOR") == 0) strcpy(default_aggreUrl, url);
 	else if(strcmp(env_name, "KSI_EXTENDER") == 0) strcpy(default_extenderUrl, url);
 	else if(strcmp(env_name, "KSI_PUBFILE") == 0) strcpy(default_pubUrl, url);
@@ -182,8 +182,8 @@ static int ksitool_load_urls_from_env(PARAM_SET *set, const char *line, const ch
 	/* ADD password and user name */
 	if((s || aggre) && (strcmp(env_name, "KSI_AGGREGATOR") == 0)
 		|| (x || v || (p && T)) && (strcmp(env_name, "KSI_EXTENDER") == 0)) {
-		if (user[0]) PARAM_SET_priorityAppendParameterByName("user", user, env_name, priority, set);
-		if (pass[0])PARAM_SET_priorityAppendParameterByName("pass", pass, env_name, priority, set);
+		if (user[0]) PARAM_SET_add(set, "user", user, env_name, priority);
+		if (pass[0])PARAM_SET_add(set, "pass", pass, env_name, priority);
 	}
 
 	return res;
@@ -427,9 +427,9 @@ int main(int argc, char** argv, char **envp) {
 	/*Add default user and pass if S or X is defined and user or pass is not.*/
 	if(PARAM_SET_isSetByName(set, "S") || PARAM_SET_isSetByName(set, "X")){
 		if(!PARAM_SET_isSetByName(set, "user"))
-			PARAM_SET_priorityAppendParameterByName("user", "anon", "default", 3, set);
+			PARAM_SET_add(set, "user", "anon", "default", 3);
 		if(!PARAM_SET_isSetByName(set, "pass"))
-			PARAM_SET_priorityAppendParameterByName("pass", "anon", "default", 3, set);
+			PARAM_SET_add(set, "pass", "anon", "default", 3);
 	}
 
 	if(includeParametersFromFile(set, 2) == false) goto cleanup;
@@ -450,7 +450,7 @@ int main(int argc, char** argv, char **envp) {
 
 		KSI_snprintf(tmp, sizeof(tmp), "%s=%s", KSI_CERT_EMAIL, email);
 
-		if (PARAM_SET_appendParameterByName("cnstr", tmp, "E", set) != PST_OK) {
+		if (PARAM_SET_add(set, "cnstr", tmp, "E", PST_PRIORITY_VALID_BASE) != PST_OK) {
 			print_errors("Error: Unable to convert parameter E to cnstr.\n");
 			retval = EXIT_FAILURE;
 			goto cleanup;
