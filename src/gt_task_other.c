@@ -45,8 +45,8 @@ int GT_other(Task *task){
 	bool n, d;
 
 	set = Task_getSet(task);
-	n = paramSet_isSetByName(set, "n");
-	d = paramSet_isSetByName(set, "d");
+	n = PARAM_SET_isSetByName(set, "n");
+	d = PARAM_SET_isSetByName(set, "d");
 
 	/*Initalization of KSI */
 	res = initTask(task, &ksi, &err);

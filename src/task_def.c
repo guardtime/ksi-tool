@@ -154,7 +154,7 @@ static int TaskDefinition_getMissingFlagCount(const char* category, PARAM_SET *s
 
 	pName = category;
 	while((pName = category_getParametersName(pName,buf, sizeof(buf))) != NULL){
-		if(!paramSet_isSetByName(set, buf)){
+		if(!PARAM_SET_isSetByName(set, buf)){
 			missedFlags++;
 		}
 	}
@@ -165,7 +165,7 @@ static int TaskDefinition_getMissingFlagCount(const char* category, PARAM_SET *s
 static bool taskDefinition_isFirstFlagSet(const char* category, PARAM_SET *set){
 	char buf[1024];
 	category_getParametersName(category, buf, sizeof(buf));
-	return paramSet_isSetByName(set, buf);
+	return PARAM_SET_isSetByName(set, buf);
 }
 
 /**
@@ -240,11 +240,11 @@ static void TaskDefinition_PrintErrors(TaskDefinition *def, PARAM_SET *set){
 		return;
 	}
 
-	printError = paramSet_getErrorPrinter(set);
+	printError = PARAM_SET_getErrorPrinter(set);
 
 	pName = def->mandatoryFlags;
 	while((pName = category_getParametersName(pName,buf, sizeof(buf))) != NULL){
-		if (!paramSet_isSetByName(set, buf)) {
+		if (!PARAM_SET_isSetByName(set, buf)) {
 			if(!def_printed){
 				printError("Error: You have to define flag(s) '%s%s'", strlen(buf)>1 ? "--" : "-", buf);
 				def_printed = true;
@@ -259,7 +259,7 @@ static void TaskDefinition_PrintErrors(TaskDefinition *def, PARAM_SET *set){
 
 	pName = def->forbittenFlags;
 	while((pName = category_getParametersName(pName,buf, sizeof(buf))) != NULL){
-		if (paramSet_isSetByName(set, buf)) {
+		if (PARAM_SET_isSetByName(set, buf)) {
 			if(!err_printed){
 				printError("Error: You must not use flag(s) '%s%s'", strlen(buf)>1 ? "--" : "-", buf);
 				err_printed = true;
@@ -284,11 +284,11 @@ static void TaskDefinition_PrintWarnings(TaskDefinition *def, PARAM_SET *set){
 		return;
 	}
 
-	printWarning = paramSet_getWarningPrinter(set);
+	printWarning = PARAM_SET_getWarningPrinter(set);
 
 	pName = def->ignoredFlags;
 		while((pName = category_getParametersName(pName,buf, sizeof(buf))) != NULL){
-			if (paramSet_isSetByName(set, buf)){
+			if (PARAM_SET_isSetByName(set, buf)){
 				printWarning("Warning: flag %s%s is ignored\n", strlen(buf)>1 ? "--" : "-", buf);
 			}
 		}
@@ -302,7 +302,7 @@ static void TaskDefinition_printSuggestions(TaskDefinition **def, int count, PAR
 
 	if(def == NULL || set == NULL || count == 0) return;
 
-	printError = paramSet_getErrorPrinter(set);
+	printError = PARAM_SET_getErrorPrinter(set);
 
 	for (i = 0; i < count; i++){
 		tmp = def[i];
@@ -394,7 +394,7 @@ Task* Task_getConsistentTask(TaskDefinition **def, int count, PARAM_SET *set){
 
 		pName = consistent->ignoredFlags;
 		while ((pName = category_getParametersName(pName,buf, sizeof(buf))) != NULL){
-			paramSet_removeParameterByName(set, buf);
+			PARAM_SET_removeParameterByName(set, buf);
 		}
 
 		Task_new(&tmpTask);
@@ -421,7 +421,7 @@ void Task_printError(TaskDefinition **def, int count, PARAM_SET *set){
 
 	if(def == NULL || set == NULL) return;
 
-	printError = paramSet_getErrorPrinter(set);
+	printError = PARAM_SET_getErrorPrinter(set);
 
 	/**
 	 * Examine if some task is consistent, find if there is highest consistency

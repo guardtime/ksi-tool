@@ -40,13 +40,13 @@ int GT_extendTask(Task *task) {
 	int publicationTime = 0;
 
 	set = Task_getSet(task);
-	paramSet_getStrValue(set, "i", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inSigFileName);
-	paramSet_getStrValue(set, "o", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &outSigFileName);
-	T = paramSet_getIntValue(set, "T", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &publicationTime) == PST_OK ? true : false;
-	n = paramSet_isSetByName(set, "n");
-	t = paramSet_isSetByName(set, "t");
-	r = paramSet_isSetByName(set, "r");
-	d = paramSet_isSetByName(set, "d");
+	PARAM_SET_getStrValue(set, "i", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inSigFileName);
+	PARAM_SET_getStrValue(set, "o", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &outSigFileName);
+	T = PARAM_SET_getIntValue(set, "T", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &publicationTime) == PST_OK ? true : false;
+	n = PARAM_SET_isSetByName(set, "n");
+	t = PARAM_SET_isSetByName(set, "t");
+	r = PARAM_SET_isSetByName(set, "r");
+	d = PARAM_SET_isSetByName(set, "d");
 
 	res = initTask(task, &ksi, &err);
 	if (res != KT_OK) goto cleanup;

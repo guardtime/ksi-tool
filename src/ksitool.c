@@ -52,18 +52,18 @@ const char *getVersion(void) {
 
 static bool includeParametersFromFile(PARAM_SET *set, int priority){
 	/*Read command-line parameters from file*/
-	if(paramSet_isSetByName(set, "inc")){
+	if(PARAM_SET_isSetByName(set, "inc")){
 		char *fname = NULL;
 		char *fname2 = NULL;
 		int i=0;
 		int n=0;
 		unsigned count=0;
 
-		while (paramSet_getStrValue(set, "inc", NULL, PST_PRIORITY_NONE, i, &fname) == PST_OK) {
-			paramSet_getValueCountByName(set, "inc", &count);
+		while (PARAM_SET_getStrValue(set, "inc", NULL, PST_PRIORITY_NONE, i, &fname) == PST_OK) {
+			PARAM_SET_getValueCountByName(set, "inc", &count);
 
 			for(n=0; n<i; n++){
-				paramSet_getStrValue(set, "inc", NULL, PST_PRIORITY_NONE, n, &fname2);
+				PARAM_SET_getStrValue(set, "inc", NULL, PST_PRIORITY_NONE, n, &fname2);
 
 				if(strcmp(fname, fname2)==0){
 					fname = NULL;
@@ -71,7 +71,7 @@ static bool includeParametersFromFile(PARAM_SET *set, int priority){
 				}
 			}
 
-			paramSet_readFromFile(fname, set, priority);
+			PARAM_SET_readFromFile(fname, set, priority);
 			if(++i>255){
 				print_errors("Error: Include file list is too long.");
 				return false;
@@ -105,15 +105,15 @@ static int ksitool_load_urls_from_env(PARAM_SET *set, const char *line, const ch
 	bool isUrlTagOk;
 
 
-	aggre = paramSet_isSetByName(set, "aggre");
-	s = paramSet_isSetByName(set, "s");
-	v = paramSet_isSetByName(set, "v");
-	x = paramSet_isSetByName(set, "x");
-	p = paramSet_isSetByName(set, "p");
-	T = paramSet_isSetByName(set, "T");
-	P = paramSet_isSetByName(set, "P");
-	E = paramSet_isSetByName(set, "E");
-	cnstr = paramSet_isSetByName(set, "cnstr");
+	aggre = PARAM_SET_isSetByName(set, "aggre");
+	s = PARAM_SET_isSetByName(set, "s");
+	v = PARAM_SET_isSetByName(set, "v");
+	x = PARAM_SET_isSetByName(set, "x");
+	p = PARAM_SET_isSetByName(set, "p");
+	T = PARAM_SET_isSetByName(set, "T");
+	P = PARAM_SET_isSetByName(set, "P");
+	E = PARAM_SET_isSetByName(set, "E");
+	cnstr = PARAM_SET_isSetByName(set, "cnstr");
 
 	/* It should indicate if constraints have been defined on command-line. */
 	constraintsAlreadySet = (E || cnstr || P) ? true : false;
@@ -144,7 +144,7 @@ static int ksitool_load_urls_from_env(PARAM_SET *set, const char *line, const ch
 						cnstr_warn = false;
 					}
 				} else {
-					paramSet_appendParameterByName("cnstr", chunk, env_name, set);
+					PARAM_SET_appendParameterByName("cnstr", chunk, env_name, set);
 				}
 		} else if (success == 0 && strcmp(env_name, "KSI_PUBFILE") != 0) {
 			if (ksitool_mightItBeUri(chunk)) {
@@ -173,7 +173,7 @@ static int ksitool_load_urls_from_env(PARAM_SET *set, const char *line, const ch
 	}
 
 	/* ADD URL */
-	paramSet_priorityAppendParameterByName(param_name, url, env_name, priority, set);
+	PARAM_SET_priorityAppendParameterByName(param_name, url, env_name, priority, set);
 	if(strcmp(env_name, "KSI_AGGREGATOR") == 0) strcpy(default_aggreUrl, url);
 	else if(strcmp(env_name, "KSI_EXTENDER") == 0) strcpy(default_extenderUrl, url);
 	else if(strcmp(env_name, "KSI_PUBFILE") == 0) strcpy(default_pubUrl, url);
@@ -182,8 +182,8 @@ static int ksitool_load_urls_from_env(PARAM_SET *set, const char *line, const ch
 	/* ADD password and user name */
 	if((s || aggre) && (strcmp(env_name, "KSI_AGGREGATOR") == 0)
 		|| (x || v || (p && T)) && (strcmp(env_name, "KSI_EXTENDER") == 0)) {
-		if (user[0]) paramSet_priorityAppendParameterByName("user", user, env_name, priority, set);
-		if (pass[0])paramSet_priorityAppendParameterByName("pass", pass, env_name, priority, set);
+		if (user[0]) PARAM_SET_priorityAppendParameterByName("user", user, env_name, priority, set);
+		if (pass[0])PARAM_SET_priorityAppendParameterByName("pass", pass, env_name, priority, set);
 	}
 
 	return res;
@@ -375,7 +375,7 @@ int main(int argc, char** argv, char **envp) {
 	print_init();
 
 	/*Create parameter set*/
-	paramSet_new("{s|sign}*{x|extend}*{p}*{v|verify}*{t}*{r}*{d}*{n}*{h|help}*{o|out}{i}{f}{b}{c}{C}{V}*"
+	PARAM_SET_new("{s|sign}*{x|extend}*{p}*{v|verify}*{t}*{r}*{d}*{n}*{h|help}*{o|out}{i}{f}{b}{c}{C}{V}*"
 				"{W}{S}>{X}>{P}>{F}{H}{T}{E}{inc}*{cnstr}*"
 				/*TODO: uncomment if implemented*/
 //				"{aggre}{htime}{setsystime}"
@@ -385,18 +385,18 @@ int main(int argc, char** argv, char **envp) {
 	if(set == NULL) goto cleanup;
 
 	/*Configure parameter set*/
-	paramSet_addControl(set, "{o}{log}", isPathFormOk, isOutputFileContOK, NULL);
-	paramSet_addControl(set, "{i}{b}{f}{V}{W}{inc}", isPathFormOk, isInputFileContOK, convert_repairPath);
-	paramSet_addControl(set, "{F}", isImprintFormatOK, isImprintContOK, NULL);
-	paramSet_addControl(set, "{H}", isHashAlgFormatOK, isHashAlgContOK, NULL);
-	paramSet_addControl(set, "{S}{X}{P}", isURLFormatOK, contentIsOK, convert_repairUrl);
-	paramSet_addControl(set, "{c}{C}", isIntegerFormatOK, isIntegerContOk, NULL);
-	paramSet_addControl(set, "{T}", isUTCTimeFormatOk, contentIsOK, convert_UTC_to_UNIX);
-	paramSet_addControl(set, "{E}", isEmailFormatOK, contentIsOK, NULL);
-	paramSet_addControl(set, "{user}{pass}", isUserPassFormatOK, contentIsOK, NULL);
-	paramSet_addControl(set, "{ref}", formatIsOK, contentIsOK, NULL);
-	paramSet_addControl(set, "{cnstr}", isConstraintFormatOK, contentIsOK, convert_replaceWithOid);
-	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{silent}{nowarn}", isFlagFormatOK, contentIsOK, NULL);
+	PARAM_SET_addControl(set, "{o}{log}", isPathFormOk, isOutputFileContOK, NULL);
+	PARAM_SET_addControl(set, "{i}{b}{f}{V}{W}{inc}", isPathFormOk, isInputFileContOK, convert_repairPath);
+	PARAM_SET_addControl(set, "{F}", isImprintFormatOK, isImprintContOK, NULL);
+	PARAM_SET_addControl(set, "{H}", isHashAlgFormatOK, isHashAlgContOK, NULL);
+	PARAM_SET_addControl(set, "{S}{X}{P}", isURLFormatOK, contentIsOK, convert_repairUrl);
+	PARAM_SET_addControl(set, "{c}{C}", isIntegerFormatOK, isIntegerContOk, NULL);
+	PARAM_SET_addControl(set, "{T}", isUTCTimeFormatOk, contentIsOK, convert_UTC_to_UNIX);
+	PARAM_SET_addControl(set, "{E}", isEmailFormatOK, contentIsOK, NULL);
+	PARAM_SET_addControl(set, "{user}{pass}", isUserPassFormatOK, contentIsOK, NULL);
+	PARAM_SET_addControl(set, "{ref}", formatIsOK, contentIsOK, NULL);
+	PARAM_SET_addControl(set, "{cnstr}", isConstraintFormatOK, contentIsOK, convert_replaceWithOid);
+	PARAM_SET_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{silent}{nowarn}", isFlagFormatOK, contentIsOK, NULL);
 	/*TODO: uncomment if implemented*/
 //	paramSet_addControl(set, "{aggre}{htime}{setsystime}", isFlagFormatOK, contentIsOK, NULL);
 
@@ -416,31 +416,31 @@ int main(int argc, char** argv, char **envp) {
 //	TaskDefinition_new(setSysTime,				"Set system time",				"aggre,setsystime,S","","",				"x,s,p,v,f,F,i,o,T,H,htime",		&taskDefArray[9]);
 
 	/*Read parameter set*/
-	paramSet_readFromCMD(argc, argv, set, 3);
+	PARAM_SET_readFromCMD(argc, argv, set, 3);
 
-	if (paramSet_isSetByName(set, "silent")) {
+	if (PARAM_SET_isSetByName(set, "silent")) {
 		print_disable(PRINT_WARNINGS | PRINT_INFO);
-	} else if (paramSet_isSetByName(set, "nowarn")) {
+	} else if (PARAM_SET_isSetByName(set, "nowarn")) {
 		print_disable(PRINT_WARNINGS);
 	}
 
 	/*Add default user and pass if S or X is defined and user or pass is not.*/
-	if(paramSet_isSetByName(set, "S") || paramSet_isSetByName(set, "X")){
-		if(!paramSet_isSetByName(set, "user"))
-			paramSet_priorityAppendParameterByName("user", "anon", "default", 3, set);
-		if(!paramSet_isSetByName(set, "pass"))
-			paramSet_priorityAppendParameterByName("pass", "anon", "default", 3, set);
+	if(PARAM_SET_isSetByName(set, "S") || PARAM_SET_isSetByName(set, "X")){
+		if(!PARAM_SET_isSetByName(set, "user"))
+			PARAM_SET_priorityAppendParameterByName("user", "anon", "default", 3, set);
+		if(!PARAM_SET_isSetByName(set, "pass"))
+			PARAM_SET_priorityAppendParameterByName("pass", "anon", "default", 3, set);
 	}
 
 	if(includeParametersFromFile(set, 2) == false) goto cleanup;
 	if(includeParametersFromEnvironment(set, envp, 1) == false) goto cleanup;
-	if(paramSet_isSetByName(set, "h")) goto cleanup;
+	if(PARAM_SET_isSetByName(set, "h")) goto cleanup;
 
-	if (paramSet_isSetByName(set, "E")) {
+	if (PARAM_SET_isSetByName(set, "E")) {
 		char tmp[1024];
 		char *email = NULL;
 		print_warnings("Warning: Parameter E is deprecated and will be removed in later versions. Use --cnstr instead.\n");
-		if (paramSet_getStrValue(set, "E", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &email) != PST_OK) {
+		if (PARAM_SET_getStrValue(set, "E", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &email) != PST_OK) {
 			print_errors("Error: Unable to convert parameter E to cnstr. Check email format.\n");
 			retval = EXIT_FAILURE;
 			goto cleanup;
@@ -450,7 +450,7 @@ int main(int argc, char** argv, char **envp) {
 
 		KSI_snprintf(tmp, sizeof(tmp), "%s=%s", KSI_CERT_EMAIL, email);
 
-		if (paramSet_appendParameterByName("cnstr", tmp, "E", set) != PST_OK) {
+		if (PARAM_SET_appendParameterByName("cnstr", tmp, "E", set) != PST_OK) {
 			print_errors("Error: Unable to convert parameter E to cnstr.\n");
 			retval = EXIT_FAILURE;
 			goto cleanup;
@@ -461,8 +461,8 @@ int main(int argc, char** argv, char **envp) {
 		print_disable(PRINT_WARNINGS | PRINT_INFO);
 	}
 
-	if(paramSet_isTypos(set)){
-		paramSet_printTypoWarnings(set);
+	if(PARAM_SET_isTypos(set)){
+		PARAM_SET_printTypoWarnings(set);
 		retval = EXIT_INVALID_CL_PARAMETERS;
 		goto cleanup;
 	}
@@ -472,20 +472,20 @@ int main(int argc, char** argv, char **envp) {
 		task = Task_getConsistentTask(taskDefArray, NUMBER_OF_TASKS, set);
 	}
 
-	paramSet_printUnknownParameterWarnings(set);
+	PARAM_SET_printUnknownParameterWarnings(set);
 	if(task == NULL){
 		Task_printError(taskDefArray, NUMBER_OF_TASKS, set);
 		retval = EXIT_INVALID_CL_PARAMETERS;
 		goto cleanup;
 	}
 
-	if(!paramSet_isFormatOK(set)){
-		paramSet_PrintErrorMessages(set);
+	if(!PARAM_SET_isFormatOK(set)){
+		PARAM_SET_PrintErrorMessages(set);
 		retval = EXIT_INVALID_CL_PARAMETERS;
 		goto cleanup;
 	}
 
-	paramSet_printIgnoredLowerPriorityWarnings(set);
+	PARAM_SET_printIgnoredLowerPriorityWarnings(set);
 
 	/*DO*/
 	if(Task_getID(task) == downloadPublicationsFile || Task_getID(task) == createPublicationString
@@ -510,9 +510,9 @@ int main(int argc, char** argv, char **envp) {
 
 cleanup:
 
-	if(paramSet_isSetByName(set, "h")) GT_pritHelp();
+	if(PARAM_SET_isSetByName(set, "h")) GT_pritHelp();
 
-	paramSet_free(set);
+	PARAM_SET_free(set);
 	for(i = 0; i < NUMBER_OF_TASKS; i++)
 		TaskDefinition_free(taskDefArray[i]);
 	Task_free(task);

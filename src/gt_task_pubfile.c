@@ -44,9 +44,9 @@ int GT_publicationsFileTask(Task *task){
 
 
 	set = Task_getSet(task);
-	paramSet_getStrValue(set, "o", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &outPubFileName);
-	r = paramSet_isSetByName(set, "r");
-	d = paramSet_isSetByName(set, "d");
+	PARAM_SET_getStrValue(set, "o", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &outPubFileName);
+	r = PARAM_SET_isSetByName(set, "r");
+	d = PARAM_SET_isSetByName(set, "d");
 
 
 	res = initTask(task ,&ksi, &err);
@@ -109,7 +109,7 @@ static int GT_publicationsFileTask_downloadPublicationsFile(Task *task, KSI_CTX 
 
 
 	set = Task_getSet(task);
-	t = paramSet_isSetByName(set, "t");
+	t = PARAM_SET_isSetByName(set, "t");
 
 
 	print_progressDesc(t, "Downloading publications file... ");
@@ -161,8 +161,8 @@ static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *
 
 
 	set = Task_getSet(task);
-	t = paramSet_isSetByName(set, "t");
-	paramSet_getIntValue(set, "T", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &publicationTime);
+	t = PARAM_SET_isSetByName(set, "t");
+	PARAM_SET_getIntValue(set, "T", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &publicationTime);
 
 	print_progressDesc(t, "Sending extend request... ");
 

@@ -66,7 +66,7 @@ void DEBUG_verifySignature(KSI_CTX *ksi, Task *task, int res, KSI_Signature *sig
 
 
 	set = Task_getSet(task);
-	d = paramSet_isSetByName(set, "d");
+	d = PARAM_SET_isSetByName(set, "d");
 
 	if (d && res == KSI_VERIFICATION_FAILURE) {
 		stepFailed = debug_getVerificationStepFailed(sig);
@@ -97,18 +97,18 @@ void DEBUG_verifyPubfile(KSI_CTX *ksi, Task *task, int res, KSI_PublicationsFile
 
 
 	set = Task_getSet(task);
-	d = paramSet_isSetByName(set, "d");
+	d = PARAM_SET_isSetByName(set, "d");
 
 	if (d && (res == KSI_PKI_CERTIFICATE_NOT_TRUSTED || res == KSI_INVALID_PKI_SIGNATURE)) {
 		print_info("\n");
 		OBJPRINT_publicationsFileSigningCert(pub);
 
 
-		if (paramSet_isSetByName(set, "cnstr")) {
+		if (PARAM_SET_isSetByName(set, "cnstr")) {
 			print_info("Expected publications file PKI certificate constraints:\n");
 		}
 
-		while (paramSet_getStrValue(set, "cnstr", NULL, PST_PRIORITY_NONE, i++, &constraint) == PST_OK) {
+		while (PARAM_SET_getStrValue(set, "cnstr", NULL, PST_PRIORITY_NONE, i++, &constraint) == PST_OK) {
 			char OID[1204];
 			char value[1204];
 			char *ret = NULL;

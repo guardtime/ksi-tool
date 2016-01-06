@@ -38,10 +38,10 @@ int GT_signTask(Task *task) {
 
 
 	set = Task_getSet(task);
-	paramSet_getStrValue(set, "o", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &outSigFileName);
-	n = paramSet_isSetByName(set, "n");
-	t = paramSet_isSetByName(set, "t");
-	d = paramSet_isSetByName(set, "d");
+	PARAM_SET_getStrValue(set, "o", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &outSigFileName);
+	n = PARAM_SET_isSetByName(set, "n");
+	t = PARAM_SET_isSetByName(set, "t");
+	d = PARAM_SET_isSetByName(set, "d");
 
 
 	res = initTask(task, &ksi, &err);
@@ -99,9 +99,9 @@ static int  getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh
 
 
 	set = Task_getSet(task);
-	paramSet_getStrValue(set, "f", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inDataFileName);
-	paramSet_getStrValue(set, "F", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &imprint);
-	H = paramSet_getStrValue(set, "H", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &hashAlg) == PST_OK ? true : false;
+	PARAM_SET_getStrValue(set, "f", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inDataFileName);
+	PARAM_SET_getStrValue(set, "F", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &imprint);
+	H = PARAM_SET_getStrValue(set, "H", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &hashAlg) == PST_OK ? true : false;
 
 
 	if(Task_getID(task) == signDataFile){

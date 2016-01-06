@@ -43,14 +43,14 @@ int GT_verifySignatureTask(Task *task){
 	char *inSigFileName = NULL;
 
 	set = Task_getSet(task);
-	paramSet_getStrValue(set, "i", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inSigFileName);
+	PARAM_SET_getStrValue(set, "i", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inSigFileName);
 
-	ref = paramSet_isSetByName(set, "ref");
-	f = paramSet_isSetByName(set, "f");
-	F = paramSet_isSetByName(set, "F");
-	n = paramSet_isSetByName(set, "n");
-	r = paramSet_isSetByName(set, "r");
-	d = paramSet_isSetByName(set, "d");
+	ref = PARAM_SET_isSetByName(set, "ref");
+	f = PARAM_SET_isSetByName(set, "f");
+	F = PARAM_SET_isSetByName(set, "F");
+	n = PARAM_SET_isSetByName(set, "n");
+	r = PARAM_SET_isSetByName(set, "r");
+	d = PARAM_SET_isSetByName(set, "d");
 
 	res = initTask(task, &ksi, &err);
 	if (res != KT_OK) goto cleanup;
@@ -132,9 +132,9 @@ int GT_verifyPublicationFileTask(Task *task){
 
 
 	set = Task_getSet(task);
-	paramSet_getStrValue(set, "b", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inPubFileName);
-	d = paramSet_isSetByName(set, "d");
-	t = paramSet_isSetByName(set, "t");
+	PARAM_SET_getStrValue(set, "b", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inPubFileName);
+	d = PARAM_SET_isSetByName(set, "d");
+	t = PARAM_SET_isSetByName(set, "t");
 
 	res = initTask(task, &ksi, &err);
 	if (res != KT_OK) goto cleanup;
@@ -198,7 +198,7 @@ static int GT_verifyTask_verifySigOnline(Task *task, KSI_CTX *ksi, ERR_TRCKR *er
 	}
 
 	set = Task_getSet(task);
-	t = paramSet_isSetByName(set, "t");
+	t = PARAM_SET_isSetByName(set, "t");
 
 	print_progressDesc(t, "Verifying online... ");
 	res = KSITOOL_Signature_verifyOnline(err, sig, ksi);
@@ -233,9 +233,9 @@ static int GT_verifyTask_verifyWithPublication(Task *task, KSI_CTX *ksi, ERR_TRC
 	}
 
 	set = Task_getSet(task);
-	paramSet_getStrValue(set, "ref", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &refStrn);
+	PARAM_SET_getStrValue(set, "ref", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &refStrn);
 
-	t = paramSet_isSetByName(set, "t");
+	t = PARAM_SET_isSetByName(set, "t");
 
 
 	isExtended = isSignatureExtended(sig);
@@ -324,8 +324,8 @@ static int GT_verifyTask_verify(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Si
 	}
 
 	set = Task_getSet(task);
-	t = paramSet_isSetByName(set, "t");
-	b = paramSet_isSetByName(set, "b");
+	t = PARAM_SET_isSetByName(set, "t");
+	b = PARAM_SET_isSetByName(set, "b");
 
 	isExtended = isSignatureExtended(sig);
 
@@ -359,8 +359,8 @@ static int GT_verifyTask_verifyData(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KS
 	}
 
 	set = Task_getSet(task);
-	f = paramSet_getStrValue(set, "f", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inDataFileName) == PST_OK ? true : false;
-	F = paramSet_getStrValue(set, "F", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &imprint) == PST_OK ? true : false;
+	f = PARAM_SET_getStrValue(set, "f", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inDataFileName) == PST_OK ? true : false;
+	F = PARAM_SET_getStrValue(set, "F", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &imprint) == PST_OK ? true : false;
 
 
 	if(f){
