@@ -117,11 +117,6 @@ static int GT_publicationsFileTask_downloadPublicationsFile(Task *task, KSI_CTX 
 	ERR_CATCH_MSG(err, res, "Error: Unable to get publication file.");
 	print_progressResult(res);
 
-	print_progressDesc(t, "Verifying publications file... ");
-	res = KSITOOL_verifyPublicationsFile(err, ksi, tmp);
-	ERR_CATCH_MSG(err, res, "Error: Unable to verify publication file.");
-	print_progressResult(res);
-
 	if (pubfile != NULL) {
 		*pubfile = tmp;
 	}

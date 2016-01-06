@@ -1,6 +1,11 @@
+* Bug fix. When verifying documents hash (-f|-F) signature is verified only once.
+
+2016-01-05 release (1.7.0)
+* Requires libksi v3.5 or v3.6 (recommended).
 * Parameter -T supports date represented as "YYYY-MM-DD hh:mm:ss" or as seconds since 1970-01-01 00:00:00 UTC.
 * When environment variables are defined incorrectly warnings and helpful error messages are printed.
 * When C API returns error that publications file URL is not configured, ksitool gives a hint how to do that.
+* Bug fix. When downloading publications file it is verified only once.
 
 2015-11-24 release (1.6.0)
 * New task dump publications file implemented (-pd -P <url> | [-b <file>]).

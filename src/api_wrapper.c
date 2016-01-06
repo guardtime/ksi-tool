@@ -214,19 +214,6 @@ int KSITOOL_Signature_verifyOnline(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *
 	return res;
 }
 
-int KSITOOL_Signature_verifyDataHash(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *docHash) {
-	int res;
-
-	res = KSI_Signature_verifyDataHash(sig, ctx, docHash);
-	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
-
-	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
-		appendNetworkErrors(err, res);
-		appendExtenderErrors(err, res);
-	}
-	return res;
-}
-
 int KSITOOL_createSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_DataHash *dataHash, KSI_Signature **sig) {
 	int res;
 	res = KSI_createSignature(ctx, dataHash, sig);
