@@ -21,7 +21,7 @@
 #include "gt_task_support.h"
 #include "obj_printer.h"
 #include "debug_print.h"
-#include "ParamSet/ParamValue.h"
+#include "ParamSet/param_value.h"
 #include "ParamSet/types.h"
 
 static int GT_verifyTask_verifySigOnline(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig);

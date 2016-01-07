@@ -24,8 +24,8 @@
 #include <stdio.h>
 #include "gt_cmd_control.h"
 #include "param_set_obj_impl.h"
-#include "Parameter.h"
-#include "ParamValue.h"
+#include "parameter.h"
+#include "param_value.h"
 #include "param_set.h"
 #include "types.h"
 

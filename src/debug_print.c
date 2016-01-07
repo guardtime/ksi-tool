@@ -23,7 +23,7 @@
 #include "obj_printer.h"
 #include "debug_print.h"
 #include "gt_task_support.h"
-#include "ParamSet/ParamValue.h"
+#include "ParamSet/param_value.h"
 #include "ParamSet/types.h"
 
 static int debug_getVerificationStepFailed(KSI_Signature *sig) {

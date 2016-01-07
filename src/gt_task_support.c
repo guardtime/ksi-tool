@@ -31,7 +31,7 @@
 #include "ParamSet/param_set.h"
 #include <ctype.h>
 #include "ksitool_err.h"
-#include "ParamSet/ParamValue.h"
+#include "ParamSet/param_value.h"
 #include "ParamSet/types.h"
 
 #ifdef _WIN32

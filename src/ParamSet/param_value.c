@@ -23,7 +23,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "param_set_obj_impl.h"
-#include "ParamValue.h"
+#include "param_value.h"
 
 static char *new_string(const char *str) {
 	char *tmp = NULL;
@@ -85,7 +85,25 @@ int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL
 
 	tmp->cstr_value = tmp_value;
 	tmp->source = tmp_source;
-	*newObj = tmp;
+
+	/**
+	 * If receiving pointer is NULL, initialize it. If receiving pointer is not
+	 * NULL iterate through linked list and append the value to the end.
+     */
+	if (*newObj == NULL) {
+		*newObj = tmp;
+	} else {
+		PARAM_VAL *current = *newObj;
+
+		while (1) {
+			if (current->next == NULL) {
+				current->next = tmp;
+				break;
+			}
+
+			current = current->next;
+		}
+	}
 
 	tmp = NULL;
 	tmp_value = NULL;
@@ -128,19 +146,20 @@ static int param_val_getPriority(PARAM_VAL *rootValue, int type, int *prio) {
 	 */
 	if (type == PST_PRIORITY_NONE || type >= PST_PRIORITY_VALID_BASE) {
 		tmp = type;
-	}
+	} else {
+		/* If priority asked is the highest or the lowest extract it. */
+		nxt = rootValue;
+		tmp = nxt->priority;
+		while (nxt != NULL) {
+			if ((type == PST_PRIORITY_HIGHEST && tmp < nxt->priority)
+				|| (type == PST_PRIORITY_LOWEST && tmp > nxt->priority)) {
+				tmp = nxt->priority;
+			}
 
-	/* If priority asked is the highest or the lowest extract it. */
-	nxt = rootValue;
-	tmp = nxt->priority;
-	while (nxt != NULL) {
-		if ((type == PST_PRIORITY_HIGHEST && tmp < nxt->priority)
-			|| (type == PST_PRIORITY_LOWEST && tmp > nxt->priority)) {
-			tmp = nxt->priority;
+			nxt = nxt->next;
 		}
-
-		nxt = nxt->next;
 	}
+
 
 	*prio = tmp;
 	res = PST_OK;
@@ -175,7 +194,7 @@ int PARAM_VAL_getElement(PARAM_VAL *rootValue, const char* source, int priority,
 	while (current != NULL) {
 		/* Increase count if (priority matches AND source matches). */
 		if ((prio == PST_PRIORITY_NONE || prio == current->priority)
-				&& (source == NULL || (source != NULL && strcmp(source, current->source)))) {
+				&& (source == NULL || (source != NULL && current->source != NULL && strcmp(source, current->source) == 0))) {
 
 			if ((at >= PST_INDEX_FIRST && i == at)
 				|| (at == PST_INDEX_LAST && current->next == NULL)) {
@@ -195,6 +214,36 @@ int PARAM_VAL_getElement(PARAM_VAL *rootValue, const char* source, int priority,
 	}
 
 	*val = tmp;
+	res = PST_OK;
+
+cleanup:
+
+	return res;
+}
+
+int PARAM_VAL_extract(PARAM_VAL *rootValue, const char **value, const char **source, int *priority) {
+	int res;
+
+	if (rootValue == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	/**
+	 * Extract parameters;
+     */
+	if (value != NULL) {
+		*value = rootValue->cstr_value;
+	}
+
+	if (source != NULL) {
+		*source = rootValue->source;
+	}
+
+	if (priority != NULL) {
+		*priority = rootValue->priority;
+	}
+
 	res = PST_OK;
 
 cleanup:

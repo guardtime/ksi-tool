@@ -22,7 +22,7 @@
 #include "obj_printer.h"
 #include "ksi/net.h"
 #include "ksi/hashchain.h"
-#include "ParamSet/ParamValue.h"
+#include "ParamSet/param_value.h"
 #include "ParamSet/types.h"
 
 static int GT_publicationsFileTask_downloadPublicationsFile(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_PublicationsFile **pubfile);

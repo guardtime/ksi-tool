@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include "obj_printer.h"
 #include "gt_task_support.h"
-#include "ParamSet/ParamValue.h"
+#include "ParamSet/param_value.h"
 #include "ParamSet/types.h"
 
 int GT_extendTask(Task *task) {

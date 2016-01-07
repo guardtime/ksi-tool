@@ -29,7 +29,7 @@
 #include <ksi/net.h>
 #include "ksitool_err.h"
 #include "gt_cmd_control.h"
-#include "ParamSet/ParamValue.h"
+#include "ParamSet/param_value.h"
 #include "ParamSet/types.h"
 
 

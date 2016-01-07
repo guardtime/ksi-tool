@@ -23,8 +23,8 @@
 #include <string.h>
 #include <ctype.h>
 #include "param_set_obj_impl.h"
-#include "ParamValue.h"
-#include "Parameter.h"
+#include "param_value.h"
+#include "parameter.h"
 
 
 #define FORMAT_OK 0
