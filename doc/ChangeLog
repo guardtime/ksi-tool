@@ -1,3 +1,4 @@
+* Bug fix. Curl and Openssl removed from packaging dependencies.
 * Bug fix. When verifying documents hash (-f|-F) signature is verified only once.
 
 2016-01-05 release (1.7.0)
