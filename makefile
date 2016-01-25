@@ -182,7 +182,7 @@ installer:$(BIN_DIR) $(OBJ_DIR) $(BIN_DIR)\$(TOOL_NAME).exe
 !MESSAGE Please install WiX to build installer.
 !ELSE
 	cd packaging\win
-	candle.exe ksitool.wxs -o ..\..\obj\ksitool.wixobj -dVersion=$(VER) -dName=$(TOOL_NAME) -dKsitool=$(BIN_DIR)\$(TOOL_NAME).exe -darch=$(INSTALL_MACHINE)
+	candle.exe ksitool.wxs -o ..\..\obj\ksitool.wixobj -dVersion=$(VER).$(BUILD_NUM) -dName=$(TOOL_NAME) -dKsitool=$(BIN_DIR)\$(TOOL_NAME).exe -darch=$(INSTALL_MACHINE)
 	light.exe ..\..\obj\ksitool.wixobj -o ..\..\bin\ksitool -pdbout ..\..\bin\ksitool.wixpdb -cultures:en-us -ext WixUIExtension
 	cd ..\..
 !ENDIF
