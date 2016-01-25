@@ -19,12 +19,21 @@
 # Guardtime Inc.
 #
 
-VER=$(tr -d [:space:] < VERSION.input)
-if hash git 2>/dev/null; then
-    BUILD=$(git rev-list HEAD | wc -l)
+if [ ! -f VERSION.input ]; then
+    if [ ! -f VERSION ]; then
+		echo "Error: File 'VERSION.input' nor 'VERSION' exists!" 1>&2
+		echo "Define 'VERSION.input' as <minor>.<major> to generate file 'VERSION' with git as <major>.<minor>.<build>." 1>&2
+		echo "Define 'VERSION' as <minor>.<major>.<build>." 1>&2
+		exit 1
+	fi
 else
-    BUILD="0"
-fi
+	VER=$(tr -d [:space:] < VERSION.input)
+	if hash git 2>/dev/null; then
+		BUILD=$(git rev-list HEAD | wc -l)
+	else
+		echo "Error: Git is not installed. Unable to generate build number. Build number is set to 0." 1>&2
+		BUILD="0"
+	fi
 
-PRF=ksitool-${VER}.${BUILD}
-echo ${VER}.${BUILD} > VERSION
+	echo ${VER}.${BUILD} > VERSION
+fi
