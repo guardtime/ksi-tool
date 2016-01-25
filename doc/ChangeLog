@@ -1,3 +1,5 @@
+* RPM package version 'STABLE' changed to '1'.
+* Versioning changed from <major>.<minor>.<batch> to <major>.<minor>.<build>.
 * Bug fix. Curl and Openssl removed from packaging dependencies.
 * Bug fix. When verifying documents hash (-f|-F) signature is verified only once.
 

@@ -43,7 +43,7 @@ gzip -c doc/ksitool.1 > $deb_dir/ksitool/usr/share/man/man1/ksitool.1.gz
 cp -f license.txt $deb_dir/ksitool/usr/share/doc/ksitool/license.txt
 
 #Get Version and architecture
-VER=$(tr -d [:space:] < VERSION)
+VER=$(./mkversion.sh && tr -d [:space:] < VERSION)
 ARCH=$(dpkg --print-architecture)
 
 echo build ver: $VER arch: $ARCH

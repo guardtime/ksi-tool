@@ -19,7 +19,7 @@
 # Guardtime Inc.
 
 
-PRF=ksitool-$(tr -d [:space:] < VERSION)
+PRF=ksitool-$(./mkversion.sh && tr -d [:space:] < VERSION)
 
 rm -f ${PRF}*.tar.gz && \
 mkdir -p config m4 && \

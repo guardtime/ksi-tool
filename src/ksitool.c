@@ -35,8 +35,8 @@
 #  endif
 #endif
 
-#ifdef COMMIT_ID
-#  define KSITOOL_VERSION_STRING "ksitool " VERSION "-" COMMIT_ID
+#ifdef BUILD_NUM
+#  define KSITOOL_VERSION_STRING "ksitool " VERSION "." BUILD_NUM
 #else
 #  define KSITOOL_VERSION_STRING "ksitool " VERSION
 #endif

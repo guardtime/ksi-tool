@@ -38,8 +38,9 @@ INSTALL_MACHINE = 32
 SRC_DIR = src
 OBJ_DIR = obj
 BIN_DIR = bin
-VERSION_FILE = VERSION
+VERSION_FILE = VERSION.input
 COMM_ID_FILE = COMMIT_ID
+BUILD_NUM_FILE = BUILD_NUM
 
 TOOL_NAME = ksitool
 
@@ -120,10 +121,23 @@ VER = \
 !INCLUDE <$(VERSION_FILE)>
 
 
+!IF [git rev-list HEAD | find /c /v "" > $(BUILD_NUM_FILE)] == 0
+BUILD_NUM = \
+!INCLUDE <$(BUILD_NUM_FILE)>
+!MESSAGE Git OK. Include build number $(BUILD_NUM).
+!IF [rm $(BUILD_NUM_FILE)] == 0
+!MESSAGE File $(BUILD_NUM_FILE) deleted.
+!ENDIF
+!ELSE
+BUILD_NUM=0
+!MESSAGE Git is not installed.
+!ENDIF
+
+
 !IF [git log -n1 --format="%H">$(COMM_ID_FILE)] == 0
 COM_ID = \
 !INCLUDE <$(COMM_ID_FILE)>
-!MESSAGE Git OK. Include commit ID.
+!MESSAGE Git OK. Include commit ID $(COM_ID).
 !IF [rm $(COMM_ID_FILE)] == 0
 !MESSAGE File $(COMM_ID_FILE) deleted.
 !ENDIF
@@ -135,7 +149,7 @@ COM_ID = \
 CCFLAGS = $(CCFLAGS) /DCOMMIT_ID=\"$(COM_ID)\"
 !ENDIF
 !IF "$(VER)" != ""
-CCFLAGS = $(CCFLAGS) /DVERSION=\"$(VER)\"
+CCFLAGS = $(CCFLAGS) /DVERSION=\"$(VER).$(BUILD_NUM)\"
 !ENDIF
 
 
