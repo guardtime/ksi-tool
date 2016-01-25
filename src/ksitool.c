@@ -35,11 +35,7 @@
 #  endif
 #endif
 
-#ifdef BUILD_NUM
-#  define KSITOOL_VERSION_STRING "ksitool " VERSION "." BUILD_NUM
-#else
-#  define KSITOOL_VERSION_STRING "ksitool " VERSION
-#endif
+#define KSITOOL_VERSION_STRING "ksitool " VERSION
 
 const char *getVersion(void) {
 	static const char versionString[] = KSITOOL_VERSION_STRING;
