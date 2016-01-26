@@ -38,9 +38,9 @@ INSTALL_MACHINE = 32
 SRC_DIR = src
 OBJ_DIR = obj
 BIN_DIR = bin
-VERSION_FILE = VERSION.input
+VERSION_FILE = VERSION
 COMM_ID_FILE = COMMIT_ID
-BUILD_NUM_FILE = BUILD_NUM
+
 
 TOOL_NAME = ksitool
 
@@ -121,19 +121,6 @@ VER = \
 !INCLUDE <$(VERSION_FILE)>
 
 
-!IF [git rev-list HEAD | find /c /v "" > $(BUILD_NUM_FILE)] == 0
-BUILD_NUM = \
-!INCLUDE <$(BUILD_NUM_FILE)>
-!MESSAGE Git OK. Include build number $(BUILD_NUM).
-!IF [rm $(BUILD_NUM_FILE)] == 0
-!MESSAGE File $(BUILD_NUM_FILE) deleted.
-!ENDIF
-!ELSE
-BUILD_NUM=0
-!MESSAGE Git is not installed.
-!ENDIF
-
-
 !IF [git log -n1 --format="%H">$(COMM_ID_FILE)] == 0
 COM_ID = \
 !INCLUDE <$(COMM_ID_FILE)>
@@ -149,7 +136,7 @@ COM_ID = \
 CCFLAGS = $(CCFLAGS) /DCOMMIT_ID=\"$(COM_ID)\"
 !ENDIF
 !IF "$(VER)" != ""
-CCFLAGS = $(CCFLAGS) /DVERSION=\"$(VER).$(BUILD_NUM)\"
+CCFLAGS = $(CCFLAGS) /DVERSION=\"$(VER)\"
 !ENDIF
 
 
@@ -182,7 +169,7 @@ installer:$(BIN_DIR) $(OBJ_DIR) $(BIN_DIR)\$(TOOL_NAME).exe
 !MESSAGE Please install WiX to build installer.
 !ELSE
 	cd packaging\win
-	candle.exe ksitool.wxs -o ..\..\obj\ksitool.wixobj -dVersion=$(VER).$(BUILD_NUM) -dName=$(TOOL_NAME) -dKsitool=$(BIN_DIR)\$(TOOL_NAME).exe -darch=$(INSTALL_MACHINE)
+	candle.exe ksitool.wxs -o ..\..\obj\ksitool.wixobj -dVersion=$(VER) -dName=$(TOOL_NAME) -dKsitool=$(BIN_DIR)\$(TOOL_NAME).exe -darch=$(INSTALL_MACHINE)
 	light.exe ..\..\obj\ksitool.wixobj -o ..\..\bin\ksitool -pdbout ..\..\bin\ksitool.wixpdb -cultures:en-us -ext WixUIExtension
 	cd ..\..
 !ENDIF
