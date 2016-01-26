@@ -21,7 +21,7 @@
 
 
 BUILD_DIR=~/rpmbuild
-version=$(tr -d [:space:] <VERSION)
+version=$(tr -d [:space:] < VERSION)
 
 autoreconf -if && \
 ./configure $* && \

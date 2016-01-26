@@ -19,47 +19,21 @@
 # Guardtime Inc.
 #
 
-old_version=$(cat VERSION)
-VERSION=($(echo $old_version | tr "." " "))
+if [ ! -f VERSION.input ]; then
+    if [ ! -f VERSION ]; then
+		echo "Error: File 'VERSION.input' nor 'VERSION' exists!" 1>&2
+		echo "Define 'VERSION.input' as <minor>.<major> to generate file 'VERSION' with git as <major>.<minor>.<build>." 1>&2
+		echo "Define 'VERSION' as <minor>.<major>.<build>." 1>&2
+		exit 1
+	fi
+else
+	VER=$(tr -d [:space:] < VERSION.input)
+	if hash git 2>/dev/null; then
+		BUILD=$(git rev-list HEAD | wc -l)
+	else
+		echo "Error: Git is not installed. Unable to generate build number. Build number is set to 0." 1>&2
+		BUILD="0"
+	fi
 
-echo "Old version: $old_version"
-
-function inc {
-	VERSION[$1]=$((${VERSION[$1]} + 1))
-	i=$(($1 + 1))
-	while [ $i -lt 3 ]; do
-		VERSION[$i]=0
-		i=$((i + 1))
-	done;
-}
-
-if [ $# -ne 1 ]; then 
-	echo "Usage $0 [major | minor | build] ..."
-	exit
+	echo ${VER}.${BUILD} > VERSION
 fi
-
-case "$1" in
-	"major" )
-		inc 0
-		;;
-	"minor" )
-		inc 1
-		;;
-	"build" )
-		inc 2 
-		;;
-	*)
-		echo "Unknown parameter"
-		exit
-		;;
-esac
-
-new_version=$(echo ${VERSION[@]} | tr " " ".")
-echo "New version: $new_version"
-
-tag="v$new_version"
-echo "Tag: $tag"
-
-git tag -a "$tag" -m "Auto-generated version $new_version"
-
-echo $new_version  > VERSION

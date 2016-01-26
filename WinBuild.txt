@@ -27,7 +27,7 @@ Building with Microsoft Visual Studio
 Prerequisites
 =====================================
 
-	To be able to build GT KSI API one must have the following software pieces:
+	To be able to build ksitool one must have the following software pieces:
 
 		1) Microsoft Visual Studio 10 or Windows SDK 7.1 for building tools.
 		2) Guardtime KSI API 3.1.0

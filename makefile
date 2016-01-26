@@ -41,6 +41,7 @@ BIN_DIR = bin
 VERSION_FILE = VERSION
 COMM_ID_FILE = COMMIT_ID
 
+
 TOOL_NAME = ksitool
 
 #Objects for making command-line tool
@@ -123,7 +124,7 @@ VER = \
 !IF [git log -n1 --format="%H">$(COMM_ID_FILE)] == 0
 COM_ID = \
 !INCLUDE <$(COMM_ID_FILE)>
-!MESSAGE Git OK. Include commit ID.
+!MESSAGE Git OK. Include commit ID $(COM_ID).
 !IF [rm $(COMM_ID_FILE)] == 0
 !MESSAGE File $(COMM_ID_FILE) deleted.
 !ENDIF

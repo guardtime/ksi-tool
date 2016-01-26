@@ -346,6 +346,7 @@ static int GT_verifyTask_verifyData(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KS
 	paramSet *set = NULL;
 	bool F, f;
 	char *imprint = NULL;
+	KSI_DataHash *input_hash = NULL;
 	KSI_DataHash *file_hsh = NULL;
 	KSI_DataHash *raw_hsh = NULL;
 	KSI_DataHasher *hsr = NULL;
@@ -360,6 +361,8 @@ static int GT_verifyTask_verifyData(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KS
 	f = paramSet_getStrValueByNameAt(set, "f",0, &inDataFileName);
 	F = paramSet_getStrValueByNameAt(set, "F",0, &imprint);
 
+	res = KSI_Signature_getDocumentHash(sig, &input_hash);
+	ERR_CATCH_MSG(err, res, "Error: Unable to extract input hash from the signature.");
 
 	if(f){
 		print_progressDesc(false, "Verifying file's %s hash... ", inDataFileName);
@@ -370,17 +373,22 @@ static int GT_verifyTask_verifyData(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KS
 			ERR_TRCKR_ADD(err, res, "Error: Unable to hash file. (%s)", errToString(res));
 			goto cleanup;
 		}
-		res = KSITOOL_Signature_verifyDataHash(err, sig, ksi, file_hsh);
-		ERR_CATCH_MSG(err, res, "Error: Unable to verify files hash.");
+
+		if (!KSI_DataHash_equals(file_hsh, input_hash)) {
+			ERR_TRCKR_ADD(err, res = KSI_VERIFICATION_FAILURE, "Error: Unable to verify files hash.");
+			goto cleanup;
+		}
 		print_progressResult(res);
 	}
 	if(F){
 		print_progressDesc(false, "Verifying imprint... ");
 		res = getHashFromCommandLine(imprint, ksi, err, &raw_hsh);
 		if (res != KT_OK) goto cleanup;
-		res = KSITOOL_Signature_verifyDataHash(err, sig, ksi, raw_hsh);
-		ERR_CATCH_MSG(err, res, "Error: Unable to verify hash.");
-		print_progressResult(res);
+
+		if (!KSI_DataHash_equals(file_hsh, input_hash)) {
+			ERR_TRCKR_ADD(err, res = KSI_VERIFICATION_FAILURE, "Error: Unable to verify hash.");
+			goto cleanup;
+		}
 	}
 
 	res = KT_OK;

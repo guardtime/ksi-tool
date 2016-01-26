@@ -35,11 +35,7 @@
 #  endif
 #endif
 
-#ifdef COMMIT_ID
-#  define KSITOOL_VERSION_STRING "ksitool " VERSION "-" COMMIT_ID
-#else
-#  define KSITOOL_VERSION_STRING "ksitool " VERSION
-#endif
+#define KSITOOL_VERSION_STRING "ksitool " VERSION
 
 const char *getVersion(void) {
 	static const char versionString[] = KSITOOL_VERSION_STRING;

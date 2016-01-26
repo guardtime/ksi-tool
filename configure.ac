@@ -21,7 +21,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.59])
-AC_INIT([ksitool], m4_esyscmd([tr -d [:space:] <VERSION]), [support@guardtime.com])
+AC_INIT([ksitool], m4_esyscmd([tr -d [:space:] < VERSION]), [support@guardtime.com])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign -Wall -Werror foreign])
@@ -47,8 +47,6 @@ AC_PROG_CC
 
 AC_PROG_LN_S
 # Checks for libraries.
-AC_CHECK_LIB([crypto], [SHA256_Init], [], [AC_MSG_FAILURE([Could not find OpenSSL 0.9.8+ libraries.])])
-AC_CHECK_LIB([curl], [curl_easy_init], [], [AC_MSG_FAILURE([Could nod find Curl libraries.])])
 AC_CHECK_LIB([ksi], [KSI_CTX_new], [], [AC_MSG_FAILURE([Could not find KSI libraries.])])
 
 
