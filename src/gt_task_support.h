@@ -81,16 +81,19 @@ int initTask(Task *task ,KSI_CTX **ksi, ERR_TRCKR **err);
 void closeTask(KSI_CTX *ksi);
 
 /**
- * Calculates the hash of an input file.
+ * Calculates the hash of an input file or stream.
+ * If fnameout is not NULL, saves input data to a file. This is useful
+ * for hashing a stream and saving the stream at the same time.
  *
- * @param err	Error tracker.
- * @param hsr	Hasher for file hashing.
- * @param fname	Files name to be hashed.
- * @param hash	Hash value of the file.
+ * @param err		Error tracker.
+ * @param hsr		Hasher for file hashing.
+ * @param fnamein	Files name to be hashed. If files name is -, file is read from stdin.
+ * @param fnameout	Files name where input data is saved.
+ * @param hash		Hash value of the file.
  *
  * @return KT_OK if successful, error code otherwise.
  */
-int getFilesHash(ERR_TRCKR *err, KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash);
+int getFilesHash(ERR_TRCKR *err, KSI_DataHasher *hsr, const char *fnamein, const char *fnameout, KSI_DataHash **hash);
 
 /**
  * Saves signature object to a file. If files name is -, file is written to stdout.
