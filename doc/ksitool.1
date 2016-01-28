@@ -8,7 +8,7 @@
 
 
 .SH SYNOPSIS
-Sign data file or hash:
+Sign data file, stream (stdin) or hash:
 .br
 \fBksitool -s -f\fI file\fR | [\fB-F\fI hash\fR]\fB -o\fI out.ksig\fR [\fI more options\fR]
 .br
@@ -77,7 +77,7 @@ This is a general signing and signature verification tool for Guardtime Keyless 
 Use for downloading publication file and creating publication string.
 .TP
 .B -s, --sign
-Use for signing document or hash.
+Use for signing document, stream (stdin) or hash.
 .TP
 .B -v, --verify
 Use for signature and publication file verification.
@@ -92,7 +92,7 @@ Use for online verification or signature extending.
 Use specified publication file.
 .TP
 .BI -f\  file
-File to be signed or verified.
+File to be signed or verified. \fIfile\fR can be \fB-\fR to sign a stream (stdin).
 .TP
 .BI -F\  hash
 Data hash to be signed or verified. Hash format: <alg>:<hash in hex>.
@@ -107,6 +107,9 @@ Input signature token file to be extended or verified.
 .TP
 .BI -o\  file
 Output file name to store signature token or publication file.
+.TP
+\fB-D, --dataout\fI  file
+Output file name to store data from stream (stdin).
 .TP
 .BI --ref\  str
 Publication string as base 32 encoded string. Use with 
@@ -290,7 +293,13 @@ In the following examples it is assumed that default service urls are defined as
 \fB2\fR To sign a file \fIfile\fR and save signature to \fIsig.ksig\fR call:
 .RS
 .br
-\fBksitool -s -f \fIfile\fR \fBB-o \fIsig.ksig\fR
+\fBksitool -s -f \fIfile\fR \fB-o \fIsig.ksig\fR
+.RE
+
+\fB2.1\fR To sign a stream (stdin), save data from stream to \fIfile\fR and save signature to \fIsig.ksig\fR call:
+.RS
+.br
+\fBksitool -s -f - -D \fIfile\fB -o \fIsig.ksig\fR
 .RE
 
 \fB3\fR To sign a data hash (hashed with SHA256) and save the resulting signature to file \fIsig.ksig\fR call:

@@ -1,3 +1,5 @@
+* New parameter -D for saving data from stream (stdin) to file while signing it.
+
 2016-01-26 release (1.8.0)
 * RPM package version 'STABLE' changed to '1'.
 * Bug fix. Curl and Openssl removed from packaging dependencies.
