@@ -65,7 +65,8 @@ SET SH1_file=../test/out/sh1.ksig
 SET SH256_file=../test/out/SH256.ksig
 SET PIPE_FILE=../test/out/pipe.file
 SET PIPE_SIG=../test/out/pipe.sig
-SET PIPE_LOG_FILE../test/out/ksi.pipe.log
+SET PIPE_LOG_FILE=../test/out/ksi.pipe.log
+SET SAVED_STREAM=../test/out/savedStream
 
 SET RIPMED160_file=../test/out/RIPMED160.ksig
 SET TEST_FILE_OUT=../test/out/testFile
@@ -80,7 +81,7 @@ REM set CERTS= %CERTS% -V "C:\Users\Taavi\Documents\GuardTime\certs\VerSign Clas
 set CERTS= %CERTS% -V "C:\Users\Taavi\Documents\GuardTime\certs\ca-bundle.trust.crt"
 
 rem remove dir
-rm -r ..\test\out
+rd /S /Q ..\test\out
 md ..\test\out\
 
 SET GLOBAL= %CERTS% %SERVICES%
@@ -90,8 +91,7 @@ SET EXTEND_FLAGS= -t -t
 
 
 
-ksitool.exe -vd -i test\testData-2015-01.gtts --log
-logi.txt
+ksitool.exe -vd -i test\testData-2015-01.gtts --log logi.txt
 
 echo ****************** Download publications file ******************
 ksitool.exe -p -t -o %PUBFILE% %GLOBAL% -d 
@@ -107,6 +107,15 @@ echo %errorlevel%
 
 echo ****************** Sign data ******************
 ksitool.exe -s %GLOBAL% %SIGN_FLAGS% -f %TEST_FILE% -o %TEST_FILE_OUT%.ksig -b %PUBFILE% 
+echo %errorlevel%
+
+echo ****************** Sign and save stream ******************
+echo "TEST" > %PIPE_FILE%
+echo "TEST" | ksitool.exe %GLOBAL% -s -f - -D %SAVED_STREAM% -o %PIPE_SIG%
+echo %errorlevel%
+ksitool.exe %GLOBAL% -v -i %PIPE_SIG% -f %SAVED_STREAM%
+echo %errorlevel%
+ksitool.exe %GLOBAL% -v -i %PIPE_SIG% -f %PIPE_FILE%
 echo %errorlevel%
 
 
@@ -254,7 +263,7 @@ echo "TEST" | ksitool.exe %GLOBAL% -s -f - -o - | ksitool.exe %GLOBAL% -v -f %PI
 echo %errorlevel%
  
 echo ****************** Test stdin stdout 3******************
-ksitool.exe %GLOBAL% -p -T 1410848909 --log - > PIPE_LOG_FILE
+ksitool.exe %GLOBAL% -p -T 1410848909 --log - > %PIPE_LOG_FILE%
 echo %errorlevel%
 
 echo ****************** Test stdin stdout 4******************
