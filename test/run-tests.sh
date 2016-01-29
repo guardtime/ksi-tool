@@ -57,7 +57,7 @@ TESTSIG="ok-sig-2014-08-01.1.ksig"
 
 echo \# Running tests on `uname -n` at `date '+%F %T %Z'`, start time: ${DATE}
 
-plan_tests 101
+plan_tests 104
 
 
 diag "######    Publications file download"
@@ -108,6 +108,14 @@ diag "--------------------------------------------------------------------------
 diag "######    Sign and save log file"
 okx $exec -s -f ${resource_dir}/testFile -o ${tmp}/tmp.ksig --log ${tmp}/out.log
 like "`[ -f ${tmp}/out.log ] && echo 'Log file exists' || echo 'Log file does not exist' 2>&1`" "Log file exists"
+diag "------------------------------------------------------------------------------";
+
+
+diag "######    Sign and save stream (stdin)"
+echo "TEST" > ${tmp}/pipeFileClone
+like "`echo \"TEST\" | $exec -s -f - -D ${tmp}/savedStream -o ${tmp}/pipeFile.ksig`" "Signature saved." "Stream saved and signed successfully"
+okx $exec -v -i ${tmp}/pipeFile.ksig -f ${tmp}/savedStream
+okx $exec -v -i ${tmp}/pipeFile.ksig -f ${tmp}/pipeFileClone
 diag "------------------------------------------------------------------------------";
 
 
