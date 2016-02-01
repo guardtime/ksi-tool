@@ -255,7 +255,7 @@ diag "--------------------------------------------------------------------------
 like "`$exec -x -i ${resource_dir}/$TESTSIG -o ${tmp}/tmp_n.ksig -T $(date --date="+1 year" +"%s") 2>&1`" "Error: The request asked for hash values newer than the current real time" "Error extend to the future [-T]"
 diag "------------------------------------------------------------------------------";
 
-like "`$exec -x -i ${resource_dir}/testFile -o ${tmp}/tmp_n.ksig 2>&1`" "Error: Unable to load signature file from" "Error verify not suitable format"
+like "`$exec -v -i ${resource_dir}/testFile -o ${tmp}/tmp_n.ksig 2>&1`" "Error: Unable to load signature file from" "Error verify not suitable format"
 diag "------------------------------------------------------------------------------";
 
 like "`$exec -v -i ${tmp}/tmp.ksig -f ${SCRIPT_DIR}/resource/TestData.txt 2>&1`" "Error: Unable to verify files hash." "Error verifying signature and wrong file"
