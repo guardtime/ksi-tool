@@ -27,6 +27,7 @@ SET WAIT=5
 
 REM Services to use
 SET SIG_SERV_IP=http://ksigw.test.guardtime.com:3333/gt-signingservice 
+SET TCP_SERV=ksi+tcp://ksigw.test.guardtime.com:3332
 REM SET SIG_SERV_IP=http://192.168.100.36:3333/
 REM SET PUB_SERV_IP=http://172.20.20.7/publications.tlv
 set PUB_SERV_IP=Http://verify.guardtime.com/ksi-publications.bin
@@ -78,7 +79,7 @@ rem ksitool.exe -x -i ..\test\out\testFile.ksig -o ..\test\out\__extended -X htt
 REM Cert files to use
 REM SET CERTS= -V "C:\Users\Taavi\Documents\GuardTime\certs\Symantec Class 1 Individual Subscriber CA(64).crt" 
 REM set CERTS= %CERTS% -V "C:\Users\Taavi\Documents\GuardTime\certs\VerSign Class 1 Public Primary Certification Authority - G3(64).crt"
-set CERTS= %CERTS% -V "C:\Users\Taavi\Documents\GuardTime\certs\ca-bundle.trust.crt"
+REM set CERTS= %CERTS% -V "C:\Users\Taavi\Documents\GuardTime\certs\ca-bundle.trust.crt"
 
 rem remove dir
 rd /S /Q ..\test\out
@@ -121,6 +122,19 @@ echo %errorlevel%
 
 echo ******************Sign data over TCP ******************
 ksitool.exe -s %SIGN_FLAGS% -f %TEST_FILE% -o %TEST_FILE_OUT%Tcp.ksig -S %TCP_SERV% %TCP_login%
+echo %errorlevel%
+
+echo ******************Sign data with specific algorithm over TCP ******************
+ksitool.exe -s %SIGN_FLAGS% -f %TEST_FILE% -H SHA1 -o %TEST_FILE_OUT%Tcp.ksig -S %TCP_SERV% %TCP_login%
+echo %errorlevel%
+
+ksitool.exe -s %SIGN_FLAGS% -f %TEST_FILE% -H SHA2-256 -o %TEST_FILE_OUT%Tcp.ksig -S %TCP_SERV% %TCP_login%
+echo %errorlevel%
+
+ksitool.exe -s %SIGN_FLAGS% -f %TEST_FILE% -H SHA2-384 -o %TEST_FILE_OUT%Tcp.ksig -S %TCP_SERV% %TCP_login%
+echo %errorlevel%
+
+ksitool.exe -s %SIGN_FLAGS% -f %TEST_FILE% -H SHA2-512 -o %TEST_FILE_OUT%Tcp.ksig -S %TCP_SERV% %TCP_login%
 echo %errorlevel%
 
 
