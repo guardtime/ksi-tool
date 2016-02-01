@@ -93,11 +93,13 @@ static int  getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh
 	KSI_DataHasher *hsr = NULL;
 	KSI_DataHash *tmp = NULL;
 	char *inDataFileName = NULL;
+	char *outDataFileName = NULL;
 	char *imprint = NULL;
 
 
 	set = Task_getSet(task);
 	paramSet_getStrValueByNameAt(set, "f", 0,&inDataFileName);
+	paramSet_getStrValueByNameAt(set, "D", 0,&outDataFileName);
 	paramSet_getStrValueByNameAt(set, "F", 0,&imprint);
 	H = paramSet_getStrValueByNameAt(set, "H", 0,&hashAlg);
 
@@ -116,7 +118,7 @@ static int  getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh
 		ERR_APPEND_KSI_ERR(err, res, KSI_UNAVAILABLE_HASH_ALGORITHM);
 		ERR_CATCH_MSG(err, res, "Error: Unable to open hasher.");
 
-		res = getFilesHash(err, hsr, inDataFileName, &tmp);
+		res = getFilesHash(err, hsr, inDataFileName, outDataFileName, &tmp);
 		if (res != KT_OK) {
 			ERR_TRCKR_ADD(err, res, "Error: Unable to hash file. (%s)", errToString(res));
 			goto cleanup;
