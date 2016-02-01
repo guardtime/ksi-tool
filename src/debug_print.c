@@ -23,8 +23,7 @@
 #include "obj_printer.h"
 #include "debug_print.h"
 #include "gt_task_support.h"
-#include "ParamSet/param_value.h"
-#include "ParamSet/types.h"
+#include "param_set/param_value.h"
 
 static int debug_getVerificationStepFailed(KSI_Signature *sig) {
 	int stat;
@@ -56,7 +55,7 @@ static int debug_getVerificationStepFailed(KSI_Signature *sig) {
 	return 0;
 }
 
-void DEBUG_verifySignature(KSI_CTX *ksi, Task *task, int res, KSI_Signature *sig) {
+void DEBUG_verifySignature(KSI_CTX *ksi, TASK *task, int res, KSI_Signature *sig) {
 	PARAM_SET *set = NULL;
 	bool d;
 	int stepFailed;
@@ -65,7 +64,7 @@ void DEBUG_verifySignature(KSI_CTX *ksi, Task *task, int res, KSI_Signature *sig
 	if (ksi == NULL || task == NULL || sig == NULL) return;
 
 
-	set = Task_getSet(task);
+	set = TASK_getSet(task);
 	d = PARAM_SET_isSetByName(set, "d");
 
 	if (d && res == KSI_VERIFICATION_FAILURE) {
@@ -87,7 +86,7 @@ void DEBUG_verifySignature(KSI_CTX *ksi, Task *task, int res, KSI_Signature *sig
 	}
 }
 
-void DEBUG_verifyPubfile(KSI_CTX *ksi, Task *task, int res, KSI_PublicationsFile *pub) {
+void DEBUG_verifyPubfile(KSI_CTX *ksi, TASK *task, int res, KSI_PublicationsFile *pub) {
 	PARAM_SET *set = NULL;
 	bool d;
 	char *constraint = NULL;
@@ -96,7 +95,7 @@ void DEBUG_verifyPubfile(KSI_CTX *ksi, Task *task, int res, KSI_PublicationsFile
 	if (ksi == NULL || task == NULL || pub == NULL) return;
 
 
-	set = Task_getSet(task);
+	set = TASK_getSet(task);
 	d = PARAM_SET_isSetByName(set, "d");
 
 	if (d && (res == KSI_PKI_CERTIFICATE_NOT_TRUSTED || res == KSI_INVALID_PKI_SIGNATURE)) {

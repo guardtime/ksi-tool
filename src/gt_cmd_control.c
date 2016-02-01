@@ -364,57 +364,27 @@ ContentStatus contentIsOK(const char *alg){
 	return PARAM_OK;
 }
 
-
-
-
-
-
-const char *getFormatErrorString(FormatStatus res){
+const char *getParameterErrorString(int res) {
 	switch (res) {
-		case FORMAT_OK: return "(Parameter OK)";
-			break;
-		case FORMAT_NULLPTR: return "(Parameter must have value)";
-			break;
-		case FORMAT_NOCONTENT: return "(Parameter has no content)";
-			break;
-		case FORMAT_INVALID: return "(Parameter is invalid)";
-			break;
-		case FORMAT_INVALID_OID: return "(OID is invalid)";
-			break;
-		case FORMAT_URL_UNKNOWN_SCHEME: return "(URL scheme is unknown)";
-			break;
-		case FORMAT_FLAG_HAS_ARGUMENT: return "(Parameter must not have arguments)";
-			break;
-		case FORMAT_INVALID_UTC: return "(Time not formatted as YYYY-MM-DD hh:mm:ss)";
-			break;
-		case FORMAT_INVALID_UTC_OUT_OF_RANGE: return "(Time out of range)";
-			break;
-		default: return "(Unknown error)";
-			break;
+		case PARAM_OK:
+		case FORMAT_NULLPTR: return "Format error: Parameter must have value";
+		case FORMAT_NOCONTENT: return "Parameter has no content";
+		case FORMAT_INVALID: return "Parameter is invalid";
+		case FORMAT_INVALID_OID: return "OID is invalid";
+		case FORMAT_URL_UNKNOWN_SCHEME: return "URL scheme is unknown";
+		case FORMAT_FLAG_HAS_ARGUMENT: return "Parameter must not have arguments";
+		case FORMAT_INVALID_UTC: return "Time not formatted as YYYY-MM-DD hh:mm:ss";
+		case FORMAT_INVALID_UTC_OUT_OF_RANGE: return "Time out of range";
+		case PARAM_INVALID: return "Parameter is invalid";
+		case HASH_ALG_INVALID_NAME: return "Algorithm name is incorrect";
+		case HASH_IMPRINT_INVALID_LEN: return "Hash length is incorrect";
+		case FILE_ACCESS_DENIED: return "File access denied";
+		case FILE_DOES_NOT_EXIST: return "File does not exist";
+		case FILE_INVALID_PATH: return "Invalid path";
+		case INTEGER_TOO_LARGE: return "Integer value is too large";
+		default: return "Unknown error";
 	}
-}
-
-const char *getParameterContentErrorString(ContentStatus res){
-	switch (res) {
-	case PARAM_OK: return "(Parameter OK)";
-		break;
-	case PARAM_INVALID: return "(Parameter is invalid)";
-		break;
-	case HASH_ALG_INVALID_NAME: return "(Algorithm name is incorrect)";
-		break;
-	case HASH_IMPRINT_INVALID_LEN: return "(Hash length is incorrect)";
-		break;
-	case FILE_ACCESS_DENIED: return "(File access denied)";
-		break;
-	case FILE_DOES_NOT_EXIST: return "(File does not exist)";
-		break;
-	case FILE_INVALID_PATH: return "(Invalid path)";
-		break;
-	case INTEGER_TOO_LARGE: return "(Integer value is too large)";
-		break;
-	default: return "(Unknown error)";
-		break;
-	}
+	return NULL;
 }
 
 int convert_repairUrl(const char* arg, char* buf, unsigned len){

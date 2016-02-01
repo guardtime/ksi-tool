@@ -21,27 +21,17 @@
 #ifndef SET_PARAM_VALUE_H
 #define	SET_PARAM_VALUE_H
 
-#include "types.h"
+#include "param_set.h"
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
-enum enum_priority {
-	PST_PRIORITY_NOTDEFINED = -4,
-	PST_PRIORITY_HIGHEST = -3,
-	PST_PRIORITY_LOWEST = -2,
-	PST_PRIORITY_NONE = -1,
-	PST_PRIORITY_VALID_BASE = 0
-}; 
-
-enum enum_value_index {
-	PST_INDEX_LAST = -1,
-	PST_INDEX_FIRST = PST_PRIORITY_VALID_BASE,
-}; 
-
 /**
- * Creates a new parameter value object.
+ * Creates a new parameter value object. If \c newObj is pointer to NULL, a new
+ * object is created. If \c newObj points to existing \c PARAM_VAL object, a new
+ * value is created and appended to the end of the linked list. After use, the 
+ * root value must be freed by calling \c PARAM_VAL_free.
  * \param value		value as c-string. Can be NULL.
  * \param source	describes the source e.g. file name or environment variable. Can be NULL.
  * \param priority	priority of the parameter, must be positive.
@@ -76,7 +66,51 @@ void PARAM_VAL_free(PARAM_VAL *rootValue);
  */
 int PARAM_VAL_getElement(PARAM_VAL *rootValue, const char* source, int priority, int at, PARAM_VAL** val);
 
+int PARAM_VAL_popElement(PARAM_VAL **rootValue, const char* source, int priority, int at, PARAM_VAL** val);
 
+int PARAM_VAL_extract(PARAM_VAL *rootValue, const char **value, const char **source, int *priority);
+
+/**
+ * Count the values with given constraints. If there are no values matching the
+ * constraints 0 is returned.
+ * \param	rootValue	The first PARAM_VAL link in the linked list.
+ * \param	source		Constraint for the source.
+ * \param	prio		Constraint for the priority.
+ * \param	count		Pointer to int receiving the count value.
+ * \return \c PST_OK when successful, error code otherwise..
+ */
+int PARAM_VAL_getElementCount(PARAM_VAL *rootValue, const char *source, int prio, int *count);
+
+/**
+ * Count the invalid values with given constraints. If there are no values matching the
+ * constraints 0 is returned.
+ * \param	rootValue	The first PARAM_VAL link in the linked list.
+ * \param	source		Constraint for the source.
+ * \param	prio		Constraint for the priority.
+ * \param	count		Pointer to int receiving the count value.
+ * \return \c PST_OK when successful, error code otherwise..
+ */
+int PARAM_VAL_getInvalidCount(PARAM_VAL *rootValue, const char *source, int prio, int *count);
+
+/**
+ * Extract the next priority level <nextPrio> according to the <current>. If
+ * <current> is set to \c PST_PRIORITY_HIGHEST or \c PST_PRIORITY_LOWEST the lowest
+ * or highest value is returned. If <current> is set to other values lower than
+ * \c PST_PRIORITY_VALID_BASE an error is returned. If current is set to a value
+ * that is exactly the priority of the highest value error code
+ * \c PST_PARAMETER_VALUE_NOT_FOUND is returned.
+ *
+ * \param	rootValue	The first PARAM_VAL link in the linked list.
+ * \param	current		Priority value or (\c PST_PRIORITY_LOWEST or \c PST_PRIORITY_HIGHEST)
+ * \param	nextPrio	Next highest priority or the lowest or highest.
+ * 
+ * \return \c PST_OK when successful, error code otherwise.
+ */
+int PARAM_VAL_getPriority(PARAM_VAL *rootValue, int current, int *nextPrio);
+
+int PARAM_VAL_getErrors(PARAM_VAL *rootValue, int *format, int* content);
+
+int PARAM_VAL_getInvalid(PARAM_VAL *rootValue, const char* source, int priority, int at, PARAM_VAL** val);
 #ifdef	__cplusplus
 }
 #endif

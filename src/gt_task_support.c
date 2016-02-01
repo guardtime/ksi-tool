@@ -28,11 +28,10 @@
 #include <ksi/compatibility.h>
 #include <stdio.h>
 #include "gt_task_support.h"
-#include "ParamSet/param_set.h"
 #include <ctype.h>
 #include "ksitool_err.h"
-#include "ParamSet/param_value.h"
-#include "ParamSet/types.h"
+#include "param_set/param_set.h"
+#include "param_set/param_value.h"
 
 #ifdef _WIN32
 #	include <windows.h>
@@ -93,7 +92,7 @@ cleanup:
 	return res;
 }
 
-static int ksitool_initLogger(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
+static int ksitool_initLogger(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	int res;
 	PARAM_SET *set = NULL;
 	FILE *writeLogTo = NULL;
@@ -105,7 +104,7 @@ static int ksitool_initLogger(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 		return KT_INVALID_ARGUMENT;
 	}
 
-	set = Task_getSet(task);
+	set = TASK_getSet(task);
 
 	log = PARAM_SET_getStrValue(set, "log", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &outLogfile) == PST_OK ? true : false;
 
@@ -131,7 +130,7 @@ cleanup:
 	return res;
 }
 
-static int ksitool_initNetworkProvider(Task *task, KSI_CTX *ksi, ERR_TRCKR *err){
+static int ksitool_initNetworkProvider(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err){
 	int res;
 	PARAM_SET *set = NULL;
 	bool P, C, c, s, v, x, p, T, aggre;
@@ -148,7 +147,7 @@ static int ksitool_initNetworkProvider(Task *task, KSI_CTX *ksi, ERR_TRCKR *err)
 		return KT_INVALID_ARGUMENT;
 	}
 
-	set = Task_getSet(task);
+	set = TASK_getSet(task);
 	PARAM_SET_getStrValue(set, "S", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_FIRST, &signingService_url);
 	PARAM_SET_getStrValue(set, "X", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_FIRST, &verificationService_url);
 	P = PARAM_SET_getStrValue(set, "P", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &publicationsFile_url) == PST_OK ? true : false;
@@ -213,22 +212,22 @@ cleanup:
 	return res;
 }
 
-static int ksitool_addConstraints(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
+static int ksitool_addConstraints(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	int res;
 	PARAM_SET *set = NULL;
 	unsigned i = 0;
-	bool cnstr;
+	int cnstr;
 	char *constraint = NULL;
 	unsigned constraint_count = 0;
 	KSI_CertConstraint *constraintArray = NULL;
 
 	/*Get parameter values*/
-	set = Task_getSet(task);
+	set = TASK_getSet(task);
 	cnstr = PARAM_SET_isSetByName(set,"cnstr");
 
 
 	if (cnstr) {
-		if (PARAM_SET_getValueCountByName(set,	"cnstr", &constraint_count) != PST_OK) {
+		if (PARAM_SET_getValueCount(set, "{cnstr}", NULL, PST_PRIORITY_NONE, &constraint_count) != PST_OK) {
 			ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, NULL);
 			goto cleanup;
 		}
@@ -290,7 +289,7 @@ cleanup:
 	return res;
 }
 
-static int ksitool_initTrustStore(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
+static int ksitool_initTrustStore(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	int res;
 	PARAM_SET *set = NULL;
 	KSI_PKITruststore *refTrustStore = NULL;
@@ -304,7 +303,7 @@ static int ksitool_initTrustStore(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	}
 
 	/*Get parameter values*/
-	set = Task_getSet(task);
+	set = TASK_getSet(task);
 	V = PARAM_SET_isSetByName(set,"V");
 	W = PARAM_SET_getStrValue(set, "W", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &lookupDir) == PST_OK ? true : false;
 	cnstr = PARAM_SET_isSetByName(set,"cnstr");
@@ -341,7 +340,7 @@ cleanup:
 	return res;
 }
 
-static int ksitool_initPublicationFile(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
+static int ksitool_initPublicationFile(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	int res = KSI_UNKNOWN_ERROR;
 	PARAM_SET *set = NULL;
 	KSI_PublicationsFile *tmpPubFile = NULL;
@@ -353,10 +352,10 @@ static int ksitool_initPublicationFile(Task *task, KSI_CTX *ksi, ERR_TRCKR *err)
 	}
 
 	/*Get parameter values*/
-	set = Task_getSet(task);
+	set = TASK_getSet(task);
 	b = PARAM_SET_getStrValue(set, "b", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inPubFileName) == PST_OK ? true : false;
 
-	if(b && (Task_getID(task) != downloadPublicationsFile && Task_getID(task) != verifyPublicationsFile)){
+	if(b && (TASK_getID(task) != downloadPublicationsFile && TASK_getID(task) != verifyPublicationsFile)){
 		res = loadPublicationFile(err, ksi, inPubFileName, &tmpPubFile);
 		if (res != KT_OK) goto cleanup;
 
@@ -374,7 +373,7 @@ cleanup:
 	return res;
 }
 
-int initTask(Task *task ,KSI_CTX **ksi, ERR_TRCKR **error) {
+int initTask(TASK *task ,KSI_CTX **ksi, ERR_TRCKR **error) {
 	int res;
 	ERR_TRCKR *err = NULL;
 	KSI_CTX *tmpKsi = NULL;
@@ -1161,4 +1160,12 @@ const char *STRING_getChunks(const char *strn, char *buf, size_t buf_len) {
 	STRING_extractAbstract(strn, "", "", buf, buf_len, find_group_start, find_group_end, &next);
 	string_removeChars(buf, '"');
 	return next;
+}
+
+int PARAM_SET_getStrValue(PARAM_SET *set, const char *name, const char *source, int prio, unsigned at, char **value) {
+	return PARAM_SET_getObj(set, name, source, prio, at, (void**)value);
+}
+
+int PARAM_SET_getIntValue(PARAM_SET *set, const char *name, const char *source, int prio, unsigned at, int *value) {
+	return PARAM_SET_getObj(set, name, source, prio, at, (void**)value);
 }

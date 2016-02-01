@@ -22,14 +22,13 @@
 #include "obj_printer.h"
 #include "ksi/net.h"
 #include "ksi/hashchain.h"
-#include "ParamSet/param_value.h"
-#include "ParamSet/types.h"
+#include "param_set/param_value.h"
 
-static int GT_publicationsFileTask_downloadPublicationsFile(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_PublicationsFile **pubfile);
-static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_PublicationData **pubData);
-static int GT_publicationsFileTask_dumpPublicationsFile(Task *task, KSI_CTX *ksi, ERR_TRCKR *err);
+static int GT_publicationsFileTask_downloadPublicationsFile(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_PublicationsFile **pubfile);
+static int GT_publicationsFileTask_createPublicationString(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_PublicationData **pubData);
+static int GT_publicationsFileTask_dumpPublicationsFile(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err);
 
-int GT_publicationsFileTask(Task *task){
+int GT_publicationsFileTask(TASK *task){
 	int res;
 	PARAM_SET *set = NULL;
 	KSI_CTX *ksi = NULL;
@@ -43,7 +42,7 @@ int GT_publicationsFileTask(Task *task){
 	int retval = EXIT_SUCCESS;
 
 
-	set = Task_getSet(task);
+	set = TASK_getSet(task);
 	PARAM_SET_getStrValue(set, "o", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &outPubFileName);
 	r = PARAM_SET_isSetByName(set, "r");
 	d = PARAM_SET_isSetByName(set, "d");
@@ -52,7 +51,7 @@ int GT_publicationsFileTask(Task *task){
 	res = initTask(task ,&ksi, &err);
 	if (res != KT_OK) goto cleanup;
 
-	if(Task_getID(task) == downloadPublicationsFile) {
+	if(TASK_getID(task) == downloadPublicationsFile) {
 		res = GT_publicationsFileTask_downloadPublicationsFile(task, ksi, err, &publicationsFile);
 		if (res != KT_OK) goto cleanup;
 
@@ -63,14 +62,14 @@ int GT_publicationsFileTask(Task *task){
 		if(d || r) print_info("\n");
 		if(d || r) OBJPRINT_publicationsFileReferences(publicationsFile);
 		if(d) OBJPRINT_publicationsFileCertificates(publicationsFile);
-	} else if(Task_getID(task) == createPublicationString){
+	} else if(TASK_getID(task) == createPublicationString){
 		res = GT_publicationsFileTask_createPublicationString(task, ksi, err, &pubData);
 		if (res != KT_OK) goto cleanup;
 
 		if(KSI_PublicationData_toString(pubData, buf,sizeof(buf)) != NULL) {
 				print_result("%s\n", buf);
 		}
-	} else if (Task_getID(task) == dumpPublicationsFile) {
+	} else if (TASK_getID(task) == dumpPublicationsFile) {
 		res = GT_publicationsFileTask_dumpPublicationsFile(task, ksi, err);
 		if (res != KSI_OK) goto cleanup;
 	}
@@ -95,7 +94,7 @@ cleanup:
 }
 
 
-static int GT_publicationsFileTask_downloadPublicationsFile(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_PublicationsFile **pubfile) {
+static int GT_publicationsFileTask_downloadPublicationsFile(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_PublicationsFile **pubfile) {
 	int res;
 	PARAM_SET *set = NULL;
 	KSI_PublicationsFile *tmp = NULL;
@@ -108,7 +107,7 @@ static int GT_publicationsFileTask_downloadPublicationsFile(Task *task, KSI_CTX 
 	}
 
 
-	set = Task_getSet(task);
+	set = TASK_getSet(task);
 	t = PARAM_SET_isSetByName(set, "t");
 
 
@@ -130,7 +129,7 @@ cleanup:
 	return res;
 }
 
-static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_PublicationData **pubData) {
+static int GT_publicationsFileTask_createPublicationString(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_PublicationData **pubData) {
 	PARAM_SET *set = NULL;
 	int res;
 
@@ -155,7 +154,7 @@ static int GT_publicationsFileTask_createPublicationString(Task *task, KSI_CTX *
 	}
 
 
-	set = Task_getSet(task);
+	set = TASK_getSet(task);
 	t = PARAM_SET_isSetByName(set, "t");
 	PARAM_SET_getIntValue(set, "T", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &publicationTime);
 
@@ -240,7 +239,7 @@ cleanup:
 	return res;
 }
 
-static int GT_publicationsFileTask_dumpPublicationsFile(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
+static int GT_publicationsFileTask_dumpPublicationsFile(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	int res;
 	KSI_PublicationsFile *pubfile = NULL;
 

@@ -21,10 +21,9 @@
 #include <stdlib.h>
 #include "obj_printer.h"
 #include "gt_task_support.h"
-#include "ParamSet/param_value.h"
-#include "ParamSet/types.h"
+#include "param_set/param_value.h"
 
-int GT_extendTask(Task *task) {
+int GT_extendTask(TASK *task) {
 	int res;
 	PARAM_SET *set = NULL;
 	KSI_CTX *ksi = NULL;
@@ -39,7 +38,7 @@ int GT_extendTask(Task *task) {
 	char *outSigFileName = NULL;
 	int publicationTime = 0;
 
-	set = Task_getSet(task);
+	set = TASK_getSet(task);
 	PARAM_SET_getStrValue(set, "i", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inSigFileName);
 	PARAM_SET_getStrValue(set, "o", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &outSigFileName);
 	T = PARAM_SET_getIntValue(set, "T", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &publicationTime) == PST_OK ? true : false;

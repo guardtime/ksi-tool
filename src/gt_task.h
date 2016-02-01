@@ -21,7 +21,7 @@
 #ifndef GT_TASK_H
 #define	GT_TASK_H
 
-#include "task_def.h"
+#include "param_set/task_def.h"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -32,42 +32,42 @@ extern "C" {
  * @param [in] task Pointer to task object.
  * @return exit code.
  */
-int GT_signTask(Task *task);
+int GT_signTask(TASK *task);
 
 /**
  * Task that deals with signature verification.
  * @param [in] task Pointer to task object.
  * @return exit code.
  */
-int GT_verifySignatureTask(Task *task);
+int GT_verifySignatureTask(TASK *task);
 
 /**
  * Task that deals with publication file verification.
  * @param [in] task Pointer to task object.
  * @return exit code.
  */
-int GT_verifyPublicationFileTask(Task *task);
+int GT_verifyPublicationFileTask(TASK *task);
 
 /**
  * Task that deals with signature extending.
  * @param [in] task Pointer to task object.
  * @return exit code.
  */
-int GT_extendTask(Task *task);
+int GT_extendTask(TASK *task);
 
 /**
  * Task that deals with publications file.
  * @param [in] task Pointer to task object.
  * @return exit code.
  */
-int GT_publicationsFileTask(Task *task);
+int GT_publicationsFileTask(TASK *task);
 
 /**
  * Other tasks..
  * @param [in] task Pointer to task object.
  * @return exit code.
  */
-int GT_other(Task *task);
+int GT_other(TASK *task);
 
 #ifdef	__cplusplus
 }

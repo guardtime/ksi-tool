@@ -29,7 +29,7 @@ extern "C" {
 
 
 enum contentStatus {
-	PARAM_OK,
+	PARAM_OK = 0x00,
 	PARAM_INVALID,
 	HASH_ALG_INVALID_NAME,
 	HASH_IMPRINT_INVALID_LEN,
@@ -41,8 +41,8 @@ enum contentStatus {
 };
 
 enum formatStatus_enum{
-	FORMAT_OK,
-	FORMAT_NULLPTR,
+	FORMAT_OK = PARAM_OK,
+	FORMAT_NULLPTR = PARAM_UNKNOWN_ERROR + 1,
 	FORMAT_NOCONTENT,
 	FORMAT_INVALID,
 	FORMAT_INVALID_OID,
@@ -76,14 +76,13 @@ ContentStatus isImprintContOK(const char *imprint);
 ContentStatus isIntegerContOk(const char* integer);
 ContentStatus contentIsOK(const char *alg);
 
-const char *getFormatErrorString(FormatStatus res);
-const char *getParameterContentErrorString(ContentStatus res);
-
-
 int convert_repairUrl(const char* arg, char* buf, unsigned len);
 int convert_repairPath(const char* arg, char* buf, unsigned len);
 int convert_replaceWithOid(const char* arg, char* buf, unsigned len);
 int convert_UTC_to_UNIX(const char* arg, char* buf, unsigned len);
+
+const char *getParameterErrorString(int res);
+
 #ifdef	__cplusplus
 }
 #endif

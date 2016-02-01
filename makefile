@@ -39,8 +39,8 @@ SRC_DIR = src
 OBJ_DIR = obj
 BIN_DIR = bin
 
-PARAMSET_SRC_DIR = $(SRC_DIR)\ParamSet
-PARAMSET_OBJ_DIR = $(OBJ_DIR)\ParamSet
+PARAMSET_SRC_DIR = $(SRC_DIR)\param_set
+PARAMSET_OBJ_DIR = $(OBJ_DIR)\param_set
 
 VERSION_FILE = VERSION
 COMM_ID_FILE = COMMIT_ID
@@ -52,7 +52,8 @@ TOOL_NAME = ksitool
 PARAMSET_OBJ = \
 	$(PARAMSET_OBJ_DIR)\param_value.obj \
 	$(PARAMSET_OBJ_DIR)\parameter.obj \
-	$(PARAMSET_OBJ_DIR)\param_set.obj
+	$(PARAMSET_OBJ_DIR)\param_set.obj \
+	$(PARAMSET_OBJ_DIR)\task_def.obj
 
 CMDTOOL_OBJ = \
 	$(OBJ_DIR)\gt_task_support.obj \
@@ -63,7 +64,6 @@ CMDTOOL_OBJ = \
 	$(OBJ_DIR)\gt_task_other.obj \
 	$(OBJ_DIR)\ksitool.obj \
 	$(OBJ_DIR)\gt_cmd_control.obj \
-	$(OBJ_DIR)\task_def.obj \
 	$(OBJ_DIR)\printer.obj \
 	$(OBJ_DIR)\ksitool_err.obj \
 	$(OBJ_DIR)\api_wrapper.obj \

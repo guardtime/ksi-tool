@@ -24,6 +24,7 @@
 #include <ctype.h>
 #include "param_set_obj_impl.h"
 #include "param_value.h"
+#include "param_set.h"
 
 static char *new_string(const char *str) {
 	char *tmp = NULL;
@@ -33,8 +34,8 @@ static char *new_string(const char *str) {
 	return strcpy(tmp, str);
 }
 
-#define UNKNOW_FORMAT_STATUS -1
-#define UNKNOW_CONTENT_STATUS -1
+#define PST_FORMAT_STATUS_OK 0
+#define PST_CONTENT_STATUS_OK 0
 
 
 int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL **newObj) {
@@ -62,9 +63,10 @@ int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL
 
 	tmp->cstr_value = NULL;
 	tmp->source = NULL;
-	tmp->formatStatus= UNKNOW_FORMAT_STATUS;
-	tmp->contentStatus = UNKNOW_CONTENT_STATUS;
+	tmp->formatStatus= PST_FORMAT_STATUS_OK;
+	tmp->contentStatus = PST_CONTENT_STATUS_OK;
 	tmp->next = NULL;
+	tmp->previous = NULL;
 	tmp->priority = priority;
 
 	if(value != NULL){
@@ -91,18 +93,17 @@ int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL
 	 * NULL iterate through linked list and append the value to the end.
      */
 	if (*newObj == NULL) {
+		tmp->previous = *newObj;
 		*newObj = tmp;
 	} else {
 		PARAM_VAL *current = *newObj;
 
-		while (1) {
-			if (current->next == NULL) {
-				current->next = tmp;
-				break;
-			}
-
+		while (current->next != NULL) {
 			current = current->next;
 		}
+
+		tmp->previous = current;
+		current->next = tmp;
 	}
 
 	tmp = NULL;
@@ -169,12 +170,11 @@ cleanup:
 	return res;
 }
 
-int PARAM_VAL_getElement(PARAM_VAL *rootValue, const char* source, int priority, int at, PARAM_VAL** val) {
+static int param_val_get_element(PARAM_VAL *rootValue, const char* source, int priority, int at, int onlyInvalid, PARAM_VAL** val) {
 	int res;
 	PARAM_VAL *current = NULL;
 	PARAM_VAL *tmp = NULL;
-	PARAM_VAL *lastAtGivenConstraints = NULL;
-	unsigned i = 0;
+	int i = 0;
 	int prio = 0;
 
 	if (rootValue == NULL || priority <= PST_PRIORITY_NOTDEFINED || at < PST_INDEX_LAST || val == NULL) {
@@ -194,7 +194,8 @@ int PARAM_VAL_getElement(PARAM_VAL *rootValue, const char* source, int priority,
 	while (current != NULL) {
 		/* Increase count if (priority matches AND source matches). */
 		if ((prio == PST_PRIORITY_NONE || prio == current->priority)
-				&& (source == NULL || (source != NULL && current->source != NULL && strcmp(source, current->source) == 0))) {
+				&& (source == NULL || (source != NULL && current->source != NULL && strcmp(source, current->source) == 0))
+				&& (onlyInvalid == 0 || onlyInvalid && (current->contentStatus != 0 || current->formatStatus != 0))) {
 
 			if ((at >= PST_INDEX_FIRST && i == at)
 				|| (at == PST_INDEX_LAST && current->next == NULL)) {
@@ -221,6 +222,101 @@ cleanup:
 	return res;
 }
 
+int PARAM_VAL_popElement(PARAM_VAL **rootValue, const char* source, int priority, int at, PARAM_VAL** val) {
+	int res;
+	PARAM_VAL *previous = NULL;
+	PARAM_VAL *next = NULL;
+	PARAM_VAL *tmp = NULL;
+	PARAM_VAL *newRoot = NULL;
+
+	/**
+	 * Extract a value from the chain.
+     */
+	res = param_val_get_element(*rootValue, source, priority, at, 0, &tmp);
+	if (res != PST_OK) goto cleanup;
+
+	previous = tmp->previous;
+	next = tmp->next;
+
+	/**
+	 * Repair the chain and root value.
+     */
+	if (previous != NULL) {
+		previous->next = next;
+		newRoot = previous;
+	}
+
+	if (next != NULL) {
+		newRoot = (newRoot != NULL) ? newRoot : next;
+		next->previous = previous;
+	}
+
+	while (newRoot != NULL && newRoot->previous != NULL) {
+		newRoot = newRoot->previous;
+	}
+
+
+	*rootValue = newRoot;
+	tmp->previous = NULL;
+	tmp->next = NULL;
+	*val = tmp;
+	res = PST_OK;
+
+cleanup:
+	return res;
+}
+
+int PARAM_VAL_getElement(PARAM_VAL *rootValue, const char* source, int priority, int at, PARAM_VAL** val) {
+	return param_val_get_element(rootValue, source, priority, at, 0, val);
+}
+
+int PARAM_VAL_getInvalid(PARAM_VAL *rootValue, const char* source, int priority, int at, PARAM_VAL** val) {
+	return param_val_get_element(rootValue, source, priority, at, 1, val);
+}
+
+static int param_val_get_element_count(PARAM_VAL *rootValue, const char *source, int prio,
+		int (*value_getter)(PARAM_VAL *, const char*, int, int, PARAM_VAL**),
+		int *count) {
+	int res;
+	PARAM_VAL *tmp = NULL;
+	int i = 0;
+
+
+	if (rootValue == NULL || prio <= PST_PRIORITY_NOTDEFINED || value_getter == NULL || count == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	while (1) {
+		res = value_getter(rootValue, source, prio, i, &tmp);
+		if (res != PST_OK && res != PST_PARAMETER_VALUE_NOT_FOUND) {
+			goto cleanup;
+		}
+
+		if (res == PST_PARAMETER_VALUE_NOT_FOUND) {
+			break;
+		}
+
+		i++;
+	}
+
+
+	*count = i;
+	res = PST_OK;
+
+cleanup:
+
+	return res;
+}
+
+int PARAM_VAL_getElementCount(PARAM_VAL *rootValue, const char *source, int prio, int *count) {
+	return param_val_get_element_count(rootValue, source, prio, PARAM_VAL_getElement, count);
+}
+
+int PARAM_VAL_getInvalidCount(PARAM_VAL *rootValue, const char *source, int prio, int *count) {
+	return param_val_get_element_count(rootValue, source, prio, PARAM_VAL_getInvalid, count);
+}
+
 int PARAM_VAL_extract(PARAM_VAL *rootValue, const char **value, const char **source, int *priority) {
 	int res;
 
@@ -244,6 +340,87 @@ int PARAM_VAL_extract(PARAM_VAL *rootValue, const char **value, const char **sou
 		*priority = rootValue->priority;
 	}
 
+	res = PST_OK;
+
+cleanup:
+
+	return res;
+}
+
+int PARAM_VAL_getErrors(PARAM_VAL *rootValue, int *format, int* content) {
+	int res;
+
+	if (rootValue == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	/**
+	 * Extract error values;
+     */
+	if (format != NULL) {
+		*format = rootValue->formatStatus;
+	}
+
+	if (content != NULL) {
+		*content = rootValue->contentStatus;
+	}
+
+	res = PST_OK;
+
+cleanup:
+
+	return res;
+}
+
+int PARAM_VAL_getPriority(PARAM_VAL *rootValue, int current, int *nextPrio) {
+	int res;
+	PARAM_VAL *nxt = NULL;
+	int tmp = 0;
+
+	if (rootValue == NULL || current <= PST_PRIORITY_NOTDEFINED
+			|| current == PST_PRIORITY_NONE || nextPrio == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	/**
+	 * If highest or lowest priority is asked.
+     */
+	if (current == PST_PRIORITY_LOWEST || current == PST_PRIORITY_HIGHEST) {
+		res = param_val_getPriority(rootValue, current, &tmp);
+		if (res != PST_OK) goto cleanup;
+
+		*nextPrio = tmp;
+		res = PST_OK;
+		goto cleanup;
+	}
+
+
+	/**
+	 * If the next priority is asked, extract it.
+     */
+	nxt = rootValue;
+
+	res = param_val_getPriority(rootValue, PST_PRIORITY_HIGHEST, &tmp);
+	if (res != PST_OK) goto cleanup;
+
+	while (nxt != NULL) {
+		if (nxt->priority > current) {
+			if (tmp > nxt->priority) {
+				tmp = nxt->priority;
+			}
+		}
+
+		nxt = nxt->next;
+	}
+
+	if (tmp == current) {
+		res = PST_PARAMETER_VALUE_NOT_FOUND;
+		goto cleanup;
+	}
+
+	*nextPrio = tmp;
 	res = PST_OK;
 
 cleanup:

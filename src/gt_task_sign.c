@@ -20,12 +20,11 @@
 
 #include "gt_task_support.h"
 #include "obj_printer.h"
-#include "ParamSet/param_value.h"
-#include "ParamSet/types.h"
+#include "param_set/param_value.h"
 
-static int getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh);
+static int getHash(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh);
 
-int GT_signTask(Task *task) {
+int GT_signTask(TASK *task) {
 	int res;
 	PARAM_SET *set = NULL;
 	bool t, n, d;
@@ -37,7 +36,7 @@ int GT_signTask(Task *task) {
 	char *outSigFileName = NULL;
 
 
-	set = Task_getSet(task);
+	set = TASK_getSet(task);
 	PARAM_SET_getStrValue(set, "o", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &outSigFileName);
 	n = PARAM_SET_isSetByName(set, "n");
 	t = PARAM_SET_isSetByName(set, "t");
@@ -86,7 +85,7 @@ cleanup:
 	return retval;
 }
 
-static int  getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh) {
+static int  getHash(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh) {
 	int res;
 	PARAM_SET *set = NULL;
 	bool H;
@@ -98,13 +97,13 @@ static int  getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh
 	char *imprint = NULL;
 
 
-	set = Task_getSet(task);
+	set = TASK_getSet(task);
 	PARAM_SET_getStrValue(set, "f", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inDataFileName);
 	PARAM_SET_getStrValue(set, "F", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &imprint);
 	H = PARAM_SET_getStrValue(set, "H", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &hashAlg) == PST_OK ? true : false;
 
 
-	if(Task_getID(task) == signDataFile){
+	if(TASK_getID(task) == signDataFile){
 		print_progressDesc(false, "Getting hash from file for signing process... ");
 		hashAlg = H ? (hashAlg) : ("default");
 		hasAlgID = KSI_getHashAlgorithmByName(hashAlg);
@@ -124,7 +123,7 @@ static int  getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh
 			goto cleanup;
 		}
 	}
-	else if(Task_getID(task) == signHash){
+	else if(TASK_getID(task) == signHash){
 		print_progressDesc(false, "Getting hash from input string for signing process... ");
 		res = getHashFromCommandLine(imprint, ksi, err, &tmp);
 		if (res != KT_OK) goto cleanup;
