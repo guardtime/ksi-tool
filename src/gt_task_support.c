@@ -461,23 +461,34 @@ cleanup:
 
 
 
-int getFilesHash(ERR_TRCKR *err, KSI_DataHasher *hsr, const char *fname, KSI_DataHash **hash){
+int getFilesHash(ERR_TRCKR *err, KSI_DataHasher *hsr, const char *fnamein, const char *fnameout, KSI_DataHash **hash){
 	int res;
 	FILE *readFrom = NULL;
+	FILE *writeInto = NULL;
 	unsigned char buf[1024];
 	size_t buf_len;
-	bool close = false;
+	size_t count;
+	bool closeIn = false;
+	bool closeOut = false;
 	KSI_DataHash *tmp = NULL;
 
-	if(err == NULL || hsr == NULL || fname == NULL || hash == NULL) {
+	if(err == NULL || hsr == NULL || fnamein == NULL || hash == NULL) {
 		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
-	res = getStreamFromPath(fname, "rb", &readFrom, &close);
+	res = getStreamFromPath(fnamein, "rb", &readFrom, &closeIn);
 	if (res != KT_OK) {
 		ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
 		goto cleanup;
+	}
+
+	if (fnameout != NULL) {
+		res = getStreamFromPath(fnameout, "wb", &writeInto, &closeOut);
+		if (res != KT_OK) {
+			ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
+			goto cleanup;
+		}
 	}
 
 	while (!feof(readFrom)) {
@@ -489,6 +500,14 @@ int getFilesHash(ERR_TRCKR *err, KSI_DataHasher *hsr, const char *fname, KSI_Dat
 
 		res = KSI_DataHasher_add(hsr, buf, buf_len);
 		ERR_CATCH_MSG(err, res, "Error: Unable to add data to hasher.");
+
+		if (fnameout != NULL) {
+			count = fwrite(buf, 1, buf_len, writeInto);
+			if (count != buf_len) {
+				ERR_TRCKR_ADD(err, res = KT_IO_ERROR, "Error: Unable to write to file.");
+				goto cleanup;
+			}
+		}
 	}
 
 	res = KSI_DataHasher_close(hsr, &tmp);
@@ -501,7 +520,8 @@ int getFilesHash(ERR_TRCKR *err, KSI_DataHasher *hsr, const char *fname, KSI_Dat
 
 cleanup:
 
-	if (close == true && readFrom != NULL) fclose(readFrom);
+	if (closeIn == true && readFrom != NULL) fclose(readFrom);
+	if (closeOut == true && writeInto != NULL) fclose(writeInto);
 	KSI_DataHash_free(tmp);
 
 	return res;

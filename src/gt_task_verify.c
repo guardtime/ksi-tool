@@ -368,7 +368,7 @@ static int GT_verifyTask_verifyData(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KS
 		print_progressDesc(false, "Verifying file's %s hash... ", inDataFileName);
 		res = KSI_Signature_createDataHasher(sig, &hsr);
 		ERR_CATCH_MSG(err, res, "Error: Unable to create data hasher.");
-		res = getFilesHash(err, hsr, inDataFileName, &file_hsh);
+		res = getFilesHash(err, hsr, inDataFileName, NULL, &file_hsh);
 		if (res != KT_OK) {
 			ERR_TRCKR_ADD(err, res, "Error: Unable to hash file. (%s)", errToString(res));
 			goto cleanup;

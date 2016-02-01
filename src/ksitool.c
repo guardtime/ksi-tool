@@ -250,6 +250,7 @@ static void GT_pritHelp(void){
 			"Where recognized options are:\n"
 			" -s --sign\tsign data (-n -d -t):\n"
 			"\t\t-s -f -o sign data file.\n"
+			"\t\t-s -f -o -D sign stream and save data to file.\n"
 			"\t\t-s -f -H -o sign data file with specific hash algorithm.\n"
 			"\t\t-s -F -o sign hash.\n"
 			" -x --extend\tuse online verification (eXtending) service (-n -r -d -t):\n"
@@ -277,6 +278,7 @@ static void GT_pritHelp(void){
 			" -f <file>\tfile to be signed or verified.\n"
 			" -F <hash>\tdata hash to be signed or verified. Hash format: <ALG>:<hash in hex>.\n"
 			" -o <file>\toutput file name to store signature token or publications file.\n"
+			" -D <file>\toutput file name to store data from stream.\n"
 			" -i <file>\tinput signature token file to be extended or verified.\n"
 			" --ref <str>\tpublication string.\n"
 			" -b <file>\tuse a specified publications file.\n"
@@ -368,7 +370,7 @@ int main(int argc, char** argv, char **envp) {
 	print_init();
 
 	/*Create parameter set*/
-	paramSet_new("{s|sign}*{x|extend}*{p}*{v|verify}*{t}*{r}*{d}*{n}*{h|help}*{o|out}{i}{f}{b}{c}{C}{V}*"
+	paramSet_new("{s|sign}*{x|extend}*{p}*{v|verify}*{t}*{r}*{d}*{n}*{h|help}*{o|out}{D|dataout}{i}{f}{b}{c}{C}{V}*"
 				"{W}{S}>{X}>{P}>{F}{H}{T}{E}{inc}*{cnstr}*"
 				/*TODO: uncomment if implemented*/
 //				"{aggre}{htime}{setsystime}"
@@ -378,7 +380,7 @@ int main(int argc, char** argv, char **envp) {
 	if(set == NULL) goto cleanup;
 
 	/*Configure parameter set*/
-	paramSet_addControl(set, "{o}{log}", isPathFormOk, isOutputFileContOK, NULL);
+	paramSet_addControl(set, "{o}{D}{log}", isPathFormOk, isOutputFileContOK, NULL);
 	paramSet_addControl(set, "{i}{b}{f}{V}{W}{inc}", isPathFormOk, isInputFileContOK, convert_repairPath);
 	paramSet_addControl(set, "{F}", isImprintFormatOK, isImprintContOK, NULL);
 	paramSet_addControl(set, "{H}", isHashAlgFormatOK, isHashAlgContOK, NULL);
@@ -395,7 +397,7 @@ int main(int argc, char** argv, char **envp) {
 
 	/*Define possible tasks*/
 	/*						ID							DESC					MAN				IGNORE	OPTIONAL		FORBIDDEN					NEW OBJ*/
-	TaskDefinition_new(signDataFile,			"Sign data file",				"s,f,o,S",		"b,r",	"H,n,d,t",		"x,p,v,aggre,F,i,T",		&taskDefArray[0]);
+	TaskDefinition_new(signDataFile,			"Sign data file",				"s,f,o,S",		"b,r",	"H,D,n,d,t",	"x,p,v,aggre,F,i,T",		&taskDefArray[0]);
 	TaskDefinition_new(signHash,				"Sign hash",					"s,F,o,S",		"b,r",	"n,d,t",		"x,p,v,aggre,f,i,T,H",		&taskDefArray[1]);
 	TaskDefinition_new(extendTimestamp,			"Extend signature",				"x,i,o,P,X",	"",		"T,n,d,r,t",	"s,p,v,aggre,f,F,H",		&taskDefArray[2]);
 	TaskDefinition_new(downloadPublicationsFile,"Download publications file",	"p,o,P,cnstr",	"n,b",	"d,r,t",		"s,x,v,aggre,f,F,T,i,H",	&taskDefArray[3]);
