@@ -32,9 +32,9 @@
 static void printSignaturesRootHash_and_Time(const KSI_Signature *sig);
 static int setSystemTime(KSI_CTX *ksi, const KSI_Signature *sig, ERR_TRCKR *err);
 
-int GT_other(Task *task){
+int GT_other(TASK *task){
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	KSI_CTX *ksi = NULL;
 	KSI_DataHasher *hsr = NULL;
 	KSI_DataHash *hsh = NULL;
@@ -44,28 +44,28 @@ int GT_other(Task *task){
 
 	bool n, d;
 
-	set = Task_getSet(task);
-	n = paramSet_isSetByName(set, "n");
-	d = paramSet_isSetByName(set, "d");
+	set = TASK_getSet(task);
+	n = PARAM_SET_isSetByName(set, "n");
+	d = PARAM_SET_isSetByName(set, "d");
 
 	/*Initalization of KSI */
 	res = initTask(task, &ksi, &err);
 	if (res != KT_OK) goto cleanup;
 
-	if (Task_getID(task) == getRootH_T || Task_getID(task) == setSysTime) {
+	if (TASK_getID(task) == getRootH_T || TASK_getID(task) == setSysTime) {
 		res = KSI_DataHasher_open(ksi, KSI_getHashAlgorithmByName("default"), &hsr);
 		ERR_CATCH_MSG(err, res, "Error: Unable to open hasher.");
-		res = KSI_DataHasher_add(hsr, (void*)task,sizeof(Task*));
+		res = KSI_DataHasher_add(hsr, (void*)task,sizeof(TASK*));
 		ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 		res = KSI_DataHasher_close(hsr, &hsh);
 		ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 		res = KSI_Signature_create(ksi, hsh, &sig);
 		ERR_CATCH_MSG(err, res, "Error: Unable to create signature.");
 
-		if (Task_getID(task) == getRootH_T) {
+		if (TASK_getID(task) == getRootH_T) {
 			printSignaturesRootHash_and_Time(sig);
 		}
-		else if (Task_getID(task) == setSysTime) {
+		else if (TASK_getID(task) == setSysTime) {
 			res = setSystemTime(ksi, sig, err);
 			if (res != KT_OK) goto cleanup;
 		}

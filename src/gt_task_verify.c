@@ -21,17 +21,18 @@
 #include "gt_task_support.h"
 #include "obj_printer.h"
 #include "debug_print.h"
+#include "param_set/param_value.h"
 
-static int GT_verifyTask_verifySigOnline(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig);
-static int GT_verifyTask_verifyWithPublication(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig, KSI_Signature **out);
-static int GT_verifyTask_verify(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig);
-static int GT_verifyTask_verifyData(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig);
+static int GT_verifyTask_verifySigOnline(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig);
+static int GT_verifyTask_verifyWithPublication(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig, KSI_Signature **out);
+static int GT_verifyTask_verify(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig);
+static int GT_verifyTask_verifyData(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig);
 
-int GT_verifySignatureTask(Task *task){
+int GT_verifySignatureTask(TASK *task){
 	int res;
 	KSI_CTX *ksi = NULL;
 	ERR_TRCKR *err = NULL;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	KSI_Signature *sig = NULL;
 	KSI_Signature *tmp_ext = NULL;
 	int retval = EXIT_SUCCESS;
@@ -40,15 +41,15 @@ int GT_verifySignatureTask(Task *task){
 	bool n, r, d, f, F, ref;
 	char *inSigFileName = NULL;
 
-	set = Task_getSet(task);
-	paramSet_getStrValueByNameAt(set, "i",0, &inSigFileName);
+	set = TASK_getSet(task);
+	PARAM_SET_getStrValue(set, "i", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inSigFileName);
 
-	ref = paramSet_isSetByName(set, "ref");
-	f = paramSet_isSetByName(set, "f");
-	F = paramSet_isSetByName(set, "F");
-	n = paramSet_isSetByName(set, "n");
-	r = paramSet_isSetByName(set, "r");
-	d = paramSet_isSetByName(set, "d");
+	ref = PARAM_SET_isSetByName(set, "ref");
+	f = PARAM_SET_isSetByName(set, "f");
+	F = PARAM_SET_isSetByName(set, "F");
+	n = PARAM_SET_isSetByName(set, "n");
+	r = PARAM_SET_isSetByName(set, "r");
+	d = PARAM_SET_isSetByName(set, "d");
 
 	res = initTask(task, &ksi, &err);
 	if (res != KT_OK) goto cleanup;
@@ -61,10 +62,10 @@ int GT_verifySignatureTask(Task *task){
 	print_progressResult(res);
 
 
-	if (Task_getID(task) == verifyTimestampOnline) {
+	if (TASK_getID(task) == verifyTimestampOnline) {
 		res = GT_verifyTask_verifySigOnline(task, ksi, err, sig);
 		if (res != KT_OK) goto cleanup;
-	} else if(Task_getID(task) == verifyTimestamp) {
+	} else if(TASK_getID(task) == verifyTimestamp) {
 		if (ref) {
 			res = GT_verifyTask_verifyWithPublication(task, ksi, err, sig, &tmp_ext);
 			if (res != KT_OK) goto cleanup;
@@ -84,7 +85,7 @@ int GT_verifySignatureTask(Task *task){
 
 	if (n || r || d) print_info("\n");
 
-	if (((n || r || d) &&  (Task_getID(task) == verifyTimestamp)) || Task_getID(task) == verifyTimestampOnline){
+	if (((n || r || d) &&  (TASK_getID(task) == verifyTimestamp)) || TASK_getID(task) == verifyTimestampOnline){
 		if (d || n) OBJPRINT_signerIdentity(tmp_ext != NULL ? tmp_ext : sig);
 		if (d || r) OBJPRINT_signaturePublicationReference(tmp_ext != NULL ? tmp_ext : sig);
 		if (d) {
@@ -114,11 +115,11 @@ cleanup:
 	return retval;
 }
 
-int GT_verifyPublicationFileTask(Task *task){
+int GT_verifyPublicationFileTask(TASK *task){
 	int res;
 	ERR_TRCKR *err = NULL;
 	KSI_CTX *ksi = NULL;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	bool d, t;
 	char *inPubFileName = NULL;
 	KSI_PublicationsFile *publicationsFile = NULL;
@@ -129,10 +130,10 @@ int GT_verifyPublicationFileTask(Task *task){
 	int retval = EXIT_SUCCESS;
 
 
-	set = Task_getSet(task);
-	paramSet_getStrValueByNameAt(set, "b", 0, &inPubFileName);
-	d = paramSet_isSetByName(set, "d");
-	t = paramSet_isSetByName(set, "t");
+	set = TASK_getSet(task);
+	PARAM_SET_getStrValue(set, "b", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inPubFileName);
+	d = PARAM_SET_isSetByName(set, "d");
+	t = PARAM_SET_isSetByName(set, "t");
 
 	res = initTask(task, &ksi, &err);
 	if (res != KT_OK) goto cleanup;
@@ -160,7 +161,7 @@ int GT_verifyPublicationFileTask(Task *task){
 	print_info("Latest publication %s.\n", pubTimeBuf);
 
 
-	if(d && Task_getID(task) == verifyPublicationsFile){
+	if(d && TASK_getID(task) == verifyPublicationsFile){
 		OBJPRINT_publicationsFileReferences(publicationsFile);
 		OBJPRINT_publicationsFileCertificates(publicationsFile);
 	}
@@ -185,9 +186,9 @@ cleanup:
 }
 
 
-static int GT_verifyTask_verifySigOnline(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig) {
+static int GT_verifyTask_verifySigOnline(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig) {
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	bool t;
 
 	if (task == NULL || ksi == NULL || err == NULL || sig == NULL) {
@@ -195,8 +196,8 @@ static int GT_verifyTask_verifySigOnline(Task *task, KSI_CTX *ksi, ERR_TRCKR *er
 		goto cleanup;
 	}
 
-	set = Task_getSet(task);
-	t = paramSet_isSetByName(set, "t");
+	set = TASK_getSet(task);
+	t = PARAM_SET_isSetByName(set, "t");
 
 	print_progressDesc(t, "Verifying online... ");
 	res = KSITOOL_Signature_verifyOnline(err, sig, ksi);
@@ -211,9 +212,9 @@ cleanup:
 	return res;
 }
 
-static int GT_verifyTask_verifyWithPublication(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig, KSI_Signature **out) {
+static int GT_verifyTask_verifyWithPublication(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig, KSI_Signature **out) {
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	KSI_PublicationData *publication = NULL;
 	KSI_PublicationRecord *extendTo = NULL;
 	KSI_Signature *tmp_ext = NULL;
@@ -230,10 +231,10 @@ static int GT_verifyTask_verifyWithPublication(Task *task, KSI_CTX *ksi, ERR_TRC
 		goto cleanup;
 	}
 
-	set = Task_getSet(task);
-	paramSet_getStrValueByNameAt(set, "ref",0, &refStrn);
+	set = TASK_getSet(task);
+	PARAM_SET_getStrValue(set, "ref", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &refStrn);
 
-	t = paramSet_isSetByName(set, "t");
+	t = PARAM_SET_isSetByName(set, "t");
 
 
 	isExtended = isSignatureExtended(sig);
@@ -309,9 +310,9 @@ cleanup:
 	return res;
 }
 
-static int GT_verifyTask_verify(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig) {
+static int GT_verifyTask_verify(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig) {
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	bool b, t;
 	bool isExtended = false;
 
@@ -321,9 +322,9 @@ static int GT_verifyTask_verify(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Si
 		goto cleanup;
 	}
 
-	set = Task_getSet(task);
-	t = paramSet_isSetByName(set, "t");
-	b = paramSet_isSetByName(set, "b");
+	set = TASK_getSet(task);
+	t = PARAM_SET_isSetByName(set, "t");
+	b = PARAM_SET_isSetByName(set, "b");
 
 	isExtended = isSignatureExtended(sig);
 
@@ -341,9 +342,9 @@ cleanup:
 	return res;
 }
 
-static int GT_verifyTask_verifyData(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig) {
+static int GT_verifyTask_verifyData(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig) {
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	bool F, f;
 	char *imprint = NULL;
 	KSI_DataHash *input_hash = NULL;
@@ -357,9 +358,9 @@ static int GT_verifyTask_verifyData(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KS
 		goto cleanup;
 	}
 
-	set = Task_getSet(task);
-	f = paramSet_getStrValueByNameAt(set, "f",0, &inDataFileName);
-	F = paramSet_getStrValueByNameAt(set, "F",0, &imprint);
+	set = TASK_getSet(task);
+	f = PARAM_SET_getStrValue(set, "f", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inDataFileName) == PST_OK ? true : false;
+	F = PARAM_SET_getStrValue(set, "F", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &imprint) == PST_OK ? true : false;
 
 	res = KSI_Signature_getDocumentHash(sig, &input_hash);
 	ERR_CATCH_MSG(err, res, "Error: Unable to extract input hash from the signature.");

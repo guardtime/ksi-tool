@@ -1,3 +1,7 @@
+#Packages
+*.rpm
+*.gz
+
 # Object files, executable
 *.obj
 *.o

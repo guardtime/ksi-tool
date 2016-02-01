@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ksi/ksi.h>
-#include "task_def.h"
+#include "param_set/task_def.h"
 #include <stdlib.h>
 #include "gt_cmd_common.h"
 #include "ksitool_err.h"
@@ -70,7 +70,7 @@ typedef enum tasks_en{
  *
  * @return KT_OK if successful, error code otherwise.
  */
-int initTask(Task *task ,KSI_CTX **ksi, ERR_TRCKR **err);
+int initTask(TASK *task ,KSI_CTX **ksi, ERR_TRCKR **err);
 
 
 /**
@@ -149,7 +149,7 @@ int loadSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signa
 bool isSignatureExtended(const KSI_Signature *sig);
 
 /*Controls parameter set and returns true if user wants to write data files to stdout*/
-bool isPiping(paramSet *set);
+bool isPiping(PARAM_SET *set);
 
 /**
  * Reads hash from command line and creates the KSI_DataHash object.
@@ -289,6 +289,9 @@ const char* find_charBeforeStrn(const char* str, const char* findIt);
  */
 const char* find_charBeforeLastStrn(const char* str, const char* findIt);
 
+
+int PARAM_SET_getStrValue(PARAM_SET *set, const char *name, const char *source, int prio, unsigned at, char **value);
+int PARAM_SET_getIntValue(PARAM_SET *set, const char *name, const char *source, int prio, unsigned at, int *value);
 #ifdef	__cplusplus
 }
 #endif

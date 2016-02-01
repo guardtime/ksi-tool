@@ -28,9 +28,10 @@
 #include <ksi/compatibility.h>
 #include <stdio.h>
 #include "gt_task_support.h"
-#include "param_set.h"
 #include <ctype.h>
 #include "ksitool_err.h"
+#include "param_set/param_set.h"
+#include "param_set/param_value.h"
 
 #ifdef _WIN32
 #	include <windows.h>
@@ -91,9 +92,9 @@ cleanup:
 	return res;
 }
 
-static int ksitool_initLogger(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
+static int ksitool_initLogger(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	FILE *writeLogTo = NULL;
 	bool log;
 	bool closeLogStream = false;
@@ -103,8 +104,9 @@ static int ksitool_initLogger(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 		return KT_INVALID_ARGUMENT;
 	}
 
-	set = Task_getSet(task);
-	log = paramSet_getStrValueByNameAt(set, "log",0, &outLogfile);
+	set = TASK_getSet(task);
+
+	log = PARAM_SET_getStrValue(set, "log", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &outLogfile) == PST_OK ? true : false;
 
 	/*Set logging*/
 	if (log){
@@ -128,9 +130,9 @@ cleanup:
 	return res;
 }
 
-static int ksitool_initNetworkProvider(Task *task, KSI_CTX *ksi, ERR_TRCKR *err){
+static int ksitool_initNetworkProvider(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err){
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	bool P, C, c, s, v, x, p, T, aggre;
 	char *signingService_url = NULL;
 	char *publicationsFile_url = NULL;
@@ -145,23 +147,23 @@ static int ksitool_initNetworkProvider(Task *task, KSI_CTX *ksi, ERR_TRCKR *err)
 		return KT_INVALID_ARGUMENT;
 	}
 
-	set = Task_getSet(task);
-	paramSet_getHighestPriorityStrValueByName(set, "S", &signingService_url);
-	paramSet_getHighestPriorityStrValueByName(set, "X", &verificationService_url);
-	P = paramSet_getStrValueByNameAt(set, "P",0,&publicationsFile_url);
+	set = TASK_getSet(task);
+	PARAM_SET_getStrValue(set, "S", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_FIRST, &signingService_url);
+	PARAM_SET_getStrValue(set, "X", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_FIRST, &verificationService_url);
+	P = PARAM_SET_getStrValue(set, "P", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &publicationsFile_url) == PST_OK ? true : false;
 
-	C = paramSet_getIntValueByNameAt(set, "C", 0,&networkConnectionTimeout);
-	c = paramSet_getIntValueByNameAt(set, "c", 0,&networkTransferTimeout);
-	aggre = paramSet_isSetByName(set, "aggre");
-	s = paramSet_isSetByName(set, "s");
-	v = paramSet_isSetByName(set, "v");
-	x = paramSet_isSetByName(set, "x");
-	p = paramSet_isSetByName(set, "p");
-	T = paramSet_isSetByName(set, "T");
+	C = PARAM_SET_getIntValue(set, "C", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &networkConnectionTimeout) == PST_OK ? true : false;
+	c = PARAM_SET_getIntValue(set, "c", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &networkTransferTimeout) == PST_OK ? true : false;
+	aggre = PARAM_SET_isSetByName(set, "aggre");
+	s = PARAM_SET_isSetByName(set, "s");
+	v = PARAM_SET_isSetByName(set, "v");
+	x = PARAM_SET_isSetByName(set, "x");
+	p = PARAM_SET_isSetByName(set, "p");
+	T = PARAM_SET_isSetByName(set, "T");
 
 
-	paramSet_getHighestPriorityStrValueByName(set, "user", &user);
-	paramSet_getHighestPriorityStrValueByName(set, "pass", &pass);
+	PARAM_SET_getStrValue(set, "user", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_FIRST, &user);
+	PARAM_SET_getStrValue(set, "pass", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_FIRST, &pass);
 
 	if (user == NULL) user = "anon";
 	if (pass == NULL) pass = "anon";
@@ -210,22 +212,22 @@ cleanup:
 	return res;
 }
 
-static int ksitool_addConstraints(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
+static int ksitool_addConstraints(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	unsigned i = 0;
-	bool cnstr;
+	int cnstr;
 	char *constraint = NULL;
 	unsigned constraint_count = 0;
 	KSI_CertConstraint *constraintArray = NULL;
 
 	/*Get parameter values*/
-	set = Task_getSet(task);
-	cnstr = paramSet_isSetByName(set,"cnstr");
+	set = TASK_getSet(task);
+	cnstr = PARAM_SET_isSetByName(set,"cnstr");
 
 
 	if (cnstr) {
-		if (paramSet_getValueCountByName(set,	"cnstr", &constraint_count) == false) {
+		if (PARAM_SET_getValueCount(set, "{cnstr}", NULL, PST_PRIORITY_NONE, &constraint_count) != PST_OK) {
 			ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, NULL);
 			goto cleanup;
 		}
@@ -245,8 +247,7 @@ static int ksitool_addConstraints(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 			char *oid = NULL;
 			char *value = NULL;
 			char tmp[1024];
-
-				paramSet_getStrValueByNameAt(set, "cnstr", i, &constraint);
+				PARAM_SET_getStrValue(set, "cnstr", NULL, PST_PRIORITY_NONE, i, &constraint);
 				strncpy(tmp, constraint, sizeof(tmp));
 
 				oid = tmp;
@@ -288,9 +289,9 @@ cleanup:
 	return res;
 }
 
-static int ksitool_initTrustStore(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
+static int ksitool_initTrustStore(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	KSI_PKITruststore *refTrustStore = NULL;
 	int i=0;
 	bool V, W, cnstr;
@@ -302,10 +303,10 @@ static int ksitool_initTrustStore(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	}
 
 	/*Get parameter values*/
-	set = Task_getSet(task);
-	V = paramSet_isSetByName(set,"V");
-	W = paramSet_getStrValueByNameAt(set, "W",0, &lookupDir);
-	cnstr = paramSet_isSetByName(set,"cnstr");
+	set = TASK_getSet(task);
+	V = PARAM_SET_isSetByName(set,"V");
+	W = PARAM_SET_getStrValue(set, "W", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &lookupDir) == PST_OK ? true : false;
+	cnstr = PARAM_SET_isSetByName(set,"cnstr");
 
 
 	if (cnstr) {
@@ -320,7 +321,7 @@ static int ksitool_initTrustStore(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 		ERR_CATCH_MSG(err, res, "Error: Unable to get PKI trust store.");
 		if(V){
 			i = 0;
-			while(paramSet_getStrValueByNameAt(set, "V", i++, &lookupFile)) {
+			while(PARAM_SET_getStrValue(set, "V", NULL, PST_PRIORITY_NONE, i++, &lookupFile) == PST_OK) {
 				res = KSI_PKITruststore_addLookupFile(refTrustStore, lookupFile);
 				ERR_CATCH_MSG(err, res, "Error: Unable to add cert to PKI trust store.");
 			}
@@ -339,9 +340,9 @@ cleanup:
 	return res;
 }
 
-static int ksitool_initPublicationFile(Task *task, KSI_CTX *ksi, ERR_TRCKR *err) {
+static int ksitool_initPublicationFile(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err) {
 	int res = KSI_UNKNOWN_ERROR;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	KSI_PublicationsFile *tmpPubFile = NULL;
 	bool b;
 	char *inPubFileName = NULL;
@@ -351,10 +352,10 @@ static int ksitool_initPublicationFile(Task *task, KSI_CTX *ksi, ERR_TRCKR *err)
 	}
 
 	/*Get parameter values*/
-	set = Task_getSet(task);
-	b = paramSet_getStrValueByNameAt(set, "b",0, &inPubFileName);
+	set = TASK_getSet(task);
+	b = PARAM_SET_getStrValue(set, "b", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inPubFileName) == PST_OK ? true : false;
 
-	if(b && (Task_getID(task) != downloadPublicationsFile && Task_getID(task) != verifyPublicationsFile)){
+	if(b && (TASK_getID(task) != downloadPublicationsFile && TASK_getID(task) != verifyPublicationsFile)){
 		res = loadPublicationFile(err, ksi, inPubFileName, &tmpPubFile);
 		if (res != KT_OK) goto cleanup;
 
@@ -372,7 +373,7 @@ cleanup:
 	return res;
 }
 
-int initTask(Task *task ,KSI_CTX **ksi, ERR_TRCKR **error) {
+int initTask(TASK *task ,KSI_CTX **ksi, ERR_TRCKR **error) {
 	int res;
 	ERR_TRCKR *err = NULL;
 	KSI_CTX *tmpKsi = NULL;
@@ -433,12 +434,12 @@ cleanup:
 	return res;
 }
 
-bool isPiping(paramSet *set) {
+bool isPiping(PARAM_SET *set) {
 	int j;
 	char *files[5] = {NULL, NULL, NULL, NULL, NULL};
 
-	paramSet_getStrValueByNameAt(set, "o", 0, &files[0]);
-	paramSet_getStrValueByNameAt(set, "log", 0, &files[1]);
+	PARAM_SET_getStrValue(set, "o", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &files[0]);
+	PARAM_SET_getStrValue(set, "log", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &files[1]);
 
 	for (j = 0; j < 2; j++) {
 		if (files[j] != NULL && strcmp(files[j], "-") == 0) {
@@ -1179,4 +1180,12 @@ const char *STRING_getChunks(const char *strn, char *buf, size_t buf_len) {
 	STRING_extractAbstract(strn, "", "", buf, buf_len, find_group_start, find_group_end, &next);
 	string_removeChars(buf, '"');
 	return next;
+}
+
+int PARAM_SET_getStrValue(PARAM_SET *set, const char *name, const char *source, int prio, unsigned at, char **value) {
+	return PARAM_SET_getObj(set, name, source, prio, at, (void**)value);
+}
+
+int PARAM_SET_getIntValue(PARAM_SET *set, const char *name, const char *source, int prio, unsigned at, int *value) {
+	return PARAM_SET_getObj(set, name, source, prio, at, (void**)value);
 }

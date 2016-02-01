@@ -308,9 +308,9 @@ diag "--------------------------------------------------------------------------
 like "`$exec -v -b ${resource_dir}/publications.tlv -V ${resource_dir}/mock.crt --cnstr 2.5.4.10="Fake company"  2>&1`" "Error: Unexpected OID value for PKI Certificate constraint." "Error invalid constraint value"
 diag "------------------------------------------------------------------------------";
 
-like "`$exec -s -F SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b877 -o ${tmp}/too_short_hash.ksig -S ${KSI_TCP_AGGREGATOR} ${KSI_TCP_LOGIN} 2>&1`" "Content error: -F 'SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b877'. (Hash length is incorrect)"
+like "`$exec -s -F SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b877 -o ${tmp}/too_short_hash.ksig -S ${KSI_TCP_AGGREGATOR} ${KSI_TCP_LOGIN} 2>&1`" "Error: Hash length is incorrect. Parameter -F 'SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b877'."
 
-like "`$exec -s -F SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d56 -o ${tmp}/too_long_hash.ksig -S ${KSI_TCP_AGGREGATOR} ${KSI_TCP_LOGIN} 2>&1`" "Content error: -F 'SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d56'. (Hash length is incorrect)"
+like "`$exec -s -F SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d56 -o ${tmp}/too_long_hash.ksig -S ${KSI_TCP_AGGREGATOR} ${KSI_TCP_LOGIN} 2>&1`" "Error: Hash length is incorrect. Parameter -F 'SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d56'."
 diag "------------------------------------------------------------------------------";
 
 diag "====== Testing exchanged services ======";
@@ -337,16 +337,16 @@ like "`$exec -v -i ${tmp}/ext.ksig -P ${KSI_AGGREGATOR:4} 2>&1`" "Error: Unable 
 diag "------------------------------------------------------------------------------";
 
 diag "######    Invalid date string format and content"
-like "`$exec -p  -T \"1899-12-12 00:00:00\"  2>&1`" "(Time out of range)" "Invalid year."
-like "`$exec -p  -T \"2015-13-15 00:00:00\"  2>&1`" "(Time out of range)" "Invalid month."
-like "`$exec -p  -T \"2015-0-31 00:00:00\"  2>&1`" "(Time out of range)" "Invalid month."
-like "`$exec -p  -T \"2013-2-29 00:00:00\"  2>&1`" "(Time out of range)" "Invalid Day - not a leap year."
-like "`$exec -p  -T \"2015-09-31 00:00:00\"  2>&1`" "(Time out of range)" "Invalid Day."
-like "`$exec -p  -T \"2015-09-0 00:00:00\"  2>&1`" "(Time out of range)" "Invalid Day."
-like "`$exec -p  -T \"2015-10-30 24:00:00\"  2>&1`" "(Time out of range)" "Invalid Hour."
-like "`$exec -p  -T \"2015-10-30 00:60:00\"  2>&1`" "(Time out of range)" "Invalid Min."
-like "`$exec -p  -T \"2015-10-30 00:00:60\"  2>&1`" "(Time out of range)" "Invalid Sec."
-like "`$exec -p  -T \"12-15-2015 00:00:00\"  2>&1`" "(Time not formatted as YYYY-MM-DD hh:mm:ss)" "Invalid Format."
+like "`$exec -p  -T \"1899-12-12 00:00:00\"  2>&1`" "Time out of range" "Invalid year."
+like "`$exec -p  -T \"2015-13-15 00:00:00\"  2>&1`" "Time out of range" "Invalid month."
+like "`$exec -p  -T \"2015-0-31 00:00:00\"  2>&1`" "Time out of range" "Invalid month."
+like "`$exec -p  -T \"2013-2-29 00:00:00\"  2>&1`" "Time out of range" "Invalid Day - not a leap year."
+like "`$exec -p  -T \"2015-09-31 00:00:00\"  2>&1`" "Time out of range" "Invalid Day."
+like "`$exec -p  -T \"2015-09-0 00:00:00\"  2>&1`" "Time out of range" "Invalid Day."
+like "`$exec -p  -T \"2015-10-30 24:00:00\"  2>&1`" "Time out of range" "Invalid Hour."
+like "`$exec -p  -T \"2015-10-30 00:60:00\"  2>&1`" "Time out of range" "Invalid Min."
+like "`$exec -p  -T \"2015-10-30 00:00:60\"  2>&1`" "Time out of range" "Invalid Sec."
+like "`$exec -p  -T \"12-15-2015 00:00:00\"  2>&1`" "Time not formatted as YYYY-MM-DD hh:mm:ss" "Invalid Format."
 diag "------------------------------------------------------------------------------";
 
 

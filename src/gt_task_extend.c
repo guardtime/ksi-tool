@@ -21,10 +21,11 @@
 #include <stdlib.h>
 #include "obj_printer.h"
 #include "gt_task_support.h"
+#include "param_set/param_value.h"
 
-int GT_extendTask(Task *task) {
+int GT_extendTask(TASK *task) {
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	KSI_CTX *ksi = NULL;
 	ERR_TRCKR *err = NULL;
 	KSI_Signature *sig = NULL;
@@ -37,14 +38,14 @@ int GT_extendTask(Task *task) {
 	char *outSigFileName = NULL;
 	int publicationTime = 0;
 
-	set = Task_getSet(task);
-	paramSet_getStrValueByNameAt(set, "i", 0,&inSigFileName);
-	paramSet_getStrValueByNameAt(set, "o", 0,&outSigFileName);
-	T = paramSet_getIntValueByNameAt(set,"T",0,&publicationTime);
-	n = paramSet_isSetByName(set, "n");
-	t = paramSet_isSetByName(set, "t");
-	r = paramSet_isSetByName(set, "r");
-	d = paramSet_isSetByName(set, "d");
+	set = TASK_getSet(task);
+	PARAM_SET_getStrValue(set, "i", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inSigFileName);
+	PARAM_SET_getStrValue(set, "o", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &outSigFileName);
+	T = PARAM_SET_getIntValue(set, "T", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &publicationTime) == PST_OK ? true : false;
+	n = PARAM_SET_isSetByName(set, "n");
+	t = PARAM_SET_isSetByName(set, "t");
+	r = PARAM_SET_isSetByName(set, "r");
+	d = PARAM_SET_isSetByName(set, "d");
 
 	res = initTask(task, &ksi, &err);
 	if (res != KT_OK) goto cleanup;

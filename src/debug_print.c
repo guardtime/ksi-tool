@@ -23,6 +23,7 @@
 #include "obj_printer.h"
 #include "debug_print.h"
 #include "gt_task_support.h"
+#include "param_set/param_value.h"
 
 static int debug_getVerificationStepFailed(KSI_Signature *sig) {
 	int stat;
@@ -54,8 +55,8 @@ static int debug_getVerificationStepFailed(KSI_Signature *sig) {
 	return 0;
 }
 
-void DEBUG_verifySignature(KSI_CTX *ksi, Task *task, int res, KSI_Signature *sig) {
-	paramSet *set = NULL;
+void DEBUG_verifySignature(KSI_CTX *ksi, TASK *task, int res, KSI_Signature *sig) {
+	PARAM_SET *set = NULL;
 	bool d;
 	int stepFailed;
 	KSI_PublicationsFile *pubFile = NULL;
@@ -63,8 +64,8 @@ void DEBUG_verifySignature(KSI_CTX *ksi, Task *task, int res, KSI_Signature *sig
 	if (ksi == NULL || task == NULL || sig == NULL) return;
 
 
-	set = Task_getSet(task);
-	d = paramSet_isSetByName(set, "d");
+	set = TASK_getSet(task);
+	d = PARAM_SET_isSetByName(set, "d");
 
 	if (d && res == KSI_VERIFICATION_FAILURE) {
 		stepFailed = debug_getVerificationStepFailed(sig);
@@ -85,8 +86,8 @@ void DEBUG_verifySignature(KSI_CTX *ksi, Task *task, int res, KSI_Signature *sig
 	}
 }
 
-void DEBUG_verifyPubfile(KSI_CTX *ksi, Task *task, int res, KSI_PublicationsFile *pub) {
-	paramSet *set = NULL;
+void DEBUG_verifyPubfile(KSI_CTX *ksi, TASK *task, int res, KSI_PublicationsFile *pub) {
+	PARAM_SET *set = NULL;
 	bool d;
 	char *constraint = NULL;
 	unsigned i = 0;
@@ -94,19 +95,19 @@ void DEBUG_verifyPubfile(KSI_CTX *ksi, Task *task, int res, KSI_PublicationsFile
 	if (ksi == NULL || task == NULL || pub == NULL) return;
 
 
-	set = Task_getSet(task);
-	d = paramSet_isSetByName(set, "d");
+	set = TASK_getSet(task);
+	d = PARAM_SET_isSetByName(set, "d");
 
 	if (d && (res == KSI_PKI_CERTIFICATE_NOT_TRUSTED || res == KSI_INVALID_PKI_SIGNATURE)) {
 		print_info("\n");
 		OBJPRINT_publicationsFileSigningCert(pub);
 
 
-		if (paramSet_isSetByName(set, "cnstr") == true) {
+		if (PARAM_SET_isSetByName(set, "cnstr")) {
 			print_info("Expected publications file PKI certificate constraints:\n");
 		}
 
-		while (paramSet_getStrValueByNameAt(set, "cnstr", i++, &constraint) == true) {
+		while (PARAM_SET_getStrValue(set, "cnstr", NULL, PST_PRIORITY_NONE, i++, &constraint) == PST_OK) {
 			char OID[1204];
 			char value[1204];
 			char *ret = NULL;

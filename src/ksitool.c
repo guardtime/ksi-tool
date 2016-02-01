@@ -22,12 +22,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "task_def.h"
+#include "param_set/task_def.h"
 #include "gt_task.h"
 #include <ksi/ksi.h>
 #include <ksi/compatibility.h>
 #include <ksi/net.h>
 #include "ksitool_err.h"
+#include "gt_cmd_control.h"
+#include "param_set/param_value.h"
+#include "component.h"
 
 #ifndef _WIN32
 #  ifdef HAVE_CONFIG_H
@@ -42,20 +45,20 @@ const char *getVersion(void) {
 	return versionString;
 }
 
-static bool includeParametersFromFile(paramSet *set, int priority){
+static bool includeParametersFromFile(PARAM_SET *set, int priority){
 	/*Read command-line parameters from file*/
-	if(paramSet_isSetByName(set, "inc")){
+	if(PARAM_SET_isSetByName(set, "inc")){
 		char *fname = NULL;
 		char *fname2 = NULL;
 		int i=0;
 		int n=0;
 		unsigned count=0;
 
-		while(paramSet_getStrValueByNameAt(set, "inc",i,&fname)){
-			paramSet_getValueCountByName(set, "inc", &count);
+		while (PARAM_SET_getStrValue(set, "inc", NULL, PST_PRIORITY_NONE, i, &fname) == PST_OK) {
+			PARAM_SET_getValueCount(set, "{inc}", NULL, PST_PRIORITY_NONE, &count);
 
 			for(n=0; n<i; n++){
-				paramSet_getStrValueByNameAt(set, "inc",n,&fname2);
+				PARAM_SET_getStrValue(set, "inc", NULL, PST_PRIORITY_NONE, n, &fname2);
 
 				if(strcmp(fname, fname2)==0){
 					fname = NULL;
@@ -63,7 +66,7 @@ static bool includeParametersFromFile(paramSet *set, int priority){
 				}
 			}
 
-			paramSet_readFromFile(fname, set, priority);
+			PARAM_SET_readFromFile(fname, set, priority);
 			if(++i>255){
 				print_errors("Error: Include file list is too long.");
 				return false;
@@ -82,7 +85,7 @@ static int ksitool_mightItBeUri(const char *uri) {
 	return KSI_UriSplitBasic(uri, NULL, NULL, NULL, NULL) == KSI_OK ? 1 : 0;
 }
 
-static int ksitool_load_urls_from_env(paramSet *set, const char *line, const char *env_name, const char *param_name, int priority) {
+static int ksitool_load_urls_from_env(PARAM_SET *set, const char *line, const char *env_name, const char *param_name, int priority) {
 	const char *nxt = line;
 	char url[1024] = "";
 	unsigned url_count = 0;
@@ -96,16 +99,15 @@ static int ksitool_load_urls_from_env(paramSet *set, const char *line, const cha
 	bool constraintsAlreadySet;
 	bool isUrlTagOk;
 
-
-	aggre = paramSet_isSetByName(set, "aggre");
-	s = paramSet_isSetByName(set, "s");
-	v = paramSet_isSetByName(set, "v");
-	x = paramSet_isSetByName(set, "x");
-	p = paramSet_isSetByName(set, "p");
-	T = paramSet_isSetByName(set, "T");
-	P = paramSet_isSetByName(set, "P");
-	E = paramSet_isSetByName(set, "E");
-	cnstr = paramSet_isSetByName(set, "cnstr");
+	aggre = PARAM_SET_isSetByName(set, "aggre");
+	s = PARAM_SET_isSetByName(set, "s");
+	v = PARAM_SET_isSetByName(set, "v");
+	x = PARAM_SET_isSetByName(set, "x");
+	p = PARAM_SET_isSetByName(set, "p");
+	T = PARAM_SET_isSetByName(set, "T");
+	P = PARAM_SET_isSetByName(set, "P");
+	E = PARAM_SET_isSetByName(set, "E");
+	cnstr = PARAM_SET_isSetByName(set, "cnstr");
 
 	/* It should indicate if constraints have been defined on command-line. */
 	constraintsAlreadySet = (E || cnstr || P) ? true : false;
@@ -136,7 +138,7 @@ static int ksitool_load_urls_from_env(paramSet *set, const char *line, const cha
 						cnstr_warn = false;
 					}
 				} else {
-					paramSet_appendParameterByName("cnstr", chunk, env_name, set);
+					PARAM_SET_add(set, "cnstr", chunk, env_name, PST_PRIORITY_VALID_BASE);
 				}
 		} else if (success == 0 && strcmp(env_name, "KSI_PUBFILE") != 0) {
 			if (ksitool_mightItBeUri(chunk)) {
@@ -165,7 +167,7 @@ static int ksitool_load_urls_from_env(paramSet *set, const char *line, const cha
 	}
 
 	/* ADD URL */
-	paramSet_priorityAppendParameterByName(param_name, url, env_name, priority, set);
+	PARAM_SET_add(set, param_name, url, env_name, priority);
 	if(strcmp(env_name, "KSI_AGGREGATOR") == 0) strcpy(default_aggreUrl, url);
 	else if(strcmp(env_name, "KSI_EXTENDER") == 0) strcpy(default_extenderUrl, url);
 	else if(strcmp(env_name, "KSI_PUBFILE") == 0) strcpy(default_pubUrl, url);
@@ -174,8 +176,8 @@ static int ksitool_load_urls_from_env(paramSet *set, const char *line, const cha
 	/* ADD password and user name */
 	if((s || aggre) && (strcmp(env_name, "KSI_AGGREGATOR") == 0)
 		|| (x || v || (p && T)) && (strcmp(env_name, "KSI_EXTENDER") == 0)) {
-		if (user[0]) paramSet_priorityAppendParameterByName("user", user, env_name, priority, set);
-		if (pass[0])paramSet_priorityAppendParameterByName("pass", pass, env_name, priority, set);
+		if (user[0]) PARAM_SET_add(set, "user", user, env_name, priority);
+		if (pass[0])PARAM_SET_add(set, "pass", pass, env_name, priority);
 	}
 
 	return res;
@@ -188,7 +190,7 @@ static int ksitool_load_urls_from_env(paramSet *set, const char *line, const cha
  * extracted. This function MUST be called after reading files and command line to
  * make correct decisions.
  */
-static bool includeParametersFromEnvironment(paramSet *set, char **envp, int priority){
+static bool includeParametersFromEnvironment(PARAM_SET *set, char **envp, int priority){
 	bool ret = true;
 	const char *key = NULL;
 	char name[1024];
@@ -346,15 +348,26 @@ static void GT_pritHelp(void){
 			printSupportedHashAlgorithms();
 			print_info("\n");
 }
-#define NUMBER_OF_TASKS 9
+
+static int wrapper_returnStr(const char* str, void** obj){
+	*obj = (void*)str;
+	return PST_OK;
+}
+
+static int wrapper_returnInt(const char* str,  void** obj){
+	int *pI = (int*)obj;
+	*pI = atoi(str);
+	return PST_OK;
+}
+
 
 int main(int argc, char** argv, char **envp) {
-	TaskDefinition *taskDefArray[NUMBER_OF_TASKS];
-	paramSet *set = NULL;
+	int res;
+	PARAM_SET *set = NULL;
+	TASK_SET *tasks = NULL;
+	TASK *task = NULL;
 	int retval = EXIT_SUCCESS;
-	Task *task = NULL;
-	int i;
-
+	char buf[2048];
 #ifdef _WIN32
 #ifdef _DEBUG
 	_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
@@ -363,79 +376,71 @@ int main(int argc, char** argv, char **envp) {
 #endif
 #endif
 
-	for (i = 0; i < NUMBER_OF_TASKS; i++) {
-		taskDefArray[i] = NULL;
-	}
-
 	print_init();
 
 	/*Create parameter set*/
-	paramSet_new("{s|sign}*{x|extend}*{p}*{v|verify}*{t}*{r}*{d}*{n}*{h|help}*{o|out}{D|dataout}{i}{f}{b}{c}{C}{V}*"
+	PARAM_SET_new("{s|sign}*{x|extend}*{p}*{v|verify}*{t}*{r}*{d}*{n}*{h|help}*{o|out}{i}{D|dataout}{f}{b}{c}{C}{V}*"
 				"{W}{S}>{X}>{P}>{F}{H}{T}{E}{inc}*{cnstr}*"
-				/*TODO: uncomment if implemented*/
-//				"{aggre}{htime}{setsystime}"
 				"{ref}{user}>{pass}>{log}{silent}{nowarn}",
-				print_info, print_warnings, print_errors,
 				&set);
 	if(set == NULL) goto cleanup;
 
 	/*Configure parameter set*/
-	paramSet_addControl(set, "{o}{D}{log}", isPathFormOk, isOutputFileContOK, NULL);
-	paramSet_addControl(set, "{i}{b}{f}{V}{W}{inc}", isPathFormOk, isInputFileContOK, convert_repairPath);
-	paramSet_addControl(set, "{F}", isImprintFormatOK, isImprintContOK, NULL);
-	paramSet_addControl(set, "{H}", isHashAlgFormatOK, isHashAlgContOK, NULL);
-	paramSet_addControl(set, "{S}{X}{P}", isURLFormatOK, contentIsOK, convert_repairUrl);
-	paramSet_addControl(set, "{c}{C}", isIntegerFormatOK, isIntegerContOk, NULL);
-	paramSet_addControl(set, "{T}", isUTCTimeFormatOk, contentIsOK, convert_UTC_to_UNIX);
-	paramSet_addControl(set, "{E}", isEmailFormatOK, contentIsOK, NULL);
-	paramSet_addControl(set, "{user}{pass}", isUserPassFormatOK, contentIsOK, NULL);
-	paramSet_addControl(set, "{ref}", formatIsOK, contentIsOK, NULL);
-	paramSet_addControl(set, "{cnstr}", isConstraintFormatOK, contentIsOK, convert_replaceWithOid);
-	paramSet_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{silent}{nowarn}", isFlagFormatOK, contentIsOK, NULL);
-	/*TODO: uncomment if implemented*/
-//	paramSet_addControl(set, "{aggre}{htime}{setsystime}", isFlagFormatOK, contentIsOK, NULL);
+	PARAM_SET_addControl(set, "{o}{D}{log}", isPathFormOk, isOutputFileContOK, NULL, wrapper_returnStr);
+	PARAM_SET_addControl(set, "{i}{b}{f}{V}{W}{inc}", isPathFormOk, isInputFileContOK, convert_repairPath, wrapper_returnStr);
+	PARAM_SET_addControl(set, "{F}", isImprintFormatOK, isImprintContOK, NULL, wrapper_returnStr);
+	PARAM_SET_addControl(set, "{H}", isHashAlgFormatOK, isHashAlgContOK, NULL, wrapper_returnStr);
+	PARAM_SET_addControl(set, "{S}{X}{P}", isURLFormatOK, contentIsOK, convert_repairUrl, wrapper_returnStr);
+	PARAM_SET_addControl(set, "{c}{C}", isIntegerFormatOK, isIntegerContOk, NULL, wrapper_returnInt);
+	PARAM_SET_addControl(set, "{T}", isUTCTimeFormatOk, contentIsOK, convert_UTC_to_UNIX, wrapper_returnInt);
+	PARAM_SET_addControl(set, "{E}", isEmailFormatOK, contentIsOK, NULL, wrapper_returnStr);
+	PARAM_SET_addControl(set, "{user}{pass}", isUserPassFormatOK, contentIsOK, NULL, wrapper_returnStr);
+	PARAM_SET_addControl(set, "{ref}", formatIsOK, contentIsOK, NULL, wrapper_returnStr);
+	PARAM_SET_addControl(set, "{cnstr}", isConstraintFormatOK, contentIsOK, convert_replaceWithOid, wrapper_returnStr);
+	PARAM_SET_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{silent}{nowarn}", isFlagFormatOK, contentIsOK, NULL, NULL);
+
+
+	TASK_SET_new(&tasks);
 
 	/*Define possible tasks*/
-	/*						ID							DESC					MAN				IGNORE	OPTIONAL		FORBIDDEN					NEW OBJ*/
-	TaskDefinition_new(signDataFile,			"Sign data file",				"s,f,o,S",		"b,r",	"H,D,n,d,t",	"x,p,v,aggre,F,i,T",		&taskDefArray[0]);
-	TaskDefinition_new(signHash,				"Sign hash",					"s,F,o,S",		"b,r",	"n,d,t",		"x,p,v,aggre,f,i,T,H",		&taskDefArray[1]);
-	TaskDefinition_new(extendTimestamp,			"Extend signature",				"x,i,o,P,X",	"",		"T,n,d,r,t",	"s,p,v,aggre,f,F,H",		&taskDefArray[2]);
-	TaskDefinition_new(downloadPublicationsFile,"Download publications file",	"p,o,P,cnstr",	"n,b",	"d,r,t",		"s,x,v,aggre,f,F,T,i,H",	&taskDefArray[3]);
-	TaskDefinition_new(createPublicationString, "Create publication string",	"p,T,X",		"n,r",	"d,t",			"s,x,v,aggre,f,F,o,i,H",	&taskDefArray[4]);
-	TaskDefinition_new(verifyTimestamp,			"Verify signature",				"v,i",			"",		"f,F,n,d,r,t",	"s,p,x,aggre,H",			&taskDefArray[5]);
-	TaskDefinition_new(verifyTimestampOnline,	"Verify online",				"v,x,i,X",		"",		"f,F,n,d,r,t",	"s,p,aggre,T,H",			&taskDefArray[6]);
-	TaskDefinition_new(verifyPublicationsFile,	"Verify publications file",		"v,b,cnstr",	"",		"n,d,r,t",		"x,s,p,aggre,i,f,F,T,H",	&taskDefArray[7]);
-	TaskDefinition_new(dumpPublicationsFile,	"Dump publications file",		"p,d",			"",		"d,r,t",		"s,x,v,aggre,f,F,T,i,H,o",	&taskDefArray[8]);
-	/*TODO: uncomment if implemented and set NUMBER_OF_TASKS+=2*/
-//	TaskDefinition_new(getRootH_T,				"Get Aggregator root hash",		"aggre,htime,S","",		"",				"x,s,p,v,f,F,i,o,T,H,setsystime",		&taskDefArray[8]);
-//	TaskDefinition_new(setSysTime,				"Set system time",				"aggre,setsystime,S","","",				"x,s,p,v,f,F,i,o,T,H,htime",		&taskDefArray[9]);
+	/*						ID							DESC						MAN				ATL		FORBIDDEN					IGN	*/
+	TASK_SET_add(tasks, signDataFile,				"Sign data file",				"s,f,o,S",		NULL,	"x,p,v,aggre,F,i,T",		"b,r");
+	TASK_SET_add(tasks, signHash,					"Sign hash",					"s,F,o,S",		NULL,	"x,p,v,aggre,f,i,T,H",		"b,r");
+	TASK_SET_add(tasks, extendTimestamp,			"Extend signature",				"x,i,o,P,X",	NULL,	"s,p,v,aggre,f,F,H",		NULL);
+	TASK_SET_add(tasks, downloadPublicationsFile,	"Download publications file",	"p,o,P,cnstr",	NULL,	"s,x,v,aggre,f,F,T,i,H",	"n,b");
+	TASK_SET_add(tasks, createPublicationString,	"Create publication string",	"p,T,X",		NULL,	"s,x,v,aggre,f,F,o,i,H",	"n,r");
+	TASK_SET_add(tasks, verifyTimestamp,			"Verify signature",				"v,i",			NULL,	"s,p,x,aggre,H",			NULL);
+	TASK_SET_add(tasks, verifyTimestampOnline,		"Verify online",				"v,x,i,X",		NULL,	"s,p,aggre,T,H",			NULL);
+	TASK_SET_add(tasks, verifyPublicationsFile,		"Verify publications file",		"v,b,cnstr",	NULL,	"x,s,p,aggre,i,f,F,T,H",	NULL);
+	TASK_SET_add(tasks, dumpPublicationsFile,		"Dump publications file",		"p,d",			NULL,	"s,x,v,aggre,f,F,T,i,H,o",	NULL);
+
 
 	/*Read parameter set*/
-	paramSet_readFromCMD(argc, argv, set, 3);
+	PARAM_SET_readFromCMD(argc, argv, set, 3);
 
-	if (paramSet_isSetByName(set, "silent")) {
+	if (PARAM_SET_isSetByName(set, "silent")) {
 		print_disable(PRINT_WARNINGS | PRINT_INFO);
-	} else if (paramSet_isSetByName(set, "nowarn")) {
+	} else if (PARAM_SET_isSetByName(set, "nowarn")) {
 		print_disable(PRINT_WARNINGS);
 	}
 
-	/*Add default user and pass if S or X is defined and user or pass is not.*/
-	if(paramSet_isSetByName(set, "S") || paramSet_isSetByName(set, "X")){
-		if(paramSet_isSetByName(set, "user") == false)
-			paramSet_priorityAppendParameterByName("user", "anon", "default", 3, set);
-		if(paramSet_isSetByName(set, "pass") == false)
-			paramSet_priorityAppendParameterByName("pass", "anon", "default", 3, set);
+	/* Add default user and pass if S or X is defined and user or pass is not. */
+	if (PARAM_SET_isSetByName(set, "S") || PARAM_SET_isSetByName(set, "X")) {
+		if(!PARAM_SET_isSetByName(set, "user"))
+			PARAM_SET_add(set, "user", "anon", "default", 3);
+		if(!PARAM_SET_isSetByName(set, "pass"))
+			PARAM_SET_add(set, "pass", "anon", "default", 3);
 	}
 
 	if(includeParametersFromFile(set, 2) == false) goto cleanup;
 	if(includeParametersFromEnvironment(set, envp, 1) == false) goto cleanup;
-	if(paramSet_isSetByName(set, "h")) goto cleanup;
+	if(PARAM_SET_isSetByName(set, "h")) goto cleanup;
 
-	if (paramSet_isSetByName(set, "E")) {
+	if (PARAM_SET_isSetByName(set, "E")) {
 		char tmp[1024];
 		char *email = NULL;
 		print_warnings("Warning: Parameter E is deprecated and will be removed in later versions. Use --cnstr instead.\n");
-		if (paramSet_getStrValueByNameAt(set, "E", 0, &email) == false) {
+		if (PARAM_SET_getStrValue(set, "E", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &email) != PST_OK) {
 			print_errors("Error: Unable to convert parameter E to cnstr. Check email format.\n");
 			retval = EXIT_FAILURE;
 			goto cleanup;
@@ -445,7 +450,7 @@ int main(int argc, char** argv, char **envp) {
 
 		KSI_snprintf(tmp, sizeof(tmp), "%s=%s", KSI_CERT_EMAIL, email);
 
-		if (paramSet_appendParameterByName("cnstr", tmp, "E", set) == false) {
+		if (PARAM_SET_add(set, "cnstr", tmp, "E", PST_PRIORITY_VALID_BASE) != PST_OK) {
 			print_errors("Error: Unable to convert parameter E to cnstr.\n");
 			retval = EXIT_FAILURE;
 			goto cleanup;
@@ -456,61 +461,66 @@ int main(int argc, char** argv, char **envp) {
 		print_disable(PRINT_WARNINGS | PRINT_INFO);
 	}
 
-	if(paramSet_isTypos(set)){
-		paramSet_printTypoWarnings(set);
+	if (PARAM_SET_isTypoFailure(set)) {
+		buf[0] = 0;
+		print_errors("%s", PARAM_SET_typosToString(set, "Typo: ", buf, sizeof(buf)));
 		retval = EXIT_INVALID_CL_PARAMETERS;
 		goto cleanup;
 	}
 
-	/*Extract task */
-	if (Task_analyse(taskDefArray, NUMBER_OF_TASKS, set)){
-		task = Task_getConsistentTask(taskDefArray, NUMBER_OF_TASKS, set);
+	if (PARAM_SET_isUnknown(set)) {
+		buf[0] = 0;
+		print_warnings("%s", PARAM_SET_unknownsToString(set, "Warning: ", buf, sizeof(buf)));
 	}
 
-	paramSet_printUnknownParameterWarnings(set);
-	if(task == NULL){
-		Task_printError(taskDefArray, NUMBER_OF_TASKS, set);
+	if(!PARAM_SET_isFormatOK(set)){
+		buf[0] = 0;
+		print_errors("%s", PARAM_SET_invalidParametersToString(set, "Error: ", getParameterErrorString, buf, sizeof(buf)));
 		retval = EXIT_INVALID_CL_PARAMETERS;
 		goto cleanup;
 	}
 
-	if(paramSet_isFormatOK(set) == false){
-		paramSet_PrintErrorMessages(set);
-		retval = EXIT_INVALID_CL_PARAMETERS;
+	res = TASK_SET_analyzeConsistency(tasks, set, 0.1);
+	if (res != PST_OK) {
+		print_errors("Error: Unable to analyze task set.\n");
+		retval = EXIT_FAILURE;
 		goto cleanup;
 	}
 
-	paramSet_printIgnoredLowerPriorityWarnings(set);
+	res = TASK_SET_getConsistentTask(tasks, &task);
+	if (res != PST_OK) {
+		print_errors("Task is not defined. Use (-x, -s, -v, -p) and read help -h.\n");
+		retval = EXIT_FAILURE;
+		goto cleanup;
+	}
 
 	/*DO*/
-	if(Task_getID(task) == downloadPublicationsFile || Task_getID(task) == createPublicationString
-			|| Task_getID(task) == dumpPublicationsFile) {
+	if(TASK_getID(task) == downloadPublicationsFile || TASK_getID(task) == createPublicationString
+			|| TASK_getID(task) == dumpPublicationsFile) {
 		retval=GT_publicationsFileTask(task);
 	}
-	else if (Task_getID(task) == verifyPublicationsFile){
+	else if (TASK_getID(task) == verifyPublicationsFile){
 		retval = GT_verifyPublicationFileTask(task);
 	}
-	else if (Task_getID(task) == signDataFile || Task_getID(task) == signHash){
+	else if (TASK_getID(task) == signDataFile || TASK_getID(task) == signHash){
 		retval=GT_signTask(task);
 	}
-	else if(Task_getID(task) == extendTimestamp){
+	else if(TASK_getID(task) == extendTimestamp){
 		retval=GT_extendTask(task);
 	}
-	else if(Task_getID(task) == getRootH_T || Task_getID(task) == setSysTime){
+	else if(TASK_getID(task) == getRootH_T || TASK_getID(task) == setSysTime){
 		retval=GT_other(task);
 	}
-	else if(Task_getID(task) == verifyTimestamp || Task_getID(task) == verifyTimestampOnline){
+	else if(TASK_getID(task) == verifyTimestamp || TASK_getID(task) == verifyTimestampOnline){
 		retval = GT_verifySignatureTask(task);
 	}
 
 cleanup:
 
-	if(paramSet_isSetByName(set, "h")) GT_pritHelp();
+	if(PARAM_SET_isSetByName(set, "h")) GT_pritHelp();
 
-	paramSet_free(set);
-	for(i = 0; i < NUMBER_OF_TASKS; i++)
-		TaskDefinition_free(taskDefArray[i]);
-	Task_free(task);
+	PARAM_SET_free(set);
+	TASK_SET_free(tasks);
 
 	/*Can be used in debug mode*/
 	//_CrtDumpMemoryLeaks();

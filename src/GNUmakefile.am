@@ -33,12 +33,16 @@ ksitool_SOURCES = \
 	gt_task_verify.c \
 	gt_task_other.c \
 	gt_task_pubfile.c \
-	task_def.c \
-	task_def.h \
 	gt_cmd_control.c \
 	gt_cmd_control.h \
-	param_set.c \
-	param_set.h \
+	param_set/param_value.c \
+	param_set/param_value.h \
+	param_set/parameter.c \
+	param_set/parameter.h \
+	param_set/param_set.c \
+	param_set/param_set.h \
+	param_set/task_def.c \
+	param_set/task_def.h \
 	printer.c \
 	printer.h \
 	ksitool_err.c \

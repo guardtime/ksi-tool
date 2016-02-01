@@ -20,12 +20,13 @@
 
 #include "gt_task_support.h"
 #include "obj_printer.h"
+#include "param_set/param_value.h"
 
-static int getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh);
+static int getHash(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh);
 
-int GT_signTask(Task *task) {
+int GT_signTask(TASK *task) {
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	bool t, n, d;
 	ERR_TRCKR *err = NULL;
 	KSI_CTX *ksi = NULL;
@@ -35,11 +36,11 @@ int GT_signTask(Task *task) {
 	char *outSigFileName = NULL;
 
 
-	set = Task_getSet(task);
-	paramSet_getStrValueByNameAt(set, "o", 0,&outSigFileName);
-	n = paramSet_isSetByName(set, "n");
-	t = paramSet_isSetByName(set, "t");
-	d = paramSet_isSetByName(set, "d");
+	set = TASK_getSet(task);
+	PARAM_SET_getStrValue(set, "o", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &outSigFileName);
+	n = PARAM_SET_isSetByName(set, "n");
+	t = PARAM_SET_isSetByName(set, "t");
+	d = PARAM_SET_isSetByName(set, "d");
 
 
 	res = initTask(task, &ksi, &err);
@@ -84,9 +85,9 @@ cleanup:
 	return retval;
 }
 
-static int  getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh) {
+static int  getHash(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh) {
 	int res;
-	paramSet *set = NULL;
+	PARAM_SET *set = NULL;
 	bool H;
 	char *hashAlg;
 	KSI_HashAlgorithm hasAlgID;
@@ -97,14 +98,14 @@ static int  getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh
 	char *imprint = NULL;
 
 
-	set = Task_getSet(task);
-	paramSet_getStrValueByNameAt(set, "f", 0,&inDataFileName);
-	paramSet_getStrValueByNameAt(set, "D", 0,&outDataFileName);
-	paramSet_getStrValueByNameAt(set, "F", 0,&imprint);
-	H = paramSet_getStrValueByNameAt(set, "H", 0,&hashAlg);
+	set = TASK_getSet(task);
+	PARAM_SET_getStrValue(set, "f", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &inDataFileName);
+	PARAM_SET_getStrValue(set, "D", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &outDataFileName);
+	PARAM_SET_getStrValue(set, "F", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &imprint);
+	H = PARAM_SET_getStrValue(set, "H", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &hashAlg) == PST_OK ? true : false;
 
 
-	if(Task_getID(task) == signDataFile){
+	if(TASK_getID(task) == signDataFile){
 		print_progressDesc(false, "Getting hash from file for signing process... ");
 		hashAlg = H ? (hashAlg) : ("default");
 		hasAlgID = KSI_getHashAlgorithmByName(hashAlg);
@@ -124,7 +125,7 @@ static int  getHash(Task *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hsh
 			goto cleanup;
 		}
 	}
-	else if(Task_getID(task) == signHash){
+	else if(TASK_getID(task) == signHash){
 		print_progressDesc(false, "Getting hash from input string for signing process... ");
 		res = getHashFromCommandLine(imprint, ksi, err, &tmp);
 		if (res != KT_OK) goto cleanup;
