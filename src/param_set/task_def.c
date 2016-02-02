@@ -58,64 +58,7 @@ static int isValidNameChar(int c) {
 }
 
 static const char* category_extract_name(const char* category, char *buf, short len, int *flags){
-	int cat_i = 0;
-	int buf_i = 0;
-	int tmp_flags = 0;
-	int isNameOpen = 0;
-	int isFlagsOpen = 0;
-
-
-	if (category == NULL || category[0] == 0 || buf == NULL) {
-		return NULL;
-	}
-
-	while (category[cat_i] != 0) {
-		/* If buf is going to be full, return NULL. */
-		if (buf_i >= len - 1) {
-			buf[len - 1] = 0;
-			return NULL;
-		}
-
-		/**
-		 * Extract the name and extra flags.
-         */
-		if (buf_i == 0 && !isNameOpen && !isFlagsOpen && isValidNameChar(category[cat_i])) {
-			isNameOpen = 1;
-		} else if (isNameOpen && buf_i > 0 && !isValidNameChar(category[cat_i]) && category[cat_i] != '-') {
-			isNameOpen = 0;
-		}
-
-
-		if (buf_i > 0 && !isNameOpen && !isFlagsOpen && category[cat_i] == '[') {
-			isFlagsOpen = 1;
-		} else if (isFlagsOpen && category[cat_i] == ']') {
-			isFlagsOpen = 0;
-		}
-
-		/**
-		 * Extract the data fields.
-         */
-		if (isNameOpen) {
-			buf[buf_i++] = category[cat_i];
-		} else if (isFlagsOpen) {
-			/*TODO: extract flags*/
-		} else if (buf_i > 0){
-			break;
-		}
-
-		cat_i++;
-	}
-
-	if (buf[0] == '0') {
-		return NULL;
-	}
-
-	buf[buf_i] = 0;
-	if (flags != NULL) {
-		*flags = tmp_flags;
-	}
-
-	return &category[cat_i];
+	return extract_next_name(category, isValidNameChar, buf, len, flags);
 }
 
 static int category_get_parameter_count(const char* categhory){
