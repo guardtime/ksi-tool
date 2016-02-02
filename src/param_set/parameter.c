@@ -106,6 +106,11 @@ cleanup:
 	return res;
 }
 
+static int wrapper_returnStr(const char* str, void** obj){
+	*obj = (void*)str;
+	return PST_OK;
+}
+
 int PARAM_new(const char *flagName,const char *flagAlias, int constraints, PARAM **newObj){
 	int res;
 	PARAM *tmp = NULL;
@@ -132,7 +137,7 @@ int PARAM_new(const char *flagName,const char *flagAlias, int constraints, PARAM
 	tmp->controlFormat = NULL;
 	tmp->controlContent = NULL;
 	tmp->convert = NULL;
-	tmp->extractObject = NULL;
+	tmp->extractObject = wrapper_returnStr;
 
 
 	tmpFlagName = new_string(flagName);
