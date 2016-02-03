@@ -64,6 +64,7 @@ CMDTOOL_OBJ = \
 	$(OBJ_DIR)\gt_task_verify.obj \
 	$(OBJ_DIR)\gt_task_other.obj \
 	$(OBJ_DIR)\ksitool.obj \
+	$(OBJ_DIR)\component.obj \
 	$(OBJ_DIR)\gt_cmd_control.obj \
 	$(OBJ_DIR)\printer.obj \
 	$(OBJ_DIR)\ksitool_err.obj \
@@ -80,7 +81,7 @@ EXT_LIB = libksiapi$(RTL).lib \
 	user32.lib gdi32.lib advapi32.lib Ws2_32.lib
 	  
 	
-CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE  /I$(SRC_DIR) /I$(PARAMSET_SRC_DIR) /I$(KSI_DIR)\include
+CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE  /I$(SRC_DIR) /I$(PARAMSET_SRC_DIR) /I$(KSI_DIR)\include /DTOOL_NAME=\"$(TOOL_NAME)\"
 LDFLAGS = /NOLOGO /LIBPATH:"$(KSI_DIR)\$(KSI_LIB)"
 
 !IF "$(KSI_LIB)" == "dll"

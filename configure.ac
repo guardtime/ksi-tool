@@ -42,6 +42,8 @@ else
     AC_MSG_RESULT([no])
 fi
 
+AC_DEFINE_UNQUOTED(TOOL_NAME, "AC_PACKAGE_NAME", [Commit id])
+
 # Checks for programs.
 AC_PROG_CC
 
