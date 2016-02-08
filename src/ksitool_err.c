@@ -23,6 +23,7 @@
 #include <stdarg.h>
 #include <ksi/ksi.h>
 #include "ksitool_err.h"
+#include "param_set/param_set.h"
 
 static int ksiErrToExitcode(int error_code){
 	switch (error_code) {
@@ -193,8 +194,10 @@ const char* errToString(int error) {
 
 	if(error < KSITOOL_ERR_BASE)
 		str = KSI_getErrorString(error);
-	else
+	else if (error >= KSITOOL_ERR_BASE && error < PARAM_SET_ERROR_BASE)
 		str = ksitoolErrToString(error);
+	else
+		str = PARAM_SET_errorToString(error);
 
 	return str;
 }
@@ -238,11 +241,11 @@ void ERR_TRCKR_free(ERR_TRCKR *obj) {
 
 void ERR_TRCKR_add(ERR_TRCKR *err, int code, const char *fname, int lineN, const char *msg, ...) {
 	va_list va;
-	if (err == NULL || msg == NULL || fname == NULL) return;
+	if (err == NULL || fname == NULL) return;
 	if(err->count >= MAX_ERROR_COUNT ) return;
 
 	va_start(va, msg);
-	vsnprintf(err->err[err->count].message, MAX_MESSAGE_LEN, msg, va);
+	vsnprintf(err->err[err->count].message, MAX_MESSAGE_LEN, msg == NULL ? "" : msg, va);
 	va_end(va);
 	err->err[err->count].message[MAX_MESSAGE_LEN -1] = 0;
 
@@ -268,7 +271,11 @@ void ERR_TRCKR_printErrors(ERR_TRCKR *err) {
 	if (err == NULL) return;
 
 	for (i = err->count - 1; i >= 0; i--) {
-		err->printErrors("%i) %s%s",i+1,  err->err[i].message, (err->err[i].message[strlen(err->err[i].message) - 1] == '\n') ? ("") : ("\n"));
+		if (err->err[i].message[0] == '\0') {
+			err->printErrors("%i) %s%s",i+1,  errToString(err->err[i].code), (err->err[i].message[strlen(err->err[i].message) - 1] == '\n') ? ("") : ("\n"));
+		} else {
+			err->printErrors("%i) %s%s",i+1,  err->err[i].message, (err->err[i].message[strlen(err->err[i].message) - 1] == '\n') ? ("") : ("\n"));
+		}
 	}
 
 	return;

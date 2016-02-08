@@ -49,12 +49,12 @@ FormatStatus isPathFormOk(const char *path){
 
 FormatStatus isHexFormatOK(const char *hex){
 	int i = 0;
-	char C;
+	int C;
 
 	if(hex == NULL) return FORMAT_NULLPTR;
 	if(strlen(hex) == 0) return FORMAT_NOCONTENT;
 
-	while ((C = hex[i++]) != '\0') {
+	while ((C = 0xff & hex[i++]) != '\0') {
 		if (!isxdigit(C)) {
 			return FORMAT_INVALID;
 		}
@@ -378,6 +378,10 @@ const char *getParameterErrorString(int res) {
 		case PARAM_INVALID: return "Parameter is invalid";
 		case HASH_ALG_INVALID_NAME: return "Algorithm name is incorrect";
 		case HASH_IMPRINT_INVALID_LEN: return "Hash length is incorrect";
+		case FORMAT_INVALID_HEX_CHAR: return "Invalid hex character";
+		case FORMAT_IMPRINT_NO_COLON: return "Imprint format must be <alg>:<hash>. ':' missing";
+		case FORMAT_IMPRINT_NO_HASH_ALG: return "Imprint format must be <alg>:<hash>. <alg> missing";
+		case FORMAT_IMPRINT_NO_HASH: return "Imprint format must be <alg>:<hash>. <hash> missing";
 		case FILE_ACCESS_DENIED: return "File access denied";
 		case FILE_DOES_NOT_EXIST: return "File does not exist";
 		case FILE_INVALID_PATH: return "Invalid path";

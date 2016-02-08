@@ -28,13 +28,20 @@ ksitool_SOURCES = \
 	gt_task.h \
 	gt_task_support.c \
 	gt_task_support.h \
-	gt_task_sign.c \
 	gt_task_extend.c \
 	gt_task_verify.c \
 	gt_task_other.c \
 	gt_task_pubfile.c \
 	gt_cmd_control.c \
 	gt_cmd_control.h \
+	tool_box/smart_file.c \
+	tool_box/smart_file.h \
+	tool_box/param_control.c \
+	tool_box/param_control.h \
+	tool_box/ksi_init.c \
+	tool_box/ksi_init.h \
+	tool_box/sign.c \
+	tool_box/default_tasks.h \
 	param_set/param_value.c \
 	param_set/param_value.h \
 	param_set/parameter.c \
