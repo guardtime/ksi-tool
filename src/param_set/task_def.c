@@ -32,7 +32,7 @@
 #define snprintf _snprintf
 #endif
 
-#define debug_array_printf 	for(n = 0; n < task_set->count; n++) {printf("[%2.2f:%2i]", task_set->cons[n], task_set->index[n]);}printf("\n");
+#define debug_array_printf 	{int n; for(n = 0; n < task_set->count; n++) {printf("[%2.2f:%2i]", task_set->cons[n], task_set->index[n]);}printf("\n");}
 
 
 static int new_string(const char *str, char **out) {
@@ -466,7 +466,7 @@ char* TASK_DEFINITION_toString(TASK_DEFINITION *def, char *buf, size_t buf_len) 
 		count += snprintf(buf + count, buf_len - count, ")");
 	}
 
-	count += snprintf(buf + count, buf_len - count, "\n");
+//	count += snprintf(buf + count, buf_len - count, "\n");
 	return buf;
 }
 
@@ -691,7 +691,7 @@ int TASK_SET_analyzeConsistency(TASK_SET *task_set, PARAM_SET *set, double sensi
 	task_set->consistent_count = 0;
 
 	if (task_set->count == 0) {
-		res = PST_TASK_SET_HAS_NOD_DEFINITIONS;
+		res = PST_TASK_SET_HAS_NO_DEFINITIONS;
 		goto cleanup;
 	}
 
@@ -700,11 +700,6 @@ int TASK_SET_analyzeConsistency(TASK_SET *task_set, PARAM_SET *set, double sensi
 		goto cleanup;
 	}
 
-
-	if (task_set->count == 0) {
-		res = PST_TASK_DEFINITION_NOT_DEFINED;
-		goto cleanup;
-	}
 
 	/**
 	 * Analyze consistency.
@@ -792,7 +787,7 @@ int TASK_SET_getConsistentTask(TASK_SET *task_set, TASK **task) {
 	}
 
 	if (task_set->count == 0) {
-		res = PST_TASK_SET_HAS_NOD_DEFINITIONS;
+		res = PST_TASK_SET_HAS_NO_DEFINITIONS;
 		goto cleanup;
 	}
 
@@ -890,6 +885,57 @@ cleanup:
 	return res;
 }
 
+int TASK_SET_isOneFromSetTheTarget(TASK_SET *task_set, double diff, int *ID) {
+	int i;
+	size_t count = 0;
+	TASK_DEFINITION *tmp = NULL;
+	double cons = 0;
+
+	if (task_set == NULL || diff <= 0) return 0;
+	if (task_set->count == 0) return 0;
+	if (task_set->count == 1) return 1;
+
+	cons = task_set->array[task_set->index[0]]->consistency;
+
+	for (i = 1; i < task_set->count; i++) {
+		tmp = task_set->array[task_set->index[i]];
+		if (fabs(tmp->consistency - cons) < diff) {
+			return 0;
+		}
+	}
+
+	if (ID != NULL) {
+		*ID = task_set->array[task_set->index[0]]->id;
+	}
+
+	return 1;
+}
+
+char* TASK_SET_howToRepair_toString(TASK_SET *task_set, PARAM_SET *set, int ID, const char *prefix, char *buf, size_t buf_len) {
+	int i;
+	size_t count = 0;
+	char *tmp;
+
+	if (task_set == NULL || buf == NULL || buf_len == 0 || set == NULL) return NULL;
+
+	for (i = 0; i < task_set->count; i++) {
+		if (task_set->array[i]->id == ID) {
+			if (task_set->array[i]->isConsistent) {
+				count += snprintf(buf + count, buf_len - count, "Task '%s' %s is OK.", task_set->array[i]->name, task_set->array[i]->toString);
+			} else {
+				count += snprintf(buf + count, buf_len - count, "Task '%s' %s is invalid:\n", task_set->array[i]->name, task_set->array[i]->toString);
+				tmp = TASK_DEFINITION_howToRepiar_toString(task_set->array[i], set, prefix, buf + count, buf_len - count);
+
+				if (tmp == NULL) return NULL;
+				else return buf;
+			}
+
+		}
+	}
+
+	return buf;
+}
+
 char* TASK_SET_suggestions_toString(TASK_SET *task_set, int depth, char *buf, size_t buf_len) {
 	int i;
 	int n;
@@ -901,7 +947,7 @@ char* TASK_SET_suggestions_toString(TASK_SET *task_set, int depth, char *buf, si
 	for (i = 0, n = 0; i < task_set->count && n < depth; i++) {
 		tmp = task_set->array[task_set->index[i]];
 		if (!tmp->isConsistent) {
-			count += snprintf(buf + count, buf_len - count, "Maybe you want to: %s %s", tmp->name, tmp->toString);
+			count += snprintf(buf + count, buf_len - count, "Maybe you want to: %s %s\n", tmp->name, tmp->toString);
 			n++;
 		}
 	}

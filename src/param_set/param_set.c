@@ -405,7 +405,7 @@ cleanup:
 	return res;
 }
 
-static int wrapper_returnStr(const char* str, void** obj){
+static int wrapper_returnStr(void *extra, const char* str, void** obj){
 	*obj = (void*)str;
 	return PST_OK;
 }
@@ -533,7 +533,7 @@ int PARAM_SET_addControl(PARAM_SET *set, const char *names,
 		int (*controlFormat)(const char *),
 		int (*controlContent)(const char *),
 		int (*convert)(const char*, char*, unsigned),
-		int (*extractObject)(const char *, void**)){
+		int (*extractObject)(void *, const char *, void**)){
 	int res;
 	PARAM *tmp = NULL;
 	const char *pName = NULL;
@@ -604,9 +604,10 @@ cleanup:
 	return res;
 }
 
-int PARAM_SET_getObj(PARAM_SET *set, const char *name, const char *source, int priority, int at, void **obj) {
+int PARAM_SET_getObjExtended(PARAM_SET *set, const char *name, const char *source, int priority, int at, void *ctxt, void **obj) {
 	int res;
 	PARAM *param = NULL;
+	void *extras[2] = {NULL, NULL};
 
 	if (set == NULL || name == NULL || obj == NULL) {
 		res = PST_INVALID_ARGUMENT;
@@ -616,11 +617,14 @@ int PARAM_SET_getObj(PARAM_SET *set, const char *name, const char *source, int p
 	res = param_set_getParameterByName(set, name, &param);
 	if (res != PST_OK) goto cleanup;
 
+	extras[0] = set;
+	extras[1] = ctxt;
+
 	/**
 	 * Obj must be feed directly to the getter function, asi it enables to manipulate
 	 * the data pointed by obj.
      */
-	res = PARAM_getObject(param, source, priority, at, obj);
+	res = PARAM_getObject(param, source, priority, at, extras, obj);
 	if (res != PST_OK) goto cleanup;
 
 	res = PST_OK;
@@ -628,6 +632,10 @@ int PARAM_SET_getObj(PARAM_SET *set, const char *name, const char *source, int p
 cleanup:
 
 	return res;
+}
+
+int PARAM_SET_getObj(PARAM_SET *set, const char *name, const char *source, int priority, int at, void **obj) {
+	return PARAM_SET_getObjExtended(set, name, source, priority, at, set, obj);
 }
 
 int PARAM_SET_clearParameter(PARAM_SET *set, const char *names){
@@ -1006,7 +1014,7 @@ char* PARAM_SET_typosToString(PARAM_SET *set, const char *prefix, char *buf, siz
 		if (res != PST_OK) return NULL;
 
 		for (n = 0; n < similar_count; n++) {
-			res = PARAM_getObject(set->typos, name, 0, n, (void**)&similar);
+			res = PARAM_getObject(set->typos, name, 0, n, NULL, (void**)&similar);
 			if (res != PST_OK || similar == NULL) return NULL;
 
 			count += snprintf(buf + count, buf_len - count, "%sDid You mean '%s%s' instead of '%s'.\n",use_prefix, strlen(similar) > 1 ? "--" : "-", similar, name);
@@ -1017,4 +1025,49 @@ char* PARAM_SET_typosToString(PARAM_SET *set, const char *prefix, char *buf, siz
 
 	buf[buf_len - 1] = '\0';
 	return buf;
+}
+
+const char* PARAM_SET_errorToString(int err) {
+	switch(err) {
+	case PST_OK:
+		return "OK.";
+	case PST_INVALID_ARGUMENT:
+		return "Invalid argument.";
+	case PST_OUT_OF_MEMORY:
+		return "PARAM_SET out of memory.";
+	case PST_INDEX_OVF:
+		return "Index is too large.";
+	case PST_PARAMETER_INVALID_FORMAT:
+	case PST_INVALID_FORMAT:
+		return "Invalid input format.";
+	case PST_PARAMETER_NOT_FOUND:
+		return "Parameter not found.";
+	case PST_PARAMETER_VALUE_NOT_FOUND:
+		return "Parameter value not found.";
+	case PST_PARAMETER_EMPTY:
+		return "Parameter is empty.";
+	case PST_PARAMETER_IS_TYPO:
+		return "Parameters name looks like typo.";
+	case PST_PARAMETER_IS_UNKNOWN:
+		return "Parameters is unknown.";
+	case PST_PARAMETER_UNIMPLEMENTED_OBJ:
+		return "Parameters object extractor unimplemented.";
+	case PST_NEGATIVE_PRIORITY:
+		return "Negative priority.";
+	case PST_TASK_ZERO_CONSISTENT_TASKS:
+		return "None consistent task.";
+	case PST_TASK_MULTIPLE_CONSISTENT_TASKS:
+		return "More than one consistent tasks.";
+	case PST_TASK_SET_HAS_NO_DEFINITIONS:
+		return "Task definition empty.";
+	case PST_TASK_SET_NOT_ANALYZED:
+		return "Task definition not analyzed.";
+	case PST_TASK_UNABLE_TO_ANALYZE_PARAM_SET_CHANGED:
+		return "Unable to analyze with different PARAM_SET.";
+	case PST_UNDEFINED_BEHAVIOUR:
+		return "PARAM_SET undefined behaviour.";
+	case PST_UNKNOWN_ERROR:
+		return "PARAM_SET unknown error.";
+	}
+	return "PARAM_SET unknown error.";
 }

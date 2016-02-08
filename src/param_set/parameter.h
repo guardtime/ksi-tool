@@ -89,15 +89,17 @@ int PARAM_addControl(PARAM *obj, int (*controlFormat)(const char *), int (*contr
  * pointer is given directly to the extractor it is possible to initialize existing
  * objects or create a new ones. It all depends how the extractor method is implemented.
  * 
- * int extractObject(const char *str, void **obj)
+ * int extractObject(void *extra, const char *str, void **obj)
+ * extra - optional pointer to data structure.
  * str - c-string value that belongs to PARAM_VAL object.
- * obj - pointer to receiving pointer to desired object. * 
+ * obj - pointer to receiving pointer to desired object.
+ * Returns PST_OK if successful, error code otherwise.
  * 
  * \param	obj				Parameter object.
  * \param	extractObject	Object extractor.
  * \return \c PST_OK when successful, error code otherwise.
  */
-int PARAM_setObjectExtractor(PARAM *obj, int (*extractObject)(const char *, void**));
+int PARAM_setObjectExtractor(PARAM *obj, int (*extractObject)(void *, const char *, void**));
 
 /**
  * Add new argument to the linked list. See \ref PARAM_addControl, \ref PARAM_getValue
@@ -162,12 +164,13 @@ int PARAM_getValue(PARAM *param, const char *source, int prio, unsigned at, PARA
  * \param	source		Constraint for the source, can be NULL.
  * \param	priority	Constraint for the priority, can be \c PST_PRIORITY_NONE, \c PST_PRIORITY_LOWEST, \c PST_PRIORITY_HIGHEST or greater than 0.
  * \param	at			Parameter index in the matching set composed with the constraints.
+ * \param	extra		Pointer to optional extra data.
  * \param	value		Pointer to the receiving pointer to the value.
  * 
  * \return \c PST_OK when successful, error code otherwise.
  * \note Returned value must be freed by the user if the implementation needs it.
  */
-int PARAM_getObject(PARAM *param, const char *source, int prio, unsigned at, void **value);
+int PARAM_getObject(PARAM *param, const char *source, int prio, unsigned at, void *extra, void **value);
 
 int PARAM_getInvalid(PARAM *param, const char *source, int prio, unsigned at, PARAM_VAL **value);
 

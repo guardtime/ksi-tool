@@ -106,7 +106,7 @@ cleanup:
 	return res;
 }
 
-static int wrapper_returnStr(const char* str, void** obj){
+static int wrapper_returnStr(void *extra, const char* str, void** obj){
 	*obj = (void*)str;
 	return PST_OK;
 }
@@ -192,10 +192,10 @@ int PARAM_addControl(PARAM *obj,
 	return PST_OK;
 }
 
-int PARAM_setObjectExtractor(PARAM *obj, int (*extractObject)(const char *, void**)) {
+int PARAM_setObjectExtractor(PARAM *obj, int (*extractObject)(void *, const char *, void**)) {
 	if (obj == NULL) return PST_INVALID_ARGUMENT;
 
-	obj->extractObject = extractObject;
+	obj->extractObject = extractObject == NULL ? wrapper_returnStr : extractObject;
 	return PST_OK;
 }
 
@@ -359,7 +359,7 @@ int PARAM_checkConstraints(PARAM *param, int constraints) {
 	return ret;
 }
 
-int PARAM_getObject(PARAM *param, const char *source, int prio, unsigned at, void **obj) {
+int PARAM_getObject(PARAM *param, const char *source, int prio, unsigned at, void *extra, void **obj) {
 	int res;
 	PARAM_VAL *value = NULL;
 
@@ -381,7 +381,7 @@ int PARAM_getObject(PARAM *param, const char *source, int prio, unsigned at, voi
 		goto cleanup;
 	}
 
-	res = param->extractObject(value->cstr_value, obj);
+	res = param->extractObject(extra, value->cstr_value, obj);
 	if (res != PST_OK) goto cleanup;
 
 	res = PST_OK;

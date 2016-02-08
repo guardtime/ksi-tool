@@ -34,20 +34,25 @@ enum param_set_err {
 	PST_INVALID_ARGUMENT = PARAM_SET_ERROR_BASE,
 	PST_INVALID_FORMAT,
 	PST_INDEX_OVF,
+	/** Parameter with the given name does not exist it the given set. */
 	PST_PARAMETER_NOT_FOUND,
+	/** Parameters value with the given constraints does not exist. */
 	PST_PARAMETER_VALUE_NOT_FOUND,
+	/** The parameters value count is zero.*/
 	PST_PARAMETER_EMPTY,
+	/** Parameter added to the set is possible typo. */
 	PST_PARAMETER_IS_TYPO,
+	/** Parameter added to the set is unknown. */
 	PST_PARAMETER_IS_UNKNOWN,
+	/** Object extractor function is not implemented. */
 	PST_PARAMETER_UNIMPLEMENTED_OBJ,
 	PST_OUT_OF_MEMORY,
 	PST_NEGATIVE_PRIORITY,
 	PST_PARAMETER_INVALID_FORMAT,
 	PST_TASK_ZERO_CONSISTENT_TASKS,
 	PST_TASK_MULTIPLE_CONSISTENT_TASKS,
-	PST_TASK_SET_HAS_NOD_DEFINITIONS,
+	PST_TASK_SET_HAS_NO_DEFINITIONS,
 	PST_TASK_SET_NOT_ANALYZED,
-	PST_TASK_DEFINITION_NOT_DEFINED,
 	PST_TASK_UNABLE_TO_ANALYZE_PARAM_SET_CHANGED,
 	PST_UNDEFINED_BEHAVIOUR,
 	PST_UNKNOWN_ERROR,
@@ -134,10 +139,14 @@ void PARAM_SET_free(PARAM_SET *set);
  * size.
  * int (*convert)(const char*, char*, unsigned) extra parameters 
  * 
- * Function \c extractObject us used to extract an object from the parameters value.
- * The value set affects the functions \rfe PARAM_SET_getObj behaviour. If not
- * set, the default value extracted is the c-string. 
- * int (*extractObject)(const char *, void**))
+ * Function \c extractObject used to extract an object from the parameters value.
+ * The value set affects the functions \ref PARAM_SET_getObj behaviour. If not
+ * set, the default value extracted is the c-string. Extra value for extractor
+ * is set as pointer to pointers (void**) and the size of the array is 2. When
+ * calling \ref PARAM_SET_getObj both pointers in array are pointing to PARAM_SET
+ * itself, when calling \ref PARAM_SET_getObjExtended, the second value is determined
+ * by the function call and extra parameter given. Format void **a = {set, extra}.
+ * int (*extractObject)(void *, const char *, void**))
  * 
  * \param	set				PARAM_SET object.
  * \param	names			list of names to add the functions.
@@ -152,7 +161,7 @@ int PARAM_SET_addControl(PARAM_SET *set, const char *names,
 		int (*controlFormat)(const char *),
 		int (*controlContent)(const char *),
 		int (*convert)(const char*, char*, unsigned),
-		int (*extractObject)(const char *, void**));
+		int (*extractObject)(void *, const char *, void**));
 
 /**
  * Appends parameter to the set. Invalid value format or content is not handled
@@ -190,10 +199,27 @@ int PARAM_SET_add(PARAM_SET *set, const char *name, const char *value, const cha
  * \param	priority	Priority that can be \c PST_PRIORITY_VALID_BASE (0) or higher.
  * \param	at			Parameter index in the matching set composed with the constraints.
  * \param	obj			Pointer to receiving pointer to \c object returned.
- * \return \c PST_OK if successful, error code otherwise.
+ * \return \c PST_OK when successful, error code otherwise. Some more common error 
+ * codes: 	\c PST_INVALID_ARGUMENT,  \c PST_PARAMETER_NOT_FOUND \c PST_PARAMETER_EMPTY
+ * \c PST_PARAMETER_INVALID_FORMAT \c PST_PARAMETER_UNIMPLEMENTED_OBJ.
  */
 int PARAM_SET_getObj(PARAM_SET *set, const char *name, const char *source, int priority, int at, void **obj);
 
+/**
+ * Same as PARAM_SET_getObj, but the ctxt feed to object extractor contains two 
+ * pointers {set, ctxt}.
+ * \param	set			PARAM_SET object.
+ * \param	name		parameters name.
+ * \param	source		Constraint for the source, can be NULL.
+ * \param	priority	Priority that can be \c PST_PRIORITY_VALID_BASE (0) or higher.
+ * \param	at			Parameter index in the matching set composed with the constraints.
+ * \param	ctxt		Pointer to extra context.
+ * \param	obj			Pointer to receiving pointer to \c object returned.
+ * \return \c PST_OK when successful, error code otherwise. Some more common error 
+ * codes: 	\c PST_INVALID_ARGUMENT,  \c PST_PARAMETER_NOT_FOUND \c PST_PARAMETER_EMPTY
+ * \c PST_PARAMETER_INVALID_FORMAT \c PST_PARAMETER_UNIMPLEMENTED_OBJ.
+ */
+int PARAM_SET_getObjExtended(PARAM_SET *set, const char *name, const char *source, int priority, int at, void *ctxt, void **obj);
 /**
  * Removes all values from the specified parameter list. Parameter list is defined
  * as "p1,p2,p3 ...".
@@ -327,6 +353,12 @@ char* PARAM_SET_unknownsToString(const PARAM_SET *set, const char *prefix, char 
  */
 char* PARAM_SET_invalidParametersToString(const PARAM_SET *set, const char *prefix, const char* (*getErrString)(int), char *buf, size_t buf_len);
 
+/**
+ * Converts PST_ Error codes to string.
+ * \param err
+ * \return Error string.
+ */
+const char* PARAM_SET_errorToString(int err);
 /**
  * Function that can be used to separate names from string. A function \c isValidNameChar
  * must be defined to separate valid name characters from all kind of separators.
