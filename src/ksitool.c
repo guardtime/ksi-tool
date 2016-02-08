@@ -30,7 +30,6 @@
 #include "ksitool_err.h"
 #include "gt_cmd_control.h"
 #include "param_set/param_value.h"
-#include "component.h"
 
 #ifndef _WIN32
 #  ifdef HAVE_CONFIG_H

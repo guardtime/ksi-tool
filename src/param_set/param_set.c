@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include "param_set_obj_impl.h"
 #include "param_value.h"
-#include "Parameter.h"
+#include "parameter.h"
 #include "param_set.h"
 
 #ifdef _WIN32

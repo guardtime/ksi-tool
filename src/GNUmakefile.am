@@ -35,6 +35,7 @@ ksitool_SOURCES = \
 	gt_task_pubfile.c \
 	gt_cmd_control.c \
 	gt_cmd_control.h \
+	param_set/param_set_obj_impl.h \
 	param_set/param_value.c \
 	param_set/param_value.h \
 	param_set/parameter.c \
