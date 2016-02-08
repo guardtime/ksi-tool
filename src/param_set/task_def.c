@@ -893,7 +893,6 @@ int TASK_SET_isOneFromSetTheTarget(TASK_SET *task_set, double diff, int *ID) {
 
 	if (task_set == NULL || diff <= 0) return 0;
 	if (task_set->count == 0) return 0;
-	if (task_set->count == 1) return 1;
 
 	cons = task_set->array[task_set->index[0]]->consistency;
 
@@ -905,7 +904,7 @@ int TASK_SET_isOneFromSetTheTarget(TASK_SET *task_set, double diff, int *ID) {
 	}
 
 	if (ID != NULL) {
-		*ID = task_set->array[task_set->index[0]]->id;
+		*ID = (task_set->count == 1) ? (task_set->array[0]->id) : (task_set->array[task_set->index[0]]->id);
 	}
 
 	return 1;
