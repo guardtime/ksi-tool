@@ -16,6 +16,9 @@ int sign_run(int argc, char** argv, char **envp);
 char *sign_help_toString(char*buf, size_t len);
 const char *sign_get_desc(void);
 
+const char *verify_get_desc(void);
+char *verify_help_toString(char*buf, size_t len);
+int verify_run(int argc, char** argv, char **envp);
 
 
 #ifdef	__cplusplus

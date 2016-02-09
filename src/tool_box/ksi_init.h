@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-#define DEF_SERVICE_PAR	"{S}{X}{P}{c}{C}{cnstr}"
+#define DEF_SERVICE_PAR	"{S}{X}{P}{c}{C}{cnstr}{aggre-user}{aggre-pass}{ext-user}{ext-pass}"
 #define DEF_PARAMETERS "{log}{V}{W}{silent}{nowarn}{d}{conf}"
 	
 /**

@@ -379,6 +379,7 @@ const char *getParameterErrorString(int res) {
 		case HASH_ALG_INVALID_NAME: return "Algorithm name is incorrect";
 		case HASH_IMPRINT_INVALID_LEN: return "Hash length is incorrect";
 		case FORMAT_INVALID_HEX_CHAR: return "Invalid hex character";
+		case FORMAT_INVALID_BASE32_CHAR: return "Invalid base32 character";
 		case FORMAT_IMPRINT_NO_COLON: return "Imprint format must be <alg>:<hash>. ':' missing";
 		case FORMAT_IMPRINT_NO_HASH_ALG: return "Imprint format must be <alg>:<hash>. <alg> missing";
 		case FORMAT_IMPRINT_NO_HASH: return "Imprint format must be <alg>:<hash>. <hash> missing";

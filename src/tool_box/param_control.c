@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <ctype.h>
+#include <limits.h>
 
 #include "param_control.h"
 #include "gt_task_support.h"
@@ -270,7 +271,103 @@ cleanup:
 	return res;
 }
 
+static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **obj,
+					int (*parse)(KSI_CTX *ksi, unsigned char *raw, unsigned raw_len, void **obj),
+					void (*obj_free)()){
+	int res;
+	SMART_FILE *file = NULL;
+	unsigned char *buf = NULL;
+	size_t buf_size = 0xffff;
+	size_t buf_len = 0;
+	void *tmp = NULL;
+	size_t count = 0;
 
+
+	if (ksi == NULL || path == NULL || obj == NULL || parse == NULL || obj_free == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	res = SMART_FILE_open(path, "rb", &file);
+	if (res != KT_OK) {
+		ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
+		goto cleanup;
+	}
+
+	buf = (unsigned char*)malloc(buf_size);
+	if (buf == NULL) {
+		res = KT_OUT_OF_MEMORY;
+		ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
+		goto cleanup;
+	}
+
+
+	while (!SMART_FILE_isEof(file)) {
+		if (buf_len + 1 >= buf_size) {
+			buf_size += 0xffff;
+			buf = realloc(buf, buf_size);
+			if (buf == NULL) {
+				res = KT_OUT_OF_MEMORY;
+				ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
+				goto cleanup;
+			}
+		}
+
+		res = SMART_FILE_read(file, buf + buf_len, buf_size - buf_len, &count);
+
+		if(res != KT_OK || SMART_FILE_isError(file)) {
+			ERR_TRCKR_ADD(err, res = KT_IO_ERROR, "Error: Unable to read data from file.");
+			goto cleanup;
+		}
+
+		buf_len += count;
+		count = 0;
+	}
+
+	if (buf_len > UINT_MAX) {
+		res = KT_INDEX_OVF;
+		ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
+		goto cleanup;
+	}
+
+	res = parse(ksi, buf, (unsigned)buf_len, &tmp);
+	ERR_CATCH_MSG(err, res, "Error: Unable to parse.");
+
+	*obj = tmp;
+	tmp = NULL;
+	res = KT_OK;
+
+
+cleanup:
+
+	SMART_FILE_close(file);
+	free(buf);
+	obj_free(tmp);
+
+	return res;
+}
+
+static int KSI_Signature_serialize_wrapper(KSI_CTX *ksi, KSI_Signature *sig, unsigned char **raw, size_t *raw_len) {
+	return KSI_Signature_serialize(sig, raw, raw_len);
+}
+
+static int load_ksi_obj_signature(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signature **sig) {
+	int res;
+
+	if (ksi == NULL || fname == NULL || sig == NULL) {
+		return KT_INVALID_ARGUMENT;
+	}
+
+	res = load_ksi_obj(err, ksi, fname,
+				(void**)sig,
+				(int (*)(KSI_CTX *, unsigned char*, unsigned, void**))KSI_Signature_parse,
+				(void (*)(void *))KSI_Signature_free);
+
+	if (res) {
+		ERR_TRCKR_ADD(err, res, "Error: Unable to load signature file from '%s'.", fname);
+	}
+	return res;
+}
 
 static int file_get_hash(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, const char *fnamein, KSI_DataHash **hash){
 	int res;
@@ -338,6 +435,63 @@ cleanup:
 }
 
 
+int isFormatOk_url(const char *url) {
+	if(url == NULL) return FORMAT_NULLPTR;
+	if(strlen(url) == 0) return FORMAT_NOCONTENT;
+
+	if(strstr(url, "ksi://") == url)
+		return FORMAT_OK;
+	else if(strstr(url, "http://") == url || strstr(url, "ksi+http://") == url)
+		return FORMAT_OK;
+	else if(strstr(url, "https://") == url || strstr(url, "ksi+https://") == url)
+		return FORMAT_OK;
+	else if(strstr(url, "ksi+tcp://") == url)
+		return FORMAT_OK;
+	else
+		return FORMAT_URL_UNKNOWN_SCHEME;
+}
+
+int convertRepair_url(const char* arg, char* buf, unsigned len) {
+	char *scheme = NULL;
+	unsigned i = 0;
+	if(arg == NULL || buf == NULL) return false;
+	scheme = strstr(arg, "://");
+
+	if(scheme == NULL){
+		strncpy(buf, "http://", len-1);
+		if(strlen(buf)+strlen(arg) < len)
+			strcat(buf, arg);
+		else
+			return false;
+	}
+	else{
+		while(arg[i] && i < len - 1){
+			if(&arg[i] < scheme){
+				buf[i] = (char)tolower(arg[i]);
+			}
+			else
+				buf[i] = arg[i];
+			i++;
+		}
+		buf[i] = 0;
+	}
+	return true;
+}
+
+int isFormatOk_int(const char *integer) {
+	int i = 0;
+	int C;
+	if(integer == NULL) return FORMAT_NULLPTR;
+	if(strlen(integer) == 0) return FORMAT_NOCONTENT;
+
+	while ((C = integer[i++]) != '\0') {
+		if (isdigit(C) == 0) {
+			return FORMAT_INVALID;
+		}
+	}
+	return FORMAT_OK;
+}
+
 
 int isFormatOk_inputFile(const char *path){
 	if(path == NULL) return FORMAT_NULLPTR;
@@ -370,6 +524,22 @@ int isContentOk_inputFile(const char* path){
 	}
 
 	return PARAM_UNKNOWN_ERROR;
+}
+
+int convert_repair_path(const char* arg, char* buf, unsigned len){
+	char *toBeReplaced = NULL;
+
+	if(arg == NULL || buf == NULL) return false;
+	strncpy(buf, arg, len-1);
+
+
+	toBeReplaced = buf;
+	while((toBeReplaced = strchr(toBeReplaced, '\\')) != NULL){
+		*toBeReplaced = '/';
+		toBeReplaced++;
+	}
+
+	return true;
 }
 
 int extract_inputFile(void *extra, const char* str, void** obj) {
@@ -556,3 +726,66 @@ cleanup:
 	return res;
 }
 
+int extract_inputSignature(void *extra, const char* str, void** obj) {
+	int res;
+	void **extra_array = extra;
+	COMPOSITE *comp = (COMPOSITE*)(extra_array[1]);
+	PARAM_SET *set = (PARAM_SET*)(extra_array[0]);
+	KSI_CTX *ctx = comp->ctx;
+	ERR_TRCKR *err = comp->err;
+
+	if (obj == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	res = load_ksi_obj_signature(err, ctx, str, (KSI_Signature**)obj);
+	if (res != KT_OK) goto cleanup;
+
+cleanup:
+
+	return res;
+}
+
+int isFormatOk_pubString(const char *str) {
+	int C;
+	int i = 0;
+	const char base32EncodeTable[33] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567-";
+
+	if (str == NULL) return FORMAT_NULLPTR;
+	if (str[0] == '\0') return FORMAT_NOCONTENT;
+
+	while (C = 0xff & str[i++]) {
+		if (strchr(base32EncodeTable, C) == NULL) {
+			return FORMAT_INVALID_BASE32_CHAR;
+		}
+	}
+	return FORMAT_OK;
+}
+
+int extract_pubString(void *extra, const char* str, void** obj) {
+	int res;
+	void **extra_array = extra;
+	COMPOSITE *comp = (COMPOSITE*)(extra_array[1]);
+	PARAM_SET *set = (PARAM_SET*)(extra_array[0]);
+	KSI_CTX *ctx = comp->ctx;
+	ERR_TRCKR *err = comp->err;
+	KSI_PublicationData *tmp = NULL;
+
+	if (obj == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+	res = KSI_PublicationData_fromBase32(ctx, str, &tmp);
+	ERR_CATCH_MSG(err, res, "Error: Unable parse publication string.");
+
+	*obj = (void*)tmp;
+	tmp = NULL;
+	res = KT_OK;
+
+cleanup:
+
+	KSI_PublicationData_free(tmp);
+
+	return res;
+}

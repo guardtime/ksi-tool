@@ -170,6 +170,8 @@ static const char* ksitoolErrToString(int error_code) {
 			return "The command-line parameters is invalid or missing.";
 		case KT_NO_PRIVILEGES:
 			return "User has no privileges.";
+		case KT_KSI_SIG_VER_IMPOSSIBLE:
+			return "Verification can't be performed.";
 		case KT_UNKNOWN_ERROR:
 			return "Unknown error.";
 		default:

@@ -33,12 +33,6 @@
 
 static int sign(PARAM_SET *set);
 
-static int wrapper_returnDouble(void *extra, const char* str,  void** obj){
-	double *pd = (double*)obj;
-	*pd = atof(str);
-	return PST_OK;
-}
-
 int sign_run(int argc, char** argv, char **envp) {
 	int exit_code;
 	int res;
