@@ -92,7 +92,7 @@ Use for online verification or signature extending.
 Use specified publication file.
 .TP
 .BI -f\  file
-File to be signed or verified. \fIfile\fR can be \fB-\fR to sign a stream (stdin).
+File to be signed or verified. \fIfile\fR can be '\fB-\fR' to sign a stream (stdin).
 .TP
 .BI -F\  hash
 Data hash to be signed or verified. Hash format: <alg>:<hash in hex>.
@@ -300,6 +300,12 @@ In the following examples it is assumed that default service urls are defined as
 .RS
 .br
 \fBksitool -s -f - -D \fIfile\fB -o \fIsig.ksig\fR
+.RE
+
+\fB2.2\fR To sign a stream (stdin) and save signature to \fIsig.ksig\fR without saving data from stream call:
+.RS
+.br
+\fBksitool -s -f - -o \fIsig.ksig\fR
 .RE
 
 \fB3\fR To sign a data hash (hashed with SHA256) and save the resulting signature to file \fIsig.ksig\fR call:

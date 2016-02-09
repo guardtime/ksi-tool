@@ -251,7 +251,7 @@ static void GT_pritHelp(void){
 			"Where recognized options are:\n"
 			" -s --sign\tsign data (-n -d -t):\n"
 			"\t\t-s -f -o sign data file.\n"
-			"\t\t-s -f -o -D sign stream and save data to file.\n"
+			"\t\t-s -f - -o -D sign stream and save data to file.\n"
 			"\t\t-s -f -H -o sign data file with specific hash algorithm.\n"
 			"\t\t-s -F -o sign hash.\n"
 			" -x --extend\tuse online verification (eXtending) service (-n -r -d -t):\n"
@@ -276,7 +276,7 @@ static void GT_pritHelp(void){
 
 
 			"\nInput/output:\n"
-			" -f <file>\tfile to be signed or verified.\n"
+			" -f <file>\tfile to be signed or verified, use '-' as file name if signing input stream.\n"
 			" -F <hash>\tdata hash to be signed or verified. Hash format: <ALG>:<hash in hex>.\n"
 			" -o <file>\toutput file name to store signature token or publications file.\n"
 			" -D <file>\toutput file name to store data from stream.\n"
