@@ -29,6 +29,8 @@ int isContentOk_inputHash(const char *str);
 int extract_inputHash(void *extra, const char* str, void** obj);
 
 int isFormatOk_int(const char *integer);
+int isContentOk_int(const char* integer);
+int extract_int(void *extra, const char* str,  void** obj);
 
 int isFormatOk_url(const char *url);
 int convertRepair_url(const char* arg, char* buf, unsigned len);
@@ -36,6 +38,10 @@ int convertRepair_url(const char* arg, char* buf, unsigned len);
 int isFormatOk_pubString(const char *str);
 int extract_pubString(void *extra, const char* str, void** obj);
 
+int isFormatOk_timeString(const char *time);
+int isFormatOk_utcTime(const char *time);
+int isContentOk_utcTime(const char *time);
+int extract_utcTime(void *extra, const char* str, void** obj);
 
 int extract_inputSignature(void *extra, const char* str, void** obj);
 

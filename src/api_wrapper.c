@@ -201,6 +201,20 @@ int KSITOOL_Signature_verify(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx) {
 	return res;
 }
 
+int KSITOOL_Signature_verifyWithPublication(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_PublicationData *pub_data) {
+	int res;
+
+	res = KSI_Signature_verifyWithPublication(sig, ctx, pub_data);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
+
+	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
+		appendNetworkErrors(err, res);
+		appendExtenderErrors(err, res);
+		appendPubFileErros(err, res);
+	}
+	return res;
+}
+
 int KSITOOL_Signature_verifyOnline(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx) {
 	int res;
 

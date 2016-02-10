@@ -20,6 +20,11 @@ const char *verify_get_desc(void);
 char *verify_help_toString(char*buf, size_t len);
 int verify_run(int argc, char** argv, char **envp);
 
+const char *extend_get_desc(void);
+char *extend_help_toString(char*buf, size_t len);
+int extend_run(int argc, char** argv, char **envp);
+
+
 
 #ifdef	__cplusplus
 }

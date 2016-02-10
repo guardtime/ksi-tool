@@ -32,6 +32,7 @@
 #include "../gt_cmd_control.h"
 #include "ksi_init.h"
 #include "../api_wrapper.h"
+#include "ksi/compatibility.h"
 #ifdef _WIN32
 #	include <io.h>
 #	define F_OK 0
@@ -434,6 +435,119 @@ cleanup:
 	return res;
 }
 
+static int date_is_valid(struct tm *time_st) {
+    int days = 31;
+    int dd = time_st->tm_mday;
+    int mm = time_st->tm_mon + 1;
+    int yy = time_st->tm_year + 1900;
+
+	if (mm < 1 || mm > 12 || dd < 1 || yy < 1900) {
+        return 0;
+    }
+
+    if (mm == 2) {
+        days = 28;
+		/* Its a leap year */
+        if (yy % 400 == 0 || (yy % 4 == 0 && yy % 100 != 0)) {
+            days = 29;
+        }
+    } else if (mm == 4 || mm == 6 || mm == 9 || mm == 11) {
+        days = 30;
+    }
+
+    if (dd > days) {
+        return 0;
+    }
+    return 1;
+}
+
+static int string_to_tm(const char *time, struct tm *time_st) {
+	const char *ret = NULL;
+	const char *next = NULL;
+	/* If its not possible to convert date string with such a buffer, there is something wrong! */
+	char buf[1024];
+
+	if (time == NULL || time_st == NULL) return FORMAT_NULLPTR;
+
+	memset(time_st, 0, sizeof(struct tm));
+
+
+	next = time;
+	ret = STRING_extractAbstract(next, NULL, "-", buf, sizeof(buf), NULL, find_charBeforeStrn, &next);
+	if (ret != buf || next == NULL || *buf == '\0' || strlen(buf) > 4 || isIntegerFormatOK(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
+	time_st->tm_year = atoi(buf) - 1900;
+
+	ret = STRING_extractAbstract(next, "-", "-", buf, sizeof(buf), find_charAfterStrn, find_charBeforeLastStrn, &next);
+	if (ret != buf || next == NULL || strlen(buf) > 2 || isIntegerFormatOK(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
+	time_st->tm_mon = atoi(buf) - 1;
+
+	ret = STRING_extractAbstract(next, "-", " ", buf, sizeof(buf), find_charAfterStrn, find_charBeforeLastStrn, &next);
+	if (ret != buf || next == NULL || strlen(buf) > 2 || isIntegerFormatOK(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
+	time_st->tm_mday = atoi(buf);
+
+	if (date_is_valid(time_st) == 0) return FORMAT_INVALID_UTC_OUT_OF_RANGE;
+
+	ret = STRING_extractAbstract(next, " ", ":", buf, sizeof(buf), find_charAfterStrn, find_charBeforeStrn, &next);
+	if (ret != buf || next == NULL || *buf == '\0' || strlen(buf) > 2 || isIntegerFormatOK(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
+	time_st->tm_hour = atoi(buf);
+	if (time_st->tm_hour < 0 || time_st->tm_hour > 23) return FORMAT_INVALID_UTC_OUT_OF_RANGE;
+
+	ret = STRING_extractAbstract(next, ":", ":", buf, sizeof(buf), find_charAfterStrn, find_charBeforeLastStrn, &next);
+	if (ret != buf || next == NULL || strlen(buf) > 2 || isIntegerFormatOK(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
+	time_st->tm_min = atoi(buf);
+	if (time_st->tm_min < 0 || time_st->tm_min > 59) return FORMAT_INVALID_UTC_OUT_OF_RANGE;
+
+	ret = STRING_extractAbstract(next, ":", NULL, buf, sizeof(buf), find_charAfterStrn, find_charBeforeLastStrn, &next);
+	if (ret != buf || strlen(buf) > 2 || isIntegerFormatOK(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
+	time_st->tm_sec = atoi(buf);
+	if (time_st->tm_sec < 0 || time_st->tm_sec > 59) return FORMAT_INVALID_UTC_OUT_OF_RANGE;
+
+	return FORMAT_OK;
+}
+
+static int convert_UTC_to_UNIX2(const char* arg, time_t *time) {
+	int res;
+	struct tm time_st;
+	time_t t;
+
+	if(arg == NULL || time == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	if (string_to_tm(arg, &time_st) != FORMAT_OK) {
+		res = KT_INVALID_INPUT_FORMAT;
+		goto cleanup;
+	}
+
+	t = KSI_CalendarTimeToUnixTime(&time_st);
+	if (t == -1) {
+		res = KT_INVALID_INPUT_FORMAT;
+		goto cleanup;
+	}
+
+	*time = t;
+	res = KT_OK;
+
+cleanup:
+
+	return res;
+}
+
+
+
+
+int isInteger(const char *str) {
+	int i = 0;
+	int C;
+	if (str == NULL) return 0;
+	if (str[0] == '\0') return 0;
+
+	while (C = 0xff & str[i++]) {
+		if (!isdigit(C)) return 0;
+	}
+	return 1;
+}
 
 int isFormatOk_url(const char *url) {
 	if(url == NULL) return FORMAT_NULLPTR;
@@ -490,6 +604,36 @@ int isFormatOk_int(const char *integer) {
 		}
 	}
 	return FORMAT_OK;
+}
+
+int isContentOk_int(const char* integer) {
+	unsigned int i;
+	size_t len;
+	size_t int_max_len;
+	char tmp[32];
+
+	sprintf(tmp, "%d", INT_MAX);
+	len  = strlen(integer);
+	int_max_len = strlen(tmp);
+
+	if (len > int_max_len) {
+		return INTEGER_TOO_LARGE;
+	} else if (len == int_max_len) {
+
+		for (i = 0; i < int_max_len; i++) {
+			if (tmp[i] < integer[i])
+				return INTEGER_TOO_LARGE;
+			else if (tmp[i] > integer[i])
+				break;
+		}
+	}
+	return PARAM_OK;
+}
+
+int extract_int(void *extra, const char* str,  void** obj){
+	int *pI = (int*)obj;
+	*pI = atoi(str);
+	return PST_OK;
 }
 
 
@@ -747,10 +891,11 @@ cleanup:
 	return res;
 }
 
+
 int isFormatOk_pubString(const char *str) {
 	int C;
 	int i = 0;
-	const char base32EncodeTable[33] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567-";
+	const char base32EncodeTable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567-";
 
 	if (str == NULL) return FORMAT_NULLPTR;
 	if (str[0] == '\0') return FORMAT_NOCONTENT;
@@ -776,6 +921,7 @@ int extract_pubString(void *extra, const char* str, void** obj) {
 		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
+
 	res = KSI_PublicationData_fromBase32(ctx, str, &tmp);
 	ERR_CATCH_MSG(err, res, "Error: Unable parse publication string.");
 
@@ -789,3 +935,86 @@ cleanup:
 
 	return res;
 }
+
+
+int isFormatOk_timeString(const char *time) {
+	struct tm time_st;
+	return string_to_tm(time, &time_st);
+}
+
+int isFormatOk_utcTime(const char *time) {
+	char buf[32] = "";
+	const char *next = NULL;
+
+	if (isInteger(time)) {
+		return isFormatOk_int(time);
+	} else {
+		return isFormatOk_timeString(time);
+	}
+}
+
+int isContentOk_utcTime(const char *time) {
+	char buf[32] = "";
+	const char *next = NULL;
+
+	if (isInteger(time)) {
+		return isContentOk_int(time);
+	} else {
+		return PARAM_OK;
+	}
+}
+
+int extract_utcTime(void *extra, const char* str, void** obj) {
+	int res;
+	void **extra_array = extra;
+	COMPOSITE *comp = (COMPOSITE*)(extra_array[1]);
+	PARAM_SET *set = (PARAM_SET*)(extra_array[0]);
+	KSI_CTX *ctx = NULL;
+	ERR_TRCKR *err = NULL;
+	KSI_Integer *tmp = NULL;
+	int time = 0;
+
+	if (obj == NULL || comp == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	/* TODO: make all extractors to not fail if comp is NULL */
+	ctx = comp->ctx;
+	err = comp->err;
+
+	/**
+	 * If input is integer, extract its value. If input is time string convert it
+	 * to time.
+     */
+	if (isInteger(str)) {
+		int t = 0;
+		res = extract_int(extra, str,  (void**)&t);
+		if (res != KT_OK) goto cleanup;
+		time = t;
+	} else {
+		time_t t;
+		res = convert_UTC_to_UNIX2(str, &t);
+		if (res != KT_OK) goto cleanup;
+		time = (int)t;
+	}
+
+
+	/**
+	 * Create KSI_Integer for output parameter.
+     */
+
+	res = KSI_Integer_new(ctx, time, &tmp);
+	ERR_CATCH_MSG(err, res, "Error: %s.", errToString(res));
+
+	*obj = (void*)tmp;
+	tmp = NULL;
+	res = KT_OK;
+
+cleanup:
+
+	KSI_Integer_free(tmp);
+
+	return res;
+}
+

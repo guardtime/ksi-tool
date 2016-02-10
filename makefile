@@ -60,7 +60,6 @@ PARAMSET_OBJ = \
 
 CMDTOOL_OBJ = \
 	$(OBJ_DIR)\gt_task_support.obj \
-	$(OBJ_DIR)\gt_task_extend.obj \
 	$(OBJ_DIR)\gt_task_pubfile.obj \
 	$(OBJ_DIR)\gt_task_other.obj \
 	$(OBJ_DIR)\ksitool.obj \
@@ -74,6 +73,7 @@ CMDTOOL_OBJ = \
 	
 TOOL_BOX_OBJ = \
     $(TOOL_BOX_OBJ_DIR)\ksi_init.obj \
+    $(TOOL_BOX_OBJ_DIR)\extend.obj \
     $(TOOL_BOX_OBJ_DIR)\sign.obj \
     $(TOOL_BOX_OBJ_DIR)\verify.obj \
     $(TOOL_BOX_OBJ_DIR)\smart_file.obj \
