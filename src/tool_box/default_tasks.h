@@ -24,6 +24,9 @@ const char *extend_get_desc(void);
 char *extend_help_toString(char*buf, size_t len);
 int extend_run(int argc, char** argv, char **envp);
 
+int pubfile_run(int argc, char** argv, char **envp);
+char *pubfile_help_toString(char*buf, size_t len);
+const char *pubfile_get_desc(void);
 
 
 #ifdef	__cplusplus
