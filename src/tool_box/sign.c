@@ -130,7 +130,9 @@ char *sign_help_toString(char*buf, size_t len) {
 
 	return buf;
 }
-const char *sign_get_desc(void) {return "ksi general signing tool";}
+const char *sign_get_desc(void) {
+	return "KSI general signing tool.";
+}
 
 
 static int sign(PARAM_SET *set) {

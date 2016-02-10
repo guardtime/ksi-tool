@@ -35,12 +35,6 @@
 
 static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, COMPOSITE *comp);
 
-static int wrapper_returnInt(void *extra, const char* str,  void** obj){
-	int *pI = (int*)obj;
-	*pI = atoi(str);
-	return PST_OK;
-}
-
 int extend_run(int argc, char** argv, char **envp) {
 	int res;
 	TASK *task = NULL;
@@ -80,7 +74,7 @@ int extend_run(int argc, char** argv, char **envp) {
      */
 	res = TASK_SET_new(&task_set);
 	if (res != PST_OK) goto cleanup;
-	printf("------------ ext --------------\n");
+
 	/*					  ID	DESC												MAN					ATL		FORBIDDEN	IGN	*/
 	TASK_SET_add(task_set, 0,	"Extend to the nearest publication.",				"i,o,X,P",			NULL,	"T,pub-str",		NULL);
 	TASK_SET_add(task_set, 1,	"Extend to the specified time.",					"i,o,X,P,T",		NULL,	"pub-str",		NULL);
@@ -209,7 +203,9 @@ char *extend_help_toString(char*buf, size_t len) {
 
 	return buf;
 }
-const char *extend_get_desc(void) {return "ksi signature extending tool.";}
+const char *extend_get_desc(void) {
+	return "KSI signature extending tool.";
+}
 
 static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, COMPOSITE *extra) {
 	int res;

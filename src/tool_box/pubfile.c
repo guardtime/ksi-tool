@@ -200,7 +200,10 @@ char *pubfile_help_toString(char*buf, size_t len) {
 
 	return buf;
 }
-const char *pubfile_get_desc(void) {return "KSI general publications file tool.";}
+
+const char *pubfile_get_desc(void) {
+	return "KSI general publications file tool.";
+}
 
 static int pubfile_download(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi) {
 	int res;

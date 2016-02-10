@@ -39,12 +39,6 @@ static int verify_calendar_based(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, K
 static int verify_key_based(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig);
 static int verify_publication_based(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, COMPOSITE *comp);
 
-static int wrapper_returnInt(void *extra, const char* str,  void** obj){
-	int *pI = (int*)obj;
-	*pI = atoi(str);
-	return PST_OK;
-}
-
 int verify_run(int argc, char** argv, char **envp) {
 	int res;
 	TASK *task = NULL;
@@ -75,7 +69,7 @@ int verify_run(int argc, char** argv, char **envp) {
 	PARAM_SET_addControl(set, "{f}", isFormatOk_inputHash, isContentOk_inputHash, convert_repair_path, extract_inputHash);
 	PARAM_SET_addControl(set, "{X}{P}{S}", isFormatOk_url, NULL, convertRepair_url, NULL);
 	PARAM_SET_addControl(set, "{aggre-user}{aggre-pass}{ext-pass}{ext-user}", isUserPassFormatOK, contentIsOK, NULL, NULL);
-	PARAM_SET_addControl(set, "{T}", isUTCTimeFormatOk, contentIsOK, convert_UTC_to_UNIX, wrapper_returnInt);
+	PARAM_SET_addControl(set, "{T}", isUTCTimeFormatOk, contentIsOK, convert_UTC_to_UNIX, extract_int);
 	PARAM_SET_addControl(set, "{d}{x}{ver-int}{ver-cal}{ver-key}{ver-pub}", isFlagFormatOK, contentIsOK, NULL, NULL);
 	PARAM_SET_addControl(set, "{cnstr}", isConstraintFormatOK, contentIsOK, convert_replaceWithOid, NULL);
 	PARAM_SET_addControl(set, "{pub-str}", isFormatOk_pubString, NULL, NULL, extract_pubString);
@@ -251,7 +245,9 @@ char *verify_help_toString(char*buf, size_t len) {
 
 	return buf;
 }
-const char *verify_get_desc(void) {return "ksi signature verification tool.";}
+const char *verify_get_desc(void) {
+	return "KSI signature verification tool.";
+}
 
 static int verify_as_possible(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig) {
 	int res;
