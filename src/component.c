@@ -414,8 +414,8 @@ char* TOOL_COMPONENT_LIST_toString(TOOL_COMPONENT_LIST *list, char *buf, size_t 
 		/**
 		 * Print the description.
 		 */
-		count += snprintf(buf + count, buf_len - count, "- %s.\n",
-				list->component[i]->getDesc == NULL ? "description not available" : list->component[i]->getDesc());
+		count += snprintf(buf + count, buf_len - count, "- %s\n",
+				list->component[i]->getDesc == NULL ? "description not available." : list->component[i]->getDesc());
 	}
 
 
