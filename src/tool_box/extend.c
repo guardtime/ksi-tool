@@ -23,7 +23,6 @@
 
 #include "../param_set/param_set.h"
 #include "../param_set/task_def.h"
-#include "../gt_cmd_control.h"
 #include "../api_wrapper.h"
 #include "param_control.h"
 #include "gt_task_support.h"
@@ -61,12 +60,12 @@ int extend_run(int argc, char** argv, char **envp) {
 	/**
 	 * Configure parameter set, control, repair and object extractor function.
      */
-	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFile, convert_repair_path, extract_inputSignature);
+	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignature);
 	PARAM_SET_addControl(set, "{X}{P}{S}", isFormatOk_url, NULL, convertRepair_url, NULL);
-	PARAM_SET_addControl(set, "{aggre-user}{aggre-pass}{ext-pass}{ext-user}", isUserPassFormatOK, contentIsOK, NULL, NULL);
+	PARAM_SET_addControl(set, "{aggre-user}{aggre-pass}{ext-pass}{ext-user}", isFormatOk_userPass, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
-	PARAM_SET_addControl(set, "{d}", isFlagFormatOK, contentIsOK, NULL, NULL);
-	PARAM_SET_addControl(set, "{cnstr}", isConstraintFormatOK, contentIsOK, convert_replaceWithOid, NULL);
+	PARAM_SET_addControl(set, "{d}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{cnstr}", isFormatOk_constraint, NULL, convertRepair_constraint, NULL);
 	PARAM_SET_addControl(set, "{pub-str}", isFormatOk_pubString, NULL, NULL, extract_pubString);
 
 	/**

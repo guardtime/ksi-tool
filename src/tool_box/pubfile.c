@@ -24,7 +24,6 @@
 #include <ksi/hashchain.h>
 #include "../param_set/param_set.h"
 #include "../param_set/task_def.h"
-#include "../gt_cmd_control.h"
 #include "../api_wrapper.h"
 #include "param_control.h"
 #include "gt_task_support.h"
@@ -63,12 +62,12 @@ int pubfile_run(int argc, char** argv, char **envp) {
 	 * Configure parameter set, control, repair and object extractor function.
      */
 
-	PARAM_SET_addControl(set, "{o}", isPathFormOk, isOutputFileContOK, NULL, NULL);
+	PARAM_SET_addControl(set, "{o}", isFormatOk_path, NULL, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{X}{P}{S}", isFormatOk_url, NULL, convertRepair_url, NULL);
-	PARAM_SET_addControl(set, "{aggre-user}{aggre-pass}{ext-pass}{ext-user}", isUserPassFormatOK, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{aggre-user}{aggre-pass}{ext-pass}{ext-user}", isFormatOk_userPass, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
-	PARAM_SET_addControl(set, "{d}", isFlagFormatOK, NULL, NULL, NULL);
-	PARAM_SET_addControl(set, "{cnstr}", isConstraintFormatOK, NULL, convert_replaceWithOid, NULL);
+	PARAM_SET_addControl(set, "{d}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{cnstr}", isFormatOk_constraint, NULL, convertRepair_constraint, NULL);
 
 	/**
 	 * Define possible tasks.

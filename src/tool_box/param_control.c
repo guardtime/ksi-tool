@@ -22,6 +22,7 @@
 #include <math.h>
 #include <ctype.h>
 #include <limits.h>
+#include <ksi/ksi.h>
 
 #include "param_control.h"
 #include "gt_task_support.h"
@@ -29,7 +30,6 @@
 #include "param_set/param_value.h"
 #include "../param_set/param_set.h"
 #include "../param_set/task_def.h"
-#include "../gt_cmd_control.h"
 #include "ksi_init.h"
 #include "../api_wrapper.h"
 #include "ksi/compatibility.h"
@@ -474,31 +474,31 @@ static int string_to_tm(const char *time, struct tm *time_st) {
 
 	next = time;
 	ret = STRING_extractAbstract(next, NULL, "-", buf, sizeof(buf), NULL, find_charBeforeStrn, &next);
-	if (ret != buf || next == NULL || *buf == '\0' || strlen(buf) > 4 || isIntegerFormatOK(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
+	if (ret != buf || next == NULL || *buf == '\0' || strlen(buf) > 4 || isFormatOk_int(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
 	time_st->tm_year = atoi(buf) - 1900;
 
 	ret = STRING_extractAbstract(next, "-", "-", buf, sizeof(buf), find_charAfterStrn, find_charBeforeLastStrn, &next);
-	if (ret != buf || next == NULL || strlen(buf) > 2 || isIntegerFormatOK(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
+	if (ret != buf || next == NULL || strlen(buf) > 2 || isFormatOk_int(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
 	time_st->tm_mon = atoi(buf) - 1;
 
 	ret = STRING_extractAbstract(next, "-", " ", buf, sizeof(buf), find_charAfterStrn, find_charBeforeLastStrn, &next);
-	if (ret != buf || next == NULL || strlen(buf) > 2 || isIntegerFormatOK(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
+	if (ret != buf || next == NULL || strlen(buf) > 2 || isFormatOk_int(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
 	time_st->tm_mday = atoi(buf);
 
 	if (date_is_valid(time_st) == 0) return FORMAT_INVALID_UTC_OUT_OF_RANGE;
 
 	ret = STRING_extractAbstract(next, " ", ":", buf, sizeof(buf), find_charAfterStrn, find_charBeforeStrn, &next);
-	if (ret != buf || next == NULL || *buf == '\0' || strlen(buf) > 2 || isIntegerFormatOK(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
+	if (ret != buf || next == NULL || *buf == '\0' || strlen(buf) > 2 || isFormatOk_int(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
 	time_st->tm_hour = atoi(buf);
 	if (time_st->tm_hour < 0 || time_st->tm_hour > 23) return FORMAT_INVALID_UTC_OUT_OF_RANGE;
 
 	ret = STRING_extractAbstract(next, ":", ":", buf, sizeof(buf), find_charAfterStrn, find_charBeforeLastStrn, &next);
-	if (ret != buf || next == NULL || strlen(buf) > 2 || isIntegerFormatOK(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
+	if (ret != buf || next == NULL || strlen(buf) > 2 || isFormatOk_int(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
 	time_st->tm_min = atoi(buf);
 	if (time_st->tm_min < 0 || time_st->tm_min > 59) return FORMAT_INVALID_UTC_OUT_OF_RANGE;
 
 	ret = STRING_extractAbstract(next, ":", NULL, buf, sizeof(buf), find_charAfterStrn, find_charBeforeLastStrn, &next);
-	if (ret != buf || strlen(buf) > 2 || isIntegerFormatOK(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
+	if (ret != buf || strlen(buf) > 2 || isFormatOk_int(buf) != FORMAT_OK) return FORMAT_INVALID_UTC;
 	time_st->tm_sec = atoi(buf);
 	if (time_st->tm_sec < 0 || time_st->tm_sec > 59) return FORMAT_INVALID_UTC_OUT_OF_RANGE;
 
@@ -534,9 +534,6 @@ cleanup:
 	return res;
 }
 
-
-
-
 int isInteger(const char *str) {
 	int i = 0;
 	int C;
@@ -548,6 +545,79 @@ int isInteger(const char *str) {
 	}
 	return 1;
 }
+
+/**
+ * OID description array must have the following format:
+ * [OID][short name][long name][alias 1][..][alias N][NULL]
+ * where OID, short and long name are mandatory. Array must end with NULL.
+ */
+static char *OID_EMAIL[] = {KSI_CERT_EMAIL, "E", "email", "e-mail", "e_mail", "emailAddress", NULL};
+static char *OID_COMMON_NAME[] = {KSI_CERT_COMMON_NAME, "CN", "common name", "common_name", NULL};
+static char *OID_COUNTRY[] = {KSI_CERT_COUNTRY, "C", "country", NULL};
+static char *OID_ORGANIZATION[] = {KSI_CERT_ORGANIZATION, "O", "org", "organization", NULL};
+
+static char **OID_INFO[] = {OID_EMAIL, OID_COMMON_NAME, OID_COUNTRY, OID_ORGANIZATION, NULL};
+
+static const char *OID_getShortDescriptionString2(const char *OID) {
+	unsigned i = 0;
+
+	if (OID == NULL) return NULL;
+
+	while (OID_INFO[i] != NULL) {
+		if (strcmp(OID_INFO[i][0], OID) == 0) return OID_INFO[i][1];
+		i++;
+	}
+
+	return OID;
+}
+
+static const char *OID_getFromString(const char *str) {
+	unsigned i = 0;
+	unsigned n = 0;
+	const char *OID = NULL;
+	size_t len;
+
+	if (str == NULL) {
+		OID = NULL;
+		goto cleanup;
+	};
+
+	while (OID_INFO[i] != NULL) {
+		n = 1;
+		while (OID_INFO[i][n] != NULL) {
+			printf("'%s' == '%s'\n", str, OID_INFO[i][n]);
+			len = strlen(OID_INFO[i][n]);
+			if (strncmp(OID_INFO[i][n], str, len) == 0 && str[len] == '=') {
+				OID = OID_INFO[i][0];
+				goto cleanup;
+			}
+			n++;
+		}
+		i++;
+	}
+
+cleanup:
+	return OID;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 int isFormatOk_url(const char *url) {
 	if(url == NULL) return FORMAT_NULLPTR;
@@ -591,6 +661,7 @@ int convertRepair_url(const char* arg, char* buf, unsigned len) {
 	}
 	return true;
 }
+
 
 int isFormatOk_int(const char *integer) {
 	int i = 0;
@@ -670,7 +741,7 @@ int isContentOk_inputFile(const char* path){
 	return PARAM_UNKNOWN_ERROR;
 }
 
-int convert_repair_path(const char* arg, char* buf, unsigned len){
+int convertRepair_path(const char* arg, char* buf, unsigned len){
 	char *toBeReplaced = NULL;
 
 	if(arg == NULL || buf == NULL) return false;
@@ -684,6 +755,11 @@ int convert_repair_path(const char* arg, char* buf, unsigned len){
 	}
 
 	return true;
+}
+
+int isFormatOk_path(const char *path) {
+	if(path == NULL) return FORMAT_NULLPTR;
+	return FORMAT_OK;
 }
 
 int extract_inputFile(void *extra, const char* str, void** obj) {
@@ -1018,3 +1094,83 @@ cleanup:
 	return res;
 }
 
+
+int isFormatOk_flag(const char *flag) {
+	if(flag == NULL) return FORMAT_OK;
+	else return FORMAT_FLAG_HAS_ARGUMENT;
+}
+
+int isFormatOk_userPass(const char *uss_pass) {
+	if(uss_pass == NULL) return FORMAT_NULLPTR;
+	if(strlen(uss_pass) == 0) return FORMAT_NOCONTENT;
+	return FORMAT_OK;
+}
+
+
+int isFormatOk_constraint(const char *constraint) {
+	char *at = NULL;
+	unsigned i = 0;
+
+	if(constraint == NULL) return FORMAT_NULLPTR;
+	if(strlen(constraint) == 0) return FORMAT_NOCONTENT;
+
+	if((at = strchr(constraint,'=')) == NULL) return FORMAT_INVALID;
+	if(at == constraint || *(at+1)==0) return FORMAT_INVALID;
+
+	while (constraint[i] != 0 &&  constraint[i] != '=') {
+		if (!isdigit(constraint[i]) && constraint[i] != '.')
+			return FORMAT_INVALID_OID;
+		i++;
+	}
+
+	return FORMAT_OK;
+}
+
+int convertRepair_constraint(const char* arg, char* buf, unsigned len) {
+	char *value = NULL;
+	const char *oid = NULL;
+
+	if(arg == NULL || buf == NULL) return 0;
+	strncpy(buf, arg, len-1);
+
+	value = strchr(arg, '=');
+	if (value == NULL) return 0;
+	else value++;
+
+	oid = OID_getFromString(arg);
+
+	if (oid != NULL && value != NULL)
+		KSI_snprintf(buf, len, "%s=%s", oid, value);
+
+	return 1;
+}
+
+
+
+const char *getParameterErrorString(int res) {
+	switch (res) {
+		case PARAM_OK:
+		case FORMAT_NULLPTR: return "Format error: Parameter must have value";
+		case FORMAT_NOCONTENT: return "Parameter has no content";
+		case FORMAT_INVALID: return "Parameter is invalid";
+		case FORMAT_INVALID_OID: return "OID is invalid";
+		case FORMAT_URL_UNKNOWN_SCHEME: return "URL scheme is unknown";
+		case FORMAT_FLAG_HAS_ARGUMENT: return "Parameter must not have arguments";
+		case FORMAT_INVALID_UTC: return "Time not formatted as YYYY-MM-DD hh:mm:ss";
+		case FORMAT_INVALID_UTC_OUT_OF_RANGE: return "Time out of range";
+		case PARAM_INVALID: return "Parameter is invalid";
+		case HASH_ALG_INVALID_NAME: return "Algorithm name is incorrect";
+		case HASH_IMPRINT_INVALID_LEN: return "Hash length is incorrect";
+		case FORMAT_INVALID_HEX_CHAR: return "Invalid hex character";
+		case FORMAT_INVALID_BASE32_CHAR: return "Invalid base32 character";
+		case FORMAT_IMPRINT_NO_COLON: return "Imprint format must be <alg>:<hash>. ':' missing";
+		case FORMAT_IMPRINT_NO_HASH_ALG: return "Imprint format must be <alg>:<hash>. <alg> missing";
+		case FORMAT_IMPRINT_NO_HASH: return "Imprint format must be <alg>:<hash>. <hash> missing";
+		case FILE_ACCESS_DENIED: return "File access denied";
+		case FILE_DOES_NOT_EXIST: return "File does not exist";
+		case FILE_INVALID_PATH: return "Invalid path";
+		case INTEGER_TOO_LARGE: return "Integer value is too large";
+		default: return "Unknown error";
+	}
+	return NULL;
+}

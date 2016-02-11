@@ -25,7 +25,6 @@
 #include "param_set/param_value.h"
 #include "../param_set/param_set.h"
 #include "../param_set/task_def.h"
-#include "../gt_cmd_control.h"
 #include "ksi_init.h"
 #include "../api_wrapper.h"
 
@@ -54,12 +53,12 @@ int sign_run(int argc, char** argv, char **envp) {
 	/**
 	 * Configure parameter set, control, repair and object extractor function.
      */
-	PARAM_SET_addControl(set, "{o}{D}", isPathFormOk, isOutputFileContOK, NULL, NULL);
+	PARAM_SET_addControl(set, "{o}{D}", isFormatOk_path, NULL, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputHash, isContentOk_inputHash, NULL, extract_inputHash);
-	PARAM_SET_addControl(set, "{H}", isHashAlgFormatOK, isHashAlgContOK, NULL, NULL);
-	PARAM_SET_addControl(set, "{S}", isURLFormatOK, contentIsOK, convert_repairUrl, NULL);
-	PARAM_SET_addControl(set, "{aggre-user}{aggre-pass}", isUserPassFormatOK, contentIsOK, NULL, NULL);
-	PARAM_SET_addControl(set, "{d}", isFlagFormatOK, contentIsOK, NULL, NULL);
+	PARAM_SET_addControl(set, "{H}", isFormatOk_hashAlg, isContentOk_hashAlg, NULL, extract_hashAlg);
+	PARAM_SET_addControl(set, "{S}", isFormatOk_url, NULL, convertRepair_url, NULL);
+	PARAM_SET_addControl(set, "{aggre-user}{aggre-pass}", isFormatOk_userPass, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{d}", isFormatOk_flag, NULL, NULL, NULL);
 
 	/**
 	 * Define possible tasks (for error handling only).

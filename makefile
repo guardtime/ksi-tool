@@ -63,7 +63,6 @@ CMDTOOL_OBJ = \
 	$(OBJ_DIR)\gt_task_other.obj \
 	$(OBJ_DIR)\ksitool.obj \
 	$(OBJ_DIR)\component.obj \
-	$(OBJ_DIR)\gt_cmd_control.obj \
 	$(OBJ_DIR)\printer.obj \
 	$(OBJ_DIR)\ksitool_err.obj \
 	$(OBJ_DIR)\api_wrapper.obj \
