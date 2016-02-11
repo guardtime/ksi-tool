@@ -19,16 +19,19 @@
  */
 
 #include <stdio.h>
-
-#include "gt_task_support.h"
-#include "obj_printer.h"
-#include "param_set/param_value.h"
-#include "../param_set/param_set.h"
-#include "../param_set/task_def.h"
-#include "ksi_init.h"
-#include "../api_wrapper.h"
-
+#include <stdlib.h>
+#include "param_set/param_set.h"
+#include "param_set/task_def.h"
+#include "api_wrapper.h"
+#include "tool_box.h"
 #include "param_control.h"
+#include "ksi_init.h"
+#include "printer.h"
+#include "obj_printer.h"
+
+#ifdef _WIN32
+#define snprintf _snprintf
+#endif
 
 static int sign(PARAM_SET *set);
 
@@ -147,7 +150,7 @@ static int sign(PARAM_SET *set) {
 	COMPOSITE extra;
 
 
-	PARAM_SET_getStrValue(set, "o", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &outSigFileName);
+	PARAM_SET_getStr(set, "o", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &outSigFileName);
 	d = PARAM_SET_isSetByName(set, "d");
 
 	res = TOOL_init_ksi(set, &ksi, &err, &ksi_log);
@@ -169,7 +172,7 @@ static int sign(PARAM_SET *set) {
 	print_progressResult(res);
 
 	/* Save signature file */
-	res = saveSignatureFile(err, ksi, sign, outSigFileName);
+	res = KSI_OBJ_saveSignature(err, ksi, sign, outSigFileName);
 	if (res != KT_OK) goto cleanup;
 	print_info("Signature saved.\n");
 

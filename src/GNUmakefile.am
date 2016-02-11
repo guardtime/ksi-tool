@@ -24,17 +24,15 @@ dist_doc_DATA = ../license.txt ../doc/ChangeLog
 EXTRA_DIST = $(man_MANS) $(dist_doc_DATA) 
 ksitool_SOURCES = \
 	ksitool.c	\
-	gt_cmd_common.h \
 	gt_task.h \
-	gt_task_support.c \
-	gt_task_support.h \
-	gt_task_other.c \
 	tool_box/smart_file.c \
 	tool_box/smart_file.h \
 	tool_box/param_control.c \
 	tool_box/param_control.h \
 	tool_box/ksi_init.c \
 	tool_box/ksi_init.h \
+	tool_box/tool_box.c \
+	tool_box/tool_box.h \
 	tool_box/pubfile.c \
 	tool_box/sign.c \
 	tool_box/verify.c \

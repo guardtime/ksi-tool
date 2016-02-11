@@ -19,13 +19,16 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include <ctype.h>
 #include <limits.h>
+#include <string.h>
 #include <ksi/ksi.h>
+#include "tool_box.h"
 
 #include "param_control.h"
-#include "gt_task_support.h"
+//#include "gt_task_support.h"
 #include "obj_printer.h"
 #include "param_set/param_value.h"
 #include "../param_set/param_set.h"
@@ -272,104 +275,6 @@ cleanup:
 	return res;
 }
 
-static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **obj,
-					int (*parse)(KSI_CTX *ksi, unsigned char *raw, unsigned raw_len, void **obj),
-					void (*obj_free)()){
-	int res;
-	SMART_FILE *file = NULL;
-	unsigned char *buf = NULL;
-	size_t buf_size = 0xffff;
-	size_t buf_len = 0;
-	void *tmp = NULL;
-	size_t count = 0;
-
-
-	if (ksi == NULL || path == NULL || obj == NULL || parse == NULL || obj_free == NULL) {
-		res = KT_INVALID_ARGUMENT;
-		goto cleanup;
-	}
-
-	res = SMART_FILE_open(path, "rb", &file);
-	if (res != KT_OK) {
-		ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
-		goto cleanup;
-	}
-
-	buf = (unsigned char*)malloc(buf_size);
-	if (buf == NULL) {
-		res = KT_OUT_OF_MEMORY;
-		ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
-		goto cleanup;
-	}
-
-
-	while (!SMART_FILE_isEof(file)) {
-		if (buf_len + 1 >= buf_size) {
-			buf_size += 0xffff;
-			buf = realloc(buf, buf_size);
-			if (buf == NULL) {
-				res = KT_OUT_OF_MEMORY;
-				ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
-				goto cleanup;
-			}
-		}
-
-		res = SMART_FILE_read(file, buf + buf_len, buf_size - buf_len, &count);
-
-		if(res != KT_OK || SMART_FILE_isError(file)) {
-			ERR_TRCKR_ADD(err, res = KT_IO_ERROR, "Error: Unable to read data from file.");
-			goto cleanup;
-		}
-
-		buf_len += count;
-		count = 0;
-	}
-
-	if (buf_len > UINT_MAX) {
-		res = KT_INDEX_OVF;
-		ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
-		goto cleanup;
-	}
-
-	res = parse(ksi, buf, (unsigned)buf_len, &tmp);
-	ERR_CATCH_MSG(err, res, "Error: Unable to parse.");
-
-	*obj = tmp;
-	tmp = NULL;
-	res = KT_OK;
-
-
-cleanup:
-
-	SMART_FILE_close(file);
-	free(buf);
-	obj_free(tmp);
-
-	return res;
-}
-
-static int KSI_Signature_serialize_wrapper(KSI_CTX *ksi, KSI_Signature *sig, unsigned char **raw, size_t *raw_len) {
-	return KSI_Signature_serialize(sig, raw, raw_len);
-}
-
-static int load_ksi_obj_signature(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signature **sig) {
-	int res;
-
-	if (ksi == NULL || fname == NULL || sig == NULL) {
-		return KT_INVALID_ARGUMENT;
-	}
-
-	res = load_ksi_obj(err, ksi, fname,
-				(void**)sig,
-				(int (*)(KSI_CTX *, unsigned char*, unsigned, void**))KSI_Signature_parse,
-				(void (*)(void *))KSI_Signature_free);
-
-	if (res) {
-		ERR_TRCKR_ADD(err, res, "Error: Unable to load signature file from '%s'.", fname);
-	}
-	return res;
-}
-
 static int file_get_hash(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, const char *fnamein, KSI_DataHash **hash){
 	int res;
 	KSI_HashAlgorithm id = KSI_HASHALG_INVALID;
@@ -546,79 +451,6 @@ int isInteger(const char *str) {
 	return 1;
 }
 
-/**
- * OID description array must have the following format:
- * [OID][short name][long name][alias 1][..][alias N][NULL]
- * where OID, short and long name are mandatory. Array must end with NULL.
- */
-static char *OID_EMAIL[] = {KSI_CERT_EMAIL, "E", "email", "e-mail", "e_mail", "emailAddress", NULL};
-static char *OID_COMMON_NAME[] = {KSI_CERT_COMMON_NAME, "CN", "common name", "common_name", NULL};
-static char *OID_COUNTRY[] = {KSI_CERT_COUNTRY, "C", "country", NULL};
-static char *OID_ORGANIZATION[] = {KSI_CERT_ORGANIZATION, "O", "org", "organization", NULL};
-
-static char **OID_INFO[] = {OID_EMAIL, OID_COMMON_NAME, OID_COUNTRY, OID_ORGANIZATION, NULL};
-
-static const char *OID_getShortDescriptionString2(const char *OID) {
-	unsigned i = 0;
-
-	if (OID == NULL) return NULL;
-
-	while (OID_INFO[i] != NULL) {
-		if (strcmp(OID_INFO[i][0], OID) == 0) return OID_INFO[i][1];
-		i++;
-	}
-
-	return OID;
-}
-
-static const char *OID_getFromString(const char *str) {
-	unsigned i = 0;
-	unsigned n = 0;
-	const char *OID = NULL;
-	size_t len;
-
-	if (str == NULL) {
-		OID = NULL;
-		goto cleanup;
-	};
-
-	while (OID_INFO[i] != NULL) {
-		n = 1;
-		while (OID_INFO[i][n] != NULL) {
-			printf("'%s' == '%s'\n", str, OID_INFO[i][n]);
-			len = strlen(OID_INFO[i][n]);
-			if (strncmp(OID_INFO[i][n], str, len) == 0 && str[len] == '=') {
-				OID = OID_INFO[i][0];
-				goto cleanup;
-			}
-			n++;
-		}
-		i++;
-	}
-
-cleanup:
-	return OID;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 int isFormatOk_url(const char *url) {
 	if(url == NULL) return FORMAT_NULLPTR;
 	if(strlen(url) == 0) return FORMAT_NOCONTENT;
@@ -638,7 +470,7 @@ int isFormatOk_url(const char *url) {
 int convertRepair_url(const char* arg, char* buf, unsigned len) {
 	char *scheme = NULL;
 	unsigned i = 0;
-	if(arg == NULL || buf == NULL) return false;
+	if(arg == NULL || buf == NULL) return 0;
 	scheme = strstr(arg, "://");
 
 	if(scheme == NULL){
@@ -646,7 +478,7 @@ int convertRepair_url(const char* arg, char* buf, unsigned len) {
 		if(strlen(buf)+strlen(arg) < len)
 			strcat(buf, arg);
 		else
-			return false;
+			return 0;
 	}
 	else{
 		while(arg[i] && i < len - 1){
@@ -659,7 +491,7 @@ int convertRepair_url(const char* arg, char* buf, unsigned len) {
 		}
 		buf[i] = 0;
 	}
-	return true;
+	return 1;
 }
 
 
@@ -744,7 +576,7 @@ int isContentOk_inputFile(const char* path){
 int convertRepair_path(const char* arg, char* buf, unsigned len){
 	char *toBeReplaced = NULL;
 
-	if(arg == NULL || buf == NULL) return false;
+	if(arg == NULL || buf == NULL) return 0;
 	strncpy(buf, arg, len-1);
 
 
@@ -754,7 +586,7 @@ int convertRepair_path(const char* arg, char* buf, unsigned len){
 		toBeReplaced++;
 	}
 
-	return true;
+	return 1;
 }
 
 int isFormatOk_path(const char *path) {
@@ -959,7 +791,7 @@ int extract_inputSignature(void *extra, const char* str, void** obj) {
 		goto cleanup;
 	}
 
-	res = load_ksi_obj_signature(err, ctx, str, (KSI_Signature**)obj);
+	res = KSI_OBJ_loadSignature(err, ctx, str, (KSI_Signature**)obj);
 	if (res != KT_OK) goto cleanup;
 
 cleanup:

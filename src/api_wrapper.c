@@ -19,9 +19,10 @@
  */
 
 #include "api_wrapper.h"
-#include "gt_task_support.h"
+#include <string.h>
 #include <ksi/ksi.h>
 #include "ksi/net.h"
+#include "tool_box/tool_box.h"
 
 #define ERR_APPEND_KSI_ERR_EXT_MSG(err, res, ref_err, msg) \
 		if (res == ref_err) { \

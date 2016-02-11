@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+#include <stdio.h>	
+#include <ksi/ksi.h>
+#include "ksitool_err.h"	
+	
 #define DEF_SERVICE_PAR	"{S}{X}{P}{c}{C}{cnstr}{aggre-user}{aggre-pass}{ext-user}{ext-pass}"
 #define DEF_PARAMETERS "{log}{V}{W}{silent}{nowarn}{d}{conf}"
 	

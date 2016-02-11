@@ -21,16 +21,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../param_set/param_set.h"
-#include "../param_set/task_def.h"
-#include "../api_wrapper.h"
-#include "param_control.h"
-#include "gt_task_support.h"
-#include "obj_printer.h"
+#include "param_set/param_set.h"
+#include "param_set/task_def.h"
 #include "ksi_init.h"
+#include "api_wrapper.h"
+#include "param_control.h"
+#include "tool_box.h"
+#include "printer.h"
+#include "debug_print.h"
+#include "obj_printer.h"
 
-#include "../debug_print.h"
-#include "../printer.h"
+#ifdef _WIN32
+#define snprintf _snprintf
+#endif
 
 static int verify_as_possible(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig);
 static int verify_internally(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig);
@@ -364,7 +367,7 @@ static int verify_publication_based(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi
 
 	d = PARAM_SET_isSetByName(set, "d");
 	x = PARAM_SET_isSetByName(set, "x");
-	isExtended = isSignatureExtended(sig);
+	isExtended = KSI_OBJ_isSignatureExtended(sig);
 
 	//TODO:
 	print_errors("Error: Not implemented.");

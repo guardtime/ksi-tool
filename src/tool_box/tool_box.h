@@ -18,162 +18,26 @@
  * Guardtime Inc.
  */
 
-#ifndef GT_TASK_SUPPORT_H
-#define	GT_TASK_SUPPORT_H
+#ifndef TOOL_BOX_H
+#define	TOOL_BOX_H
 
-#ifdef _WIN32
-#ifdef _DEBUG
-#   define _CRTDBG_MAP_ALLOC
-#   include <stdlib.h>
-#   include <crtdbg.h>
-#endif
-#endif
-
-
-#include <stdio.h>
-#include <string.h>
 #include <ksi/ksi.h>
-#include "param_set/task_def.h"
-#include <stdlib.h>
-#include "gt_cmd_common.h"
 #include "ksitool_err.h"
-#include "api_wrapper.h"
-#include "printer.h"
-
-
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
-typedef enum tasks_en{
-	noTask = 0,
-	downloadPublicationsFile,
-	dumpPublicationsFile,
-	createPublicationString,
-	signDataFile,
-	signHash,
-	extendTimestamp,
-	verifyPublicationsFile,
-	verifyTimestamp,
-	verifyTimestampOnline,
-	getRootH_T,
-	setSysTime,
-	showHelp,
-	invalid
-} TaskID;
+	
+int KSI_OBJ_saveSignature(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *fname);
+int KSI_OBJ_savePublicationsFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *fname) ;
+int KSI_OBJ_loadSignature(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signature **sig);
+int KSI_OBJ_isSignatureExtended(const KSI_Signature *sig);
 
-/**
- * Configures KSI using parameters extracted from command line.
- *
- * @param[in] task Pointer to task object.
- * @param[out] ksi Pointer to receiving pointer to KSI context object.
- *
- * @return KT_OK if successful, error code otherwise.
- */
-int initTask(TASK *task ,KSI_CTX **ksi, ERR_TRCKR **err);
-
-
-/**
- * Closes KSI and logging file.
- * @param[in] task	Pointer to task object.
- * @param[in] ksi	Pointer to receiving pointer to KSI context object.
- */
-void closeTask(KSI_CTX *ksi);
-
-/**
- * Calculates the hash of an input file or stream.
- * If fnameout is not NULL, saves input data to a file. This is useful
- * for hashing a stream and saving the stream at the same time.
- *
- * @param err		Error tracker.
- * @param hsr		Hasher for file hashing.
- * @param fnamein	Files name to be hashed. If files name is -, file is read from stdin.
- * @param fnameout	Files name where input data is saved.
- * @param hash		Hash value of the file.
- *
- * @return KT_OK if successful, error code otherwise.
- */
-int getFilesHash(ERR_TRCKR *err, KSI_DataHasher *hsr, const char *fnamein, const char *fnameout, KSI_DataHash **hash);
-
-/**
- * Saves signature object to a file. If files name is -, file is written to stdout.
- *
- * @param err	Error tracker.
- * @param ksi	KSI Context.
- * @param sign	Signature object.
- * @param fname	Files name where the signature is saved.
- *
- * @return KT_OK if successful, error code otherwise.
- */
-int saveSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *fname);
-
-/**
- * Saves publication file object to a file. If files name is -, file is written to stdout.
- *
- * @param err		Error tracker.
- * @param ksi		KSI Context.
- * @param pubfile	Publication file object.
- * @param fname		Files name where the signature is saved.
- *
- * @return KT_OK if successful, error code otherwise.
- */
-int savePublicationFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *fname);
-
-/**
- * Reads publication file from file. If files name is -, file is read from stdin.
- *
- * @param err		Error tracker.
- * @param ksi		KSI Context.
- * @param fname		Files name where the signature is saved.
- * @param pubfile	Publication file object.
- *
- * @return KT_OK if successful, error code otherwise.
- */
-int loadPublicationFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_PublicationsFile **pubfile);
-
-/**
- * Reads signature file from file. If files name is -, file is read from stdin.
- *
- * @param err		Error tracker.
- * @param ksi		KSI Context.
- * @param fname		Files name where the signature is saved.
- * @param sig		Signature file object.
- *
- * @return KT_OK if successful, error code otherwise.
- */
-int loadSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signature **sig);
-
-/**
- * Returns true if signature is extended. False if not.
- */
-bool isSignatureExtended(const KSI_Signature *sig);
-
-/*Controls parameter set and returns true if user wants to write data files to stdout*/
-bool isPiping(PARAM_SET *set);
-
-/**
- * Reads hash from command line and creates the KSI_DataHash object.
- *
- * @param[in] cmdparam Pointer to command line data object.
- * @param[in] ksi Pointer to ksi context object.
- * @param[out] hash Pointer to receiving pointer to KSI_DataHash object.
- *
- */
-int getHashFromCommandLine(const char *imprint, KSI_CTX *ksi, ERR_TRCKR *err, KSI_DataHash **hash);
-
-void print_progressDesc(bool showTiming, const char *msg, ...);
-
-void print_progressResult(int res);
-
-/**
- * Returns short string representing OID. If string representation is not found
- * the same OID is returned.
- * 
- * @param	OID[in]		OID value.
- * @return OID string representation if successful, NULL otherwise. If short string is not found
- * the input value is returned.
- */
 const char *OID_getShortDescriptionString(const char *OID);
+const char *OID_getFromString(const char *str);
+
+void print_progressDesc(int showTiming, const char *msg, ...);
+void print_progressResult(int res);
 
 char *STRING_getBetweenWhitespace(const char *strn, char *buf, size_t buf_len);
 
@@ -289,12 +153,9 @@ const char* find_charBeforeStrn(const char* str, const char* findIt);
  */
 const char* find_charBeforeLastStrn(const char* str, const char* findIt);
 
-
-int PARAM_SET_getStrValue(PARAM_SET *set, const char *name, const char *source, int prio, unsigned at, char **value);
-int PARAM_SET_getIntValue(PARAM_SET *set, const char *name, const char *source, int prio, unsigned at, int *value);
 #ifdef	__cplusplus
 }
 #endif
 
-#endif	/* GT_TASK_H */
+#endif	/* TOOL_BOX_H */
 

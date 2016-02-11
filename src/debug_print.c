@@ -22,8 +22,8 @@
 #include "printer.h"
 #include "obj_printer.h"
 #include "debug_print.h"
-#include "gt_task_support.h"
 #include "param_set/param_value.h"
+#include "tool_box/tool_box.h"
 
 static int debug_getVerificationStepFailed(KSI_Signature *sig) {
 	int stat;
@@ -57,7 +57,7 @@ static int debug_getVerificationStepFailed(KSI_Signature *sig) {
 
 void DEBUG_verifySignature(KSI_CTX *ksi, TASK *task, int res, KSI_Signature *sig) {
 	PARAM_SET *set = NULL;
-	bool d;
+	int d;
 	int stepFailed;
 	KSI_PublicationsFile *pubFile = NULL;
 
@@ -88,7 +88,7 @@ void DEBUG_verifySignature(KSI_CTX *ksi, TASK *task, int res, KSI_Signature *sig
 
 void DEBUG_verifyPubfile(KSI_CTX *ksi, TASK *task, int res, KSI_PublicationsFile *pub) {
 	PARAM_SET *set = NULL;
-	bool d;
+	int d;
 	char *constraint = NULL;
 	unsigned i = 0;
 
@@ -107,7 +107,7 @@ void DEBUG_verifyPubfile(KSI_CTX *ksi, TASK *task, int res, KSI_PublicationsFile
 			print_info("Expected publications file PKI certificate constraints:\n");
 		}
 
-		while (PARAM_SET_getStrValue(set, "cnstr", NULL, PST_PRIORITY_NONE, i++, &constraint) == PST_OK) {
+		while (PARAM_SET_getObj(set, "cnstr", NULL, PST_PRIORITY_NONE, i++, (void**)&constraint) == PST_OK) {
 			char OID[1204];
 			char value[1204];
 			char *ret = NULL;

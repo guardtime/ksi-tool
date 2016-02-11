@@ -22,16 +22,19 @@
 #include <stdlib.h>
 #include <ksi/net.h>
 #include <ksi/hashchain.h>
-#include "../param_set/param_set.h"
-#include "../param_set/task_def.h"
-#include "../api_wrapper.h"
-#include "param_control.h"
-#include "gt_task_support.h"
-#include "obj_printer.h"
+#include "param_set/param_set.h"
+#include "param_set/task_def.h"
+#include "api_wrapper.h"
 #include "ksi_init.h"
+#include "param_control.h"
+#include "tool_box.h"
+#include "printer.h"
+#include "debug_print.h"
+#include "obj_printer.h"
 
-#include "../debug_print.h"
-#include "../printer.h"
+#ifdef _WIN32
+#define snprintf _snprintf
+#endif
 
 static int pubfile_download(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi);
 static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, COMPOSITE *extra);
@@ -76,10 +79,11 @@ int pubfile_run(int argc, char** argv, char **envp) {
 	if (res != PST_OK) goto cleanup;
 
 	/*					  ID	DESC										MAN			ATL		FORBIDDEN	IGN	*/
-	TASK_SET_add(task_set, 0,	"Dump publications file.",					"P,d",		NULL,	"T,o",		NULL);
-	TASK_SET_add(task_set, 1,	"Save publications.",						"P,o",		NULL,	"T,d",		NULL);
-	TASK_SET_add(task_set, 2,	"Save and dump publications file.",			"P,o,d",	NULL,	"T",		NULL);
-	TASK_SET_add(task_set, 3,	"Create publication string.",				"T,X",		NULL,	NULL,		NULL);
+	TASK_SET_add(task_set, 0,	"Verify publications file.",				"P,v",		NULL,	"T,d,o",		NULL);
+	TASK_SET_add(task_set, 1,	"Dump publications file.",					"P,d",		NULL,	"T,o",		NULL);
+	TASK_SET_add(task_set, 2,	"Save publications.",						"P,o",		NULL,	"T,d",		NULL);
+	TASK_SET_add(task_set, 3,	"Save and dump publications file.",			"P,o,d",	NULL,	"T",		NULL);
+	TASK_SET_add(task_set, 4,	"Create publication string.",				"T,X",		NULL,	NULL,		NULL);
 
 
 	PARAM_SET_readFromCMD(argc, argv, set, 0);
@@ -137,8 +141,9 @@ int pubfile_run(int argc, char** argv, char **envp) {
 		case 0:
 		case 1:
 		case 2:
-			res = pubfile_download(set, err, ksi);
 		case 3:
+			res = pubfile_download(set, err, ksi);
+		case 4:
 			res = pubfile_create_pub_string(set, err, ksi, &extra);
 		break;
 		default:
@@ -240,7 +245,7 @@ static int pubfile_download(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi) {
 
 	if (save_to != NULL) {
 		print_progressDesc(d, "Saveing publications file... ");
-		res = savePublicationFile(err, ksi, pubfile, save_to);
+		res = KSI_OBJ_savePublicationsFile(err, ksi, pubfile, save_to);
 		ERR_CATCH_MSG(err, res, "Error: Unable to save publications file.");
 		print_progressResult(res);
 	}
@@ -327,7 +332,7 @@ static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ks
 	print_progressResult(res);
 
 
-	print_progressDesc(false, "Getting publication string... ");
+	print_progressDesc(1, "Getting publication string... ");
 
 	res = KSI_ExtendResp_getCalendarHashChain(extResp, &chain);
 	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));

@@ -21,16 +21,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../param_set/param_set.h"
-#include "../param_set/task_def.h"
-#include "../api_wrapper.h"
-#include "param_control.h"
-#include "gt_task_support.h"
-#include "obj_printer.h"
+#include "param_set/param_set.h"
+#include "param_set/task_def.h"
+#include "api_wrapper.h"
 #include "ksi_init.h"
+#include "tool_box.h"
+#include "param_control.h"
+#include "printer.h"
+#include "obj_printer.h"
+#include "debug_print.h"
 
-#include "../debug_print.h"
-#include "../printer.h"
+#ifdef _WIN32
+#define snprintf _snprintf
+#endif
 
 static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, COMPOSITE *comp);
 
@@ -244,7 +247,7 @@ static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *s
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify signature.");
 	print_progressResult(res);
 
-	PARAM_SET_getStrValue(set, "o", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &outSigFileName);
+	PARAM_SET_getStr(set, "o", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &outSigFileName);
 
 	/* Extend the signature. */
 	if(pubTime != NULL){
@@ -272,7 +275,7 @@ static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *s
 	print_progressResult(res);
 
 	/* Save signature. */
-	res = saveSignatureFile(err, ksi, ext, outSigFileName);
+	res = KSI_OBJ_saveSignature(err, ksi, ext, outSigFileName);
 	if (res != KT_OK) goto cleanup;
 	print_info("Extended signature saved.\n");
 

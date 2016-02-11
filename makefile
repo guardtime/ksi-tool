@@ -59,8 +59,6 @@ PARAMSET_OBJ = \
 	$(PARAMSET_OBJ_DIR)\task_def.obj
 
 CMDTOOL_OBJ = \
-	$(OBJ_DIR)\gt_task_support.obj \
-	$(OBJ_DIR)\gt_task_other.obj \
 	$(OBJ_DIR)\ksitool.obj \
 	$(OBJ_DIR)\component.obj \
 	$(OBJ_DIR)\printer.obj \
@@ -70,6 +68,7 @@ CMDTOOL_OBJ = \
 	$(OBJ_DIR)\debug_print.obj
 	
 TOOL_BOX_OBJ = \
+    $(TOOL_BOX_OBJ_DIR)\tool_box.obj \
     $(TOOL_BOX_OBJ_DIR)\ksi_init.obj \
     $(TOOL_BOX_OBJ_DIR)\pubfile.obj \
     $(TOOL_BOX_OBJ_DIR)\extend.obj \
@@ -86,7 +85,7 @@ EXT_LIB = libksiapi$(RTL).lib \
 	user32.lib gdi32.lib advapi32.lib Ws2_32.lib
 	  
 	
-CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE  /I$(SRC_DIR) /I$(PARAMSET_SRC_DIR) /I$(KSI_DIR)\include /DTOOL_NAME=\"$(TOOL_NAME)\"
+CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE  /I$(SRC_DIR) /I$(PARAMSET_SRC_DIR) /I$(TOOL_BOX_SRC_DIR) /I$(KSI_DIR)\include /DTOOL_NAME=\"$(TOOL_NAME)\"
 LDFLAGS = /NOLOGO /LIBPATH:"$(KSI_DIR)\$(KSI_LIB)"
 
 !IF "$(KSI_LIB)" == "dll"

@@ -27,8 +27,6 @@
 #include "../api_wrapper.h"
 #include "ksi_init.h"
 
-#include "../gt_task_support.h"
-
 #ifdef _WIN32
 //#	include <windows.h>
 #	include <io.h>
@@ -94,7 +92,7 @@ static int tool_init_ksi_logger(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set, FI
 		goto cleanup;
 	}
 
-	PARAM_SET_getStrValue(set, "log", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &outLogfile);
+	PARAM_SET_getStr(set, "log", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &outLogfile);
 
 	/* Set logging. */
 	if (outLogfile != NULL) {
@@ -145,17 +143,17 @@ static int tool_init_ksi_network_provider(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SE
 	/**
 	 * Extract values from the set.
      */
-	PARAM_SET_getStrValue(set, "S", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &aggr_url);
-	PARAM_SET_getStrValue(set, "X", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &ext_url);
-	PARAM_SET_getStrValue(set, "P", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &pub_url);
+	PARAM_SET_getStr(set, "S", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &aggr_url);
+	PARAM_SET_getStr(set, "X", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &ext_url);
+	PARAM_SET_getStr(set, "P", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &pub_url);
 
-	PARAM_SET_getStrValue(set, "aggre-user", NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, &aggre_user);
-	PARAM_SET_getStrValue(set, "aggre-pass", NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, &aggre_pass);
-	PARAM_SET_getStrValue(set, "ext-user", NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, &ext_user);
-	PARAM_SET_getStrValue(set, "ext-pass", NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, &ext_pass);
+	PARAM_SET_getStr(set, "aggre-user", NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, &aggre_user);
+	PARAM_SET_getStr(set, "aggre-pass", NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, &aggre_pass);
+	PARAM_SET_getStr(set, "ext-user", NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, &ext_user);
+	PARAM_SET_getStr(set, "ext-pass", NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, &ext_pass);
 
-	PARAM_SET_getIntValue(set, "C", NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, &networkConnectionTimeout);
-	PARAM_SET_getIntValue(set, "c", NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, &networkTransferTimeout);
+	PARAM_SET_getObj(set, "C", NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, (void**)&networkConnectionTimeout);
+	PARAM_SET_getObj(set, "c", NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, (void**)&networkTransferTimeout);
 
 	aggre_user = aggre_user == NULL ? "anon" : aggre_user;
 	aggre_pass = aggre_pass == NULL ? "anon" : aggre_pass;
@@ -246,7 +244,7 @@ static int tool_init_ksi_pub_cert_constraints(KSI_CTX *ksi, ERR_TRCKR *err, PARA
 		char *oid = NULL;
 		char *value = NULL;
 		char tmp[1024];
-			PARAM_SET_getStrValue(set, "cnstr", NULL, PST_PRIORITY_NONE, i, &constraint);
+			PARAM_SET_getStr(set, "cnstr", NULL, PST_PRIORITY_NONE, i, &constraint);
 			strncpy(tmp, constraint, sizeof(tmp));
 
 			oid = tmp;
@@ -323,13 +321,13 @@ static int tool_init_ksi_trust_store(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *se
 		ERR_CATCH_MSG(err, res, "Error: Unable to get PKI trust store.");
 
 		i = 0;
-		while(PARAM_SET_getStrValue(set, "V", NULL, PST_PRIORITY_HIGHEST, i++, &lookupFile) == PST_OK) {
+		while(PARAM_SET_getStr(set, "V", NULL, PST_PRIORITY_HIGHEST, i++, &lookupFile) == PST_OK) {
 			res = KSI_PKITruststore_addLookupFile(refTrustStore, lookupFile);
 			ERR_CATCH_MSG(err, res, "Error: Unable to add cert to PKI trust store.");
 		}
 
 		i = 0;
-		while(PARAM_SET_getStrValue(set, "W", NULL, PST_PRIORITY_HIGHEST, i++, &lookupDir) == PST_OK) {
+		while(PARAM_SET_getStr(set, "W", NULL, PST_PRIORITY_HIGHEST, i++, &lookupDir) == PST_OK) {
 			res = KSI_PKITruststore_addLookupDir(refTrustStore, lookupDir);
 			ERR_CATCH_MSG(err, res, "Error: Unable to add lookup dir to PKI trust store.");
 		}
