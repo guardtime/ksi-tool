@@ -185,6 +185,22 @@ int PARAM_SET_addControl(PARAM_SET *set, const char *names,
  */
 int PARAM_SET_add(PARAM_SET *set, const char *name, const char *value, const char *source, int priority);
 
+/**
+ * Extracts string from the \c PARAM_SET (see \ref PARAM_SET_add). If object
+ * extractor is set, a string value is is always extracted. The user MUST not free
+ * the returned string.
+ *
+ * \param	set			PARAM_SET object.
+ * \param	name		parameters name.
+ * \param	source		Constraint for the source, can be NULL.
+ * \param	priority	Priority that can be \c PST_PRIORITY_VALID_BASE (0) or higher.
+ * \param	at			Parameter index in the matching set composed with the constraints.
+ * \param	obj			Pointer to receiving pointer to string returned.
+ * \return \c PST_OK when successful, error code otherwise. Some more common error
+ * codes: 	\c PST_INVALID_ARGUMENT,  \c PST_PARAMETER_NOT_FOUND \c PST_PARAMETER_EMPTY
+ * \c PST_PARAMETER_INVALID_FORMAT.
+ */
+int PARAM_SET_getStr(PARAM_SET *set, const char *name, const char *source, int priority, int at, char **value);
 
 /**
  * Extracts object from the \c PARAM_SET (see \ref PARAM_SET_add,

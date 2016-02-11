@@ -638,6 +638,36 @@ int PARAM_SET_getObj(PARAM_SET *set, const char *name, const char *source, int p
 	return PARAM_SET_getObjExtended(set, name, source, priority, at, set, obj);
 }
 
+int PARAM_SET_getStr(PARAM_SET *set, const char *name, const char *source, int priority, int at, char **value) {
+	int res;
+	PARAM *param = NULL;
+	PARAM_VAL *val = NULL;
+
+	if (set == NULL || name == NULL || value == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;;
+	}
+
+	res = param_set_getParameterByName(set, name, &param);
+	if (res != PST_OK) goto cleanup;
+
+	res = PARAM_getValue(param, source, priority, at, &val);
+	if (res != PST_OK) goto cleanup;
+
+
+	*value = val->cstr_value;
+
+	if (val->formatStatus != 0 || val->contentStatus != 0) {
+		res = PST_PARAMETER_INVALID_FORMAT;
+	} else {
+		res = PST_OK;
+	}
+
+cleanup:
+
+	return res;
+}
+
 int PARAM_SET_clearParameter(PARAM_SET *set, const char *names){
 	int res;
 	PARAM *tmp = NULL;
