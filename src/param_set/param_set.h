@@ -47,6 +47,7 @@ enum param_set_err {
 	/** Object extractor function is not implemented. */
 	PST_PARAMETER_UNIMPLEMENTED_OBJ,
 	PST_OUT_OF_MEMORY,
+	PST_IO_ERROR,
 	PST_NEGATIVE_PRIORITY,
 	PST_PARAMETER_INVALID_FORMAT,
 	PST_TASK_ZERO_CONSISTENT_TASKS,
@@ -319,7 +320,7 @@ int PARAM_SET_isUnknown(const PARAM_SET *set);
  * @param[in]		fname	files path.
  * @param[in/out]	set		parameter set.
  */
-void PARAM_SET_readFromFile(const char *fname, PARAM_SET *set,  int priority);
+int PARAM_SET_readFromFile(const char *fname, PARAM_SET *set,  int priority);
 
 /**
  * Reads parameter values from command-line into predefined parameter set.
@@ -333,6 +334,8 @@ void PARAM_SET_readFromFile(const char *fname, PARAM_SET *set,  int priority);
  * @param[in/out]	set		parameter set.
  */
 void PARAM_SET_readFromCMD(int argc, char **argv, PARAM_SET *set, int priority);
+
+char* PARAM_SET_toString(PARAM_SET *set, char *buf, size_t buf_len);
 
 /**
  * Generates typo failure string
@@ -390,6 +393,28 @@ const char* PARAM_SET_errorToString(int err);
  * extracted or NULL if end if string reached or no name can be extracted.
  */
 const char* extract_next_name(const char* name_string, int (*isValidNameChar)(int), char *buf, short len, int *flags);
+
+/**
+ * Extract a key value pair from the line. Supported formats, where <ws> is white space:
+ * <wh><key><wh>=<wh><value><wh>
+ * <wh><key><wh><value><wh>
+ * <wh><key><wh>=<wh>"<value><wh><value>"
+ * <wh><key><wh>"<value><wh><value>"
+ * <wh><key><wh>"<value><wh><value>"
+ *
+ * To have <wh> inside value an escape character \ must be used.
+ * Some examples:
+ *
+ * ' key = "a b c d"' result: 'key' 'a b c d'
+ * ' key  "a \"b\" c d"' result 'key' 'a "b" c d'
+ *
+ * \param line
+ * \param key
+ * \param value
+ * \param buf_len
+ * \return
+ */
+int parse_key_value_pair(const char *line, char *key, char *value, size_t buf_len);
 
 #ifdef	__cplusplus
 }

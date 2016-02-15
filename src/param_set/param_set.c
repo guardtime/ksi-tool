@@ -151,6 +151,105 @@ static char *getParametersName(const char* list_of_names, char *name, char *alia
 	return &pName[i];
 }
 
+const char not_valid_key_beginning_characters[] = "-_";
+
+int parse_key_value_pair(const char *line, char *key, char *value, size_t buf_len) {
+	int res;
+	size_t i = 0;
+	size_t key_i = 0;
+	size_t value_i = 0;
+	int key_opend = 0;
+	int value_opend = 0;
+	int is_ecape_opend = 0;
+	int is_quote_mark_opend = 0;
+	int C;
+
+
+	if (line == NULL || key == NULL || value == NULL || buf_len == 0) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	/**
+	 * Search for the first character that is valid for a KEY string. Everything else
+	 * than space
+     */
+	while (C = 0xff & line[i]) {
+		if (!isspace(C) && C != '-' && !isalpha(C)) {
+			res = PST_INVALID_FORMAT;
+			goto cleanup;
+		} else if (isalnum(C) || C == '-') {
+			break;
+		}
+
+		i++;
+	}
+
+	if (C == '\0') {
+		res = PST_OK;
+		goto cleanup;
+	}
+
+	/**
+	 * The first key character must be available.
+     */
+	key_opend = 1;
+	while (C = 0xff & line[i]) {
+		if (!is_ecape_opend && C == '\\') {
+			is_ecape_opend = 1;
+			i++;
+			continue;
+		}
+
+		if (!is_ecape_opend && !is_quote_mark_opend && C == '"') {
+			is_quote_mark_opend = 1;
+			i++;
+			continue;
+		} else if (!is_ecape_opend && is_quote_mark_opend && C == '"') {
+			break;
+		}
+
+		if (is_ecape_opend && C == '\\') {
+			is_ecape_opend = 0;
+		} else if (is_ecape_opend && C == '"') {
+			is_ecape_opend = 0;
+		}
+
+
+		if (key_opend && key_i < buf_len - 1) {
+			if (isValidNameChar(C)) {
+				key[key_i] = (char)(0xff & C);
+				key_i++;
+			} else {
+				key_opend = 0;
+			}
+		} else if (key_opend == 0 && value_opend == 0) {
+			if ((!isspace(C) && C != '=') || (isspace(C) && is_quote_mark_opend)) {
+				value_opend = 1;
+				value[value_i] = (char)(0xff & C);
+				value_i++;
+			}
+		} else if (value_opend && value_i < buf_len - 1) {
+			if (isspace(C) && !is_quote_mark_opend) break;
+
+			value[value_i] = (char)(0xff & C);
+			value_i++;
+		}
+
+		i++;
+	}
+
+
+	res = PST_OK;
+
+
+cleanup:
+	key[key_i] = '\0';
+	value[value_i] = '\0';
+
+	return res;
+}
+
 static unsigned min_of_3(unsigned A, unsigned B,unsigned C){
 	unsigned tmp;
 	tmp = A < B ? A : B;
@@ -357,7 +456,7 @@ static int param_set_addRawParameter(const char *param, const char *arg, const c
          */
 		if ((strncmp("--", param, 2) == 0 && len >= 3) || (param[0] == '-' && len == 2)) {
 			res = PARAM_SET_add(set, flag, arg, source, priority);
-			if (res != PST_OK || res != PST_PARAMETER_IS_UNKNOWN || res != PST_PARAMETER_IS_TYPO) {
+			if (res != PST_OK && res != PST_PARAMETER_IS_UNKNOWN && res != PST_PARAMETER_IS_TYPO) {
 				goto cleanup;
 			}
 
@@ -374,7 +473,7 @@ static int param_set_addRawParameter(const char *param, const char *arg, const c
 					param_set_add_typo(set, arg, source);
 				} else {
 					res = PARAM_addValue(set->unknown, flag, source, PST_PRIORITY_VALID_BASE);
-					if (res != PST_OK) goto cleanup;
+					if (res != PST_OK && res != PST_PARAMETER_IS_UNKNOWN && res != PST_PARAMETER_IS_TYPO) goto cleanup;
 				}
 			}
 
@@ -396,6 +495,9 @@ static int param_set_addRawParameter(const char *param, const char *arg, const c
 	else{
 		res = PARAM_addValue(set->unknown, param, source, PST_PRIORITY_VALID_BASE);
 		if (res != PST_OK) goto cleanup;
+
+		res = PST_INVALID_FORMAT;
+		goto cleanup;
 	}
 
 	res = PST_OK;
@@ -410,6 +512,18 @@ static int wrapper_returnStr(void *extra, const char* str, void** obj){
 	return PST_OK;
 }
 
+static int isComment(const char *line) {
+	int i = 0;
+	int C;
+	if (line == NULL) return 0;
+	if (line[0] == '\0') return 0;
+
+	while (C = (0xff & line[i])) {
+		if(C == '#') return 1;
+		else if (!isspace(C)) return 0;
+	}
+	return 0;
+}
 
 int PARAM_SET_new(const char *names, PARAM_SET **set){
 	int res;
@@ -842,32 +956,54 @@ int PARAM_SET_isUnknown(const PARAM_SET *set){
 	return count > 0 ? 1 : 0;
 }
 
-void PARAM_SET_readFromFile(const char *fname, PARAM_SET *set, int priority){
+int PARAM_SET_readFromFile(const char *fname, PARAM_SET *set, int priority){
+	int res;
 	FILE *file = NULL;
 	char *ln = NULL;
 	char line[1024];
 	char flag[1024];
 	char arg[1024];
 
-	if(fname == NULL || set == NULL) goto cleanup;
+	if(fname == NULL || set == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
 
 	file = fopen(fname, "r");
-	if(file == NULL) goto cleanup;
+	if(file == NULL) {
+		res = PST_IO_ERROR;
+		goto cleanup;
+	}
 
-	while(fgets(line, sizeof(line),file)){
+	while(fgets(line, sizeof(line), file)) {
 		ln = strchr(line, '\n');
 		if(ln != NULL) *ln = 0;
 
-		if(sscanf(line, "%s %s", flag, arg) == 2)
-			param_set_addRawParameter(flag, arg, fname, set, priority);
-		else
-			param_set_addRawParameter(line,NULL, fname, set, priority);
+		if (isComment(line)) continue;
+
+		res = parse_key_value_pair(line, flag, arg, sizeof(flag));
+		if (res != PST_OK) {
+			goto cleanup;
+		}
+
+		if (flag[0] == '\0' && arg[0] == '\0') continue;
+
+		if(flag[0] != '\0' && arg[0] != '\0') {
+			res = param_set_addRawParameter(flag, arg, fname, set, priority);
+			if (res != PST_OK) goto cleanup;
+		} else {
+			res = param_set_addRawParameter(flag, NULL, fname, set, priority);
+			if (res != PST_OK) goto cleanup;
+		}
+
 	}
+
+	res = PST_OK;
 
 cleanup:
 
 	if(file) fclose(file);
-	return;
+	return res;
 }
 
 void PARAM_SET_readFromCMD(int argc, char **argv, PARAM_SET *set, int priority){
@@ -1057,6 +1193,49 @@ char* PARAM_SET_typosToString(PARAM_SET *set, const char *prefix, char *buf, siz
 	return buf;
 }
 
+char* PARAM_SET_toString(PARAM_SET *set, char *buf, size_t buf_len) {
+	int res;
+	PARAM_VAL *param_value = NULL;
+	int i = 0;
+	const char *value = NULL;
+	const char *source = NULL;
+	int priority = 0;
+	int n = 0;
+	size_t count = 0;
+
+	if (set == NULL || buf == NULL || buf_len == 0) {
+		return NULL;
+	}
+
+
+	count += snprintf(buf + count, buf_len - count, "  %3s %10s %50s %10s\n",
+			"nr", "value", "source", "priority");
+
+	for (i = 0; i < set->count; i++) {
+		count += snprintf(buf + count, buf_len - count, "Parameter: '%s' (%i):\n",
+				set->parameter[i]->flagName, set->parameter[i]->argCount);
+
+
+		n = 0;
+		while (PARAM_getValue(set->parameter[i], NULL, PST_PRIORITY_NONE, n, &param_value) == PST_OK) {
+			res = PARAM_VAL_extract(param_value, &value, &source, &priority);
+			if (res != PST_OK) return NULL;
+
+			count += snprintf(buf + count, buf_len - count, "  %2i) %10s %50s %10i\n",
+					n,
+					value == NULL ? "-" : value,
+					source == NULL ? "-" : source,
+					priority);
+
+			n++;
+		}
+	}
+	count += snprintf(buf + count, buf_len - count, "\n");
+
+	buf[buf_len - 1] = '\0';
+	return buf;
+}
+
 const char* PARAM_SET_errorToString(int err) {
 	switch(err) {
 	case PST_OK:
@@ -1065,6 +1244,8 @@ const char* PARAM_SET_errorToString(int err) {
 		return "Invalid argument.";
 	case PST_OUT_OF_MEMORY:
 		return "PARAM_SET out of memory.";
+	case PST_IO_ERROR:
+		return "PARAM_SET IO error.";
 	case PST_INDEX_OVF:
 		return "Index is too large.";
 	case PST_PARAMETER_INVALID_FORMAT:

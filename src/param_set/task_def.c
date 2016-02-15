@@ -887,7 +887,6 @@ cleanup:
 
 int TASK_SET_isOneFromSetTheTarget(TASK_SET *task_set, double diff, int *ID) {
 	int i;
-	size_t count = 0;
 	TASK_DEFINITION *tmp = NULL;
 	double cons = 0;
 
