@@ -1,5 +1,9 @@
 Version 1.8
 
+2016-01-26 1.8.1
+
+* BUGFIX: Double free fixed when verifying publications file.
+
 2016-01-26 1.8.0
 
 * IMPROVEMENT: RPM package version 'STABLE' changed to '1'.

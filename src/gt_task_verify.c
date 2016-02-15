@@ -176,7 +176,6 @@ cleanup:
 		retval = errToExitCode(res);
 	}
 
-	KSI_Integer_free(pubTime);
 	KSI_PublicationsFile_free(publicationsFile);
 	ERR_TRCKR_free(err);
 	closeTask(ksi);
