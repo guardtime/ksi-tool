@@ -697,7 +697,7 @@ int PARAM_SET_add(PARAM_SET *set, const char *name, const char *value, const cha
 			if(res != PST_OK) goto cleanup;
 
 			if (value != NULL) {
-				res = PARAM_addValue(set->unknown, name, source, PST_PRIORITY_VALID_BASE);
+				res = PARAM_addValue(set->unknown, value, source, PST_PRIORITY_VALID_BASE);
 				if(res != PST_OK) goto cleanup;
 			}
 
@@ -956,7 +956,7 @@ int PARAM_SET_isUnknown(const PARAM_SET *set){
 	return count > 0 ? 1 : 0;
 }
 
-int PARAM_SET_readFromFile(const char *fname, PARAM_SET *set, int priority){
+int PARAM_SET_readFromFile(PARAM_SET *set, const char *fname, const char* source, int priority){
 	int res;
 	FILE *file = NULL;
 	char *ln = NULL;
@@ -989,10 +989,10 @@ int PARAM_SET_readFromFile(const char *fname, PARAM_SET *set, int priority){
 		if (flag[0] == '\0' && arg[0] == '\0') continue;
 
 		if(flag[0] != '\0' && arg[0] != '\0') {
-			res = param_set_addRawParameter(flag, arg, fname, set, priority);
+			res = param_set_addRawParameter(flag, arg, source, set, priority);
 			if (res != PST_OK) goto cleanup;
 		} else {
-			res = param_set_addRawParameter(flag, NULL, fname, set, priority);
+			res = param_set_addRawParameter(flag, NULL, source, set, priority);
 			if (res != PST_OK) goto cleanup;
 		}
 

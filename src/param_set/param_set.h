@@ -312,15 +312,18 @@ int PARAM_SET_isUnknown(const PARAM_SET *set);
 /**
  * Reads parameter values from file into predefined parameter set. File must be
  * formatted one parameter (and its possible value) per line.
- * Format of parameters
+ * Format of parameters.
  * --long		- long parameter without argument.
  * --long <arg>	- long parameter with argument.
  * -i <arg>		- short parameter with argument.
  * -vxn			- bunch of flags.
- * @param[in]		fname	files path.
- * @param[in/out]	set		parameter set.
+ * \param	set			parameter set.
+ * \param	fname		files path.
+ * \param	source		Source description as c-string. Can be NULL.
+ * \param	priority	Priority that can be \c PST_PRIORITY_VALID_BASE (0) or higher.
+ * \return PST_OK if successful, error code otherwise.
  */
-int PARAM_SET_readFromFile(const char *fname, PARAM_SET *set,  int priority);
+int PARAM_SET_readFromFile(PARAM_SET *set, const char *fname, const char* source,  int priority);
 
 /**
  * Reads parameter values from command-line into predefined parameter set.
