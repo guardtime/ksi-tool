@@ -728,6 +728,15 @@ bool isPublicationRecordPresent(const KSI_Signature *sig) {
 	return pubRec == NULL ? false : true;
 }
 
+bool isCalendarAuthRecPresent(const KSI_Signature *sig) {
+	KSI_CalendarAuthRec *calRec = NULL;
+
+	if (sig == NULL) return false;
+	KSI_Signature_getCalendarAuthRec(sig, &calRec);
+
+	return calRec == NULL ? false : true;
+}
+
 // helpers for hex decoding
 static int x(char c){
 	if (c >= '0' && c <= '9')

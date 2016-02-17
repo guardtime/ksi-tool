@@ -150,6 +150,11 @@ int loadSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signa
  */
 bool isPublicationRecordPresent(const KSI_Signature *sig);
 
+/**
+ * Returns true if calendar authentication record exists.
+ */
+bool isCalendarAuthRecPresent(const KSI_Signature *sig);
+
 /*Controls parameter set and returns true if user wants to write data files to stdout*/
 bool isPiping(PARAM_SET *set);
 
