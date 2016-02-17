@@ -55,6 +55,8 @@ typedef enum tasks_en{
 	extendTimestamp,
 	verifyPublicationsFile,
 	verifyTimestamp,
+	verifyTimestampUsrPub,
+	verifyTimestampUsrPub_x,
 	verifyTimestampOnline,
 	getRootH_T,
 	setSysTime,
@@ -146,7 +148,7 @@ int loadSignatureFile(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signa
 /**
  * Returns true if signature is extended. False if not.
  */
-bool isSignatureExtended(const KSI_Signature *sig);
+bool isPublicationRecordPresent(const KSI_Signature *sig);
 
 /*Controls parameter set and returns true if user wants to write data files to stdout*/
 bool isPiping(PARAM_SET *set);

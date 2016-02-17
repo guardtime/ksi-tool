@@ -719,7 +719,7 @@ int savePublicationFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubf
 	return res;
 }
 
-bool isSignatureExtended(const KSI_Signature *sig) {
+bool isPublicationRecordPresent(const KSI_Signature *sig) {
 	KSI_PublicationRecord *pubRec = NULL;
 
 	if (sig == NULL) return false;

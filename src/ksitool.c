@@ -267,6 +267,7 @@ static void GT_pritHelp(void){
 			"\t\t-v -i verify a signature.\n"
 			"\t\t-v -b -i verify a signature using specific publications file.\n"
 			"\t\t-v --ref -i verify a signature using publication string.\n"
+			"\t\t-v -x --ref -i verify a signature using publication string, permit extending.\n"
 			"\t\t-v -b --cnstr verify publication file.\n"
 			/*TODO: uncomment if implemented*/
 //			" --aggre	use aggregator for (-n -t):\n"
@@ -402,16 +403,18 @@ int main(int argc, char** argv, char **envp) {
 	TASK_SET_new(&tasks);
 
 	/*Define possible tasks*/
-	/*						ID							DESC						MAN				ATL		FORBIDDEN					IGN	*/
-	TASK_SET_add(tasks, signDataFile,				"Sign data file",				"s,f,o,S",		NULL,	"x,p,v,aggre,F,i,T",		"b,r");
-	TASK_SET_add(tasks, signHash,					"Sign hash",					"s,F,o,S",		NULL,	"x,p,v,aggre,f,i,T,H",		"b,r");
-	TASK_SET_add(tasks, extendTimestamp,			"Extend signature",				"x,i,o,P,X",	NULL,	"s,p,v,aggre,f,F,H",		NULL);
-	TASK_SET_add(tasks, downloadPublicationsFile,	"Download publications file",	"p,o,P,cnstr",	NULL,	"s,x,v,aggre,f,F,T,i,H",	"n,b");
-	TASK_SET_add(tasks, createPublicationString,	"Create publication string",	"p,T,X",		NULL,	"s,x,v,aggre,f,F,o,i,H",	"n,r");
-	TASK_SET_add(tasks, verifyTimestamp,			"Verify signature",				"v,i",			NULL,	"s,p,x,aggre,H",			NULL);
-	TASK_SET_add(tasks, verifyTimestampOnline,		"Verify online",				"v,x,i,X",		NULL,	"s,p,aggre,T,H",			NULL);
-	TASK_SET_add(tasks, verifyPublicationsFile,		"Verify publications file",		"v,b,cnstr",	NULL,	"x,s,p,aggre,i,f,F,T,H",	NULL);
-	TASK_SET_add(tasks, dumpPublicationsFile,		"Dump publications file",		"p,d",			NULL,	"s,x,v,aggre,f,F,T,i,H,o",	NULL);
+	/*						ID							DESC											MAN				ATL		FORBIDDEN					IGN	*/
+	TASK_SET_add(tasks, signDataFile,				"Sign data file",									"s,f,o,S",		NULL,	"x,p,v,aggre,F,i,T",		"b,r");
+	TASK_SET_add(tasks, signHash,					"Sign hash",										"s,F,o,S",		NULL,	"x,p,v,aggre,f,i,T,H",		"b,r");
+	TASK_SET_add(tasks, extendTimestamp,			"Extend signature",									"x,i,o,P,X",	NULL,	"s,p,v,aggre,f,F,H",		NULL);
+	TASK_SET_add(tasks, downloadPublicationsFile,	"Download publications file",						"p,o,P,cnstr",	NULL,	"s,x,v,aggre,f,F,T,i,H",	"n,b");
+	TASK_SET_add(tasks, createPublicationString,	"Create publication string",						"p,T,X",		NULL,	"s,x,v,aggre,f,F,o,i,H",	"n,r");
+	TASK_SET_add(tasks, verifyTimestampUsrPub,		"Verify with user publication, no extending.",		"v,i,ref",		NULL,	"s,p,aggre,H,x",				NULL);
+	TASK_SET_add(tasks, verifyTimestampUsrPub_x,	"Verify with user publication permit extending.",	"v,i,ref,x,X",	NULL,	"s,p,aggre,H",				NULL);
+	TASK_SET_add(tasks, verifyTimestamp,			"Verify signature",									"v,i",			NULL,	"s,p,x,aggre,H,ref",		NULL);
+	TASK_SET_add(tasks, verifyTimestampOnline,		"Verify online",									"v,x,i,X",		NULL,	"s,p,aggre,T,H,ref",		NULL);
+	TASK_SET_add(tasks, verifyPublicationsFile,		"Verify publications file",							"v,b,cnstr",	NULL,	"x,s,p,aggre,i,f,F,T,H",	NULL);
+	TASK_SET_add(tasks, dumpPublicationsFile,		"Dump publications file",							"p,d",			NULL,	"s,x,v,aggre,f,F,T,i,H,o",	NULL);
 
 
 	/*Read parameter set*/
@@ -510,7 +513,8 @@ int main(int argc, char** argv, char **envp) {
 	else if(TASK_getID(task) == getRootH_T || TASK_getID(task) == setSysTime){
 		retval=GT_other(task);
 	}
-	else if(TASK_getID(task) == verifyTimestamp || TASK_getID(task) == verifyTimestampOnline){
+	else if(TASK_getID(task) == verifyTimestamp || TASK_getID(task) == verifyTimestampOnline
+			|| TASK_getID(task) == verifyTimestampUsrPub || TASK_getID(task) == verifyTimestampUsrPub_x){
 		retval = GT_verifySignatureTask(task);
 	}
 

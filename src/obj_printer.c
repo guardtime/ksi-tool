@@ -145,7 +145,7 @@ void OBJPRINT_signatureVerificationInfo(KSI_Signature *sig){
 	print_info("Verification steps:\n");
 	res = KSI_Signature_getVerificationResult(sig, &sigVerification);
 	if(res != KSI_OK){
-		print_info("Unable to get verification steps\n\n");
+		print_info("Unable to get verification steps.\n\n");
 		return;
 	}
 
