@@ -57,7 +57,7 @@ TESTSIG="ok-sig-2014-08-01.1.ksig"
 
 echo \# Running tests on `uname -n` at `date '+%F %T %Z'`, start time: ${DATE}
 
-plan_tests 104
+plan_tests 109
 
 
 diag "######    Publications file download"
@@ -183,6 +183,9 @@ okx $exec -x -i ${resource_dir}/$TESTSIG -o ${tmp}/ext-t.ksig -T 1421280000 #  (
 
 diag "######    Extend old signature to nearest publication "
 okx $exec -x -i ${resource_dir}/$TESTSIG -o ${tmp}/ext-t.ksig
+
+diag "######    Extend old signature before publication time [-T] "
+okx $exec -x -i ${resource_dir}/$TESTSIG -o ${tmp}/ext_btw_pubs.ksig -T 1413120695 #  2014-10-12 13:31:35
 diag "------------------------------------------------------------------------------";
 
 
@@ -199,13 +202,13 @@ diag "######    Verify extended signature with pubstring. Bubstr points to exact
 okx $exec -v -i ${tmp}/ext.ksig --ref AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
 
 diag "######    Verify extended signature with pubstring. Bubstr points to newer publication."
-okx $exec -v -i ${tmp}/ext.ksig --ref AAAAAA-CUM2LY-AANFLH-HIQ7FW-TGTOAL-VDVGBO-AN3SQO-5FOO7L-CYGQG6-FNMOBG-QGSTAG-K3VY6C
+okx $exec -vx -i ${tmp}/ext.ksig --ref AAAAAA-CUM2LY-AANFLH-HIQ7FW-TGTOAL-VDVGBO-AN3SQO-5FOO7L-CYGQG6-FNMOBG-QGSTAG-K3VY6C
 
 diag "######    Verify extended signature with pubstring. Bubstr points between publications."
-okx $exec -v -i ${tmp}/ext.ksig --ref AAAAAA-CUBJQL-AAKVFD-VNJIK5-7DTJ6T-YYCOGP-N7J3RT-CRE5DU-WBB6AE-LANHHH-3CFEM4-7FM65J
+okx $exec -vx -i ${tmp}/ext.ksig --ref AAAAAA-CUBJQL-AAKVFD-VNJIK5-7DTJ6T-YYCOGP-N7J3RT-CRE5DU-WBB6AE-LANHHH-3CFEM4-7FM65J
 
 diag "######    Verify signature with pubstring. Bubstr points to exact publication."
-okx $exec -v -i ${resource_dir}/$TESTSIG --ref AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
+okx $exec -v -i ${tmp}/ext_btw_pubs.ksig --ref AAAAAA-CUHKBL-OAN7KE-CYZANC-HVJCQL-COJQY5-MZR233-BHZC44-4ZSFMG-CB3XZA-UYH3IW-VANQAL
 
 diag "######    Verify raw hash using SHA-1"
 okx $exec -v -i ${resource_dir}/sha1.ksig -f ${resource_dir}/testFile
@@ -335,6 +338,16 @@ diag "--------------------------------------------------------------------------
 
 like "`$exec -v -i ${tmp}/ext.ksig -P ${KSI_AGGREGATOR:4} 2>&1`" "Error: Unable to parse publications file. Check URL or file!" "Error pubfile 3 from aggregator url."
 diag "------------------------------------------------------------------------------";
+
+
+diag "######    Invalid verification attempts with --ref. Signature has no calendar authentication record nor publications record."
+like "`$exec -v -i ${tmp}/ext_btw_pubs.ksig --ref AAAAAA-CT3OLS-AAM5AU-TLCN6N-4N4GDI-I67H26-OGI3UI-I33AMP-3ZEJBZ-NUEZR4-XTNSTE-4S5QN3  2>&1`" "Error: Unable to verify signature with user publication as signature is created after user publication." "Pubstring is older than signature (no pub rec / cal auth rec)."
+like "`$exec -v -i ${tmp}/ext_btw_pubs.ksig --ref AAAAAA-CT5LMW-AAKYYI-JC77AB-GEARLJ-Q2R5ZE-YSL7WU-SZTWTZ-PXPASW-LE5O55-LSNKL6-R4S2TL  2>&1`" "Error: Unable to verify signature as extending is not permitted." "Signature is older than publication string (no pub rec / cal auth rec). Extending is not permitted."
+
+diag "######    Invalid verification attempts with --ref. Signature has publication."
+like "`$exec -v -i ${tmp}/ext.ksig --ref AAAAAA-CT3OLS-AAM5AU-TLCN6N-4N4GDI-I67H26-OGI3UI-I33AMP-3ZEJBZ-NUEZR4-XTNSTE-4S5QN3  2>&1`" "Error: Unable to verify signature with user publication as signature is created after user publication." "Pubstring is older than signature (contains pub rec)."
+like "`$exec -v -i ${tmp}/ext.ksig --ref AAAAAA-CUM2LY-AANFLH-HIQ7FW-TGTOAL-VDVGBO-AN3SQO-5FOO7L-CYGQG6-FNMOBG-QGSTAG-K3VY6C  2>&1`" "Error: Unable to verify signature as extending is not permitted." "Signature (contains pub rec) is older than publication string. Extending is not permitted."
+
 
 diag "######    Invalid date string format and content"
 like "`$exec -p  -T \"1899-12-12 00:00:00\"  2>&1`" "Time out of range" "Invalid year."
