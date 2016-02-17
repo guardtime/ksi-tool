@@ -236,6 +236,80 @@ static int publication_data_equals(KSI_PublicationData *A, KSI_PublicationData *
 	return 1;
 }
 
+static int signature_add_dummy_pub_rec(KSI_Signature *sig, KSI_CTX *ksi, const char *pub_str) {
+	int res;
+	KSI_PublicationRecord *dummy_pub_rec = NULL;
+	KSI_PublicationData *user_pub_data = NULL;
+
+	if (sig == NULL || ksi == NULL || pub_str == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	res = KSI_PublicationData_fromBase32(ksi, pub_str, &user_pub_data);
+	if (res != KSI_OK) goto cleanup;
+
+	res = KSI_PublicationRecord_new(ksi, &dummy_pub_rec);
+	if (res != KSI_OK) goto cleanup;
+
+	res = KSI_PublicationRecord_setPublishedData(dummy_pub_rec, user_pub_data);
+	if (res != KSI_OK) goto cleanup;
+	user_pub_data = NULL;
+
+	res = KSI_Signature_replacePublicationRecord(sig, dummy_pub_rec);
+	if (res != KSI_OK) goto cleanup;
+	dummy_pub_rec = NULL;
+
+	res = KSI_OK;
+
+cleanup:
+
+	KSI_PublicationRecord_free(dummy_pub_rec);
+	KSI_PublicationData_free(user_pub_data);
+
+	return res;
+}
+static int signature_without_trust_record_isPubDataExactMatch(const KSI_Signature *sig, KSI_CTX *ksi, const char *pubStr) {
+	int res;
+	KSI_PublicationData *user_pub_data = NULL;
+	KSI_Signature *tmp = NULL;
+	const KSI_VerificationResult *ver_result = NULL;
+
+	if (sig == NULL || pubStr == NULL || ksi == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+	res = KSI_Signature_clone(sig, &tmp);
+	if (res != KSI_OK) goto cleanup;
+
+
+	res = KSI_PublicationData_fromBase32(ksi, pubStr, &user_pub_data);
+	if (res != KSI_OK) goto cleanup;
+
+	res = signature_add_dummy_pub_rec(tmp, ksi, pubStr);
+	if (res != KSI_OK) goto cleanup;
+
+	res = KSI_Signature_verifyWithPublication(tmp, ksi, user_pub_data);
+	if (res != KSI_OK || res != KSI_VERIFICATION_FAILURE) goto cleanup;
+
+	res = KSI_Signature_getVerificationResult(tmp, &ver_result);
+	if (res != KSI_OK) goto cleanup;
+
+	if (!KSI_VerificationResult_isStepSuccess(ver_result, KSI_VERIFY_PUBLICATION_WITH_PUBSTRING)) {
+		res = KSI_VERIFICATION_FAILURE;
+		goto cleanup;
+	}
+
+	res = KSI_OK;
+
+cleanup:
+
+	KSI_Signature_free(tmp);
+	KSI_PublicationData_free(user_pub_data);
+
+	return res == KSI_OK ? 1 : 0;
+}
+
 static int GT_verifyTask_verifyWithPublication(TASK *task, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig, KSI_Signature **out) {
 	int res;
 	PARAM_SET *set = NULL;
@@ -243,15 +317,15 @@ static int GT_verifyTask_verifyWithPublication(TASK *task, KSI_CTX *ksi, ERR_TRC
 	bool t;
 	bool x;
 	bool isPubrec;
+	bool isCalAuthRec;
+	bool exact_match = false;
 	KSI_PublicationData *user_pub_data = NULL;
 	KSI_Integer *user_pub_time = NULL;
 	KSI_PublicationRecord *sig_pub_rec = NULL;
 	KSI_PublicationData *sig_pub_data = NULL;
 	KSI_Integer *sig_signing_time = NULL;
-	KSI_Integer *sig_cal_root_time = NULL;
-	KSI_Signature *tmp_ext = NULL;
-	KSI_PublicationData *user_pub_data_clone = NULL;
-	KSI_PublicationRecord *dummy_pub_rec = NULL;
+	KSI_Signature *verify_that = NULL;
+	KSI_Signature *tmp_sig = NULL;
 
 	if (task == NULL || ksi == NULL || err == NULL || sig == NULL) {
 		res = KT_INVALID_ARGUMENT;
@@ -275,11 +349,33 @@ static int GT_verifyTask_verifyWithPublication(TASK *task, KSI_CTX *ksi, ERR_TRC
 
 
 	/**
-	 * Check if signature contains publication record.
+	 * Check if signature contains publication record. For a workaround check also
+	 * the calendar authentication record.
      */
 	isPubrec = isPublicationRecordPresent(sig);
+	isCalAuthRec = isCalendarAuthRecPresent(sig);
 
-	if (isPubrec) {
+	/**
+	 * If both calendar and authentication record is missing, the signature is
+	 * probably extended between publications. Check if it is extended exactly the same
+	 * time as encoded in the publication string. In the other case when publication
+	 * record is present, check if it matches the user publication. If there is match,
+	 * let the real verification for API call.
+	 */
+	if (!isPubrec && !isCalAuthRec && signature_without_trust_record_isPubDataExactMatch(sig, ksi, refStrn)) {
+			print_info("Signature publication record does not exist.\n");
+			print_progressDesc(t, "Adding publication record to the signature generated from publication string... ");
+
+			res = KSI_Signature_clone(sig, &tmp_sig);
+			ERR_CATCH_MSG(err, res, "Error: Unable to clone signature for verification.");
+
+			res = signature_add_dummy_pub_rec(tmp_sig, ksi, refStrn);
+			ERR_CATCH_MSG(err, res, "Error: Unable to add publications record for verification.");
+
+			exact_match = true;
+			verify_that = tmp_sig;
+			print_progressResult(res);
+	} else if (isPubrec) {
 		print_info("Signature publication record exists.\n");
 		res = KSI_Signature_getPublicationRecord(sig, &sig_pub_rec);
 		ERR_CATCH_MSG(err, res, "Error: Unable to extract publication record from signature.");
@@ -287,20 +383,26 @@ static int GT_verifyTask_verifyWithPublication(TASK *task, KSI_CTX *ksi, ERR_TRC
 		res = KSI_PublicationRecord_getPublishedData(sig_pub_rec, &sig_pub_data);
 		ERR_CATCH_MSG(err, res, "Error: Unable to get publication data from signatures publication record.");
 
-		/**
-		 * Check if publications are equal.
-         */
 		if (publication_data_equals(sig_pub_data, user_pub_data)) {
-			print_progressDesc(t, "Verifying signature with user publication... ");
-
-			res = KSI_Signature_verifyWithPublication(sig, ksi, user_pub_data);
-			ERR_CATCH_MSG(err, res, "Error: Verification failed.");
-
-			print_progressResult(res);
-			goto cleanup;
+			exact_match = true;
+			verify_that = sig;
 		}
 	} else {
 		print_info("Signature publication record does not exist.\n");
+	}
+
+	/**
+	 * There seems to be exact match between publications string and the signature.
+	 * Let the API to verify the signature and construct the verification result.
+     */
+	if (exact_match) {
+		print_progressDesc(t, "Verifying signature with user publication... ");
+
+		res = KSI_Signature_verifyWithPublication(verify_that, ksi, user_pub_data);
+		ERR_CATCH_MSG(err, res, "Error: Verification failed.");
+
+		print_progressResult(res);
+		goto cleanup;
 	}
 
 	/**
@@ -314,7 +416,7 @@ static int GT_verifyTask_verifyWithPublication(TASK *task, KSI_CTX *ksi, ERR_TRC
 
 	if (KSI_Integer_getUInt64(sig_signing_time) > KSI_Integer_getUInt64(user_pub_time)) {
 		ERR_TRCKR_ADD(err, res = KSI_VERIFICATION_FAILURE,
-				"Error: Unable to verify signature with user publication as signature is created before user publication.");
+				"Error: Unable to verify signature with user publication as signature is created after user publication.");
 		goto cleanup;
 	}
 
@@ -333,7 +435,7 @@ static int GT_verifyTask_verifyWithPublication(TASK *task, KSI_CTX *ksi, ERR_TRC
 	 * As extending is permitted, extend the signature to the user publication.
      */
 	print_progressDesc(t, "Extending signature to publication time of publication string... ");
-	res = KSITOOL_Signature_extendTo(err, sig, ksi, user_pub_time, &tmp_ext);
+	res = KSITOOL_Signature_extendTo(err, sig, ksi, user_pub_time, &tmp_sig);
 	ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
 	print_progressResult(res);
 
@@ -342,45 +444,35 @@ static int GT_verifyTask_verifyWithPublication(TASK *task, KSI_CTX *ksi, ERR_TRC
 	 * workaround: Create a dummy publication record from the user publication to
 	 * make the API verify the signature with user publication.
      */
-	res = KSI_PublicationData_fromBase32(ksi, refStrn, &user_pub_data_clone);
-	ERR_CATCH_MSG(err, res, "Error: Unable to parse publication string.");
+	res = signature_add_dummy_pub_rec(tmp_sig, ksi, refStrn);
+	ERR_CATCH_MSG(err, res, "Error: Unable to add publications record for verification.");
 
-	res = KSI_PublicationRecord_new(ksi, &dummy_pub_rec);
-	ERR_CATCH_MSG(err, res, "Error: Unable to create new publication record.");
-
-	res = KSI_PublicationRecord_setPublishedData(dummy_pub_rec, user_pub_data_clone);
-	ERR_CATCH_MSG(err, res, "Error: Unable to set published data.");
-	user_pub_data_clone = NULL;
-
-	res = KSI_Signature_replacePublicationRecord(tmp_ext, dummy_pub_rec);
-	ERR_CATCH_MSG(err, res, "Error: Unable to set publication record.");
-	dummy_pub_rec = NULL;
-
+	verify_that = tmp_sig;
 
 	/**
 	 * If signature has dummy publication record, it is possible to verify it with
 	 * user publication.
 	 */
 	print_progressDesc(t, "Verifying signature with user publication... ");
-	res = KSI_Signature_verifyWithPublication(tmp_ext, ksi, user_pub_data);
+	res = KSI_Signature_verifyWithPublication(verify_that, ksi, user_pub_data);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify signature with user publication.");
 	print_progressResult(res);
 
 
-	if (out != NULL) {
-		*out = tmp_ext;
-		tmp_ext = NULL;
-	}
 
 	res = KT_OK;
 
 cleanup:
+	/* If the signature is cloned for the verification, return the signature. */
+	if (out != NULL) {
+		*out = tmp_sig;
+		tmp_sig = NULL;
+	}
+
 	print_progressResult(res);
 
 	KSI_PublicationData_free(user_pub_data);
-	KSI_PublicationData_free(user_pub_data_clone);
-	KSI_PublicationRecord_free(dummy_pub_rec);
-	KSI_Signature_free(tmp_ext);
+	KSI_Signature_free(tmp_sig);
 
 	return res;
 }
