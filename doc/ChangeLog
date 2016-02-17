@@ -1,5 +1,7 @@
 Version 1.8
 
+* BUGFIX: Verification with publication string fixed.
+
 2016-02-15 1.8.1
 
 * BUGFIX: Double free fixed when verifying publications file.

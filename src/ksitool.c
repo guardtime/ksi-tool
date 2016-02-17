@@ -282,7 +282,7 @@ static void GT_pritHelp(void){
 			" -o <file>\toutput file name to store signature token or publications file.\n"
 			" -D <file>\toutput file name to store data from stream.\n"
 			" -i <file>\tinput signature token file to be extended or verified.\n"
-			" --ref <str>\tpublication string.\n"
+			" --ref <str>\tpublication string. Use with -v and -x (permit extending).\n"
 			" -b <file>\tuse a specified publications file.\n"
 			" -H <ALG>\tuse a specific hash algorithm to hash the file to be signed.\n"
 			" -T <UTC>\tspecify a publication time to extend to (use with -x) or a time\n"

@@ -10,17 +10,17 @@
 .SH SYNOPSIS
 Sign data file, stream (stdin) or hash:
 .br
-\fBksitool -s -f\fI file\fR | [\fB-F\fI hash\fR]\fB -o\fI out.ksig\fR [\fI more options\fR]
+\fBksitool -s -f\fI file\fR | [\fB-F\fI hash\fR]\fB -o\fI out.ksig\fR [\fImore options\fR]
 .br
 
 Extend signature:
 .br
-\fBksitool -x -i\fI sig.ksig\fB -o\fI ext.ksig\fR [\fB-T\fR] [\fI more options\fR]
+\fBksitool -x -i\fI sig.ksig\fB -o\fI ext.ksig\fR [\fB-T\fR] [\fImore options\fR]
 .br
 
 Download and verify publication file:
 .br
-\fBksitool -p -o \fI pubfile\fB --cnstr \fIoid=value \fR... [\fI more options\fR]
+\fBksitool -p -o \fI pubfile\fB --cnstr \fIoid=value \fR... [\fImore options\fR]
 .br
 
 Dump publication file:
@@ -30,17 +30,22 @@ Dump publication file:
 
 Download publication file:
 .br
-\fBksitool -p -o \fI pubfile\fB --cnstr \fIoid=value \fR... [\fI more options\fR]
+\fBksitool -p -o \fI pubfile\fB --cnstr \fIoid=value \fR... [\fImore options\fR]
 .br
 
 Create publication string:
 .br
-\fBksitool -p -T \fR[\fI more options]
+\fBksitool -p -T \fR[\fImore options]
 .br
 
 Verify signature:
 .br
-\fBksitool -v -i\fI sig.ksig\fB -f\fI file\fR | \fB-F\fI hash\fR [\fB -x\fR | \fB-b \fI pubfile\fR] [\fI more options\fR]
+\fBksitool -v -i\fI sig.ksig\fR [\fB-f\fI file\fR | \fB-F\fI hash\fR] [\fB-x\fR | \fB-b \fI pubfile\fR] [\fI more options\fR]
+.br
+
+Verify signature with publications string:
+.br
+\fBksitool -v -i\fI sig.ksig\fR \fB--ref\fR \fIpubstr\fR [\fB-f\fI file\fR | \fB-F\fI hash\fR] [\fB-x\fR] [\fI more options\fR]
 .br
 
 Verify publication file:
@@ -83,7 +88,7 @@ Use for signing document, stream (stdin) or hash.
 Use for signature and publication file verification.
 .TP
 .B -x, --extend
-Use for online verification or signature extending.
+Use for online verification or signature extending (permit extending when verifying signature with publication string).
 
 .TP
 .B Input/output:
@@ -112,8 +117,7 @@ Output file name to store signature token or publication file.
 Output file name to store data from stream (stdin).
 .TP
 .BI --ref\  str
-Publication string as base 32 encoded string. Use with 
-.BR -v \. 
+Publication string as base 32 encoded string. Use with \fB-v\fR, add \fB-x\fR to permit extending.
 .TP
 .BI -T\  int
 .br
