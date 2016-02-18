@@ -521,6 +521,7 @@ static int isComment(const char *line) {
 	while (C = (0xff & line[i])) {
 		if(C == '#') return 1;
 		else if (!isspace(C)) return 0;
+		i++;
 	}
 	return 0;
 }
@@ -1028,6 +1029,58 @@ void PARAM_SET_readFromCMD(int argc, char **argv, PARAM_SET *set, int priority){
 	return;
 }
 
+int PARAM_SET_IncludeSet(PARAM_SET *target, PARAM_SET *src) {
+	int res;
+	int i;
+	int n;
+	PARAM_VAL *param_value = NULL;
+	PARAM *target_param = NULL;
+
+	if (target == NULL || src == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	/**
+	 * Scan the source set for parameters. If there is a parameter with the same
+	 * name and it has values, add those values to the target set.
+     */
+	for (i = 0; i < src->count; i++) {
+		/**
+		 * If the count is zero, skip that round.
+         */
+		if (src->parameter[i]->argCount == 0) continue;
+
+		/**
+		 * If parameter in src has values, check if it exists in target. If it does
+		 * not skip the round.
+         */
+		res = param_set_getParameterByName(target, src->parameter[i]->flagName, &target_param);
+		if (res != PST_OK && res != PST_PARAMETER_NOT_FOUND) {
+			goto cleanup;
+		} else if (res == PST_PARAMETER_NOT_FOUND) {
+			continue;
+		}
+
+
+		/**
+		 * The target has the parameter with the same name. Include all values.
+         */
+		n = 0;
+		while (PARAM_getValue(src->parameter[i], NULL, PST_PRIORITY_NONE, n, &param_value) == PST_OK) {
+			res = PARAM_SET_add(target, src->parameter[i]->flagName, param_value->cstr_value, param_value->source, param_value->priority);
+			if (res != PST_OK) 	goto cleanup;
+
+			n++;
+		}
+	}
+
+	res = PST_OK;
+
+cleanup:
+
+	return res;
+}
 
 char* PARAM_SET_invalidParametersToString(const PARAM_SET *set, const char *prefix, const char* (*getErrString)(int), char *buf, size_t buf_len) {
 	int res;

@@ -25,6 +25,8 @@
 extern "C" {
 #endif
 
+#include <stddef.h>	
+
 #ifndef PARAM_SET_ERROR_BASE 
 #define		PARAM_SET_ERROR_BASE 0x30001 
 #endif	
@@ -337,6 +339,19 @@ int PARAM_SET_readFromFile(PARAM_SET *set, const char *fname, const char* source
  * @param[in/out]	set		parameter set.
  */
 void PARAM_SET_readFromCMD(int argc, char **argv, PARAM_SET *set, int priority);
+
+/**
+ * Extracts all parameters from \c src known to \c target and appends all the
+ * values to the target set. Values are added via \ref PARAM_SET_add and all
+ * control and extract functions that are used are from the target set. After
+ * successful operation both sets must be freed separately and operations applied
+ * to each set does not affect the other one.
+ *
+ * \param	target			target parameter set.
+ * \param	srct			source parameter set.
+ * \return PST_OK if successful, error code otherwise.
+ */
+int PARAM_SET_IncludeSet(PARAM_SET *target, PARAM_SET *src);
 
 char* PARAM_SET_toString(PARAM_SET *set, char *buf, size_t buf_len);
 

@@ -21,6 +21,7 @@
 #ifndef TASK_DEF_H
 #define	TASK_DEF_H
 
+#include <stddef.h>
 #include "param_set.h"
 
 
