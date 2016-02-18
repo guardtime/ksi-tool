@@ -375,7 +375,7 @@ char *TOOL_COMPONENT_LIST_helpToString(TOOL_COMPONENT_LIST *list, int id, char *
 	return NULL;
 }
 
-char* TOOL_COMPONENT_LIST_toString(TOOL_COMPONENT_LIST *list, char *buf, size_t buf_len) {
+char* TOOL_COMPONENT_LIST_toString(TOOL_COMPONENT_LIST *list, const char* preffix, char *buf, size_t buf_len) {
 	int i;
 	size_t count = 0;
 	size_t sub_count = 0;
@@ -398,7 +398,7 @@ char* TOOL_COMPONENT_LIST_toString(TOOL_COMPONENT_LIST *list, char *buf, size_t 
 		}
 	}
 
-	snprintf(format, sizeof(format), "%%-%is ", max_size);
+	snprintf(format, sizeof(format), "%%s%%-%is ", max_size);
 
 	/**
 	 * Generate help string for all known tasks.
@@ -409,7 +409,9 @@ char* TOOL_COMPONENT_LIST_toString(TOOL_COMPONENT_LIST *list, char *buf, size_t 
 		/**
 		 * Print the tasks name.
          */
-		count += snprintf(buf + count, buf_len - count, format, list->component[i]->name);
+		count += snprintf(buf + count, buf_len - count, format,
+				preffix == NULL ? "" : preffix,
+				list->component[i]->name);
 
 		/**
 		 * Print the description.

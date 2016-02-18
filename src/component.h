@@ -42,7 +42,7 @@ int TOOL_COMPONENT_LIST_add(TOOL_COMPONENT_LIST *list,
 		int id);
 int TOOL_COMPONENT_LIST_run(TOOL_COMPONENT_LIST *list, int id, int argc, char **argv, char **envp);
 
-char* TOOL_COMPONENT_LIST_toString(TOOL_COMPONENT_LIST *list, char *buf, size_t buf_len);
+char* TOOL_COMPONENT_LIST_toString(TOOL_COMPONENT_LIST *list, const char* preffix, char *buf, size_t buf_len);
 char *TOOL_COMPONENT_LIST_helpToString(TOOL_COMPONENT_LIST *list, int id, char *buf, size_t buf_len);
 
 
