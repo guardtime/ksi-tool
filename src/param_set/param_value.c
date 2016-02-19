@@ -174,6 +174,7 @@ static int param_val_get_element(PARAM_VAL *rootValue, const char* source, int p
 	int res;
 	PARAM_VAL *current = NULL;
 	PARAM_VAL *tmp = NULL;
+	PARAM_VAL *last_match = NULL;
 	int i = 0;
 	int prio = 0;
 
@@ -197,8 +198,9 @@ static int param_val_get_element(PARAM_VAL *rootValue, const char* source, int p
 				&& (source == NULL || (source != NULL && current->source != NULL && strcmp(source, current->source) == 0))
 				&& (onlyInvalid == 0 || onlyInvalid && (current->contentStatus != 0 || current->formatStatus != 0))) {
 
-			if ((at >= PST_INDEX_FIRST && i == at)
-				|| (at == PST_INDEX_LAST && current->next == NULL)) {
+			last_match = current;
+
+			if (at >= PST_INDEX_FIRST && i == at) {
 				tmp =  current;
 				break;
 			}
@@ -207,6 +209,10 @@ static int param_val_get_element(PARAM_VAL *rootValue, const char* source, int p
 		}
 
 		current = current->next;
+	}
+
+	if (tmp == NULL && last_match != NULL && at == PST_INDEX_LAST) {
+		tmp = last_match;
 	}
 
 	if (tmp == NULL) {
