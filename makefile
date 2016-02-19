@@ -62,6 +62,7 @@ CMDTOOL_OBJ = \
 	$(OBJ_DIR)\ksitool.obj \
 	$(OBJ_DIR)\component.obj \
 	$(OBJ_DIR)\printer.obj \
+	$(OBJ_DIR)\conf.obj \
 	$(OBJ_DIR)\ksitool_err.obj \
 	$(OBJ_DIR)\api_wrapper.obj \
 	$(OBJ_DIR)\obj_printer.obj \

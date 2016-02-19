@@ -137,6 +137,8 @@ static int ksitoolErrToExitcode(int error_code) {
 			return EXIT_INVALID_CL_PARAMETERS;
 		case KT_NO_PRIVILEGES:
 			return EXIT_NO_PRIVILEGES;
+		case KT_INVALID_CONF:
+			return EXIT_INVALID_CONF;
 		case KT_UNKNOWN_ERROR:
 			return EXIT_FAILURE;
 		default:

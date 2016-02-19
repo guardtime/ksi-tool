@@ -503,7 +503,7 @@ int isFormatOk_int(const char *integer) {
 
 	while ((C = integer[i++]) != '\0') {
 		if (isdigit(C) == 0) {
-			return FORMAT_INVALID;
+			return FORMAT_NOT_INTEGER;
 		}
 	}
 	return FORMAT_OK;
@@ -991,6 +991,7 @@ const char *getParameterErrorString(int res) {
 		case FORMAT_INVALID_UTC: return "Time not formatted as YYYY-MM-DD hh:mm:ss";
 		case FORMAT_INVALID_UTC_OUT_OF_RANGE: return "Time out of range";
 		case PARAM_INVALID: return "Parameter is invalid";
+		case FORMAT_NOT_INTEGER: return "Invalid integer";
 		case HASH_ALG_INVALID_NAME: return "Algorithm name is incorrect";
 		case HASH_IMPRINT_INVALID_LEN: return "Hash length is incorrect";
 		case FORMAT_INVALID_HEX_CHAR: return "Invalid hex character";
