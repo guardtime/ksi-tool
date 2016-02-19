@@ -33,11 +33,8 @@ int CONF_createSet(PARAM_SET **conf) {
 	res = PARAM_SET_new(CONF_generate_desc(NULL, buf, sizeof(buf)), &tmp);
 	if (res != PST_OK) goto cleanup;
 
-	PARAM_SET_addControl(tmp, "{V}{W}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, NULL);
-	PARAM_SET_addControl(tmp, "{X}{P}{S}", isFormatOk_url, NULL, convertRepair_url, NULL);
-	PARAM_SET_addControl(tmp, "{aggre-user}{aggre-pass}{ext-pass}{ext-user}", isFormatOk_userPass, NULL, NULL, NULL);
-	PARAM_SET_addControl(tmp, "{cnstr}", isFormatOk_constraint, NULL, convertRepair_constraint, NULL);
-	PARAM_SET_addControl(tmp, "{c}{C}", isFormatOk_int, isContentOk_int, NULL, NULL);
+	res = CONF_initialize_set_functions(tmp);
+	if (res != PST_OK) goto cleanup;
 
 	*conf = tmp;
 	tmp = NULL;
@@ -46,6 +43,34 @@ int CONF_createSet(PARAM_SET **conf) {
 cleanup:
 
 	PARAM_SET_free(tmp);
+
+	return res;
+}
+
+int CONF_initialize_set_functions(PARAM_SET *conf) {
+	int res;
+
+	if (conf == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	res = PARAM_SET_addControl(conf, "{V}{W}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, NULL);
+	if (res != PST_OK) goto cleanup;
+
+	PARAM_SET_addControl(conf, "{X}{P}{S}", isFormatOk_url, NULL, convertRepair_url, NULL);
+	if (res != PST_OK) goto cleanup;
+
+	PARAM_SET_addControl(conf, "{aggre-user}{aggre-pass}{ext-pass}{ext-user}", isFormatOk_userPass, NULL, NULL, NULL);
+	if (res != PST_OK) goto cleanup;
+
+	PARAM_SET_addControl(conf, "{cnstr}", isFormatOk_constraint, NULL, convertRepair_constraint, NULL);
+	if (res != PST_OK) goto cleanup;
+
+	PARAM_SET_addControl(conf, "{c}{C}", isFormatOk_int, isContentOk_int, NULL, extract_int);
+	if (res != PST_OK) goto cleanup;
+
+cleanup:
 
 	return res;
 }

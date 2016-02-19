@@ -13,6 +13,8 @@ char* CONF_generate_desc(char *description, char *buf, size_t buf_len);
 	
 int CONF_createSet(PARAM_SET **conf);
 
+int CONF_initialize_set_functions(PARAM_SET *conf);
+
 int CONF_fromFile(PARAM_SET *set, const char *fname, const char *source, int priority);
 
 int CONF_fromEnvironment(PARAM_SET *set, const char *env_name, char **envp, int priority);
