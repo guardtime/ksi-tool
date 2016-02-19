@@ -30,9 +30,6 @@ extern "C" {
 #include <ksi/ksi.h>
 #include "ksitool_err.h"	
 	
-#define DEF_SERVICE_PAR	"{S}{X}{P}{c}{C}{cnstr}{aggre-user}{aggre-pass}{ext-user}{ext-pass}"
-#define DEF_PARAMETERS "{log}{V}{W}{silent}{nowarn}{d}{conf}"
-	
 /**
  * This function takes PARAM_SET as input and configures KSI_CTX and ERR_TRCKR.
  * Output parameter <ksi_log> is used to close the stream if needed by calling
