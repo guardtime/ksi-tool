@@ -18,11 +18,12 @@
  * Guardtime Inc.
  */
 
+#include "component.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#include "component.h"
+#include "tool_box.h"
 #include "ksitool_err.h"
 #include "gt_cmd_common.h"
 

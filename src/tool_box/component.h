@@ -21,6 +21,7 @@
 #ifndef COMPONENT_H
 #define	COMPONENT_H
 
+#include <stddef.h>	
 
 #ifdef	__cplusplus
 extern "C" {

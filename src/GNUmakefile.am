@@ -38,6 +38,8 @@ ksitool_SOURCES = \
 	tool_box/verify.c \
 	tool_box/extend.c \
 	tool_box/default_tasks.h \
+	tool_box/component.c \
+	tool_box/component.h \
 	param_set/param_value.c \
 	param_set/param_value.h \
 	param_set/parameter.c \
@@ -56,8 +58,6 @@ ksitool_SOURCES = \
 	api_wrapper.h \
 	obj_printer.c \
 	obj_printer.h \
-	component.h \
-	component.c \
 	debug_print.c \
 	debug_print.h
 	

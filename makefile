@@ -60,7 +60,6 @@ PARAMSET_OBJ = \
 
 CMDTOOL_OBJ = \
 	$(OBJ_DIR)\ksitool.obj \
-	$(OBJ_DIR)\component.obj \
 	$(OBJ_DIR)\printer.obj \
 	$(OBJ_DIR)\conf.obj \
 	$(OBJ_DIR)\ksitool_err.obj \
@@ -69,6 +68,7 @@ CMDTOOL_OBJ = \
 	$(OBJ_DIR)\debug_print.obj
 	
 TOOL_BOX_OBJ = \
+    $(TOOL_BOX_OBJ_DIR)\component.obj \
     $(TOOL_BOX_OBJ_DIR)\tool_box.obj \
     $(TOOL_BOX_OBJ_DIR)\ksi_init.obj \
     $(TOOL_BOX_OBJ_DIR)\pubfile.obj \
