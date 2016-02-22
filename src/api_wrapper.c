@@ -264,6 +264,24 @@ int KSITOOL_verifyPublicationsFile(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Publication
 	return res;
 }
 
+int KSITOOL_Signature_isPublicationRecordPresent(const KSI_Signature *sig) {
+	KSI_PublicationRecord *pubRec = NULL;
+
+	if (sig == NULL) return 0;
+	KSI_Signature_getPublicationRecord(sig, &pubRec);
+
+	return pubRec == NULL ? 0 : 1;
+}
+
+int KSITOOL_Signature_isCalendarAuthRecPresent(const KSI_Signature *sig) {
+	KSI_CalendarAuthRec *calRec = NULL;
+
+	if (sig == NULL) return 0;
+	KSI_Signature_getCalendarAuthRec(sig, &calRec);
+
+	return calRec == NULL ? 0 : 1;
+}
+
 char err_buf[0x2000] = "";
 
 void KSITOOL_KSI_ERRTrace_save(KSI_CTX *ctx) {

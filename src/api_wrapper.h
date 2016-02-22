@@ -48,6 +48,8 @@ int KSITOOL_RequestHandle_getExtendResponse(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Re
 int KSITOOL_Signature_verify(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx);
 int KSITOOL_Signature_verifyOnline(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx);
 int KSITOOL_Signature_verifyWithPublication(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_PublicationData *pub_data);
+int KSITOOL_Signature_isCalendarAuthRecPresent(const KSI_Signature *sig);
+int KSITOOL_Signature_isPublicationRecordPresent(const KSI_Signature *sig);
 int KSITOOL_createSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_DataHash *dataHash, KSI_Signature **sig);
 int KSITOOL_receivePublicationsFile(ERR_TRCKR *err ,KSI_CTX *ctx, KSI_PublicationsFile **pubFile);
 int KSITOOL_verifyPublicationsFile(ERR_TRCKR *err, KSI_CTX *ctx, KSI_PublicationsFile *pubfile);
