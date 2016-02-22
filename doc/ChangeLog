@@ -1,6 +1,7 @@
-Version 1.8
-
 * BUGFIX: Verification with publication string fixed.
+* IMPROVEMNT: Enabled autotools option subdir-objects to remove build errors (on Mac OS and Ubuntu).
+
+Version 1.8
 
 2016-02-15 1.8.1
 
