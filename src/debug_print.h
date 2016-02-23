@@ -22,14 +22,14 @@
 #define	DEBUG_PRINT_H
 
 #include <ksi/ksi.h>
-#include "param_set/task_def.h"
+#include "param_set/param_set.h"
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
-void DEBUG_verifySignature(KSI_CTX *ksi, TASK *task, int res, KSI_Signature *sig);
-void DEBUG_verifyPubfile(KSI_CTX *ksi, TASK *task, int res, KSI_PublicationsFile *pub);
+void DEBUG_verifySignature(KSI_CTX *ksi, int res, KSI_Signature *sig, KSI_DataHash *hsh);
+void DEBUG_verifyPubfile(KSI_CTX *ksi, PARAM_SET *set, int res, KSI_PublicationsFile *pub);
 
 
 #ifdef	__cplusplus
