@@ -25,13 +25,14 @@
 #include "param_set/param_set.h"
 #include "param_set/task_def.h"
 #include "api_wrapper.h"
-#include "tool_box.h"
-#include "param_control.h"
-#include "ksi_init.h"
+#include "tool_box/tool_box.h"
+#include "tool_box/param_control.h"
+#include "tool_box/ksi_init.h"
+#include "tool_box/task_initializer.h"
+#include "tool_box/smart_file.h"
 #include "printer.h"
 #include "obj_printer.h"
 #include "conf.h"
-#include "task_initializer.h"
 
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature **sig);
@@ -44,7 +45,7 @@ int sign_run(int argc, char** argv, char **envp) {
 	TASK *task = NULL;
 	KSI_CTX *ksi = NULL;
 	ERR_TRCKR *err = NULL;
-	FILE *ksi_log = NULL;
+	SMART_FILE *logfile = NULL;
 	KSI_Signature *sig = NULL;
 	int d = 0;
 
@@ -52,7 +53,7 @@ int sign_run(int argc, char** argv, char **envp) {
 	 * Extract command line parameters.
      */
 	res = PARAM_SET_new(
-			CONF_generate_desc("{sign}{i}{o}{H}{D}{d}{conf}", buf, sizeof(buf)),
+			CONF_generate_desc("{sign}{i}{o}{H}{D}{d}{log}{conf}", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -68,7 +69,7 @@ int sign_run(int argc, char** argv, char **envp) {
 	res = TASK_INITIALIZER_check_analyze_report(set, task_set, 0.2, 0.1, &task);
 	if (res != KT_OK) goto cleanup;
 
-	res = TOOL_init_ksi(set, &ksi, &err, &ksi_log);
+	res = TOOL_init_ksi(set, &ksi, &err, &logfile);
 	if (res != KT_OK) goto cleanup;
 
 	d = PARAM_SET_isSetByName(set, "d");
@@ -99,7 +100,7 @@ cleanup:
 		else 	ERR_TRCKR_printErrors(err);
 	}
 
-	if (ksi_log != NULL) fclose(ksi_log);
+	SMART_FILE_close(logfile);
 	KSI_Signature_free(sig);
 	TASK_SET_free(task_set);
 	PARAM_SET_free(set);
@@ -197,7 +198,8 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	res = CONF_initialize_set_functions(set);
 	if (res != KT_OK) goto cleanup;
 
-	PARAM_SET_addControl(set, "{o}{D}", isFormatOk_path, NULL, convertRepair_path, NULL);
+	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, NULL);
+	PARAM_SET_addControl(set, "{o}{D}{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputHash, isContentOk_inputHash, NULL, extract_inputHash);
 	PARAM_SET_addControl(set, "{H}", isFormatOk_hashAlg, isContentOk_hashAlg, NULL, extract_hashAlg);
 	PARAM_SET_addControl(set, "{d}", isFormatOk_flag, NULL, NULL, NULL);

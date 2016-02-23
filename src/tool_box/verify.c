@@ -28,6 +28,7 @@
 #include "tool_box/tool_box.h"
 #include "tool_box/param_control.h"
 #include "tool_box/task_initializer.h"
+#include "tool_box/smart_file.h"
 #include "api_wrapper.h"
 #include "printer.h"
 #include "debug_print.h"
@@ -51,7 +52,7 @@ int verify_run(int argc, char** argv, char **envp) {
 	TASK *task = NULL;
 	KSI_CTX *ksi = NULL;
 	ERR_TRCKR *err = NULL;
-	FILE *file = NULL;
+	SMART_FILE *logfile = NULL;
 	int d;
 	COMPOSITE extra;
 	KSI_DataHash *hsh = NULL;
@@ -62,7 +63,7 @@ int verify_run(int argc, char** argv, char **envp) {
 	 * Extract command line parameters and also add configuration specific parameters.
      */
 	res = PARAM_SET_new(
-			CONF_generate_desc("{verify}{i}{o}{H}{D}{x}{f}{pub-str|p}{ver-int}{ver-cal}{ver-key}{ver-pub}{log}{silent}{nowarn}{conf}{d}{conf}", buf, sizeof(buf)),
+			CONF_generate_desc("{verify}{i}{o}{H}{D}{x}{f}{d}{pub-str|p}{ver-int}{ver-cal}{ver-key}{ver-pub}{log}{silent}{nowarn}{conf}{log}", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -78,7 +79,7 @@ int verify_run(int argc, char** argv, char **envp) {
 	res = TASK_INITIALIZER_check_analyze_report(set, task_set, 0.2, 0.1, &task);
 	if (res != KT_OK) goto cleanup;
 
-	res = TOOL_init_ksi(set, &ksi, &err, &file);
+	res = TOOL_init_ksi(set, &ksi, &err, &logfile);
 	if (res != KT_OK) goto cleanup;
 
 	d = PARAM_SET_isSetByName(set, "d");
@@ -163,7 +164,7 @@ cleanup:
 		else  ERR_TRCKR_printErrors(err);
 	}
 
-	if (file != NULL) fclose(file);
+	SMART_FILE_close(logfile);
 	PARAM_SET_free(set);
 	TASK_SET_free(task_set);
 	KSI_DataHash_free(hsh);
@@ -385,8 +386,9 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	res = CONF_initialize_set_functions(set);
 	if (res != KT_OK) goto cleanup;
 
-	PARAM_SET_addControl(set, "{f}", isFormatOk_inputHash, isContentOk_inputHash, NULL, extract_inputHash);
 	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, NULL);
+	PARAM_SET_addControl(set, "{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
+	PARAM_SET_addControl(set, "{f}", isFormatOk_inputHash, isContentOk_inputHash, NULL, extract_inputHash);
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignature);
 	PARAM_SET_addControl(set, "{f}", isFormatOk_inputHash, isContentOk_inputHash, convertRepair_path, extract_inputHash);
 	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);

@@ -29,11 +29,11 @@ extern "C" {
 #include <stdio.h>	
 #include <ksi/ksi.h>
 #include "ksitool_err.h"	
-	
+#include "tool_box/smart_file.h"
 /**
  * This function takes PARAM_SET as input and configures KSI_CTX and ERR_TRCKR.
  * Output parameter <ksi_log> is used to close the stream if needed by calling
- * \c fclose. If logging is directed to \c stderr or \c stdrout <ksi_log> will be
+ * \c SMART_FILE_close. If logging is directed to \c stderr or \c stdrout <ksi_log> will be
  * NULL.
  * 
  * \param set		PARAM_SET given.
@@ -42,7 +42,7 @@ extern "C" {
  * \param ksi_log	Output parameter for KSI logging stream.
  * \return KT_OK if successful, error code otherwise.
  */
-int TOOL_init_ksi(PARAM_SET *set, KSI_CTX **ksi, ERR_TRCKR **error, FILE **ksi_log);
+int TOOL_init_ksi(PARAM_SET *set, KSI_CTX **ksi, ERR_TRCKR **error, SMART_FILE **ksi_log);
 	
 #ifdef	__cplusplus
 }

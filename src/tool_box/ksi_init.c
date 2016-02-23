@@ -21,14 +21,14 @@
 #include <ksi/ksi.h>
 #include <ksi/pkitruststore.h>
 #include <string.h>
+#include "param_set/param_set.h"
+#include "tool_box/ksi_init.h"
+#include "tool_box/smart_file.h"
 #include "ksitool_err.h"
-#include "../param_set/param_set.h"
-#include "../printer.h"
-#include "../api_wrapper.h"
-#include "ksi_init.h"
+#include "printer.h"
+#include "api_wrapper.h"
 
 #ifdef _WIN32
-//#	include <windows.h>
 #	include <io.h>
 #	include <fcntl.h>
 #include <stdlib.h>
@@ -37,55 +37,10 @@
 #	include <sys/time.h>
 #endif
 
-static int getStreamFromPath(const char *fname, const char *mode, FILE **stream, int *close) {
+static int tool_init_ksi_logger(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set, SMART_FILE **log) {
 	int res;
-	FILE *in = NULL;
-	FILE *tmp = NULL;
-	int doClose = 0;
-
-	if (fname == NULL || mode == NULL || stream == NULL || close == NULL) {
-		res = KT_INVALID_ARGUMENT;
-		goto cleanup;
-	}
-
-	if (strcmp(fname, "-") == 0) {
-		tmp = strcmp(mode, "rb") == 0 ? stdin : stdout;
-#ifdef _WIN32
-		res = _setmode(_fileno(tmp),_O_BINARY);
-		if (res == -1) {
-			res = KT_UNABLE_TO_SET_STREAM_MODE;
-			goto cleanup;
-		}
-#endif
-	} else {
-		in = fopen(fname, mode);
-		if (in == NULL) {
-			res = KT_IO_ERROR;
-			goto cleanup;
-		}
-
-		doClose = 1;
-		tmp = in;
-	}
-
-	*stream = tmp;
-	in = NULL;
-	*close = 1;
-
-	res = KT_OK;
-
-cleanup:
-
-	if (in) fclose(in);
-	return res;
-}
-
-static int tool_init_ksi_logger(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set, FILE **log) {
-	int res;
-	FILE *writeLogTo = NULL;
-	FILE *tmp = NULL;
+	SMART_FILE *tmp = NULL;
 	char *outLogfile = NULL;
-	int logFile_must_be_closed;
 
 	if (ksi == NULL || err == NULL || set == NULL || log == NULL) {
 		res = KT_INVALID_ARGUMENT;
@@ -96,15 +51,13 @@ static int tool_init_ksi_logger(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set, FI
 
 	/* Set logging. */
 	if (outLogfile != NULL) {
-		res = getStreamFromPath(outLogfile, "w", &writeLogTo, &logFile_must_be_closed);
+		res = SMART_FILE_open(outLogfile, "w", &tmp);
 		if (res != KT_OK) {
 			ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
 			goto cleanup;
 		}
 
-		if (logFile_must_be_closed) tmp = writeLogTo;
-
-		res = KSI_CTX_setLoggerCallback(ksi, KSI_LOG_StreamLogger, writeLogTo);
+		res = KSI_CTX_setLoggerCallback(ksi, KSI_LOG_StreamLogger, SMART_FILE_getFile(tmp));
 		ERR_CATCH_MSG(err, res, "Error: Unable to set logger callback function.");
 
 		res = KSI_CTX_setLogLevel(ksi, KSI_LOG_DEBUG);
@@ -117,7 +70,7 @@ static int tool_init_ksi_logger(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set, FI
 
 cleanup:
 
-	if (tmp) fclose(tmp);
+	SMART_FILE_close(tmp);
 
 	return res;
 }
@@ -364,11 +317,11 @@ cleanup:
 	return res;
 }
 
-int TOOL_init_ksi(PARAM_SET *set, KSI_CTX **ksi, ERR_TRCKR **error, FILE **ksi_log) {
+int TOOL_init_ksi(PARAM_SET *set, KSI_CTX **ksi, ERR_TRCKR **error, SMART_FILE **ksi_log) {
 	int res;
 	ERR_TRCKR *err = NULL;
 	KSI_CTX *tmp = NULL;
-	FILE *tmp_log = NULL;
+	SMART_FILE *tmp_log = NULL;
 
 	if (set == NULL || ksi == NULL || error == NULL) {
 		res = KT_INVALID_ARGUMENT;
@@ -442,8 +395,7 @@ int TOOL_init_ksi(PARAM_SET *set, KSI_CTX **ksi, ERR_TRCKR **error, FILE **ksi_l
 cleanup:
 
 	KSI_CTX_free(tmp);
-	if (tmp_log != NULL) fclose(tmp_log);
+	SMART_FILE_close(tmp_log);
 
 	return res;
 }
-

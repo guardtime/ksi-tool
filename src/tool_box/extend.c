@@ -28,6 +28,7 @@
 #include "tool_box/tool_box.h"
 #include "tool_box/param_control.h"
 #include "tool_box/task_initializer.h"
+#include "tool_box/smart_file.h"
 #include "api_wrapper.h"
 #include "printer.h"
 #include "obj_printer.h"
@@ -43,7 +44,7 @@ int extend_run(int argc, char** argv, char **envp) {
 	TASK_SET *task_set = NULL;
 	PARAM_SET *set = NULL;
 	KSI_CTX *ksi = NULL;
-	FILE *file = NULL;
+	SMART_FILE *logfile = NULL;
 	ERR_TRCKR *err = NULL;
 	KSI_Signature *sig = NULL;
 	COMPOSITE extra;
@@ -54,7 +55,7 @@ int extend_run(int argc, char** argv, char **envp) {
 	 * Extract command line parameters.
      */
 	res = PARAM_SET_new(
-			CONF_generate_desc("{i}{o}{H}{D}{d}{x}{T}{pub-str|p}", buf, sizeof(buf)),
+			CONF_generate_desc("{i}{o}{H}{D}{d}{x}{T}{pub-str|p}{conf}{log}", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -70,7 +71,7 @@ int extend_run(int argc, char** argv, char **envp) {
 	res = TASK_INITIALIZER_check_analyze_report(set, task_set, 0.5, 0.1, &task);
 	if (res != KT_OK) goto cleanup;
 
-	res = TOOL_init_ksi(set, &ksi, &err, &file);
+	res = TOOL_init_ksi(set, &ksi, &err, &logfile);
 	if (res != KT_OK) goto cleanup;
 
 	d = PARAM_SET_isSetByName(set, "d");
@@ -109,7 +110,7 @@ cleanup:
 		else  ERR_TRCKR_printErrors(err);
 	}
 
-	if (file != NULL) fclose(file);
+	SMART_FILE_close(logfile);
 	PARAM_SET_free(set);
 	TASK_SET_free(task_set);
 	KSI_Signature_free(sig);
@@ -248,6 +249,8 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	/**
 	 * Configure parameter set, control, repair and object extractor function.
      */
+	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, NULL);
+	PARAM_SET_addControl(set, "{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignature);
 	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
 	PARAM_SET_addControl(set, "{d}", isFormatOk_flag, NULL, NULL, NULL);

@@ -30,6 +30,7 @@
 #include "tool_box/tool_box.h"
 #include "tool_box/param_control.h"
 #include "tool_box/task_initializer.h"
+#include "tool_box/smart_file.h"
 #include "api_wrapper.h"
 #include "printer.h"
 #include "debug_print.h"
@@ -47,7 +48,7 @@ int pubfile_run(int argc, char** argv, char **envp) {
 	PARAM_SET *set = NULL;
 	KSI_PublicationsFile *pubfile = NULL;
 	KSI_CTX *ksi = NULL;
-	FILE *file = NULL;
+	SMART_FILE *logfile = NULL;
 	ERR_TRCKR *err = NULL;
 	COMPOSITE extra;
 	char buf[2048];
@@ -57,7 +58,7 @@ int pubfile_run(int argc, char** argv, char **envp) {
 	 * Extract command line parameters.
      */
 	res = PARAM_SET_new(
-			CONF_generate_desc("{o}{d}{v}{T}", buf, sizeof(buf)),
+			CONF_generate_desc("{o}{d}{v}{T}{conf}{log}", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -73,7 +74,7 @@ int pubfile_run(int argc, char** argv, char **envp) {
 	res = TASK_INITIALIZER_check_analyze_report(set, task_set, 0.5, 0.1, &task);
 	if (res != KT_OK) goto cleanup;
 
-	res = TOOL_init_ksi(set, &ksi, &err, &file);
+	res = TOOL_init_ksi(set, &ksi, &err, &logfile);
 	if (res != KT_OK) goto cleanup;
 
 	d = PARAM_SET_isSetByName(set, "d");
@@ -117,7 +118,7 @@ cleanup:
 		else  ERR_TRCKR_printErrors(err);
 	}
 
-	if (file != NULL) fclose(file);
+	SMART_FILE_close(logfile);
 	PARAM_SET_free(set);
 	TASK_SET_free(task_set);
 	ERR_TRCKR_free(err);
@@ -338,7 +339,8 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	res = CONF_initialize_set_functions(set);
 	if (res != KT_OK) goto cleanup;
 
-	PARAM_SET_addControl(set, "{o}", isFormatOk_path, NULL, convertRepair_path, NULL);
+	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, NULL);
+	PARAM_SET_addControl(set, "{o}{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
 	PARAM_SET_addControl(set, "{d}{v}", isFormatOk_flag, NULL, NULL, NULL);
 
