@@ -212,6 +212,13 @@ char *verify_help_toString(char*buf, size_t len) {
 		" -p | --pub-str <str>\n"
 		"           - publication string.\n"
 		" -x        - allow to use extender when using publication based verification.\n"
+		" -d        - print detailed information about processes and errors.\n"
+		" --conf <file>\n"
+		"           - specify a configurations file to override default service\n"
+		"             information. It must be noted that service info from\n"
+		"             command-line will override the configurations file.\n"
+		" --log <file>\n"
+		"           - Write libksi log into file."
 	);
 
 	return buf;

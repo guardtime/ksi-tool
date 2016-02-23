@@ -126,6 +126,13 @@ char *sign_help_toString(char*buf, size_t len) {
 		"           - password for signing service.\n"
 		" --data-out <file>\n"
 		"           - save signed data to file.\n"
+		" -d        - print detailed information about processes and errors.\n"
+		" --conf <file>\n"
+		"           - specify a configurations file to override default service\n"
+		"             information. It must be noted that service info from\n"
+		"             command-line will override the configurations file.\n"
+		" --log <file>\n"
+		"           - Write libksi log into file."
 	);
 
 	return buf;
