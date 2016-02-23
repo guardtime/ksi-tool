@@ -981,7 +981,7 @@ int convertRepair_constraint(const char* arg, char* buf, unsigned len) {
 
 const char *getParameterErrorString(int res) {
 	switch (res) {
-		case PARAM_OK:
+		case PARAM_OK: return "OK";
 		case FORMAT_NULLPTR: return "Format error: Parameter must have value";
 		case FORMAT_NOCONTENT: return "Parameter has no content";
 		case FORMAT_INVALID: return "Parameter is invalid";
