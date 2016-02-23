@@ -193,3 +193,8 @@ int SMART_FILE_isError(SMART_FILE *file) {
 	return ferror(file->file);
 }
 
+FILE* SMART_FILE_getFile(SMART_FILE *file) {
+	if (file == NULL || file->isOpen == 0) return NULL;
+
+	return file->file;
+}
