@@ -75,6 +75,7 @@ TOOL_BOX_OBJ = \
     $(TOOL_BOX_OBJ_DIR)\extend.obj \
     $(TOOL_BOX_OBJ_DIR)\sign.obj \
     $(TOOL_BOX_OBJ_DIR)\verify.obj \
+    $(TOOL_BOX_OBJ_DIR)\task_initializer.obj \
     $(TOOL_BOX_OBJ_DIR)\smart_file.obj \
     $(TOOL_BOX_OBJ_DIR)\param_control.obj
 

@@ -40,6 +40,8 @@ ksitool_SOURCES = \
 	tool_box/default_tasks.h \
 	tool_box/component.c \
 	tool_box/component.h \
+	tool_box/task_initializer.c \
+	tool_box/task_initializer.h \
 	param_set/param_value.c \
 	param_set/param_value.h \
 	param_set/parameter.c \
