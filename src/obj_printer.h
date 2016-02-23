@@ -39,7 +39,7 @@ void OBJPRINT_Hash(KSI_DataHash *hsh, const char *prefix);
 void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile);
 void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile);
 void OBJPRINT_publicationsFileSigningCert(KSI_PublicationsFile *pubfile);
-
+void OBJPRINT_publicationsFileDump(KSI_PublicationsFile *pubfile);
 
 #ifdef	__cplusplus
 }

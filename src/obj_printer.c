@@ -363,3 +363,19 @@ void OBJPRINT_signatureDump(KSI_Signature *sig) {
 
 	return;
 }
+
+void OBJPRINT_publicationsFileDump(KSI_PublicationsFile *pubfile) {
+
+	print_info("KSI Signature dump:\n");
+
+	if (pubfile == NULL) {
+		print_info("(null)\n");
+		return;
+	}
+
+	OBJPRINT_publicationsFileReferences(pubfile);
+	OBJPRINT_publicationsFileCertificates(pubfile);
+	OBJPRINT_publicationsFileSigningCert(pubfile);
+
+	return;
+}
