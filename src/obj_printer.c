@@ -20,8 +20,10 @@
 
 #include <ksi/pkitruststore.h>
 #include <string.h>
+#include <stdlib.h>
 #include "obj_printer.h"
 #include "printer.h"
+#include "api_wrapper.h"
 
 void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile){
 	int res = KSI_UNKNOWN_ERROR;
@@ -110,6 +112,49 @@ void OBJPRINT_signaturePublicationReference(KSI_Signature *sig){
 	return;
 }
 
+void OBJPRINT_Hash(KSI_DataHash *hsh, const char *prefix) {
+	char buf[1024];
+	char alg[3] = {' ', ' ', '\0'};
+	KSI_HashAlgorithm algorithm = KSI_HASHALG_INVALID;
+
+	if (hsh == NULL) return;
+
+	if (KSI_DataHash_toString(hsh, buf, sizeof(buf)) != buf
+			|| buf[0] == '\0' || buf[1] == '\0' || buf[2] == '\0') {
+		print_info("%sUnable to stringify hash.\n", prefix == NULL ? "" : prefix);
+		return;
+	}
+
+	alg[0] = buf[0];
+	alg[1] = buf[1];
+
+	algorithm = strtol(alg, NULL, 16);
+
+	print_info("%s%s:%s.\n",
+			prefix == NULL ? "" : prefix,
+			KSI_getHashAlgorithmName(algorithm),
+			buf + 2);
+
+
+	return;
+}
+void OBJPRINT_signatureInputHash(KSI_Signature *sig) {
+	int res;
+	KSI_DataHash *hsh = NULL;
+
+	if (sig == NULL) return;
+
+	res = KSI_Signature_getDocumentHash(sig, &hsh);
+	if (res != KSI_OK) {
+		print_info("Input hash: Unable to extract from the signature.\n");
+		return;
+	}
+
+	OBJPRINT_Hash(hsh, "Input hash: ");
+
+	return;
+}
+
 void OBJPRINT_signerIdentity(KSI_Signature *sig){
 	int res = KSI_UNKNOWN_ERROR;
 	char *signerIdentity = NULL;
@@ -123,8 +168,7 @@ void OBJPRINT_signerIdentity(KSI_Signature *sig){
 		goto cleanup;
 	}
 
-	print_info("'%s'\n", signerIdentity == NULL || strlen(signerIdentity) == 0 ? "Unknown" : signerIdentity);
-	print_info("\n");
+	print_info("'%s'.\n", signerIdentity == NULL || strlen(signerIdentity) == 0 ? "Unknown" : signerIdentity);
 cleanup:
 
 	KSI_free(signerIdentity);
@@ -190,11 +234,9 @@ void OBJPRINT_signatureSigningTime(const KSI_Signature *sig) {
 
 	signingTime = (unsigned long)KSI_Integer_getUInt64(sigTime);
 
-	print_info("Signing time:\n"
-			"UTC seconds:%i\n"
-			"Date %s\n", signingTime, date);
+	print_info("Signing time: (%i) %s+00:00\n",
+			signingTime, date);
 
-	print_info("\n");
 	return;
 }
 
@@ -226,10 +268,9 @@ void OBJPRINT_signatureCertificate(const KSI_Signature *sig) {
 	ret = KSI_OctetString_toString(ID, ':', str_id, sizeof(str_id));
 	if (ret != str_id) goto cleanup;
 
-	print_info("KSI SIgnatures Calendar authentication record PKI signature:\n");
-	print_info("Signing certificate ID: %s\n", str_id);
-	print_info("Signature type: %s\n", KSI_Utf8String_cstr(sig_type));
-	print_info("\n");
+	print_info("KSI Signatures Calendar authentication record PKI signature:\n");
+	print_info("  Signing certificate ID: %s\n", str_id);
+	print_info("  Signature type: %s\n", KSI_Utf8String_cstr(sig_type));
 
 cleanup:
 
@@ -251,7 +292,7 @@ void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile){
 	res = KSI_PublicationsFile_getCertificates(pubfile, &certReclist);
 	if(res != KSI_OK || certReclist == NULL) goto cleanup;
 
-	for(i=0; i<KSI_CertificateRecordList_length(certReclist); i++){
+	for (i = 0; i < KSI_CertificateRecordList_length(certReclist); i++){
 		res = KSI_CertificateRecordList_elementAt(certReclist, i, &certRec);
 		if(res != KSI_OK || certRec == NULL) goto cleanup;
 
@@ -289,6 +330,36 @@ void OBJPRINT_publicationsFileSigningCert(KSI_PublicationsFile *pubfile) {
 cleanup:
 
 	KSI_PKICertificate_free(cert);
+
+	return;
+}
+
+void OBJPRINT_signatureDump(KSI_Signature *sig) {
+
+	print_info("KSI Signature dump:\n");
+
+	if (sig == NULL) {
+		print_info("(null)\n");
+		return;
+	}
+
+	print_info("  ");
+	OBJPRINT_signatureInputHash(sig);
+	print_info("  ");
+	OBJPRINT_signatureSigningTime(sig);
+	print_info("  ");
+	OBJPRINT_signerIdentity(sig);
+	print_info("  Trust anchor: ");
+
+	if (KSITOOL_Signature_isCalendarAuthRecPresent(sig)) {
+		print_info("Calendar Authentication Record.\n\n");
+		OBJPRINT_signatureCertificate(sig);
+	} else if (KSITOOL_Signature_isPublicationRecordPresent(sig)) {
+		print_info("Publication Record.\n\n");
+		OBJPRINT_signaturePublicationReference(sig);
+	} else {
+		print_info("missing.\n\n");
+	}
 
 	return;
 }

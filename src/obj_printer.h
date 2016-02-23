@@ -32,6 +32,9 @@ void OBJPRINT_signaturePublicationReference(KSI_Signature *sig);
 void OBJPRINT_signatureVerificationInfo(KSI_Signature *sig);
 void OBJPRINT_signatureSigningTime(const KSI_Signature *sig);
 void OBJPRINT_signatureCertificate(const KSI_Signature *sig);
+void OBJPRINT_signatureDump(KSI_Signature *sig);
+
+void OBJPRINT_Hash(KSI_DataHash *hsh, const char *prefix);
 
 void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile);
 void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile);
