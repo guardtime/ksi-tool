@@ -20,30 +20,32 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <ksi/ksi.h>
 #include <ksi/net.h>
 #include <ksi/hashchain.h>
+#include <ksi/compatibility.h>
 #include "param_set/param_set.h"
 #include "param_set/task_def.h"
+#include "tool_box/ksi_init.h"
+#include "tool_box/tool_box.h"
+#include "tool_box/param_control.h"
+#include "tool_box/task_initializer.h"
 #include "api_wrapper.h"
-#include "ksi_init.h"
-#include "param_control.h"
-#include "tool_box.h"
 #include "printer.h"
 #include "debug_print.h"
 #include "obj_printer.h"
+#include "conf.h"
 
-#ifdef _WIN32
-#define snprintf _snprintf
-#endif
-
-static int pubfile_download(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi);
+static int pubfile_download(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile **pubfile);
 static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, COMPOSITE *extra);
+static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 
 int pubfile_run(int argc, char** argv, char **envp) {
 	int res;
 	TASK *task = NULL;
 	TASK_SET *task_set = NULL;
 	PARAM_SET *set = NULL;
+	KSI_PublicationsFile *pubfile = NULL;
 	KSI_CTX *ksi = NULL;
 	FILE *file = NULL;
 	ERR_TRCKR *err = NULL;
@@ -54,85 +56,27 @@ int pubfile_run(int argc, char** argv, char **envp) {
 	/**
 	 * Extract command line parameters.
      */
-	res = PARAM_SET_new("{verify}{o}{d}{v}{x}{T}{ver-int}{ver-cal}{ver-key}{ver-pub}"
-			DEF_SERVICE_PAR DEF_PARAMETERS
-			, &set);
-	if (res != KT_OK) {
-		goto cleanup;
-	}
+	res = PARAM_SET_new(
+			CONF_generate_desc("{o}{d}{v}{T}", buf, sizeof(buf)),
+			&set);
+	if (res != KT_OK) goto cleanup;
 
-	/**
-	 * Configure parameter set, control, repair and object extractor function.
-     */
-
-	PARAM_SET_addControl(set, "{o}", isFormatOk_path, NULL, convertRepair_path, NULL);
-	PARAM_SET_addControl(set, "{X}{P}{S}", isFormatOk_url, NULL, convertRepair_url, NULL);
-	PARAM_SET_addControl(set, "{aggre-user}{aggre-pass}{ext-pass}{ext-user}", isFormatOk_userPass, NULL, NULL, NULL);
-	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
-	PARAM_SET_addControl(set, "{d}", isFormatOk_flag, NULL, NULL, NULL);
-	PARAM_SET_addControl(set, "{cnstr}", isFormatOk_constraint, NULL, convertRepair_constraint, NULL);
-
-	/**
-	 * Define possible tasks.
-     */
 	res = TASK_SET_new(&task_set);
 	if (res != PST_OK) goto cleanup;
 
-	/*					  ID	DESC										MAN			ATL		FORBIDDEN	IGN	*/
-	TASK_SET_add(task_set, 0,	"Verify publications file.",				"P,v",		NULL,	"T,d,o",		NULL);
-	TASK_SET_add(task_set, 1,	"Dump publications file.",					"P,d",		NULL,	"T,o",		NULL);
-	TASK_SET_add(task_set, 2,	"Save publications.",						"P,o",		NULL,	"T,d",		NULL);
-	TASK_SET_add(task_set, 3,	"Save and dump publications file.",			"P,o,d",	NULL,	"T",		NULL);
-	TASK_SET_add(task_set, 4,	"Create publication string.",				"T,X",		NULL,	NULL,		NULL);
-
-
-	PARAM_SET_readFromCMD(argc, argv, set, 0);
-
-	d = PARAM_SET_isSetByName(set, "d");
-
-	if (!PARAM_SET_isFormatOK(set)) {
-		PARAM_SET_invalidParametersToString(set, NULL, getParameterErrorString, buf, sizeof(buf));
-		print_errors("%s", buf);
-		res = KT_INVALID_CMD_PARAM;
-		goto cleanup;
-	}
-
-	/**
-	 * Analyze task set and Extract the task if consistent one exists, print help
-	 * messaged otherwise.
-     */
-	res = TASK_SET_analyzeConsistency(task_set, set, 0.5);
+	res = generate_tasks_set(set, task_set);
 	if (res != PST_OK) goto cleanup;
 
-	res = TASK_SET_getConsistentTask(task_set, &task);
-	if (res != PST_OK && res != PST_TASK_ZERO_CONSISTENT_TASKS && res !=PST_TASK_MULTIPLE_CONSISTENT_TASKS) goto cleanup;
+	res = TASK_INITIALIZER_getServiceInfo(set, argc, argv, envp);
+	if (res != PST_OK) goto cleanup;
 
-	if (PARAM_SET_isTypoFailure(set)) {
-			printf("%s\n", PARAM_SET_typosToString(set, NULL, buf, sizeof(buf)));
-			res = KT_INVALID_CMD_PARAM;
-			goto cleanup;
-	} else if (PARAM_SET_isUnknown(set)){
-			printf("%s\n", PARAM_SET_unknownsToString(set, NULL, buf, sizeof(buf)));
-	}
+	res = TASK_INITIALIZER_check_analyze_report(set, task_set, 0.5, 0.1, &task);
+	if (res != KT_OK) goto cleanup;
 
-	if (task == NULL) {
-		int ID;
-		if (TASK_SET_isOneFromSetTheTarget(task_set, 0.1, &ID)) {
-			printf("%s", TASK_SET_howToRepair_toString(task_set, set, ID, NULL, buf, sizeof(buf)));
-		} else {
-			printf("%s", TASK_SET_suggestions_toString(task_set, 3, buf, sizeof(buf)));
-		}
-
-		res = KT_INVALID_CMD_PARAM;
-		goto cleanup;
-	}
-
-	/**
-	 * As the task is extracted, initialize a KSI object, read the input file
-	 * and execute the verification process.
-     */
 	res = TOOL_init_ksi(set, &ksi, &err, &file);
 	if (res != KT_OK) goto cleanup;
+
+	d = PARAM_SET_isSetByName(set, "d");
 
 	extra.ctx = ksi;
 	extra.err = err;
@@ -142,7 +86,7 @@ int pubfile_run(int argc, char** argv, char **envp) {
 		case 1:
 		case 2:
 		case 3:
-			res = pubfile_download(set, err, ksi);
+			res = pubfile_download(set, err, ksi, &pubfile);
 		case 4:
 			res = pubfile_create_pub_string(set, err, ksi, &extra);
 		break;
@@ -152,21 +96,23 @@ int pubfile_run(int argc, char** argv, char **envp) {
 		break;
 	}
 
+	if (TASK_getID(task) == 4) goto cleanup;
 
-
-
-
-
-
+	if (d) {
+		OBJPRINT_publicationsFileDump(pubfile);
+	}
 
 
 cleanup:
 	print_progressResult(res);
+	KSITOOL_KSI_ERRTrace_save(ksi);
 
 	if (res != KT_OK) {
-		KSITOOL_KSI_ERRTrace_save(ksi);
-		//TODO: fix debug print.
-//		DEBUG_verifySignature(ksi, task, res, sig);
+		KSI_LOG_debug(ksi, "\n%s", KSITOOL_KSI_ERRTrace_get());
+		print_info("\n");
+		DEBUG_verifyPubfile(ksi, set, res, pubfile);
+
+		print_info("\n");
 		if (d) ERR_TRCKR_printExtendedErrors(err);
 		else  ERR_TRCKR_printErrors(err);
 	}
@@ -182,24 +128,24 @@ cleanup:
 char *pubfile_help_toString(char*buf, size_t len) {
 	size_t count = 0;
 
-	count += snprintf(buf + count, len - count,
+	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
 		"ksitool pubfile -P <url> [--cnstr <oid=value>]... [-V <file>]...\n"
 		"        [-W <file>]... [-o <pubfile.bin>] [-d] [-v] [more options]\n"
 		"ksitool pubfile -T <time> -X <url> [--ext-user <user> --ext-pass <pass>]\n\n"
 
-		"-P <url>  - specify publications file URL (or file with uri scheme 'file://').\n"
-		"--cnstr <oid=value>\n"
-		"          - publications file certificate verification constraints.\n"
-		"-o <file> - output file name to store publications file.\n"
-		"-v        - perform publications file verification."
-		"-X <url>  - specify extending service URL.\n"
-		"--ext-user <str>\n"
-		"          - user name for extending service.\n"
-		"--ext-pass <str>\n"
-		"          - password for extending service.\n"
-		"-T <time> - specify time to create a publication string for as the number of seconds\n"
-		"            since 1970-01-01 00:00:00 UTC or time string formatted as \"YYYY-MM-DD hh:mm:ss\".\n"
+		" -P <url>  - specify publications file URL (or file with uri scheme 'file://').\n"
+		" --cnstr <oid=value>\n"
+		"           - publications file certificate verification constraints.\n"
+		" -o <file> - output file name to store publications file.\n"
+		" -v        - perform publications file verification."
+		" -X <url>  - specify extending service URL.\n"
+		" --ext-user <str>\n"
+		"           - user name for extending service.\n"
+		" --ext-pass <str>\n"
+		"           - password for extending service.\n"
+		" -T <time> - specify time to create a publication string for as the number of seconds\n"
+		"             since 1970-01-01 00:00:00 UTC or time string formatted as \"YYYY-MM-DD hh:mm:ss\".\n"
 	);
 
 	return buf;
@@ -209,64 +155,75 @@ const char *pubfile_get_desc(void) {
 	return "KSI general publications file tool.";
 }
 
-static int pubfile_download(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi) {
+static int pubfile_download(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile **pubfile) {
 	int res;
-	KSI_PublicationsFile *pubfile = NULL;
 	int d;
 	int v;
 	char *save_to = NULL;
+	KSI_PublicationsFile *tmp = NULL;
+	KSI_Integer *pubTime = NULL;
+	KSI_PublicationRecord *pubRec = NULL;
+	KSI_PublicationData *pubData = NULL;
+	char buf[1024];
 
-	if (set == NULL || ksi == NULL || err == NULL) {
+	if (set == NULL || ksi == NULL || err == NULL || pubfile == NULL) {
 		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
 	d = PARAM_SET_isSetByName(set, "d");
 	v = PARAM_SET_isSetByName(set, "v");
-	PARAM_SET_getObj(set, "o", NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, (void**)&save_to);
+
+	res = PARAM_SET_getObj(set, "o", NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, (void**)&save_to);
+	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 
 	print_progressDesc(d, "Downloading publications file... ");
-	res = KSITOOL_receivePublicationsFile(err, ksi, &pubfile);
+	res = KSITOOL_receivePublicationsFile(err, ksi, &tmp);
 	ERR_CATCH_MSG(err, res, "Error: Unable to get publication file.");
 	print_progressResult(res);
 
-	if (d) {
-		OBJPRINT_publicationsFileReferences(pubfile);
-		OBJPRINT_publicationsFileCertificates(pubfile);
-		OBJPRINT_publicationsFileSigningCert(pubfile);
-	}
+	print_progressDesc(d, "Extracting latest publication time... ");
+	res = KSI_PublicationsFile_getLatestPublication(tmp, NULL, &pubRec);
+	ERR_CATCH_MSG(err, res, "Error: Unable to extract publication record.");
+	res = KSI_PublicationRecord_getPublishedData(pubRec, &pubData);
+	ERR_CATCH_MSG(err, res, "Error: Unable to extract publication data.");
+	res = KSI_PublicationData_getTime(pubData, &pubTime);
+	ERR_CATCH_MSG(err, res, "Error: Unable to extract publication time.");
+	print_progressResult(res);
+
+	print_info("Latest publication (%i) %s+00:00.\n",
+			KSI_Integer_getUInt64(pubTime),
+			KSI_Integer_toDateString(pubTime, buf, sizeof(buf)));
 
 	if (v) {
 		print_progressDesc(d, "Verifying publications file... ");
-		res = KSITOOL_verifyPublicationsFile(err, ksi, pubfile);
+		res = KSITOOL_verifyPublicationsFile(err, ksi, tmp);
 		ERR_CATCH_MSG(err, res, "Error: Unable to verify publication file.");
 		print_progressResult(res);
 	}
 
 	if (save_to != NULL) {
-		print_progressDesc(d, "Saveing publications file... ");
-		res = KSI_OBJ_savePublicationsFile(err, ksi, pubfile, save_to);
+		print_progressDesc(d, "Saving publications file... ");
+		res = KSI_OBJ_savePublicationsFile(err, ksi, tmp, save_to);
 		ERR_CATCH_MSG(err, res, "Error: Unable to save publications file.");
 		print_progressResult(res);
 	}
 
 	res = KT_OK;
+	*pubfile = tmp;
+	tmp = NULL;
 
 cleanup:
 	print_progressResult(res);
-
-	if (res != KT_OK) {
-//		DEBUG_verifyPubfile();
-	}
 
 	return res;
 }
 
 static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, COMPOSITE *extra) {
 	int res;
-
-	KSI_Integer *end = NULL;
+	int d;
 	KSI_Integer *start = NULL;
+	KSI_Integer *end = NULL;
 	KSI_Integer *reqID = NULL;
 	KSI_ExtendReq *extReq = NULL;
 	KSI_RequestHandle *request = NULL;
@@ -276,7 +233,6 @@ static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ks
 	KSI_DataHash *extHsh = NULL;
 	KSI_PublicationData *tmpPubData = NULL;
 	KSI_Integer *pubTime = NULL;
-	int d;
 	int publicationTime = 0;
 	char buf[1024];
 
@@ -364,6 +320,39 @@ cleanup:
 	KSI_ExtendResp_free(extResp);
 	KSI_RequestHandle_free(request);
 	KSI_PublicationData_free(tmpPubData);
+
+	return res;
+}
+
+static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
+	int res;
+
+	if (set == NULL || task_set == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	/**
+	 * Configure parameter set, control, repair and object extractor function.
+     */
+	res = CONF_initialize_set_functions(set);
+	if (res != KT_OK) goto cleanup;
+
+	PARAM_SET_addControl(set, "{o}", isFormatOk_path, NULL, convertRepair_path, NULL);
+	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
+	PARAM_SET_addControl(set, "{d}{v}", isFormatOk_flag, NULL, NULL, NULL);
+
+	/**
+	 * Define possible tasks.
+     */
+	/*					  ID	DESC										MAN			ATL		FORBIDDEN	IGN	*/
+	TASK_SET_add(task_set, 0,	"Verify publications file.",				"P,v",		NULL,	"T,d,o",	NULL);
+	TASK_SET_add(task_set, 1,	"Dump publications file.",					"P,d",		NULL,	"T,o",		NULL);
+	TASK_SET_add(task_set, 2,	"Save publications.",						"P,o",		NULL,	"T,d",		NULL);
+	TASK_SET_add(task_set, 3,	"Save and dump publications file.",			"P,o,d",	NULL,	"T",		NULL);
+	TASK_SET_add(task_set, 4,	"Create publication string.",				"T,X",		NULL,	NULL,		NULL);
+
+cleanup:
 
 	return res;
 }

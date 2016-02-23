@@ -20,6 +20,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <ksi/ksi.h>
+#include <ksi/compatibility.h>
 #include "param_set/param_set.h"
 #include "param_set/task_def.h"
 #include "api_wrapper.h"
@@ -28,106 +30,101 @@
 #include "ksi_init.h"
 #include "printer.h"
 #include "obj_printer.h"
+#include "conf.h"
+#include "task_initializer.h"
 
-#ifdef _WIN32
-#define snprintf _snprintf
-#endif
-
-static int sign(PARAM_SET *set);
+static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
+static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature **sig);
 
 int sign_run(int argc, char** argv, char **envp) {
-	int exit_code;
 	int res;
-	TASK *task = NULL;
-	TASK_SET *task_set = NULL;
-	PARAM_SET *set = NULL;
 	char buf[2048];
+	PARAM_SET *set = NULL;
+	TASK_SET *task_set = NULL;
+	TASK *task = NULL;
+	KSI_CTX *ksi = NULL;
+	ERR_TRCKR *err = NULL;
+	FILE *ksi_log = NULL;
+	KSI_Signature *sig = NULL;
+	int d = 0;
 
 	/**
 	 * Extract command line parameters.
      */
-	res = PARAM_SET_new("{sign}{i}{o}{H}{S}{aggre-user}{aggre-pass}{D}{d}"
-			DEF_SERVICE_PAR DEF_PARAMETERS
-			, &set);
-	if (res != KT_OK) {
-		goto cleanup;
-	}
+	res = PARAM_SET_new(
+			CONF_generate_desc("{sign}{i}{o}{H}{D}{d}{conf}", buf, sizeof(buf)),
+			&set);
+	if (res != KT_OK) goto cleanup;
 
-	/**
-	 * Configure parameter set, control, repair and object extractor function.
-     */
-	PARAM_SET_addControl(set, "{o}{D}", isFormatOk_path, NULL, convertRepair_path, NULL);
-	PARAM_SET_addControl(set, "{i}", isFormatOk_inputHash, isContentOk_inputHash, NULL, extract_inputHash);
-	PARAM_SET_addControl(set, "{H}", isFormatOk_hashAlg, isContentOk_hashAlg, NULL, extract_hashAlg);
-	PARAM_SET_addControl(set, "{S}", isFormatOk_url, NULL, convertRepair_url, NULL);
-	PARAM_SET_addControl(set, "{aggre-user}{aggre-pass}", isFormatOk_userPass, NULL, NULL, NULL);
-	PARAM_SET_addControl(set, "{d}", isFormatOk_flag, NULL, NULL, NULL);
-
-	/**
-	 * Define possible tasks (for error handling only).
-     */
 	res = TASK_SET_new(&task_set);
 	if (res != PST_OK) goto cleanup;
 
-	/*					  ID	DESC										MAN			 ATL	FORBIDDEN	IGN	*/
-	TASK_SET_add(task_set, 0,	"Sign data.",								"S,i,o",	 NULL,	NULL,		NULL);
-	TASK_SET_add(task_set, 1,	"Sign data, specify hash alg.",				"S,i,o,H",	 NULL,	"D",		NULL);
-	TASK_SET_add(task_set, 2,	"Sign and save data.",						"S,i,o,D",	 NULL,	"H",		NULL);
-	TASK_SET_add(task_set, 3,	"Sign and save data, specify hash alg.",	"S,i,o,H,D", NULL,	NULL,		NULL);
-
-	PARAM_SET_readFromCMD(argc, argv, set, 0);
-
-	if (!PARAM_SET_isFormatOK(set)) {
-		PARAM_SET_invalidParametersToString(set, NULL, getParameterErrorString, buf, sizeof(buf));
-		printf("%s", buf);
-	}
-
-	/**
-	 * Analyze task set and Extract the task if consistent one exists, print help
-	 * messaged otherwise.
-     */
-	res = TASK_SET_analyzeConsistency(task_set, set, 0.2);
+	res = generate_tasks_set(set, task_set);
 	if (res != PST_OK) goto cleanup;
 
-	res = TASK_SET_getConsistentTask(task_set, &task);
-	if (res != PST_OK && res != PST_TASK_ZERO_CONSISTENT_TASKS && res !=PST_TASK_MULTIPLE_CONSISTENT_TASKS) goto cleanup;
+	res = TASK_INITIALIZER_getServiceInfo(set, argc, argv, envp);
+	if (res != PST_OK) goto cleanup;
 
-	if (task == NULL) {
-		int ID;
-		if (TASK_SET_isOneFromSetTheTarget(task_set, 0.1, &ID)) {
-			printf("%s", TASK_SET_howToRepair_toString(task_set, set, ID, NULL, buf, sizeof(buf)));
-		} else {
-			printf("%s", TASK_SET_suggestions_toString(task_set, 2, buf, sizeof(buf)));
-		}
-	}
+	res = TASK_INITIALIZER_check_analyze_report(set, task_set, 0.2, 0.1, &task);
+	if (res != KT_OK) goto cleanup;
+
+	res = TOOL_init_ksi(set, &ksi, &err, &ksi_log);
+	if (res != KT_OK) goto cleanup;
+
+	d = PARAM_SET_isSetByName(set, "d");
 
 	/**
 	 * If everything OK, run the task.
      */
-	exit_code = sign(set);
+	res = sign_save_to_file(set, ksi, err, &sig);
+	if (res != KSI_OK) goto cleanup;
+
+	/**
+	 * If signature was created without errors print some info on demand.
+     */
+	if (d) {
+		print_info("\n");
+		OBJPRINT_signatureDump(sig);
+	}
 
 cleanup:
+	print_progressResult(res);
+	KSITOOL_KSI_ERRTrace_save(ksi);
 
-	//TODO: Extract exit_code from error code.
+	if (res != KT_OK) {
+		KSI_LOG_debug(ksi, "\n%s", KSITOOL_KSI_ERRTrace_get());
+
+		print_info("\n");
+		if (d) 	ERR_TRCKR_printExtendedErrors(err);
+		else 	ERR_TRCKR_printErrors(err);
+	}
+
+	if (ksi_log != NULL) fclose(ksi_log);
+	KSI_Signature_free(sig);
 	TASK_SET_free(task_set);
 	PARAM_SET_free(set);
+	ERR_TRCKR_free(err);
+	KSI_CTX_free(ksi);
 
-	return exit_code;
+	return errToExitCode(res);
 }
 char *sign_help_toString(char*buf, size_t len) {
 	size_t count = 0;
 
-	count += snprintf(buf + count, len - count,
+	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
 		"ksitool sign -i <input> -o <out.ksig> [-H <alg>] -S <url>\n"
 		"[--aggre-user <user> --aggre-pass <pass>][--data-out][more options]\n\n"
-		"-i <data> file or data hash to be signed. Hash format: <alg>:<hash in hex>.\n"
-		"-o <file> output file name to store signature token.\n"
-		"-H <alg>  use a specific hash algorithm to hash the file to be signed.\n"
-		"-S <url>  specify signing service URL.\n"
-		"--aggre-user <str> user name for signing service.\n"
-		"--aggre-pass <str> password for signing service.\n"
-		"--data-out <file>  save signed data to file.\n"
+		" -i <data> - file or data hash to be signed. Hash format: <alg>:<hash in hex>.\n"
+		" -o <file> - output file name to store signature token.\n"
+		" -H <alg>  - use a specific hash algorithm to hash the file to be signed.\n"
+		" -S <url>  - specify signing service URL.\n"
+		" --aggre-user <str>\n"
+		"           - user name for signing service.\n"
+		" --aggre-pass <str>\n"
+		"           - password for signing service.\n"
+		" --data-out <file>\n"
+		"           - save signed data to file.\n"
 	);
 
 	return buf;
@@ -137,24 +134,22 @@ const char *sign_get_desc(void) {
 }
 
 
-static int sign(PARAM_SET *set) {
+static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature **sig) {
 	int res;
 	int d = 0;
-	ERR_TRCKR *err = NULL;
-	KSI_CTX *ksi = NULL;
 	KSI_DataHash *hash = NULL;
-	KSI_Signature *sign = NULL;
-	FILE *ksi_log = NULL;
+	KSI_Signature *tmp = NULL;
 	int retval = EXIT_SUCCESS;
 	char *outSigFileName = NULL;
 	COMPOSITE extra;
 
+	if(set == NULL || sig == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
 
 	PARAM_SET_getStr(set, "o", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &outSigFileName);
 	d = PARAM_SET_isSetByName(set, "d");
-
-	res = TOOL_init_ksi(set, &ksi, &err, &ksi_log);
-	if (res != KT_OK) goto cleanup;
 
 	extra.ctx = ksi;
 	extra.err = err;
@@ -167,37 +162,53 @@ static int sign(PARAM_SET *set) {
 
 	/* Sign the data hash. */
 	print_progressDesc(d, "Creating signature from hash... ");
-	res = KSITOOL_createSignature(err, ksi, hash, &sign);
+	res = KSITOOL_createSignature(err, ksi, hash, &tmp);
 	ERR_CATCH_MSG(err, res, "Error: Unable to create signature.");
 	print_progressResult(res);
 
 	/* Save signature file */
-	res = KSI_OBJ_saveSignature(err, ksi, sign, outSigFileName);
+	res = KSI_OBJ_saveSignature(err, ksi, tmp, outSigFileName);
 	if (res != KT_OK) goto cleanup;
 	print_info("Signature saved.\n");
 
-	/*Print info*/
-	if(d) print_info("\n");
-	if (d) OBJPRINT_signerIdentity(sign);
-	if (d) OBJPRINT_signatureSigningTime(sign);
-
+	*sig = tmp;
+	tmp = NULL;
 
 cleanup:
 	print_progressResult(res);
-	KSITOOL_KSI_ERRTrace_save(ksi);
 
-	if (res != KT_OK) {
-		if (d) 	ERR_TRCKR_printExtendedErrors(err);
-		else 	ERR_TRCKR_printErrors(err);
-		retval = errToExitCode(res);
-	}
-
-	KSI_Signature_free(sign);
+	KSI_Signature_free(tmp);
 	KSI_DataHash_free(hash);
 
-	if (ksi_log != NULL) fclose(ksi_log);
-	ERR_TRCKR_free(err);
-	KSI_CTX_free(ksi);
-
 	return retval;
+}
+
+static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
+	int res;
+
+	if (set == NULL || task_set == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	/**
+	 * Configure parameter set, control, repair and object extractor function.
+     */
+	res = CONF_initialize_set_functions(set);
+	if (res != KT_OK) goto cleanup;
+
+	PARAM_SET_addControl(set, "{o}{D}", isFormatOk_path, NULL, convertRepair_path, NULL);
+	PARAM_SET_addControl(set, "{i}", isFormatOk_inputHash, isContentOk_inputHash, NULL, extract_inputHash);
+	PARAM_SET_addControl(set, "{H}", isFormatOk_hashAlg, isContentOk_hashAlg, NULL, extract_hashAlg);
+	PARAM_SET_addControl(set, "{d}", isFormatOk_flag, NULL, NULL, NULL);
+
+	/*					  ID	DESC										MAN			 ATL	FORBIDDEN	IGN	*/
+	TASK_SET_add(task_set, 0,	"Sign data.",								"S,i,o",	 NULL,	"H",		NULL);
+	TASK_SET_add(task_set, 1,	"Sign data, specify hash alg.",				"S,i,o,H",	 NULL,	"D",		NULL);
+	TASK_SET_add(task_set, 2,	"Sign and save data.",						"S,i,o,D",	 NULL,	"H",		NULL);
+	TASK_SET_add(task_set, 3,	"Sign and save data, specify hash alg.",	"S,i,o,H,D", NULL,	NULL,		NULL);
+
+cleanup:
+
+	return res;
 }
