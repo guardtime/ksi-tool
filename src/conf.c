@@ -70,6 +70,8 @@ int CONF_initialize_set_functions(PARAM_SET *conf) {
 	PARAM_SET_addControl(conf, "{c}{C}", isFormatOk_int, isContentOk_int, NULL, extract_int);
 	if (res != PST_OK) goto cleanup;
 
+	res = KT_OK;
+
 cleanup:
 
 	return res;

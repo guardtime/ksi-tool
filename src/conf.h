@@ -13,6 +13,17 @@ char* CONF_generate_desc(char *description, char *buf, size_t buf_len);
 	
 int CONF_createSet(PARAM_SET **conf);
 
+/**
+ * Initialize default parameters that are service specific.
+ * {V}{W}    - isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, NULL.
+ * {X}{P}{S} - isFormatOk_url, NULL, convertRepair_url, NULL
+ * {aggre-user}{aggre-pass}{ext-pass}{ext-user}
+ *			 - isFormatOk_userPass, NULL, NULL, NULL
+ * {cnstr}   - isFormatOk_constraint, NULL, convertRepair_constraint, NULL
+ * {c}{C}    - isFormatOk_int, isContentOk_int, NULL, extract_int
+ * \param conf	parameter set object.
+ * \return KT_OK if successful, error code otherwise.
+ */
 int CONF_initialize_set_functions(PARAM_SET *conf);
 
 int CONF_fromFile(PARAM_SET *set, const char *fname, const char *source, int priority);
