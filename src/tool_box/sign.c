@@ -147,7 +147,6 @@ static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_S
 	int d = 0;
 	KSI_DataHash *hash = NULL;
 	KSI_Signature *tmp = NULL;
-	int retval = EXIT_SUCCESS;
 	char *outSigFileName = NULL;
 	COMPOSITE extra;
 
@@ -181,6 +180,7 @@ static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_S
 
 	*sig = tmp;
 	tmp = NULL;
+	res = KT_OK;
 
 cleanup:
 	print_progressResult(res);
@@ -188,7 +188,7 @@ cleanup:
 	KSI_Signature_free(tmp);
 	KSI_DataHash_free(hash);
 
-	return retval;
+	return res;
 }
 
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
