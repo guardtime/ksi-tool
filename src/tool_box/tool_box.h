@@ -68,7 +68,7 @@ const char * STRING_locateLastOccurance(const char *str, const char *findIt);
  * @param find_from[in]		Abstract function to find <from>. 	
  * @param find_to[in]		Abstract functions to find <to>.
  * @param firstChar[in/out]	The pointer to the pointer of first character not extracted from string. Can be NULL.
- * @return
+ * @return Returns buf is successful, NULL otherwise.
  * @note buf is only changed on successful extraction.
  */
 char *STRING_extractAbstract(const char *strn, const char *from, const char *to, char *buf, size_t buf_len,

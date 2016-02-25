@@ -61,7 +61,7 @@ int CONF_initialize_set_functions(PARAM_SET *conf) {
 	PARAM_SET_addControl(conf, "{X}{P}{S}", isFormatOk_url, NULL, convertRepair_url, NULL);
 	if (res != PST_OK) goto cleanup;
 
-	PARAM_SET_addControl(conf, "{aggre-user}{aggre-pass}{ext-pass}{ext-user}", isFormatOk_userPass, NULL, NULL, NULL);
+	PARAM_SET_addControl(conf, "{aggr-user}{aggr-pass}{ext-pass}{ext-user}", isFormatOk_userPass, NULL, NULL, NULL);
 	if (res != PST_OK) goto cleanup;
 
 	PARAM_SET_addControl(conf, "{cnstr}", isFormatOk_constraint, NULL, convertRepair_constraint, NULL);
@@ -204,9 +204,9 @@ char *conf_help_toString(char *buf, size_t len) {
 
 	count += KSI_snprintf(buf + count, len - count,
 		" -S <url>  - specify signing service URL.\n"
-		" --aggre-user <str>\n"
+		" --aggr-user <str>\n"
 		"           - user name for signing service.\n"
-		" --aggre-pass <str>\n"
+		" --aggr-pass <str>\n"
 		"           - password for signing service.\n"
 		" -X <url>  - specify extending service URL.\n"
 		" --ext-user <str>\n"

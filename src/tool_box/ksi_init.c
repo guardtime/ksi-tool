@@ -78,8 +78,8 @@ cleanup:
 static int tool_init_ksi_network_provider(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set) {
 	int res;
 	char *aggr_url = NULL;
-	char *aggre_user = NULL;
-	char *aggre_pass = NULL;
+	char *aggr_user = NULL;
+	char *aggr_pass = NULL;
 	char *ext_url = NULL;
 	char *ext_user = NULL;
 	char *ext_pass = NULL;
@@ -100,16 +100,16 @@ static int tool_init_ksi_network_provider(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SE
 	PARAM_SET_getStr(set, "X", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &ext_url);
 	PARAM_SET_getStr(set, "P", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &pub_url);
 
-	PARAM_SET_getStr(set, "aggre-user", NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, &aggre_user);
-	PARAM_SET_getStr(set, "aggre-pass", NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, &aggre_pass);
-	PARAM_SET_getStr(set, "ext-user", NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, &ext_user);
-	PARAM_SET_getStr(set, "ext-pass", NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, &ext_pass);
+	PARAM_SET_getStr(set, "aggr-user", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &aggr_user);
+	PARAM_SET_getStr(set, "aggr-pass", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &aggr_pass);
+	PARAM_SET_getStr(set, "ext-user", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &ext_user);
+	PARAM_SET_getStr(set, "ext-pass", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &ext_pass);
 
-	PARAM_SET_getObj(set, "C", NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, (void**)&networkConnectionTimeout);
-	PARAM_SET_getObj(set, "c", NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, (void**)&networkTransferTimeout);
+	PARAM_SET_getObj(set, "C", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&networkConnectionTimeout);
+	PARAM_SET_getObj(set, "c", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&networkTransferTimeout);
 
-	aggre_user = aggre_user == NULL ? "anon" : aggre_user;
-	aggre_pass = aggre_pass == NULL ? "anon" : aggre_pass;
+	aggr_user = aggr_user == NULL ? "anon" : aggr_user;
+	aggr_pass = aggr_pass == NULL ? "anon" : aggr_pass;
 	ext_user = ext_user == NULL ? "anon" : ext_user;
 	ext_pass = ext_pass == NULL ? "anon" : ext_pass;
 
@@ -123,7 +123,7 @@ static int tool_init_ksi_network_provider(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SE
 	}
 
 	if (aggr_url != NULL) {
-		res = KSI_CTX_setAggregator(ksi, aggr_url, aggre_user, aggre_pass);
+		res = KSI_CTX_setAggregator(ksi, aggr_url, aggr_user, aggr_pass);
 		ERR_CATCH_MSG(err, res, "Error: Unable set aggregator.");
 	}
 
