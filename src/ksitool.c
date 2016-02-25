@@ -189,7 +189,7 @@ int main(int argc, char** argv, char **envp) {
 	res = PARAM_SET_add(set_task_name, argv[1], NULL, NULL, 0);
 
 	if (argc > 1) {
-		PARAM_SET_readFromCMD(argc, argv, set, 0);
+		res = PARAM_SET_readFromCMD(set, argc, argv, NULL, 0);
 	}
 
 	/**
