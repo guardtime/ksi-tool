@@ -34,10 +34,6 @@ static char *new_string(const char *str) {
 	return strcpy(tmp, str);
 }
 
-#define PST_FORMAT_STATUS_OK 0
-#define PST_CONTENT_STATUS_OK 0
-
-
 int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL **newObj) {
 	int res;
 	PARAM_VAL *tmp = NULL;

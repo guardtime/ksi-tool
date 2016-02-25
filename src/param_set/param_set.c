@@ -174,7 +174,7 @@ int parse_key_value_pair(const char *line, char *key, char *value, size_t buf_le
 	 * Search for the first character that is valid for a KEY string. Everything else
 	 * than space
      */
-	while (C = 0xff & line[i]) {
+	while ((C = 0xff & line[i]) != '\0') {
 		if (!isspace(C) && C != '-' && !isalpha(C)) {
 			res = PST_INVALID_FORMAT;
 			goto cleanup;
@@ -194,7 +194,7 @@ int parse_key_value_pair(const char *line, char *key, char *value, size_t buf_le
 	 * The first key character must be available.
      */
 	key_opend = 1;
-	while (C = 0xff & line[i]) {
+	while ((C = 0xff & line[i]) != '\0') {
 		if (!is_ecape_opend && C == '\\') {
 			is_ecape_opend = 1;
 			i++;
@@ -496,7 +496,7 @@ static int param_set_addRawParameter(const char *param, const char *arg, const c
 		res = PARAM_addValue(set->unknown, param, source, PST_PRIORITY_VALID_BASE);
 		if (res != PST_OK) goto cleanup;
 
-		res = PST_INVALID_FORMAT;
+		res = PST_OK;
 		goto cleanup;
 	}
 
@@ -507,18 +507,13 @@ cleanup:
 	return res;
 }
 
-static int wrapper_returnStr(void *extra, const char* str, void** obj){
-	*obj = (void*)str;
-	return PST_OK;
-}
-
 static int isComment(const char *line) {
 	int i = 0;
 	int C;
 	if (line == NULL) return 0;
 	if (line[0] == '\0') return 0;
 
-	while (C = (0xff & line[i])) {
+	while ((C = 0xff & line[i]) != '\0') {
 		if(C == '#') return 1;
 		else if (!isspace(C)) return 0;
 		i++;
@@ -585,10 +580,10 @@ int PARAM_SET_new(const char *names, PARAM_SET **set){
 	res = PARAM_new("typo", NULL, 0, &tmp_typo);
 	if(res != PST_OK) goto cleanup;
 
-	res = PARAM_setObjectExtractor(tmp_typo, wrapper_returnStr);
+	res = PARAM_setObjectExtractor(tmp_typo, NULL);
 	if(res != PST_OK) goto cleanup;
 
-	res = PARAM_setObjectExtractor(tmp_unknwon, wrapper_returnStr);
+	res = PARAM_setObjectExtractor(tmp_unknwon, NULL);
 	if(res != PST_OK) goto cleanup;
 
 	tmp->count = paramCount;
@@ -777,6 +772,38 @@ int PARAM_SET_getStr(PARAM_SET *set, const char *name, const char *source, int p
 	} else {
 		res = PST_OK;
 	}
+
+cleanup:
+
+	return res;
+}
+
+int PARAM_SET_getAtr(PARAM_SET *set, const char *name, const char *source, int priority, int at, PARAM_ATR *atr) {
+	int res;
+	PARAM *param = NULL;
+	PARAM_VAL *val = NULL;
+
+	if (set == NULL || name == NULL || atr == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	res = param_set_getParameterByName(set, name, &param);
+	if (res != PST_OK) goto cleanup;
+
+	res = PARAM_getValue(param, source, priority, at, &val);
+	if (res != PST_OK) goto cleanup;
+
+
+	atr->cstr_value = val->cstr_value;
+	atr->formatStatus = val->formatStatus;
+	atr->contentStatus = val->contentStatus;
+	atr->priority = val->priority;
+	atr->source = val->source;
+	atr->name = param->flagName;
+	atr->alias = param->flagAlias;
+
+	res = PST_OK;
 
 cleanup:
 
@@ -1007,12 +1034,16 @@ cleanup:
 	return res;
 }
 
-void PARAM_SET_readFromCMD(int argc, char **argv, PARAM_SET *set, int priority){
-	int i=0;
+int PARAM_SET_readFromCMD(PARAM_SET *set, int argc, char **argv, const char *source, int priority) {
+	int res;
+	int i = 0;
 	char *tmp = NULL;
 	char *arg = NULL;
 
-	if(set == NULL) return;
+	if(set == NULL || argc == 0 || argv == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
 
 	for (i = 1; i < argc; i++){
 		tmp = argv[i];
@@ -1023,10 +1054,15 @@ void PARAM_SET_readFromCMD(int argc, char **argv, PARAM_SET *set, int priority){
 				arg = argv[++i];
 		}
 
-		param_set_addRawParameter(tmp, arg, NULL, set, priority);
+		res = param_set_addRawParameter(tmp, arg, source, set, priority);
+		if (res != PST_OK) goto cleanup;
 	}
 
-	return;
+	res = PST_OK;
+
+cleanup:
+
+	return res;
 }
 
 int PARAM_SET_IncludeSet(PARAM_SET *target, PARAM_SET *src) {
@@ -1274,7 +1310,7 @@ char* PARAM_SET_toString(PARAM_SET *set, char *buf, size_t buf_len) {
 			res = PARAM_VAL_extract(param_value, &value, &source, &priority);
 			if (res != PST_OK) return NULL;
 
-			count += snprintf(buf + count, buf_len - count, "  %2i) %10s %50s %10i\n",
+			count += snprintf(buf + count, buf_len - count, "  %2i) '%s' %50s %10i\n",
 					n,
 					value == NULL ? "-" : value,
 					source == NULL ? "-" : source,

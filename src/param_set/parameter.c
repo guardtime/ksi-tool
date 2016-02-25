@@ -107,6 +107,7 @@ cleanup:
 }
 
 static int wrapper_returnStr(void *extra, const char* str, void** obj){
+	if (extra);
 	*obj = (void*)str;
 	return PST_OK;
 }
