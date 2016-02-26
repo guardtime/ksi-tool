@@ -1,5 +1,6 @@
 * BUGFIX: Verification with publication string fixed.
 * IMPROVEMNT: Enabled autotools option subdir-objects to remove build errors (on Mac OS and Ubuntu).
+* IMPROVEMNT: Added option to build static ksitool and create installer package for Mac OS with static ksitool.
 
 Version 1.8
 

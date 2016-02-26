@@ -1,0 +1,19 @@
+This file describes steps to build static ksitool.
+
+Mac OS:
+
+	Build static ksitool:
+		* Set LIBS environment variable to "/usr/local/lib/libksi.a /usr/local/opt/openssl/lib/libcrypto.a /usr/local/lib/libcurl.a -lldap -lz"
+		* ./configure -enable-static-build
+		* make
+
+	Build installer package with static ksitool:
+		* export LDFLAGS="-L/usr/local/lib /usr/local/lib/libksi.a /usr/local/opt/openssl/lib/libcrypto.a /usr/local/lib/libcurl.a -lldap -lz"
+		* ./rebuild-mac-static-installer.sh
+		* find installer package under /mac_static_content
+
+Linux:
+	Build static ksitool:
+	* Set LIBS environment variable to "/usr/local/lib/libksi.a /usr/local/lib/libcurl.a libraries/openssl-1.0.2d/libssl.a libraries/openssl-1.0.2d/libcrypto.a -lz -ldl"
+	* ./configure -enable-static-build
+	* make
