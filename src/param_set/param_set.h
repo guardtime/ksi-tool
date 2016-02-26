@@ -25,12 +25,12 @@
 extern "C" {
 #endif
 
-#include <stddef.h>	
+#include <stddef.h>
 
-#ifndef PARAM_SET_ERROR_BASE 
-#define		PARAM_SET_ERROR_BASE 0x30001 
-#endif	
-	
+#ifndef PARAM_SET_ERROR_BASE
+#define		PARAM_SET_ERROR_BASE 0x30001
+#endif
+
 enum param_set_err {
 	PST_OK = 0,
 	PST_INVALID_ARGUMENT = PARAM_SET_ERROR_BASE,
@@ -59,7 +59,7 @@ enum param_set_err {
 	PST_TASK_UNABLE_TO_ANALYZE_PARAM_SET_CHANGED,
 	PST_UNDEFINED_BEHAVIOUR,
 	PST_UNKNOWN_ERROR,
-};	
+};
 
 enum enum_priority {
 	PST_PRIORITY_NOTDEFINED = -4,
@@ -67,7 +67,7 @@ enum enum_priority {
 	PST_PRIORITY_LOWEST = -2,
 	PST_PRIORITY_NONE = -1,
 	PST_PRIORITY_VALID_BASE = 0
-}; 
+};
 
 enum enum_status {
 	PST_VALUE_OK = 0,
@@ -77,7 +77,13 @@ enum enum_status {
 enum enum_value_index {
 	PST_INDEX_LAST = -1,
 	PST_INDEX_FIRST = 0,
-}; 
+};
+
+enum enum_to_str_artifacts {
+	PST_TOSTR_NONE = 0x0,
+	PST_TOSTR_HYPHEN = 0x02,
+	PST_TOSTR_DOUBLE_HYPHEN = 0x04 ,
+};
 
 struct PARAM_ATR_st {
 	/* Name. */
@@ -105,10 +111,10 @@ struct PARAM_ATR_st {
 #define PST_FORMAT_STATUS_OK 0
 #define PST_CONTENT_STATUS_OK 0
 
-typedef struct PARAM_VAL_st PARAM_VAL;	
+typedef struct PARAM_VAL_st PARAM_VAL;
 typedef struct PARAM_st PARAM;
 typedef struct PARAM_SET_st PARAM_SET;
-typedef enum PARAM_CONSTRAINTS_enum PARAM_CONSTRAINTS;	
+typedef enum PARAM_CONSTRAINTS_enum PARAM_CONSTRAINTS;
 typedef struct PARAM_ATR_st PARAM_ATR;
 
 
@@ -117,7 +123,7 @@ typedef struct TASK_DEFINITION_st TASK_DEFINITION;
 typedef struct TASK_SET_st TASK_SET;
 
 #define TASK_DEFINITION_MAX_COUNT 32
-	
+
 /**
  * This files deals with command-line parameters. An object @ref #paramSet used
  * in functions is set containing all parameters and its values (arguments).
@@ -156,20 +162,20 @@ void PARAM_SET_free(PARAM_SET *set);
  * the first parameters as c-string value (must not fail if is NULL). See
  * \ref PARAM_addControl, \ref PARAM_getObject and \ref PARAM_setObjectExtractor
  * for more details.
- * 
+ *
  * Function \c controlFormat is to control the format. Return 0 if format is ok,
  * error code otherwise.
  * int (*controlFormat)(const char *)
- * 
+ *
  * Function \c controlContent is to control the content. Return 0 if content is
  * ok, error code otherwise.
  * int (*controlContent)(const char *)
- * 
+ *
  * Function \c convert is used to repair / convert the c-string value before any
  * content or format check is done. Takes two extra parameters for buffer and its
  * size.
- * int (*convert)(const char*, char*, unsigned) extra parameters 
- * 
+ * int (*convert)(const char*, char*, unsigned) extra parameters
+ *
  * Function \c extractObject used to extract an object from the parameters value.
  * The value set affects the functions \ref PARAM_SET_getObj behaviour. If not
  * set, the default value extracted is the c-string. Extra value for extractor
@@ -178,7 +184,7 @@ void PARAM_SET_free(PARAM_SET *set);
  * itself, when calling \ref PARAM_SET_getObjExtended, the second value is determined
  * by the function call and extra parameter given. Format void **a = {set, extra}.
  * int (*extractObject)(void *, const char *, void**))
- * 
+ *
  * \param	set				PARAM_SET object.
  * \param	names			list of names to add the functions.
  * \param	controlFormat	function for format control.
@@ -201,17 +207,17 @@ int PARAM_SET_addControl(PARAM_SET *set, const char *names,
  * be detected - see \ref PARAM_SET_isFormatOK. If parameters name dose not exist,
  * function will fail. When parameter is not found it is examined as a typo or
  * unknown (see \ref PARAM_SET_isTypoFailure and \ref PARAM_SET_isUnknown).
- * 
- * See \rfe PARAM_SET_unknownsToString, \ref PARAM_SET_typosToString and 
+ *
+ * See \rfe PARAM_SET_unknownsToString, \ref PARAM_SET_typosToString and
  * \ref PARAM_SET_invalidParametersToString to display errors.
- * 
+ *
  * \param	set			PARAM_SET object.
  * \param	name		parameters name.
  * \param	argument	Parameters value as c-string. Can be NULL.
  * \param	source		Source description as c-string. Can be NULL.
  * \param	priority	Priority that can be \c PST_PRIORITY_VALID_BASE (0) or higher.
- * \return PST_OK if successful, error code otherwise. When parameters is not 
- * part of the set it is pushed to the unknown or typo list and error code 
+ * \return PST_OK if successful, error code otherwise. When parameters is not
+ * part of the set it is pushed to the unknown or typo list and error code
  * \c PST_PARAMETER_IS_UNKNOWN or \c PST_PARAMETER_IS_TYPO is returned.
  */
 int PARAM_SET_add(PARAM_SET *set, const char *name, const char *value, const char *source, int priority);
@@ -235,25 +241,25 @@ int PARAM_SET_getStr(PARAM_SET *set, const char *name, const char *source, int p
 
 /**
  * Extracts object from the \c PARAM_SET (see \ref PARAM_SET_add,
- * \ref PARAM_SET_addControl). If no object extractor is set, a string value is 
+ * \ref PARAM_SET_addControl). If no object extractor is set, a string value is
  * returned. By default the user MUST not free the returned object. If a custom
  * object extractor function is used, object must be freed if implementation
- * requires it. 
- * 
+ * requires it.
+ *
  * \param	set			PARAM_SET object.
  * \param	name		parameters name.
  * \param	source		Constraint for the source, can be NULL.
  * \param	priority	Priority that can be \c PST_PRIORITY_VALID_BASE (0) or higher.
  * \param	at			Parameter index in the matching set composed with the constraints.
  * \param	obj			Pointer to receiving pointer to \c object returned.
- * \return \c PST_OK when successful, error code otherwise. Some more common error 
+ * \return \c PST_OK when successful, error code otherwise. Some more common error
  * codes: 	\c PST_INVALID_ARGUMENT,  \c PST_PARAMETER_NOT_FOUND \c PST_PARAMETER_EMPTY
  * \c PST_PARAMETER_INVALID_FORMAT \c PST_PARAMETER_UNIMPLEMENTED_OBJ \c PST_PARAMETER_VALUE_NOT_FOUND.
  */
 int PARAM_SET_getObj(PARAM_SET *set, const char *name, const char *source, int priority, int at, void **obj);
 
 /**
- * Same as PARAM_SET_getObj, but the ctxt feed to object extractor contains two 
+ * Same as PARAM_SET_getObj, but the ctxt feed to object extractor contains two
  * pointers {set, ctxt}.
  * \param	set			PARAM_SET object.
  * \param	name		parameters name.
@@ -262,7 +268,7 @@ int PARAM_SET_getObj(PARAM_SET *set, const char *name, const char *source, int p
  * \param	at			Parameter index in the matching set composed with the constraints.
  * \param	ctxt		Pointer to extra context.
  * \param	obj			Pointer to receiving pointer to \c object returned.
- * \return \c PST_OK when successful, error code otherwise. Some more common error 
+ * \return \c PST_OK when successful, error code otherwise. Some more common error
  * codes: 	\c PST_INVALID_ARGUMENT,  \c PST_PARAMETER_NOT_FOUND \c PST_PARAMETER_EMPTY
  * \c PST_PARAMETER_INVALID_FORMAT \c PST_PARAMETER_UNIMPLEMENTED_OBJ \c PST_PARAMETER_VALUE_NOT_FOUND.
  */
@@ -294,9 +300,9 @@ int PARAM_SET_clearParameter(PARAM_SET *set, const char *names);
 /**
  * Removes a values specifeid by the constraints from the specified parameter list.
  * Parameter list is defined as "p1,p2,p3 ...".
- * 
+ *
  * \param	obj			Pointer to receiving pointer to \c object returned.
- * 
+ *
  * \param	set			PARAM_SET object.
  * \param	names		parameters name list.
  * \param	source		Constraint for the source, can be NULL.
@@ -311,20 +317,21 @@ int PARAM_SET_clearValue(PARAM_SET *set, const char *names, const char *source, 
  * Counts all the existing parameter values in the list composed by the parameter
  * list and constraints specified.
  * Parameter list is defined as "p1,p2,p3 ...".
- * 
+ *
  * \param	set			PARAM_SET object.
  * \param	names		parameters name list.
  * \param	source		Constraint for the source, can be NULL.
  * \param	priority	Priority that can be \c PST_PRIORITY_VALID_BASE (0) or higher.
  * \param	count		Pointer to integer that are loaded with value count.
- * \return PST_OK if successful, error code otherwise.
+ * \return PST_OK if successful, error code otherwise. If parameter foes not exists
+ * \c PST_PARAMETER_NOT_FOUND is returned.
  */
 int PARAM_SET_getValueCount(PARAM_SET *set, const char *names, const char *source, int priority, int *count);
 
 /**
  * Searches for a parameter by name and checks if its value is present. Even if
  * the values format or content is invalid, true is returned.
- * 
+ *
  * \param	set		PARAM_SET object.
  * \param	name	parameter name.
  * \return PST_OK if successful, error code otherwise.
@@ -348,7 +355,7 @@ int PARAM_SET_isTypoFailure(const PARAM_SET *set);
 
 /**
  * Controls if there are some undefined parameters red from command-line or file
- * etc.. 
+ * etc..
  * \param	set		PARAM_SET object.
  * \return 0 if set contains unknown parameters, greater than 0 otherwise.
  */
@@ -404,12 +411,13 @@ char* PARAM_SET_toString(PARAM_SET *set, char *buf, size_t buf_len);
 /**
  * Generates typo failure string
  * \param	set		PARAM_SET object.
+ * \param	flags	Optional flags to modify output. Use PST_TOSTR_x values.
  * \param	prefix	prefix to each typo failure string. Can be NULL.
  * \param	buf		receiving buffer.
  * \param	buf_len	receiving buffer size.
  * \return buf if successful, NULL otherwise.
  */
-char* PARAM_SET_typosToString(PARAM_SET *set, const char *prefix, char *buf, size_t buf_len);
+char* PARAM_SET_typosToString(PARAM_SET *set, int flags, const char *prefix, char *buf, size_t buf_len);
 
 /**
  * Generates unknown parameter error string.
@@ -422,11 +430,11 @@ char* PARAM_SET_typosToString(PARAM_SET *set, const char *prefix, char *buf, siz
 char* PARAM_SET_unknownsToString(const PARAM_SET *set, const char *prefix, char *buf, size_t buf_len);
 
 /**
- * Generates a string from invalid parameter list (\see PARAM_SET_addControl). 
+ * Generates a string from invalid parameter list (\see PARAM_SET_addControl).
  * By default error strings generated contain only error code. To make the messages
- * more human-readable define function \c getErrString that takes error code as 
+ * more human-readable define function \c getErrString that takes error code as
  * input and returns \c const \c string describing the falure.
- * 
+ *
  * \param	set				PARAM_SET object.
  * \param	prefix			prefix for each failure string. Can be NULL.
  * \param	getErrString	Function pointer to make error codes to string. Can be NULL.

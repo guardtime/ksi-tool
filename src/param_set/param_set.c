@@ -31,6 +31,9 @@
 #define snprintf _snprintf
 #endif
 
+#define TYPO_SENSITIVITY 10
+#define TYPO_MAX_COUNT 5
+
 typedef struct INT_st {int value;} INT;
 
 static int isValidNameChar(int c) {
@@ -341,87 +344,212 @@ cleanup:
 	return res;
 }
 
-static int param_set_couldItBeTypo(const char *str, const PARAM_SET *set){
+typedef struct TYPO_st {
+	char *name;
+	int difference;
+	int isTypo;
+} TYPO;
+
+static int string_is_substring(const char *str, const char *substr) {
+	char *ret_str = NULL;
+	char *ret_substr = NULL;
+
+	if (str == NULL || substr == NULL) return 0;
+
+	ret_str = strstr(str, substr);
+	ret_substr = strstr(substr, str);
+
+	return (ret_str == NULL && ret_substr == NULL) ? 0 : 1;
+}
+
+static int string_is_substring_at_the_beginning(const char *str, const char *substr) {
+	char *ret_str = NULL;
+	char *ret_substr = NULL;
+
+	if (str == NULL || substr == NULL) return 0;
+
+	ret_str = strstr(str, substr);
+	ret_substr = strstr(substr, str);
+
+	return (ret_str == str || ret_substr == substr) ? 1 : 0;
+}
+
+//#define dbg_print_(format, ...) printf(format, ##__VA_ARGS__)
+#define dbg_print_(format, ...) ;
+
+
+static int param_set_analyze_similarity(PARAM_SET *set, const char *str, int sens, int max_count, TYPO *typo_index){
 	int numOfElements = 0;
 	PARAM **array = NULL;
-	int i =0;
+	int smallest_difference = 100;
+	int typo_count = 0;
+	int i = 0;
 
-	if(set == NULL) return 0;
+	if(set == NULL || str == NULL || max_count == 0 || typo_index == NULL) return 0;
+
 	numOfElements = set->count;
 	array = set->parameter;
 
+
+	dbg_print_("%10s", str);
 	for (i = 0; i < numOfElements; i++) {
-		unsigned lenName = 0;
-		int editDist = 0;
+		typo_index[i].name = NULL;
+		typo_index[i].isTypo = 0;
+		typo_index[i].difference = 100;
+		dbg_print_("%10s", array[i]->flagName);
+	}
+	dbg_print_("\n");
+	dbg_print_("%10s", "f(x) = ");
+	/**
+	 * Analyze the set for possible typos.
+	 */
+	for (i = 0; i < numOfElements; i++) {
+		unsigned name_len = 0;
+		unsigned alias_len = 0;
+		int name_edit_distance = 0;
+		int alias_edit_distance = 0;
+		int name_difference = 100;
+		int alias_difference = 100;
+		int isSubstring = 0;
+		int isSubstringAtTheBeginning = 0;
+		/**
+		 * Examine both the name and its alias and calculate how big is the difference
+		 * compared with input string. If alias exists select the one that is more
+		 * similar.
+         */
+		name_edit_distance = editDistance_levenshtein(array[i]->flagName, str);
+		name_len = (unsigned)strlen(array[i]->flagName);
+		name_difference = (name_edit_distance * 100) / name_len;
 
-		editDist = editDistance_levenshtein(array[i]->flagName, str);
-		lenName = (unsigned)strlen(array[i]->flagName);
-		if((editDist*100)/lenName <= 49)
-			return 1;
-
-		if(array[i]->flagAlias){
-			editDist = editDistance_levenshtein(array[i]->flagAlias, str);
-			lenName = (unsigned)strlen(array[i]->flagAlias);
-
-			if((editDist*100)/lenName <= 49)
-				return 1;
+		if (array[i]->flagAlias) {
+			alias_edit_distance = editDistance_levenshtein(array[i]->flagAlias, str);
+			alias_len = (unsigned)strlen(array[i]->flagAlias);
+			alias_difference = (alias_edit_distance * 100) / alias_len;
 		}
+
+		if (name_difference <= alias_difference) {
+			isSubstring = string_is_substring(str, array[i]->flagName);
+			isSubstringAtTheBeginning = string_is_substring_at_the_beginning(str, array[i]->flagName);
+			typo_index[i].difference = name_difference;
+			typo_index[i].name = array[i]->flagName;
+		} else {
+			isSubstring = string_is_substring(str, array[i]->flagAlias);
+			isSubstringAtTheBeginning = string_is_substring_at_the_beginning(str, array[i]->flagAlias);
+			typo_index[i].difference = alias_difference;
+			typo_index[i].name = array[i]->flagAlias;
+		}
+
+		if (isSubstring) {
+			typo_index[i].difference -= 15;
+		}
+
+		if (isSubstringAtTheBeginning) {
+			typo_index[i].difference -= 15;
+		}
+
+		dbg_print_("%5i%2c%3c", typo_index[i].difference, isSubstring ? 'S' : '-', isSubstringAtTheBeginning ? 'B' : '-');
+
+		/**
+		 * Register the smallest difference value.
+         */
+		if (typo_index[i].difference < smallest_difference) {
+			smallest_difference = typo_index[i].difference;
+		}
+
 	}
 
-	return 0;
+	dbg_print_("\n..............\n");
+	dbg_print_("%12s %2i/%2i, %s\n", "typo", 0,0, "suggestion");
+	for (i = 0; i < numOfElements; i++) {
+		if (typo_index[i].difference < 90 && typo_index[i].difference <= smallest_difference + sens) {
+			typo_count++;
+			dbg_print_("%12s %2i/%2i, %s\n", str, typo_index[i].difference, smallest_difference, typo_index[i].name); typo_index[i].isTypo = 1;
+		}
+	}
+	dbg_print_("\n..............\n");
+
+	dbg_print_("RET %i\n", typo_count <= max_count ? 1 : 0);
+	return (typo_count > 0 && typo_count <= max_count) ? 1 : 0;
 }
 
-int param_set_add_typo(PARAM_SET *set, const char *typo, const char *source) {
+int param_set_add_typo_from_list(PARAM_SET *set, const char *typo, const char *source, TYPO *typo_list, size_t typo_list_len) {
 	int res;
-	PARAM **array = NULL;
 	int i = 0;
-	int edit_dist = 0;
-	unsigned name_len = 0;
 
-	if (set == NULL || typo == NULL) {
+	if (set == NULL || typo == NULL || typo_list == NULL || typo_list_len == 0) {
 		res = PST_INVALID_ARGUMENT;
 		goto cleanup;
 	}
-	/**
-	 * Add typo as priority 1 value
-     */
+
 	res = PARAM_addValue(set->typos, typo, source, 1);
 	if (res != PST_OK) goto cleanup;
 
-	array = set->parameter;
 
-	/**
-	 * Add similar values to priority level == 0 ands source == <typo>.
-     */
-	for (i = 0; i < set->count; i++) {
-		edit_dist = editDistance_levenshtein(array[i]->flagName, typo);
-		name_len = (unsigned)strlen(array[i]->flagName);
-//		printf("'%s' \t '%s' %i\n", array[i]->flagName, typo, (int)((edit_dist*100)/name_len));
-
-		/**
-		 * Check if some parameter is similar enough to add it to the typo list.
-		 */
-		if((edit_dist*100)/name_len <= 49) {
-			res = PARAM_addValue(set->typos,array[i]->flagName, typo, 0);
+	for (i = 0; i < typo_list_len; i++) {
+		if (typo_list[i].isTypo) {
+			res = PARAM_addValue(set->typos, typo_list[i].name, typo, 0);
 			if (res != PST_OK) goto cleanup;
-//			printf("Typo: Did You mean '%s%s'.\n",name_len>1 ? "--" : "-", array[i]->flagName);
-			continue;
+		}
+	}
+
+	res = PST_OK;
+
+cleanup:
+
+	return res;
+}
+
+static int bunch_of_flags_get_unknown_rate(PARAM_SET *set, const char *bunch_of_flags) {
+	int res;
+	char str_flg[2] = {255,0};
+	int itr = 0;
+	PARAM *tmp = NULL;
+	int unknowns = 0;
+
+	if (set == 0 || bunch_of_flags == NULL) {
+		return 100;
+	}
+
+	while ((str_flg[0] = bunch_of_flags[itr++]) != '\0') {
+		res = param_set_getParameterByName(set, str_flg, &tmp);
+		if (res != PST_OK && res != PST_PARAMETER_NOT_FOUND) {
+			return 100;
 		}
 
-		/**
-		 * If flag itself was not similar enough check if it alias (if exists) is
-		 * similar enough to add it to the typo list.
-		 */
-		if (array[i]->flagAlias) {
-			edit_dist = editDistance_levenshtein(array[i]->flagAlias, typo);
-			name_len = (unsigned)strlen(array[i]->flagAlias);
+		if (res == PST_PARAMETER_NOT_FOUND) {
+			unknowns++;
+		}
+	}
 
-			if((edit_dist*100)/name_len <= 33) {
-				res = PARAM_addValue(set->typos,array[i]->flagAlias, typo, 0);
-				if (res != PST_OK) goto cleanup;
-//				printf("Typo: Did You mean '%s%s'.\n",name_len>1 ? "--" : "-", array[i]->flagAlias);
-				continue;
-			}
+	if (itr == 0) return 100;
+	else return (unknowns * 100) / itr;
+}
+
+static int param_set_add_typo_or_unknown(PARAM_SET *set, TYPO *typo_list, const char *source, const char *param, const char *arg) {
+	int res;
+
+	if (set == NULL || typo_list == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	if (param != NULL) {
+		if (param_set_analyze_similarity(set, param, TYPO_SENSITIVITY, TYPO_MAX_COUNT, typo_list)) {
+			res = param_set_add_typo_from_list(set, param, source, typo_list, set->count);
+			if (res != PST_OK) goto cleanup;
+		} else {
+			res = PARAM_addValue(set->unknown, param, source, PST_PRIORITY_VALID_BASE);
+			if (res != PST_OK && res != PST_PARAMETER_IS_UNKNOWN && res != PST_PARAMETER_IS_TYPO) goto cleanup;
+		}
+	}
+
+	if (arg != NULL) {
+		if (param_set_analyze_similarity(set, arg, TYPO_SENSITIVITY, TYPO_MAX_COUNT, typo_list)) {
+			res = param_set_add_typo_from_list(set, arg, source, typo_list, set->count);
+			if (res != PST_OK) goto cleanup;
+		} else {
+			res = PARAM_addValue(set->unknown, arg, source, PST_PRIORITY_VALID_BASE);
+			if (res != PST_OK && res != PST_PARAMETER_IS_UNKNOWN && res != PST_PARAMETER_IS_TYPO) goto cleanup;
 		}
 	}
 
@@ -446,8 +574,18 @@ static int param_set_addRawParameter(const char *param, const char *arg, const c
 	int res;
 	const char *flag = NULL;
 	unsigned len;
+	TYPO *typo_list = NULL;
+	int unknown_rate = 0;
 	len = (unsigned)strlen(param);
-	if(param[0] == '-' && param[1] != 0){
+
+	typo_list = (TYPO*) malloc(set->count * sizeof(TYPO));
+	if (typo_list == NULL) {
+		res = PST_OUT_OF_MEMORY;
+		goto cleanup;
+	}
+
+
+	if(param[0] == '-' && param[1] != 0) {
 		flag = param + (param[1] == '-' ? 2 : 1);
 
 		/**
@@ -468,41 +606,43 @@ static int param_set_addRawParameter(const char *param, const char *arg, const c
 			/**
 			 * If bunch of flags have an argument it must be a typo or unknown parameter.
              */
-			if (arg != NULL) {
-				if (param_set_couldItBeTypo(arg, set)) {
-					param_set_add_typo(set, arg, source);
-				} else {
-					res = PARAM_addValue(set->unknown, flag, source, PST_PRIORITY_VALID_BASE);
-					if (res != PST_OK && res != PST_PARAMETER_IS_UNKNOWN && res != PST_PARAMETER_IS_TYPO) goto cleanup;
-				}
-			}
+			res = param_set_add_typo_or_unknown(set, typo_list, source, NULL, arg);
+			if (res != PST_OK) goto cleanup;
 
 			/**
-			 * Extract the flags.
+			 * Check how many flags from the group are unknown. If less than 25%
+			 * are unknown treat them as regular flags. If more than 25% are
+			 * unknown, set the whole string to typo or unknown list.
              */
-			while ((str_flg[0] = flag[itr++]) != '\0') {
-				res = PARAM_SET_add(set, str_flg, NULL, source, priority);
-				if (res != PST_OK && res != PST_PARAMETER_IS_UNKNOWN && res != PST_PARAMETER_IS_TYPO) {
-					goto cleanup;
+			unknown_rate = bunch_of_flags_get_unknown_rate(set, flag);
+
+			if (unknown_rate <= 25) {
+				while ((str_flg[0] = flag[itr++]) != '\0') {
+					res = PARAM_SET_add(set, str_flg, NULL, source, priority);
+					if (res != PST_OK && res != PST_PARAMETER_IS_UNKNOWN && res != PST_PARAMETER_IS_TYPO) {
+						goto cleanup;
+					}
+
+					res = PST_OK;
 				}
-
-				res = PST_OK;
-
+			} else {
+				res = param_set_add_typo_or_unknown(set, typo_list, source, flag, NULL);
+				if (res != PST_OK) goto cleanup;
 			}
 
 		}
 	}
 	else{
-		res = PARAM_addValue(set->unknown, param, source, PST_PRIORITY_VALID_BASE);
+		res = param_set_add_typo_or_unknown(set, typo_list, source, param, arg);
 		if (res != PST_OK) goto cleanup;
-
-		res = PST_OK;
 		goto cleanup;
 	}
 
 	res = PST_OK;
 
 cleanup:
+
+	if (typo_list != NULL) free(typo_list);
 
 	return res;
 }
@@ -669,10 +809,16 @@ int PARAM_SET_addControl(PARAM_SET *set, const char *names,
 int PARAM_SET_add(PARAM_SET *set, const char *name, const char *value, const char *source, int priority) {
 	int res;
 	PARAM *param = NULL;
-
+	TYPO *typo_list = NULL;
 	if (set == NULL || name == NULL) {
 		res = PST_INVALID_ARGUMENT;
 		goto cleanup;;
+	}
+
+	typo_list = (TYPO*) malloc(set->count * sizeof(TYPO));
+	if (typo_list == NULL) {
+		res = PST_OUT_OF_MEMORY;
+		goto cleanup;
 	}
 
 	res = param_set_getParameterByName(set, name, &param);
@@ -682,9 +828,11 @@ int PARAM_SET_add(PARAM_SET *set, const char *name, const char *value, const cha
 		 * is found push it to the typo list. If not a typo, push it to the unknown
 		 * list and if unknown flag has argument, push it too.
          */
-		if (param_set_couldItBeTypo(name, set)) {
-			res = param_set_add_typo(set, name, source);
-			if(res != PST_OK) goto cleanup;
+
+		/* Analyze similarity and */
+		if (param_set_analyze_similarity(set, name, TYPO_SENSITIVITY, TYPO_MAX_COUNT, typo_list)) {
+			res = param_set_add_typo_from_list(set, name, source, typo_list, set->count);
+			if (res != PST_OK) goto cleanup;
 
 			res = PST_PARAMETER_IS_TYPO;
 			goto cleanup;
@@ -710,6 +858,8 @@ int PARAM_SET_add(PARAM_SET *set, const char *name, const char *value, const cha
 	res = PST_OK;
 
 cleanup:
+
+	if (typo_list != NULL) free(typo_list);
 
 	return res;
 }
@@ -1238,7 +1388,7 @@ char* PARAM_SET_unknownsToString(const PARAM_SET *set, const char *prefix, char 
 	return buf;
 }
 
-char* PARAM_SET_typosToString(PARAM_SET *set, const char *prefix, char *buf, size_t buf_len) {
+char* PARAM_SET_typosToString(PARAM_SET *set, int flags, const char *prefix, char *buf, size_t buf_len) {
 	int res;
 	const char *use_prefix = NULL;
 	PARAM_VAL *typo = NULL;
@@ -1249,6 +1399,16 @@ char* PARAM_SET_typosToString(PARAM_SET *set, const char *prefix, char *buf, siz
 	int n = 0;
 	const char *similar = NULL;
 	size_t count = 0;
+	char *hyphen = "";
+	char *d_hyphen = "";
+
+	if (flags & PST_TOSTR_HYPHEN) {
+		hyphen = "-";
+		d_hyphen = "-";
+	} else if (flags & PST_TOSTR_DOUBLE_HYPHEN) {
+		hyphen = "-";
+		d_hyphen = "--";
+	}
 
 	if (set == NULL || buf == NULL || buf_len == 0) {
 		return NULL;
@@ -1272,7 +1432,11 @@ char* PARAM_SET_typosToString(PARAM_SET *set, const char *prefix, char *buf, siz
 			res = PARAM_getObject(set->typos, name, 0, n, NULL, (void**)&similar);
 			if (res != PST_OK || similar == NULL) return NULL;
 
-			count += snprintf(buf + count, buf_len - count, "%sDid You mean '%s%s' instead of '%s'.\n",use_prefix, strlen(similar) > 1 ? "--" : "-", similar, name);
+			count += snprintf(buf + count, buf_len - count, "%sDid You mean '%s%s' instead of '%s'.\n",
+						use_prefix,
+						strlen(similar) > 1 ? d_hyphen : hyphen,
+						similar,
+						name);
 		}
 
 		i++;
