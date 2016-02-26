@@ -65,7 +65,7 @@ int TASK_INITIALIZER_check_analyze_report(PARAM_SET *set, TASK_SET *task_set, do
 	 * Check for typos and unknown parameters.
      */
 	if (PARAM_SET_isTypoFailure(set)) {
-			print_info("%s\n", PARAM_SET_typosToString(set, NULL, buf, sizeof(buf)));
+			print_info("%s\n", PARAM_SET_typosToString(set, PST_TOSTR_DOUBLE_HYPHEN, NULL, buf, sizeof(buf)));
 			res = KT_INVALID_CMD_PARAM;
 			goto cleanup;
 	} else if (PARAM_SET_isUnknown(set)){

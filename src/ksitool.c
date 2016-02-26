@@ -238,7 +238,7 @@ int main(int argc, char** argv, char **envp) {
 	if (task == NULL) {
 		print_errors("Error: Invalid task. Read help (-h) or man page.\n");
 		if (PARAM_SET_isTypoFailure(set_task_name)) {
-			print_info("%s\n", PARAM_SET_typosToString(set_task_name, NULL, buf, sizeof(buf)));
+			print_info("%s\n", PARAM_SET_typosToString(set_task_name, PST_TOSTR_NONE, NULL, buf, sizeof(buf)));
 		} else if (PARAM_SET_isUnknown(set_task_name)){
 			print_info("%s\n", PARAM_SET_unknownsToString(set_task_name, NULL, buf, sizeof(buf)));
 		}
@@ -279,7 +279,7 @@ static int ksitool_compo_get(TASK_SET *tasks, PARAM_SET **set, TOOL_COMPONENT_LI
 	/**
 	 * Create parameter list that contains all known tasks.
      */
-	res = PARAM_SET_new("{s|sign}{x|extend}{v|verify}{pubfile}{tlv}{conf}", &tmp_set);
+	res = PARAM_SET_new("{sign}{extend}{verify}{pubfile}{tlv}{conf}", &tmp_set);
 	if (res != PST_OK) goto cleanup;
 
 	res = TOOL_COMPONENT_LIST_new(32, &tmp_compo);
