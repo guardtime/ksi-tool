@@ -82,6 +82,7 @@ static void print_general_help(PARAM_SET *set){
 	char *pub_url = NULL;
 	char *cnstr = NULL;
 	char buf[1024];
+	int i = 0;
 
 	if (set == NULL) {
 		return;
@@ -129,6 +130,18 @@ static void print_general_help(PARAM_SET *set){
 	"  Publications file:	%s\n\n",
 		aggre_url, ext_url, pub_url
 	);
+
+	print_info("Default publications file certificate constraints:\n");
+	while (PARAM_SET_getStr(set, "cnstr", NULL, PST_PRIORITY_HIGHEST, i, &cnstr) == PST_OK) {
+		print_info("  %s\n", cnstr);
+		i++;
+	}
+
+	if (i == 0) {
+		print_info("  none\n");
+	} else {
+		print_info("\n");
+	}
 
 	/**
 	 * Print info about supported hash algorithms.
