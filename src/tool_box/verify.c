@@ -64,7 +64,7 @@ int verify_run(int argc, char** argv, char **envp) {
 	 * Extract command line parameters and also add configuration specific parameters.
      */
 	res = PARAM_SET_new(
-			CONF_generate_desc("{verify}{i}{o}{H}{D}{x}{f}{d}{pub-str|p}{ver-int}{ver-cal}{ver-key}{ver-pub}{log}{silent}{nowarn}{conf}{log}", buf, sizeof(buf)),
+			CONF_generate_desc("{verify}{i}{o}{D}{x}{f}{d}{pub-str|p}{ver-int}{ver-cal}{ver-key}{ver-pub}{log}{silent}{nowarn}{conf}{log}", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -87,6 +87,7 @@ int verify_run(int argc, char** argv, char **envp) {
 
 	extra.ctx = ksi;
 	extra.err = err;
+	extra.fname_out = NULL;
 
 	print_progressDesc(d, "Reading signature... ");
 	res = PARAM_SET_getObjExtended(set, "i", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &extra, (void**)&sig);

@@ -14,10 +14,22 @@ extern "C" {
 
 typedef struct COMPOSITE_st COMPOSITE;
 
+/**
+ * A helper data structure to enable error handling and extra context for extracting
+ * different objects.
+ */
 struct COMPOSITE_st {
+	/** A pointer to KSI context. Mandatory. */
 	void *ctx;
+	
+	/** A pointer to tool error handler. Mandatory. */
 	void *err;
+	
+	/** A pointer to hash algorithm. Mandatory if hashing input file. */
 	void *h_alg;
+	
+	/** A optional pointer to file name to save input data to file when hashing. */
+	void *fname_out;
 };
 
 
@@ -69,7 +81,12 @@ int convertRepair_path(const char* arg, char* buf, unsigned len);
 
 int isFormatOk_inputHash(const char *str);
 int isContentOk_inputHash(const char *str);
-/** Requires COMPOSITE as extra. ctx, and err must not be NULL. h_alg can be omitted if extracting imprint. */
+
+/**
+ * Requires \c COMPOSITE as extra. \c ctx, and \c err must not be NULL. \c h_alg
+ * can be omitted if extracting imprint. \c fname_out must be NULL if input data
+ * is not written into file / stream.
+ */
 int extract_inputHash(void *extra, const char* str, void** obj);
 
 int isFormatOk_int(const char *integer);
