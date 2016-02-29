@@ -275,9 +275,8 @@ cleanup:
 	return res;
 }
 
-static int file_get_hash(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, const char *fnamein, KSI_DataHash **hash){
+static int file_get_hash(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, const char *fnamein, KSI_HashAlgorithm *algo, KSI_DataHash **hash){
 	int res;
-	KSI_HashAlgorithm id = KSI_HASHALG_INVALID;
 	KSI_DataHasher *hasher = NULL;
 	SMART_FILE *file = NULL;
 	unsigned char buf[1024];
@@ -289,21 +288,20 @@ static int file_get_hash(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, const cha
 		goto cleanup;
 	}
 
-	/**
-	 * Consulte the parameter set and check if special hash algorithm is needed.
-	 * Open Hasher.
-     */
-	res = PARAM_SET_getObj(set, "H", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&id);
-	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
+	if (algo == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Unable to hash data file as hash algorithm is not specified (null).");
+		goto cleanup;
+	} else if (!KSI_isHashAlgorithmSupported(*algo)) {
+		ERR_TRCKR_ADD(err, res = KT_UNKNOWN_HASH_ALG, "Error: Unable to hash data file as hash algorithm is not supported.");
+		goto cleanup;
+	}
 
-	id = (id == KSI_HASHALG_INVALID) ? KSI_getHashAlgorithmByName("default") : id;
 
-	res = KSI_DataHasher_open(ctx, id, &hasher);
+	res = KSI_DataHasher_open(ctx, *algo, &hasher);
 	if (res != KSI_OK) goto cleanup;
 
-
 	/**
-	 * Open the file , read and hash.
+	 * Open the file, read and hash.
      */
 	res = SMART_FILE_open(fnamein, "rb", &file);
 	if (res != KT_OK) goto cleanup;
@@ -633,7 +631,7 @@ int extract_hashAlg(void *extra, const char* str, void** obj) {
 	KSI_HashAlgorithm *hash_id = (KSI_HashAlgorithm*)obj;
 	KSI_HashAlgorithm tmp = KSI_HASHALG_INVALID;
 
-	hash_alg_name = str == NULL ? (str) : ("default");
+	hash_alg_name = str != NULL ? (str) : ("default");
 	*hash_id = KSI_getHashAlgorithmByName(hash_alg_name);
 
 	if (*hash_id == KSI_HASHALG_INVALID) return KT_UNKNOWN_HASH_ALG;
@@ -750,6 +748,7 @@ int extract_inputHash(void *extra, const char* str, void** obj) {
 	PARAM_SET *set = (PARAM_SET*)(extra_array[0]);
 	KSI_CTX *ctx = comp->ctx;
 	ERR_TRCKR *err = comp->err;
+	KSI_HashAlgorithm *algo = comp->h_alg;
 	KSI_DataHash *tmp = NULL;
 
 	if (obj == NULL) {
@@ -762,7 +761,7 @@ int extract_inputHash(void *extra, const char* str, void** obj) {
 		res = extract_imprint(extra, str, (void**)&tmp);
 		if (res != KT_OK) goto cleanup;
 	} else {
-		res = file_get_hash(set, err, ctx, str, &tmp);
+		res = file_get_hash(set, err, ctx, str, algo, &tmp);
 		if (res != KT_OK) goto cleanup;
 	}
 

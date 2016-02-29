@@ -58,6 +58,7 @@ int verify_run(int argc, char** argv, char **envp) {
 	KSI_DataHash *hsh = NULL;
 	KSI_Signature *sig = NULL;
 	KSI_Signature *ver_result_sig = NULL;
+	KSI_HashAlgorithm alg = KSI_HASHALG_INVALID;
 
 	/**
 	 * Extract command line parameters and also add configuration specific parameters.
@@ -128,6 +129,10 @@ int verify_run(int argc, char** argv, char **envp) {
 	 * Verify the signatures input hash and document hash.
      */
 	if (PARAM_SET_isSetByName(set, "f")) {
+		res = KSI_Signature_getHashAlgorithm(sig, &alg);
+		if (res != KSI_OK) goto cleanup;
+		extra.h_alg = &alg;
+
 		print_progressDesc(d, "Reading documents hash... ");
 		/* TODO: fix hash extractor from file. */
 		res = PARAM_SET_getObjExtended(set, "f", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &extra, (void**)&hsh);
@@ -395,7 +400,6 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 
 	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
-	PARAM_SET_addControl(set, "{f}", isFormatOk_inputHash, isContentOk_inputHash, NULL, extract_inputHash);
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignature);
 	PARAM_SET_addControl(set, "{f}", isFormatOk_inputHash, isContentOk_inputHash, convertRepair_path, extract_inputHash);
 	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);

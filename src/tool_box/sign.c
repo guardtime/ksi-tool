@@ -147,6 +147,7 @@ static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_S
 	int d = 0;
 	KSI_DataHash *hash = NULL;
 	KSI_Signature *tmp = NULL;
+	KSI_HashAlgorithm algo = KSI_HASHALG_INVALID;
 	char *outSigFileName = NULL;
 	COMPOSITE extra;
 
@@ -155,25 +156,47 @@ static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_S
 		goto cleanup;
 	}
 
-	PARAM_SET_getStr(set, "o", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &outSigFileName);
+	/**
+	 * Extract the output file.
+     */
+	res = PARAM_SET_getStr(set, "o", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &outSigFileName);
+	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
+
 	d = PARAM_SET_isSetByName(set, "d");
 
+	/**
+	 * Extract the hash algorithm. If not specified, set algorithm as default.
+	 * It must be noted that if hash is extracted from imprint, has algorithm has
+	 * no effect.
+     */
+	if (PARAM_SET_isSetByName(set, "H")) {
+		res = PARAM_SET_getObjExtended(set, "H", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, NULL, (void**)&algo);
+		if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
+	} else {
+		algo = KSI_getHashAlgorithmByName("default");
+	}
+
+	/**
+	 * Initialize helper data structure and sign the hash value.
+     */
 	extra.ctx = ksi;
 	extra.err = err;
+	extra.h_alg = &algo;
 
 	print_progressDesc(d, "Extracting hash from input... ");
 	res = PARAM_SET_getObjExtended(set, "i", NULL, PST_PRIORITY_HIGHEST, 0, &extra, (void**)&hash);
 	if (res != KT_OK) goto cleanup;
 	print_progressResult(res);
 
-
-	/* Sign the data hash. */
 	print_progressDesc(d, "Creating signature from hash... ");
 	res = KSITOOL_createSignature(err, ksi, hash, &tmp);
 	ERR_CATCH_MSG(err, res, "Error: Unable to create signature.");
 	print_progressResult(res);
 
-	/* Save signature file */
+
+	/**
+	 * Save KSI signature to file.
+	 */
 	res = KSI_OBJ_saveSignature(err, ksi, tmp, outSigFileName);
 	if (res != KT_OK) goto cleanup;
 	print_info("Signature saved.\n");

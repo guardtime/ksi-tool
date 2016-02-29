@@ -12,11 +12,12 @@
 extern "C" {
 #endif
 
-typedef struct COMPOSITE_st COMPOSITE;;
+typedef struct COMPOSITE_st COMPOSITE;
 
 struct COMPOSITE_st {
 	void *ctx;
 	void *err;
+	void *h_alg;
 };
 
 
@@ -56,6 +57,7 @@ const char *getParameterErrorString(int res);
 
 int isFormatOk_hashAlg(const char *hashAlg);
 int isContentOk_hashAlg(const char *alg);
+/** extra is not used.*/
 int extract_hashAlg(void *extra, const char* str, void** obj);
 
 int isFormatOk_inputFile(const char *path);
@@ -67,6 +69,7 @@ int convertRepair_path(const char* arg, char* buf, unsigned len);
 
 int isFormatOk_inputHash(const char *str);
 int isContentOk_inputHash(const char *str);
+/** Requires COMPOSITE as extra. ctx, and err must not be NULL. h_alg can be omitted if extracting imprint. */
 int extract_inputHash(void *extra, const char* str, void** obj);
 
 int isFormatOk_int(const char *integer);
