@@ -37,7 +37,7 @@ mkdir -p config m4 && \
 echo Running autoreconf... && \
 autoreconf -if && \
 echo Running configure script... && \
-./configure --enable-static && \
+./configure --enable-static-build && \
 echo Running make... && \
 make clean && \
 make && \
