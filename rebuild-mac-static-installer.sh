@@ -41,6 +41,7 @@ echo Running configure script... && \
 echo Running make... && \
 make clean && \
 make && \
+mkdir -p mac_static_content/Source && \
 cp src/ksitool mac_static_content/Source/ksitool && \
 #create content needed for installer package
 pkgbuild --root mac_static_content/Source/ --identifier KsitoolInstaller --install-location /usr/local/bin mac_static_content/Source.pkg && \
