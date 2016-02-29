@@ -275,15 +275,17 @@ cleanup:
 	return res;
 }
 
-static int file_get_hash(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, const char *fnamein, KSI_HashAlgorithm *algo, KSI_DataHash **hash){
+static int file_get_hash(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, const char *fname_in, const char *fname_out, KSI_HashAlgorithm *algo, KSI_DataHash **hash){
 	int res;
 	KSI_DataHasher *hasher = NULL;
-	SMART_FILE *file = NULL;
+	SMART_FILE *in = NULL;
+	SMART_FILE *out = NULL;
 	unsigned char buf[1024];
 	size_t read_count = 0;
+	size_t write_count = 0;
 	KSI_DataHash *tmp = NULL;
 
-	if(err == NULL || fnamein == NULL || hash == NULL) {
+	if(err == NULL || fname_in == NULL || hash == NULL) {
 		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
@@ -303,22 +305,35 @@ static int file_get_hash(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, const cha
 	/**
 	 * Open the file, read and hash.
      */
-	res = SMART_FILE_open(fnamein, "rb", &file);
+	res = SMART_FILE_open(fname_in, "rb", &in);
 	if (res != KT_OK) goto cleanup;
 
-
-	while (!SMART_FILE_isEof(file)) {
-		read_count = 0;
-		res = SMART_FILE_read(file, buf, sizeof(buf), &read_count);
+	if (fname_out != NULL) {
+		res = SMART_FILE_open(fname_out, "wb", &out);
 		if (res != KT_OK) goto cleanup;
+	}
 
-		if(SMART_FILE_isError(file)) {
+
+	while (!SMART_FILE_isEof(in)) {
+		read_count = 0;
+		write_count = 0;
+
+		res = SMART_FILE_read(in, buf, sizeof(buf), &read_count);
+		if (res != KT_OK || SMART_FILE_isError(in)) {
 			ERR_TRCKR_ADD(err, res = KT_IO_ERROR, "Error: Unable to read data from file.");
 			goto cleanup;
 		}
 
 		res = KSI_DataHasher_add(hasher, buf, read_count);
 		ERR_CATCH_MSG(err, res, "Error: Unable to add data to hasher.");
+
+		if (out != NULL) {
+			res = SMART_FILE_write(out, buf, read_count, &write_count);
+			if (res != KT_OK || SMART_FILE_isError(in) || write_count != read_count) {
+				ERR_TRCKR_ADD(err, res = KT_IO_ERROR, "Error: Unable to write to file.");
+				goto cleanup;
+			}
+		}
 	}
 
 	res = KSI_DataHasher_close(hasher, &tmp);
@@ -331,7 +346,8 @@ static int file_get_hash(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, const cha
 
 cleanup:
 
-	SMART_FILE_close(file);
+	SMART_FILE_close(in);
+	SMART_FILE_close(out);
 	KSI_DataHasher_free(hasher);
 	KSI_DataHash_free(tmp);
 
@@ -749,6 +765,7 @@ int extract_inputHash(void *extra, const char* str, void** obj) {
 	KSI_CTX *ctx = comp->ctx;
 	ERR_TRCKR *err = comp->err;
 	KSI_HashAlgorithm *algo = comp->h_alg;
+	char *fname_out = comp->fname_out;
 	KSI_DataHash *tmp = NULL;
 
 	if (obj == NULL) {
@@ -761,7 +778,7 @@ int extract_inputHash(void *extra, const char* str, void** obj) {
 		res = extract_imprint(extra, str, (void**)&tmp);
 		if (res != KT_OK) goto cleanup;
 	} else {
-		res = file_get_hash(set, err, ctx, str, algo, &tmp);
+		res = file_get_hash(set, err, ctx, str, fname_out, algo, &tmp);
 		if (res != KT_OK) goto cleanup;
 	}
 

@@ -53,7 +53,7 @@ int sign_run(int argc, char** argv, char **envp) {
 	 * Extract command line parameters.
      */
 	res = PARAM_SET_new(
-			CONF_generate_desc("{sign}{i}{o}{H}{D}{d}{log}{conf}", buf, sizeof(buf)),
+			CONF_generate_desc("{sign}{i}{h}{o}{H}{D|data-out}{d}{log}{conf}", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -115,7 +115,7 @@ char *sign_help_toString(char*buf, size_t len) {
 	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
 		"ksitool sign -i <input> -o <out.ksig> [-H <alg>] -S <url>\n"
-		"[--aggr-user <user> --aggr-pass <pass>][--data-out][more options]\n\n"
+		"[--aggr-user <user> --aggr-pass <pass>][--data-out <file>][more options]\n\n"
 		" -i <data> - file or data hash to be signed. Hash format: <alg>:<hash in hex>.\n"
 		" -o <file> - output file name to store signature token.\n"
 		" -H <alg>  - use a specific hash algorithm to hash the file to be signed.\n"
@@ -124,7 +124,7 @@ char *sign_help_toString(char*buf, size_t len) {
 		"           - user name for signing service.\n"
 		" --aggr-pass <str>\n"
 		"           - password for signing service.\n"
-		" --data-out <file>\n"
+		" --data-out | D <file>\n"
 		"           - save signed data to file.\n"
 		" -d        - print detailed information about processes and errors.\n"
 		" --conf <file>\n"
@@ -149,6 +149,7 @@ static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_S
 	KSI_Signature *tmp = NULL;
 	KSI_HashAlgorithm algo = KSI_HASHALG_INVALID;
 	char *outSigFileName = NULL;
+	char *signed_data_out = NULL;
 	COMPOSITE extra;
 
 	if(set == NULL || sig == NULL) {
@@ -157,9 +158,12 @@ static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_S
 	}
 
 	/**
-	 * Extract the output file.
+	 * Extract the signature output file name and signed data output file name if present.
      */
 	res = PARAM_SET_getStr(set, "o", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &outSigFileName);
+	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
+
+	res = PARAM_SET_getStr(set, "D", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &signed_data_out);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 
 	d = PARAM_SET_isSetByName(set, "d");
@@ -177,11 +181,12 @@ static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_S
 	}
 
 	/**
-	 * Initialize helper data structure and sign the hash value.
+	 * Initialize helper data structure, retrieve the has and sign the hash value.
      */
 	extra.ctx = ksi;
 	extra.err = err;
 	extra.h_alg = &algo;
+	extra.fname_out = signed_data_out;
 
 	print_progressDesc(d, "Extracting hash from input... ");
 	res = PARAM_SET_getObjExtended(set, "i", NULL, PST_PRIORITY_HIGHEST, 0, &extra, (void**)&hash);
@@ -235,7 +240,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{d}", isFormatOk_flag, NULL, NULL, NULL);
 
 	/*					  ID	DESC										MAN			 ATL	FORBIDDEN	IGN	*/
-	TASK_SET_add(task_set, 0,	"Sign data.",								"S,i,o",	 NULL,	"H",		NULL);
+	TASK_SET_add(task_set, 0,	"Sign data.",								"S,i,o",	 NULL,	"H,D",		NULL);
 	TASK_SET_add(task_set, 1,	"Sign data, specify hash alg.",				"S,i,o,H",	 NULL,	"D",		NULL);
 	TASK_SET_add(task_set, 2,	"Sign and save data.",						"S,i,o,D",	 NULL,	"H",		NULL);
 	TASK_SET_add(task_set, 3,	"Sign and save data, specify hash alg.",	"S,i,o,H,D", NULL,	NULL,		NULL);

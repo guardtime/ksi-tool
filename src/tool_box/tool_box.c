@@ -108,7 +108,6 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **o
 
 	res = parse(ksi, buf, (unsigned)buf_len, &tmp);
 	if (res != KSI_OK) {
-		res = KT_INDEX_OVF;
 		ERR_TRCKR_ADD(err, res, "Error: Unable to parse.");
 		goto cleanup;
 	}
