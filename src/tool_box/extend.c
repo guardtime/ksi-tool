@@ -34,6 +34,7 @@
 #include "obj_printer.h"
 #include "debug_print.h"
 #include "conf.h"
+#include "tool.h"
 
 static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, COMPOSITE *comp);
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
@@ -124,7 +125,7 @@ char *extend_help_toString(char*buf, size_t len) {
 
 	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
-		"ksitool extend -i <in.ksig> -o <out.ksig> -X <url>\n"
+		"%s extend -i <in.ksig> -o <out.ksig> -X <url>\n"
 		"        [--ext-user <user> --ext-pass <pass>] -P <url> [--cnstr <oid=value>]...\n"
 		"        [-T <time>] | [--pub-str <str>] [more options]\n\n"
 
@@ -148,8 +149,9 @@ char *extend_help_toString(char*buf, size_t len) {
 		"             information. It must be noted that service info from\n"
 		"             command-line will override the configurations file.\n"
 		" --log <file>\n"
-		"           - Write libksi log into file."
-	);
+		"           - Write libksi log into file.",
+		TOOL_getName()
+		);
 
 	return buf;
 }

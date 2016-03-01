@@ -34,6 +34,7 @@
 #include "debug_print.h"
 #include "obj_printer.h"
 #include "conf.h"
+#include "tool.h"
 
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 static int verify_as_possible(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig);
@@ -187,15 +188,15 @@ char *verify_help_toString(char*buf, size_t len) {
 
 	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
-		"ksitool verify -i <in.ksig> [-f <data>] [more options]\n"
-		"ksitool verify --ver-int -i <in.ksig> [-f <data>] [more options]\n"
-		"ksitool verify --ver-cal -i <in.ksig> [-f <data>] -X <url>\n"
+		"%s verify -i <in.ksig> [-f <data>] [more options]\n"
+		"%s verify --ver-int -i <in.ksig> [-f <data>] [more options]\n"
+		"%s verify --ver-cal -i <in.ksig> [-f <data>] -X <url>\n"
 		"        [--ext-user <user> --ext-pass <pass>] [-T <time>] [more options]\n"
-		"ksitool verify --ver-key -i <in.ksig> [-f <data>] -P <url>\n"
+		"%s verify --ver-key -i <in.ksig> [-f <data>] -P <url>\n"
 		"        [--cnstr <oid=value>]... [more options]\n"
-		"ksitool verify --ver-pub -i <in.ksig> [-f <data>] -p <pubstring>\n"
+		"%s verify --ver-pub -i <in.ksig> [-f <data>] -p <pubstring>\n"
 		"        [-x -X <url>  [--ext-user <user> --ext-pass <pass>]] [more options]\n"
-		"ksitool verify --ver-pub -i <in.ksig> [-f <data>] -P <url> [--cnstr <oid=value>]...\n"
+		"%s verify --ver-pub -i <in.ksig> [-f <data>] -P <url> [--cnstr <oid=value>]...\n"
 		"        [-x -X <url>  [--ext-user <user> --ext-pass <pass>][-T <time>]] [more options]\n\n"
 
 		" --ver-int - verify just internally.\n"
@@ -224,7 +225,13 @@ char *verify_help_toString(char*buf, size_t len) {
 		"             information. It must be noted that service info from\n"
 		"             command-line will override the configurations file.\n"
 		" --log <file>\n"
-		"           - Write libksi log into file."
+		"           - Write libksi log into file.",
+		TOOL_getName(),
+		TOOL_getName(),
+		TOOL_getName(),
+		TOOL_getName(),
+		TOOL_getName(),
+		TOOL_getName()
 	);
 
 	return buf;

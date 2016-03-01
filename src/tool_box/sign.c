@@ -33,6 +33,7 @@
 #include "printer.h"
 #include "obj_printer.h"
 #include "conf.h"
+#include "tool.h"
 
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature **sig);
@@ -114,7 +115,7 @@ char *sign_help_toString(char*buf, size_t len) {
 
 	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
-		"ksitool sign -i <input> -o <out.ksig> [-H <alg>] -S <url>\n"
+		"%s sign -i <input> -o <out.ksig> [-H <alg>] -S <url>\n"
 		"[--aggr-user <user> --aggr-pass <pass>][--data-out <file>][more options]\n\n"
 		" -i <data> - file or data hash to be signed. Hash format: <alg>:<hash in hex>.\n"
 		" -o <file> - output file name to store signature token.\n"
@@ -132,7 +133,8 @@ char *sign_help_toString(char*buf, size_t len) {
 		"             information. It must be noted that service info from\n"
 		"             command-line will override the configurations file.\n"
 		" --log <file>\n"
-		"           - Write libksi log into file."
+		"           - Write libksi log into file.",
+		TOOL_getName()
 	);
 
 	return buf;

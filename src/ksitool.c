@@ -39,14 +39,14 @@
 #  endif
 #endif
 
-const char *getVersion(void) {
+const char *TOOL_getVersion(void) {
 	static const char versionString[] = VERSION;
 	return versionString;
 }
 
-const char *getName(void) {
-	static const char versionString[] = TOOL_NAME;
-	return versionString;
+const char *TOOL_getName(void) {
+	static const char name[] = TOOL_NAME;
+	return name;
 }
 
 static char *hash_algorithms_to_string(char *buf, size_t buf_len) {
@@ -88,7 +88,7 @@ static void print_general_help(PARAM_SET *set){
 		return;
 	}
 
-	toolVersion = getVersion();
+	toolVersion = TOOL_getVersion();
 	apiVersion = KSI_getVersion();
 
 	res = PARAM_SET_getStr(set, "S", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &aggre_url);
@@ -218,11 +218,11 @@ int main(int argc, char** argv, char **envp) {
 	 * Simple tool help handler.
      */
 	if (PARAM_SET_isSetByName(set, "h")) {
-		print_info("%s %s (C) Guardtime\n", getName(), getVersion());
+		print_info("%s %s (C) Guardtime\n", TOOL_getName(), TOOL_getVersion());
 		print_info("%s (C) Guardtime\n\n", KSI_getVersion());
 
 		if (task == NULL) {
-			print_info("Usage %s <task> <arguments>\n", getName());
+			print_info("Usage %s <task> <arguments>\n", TOOL_getName());
 			print_info("All known tasks:\n");
 			print_info("%s", TOOL_COMPONENT_LIST_toString(components, "  ", buf, sizeof(buf)));
 		} else {
@@ -233,7 +233,7 @@ int main(int argc, char** argv, char **envp) {
 
 		goto cleanup;
 	} else if (PARAM_SET_isSetByName(set, "version")) {
-		print_info("%s %s (C) Guardtime\n", getName(), getVersion());
+		print_info("%s %s (C) Guardtime\n", TOOL_getName(), TOOL_getVersion());
 		goto cleanup;
 	}
 

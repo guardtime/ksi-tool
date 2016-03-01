@@ -36,6 +36,7 @@
 #include "debug_print.h"
 #include "obj_printer.h"
 #include "conf.h"
+#include "tool.h"
 
 static int pubfile_download(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile **pubfile);
 static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, COMPOSITE *extra);
@@ -131,9 +132,9 @@ char *pubfile_help_toString(char*buf, size_t len) {
 
 	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
-		"ksitool pubfile -P <url> [--cnstr <oid=value>]... [-V <file>]...\n"
+		"%s pubfile -P <url> [--cnstr <oid=value>]... [-V <file>]...\n"
 		"        [-W <file>]... [-o <pubfile.bin>] [-d] [-v] [more options]\n"
-		"ksitool pubfile -T <time> -X <url> [--ext-user <user> --ext-pass <pass>]\n\n"
+		"%s pubfile -T <time> -X <url> [--ext-user <user> --ext-pass <pass>]\n\n"
 
 		" -P <url>  - specify publications file URL (or file with uri scheme 'file://').\n"
 		" --cnstr <oid=value>\n"
@@ -153,7 +154,9 @@ char *pubfile_help_toString(char*buf, size_t len) {
 		"             information. It must be noted that service info from\n"
 		"             command-line will override the configurations file.\n"
 		" --log <file>\n"
-		"           - Write libksi log into file."
+		"           - Write libksi log into file.",
+		TOOL_getName(),
+		TOOL_getName()
 	);
 
 	return buf;

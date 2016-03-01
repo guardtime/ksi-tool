@@ -26,6 +26,7 @@
 #include "tool_box.h"
 #include "ksitool_err.h"
 #include "gt_cmd_common.h"
+#include "tool.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -362,11 +363,10 @@ char *TOOL_COMPONENT_LIST_helpToString(TOOL_COMPONENT_LIST *list, int id, char *
 	}
 
 
-	/*TODO: ksitool is hard coded. Make version extracting global.*/
 	for (i = 0; i < list->count; i++) {
 		if (list->component[i]->id == id) {
 			if (list->component[i]->help_toString == NULL) {
-				count += snprintf(buf + count, buf_len - count, "ksitool %s help.\n", list->component[i]->name);
+				count += snprintf(buf + count, buf_len - count, "%s %s help.\n", TOOL_getName(), list->component[i]->name);
 				count += snprintf(buf + count, buf_len - count, "Unavailable.\n");
 			}
 			return list->component[i]->help_toString(buf, buf_len);
