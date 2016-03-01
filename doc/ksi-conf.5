@@ -1,0 +1,124 @@
+.TH KSI-CONF 5
+.\"
+.\"
+.\"
+.SH NAME
+\fBksi.conf \fR- KSI (Keyless Signature Infrastructure) service configuration file.
+.\"
+.\"
+.SH DESCRIPTION
+.\"
+This file is read by ksi command-line tool \fBksi\fR(1) as KSI service configurations file.
+Configurations file is composed with the following parameters described under section \fB OPTIONS\fR. If configurations file with unknown or invalid key-value pairs is used, an error is generated until user applies all the fixes needed. All \fBksi\fR(1) components that use KSI services must accept the configurations file. It also must be possible to define exactly the same parameters on command-line to override values from configurations file.
+.br
+\n
+All the key-value pairs must be placed one per line. A short parameter or multiple flags must have prefix \fB- \fRand long parameters must have prefix \fB--\fR. To write a comment start the line with \fB#\fR. If some parameter values contain whitespace characters a double quote marks \fB" \fRmust be used to wrap the entire value. If double quote mark \fB" \fRhave to be used inside the value part an escape character \fB\\ \fRmust be typed before the quote mark like that \fB\\"\fR.
+.br
+.\"
+.\"
+.SH OPTIONS
+.br
+.\"
+.TP
+\fB-S \fIurl\fR
+Specify signing service URL.
+.\"
+.TP
+\fB--aggr-user \fIstr\fR
+User name for signing service.
+.\"
+.TP
+\fB--aggr-pass \fIstr\fR
+Key for signing service.
+.\"
+.TP
+\fB-X \fIurl\fR
+Specify extending service URL.
+.\"
+.TP
+\fB--ext-user \fIstr\fR
+User name for extending service
+.\"
+.TP
+\fB--ext-pass \fIstr\fR
+Key for extending service.
+.\"
+.TP
+\fB-P \fIurl\fR
+Specify publications file URL (or file with uri scheme 'file://').
+.\"
+.TP
+\fB--cnstr \fIoid\fR=\fIvalue\fR
+OID and its expected value to verify publications file PKI signature. At least one constraint must be defined to be able to verify publications file but it is possible to define more.
+.\"
+.TP
+\fB-V \fIfile\fR
+Specify an OpenSSL-style trust store file for publications file verification.
+.\"
+.TP
+\fB-W \fIdir\fR
+Specify an OpenSSL-style trust store directory for publications file verification.
+.\"
+.TP
+\fB-c \fIint\fR
+Set network transfer timeout, after successful connect, in s.
+.\"
+.TP
+\fB-C \fIint\fR
+Set network Connect timeout in s (is not supported with tcp client).
+.\"
+.\"
+.SH ENVIRONMENT
+Program \fBksi\fR(1) uses environment variable \fBKSI_CONF \fRto point to default configurations file.
+.\"
+.\"
+.SH EXAMPLES
+An example of configurations file:
+\n
+.RS
+\fR# --- BEGINNING ---
+.br
+\fR#
+.br
+\fR# KSI Signing service parameters:
+.br
+\fB-S \fIhttp://ksigw.test.guardtime.com:3333/gt-signingservice
+.br
+\fB--aggr-user \fIanon
+.br
+\fB--aggr-pass \fIanon
+.br
+\fn
+\fR# KSI Extending service:
+.br
+\fR# Note that ext-pass real value is &h/J"kv\\G##
+.br
+\fB-X \fIhttp://ksigw.test.guardtime.com:8010/gt-extendingservice
+.br
+\fB--ext-user \fIanon
+.br
+\fB--ext-pass \fI"&h/J\\"kv\\\\G##"
+.br
+\fn
+.br
+\fR# KSI Publications file:
+.br
+\fB-P \fIhttp://verify.guardtime.com/ksi-publications.bin
+.br
+\fB--cnstr \fIemail=publications@guardtime.com
+.br
+\fB--cnstr \fI"org=Guardtime AS"
+.br
+\fR#
+.br
+\fR# --- END ---
+.br
+.RE
+.\"
+.\"
+.SH AUTHOR
+Guardtime AS, http://www.guardtime.com/
+.\"
+.\"
+.SH SEE ALSO	
+\fBksi-sign\fR(1), \fBksi-verify\fR(1), \fBksi-extend\fR(1), \fBksi-pubfile\fR(1), \fBksi-conf\fR(5) 

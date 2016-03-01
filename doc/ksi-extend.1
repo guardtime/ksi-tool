@@ -1,0 +1,103 @@
+.TH KSI-EXTEND 1
+.\"
+.\"
+.\"
+.SH NAME
+\fBksi extend \fR- Guardtime command-line tool for extending KSI Signatures.
+.\"
+.\"
+.SH SYNOPSIS
+.\"
+\fBksi extend -i \fIin.ksig \fB-o \fIout.ksig \fB-X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-pass \fIkey\fR] \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... [\fB-T \fItime\fR] | [\fB--pub-str \fIstr\fR] [\fImore options\fR]
+.br
+.\"
+.\"
+.SH DESCRIPTION
+.\"
+This is a KSI signature extending tool.
+.\"
+.\"
+.SH OPTIONS
+.\"
+.TP
+\fB-i \fIdata\fR
+KSI signature file to be extended.
+.\"
+.TP
+\fB-o \fIfile\fR
+Output file name to store extended signature.
+.\"
+.TP
+\fB-X \fIurl\fR
+Specify extending service URL;
+.\"
+.TP
+\fB--ext-user \fIstr\fR
+User name for extending service.
+.\"
+.TP
+\fB--ext-pass \fIstr\fR
+Key for extending service.
+.\"
+.TP
+\fB-P \fIurl\fR
+Specify publications file URL (or file with uri scheme 'file://').
+.\"
+.TP
+\fB--cnstr \fIoid\fR=\fIvalue\fR
+OID and its expected value to verify publications file PKI signature. At least one constraint must be defined to be able to verify publications file but it is possible to define more.
+.TP
+\fB-T \fItime\fR
+specify a publication time to extend to as the number of seconds since 1970-01-01 00:00:00 UTC or time string formatted as \"YYYY-MM-DD hh:mm:ss\".
+.TP
+\fB-p\fR | \fB--pub-str \fIstr\fR
+Specify a publication string to extend to.
+.\"
+.TP
+\fB-d\fR
+Save signed data to file.
+.\"
+.TP
+\fB--conf \fIfile\fR
+Specify a configurations file to override default service information. It must be noted that service info from command-line will override the configurations file. See \fBksi\fR(1) and \fBksi-conf\fR(5) for more information.
+.\"
+.TP
+\fB--log \fIfile\fR
+Write libksi log into file.
+.br
+.\"
+.\"
+.\"
+.SH EXIT STATUS
+See \fBksi\fR(1) for more information.
+.\"
+.\"
+.\"
+.SH EXAMPLES
+.\"
+In the following examples it is assumed that default service urls are defined (see \fBksi\fR(1) \fRfor more information).
+
+
+\fB1 \fRTo extend a signature \fIsig.ksig\fR and save it as \fIext.ksig\fR call:
+.RS
+\fBksi extend -i \fIsig.ksig \fB-o \fIext.ksig
+.RE
+
+\fB2 \fRTo extend a signature \fIsig.ksig\fR to s specified calendar time \fI2015-05-05 00:00:00 \fRand save it as \fIext.ksig\fR call:
+.RS
+\fBksi extend -i \fIsig.ksig \fB-o \fIext.ksig \fB-T \fI"2015-05-05 00:00:00"
+.RE
+
+.RE
+.\"
+.\"
+.\"
+.SH ENVIRONMENT
+Environment variable \fBKSI_CONF \fR can be defined to set default KSI configurations file. See \fBksi\fR(1) and \fBksi-conf\fR(5) for more information.
+
+.SH AUTHOR
+
+Guardtime AS, http://www.guardtime.com/
+
+.SH SEE ALSO	
+\fBksi\fR(1), \fBksi-sign\fR(1), \fBksi-verify\fR(1), \fBksi-pubfile\fR(1), \fBksi-conf\fR(5) 

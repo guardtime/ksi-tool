@@ -1,372 +1,125 @@
-.TH KSITOOL 1
-
-
-
+.TH KSI 1
+.\"
+.\"
+.\"
 .SH NAME
-.B ksitool
-- Guardtime command-line tool to access KSI service.
-
-
+\fBksi \fR- Guardtime command-line tool for KSI (Keyless Signature Infrastructure)service.
+.\"
+.\"
 .SH SYNOPSIS
-Sign data file, stream (stdin) or hash:
+.\"
 .br
-\fBksitool -s -f\fI file\fR | [\fB-F\fI hash\fR]\fB -o\fI out.ksig\fR [\fI more options\fR]
+\fBksi \fR[\fB-h\fR] [\fB--version\fR] [\fImore options\fR]
 .br
-
-Extend signature:
-.br
-\fBksitool -x -i\fI sig.ksig\fB -o\fI ext.ksig\fR [\fB-T\fR] [\fI more options\fR]
-.br
-
-Download and verify publication file:
-.br
-\fBksitool -p -o \fI pubfile\fB --cnstr \fIoid=value \fR... [\fI more options\fR]
-.br
-
-Dump publication file:
-.br
-\fBksitool -p -d -P\fI url\fR | [\fB-b \fIpubfile\fR]\fR
-.br
-
-Download publication file:
-.br
-\fBksitool -p -o \fI pubfile\fB --cnstr \fIoid=value \fR... [\fI more options\fR]
-.br
-
-Create publication string:
-.br
-\fBksitool -p -T \fR[\fI more options]
-.br
-
-Verify signature:
-.br
-\fBksitool -v -i\fI sig.ksig\fB -f\fI file\fR | \fB-F\fI hash\fR [\fB -x\fR | \fB-b \fI pubfile\fR] [\fI more options\fR]
-.br
-
-Verify publication file:
-.br
-\fBksitool -v -b\fI pubfile\fB --cnstr \fIoid=value \fR... [\fImore options\fR]
-.br
-.\TODO: uncomment if implemented
-.\Display current aggregation root hash value and time:
-.\.br
-.\.B ksitool --aggre --htime
-.\.br
-.\
-.\Set system time from current aggregation:
-.\.br
-.\.B ksitool --aggre --setsystime
-.\.br
-
-
+\fBksi \fIcomponent \fR[\fB-h\fR] [\fIservice info\fR] [\fImore options\fR]
+.\"
+.\"
 .SH DESCRIPTION
-
+.\"
 This is a general signing and signature verification tool for Guardtime Keyless Signature services.
-
-
+.\"
+.\"
 .SH OPTIONS
+.\"
+.TP
+\fB-h\fR
+Print help text of program ksi. To print a help text of ksi component use \fB-h\fR with specified component name.
+.\"
+.TP
+\fB--version\fR
+Print version info.
+.\"
+.\"
+.SH KSI COMPONENTS
+.\"
 
 .TP
-.B Tasks:
-.\TODO: uncomment if implemented
-.\.TP
-.\.B --aggre
-.\Use for getting root hash and time from aggregator.
+\fBsign\fR
+KSI general signing tool. See \fBksi-sign\fR(1) for more information.
+.\"
 .TP
-.B -p
-Use for downloading publication file and creating publication string.
+\fBverify\fR
+KSI signing verification tool. See \fBksi-verify\fR(1) for more information.
+.\"
 .TP
-.B -s, --sign
-Use for signing document, stream (stdin) or hash.
+\fBextend\fR
+KSI signing extending tool. See \fBksi-extend\fR(1) for more information.
+.\"
 .TP
-.B -v, --verify
-Use for signature and publication file verification.
-.TP
-.B -x, --extend
-Use for online verification or signature extending.
-
-.TP
-.B Input/output:
-.TP
-.BI -b\  file
-Use specified publication file.
-.TP
-.BI -f\  file
-File to be signed or verified. \fIfile\fR can be \fB-\fR to sign a stream (stdin).
-.TP
-.BI -F\  hash
-Data hash to be signed or verified. Hash format: <alg>:<hash in hex>.
-.TP
-.BI -H\  alg
-Hash algorithm used to hash the file to be signed. Use when signing file (
-.B -s -f
-).
-.TP
-.BI -i\  file
-Input signature token file to be extended or verified.
-.TP
-.BI -o\  file
-Output file name to store signature token or publication file.
-.TP
-\fB-D, --dataout\fI  file
-Output file name to store data from stream (stdin).
-.TP
-.BI --ref\  str
-Publication string as base 32 encoded string. Use with 
-.BR -v \. 
-.TP
-.BI -T\  int
-.br
-Specify a publication time to extend to (use with \fB-x\fR) or a time to create a new publication code for (use with \fB-p\fR) as the number of seconds since 1970-01-01 00:00:00 UTC or time string formatted as "YYYY-MM-DD hh:mm:ss".
-.br
-
-.TP
-.B Details:
-.TP
-.B -d
-Print detailed information.
-.TP
-.BI --log\  file
-Dump KSI log into file.
-.TP
-.B -n
-Print signer Name (identity).
-.TP
-.B --nowarn
-Silence warning messages.
-.br
-.TP
-.B -r
-Print publication References (use with -vx).
-.TP
-.B --silent
-Silence info and warning messages.
-.br
-.TP
-.B -t
-Print service Timing in ms.
-.br
-
-.TP
-.B Configuration:
-.TP
-.BI -c\  int
-Network transfer timeout in seconds, after successful Connect.
-.TP
-.BI -C\  int
-Network Connect timeout in seconds (is not supported with tcp client).
-.TP
-.BI --cnstr\  oid=value
-use OID and its expected value to verify publications file PKI signature. At least one constraint must be defined to be able to verify publications file but it is possible to define more. If value part contains spaces use " " to wrap its contents. For common OID's there are string representations: '\fBemail\fR' for 1.2.840.113549.1.9.1, '\fBcountry\fR' for 2.5.4.6, '\fBorg\fR' for 2.5.4.10 and '\fBcommon_name\fR' for 2.5.4.3. Example \fB--cnstr \fI2.5.4.6=EE \fB--cnstr \fIorg="Guardtime AS"\fR.
-.TP
-.BI --inc\  file
-Use configuration file containing command-line parameters. Parameter must be written line by line.
-.TP
-.BI --pass\  str
-Password for authentication.
-.TP
-.BI -P\  url
-Specify publication file URL.
-.TP
-.BI -S\  url
-Specify Signing service URL.
-.TP
-.BI --user\  str
-User name for authentication.
-.TP
-.BI -V\  file
-Use specified OpenSSL-style trust store file for publication file verification. Can have multiple values (-V <file 1> -V <file 2>).
-.TP
-.BI -W\  dir
-Use specified OpenSSL-style trust store directory for publication file verification.
-.TP
-.BI -X\  url
-Specify verification (eXtending) service URL.
-.br
-
-.TP
-.B Help:
-.TP
-.B -h, --help
-print ksitool help.
-.br			
-
+\fBpubfile\fR
+KSI general publications file verification tool. See \fBksi-pubfile\fR(1) for more information.
+.\"
 
 .SH EXIT STATUS
-
 .TP
-.B 0
+\fB0\fR
 Exit success. Returned if everything is OK.
-.br
+.\"
 .TP
-.B 1
+\fB1
 Exit failure. A general failure occurred.
-.br
+.\"
 .TP
-.B 3
+\fB3
 Invalid command-line parameter. The content or format of command-line parameter is invalid. Also a parameter may be missing.
-.br
+.\"
 .TP
-.B 4
+\fB4
 Invalid format. Input data to KSI library is invalid, for example signature or publication file format is invalid.
-.br
+.\"
 .TP
-.B 5
+\fB5
 Network error. Ksitool is unable to connect to the service, connection is timed out or an HTTP error was returned from the service url.
-.br
+.\"
 .TP
-.B 6
+\fB6
 Verification error. Verification of signature or document hash failed.
-.br
+.\"
 .TP
-.B 7
+\fB7
 Extending error. Error in extending a signature or an error was returned by extender.
-.br
+.\"
 .TP
-.B 8
+\fB8
 Aggregation error. Error returned by aggregator.
-.br	
+.\"
 .TP
-.B 9
+\fB9
 Input / output error. Unable to write or read file.
-.br
+.\"
 .TP
-.B 10
+\fB10
 Cryptographic error. Error may be generated due to untrusted or unavailable hash algorithm or by an invalid PKI signature or untrusted certificate.
-.br
+.\"
 .TP
-.B 11
+\fB11
 HMAC error. HMAC of aggregation or extend response does not match. 
-.br
+.\"
 .TP
-.B 12
+\fB12
 No privileges. Operating system did not grant privileges to perform an operation.
-.br
+.\"
 .TP
-.B 13
+\fB13
 System out of memory.
-.br
+.\"
 .TP
-.B 14
+\fB14
 Authentication error. Aggregation or extending service did not accept user identification parameters.
 .br
-
-
-.SH EXAMPLES
-
-In the following examples it is assumed that default service urls are defined as environment variables. Read example 1 to learn how to define service urls.
-
-\fB1\fR To use ksitool, service urls must be specified. It can be done via environment variables, command-line parameters or a configuration file.
-
-\fB1.1\fR To define default urls as environment variables, KSI_AGGREGATOR, KSI_EXTENDER and KSI_PUBFILE must be defined as shown below: 
-
-.RS
-.br
-\fBKSI_AGGREGATOR\fR=\fIurl=http://test.com:3333/gt-signingservice pass=test_pass user=test_user\fR
-.br
-\fBKSI_EXTENDER\fR=\fIurl=http://test.com:8010/gt-extendingservice pass=test_pass user=test_user\fR
-.br
-\fBKSI_PUBFILE\fR=\fIurl=http://verify.guardtime.com/ksi-publications.bin 1.2.840.113549.1.9.1=publications@guardtime.com 2.5.4.10="Symantec Corporation"\fR
-.RE
-
-
-\fB1.2\fR To define service urls on command-line or via configuration file, following parameters must be defined:
-.RS
-.br
-\fB-X\fI http://test.com:8010/gt-extendingservice
-.br
-\fB-S\fI http://test.com:3333/gt-signingservice
-.br
-\fB--user\fI test_user
-.br
-\fB--pass\fI test_pass
-.RE
-.br
-
-\fB1.3\fR To use a configuration file, parameters must be written on separate lines, into a file, as in the example above. Configuration file \fIconf\fR  must be included using option:
-.br
-.RS
-\fB--inc\fI conf  
-.RE
-.br
-
-\fB2\fR To sign a file \fIfile\fR and save signature to \fIsig.ksig\fR call:
-.RS
-.br
-\fBksitool -s -f \fIfile\fR \fB-o \fIsig.ksig\fR
-.RE
-
-\fB2.1\fR To sign a stream (stdin), save data from stream to \fIfile\fR and save signature to \fIsig.ksig\fR call:
-.RS
-.br
-\fBksitool -s -f - -D \fIfile\fB -o \fIsig.ksig\fR
-.RE
-
-\fB3\fR To sign a data hash (hashed with SHA256) and save the resulting signature to file \fIsig.ksig\fR call:
-.RS
-.br
-\fBksitool -s -o \fIsig.ksig\fB -F\fI SHA-256:c8ef6d57ac28d1b4e95a513959f5fcdd0688380a43d601a5ace1d2e96884690a\fR
-.RE
-
-\fB4\fR To sign a data file \fIfile\fR with non-default algorithm \fI SHA1\fR call:
-.br
-.RS
-\fBksitool -s -f \fIfile\fB -H\fI SHA1\fB -o\fI sig.ksig\fR 
-.RE
-
-\fB5\fR To verify a signature \fIsig.ksig\fR and file \fIfile\fR it belongs to call:
-.RS
-\fBksitool -v -i \fIsig.ksig\fB -f\fI file\fR
-.RE
-
-\fB6\fR To verify a signature \fIsig.ksig\fR and hash it belongs to call:
-.RS
-\fBksitool -v -i\fI sig.ksig \fB-F\fI SHA-256:c8ef6d57ac28d1b4e95a513959f5fcdd0688380a43d601a5ace1d2e96884690a\fR
-.RE
-
-\fB7\fR To verify a signature \fI sig.ksig\fR using online verification service call:
-.RS
-\fBksitool -vx -i\fI sig.ksig\fR
-.RE
-
-\fB8\fR To extend a signature \fIsig.ksig\fR and save it as \fIext.ksig\fR call:
-.RS
-\fBksitool -x -i \fIsig.ksig\fR \fB-o\fI ext.ksig\fR 
-.RE
-
-\fB9\fR To verify an extended signature \fI ext.ksig\fR against publication from printed media call:
-.RS
-\fBksitool -v -i \fIext.ksig\fB --ref\fI AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4 
-.RE
-
-\fB10\fR To download a publication file \fIpubfile\fR call:
-.RS
-\fBksitool -p -o\fI pubfile\fR
-.RE
-
-\fB11\fR To verify publication file \fIpubfile\fR call:
-.RS
-\fBksitool -v -b \fIpubfile\fR
-.RE
-
-\fB12\fR To create a publication string call:
-.RS
-\fBksitool -p -T\fR \fI"2015-10-15 00:00:00"\fR 
-.RE
+.\"
+.\"
+.\"
 
 
 .SH ENVIRONMENT	
 
-. B Default service access URL-s:
+To define default service info environment variables \fBKSI_CONF \fRmust be specified that contains path to KSI configurations file (see \fBksi-conf\fR(5)). Print ksi help (\fB-h\fR) to check if default service info is available.
 
-To define default URL-s, they must be defined as environment variables. For aggregator and extender service, define environment variables \fB KSI_AGGREGATOR\fR and \fBKSI_EXTENDER\fR with content\fI 'url=<url> pass=<pass> user=<user>'\fR. Only url part is mandatory: user and pass can be left undefined if anonymous access is allowed by the service. Default \fI <pass> \fR and \fI <user> \fRis \fI 'anon'\fR. 
-.br
-
-For publications file, define \fBKSI_PUBFILE\fR with content '\fIurl=<url> <constraint> <constraint> \fR...'. Constraint is formatted as  \fI<OID>="<value>"\fR where \fB""\fR can be omitted if 'value' does not contain any white-space characters. Publications file url is mandatory but constraints are not if at least one constraint is defined on command-line (see \fB--cnstr\fR).
-.br
-
-Using includes (\fB --inc\fR) or defining urls on command-line will override defaults.
 
 .SH AUTHOR
 
 Guardtime AS, http://www.guardtime.com/
+
+.SH SEE ALSO	
+\fBksi-sign\fR(1), \fBksi-verify\fR(1), \fBksi-extend\fR(1), \fBksi-pubfile\fR(1), \fBksi-conf\fR(5) 
