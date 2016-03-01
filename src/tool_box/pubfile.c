@@ -244,7 +244,6 @@ static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ks
 	KSI_DataHash *extHsh = NULL;
 	KSI_PublicationData *tmpPubData = NULL;
 	KSI_Integer *pubTime = NULL;
-	int publicationTime = 0;
 	char buf[1024];
 
 

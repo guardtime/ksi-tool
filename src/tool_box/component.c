@@ -246,7 +246,7 @@ static char* tool_component_helpToString(TOOL_COMPONENT *new, char *buf, size_t 
 
 int TOOL_COMPONENT_LIST_new(size_t max_size, TOOL_COMPONENT_LIST **new) {
 	int res;
-	TOOL_COMPONENT_LIST *tmp;
+	TOOL_COMPONENT_LIST *tmp = NULL;
 	size_t i = 0;
 
 	if (max_size == 0 || new == NULL) {
@@ -305,7 +305,6 @@ int TOOL_COMPONENT_LIST_add(TOOL_COMPONENT_LIST *list,
 		int id) {
 	int res;
 	TOOL_COMPONENT *tmp = NULL;
-	size_t i = 0;
 
 	if (list == NULL) {
 		res = KT_INVALID_ARGUMENT;
@@ -336,7 +335,6 @@ cleanup:
 }
 
 int TOOL_COMPONENT_LIST_run(TOOL_COMPONENT_LIST *list, int id, int argc, char **argv, char **envp) {
-	TOOL_COMPONENT *tmp = NULL;
 	size_t i = 0;
 
 	if (list == NULL) {
@@ -353,7 +351,6 @@ int TOOL_COMPONENT_LIST_run(TOOL_COMPONENT_LIST *list, int id, int argc, char **
 }
 
 char *TOOL_COMPONENT_LIST_helpToString(TOOL_COMPONENT_LIST *list, int id, char *buf, size_t buf_len) {
-	TOOL_COMPONENT *tmp = NULL;
 	size_t i = 0;
 	size_t count = 0;
 
@@ -379,8 +376,6 @@ char *TOOL_COMPONENT_LIST_helpToString(TOOL_COMPONENT_LIST *list, int id, char *
 char* TOOL_COMPONENT_LIST_toString(TOOL_COMPONENT_LIST *list, const char* preffix, char *buf, size_t buf_len) {
 	int i;
 	size_t count = 0;
-	size_t sub_count = 0;
-	size_t line_counter = 0;
 	size_t max_size = 0;
 	size_t tmp;
 	char format[32];

@@ -168,7 +168,6 @@ static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *s
 	KSI_Integer *pubTime = NULL;
 	KSI_PublicationData *pub_data = NULL;
 	char *outSigFileName = NULL;
-	int publicationTime = 0;
 	char buf[1024] = "";
 
 	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || extra == NULL) {

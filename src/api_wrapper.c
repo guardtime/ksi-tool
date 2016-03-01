@@ -30,7 +30,6 @@
 		}
 static int appendInvalidPubfileUrlOrFileError(ERR_TRCKR *err, int res, KSI_CTX *ksi, long line) {
 	char buf[2048];
-	char *ret = NULL;
 
 	if (res == KSI_OK) return 0;
 

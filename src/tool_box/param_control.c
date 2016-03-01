@@ -275,12 +275,12 @@ cleanup:
 	return res;
 }
 
-static int file_get_hash(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, const char *fname_in, const char *fname_out, KSI_HashAlgorithm *algo, KSI_DataHash **hash){
+static int file_get_hash(ERR_TRCKR *err, KSI_CTX *ctx, const char *fname_in, const char *fname_out, KSI_HashAlgorithm *algo, KSI_DataHash **hash){
 	int res;
 	KSI_DataHasher *hasher = NULL;
 	SMART_FILE *in = NULL;
 	SMART_FILE *out = NULL;
-	unsigned char buf[1024];
+	char buf[1024];
 	size_t read_count = 0;
 	size_t write_count = 0;
 	KSI_DataHash *tmp = NULL;
@@ -549,6 +549,7 @@ int isContentOk_int(const char* integer) {
 
 int extract_int(void *extra, const char* str,  void** obj){
 	int *pI = (int*)obj;
+	extra;
 	*pI = atoi(str);
 	return PST_OK;
 }
@@ -612,6 +613,7 @@ int extract_inputFile(void *extra, const char* str, void** obj) {
 	int res;
 	SMART_FILE *tmp = NULL;
 
+	extra;
 	if (str == NULL) {
 		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
@@ -645,8 +647,8 @@ int isContentOk_hashAlg(const char *alg){
 int extract_hashAlg(void *extra, const char* str, void** obj) {
 	const char *hash_alg_name = NULL;
 	KSI_HashAlgorithm *hash_id = (KSI_HashAlgorithm*)obj;
-	KSI_HashAlgorithm tmp = KSI_HASHALG_INVALID;
 
+	extra;
 	hash_alg_name = str != NULL ? (str) : ("default");
 	*hash_id = KSI_getHashAlgorithmByName(hash_alg_name);
 
@@ -761,7 +763,6 @@ int extract_inputHash(void *extra, const char* str, void** obj) {
 	int res;
 	void **extra_array = extra;
 	COMPOSITE *comp = (COMPOSITE*)(extra_array[1]);
-	PARAM_SET *set = (PARAM_SET*)(extra_array[0]);
 	KSI_CTX *ctx = comp->ctx;
 	ERR_TRCKR *err = comp->err;
 	KSI_HashAlgorithm *algo = comp->h_alg;
@@ -778,7 +779,7 @@ int extract_inputHash(void *extra, const char* str, void** obj) {
 		res = extract_imprint(extra, str, (void**)&tmp);
 		if (res != KT_OK) goto cleanup;
 	} else {
-		res = file_get_hash(set, err, ctx, str, fname_out, algo, &tmp);
+		res = file_get_hash(err, ctx, str, fname_out, algo, &tmp);
 		if (res != KT_OK) goto cleanup;
 	}
 
@@ -798,7 +799,6 @@ int extract_inputSignature(void *extra, const char* str, void** obj) {
 	int res;
 	void **extra_array = extra;
 	COMPOSITE *comp = (COMPOSITE*)(extra_array[1]);
-	PARAM_SET *set = (PARAM_SET*)(extra_array[0]);
 	KSI_CTX *ctx = comp->ctx;
 	ERR_TRCKR *err = comp->err;
 
@@ -836,7 +836,6 @@ int extract_pubString(void *extra, const char* str, void** obj) {
 	int res;
 	void **extra_array = extra;
 	COMPOSITE *comp = (COMPOSITE*)(extra_array[1]);
-	PARAM_SET *set = (PARAM_SET*)(extra_array[0]);
 	KSI_CTX *ctx = comp->ctx;
 	ERR_TRCKR *err = comp->err;
 	KSI_PublicationData *tmp = NULL;
@@ -867,9 +866,6 @@ int isFormatOk_timeString(const char *time) {
 }
 
 int isFormatOk_utcTime(const char *time) {
-	char buf[32] = "";
-	const char *next = NULL;
-
 	if (isInteger(time)) {
 		return isFormatOk_int(time);
 	} else {
@@ -878,9 +874,6 @@ int isFormatOk_utcTime(const char *time) {
 }
 
 int isContentOk_utcTime(const char *time) {
-	char buf[32] = "";
-	const char *next = NULL;
-
 	if (isInteger(time)) {
 		return isContentOk_int(time);
 	} else {
@@ -892,7 +885,6 @@ int extract_utcTime(void *extra, const char* str, void** obj) {
 	int res;
 	void **extra_array = extra;
 	COMPOSITE *comp = (COMPOSITE*)(extra_array[1]);
-	PARAM_SET *set = (PARAM_SET*)(extra_array[0]);
 	KSI_CTX *ctx = NULL;
 	ERR_TRCKR *err = NULL;
 	KSI_Integer *tmp = NULL;
@@ -1021,5 +1013,4 @@ const char *getParameterErrorString(int res) {
 		case INTEGER_TOO_LARGE: return "Integer value is too large";
 		default: return "Unknown error";
 	}
-	return NULL;
 }

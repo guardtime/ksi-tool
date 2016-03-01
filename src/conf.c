@@ -171,6 +171,9 @@ char *CONF_errorsToString(PARAM_SET *set, const char *prefix, char *buf, size_t 
 
 int conf_run(int argc, char** argv, char **envp) {
 	char buf[0xffff];
+	argc;
+	argv;
+	envp;
 
 	print_info("%s\n", conf_help_toString(buf, sizeof(buf)));
 

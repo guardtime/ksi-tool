@@ -31,7 +31,6 @@ static int debug_getVerificationStepFailed(KSI_Signature *sig) {
 	const KSI_VerificationStepResult *step;
 	size_t count;
 	size_t i;
-	const char *desc = NULL;
 
 	if (sig == NULL) return 0;
 

@@ -46,6 +46,7 @@ static char *OID_ORGANIZATION[] = {KSI_CERT_ORGANIZATION, "O", "org", "organizat
 static char **OID_INFO[] = {OID_EMAIL, OID_COMMON_NAME, OID_COUNTRY, OID_ORGANIZATION, NULL};
 
 static int KSI_Signature_serialize_wrapper(KSI_CTX *ksi, KSI_Signature *sig, unsigned char **raw, size_t *raw_len) {
+	ksi;
 	return KSI_Signature_serialize(sig, raw, raw_len);
 }
 
@@ -454,7 +455,6 @@ char *STRING_extract(const char *strn, const char *from, const char *to, char *b
 
 char *STRING_extractRmWhite(const char *strn, const char *from, const char *to, char *buf, size_t buf_len) {
 	char *tmp = NULL;
-	size_t tmp_size = 0;
 	char *ret = NULL;
 	char *isBuf = NULL;
 
@@ -480,6 +480,7 @@ cleanup:
 
 static const char* find_group_start(const char *str, const char *ignore) {
 	size_t i = 0;
+	ignore;
 	while (str[i] && isspace(str[i])) i++;
 	return (i == 0) ? str : &str[i];
 }
@@ -489,6 +490,7 @@ static const char* find_group_end(const char *str, const char *ignore) {
 	int is_firs_non_whsp_found = 0;
 	size_t i = 0;
 
+	ignore;
 	while (str[i]) {
 		if (!isspace(str[i])) is_firs_non_whsp_found = 1;
 		if (isspace(str[i]) && is_quato_opend == 0 && is_firs_non_whsp_found) return &str[i - 1];

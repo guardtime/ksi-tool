@@ -154,9 +154,9 @@ cleanup:
 
 static int tool_init_ksi_pub_cert_constraints(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set) {
 	int res;
-	unsigned i = 0;
+	int i = 0;
 	char *constraint = NULL;
-	unsigned constraint_count = 0;
+	int constraint_count = 0;
 	KSI_CertConstraint *constraintArray = NULL;
 
 	if (ksi == NULL || err == NULL || set == NULL) {
