@@ -25,11 +25,11 @@
 #include <string.h>
 #include "tool_box.h"
 #include "ksitool_err.h"
-#include "gt_cmd_common.h"
 #include "tool.h"
 
 #ifdef _WIN32
 #include <Windows.h>
+#define snprintf _snprintf
 #endif
 
 typedef struct TOOL_COMPONENT_st TOOL_COMPONENT;

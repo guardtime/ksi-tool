@@ -28,8 +28,8 @@ autoreconf -if && \
 make clean && \
 make dist && \
 mkdir -p $BUILD_DIR/{BUILD,RPMS,SOURCES,SPECS,SRPMS,tmp} && \
-cp packaging/redhat/ksitool.spec $BUILD_DIR/SPECS/ && \
-cp ksitool-*.tar.gz $BUILD_DIR/SOURCES/ && \
-rpmbuild -ba $BUILD_DIR/SPECS/ksitool.spec && \
-cp $BUILD_DIR/RPMS/*/ksitool-*$version*.rpm . && \
-cp $BUILD_DIR/SRPMS/ksitool-*$version*.rpm .
+cp packaging/redhat/ksi.spec $BUILD_DIR/SPECS/ && \
+cp ksi-*.tar.gz $BUILD_DIR/SOURCES/ && \
+rpmbuild -ba $BUILD_DIR/SPECS/ksi.spec && \
+cp $BUILD_DIR/RPMS/*/ksi-*$version*.rpm . && \
+cp $BUILD_DIR/SRPMS/ksi-*$version*.rpm .

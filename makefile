@@ -48,7 +48,7 @@ VERSION_FILE = VERSION
 COMM_ID_FILE = COMMIT_ID
 
 
-TOOL_NAME = ksitool
+TOOL_NAME = ksi
 
 #Objects for making command-line tool
 
@@ -59,7 +59,7 @@ PARAMSET_OBJ = \
 	$(PARAMSET_OBJ_DIR)\task_def.obj
 
 CMDTOOL_OBJ = \
-	$(OBJ_DIR)\ksitool.obj \
+	$(OBJ_DIR)\main.obj \
 	$(OBJ_DIR)\printer.obj \
 	$(OBJ_DIR)\conf.obj \
 	$(OBJ_DIR)\ksitool_err.obj \
@@ -189,8 +189,8 @@ installer:$(BIN_DIR) $(OBJ_DIR) $(BIN_DIR)\$(TOOL_NAME).exe
 !MESSAGE Please install WiX to build installer.
 !ELSE
 	cd packaging\win
-	candle.exe ksitool.wxs -o ..\..\obj\ksitool.wixobj -dVersion=$(VER) -dName=$(TOOL_NAME) -dKsitool=$(BIN_DIR)\$(TOOL_NAME).exe -darch=$(INSTALL_MACHINE)
-	light.exe ..\..\obj\ksitool.wixobj -o ..\..\bin\ksitool -pdbout ..\..\bin\ksitool.wixpdb -cultures:en-us -ext WixUIExtension
+	candle.exe ksi.wxs -o ..\..\obj\ksi.wixobj -dVersion=$(VER) -dName=$(TOOL_NAME) -dtool_file=$(BIN_DIR)\$(TOOL_NAME).exe -darch=$(INSTALL_MACHINE)
+	light.exe ..\..\obj\ksi.wixobj -o ..\..\bin\ksi -pdbout ..\..\bin\ksi.wixpdb -cultures:en-us -ext WixUIExtension
 	cd ..\..
 !ENDIF
 

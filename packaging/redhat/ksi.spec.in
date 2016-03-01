@@ -62,7 +62,7 @@ make install DESTDIR=%{buildroot}
 %defattr (-,root,root)
 
 %{_bindir}/%{name}*
-%{_mandir}/man1/ksitool.1*
+%{_mandir}/man1/ksi.1*
 %{_docdir}/%{name}/license.txt
 %{_docdir}/%{name}/ChangeLog
 

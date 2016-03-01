@@ -21,7 +21,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.59])
-AC_INIT([ksitool], m4_esyscmd([tr -d [:space:] < VERSION]), [support@guardtime.com])
+AC_INIT([ksi], m4_esyscmd([tr -d [:space:] < VERSION]), [support@guardtime.com])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign -Wall -Werror foreign])
@@ -65,5 +65,5 @@ AC_CHECK_FUNCS([strchr])
 
 
 
-AC_CONFIG_FILES([GNUmakefile src/GNUmakefile packaging/redhat/ksitool.spec])
+AC_CONFIG_FILES([GNUmakefile src/GNUmakefile packaging/redhat/ksi.spec])
 AC_OUTPUT

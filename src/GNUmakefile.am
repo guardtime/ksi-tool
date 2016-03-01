@@ -17,13 +17,13 @@
 # Guardtime Inc.
 #
 
-bin_PROGRAMS = ksitool
-man_MANS = ../doc/ksitool.1
+bin_PROGRAMS = ksi
+man_MANS = ../doc/ksi.1
 dist_doc_DATA = ../license.txt ../doc/ChangeLog
 
 EXTRA_DIST = $(man_MANS) $(dist_doc_DATA) 
-ksitool_SOURCES = \
-	ksitool.c	\
+ksi_SOURCES = \
+	main.c	\
 	gt_task.h \
 	tool_box/smart_file.c \
 	tool_box/smart_file.h \
@@ -42,6 +42,7 @@ ksitool_SOURCES = \
 	tool_box/component.h \
 	tool_box/task_initializer.c \
 	tool_box/task_initializer.h \
+	param_set/param_set_obj_impl.h \
 	param_set/param_value.c \
 	param_set/param_value.h \
 	param_set/parameter.c \
