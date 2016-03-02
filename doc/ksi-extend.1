@@ -45,7 +45,7 @@ Specify publications file URL (or file with uri scheme 'file://').
 .\"
 .TP
 \fB--cnstr \fIoid\fR=\fIvalue\fR
-OID and its expected value to verify publications file PKI signature. At least one constraint must be defined to be able to verify publications file but it is possible to define more.
+OID and its expected value to verify publications file PKI signature. At least one constraint must be defined to be able to verify publications file but it is possible to define more. All values from lower priority source are ignored, where default configurations file is the lowest and command-line is the highest.
 .TP
 \fB-T \fItime\fR
 specify a publication time to extend to as the number of seconds since 1970-01-01 00:00:00 UTC or time string formatted as \"YYYY-MM-DD hh:mm:ss\".
@@ -55,7 +55,7 @@ Specify a publication string to extend to.
 .\"
 .TP
 \fB-d\fR
-Save signed data to file.
+Use to dump signatures data and get more precise info about the warnings.
 .\"
 .TP
 \fB--conf \fIfile\fR
