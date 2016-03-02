@@ -23,7 +23,8 @@ man_MANS = \
 	../doc/ksi-conf.5 \
 	../doc/ksi-sign.1 \
 	../doc/ksi-extend.1 \
-	../doc/ksi-pubfile.1
+	../doc/ksi-pubfile.1 \
+	../doc/ksi-verify.1
 	
 dist_doc_DATA = ../license.txt ../doc/ChangeLog
 

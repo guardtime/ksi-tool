@@ -1,0 +1,176 @@
+.TH KSI-VERIFY 1
+.\"
+.\"
+.\"
+.SH NAME
+\fBksi verify \fR- Guardtime command-line tool for verifying KSI signatures.
+.\"
+.\"
+.SH SYNOPSIS
+.\"
+.br
+\fBksi verify -i \fIin.ksig \fR[\fB-f \fIdata\fR] [\fImore options\fR]
+.br
+.\"
+\fBksi verify --ver-int -i \fIin.ksig \fR[\fB-f \fIdata\fR] [\fImore options\fR]
+.br
+.\"
+\fBksi verify --ver-cal -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-pass \fIkey\fR] [\fImore options\fR]
+.br
+.\"
+\fBksi verify --ver-key -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fImore options\fR]
+.br
+.\"
+\fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-p \fIpubstr \fR[\fB-x -X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-pass \fIkey\fR]] [\fImore options\fR]
+.br
+.\"
+\fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fB-T \fItime\fR] \fR[\fB-x -X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-pass \fIkey\fR]] [\fImore options\fR]
+.br
+.\"
+.\"
+.SH DESCRIPTION
+.\"
+This is a KSI signature verification tool. 
+.\"
+.\"
+.SH OPTIONS
+.\"
+.TP
+\fB--ver-int\fR
+Perform internal verification.
+.\"
+.TP
+\fB--ver-cal\fR
+Perform calendar based verification (use extending service).
+.\"
+.TP
+\fB--ver-key\fR
+Perform key based verification.
+.\"
+.TP
+\fB--ver-pub\fR
+Perform publication based verification.
+.\"
+.TP
+\fB-i \fIdata\fR
+KSI signature file to be verified.
+.\"
+.TP
+\fB-f \fIdata\fR
+File or data hash to be verified. Hash format: <alg>:<hash in hex>.
+.\"
+.TP
+\fB-X \fIurl\fR
+Specify extending service URL.
+.\"
+.TP
+\fB--ext-user \fIstr\fR
+User name for extending service.
+.\"
+.TP
+\fB--ext-pass \fIstr\fR
+Key for extending service.
+.\"
+.TP
+\fB-x\fR
+Permit to use extender when using publication based verification.
+.\"
+.TP
+\fB-T \fItime\fR
+Specify a publication time to extend to as the number of seconds since 1970-01-01 00:00:00 UTC or time string formatted as "YYYY-MM-DD hh:mm:ss".
+.\"
+.TP
+\fB-p\fR | \fB--pub-str \fIstr\fR
+Specify a publication string to verify with.
+.\"
+.TP
+\fB-P \fIurl\fR
+Specify publications file URL (or file with uri scheme 'file://').
+.\"
+.TP
+\fB--cnstr \fIoid\fR=\fIvalue\fR
+OID and its expected value to verify publications file PKI signature. At least one constraint must be defined to be able to verify publications file but it is possible to define more. All values from lower priority source are ignored, where default configurations file is the lowest and command-line is the highest.
+.\"
+.TP
+\fB-V \fIfile\fR
+Specify an OpenSSL-style trust store file for publications file verification. All values from lower priority source are ignored, where default configurations file is the lowest and command-line is the highest.
+.\"
+.TP
+\fB-W \fIdir\fR
+Specify an OpenSSL-style trust store directory for publications file verification. All values from lower priority source are ignored, where default configurations file is the lowest and command-line is the highest.
+.\"
+.TP
+\fB-d\fR
+Use to dump signature file or get more precise information about verification process and errors.
+.\"
+.TP
+\fB--conf \fIfile\fR
+Specify a configurations file to override default service information. It must be noted that service info from command-line will override the configurations file. See \fBksi\fR(1) and \fBksi-conf\fR(5) for more information.
+.\"
+.TP
+\fB--log \fIfile\fR
+Write libksi log into file.
+.br
+.\"
+.\"
+.\"
+.SH EXIT STATUS
+See \fBksi\fR(1) for more information.
+.\"
+.\"
+.\"
+.SH EXAMPLES
+.\"
+In the following examples it is assumed that default service urls are defined (see \fBksi\fR(1) \fRfor more information). Signature files with extension \fB.ksig \fRare not and files with extension \fB.ext.ksig \fRare extended signatures.
+
+\fB1\fR To perform internal verification on KSI signature file \fItest.ksig \fRand document \fItest \fRcall:
+.RS
+\fBksi verify --ver-int -i \fItest.ksig\fR \fB-f \fItest\fR 
+.RE
+
+\fB2\fR To perform key based verification on freshly created KSI signature file \fItest.ksig \fRand document hash call:
+.RS
+\fBksi verify --ver-key -i \fItest.ksig\fR \fB-f \fISHA-256:c8ef6d57ac28d1b4e95a513959f5fcdd0688380a43d601a5ace1d2e96884690a\fR 
+.RE
+
+\fB3\fR To perform calendar based verification on KSI signature file \fItest.ksig \fRcall:
+.RS
+\fBksi verify --ver-cal -i \fItest.ksig\fR 
+.RE
+
+\fB4\fR To perform publication  based verification (printed in public media) on KSI signature file \fItest.ext.ksig \fRcall:
+.RS
+\fBksi verify --ver-pub -i \fItest.ext.ksig\fR \fB-p \fIAAAAAA-CWYEKQ-AAIYPA-UJ4GRT-HXMFBE-OTB4AB-XH3PT3-KNIKGV-PYCJXU-HL2TN4-RG6SCC-3ZGSBM
+.RE
+
+\fB5\fR To perform publication  based verification (publication from publications file) on KSI signature file \fItest.ext.ksig \fRcall:
+.RS
+\fBksi verify --ver-pub -i \fItest.ext.ksig\fR
+.RE
+
+\fB6\fR To perform publication  based verification on not extended KSI signature file \fItest.ksig \fRcall:
+.RS
+\fBksi verify --ver-pub -i \fItest.ksig\fR \fB-x
+.RE
+
+\fB7\fR To perform verification on KSI signature \fItest.ksig \fRas possible call and dump its content:
+.RS
+\fBksi verify -i \fItest.ksig\fR \fB-d\fR
+.RE
+
+
+
+
+
+.\"
+.\"
+.\"
+.SH ENVIRONMENT
+Environment variable \fBKSI_CONF \fR can be defined to set default KSI configurations file. See \fBksi\fR(1) and \fBksi-conf\fR(5) for more information.
+
+.SH AUTHOR
+
+Guardtime AS, http://www.guardtime.com/
+
+.SH SEE ALSO	
+\fBksi\fR(1), \fBksi-sign\fR(1), \fBksi-extend\fR(1), \fBksi-pubfile\fR(1), \fBksi-conf\fR(5) 
