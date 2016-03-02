@@ -18,7 +18,6 @@
 # "Guardtime" and "KSI" are trademarks or registered trademarks of
 # Guardtime Inc.
 
-./mkversion.sh
 
 KSITOOL_VER=$(<VERSION)
 
