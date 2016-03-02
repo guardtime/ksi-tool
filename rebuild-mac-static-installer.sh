@@ -24,9 +24,11 @@ KSITOOL_VER=$(<VERSION)
 MAC_KSITOOL_INSTALLER_VERSION="ksitool-mac-installer-$KSITOOL_VER.$MACHTYPE.pkg"
 
 OLD_STRING='</installer-gui-script>'
-ADD_README_BACKGROUND="<background file='background.png' mime-type='image/png' /> \
+ADD_LICENSE_BACKGROUND="<background file='background.png' mime-type='image/png' /> \
                        <license file='license.txt' />\
                        </installer-gui-script>"
+
+MAC_STATIC_DIR="packaging/MacOS/mac_static_content"
 
 
 PRF=ksitool-$(tr -d [:space:] < VERSION)
@@ -40,13 +42,14 @@ echo Running configure script... && \
 echo Running make... && \
 make clean && \
 make && \
-mkdir -p mac_static_content/Source && \
-cp src/ksitool mac_static_content/Source/ksitool && \
+mkdir -p $MAC_STATIC_DIR/Source && \
+cp license.txt $MAC_STATIC_DIR/Resources/license.txt && \
+cp src/ksitool $MAC_STATIC_DIR/Source/ksitool && \
 #create content needed for installer package
-pkgbuild --root mac_static_content/Source/ --identifier KsitoolInstaller --install-location /usr/local/bin mac_static_content/Source.pkg && \
-productbuild --synthesize --package mac_static_content/Source.pkg mac_static_content/Distribution.xml && \
+pkgbuild --root $MAC_STATIC_DIR/Source/ --identifier KsitoolInstaller --install-location /usr/local/bin $MAC_STATIC_DIR/Source.pkg && \
+productbuild --synthesize --package $MAC_STATIC_DIR/Source.pkg $MAC_STATIC_DIR/Distribution.xml && \
 #configure xml file must be modified so that license and background picture will be included in the installer package
-sed -i '' "s:${OLD_STRING}:${ADD_README_BACKGROUND}:g" mac_static_content/Distribution.xml && \
-productbuild --distribution mac_static_content/Distribution.xml --resources mac_static_content/Resources --package-path mac_static_content mac_static_content/$MAC_KSITOOL_INSTALLER_VERSION && \
-rm mac_static_content/Source.pkg && \
-rm mac_static_content/Distribution.xml
+sed -i '' "s:${OLD_STRING}:${ADD_LICENSE_BACKGROUND}:g" $MAC_STATIC_DIR/Distribution.xml && \
+productbuild --distribution $MAC_STATIC_DIR/Distribution.xml --resources $MAC_STATIC_DIR/Resources --package-path $MAC_STATIC_DIR $MAC_STATIC_DIR/$MAC_KSITOOL_INSTALLER_VERSION && \
+rm $MAC_STATIC_DIR/Source.pkg && \
+rm $MAC_STATIC_DIR/Distribution.xml
