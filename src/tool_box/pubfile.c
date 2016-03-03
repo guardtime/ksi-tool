@@ -318,7 +318,7 @@ static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ks
 	print_progressResult(res);
 	print_info("\n");
 
-	print_result("%s\n", KSI_PublicationData_toString(tmpPubData, buf,sizeof(buf)));
+	print_result("%s\n", KSITOOL_PublicationData_toString(tmpPubData, buf,sizeof(buf)));
 
 
 cleanup:

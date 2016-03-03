@@ -46,7 +46,7 @@ void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile){
 		res = KSI_PublicationRecordList_elementAt(list_publicationRecord, i, &publicationRecord);
 		if(res != KSI_OK) return;
 
-		if(KSI_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
+		if(KSITOOL_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
 
 		pStart = buf;
 		j=1;
@@ -89,7 +89,7 @@ void OBJPRINT_signaturePublicationReference(KSI_Signature *sig){
 		return;
 	}
 
-	if(KSI_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
+	if(KSITOOL_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
 	pStart = buf;
 
 	while((pLineBreak = strchr(pStart, '\n')) != NULL){
@@ -114,27 +114,15 @@ void OBJPRINT_signaturePublicationReference(KSI_Signature *sig){
 
 void OBJPRINT_Hash(KSI_DataHash *hsh, const char *prefix) {
 	char buf[1024];
-	char alg[3] = {' ', ' ', '\0'};
-	KSI_HashAlgorithm algorithm = KSI_HASHALG_INVALID;
 
 	if (hsh == NULL) return;
 
-	if (KSI_DataHash_toString(hsh, buf, sizeof(buf)) != buf
-			|| buf[0] == '\0' || buf[1] == '\0' || buf[2] == '\0') {
-		print_info("%sUnable to stringify hash.\n", prefix == NULL ? "" : prefix);
-		return;
-	}
+	if (KSITOOL_DataHash_toString(hsh, buf, sizeof(buf)) == NULL) return;
 
-	alg[0] = buf[0];
-	alg[1] = buf[1];
-
-	algorithm = strtol(alg, NULL, 16);
-
-	print_info("%s%s:%s.\n",
+	print_info("%s%s\n",
 			prefix == NULL ? "" : prefix,
-			KSI_getHashAlgorithmName(algorithm),
-			buf + 2);
-
+			buf
+			);
 
 	return;
 }

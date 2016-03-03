@@ -56,6 +56,9 @@ int KSITOOL_verifyPublicationsFile(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Publication
 void KSITOOL_KSI_ERRTrace_save(KSI_CTX *ctx);
 const char *KSITOOL_KSI_ERRTrace_get(void);
 
+char *KSITOOL_DataHash_toString(KSI_DataHash *hsh, char *buf, size_t buf_len);
+char* KSITOOL_PublicationData_toString(KSI_PublicationData *data, char *buf, size_t buf_len);
+char *KSITOOL_PublicationRecord_toString(KSI_PublicationRecord *rec, char *buf, size_t buf_len);
 
 
 #ifdef	__cplusplus
