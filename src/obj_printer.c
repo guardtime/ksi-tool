@@ -21,6 +21,7 @@
 #include <ksi/pkitruststore.h>
 #include <string.h>
 #include "obj_printer.h"
+#include "api_wrapper.h"
 #include "printer.h"
 
 void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile){
@@ -44,7 +45,7 @@ void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile){
 		res = KSI_PublicationRecordList_elementAt(list_publicationRecord, i, &publicationRecord);
 		if(res != KSI_OK) return;
 
-		if(KSI_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
+		if(KSITOOL_PublicationRecord_toString(publicationRecord, buf,sizeof(buf)) == NULL) return;
 
 		pStart = buf;
 		j=1;
@@ -87,7 +88,7 @@ void OBJPRINT_signaturePublicationReference(KSI_Signature *sig){
 		return;
 	}
 
-	if(KSI_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
+	if(KSITOOL_PublicationRecord_toString(publicationRecord, buf,sizeof(buf)) == NULL) return;
 	pStart = buf;
 
 	while((pLineBreak = strchr(pStart, '\n')) != NULL){
