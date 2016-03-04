@@ -66,7 +66,7 @@ int GT_publicationsFileTask(TASK *task){
 		res = GT_publicationsFileTask_createPublicationString(task, ksi, err, &pubData);
 		if (res != KT_OK) goto cleanup;
 
-		if(KSI_PublicationData_toString(pubData, buf,sizeof(buf)) != NULL) {
+		if(KSITOOL_PublicationData_toString(pubData, buf,sizeof(buf)) != NULL) {
 				print_result("%s\n", buf);
 		}
 	} else if (TASK_getID(task) == dumpPublicationsFile) {

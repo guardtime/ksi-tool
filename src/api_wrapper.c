@@ -21,6 +21,7 @@
 #include "api_wrapper.h"
 #include "gt_task_support.h"
 #include <ksi/ksi.h>
+#include <ksi/compatibility.h>
 #include "ksi/net.h"
 
 #define ERR_APPEND_KSI_ERR_EXT_MSG(err, res, ref_err, msg) \
@@ -247,6 +248,92 @@ int KSITOOL_verifyPublicationsFile(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Publication
 	appendPubFileErros(err, res);
 
 	return res;
+}
+
+char *KSITOOL_DataHash_toString(KSI_DataHash *hsh, char *buf, size_t buf_len) {
+	char tmp[1024];
+	char alg_hex_str[3] = {0, 0, 0};
+	KSI_HashAlgorithm alg = KSI_HASHALG_INVALID;
+
+	if (hsh == NULL || buf == NULL || buf_len == 0) return NULL;
+	if (KSI_DataHash_toString(hsh, tmp, sizeof(tmp)) ==  NULL) return NULL;
+	alg_hex_str[0] = tmp[0];
+	alg_hex_str[1] = tmp[1];
+	alg = strtol(alg_hex_str, NULL, 16);
+
+	KSI_snprintf(buf, buf_len, "%s:%s", KSI_getHashAlgorithmName(alg), tmp + 2);
+
+	return buf;
+}
+
+char* KSITOOL_PublicationData_toString(KSI_PublicationData *data, char *buf, size_t buf_len) {
+	char *ret = NULL;
+	int res;
+	char tmp[1024];
+	char hash_str[1024];
+	char *p_hsh = NULL;
+	KSI_DataHash *data_hash = NULL;
+
+	if (data == NULL || buf == NULL || buf_len == 0) goto cleanup;
+
+	if (KSI_PublicationData_toString(data, tmp, sizeof(tmp)) == NULL) goto cleanup;
+	p_hsh = strstr(tmp, "Published hash:");
+
+	if (p_hsh == NULL) {
+		KSI_strncpy(buf, tmp, buf_len);
+	} else {
+		*p_hsh = '\0';
+
+		res = KSI_PublicationData_getImprint(data, &data_hash);
+		if (res != KT_OK) goto cleanup;
+
+		if (KSITOOL_DataHash_toString(data_hash, hash_str, sizeof(hash_str)) == NULL) goto cleanup;
+		KSI_snprintf(buf, buf_len, "%s%s%s", tmp, "Published hash: ", hash_str);
+	}
+
+	ret = buf;
+
+cleanup:
+
+	return ret;
+}
+
+char *KSITOOL_PublicationRecord_toString(KSI_PublicationRecord *rec, char *buf, size_t buf_len) {
+	int res;
+	KSI_PublicationData *pub_data = NULL;
+	KSI_Utf8StringList *pub_ref_list = NULL;
+	char *ret = NULL;
+	char tmp[1024];
+	size_t count = 0;
+	size_t i;
+
+
+	if (rec == NULL || buf == NULL || buf_len == 0) goto cleanup;
+
+
+	res = KSI_PublicationRecord_getPublishedData(rec, &pub_data);
+	if (res != KSI_OK) goto cleanup;
+
+	res = KSI_PublicationRecord_getPublicationRefList(rec, &pub_ref_list);
+	if (res != KSI_OK) goto cleanup;
+
+	count += KSI_snprintf(buf + count, buf_len - count, "%s", KSITOOL_PublicationData_toString(pub_data, tmp, sizeof(tmp)));
+
+	for (i = 0; i < KSI_Utf8StringList_length(pub_ref_list); i++) {
+		KSI_Utf8String *ref = NULL;
+
+		res = KSI_Utf8StringList_elementAt(pub_ref_list, i, &ref);
+		if (res != KSI_OK) goto cleanup;
+
+		count += KSI_snprintf(buf + count, buf_len - count, "\nRef: %s", KSI_Utf8String_cstr(ref));
+	}
+
+
+	ret = buf;
+
+cleanup:
+
+	return ret;
 }
 
 char err_buf[0x2000] = "";
