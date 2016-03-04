@@ -31,11 +31,12 @@
 struct printer_conf_st {
 	unsigned print;
 	FILE *info;
+	FILE *result;
 	FILE *warning;
 	FILE *error;
 };
 
-struct printer_conf_st printer_conf = {(PRINT_INFO | PRINT_WARNINGS | PRINT_ERRORS), NULL, NULL, NULL};
+struct printer_conf_st printer_conf = {(PRINT_INFO | PRINT_WARNINGS | PRINT_ERRORS | PRINT_RESULT), NULL, NULL, NULL};
 
 void print_setStream(unsigned print, FILE* stream) {
 	if (print & PRINT_INFO) {
@@ -46,6 +47,9 @@ void print_setStream(unsigned print, FILE* stream) {
 	}
 	if (print & PRINT_ERRORS) {
 		printer_conf.error = stream;
+	}
+	if (print & PRINT_RESULT) {
+		printer_conf.result = stream;
 	}
 }
 
@@ -69,7 +73,7 @@ int print_result(const char *format, ... ) {
 	if (printer_conf.print & PRINT_RESULT) {
 		va_list va;
 		va_start(va, format);
-		res = vfprintf(stdout, format, va);
+		res = vfprintf(printer_conf.result, format, va);
 		va_end(va);
 	}
 	return res;
@@ -80,7 +84,7 @@ int print_info(const char *format, ... ) {
 	if (printer_conf.print & PRINT_INFO) {
 		va_list va;
 		va_start(va, format);
-		res = vfprintf(stdout, format, va);
+		res = vfprintf(printer_conf.info, format, va);
 		va_end(va);
 	}
 	return res;
@@ -91,7 +95,7 @@ int print_warnings(const char *format, ... ) {
 	if (printer_conf.print & PRINT_WARNINGS) {
 		va_list va;
 		va_start(va, format);
-		res = vfprintf(stdout, format, va);
+		res = vfprintf(printer_conf.warning, format, va);
 		va_end(va);
 	}
 	return res;
@@ -102,12 +106,8 @@ int print_errors(const char *format, ... ) {
 	if (printer_conf.print & PRINT_ERRORS) {
 		va_list va;
 		va_start(va, format);
-		res = vfprintf(stderr, format, va);
+		res = vfprintf(printer_conf.error, format, va);
 		va_end(va);
 	}
 	return res;
 }
-
-
-
-

@@ -65,7 +65,7 @@ static bool includeParametersFromFile(PARAM_SET *set, int priority){
 				}
 			}
 
-			PARAM_SET_readFromFile(fname, set, priority);
+			PARAM_SET_readFromFile(set, fname, NULL, priority);
 			if(++i>255){
 				print_errors("Error: Include file list is too long.");
 				return false;
@@ -349,12 +349,12 @@ static void GT_pritHelp(void){
 			print_info("\n");
 }
 
-static int wrapper_returnStr(const char* str, void** obj){
+static int wrapper_returnStr(void *extra, const char* str, void** obj){
 	*obj = (void*)str;
 	return PST_OK;
 }
 
-static int wrapper_returnInt(const char* str,  void** obj){
+static int wrapper_returnInt(void *extra, const char* str,  void** obj){
 	int *pI = (int*)obj;
 	*pI = atoi(str);
 	return PST_OK;
@@ -364,7 +364,7 @@ static int wrapper_returnInt(const char* str,  void** obj){
 int main(int argc, char** argv, char **envp) {
 	int res;
 	PARAM_SET *set = NULL;
-	TASK_SET *tasks = NULL;
+	TASK_SET *task_set = NULL;
 	TASK *task = NULL;
 	int retval = EXIT_SUCCESS;
 	char buf[2048];
@@ -400,25 +400,25 @@ int main(int argc, char** argv, char **envp) {
 	PARAM_SET_addControl(set, "{x}{s}{v}{p}{t}{r}{n}{d}{h}{silent}{nowarn}", isFlagFormatOK, contentIsOK, NULL, NULL);
 
 
-	TASK_SET_new(&tasks);
+	TASK_SET_new(&task_set);
 
 	/*Define possible tasks*/
-	/*						ID							DESC											MAN				ATL		FORBIDDEN					IGN	*/
-	TASK_SET_add(tasks, signDataFile,				"Sign data file",									"s,f,o,S",		NULL,	"x,p,v,aggre,F,i,T",		"b,r");
-	TASK_SET_add(tasks, signHash,					"Sign hash",										"s,F,o,S",		NULL,	"x,p,v,aggre,f,i,T,H",		"b,r");
-	TASK_SET_add(tasks, extendTimestamp,			"Extend signature",									"x,i,o,P,X",	NULL,	"s,p,v,aggre,f,F,H",		NULL);
-	TASK_SET_add(tasks, downloadPublicationsFile,	"Download publications file",						"p,o,P,cnstr",	NULL,	"s,x,v,aggre,f,F,T,i,H",	"n,b");
-	TASK_SET_add(tasks, createPublicationString,	"Create publication string",						"p,T,X",		NULL,	"s,x,v,aggre,f,F,o,i,H",	"n,r");
-	TASK_SET_add(tasks, verifyTimestampUsrPub,		"Verify with user publication, no extending.",		"v,i,ref",		NULL,	"s,p,aggre,H,x",				NULL);
-	TASK_SET_add(tasks, verifyTimestampUsrPub_x,	"Verify with user publication permit extending.",	"v,i,ref,x,X",	NULL,	"s,p,aggre,H",				NULL);
-	TASK_SET_add(tasks, verifyTimestamp,			"Verify signature",									"v,i",			NULL,	"s,p,x,aggre,H,ref",		NULL);
-	TASK_SET_add(tasks, verifyTimestampOnline,		"Verify online",									"v,x,i,X",		NULL,	"s,p,aggre,T,H,ref",		NULL);
-	TASK_SET_add(tasks, verifyPublicationsFile,		"Verify publications file",							"v,b,cnstr",	NULL,	"x,s,p,aggre,i,f,F,T,H",	NULL);
-	TASK_SET_add(tasks, dumpPublicationsFile,		"Dump publications file",							"p,d",			NULL,	"s,x,v,aggre,f,F,T,i,H,o",	NULL);
+	/*						ID							DESC												MAN				ATL		FORBIDDEN					IGN	*/
+	TASK_SET_add(task_set, signDataFile,				"Sign data file.",									"s,f,o,S",		NULL,	"x,p,v,aggre,F,i,T",		"b,r");
+	TASK_SET_add(task_set, signHash,					"Sign hash.",										"s,F,o,S",		NULL,	"x,p,v,aggre,f,i,T,H",		"b,r");
+	TASK_SET_add(task_set, extendTimestamp,				"Extend signature.",								"x,i,o,P,X",	NULL,	"s,p,v,aggre,f,F,H",		NULL);
+	TASK_SET_add(task_set, downloadPublicationsFile,	"Download publications file.",						"p,o,P,cnstr",	NULL,	"s,x,v,aggre,f,F,T,i,H",	"n,b");
+	TASK_SET_add(task_set, createPublicationString,		"Create publication string.",						"p,T,X",		NULL,	"s,x,v,aggre,f,F,o,i,H",	"n,r");
+	TASK_SET_add(task_set, verifyTimestampUsrPub,		"Verify with user publication, no extending.",		"v,i,ref",		NULL,	"s,p,aggre,H,x,o",			NULL);
+	TASK_SET_add(task_set, verifyTimestampUsrPub_x,		"Verify with user publication, permit extending.",	"v,i,ref,x,X",	NULL,	"s,p,aggre,H,o",			NULL);
+	TASK_SET_add(task_set, verifyTimestamp,				"Verify signature.",								"v,i",			NULL,	"s,p,x,aggre,H,ref,o",		NULL);
+	TASK_SET_add(task_set, verifyTimestampOnline,		"Verify online.",									"v,x,i,X",		NULL,	"s,p,aggre,T,H,ref,o",		NULL);
+	TASK_SET_add(task_set, verifyPublicationsFile,		"Verify publications file.",						"v,b,cnstr",	NULL,	"x,s,p,aggre,i,f,F,T,H",	NULL);
+	TASK_SET_add(task_set, dumpPublicationsFile,		"Dump publications file.",							"p,d",			NULL,	"s,x,v,aggre,f,F,T,i,H,o",	NULL);
 
 
 	/*Read parameter set*/
-	PARAM_SET_readFromCMD(argc, argv, set, 3);
+	PARAM_SET_readFromCMD(set, argc, argv, NULL, 3);
 
 	if (PARAM_SET_isSetByName(set, "silent")) {
 		print_disable(PRINT_WARNINGS | PRINT_INFO);
@@ -463,18 +463,9 @@ int main(int argc, char** argv, char **envp) {
 		print_disable(PRINT_WARNINGS | PRINT_INFO);
 	}
 
-	if (PARAM_SET_isTypoFailure(set)) {
-		buf[0] = 0;
-		print_errors("%s", PARAM_SET_typosToString(set, "Typo: ", buf, sizeof(buf)));
-		retval = EXIT_INVALID_CL_PARAMETERS;
-		goto cleanup;
-	}
-
-	if (PARAM_SET_isUnknown(set)) {
-		buf[0] = 0;
-		print_warnings("%s", PARAM_SET_unknownsToString(set, "Warning: ", buf, sizeof(buf)));
-	}
-
+	/**
+	 * Check the format.
+     */
 	if(!PARAM_SET_isFormatOK(set)){
 		buf[0] = 0;
 		print_errors("%s", PARAM_SET_invalidParametersToString(set, "Error: ", getParameterErrorString, buf, sizeof(buf)));
@@ -482,17 +473,41 @@ int main(int argc, char** argv, char **envp) {
 		goto cleanup;
 	}
 
-	res = TASK_SET_analyzeConsistency(tasks, set, 0.1);
+	/**
+	 * Check for typos and unknown parameters.
+     */
+	if (PARAM_SET_isTypoFailure(set)) {
+			print_errors("%s\n", PARAM_SET_typosToString(set, PST_TOSTR_DOUBLE_HYPHEN, NULL, buf, sizeof(buf)));
+			retval = EXIT_INVALID_CL_PARAMETERS;
+			goto cleanup;
+	} else if (PARAM_SET_isUnknown(set)){
+			print_info("%s\n", PARAM_SET_unknownsToString(set, "Warning: ", buf, sizeof(buf)));
+	}
+
+
+	res = TASK_SET_analyzeConsistency(task_set, set, 0.1);
 	if (res != PST_OK) {
 		print_errors("Error: Unable to analyze task set.\n");
 		retval = EXIT_FAILURE;
 		goto cleanup;
 	}
 
-	res = TASK_SET_getConsistentTask(tasks, &task);
-	if (res != PST_OK) {
+	res = TASK_SET_getConsistentTask(task_set, &task);
+	if (res != PST_OK && res != PST_TASK_ZERO_CONSISTENT_TASKS && res != PST_TASK_MULTIPLE_CONSISTENT_TASKS) {
 		print_errors("Task is not defined. Use (-x, -s, -v, -p) and read help -h.\n");
 		retval = EXIT_FAILURE;
+		goto cleanup;
+	}
+
+	if (task == NULL) {
+		int ID;
+		if (TASK_SET_isOneFromSetTheTarget(task_set, 0.1, &ID)) {
+			print_errors("%s", TASK_SET_howToRepair_toString(task_set, set, ID, NULL, buf, sizeof(buf)));
+		} else {
+			print_errors("Task is not defined. Use (-x, -s, -v, -p) and read help -h.\n");
+			print_errors("%s", TASK_SET_suggestions_toString(task_set, 3, buf, sizeof(buf)));
+		}
+		retval = KT_INVALID_CMD_PARAM;
 		goto cleanup;
 	}
 
@@ -523,7 +538,7 @@ cleanup:
 	if(PARAM_SET_isSetByName(set, "h")) GT_pritHelp();
 
 	PARAM_SET_free(set);
-	TASK_SET_free(tasks);
+	TASK_SET_free(task_set);
 
 	/*Can be used in debug mode*/
 	//_CrtDumpMemoryLeaks();

@@ -1,8 +1,14 @@
-* BUGFIX: Verification with publication string fixed.
-* IMPROVEMENT: Enabled autotools option subdir-objects to remove build errors (on Mac OS and Ubuntu).
-* IMPROVEMENT: Added option to build static ksitool (TOOL-103)
-* IMPROVEMENT: Possibility to create installer package for Mac OS with static ksitool (KCT-77, TOOL-25).
+* IMPROVEMENT: Enabled autotools option subdir-objects to remove build errors (on Mac OS and Ubuntu). (TOOL-97)
+* IMPROVEMENT: Added option to build static ksitool. (TOOL-103)
+* IMPROVEMENT: Possibility to create installer package for Mac OS with static ksitool. (KCT-77, TOOL-25).
 * IMPROVEMENT: Hash imprints are printed in more human-readable way as the hash algorithm ID in hex string is replaced with the algorithms name. (TOOL-115)
+
+Version 1.9
+
+2016-03-04 1.9.0
+
+* IMPROVEMENT: Ksitool parameter handling improved. (TOOL-67)
+* BUGFIX: Verification with publication string fixed. (TOOL-42)
 
 Version 1.8
 
