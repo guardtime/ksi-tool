@@ -477,7 +477,7 @@ int main(int argc, char** argv, char **envp) {
 	 * Check for typos and unknown parameters.
      */
 	if (PARAM_SET_isTypoFailure(set)) {
-			print_info("%s\n", PARAM_SET_typosToString(set, PST_TOSTR_DOUBLE_HYPHEN, NULL, buf, sizeof(buf)));
+			print_errors("%s\n", PARAM_SET_typosToString(set, PST_TOSTR_DOUBLE_HYPHEN, NULL, buf, sizeof(buf)));
 			retval = EXIT_INVALID_CL_PARAMETERS;
 			goto cleanup;
 	} else if (PARAM_SET_isUnknown(set)){
@@ -502,10 +502,10 @@ int main(int argc, char** argv, char **envp) {
 	if (task == NULL) {
 		int ID;
 		if (TASK_SET_isOneFromSetTheTarget(task_set, 0.1, &ID)) {
-			print_info("%s", TASK_SET_howToRepair_toString(task_set, set, ID, NULL, buf, sizeof(buf)));
+			print_errors("%s", TASK_SET_howToRepair_toString(task_set, set, ID, NULL, buf, sizeof(buf)));
 		} else {
 			print_errors("Task is not defined. Use (-x, -s, -v, -p) and read help -h.\n");
-			print_info("%s", TASK_SET_suggestions_toString(task_set, 3, buf, sizeof(buf)));
+			print_errors("%s", TASK_SET_suggestions_toString(task_set, 3, buf, sizeof(buf)));
 		}
 		retval = KT_INVALID_CMD_PARAM;
 		goto cleanup;
