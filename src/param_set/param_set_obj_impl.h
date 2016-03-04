@@ -58,7 +58,7 @@ struct PARAM_st{
 
 	PARAM_VAL *arg;		/* Linked list of parameter values. */
 
-	int (*extractObject)(const char*, void**);		/* Function pointer to convert or repair the value before format and content check. */
+	int (*extractObject)(void *extra, const char*, void**);		/* Function pointer to convert or repair the value before format and content check. */
 	int (*convert)(const char*, char*, unsigned);	/* Function pointer to convert or repair the value before format and content check. */
 	int (*controlFormat)(const char*);				/* Function pointer for format control. */
 	int (*controlContent)(const char*);				/* Function pointer for content control. */
