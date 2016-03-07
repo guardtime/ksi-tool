@@ -58,6 +58,8 @@ int SMART_FILE_read(SMART_FILE *file, char *raw, size_t raw_len, size_t *count);
  */
 int SMART_FILE_isEof(SMART_FILE *file);
 
+const char* SMART_FILE_errorToString(int error_code);
+
 #ifdef	__cplusplus
 }
 #endif

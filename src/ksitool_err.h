@@ -26,7 +26,11 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
-						 
+
+//    KSITOOL_ERR_BASE  0x10001
+//PARAM_SET_ERROR_BASE  0x30001
+//SMART_FILE_ERROR_BASE 0x40001
+
 #define KSITOOL_ERR_BASE 0x10001
 #define MAX_MESSAGE_LEN 1024
 #define MAX_FILE_NAME_LEN 256

@@ -591,3 +591,35 @@ int SMART_FILE_isEof(SMART_FILE *file) {
 	if (file->isOpen == 0) return 0;
 	return file->isEOF;
 }
+
+const char* SMART_FILE_errorToString(int error_code) {
+	switch (error_code) {
+		case SMART_FILE_OK:
+			return "OK.";
+		case SMART_FILE_OUT_OF_MEM:
+			return "Ksitool out of memory.";
+		case SMART_FILE_INVALID_ARG:
+			return "Invalid argument.";
+		case SMART_FILE_INVALID_MODE:
+			return "Invalid file open mode.";
+		case SMART_FILE_UNABLE_TO_OPEN:
+			return "Unable to open file.";
+		case SMART_FILE_UNABLE_TO_READ:
+			return "Unable to read from file.";
+		case SMART_FILE_UNABLE_TO_WRITE:
+			return "Unable to write to file.";
+		case SMART_FILE_BUFFER_TOO_SMALL:
+			return "Insufficient buffer size.";
+		case SMART_FILE_NOT_OPEND:
+			return "File is not opened.";
+		case SMART_FILE_DOES_NOT_EXIST:
+			return "File does not exist.";
+		case SMART_FILE_ACCESS_DENIED:
+			return "File access denied.";
+		case SMART_FILE_PIPE_ERROR:
+			return "Pipe error.";
+		case SMART_FILE_UNKNOWN_ERROR:
+		default:
+			return "Unknown error.";
+	}
+}

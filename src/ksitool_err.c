@@ -24,8 +24,9 @@
 #include <ksi/ksi.h>
 #include "ksitool_err.h"
 #include "param_set/param_set.h"
+#include "tool_box/smart_file.h"
 
-static int ksiErrToExitcode(int error_code){
+static int ksi_ErrToExitcode(int error_code){
 	switch (error_code) {
 		case KSI_OK:
 			return EXIT_SUCCESS;
@@ -115,7 +116,7 @@ static int ksiErrToExitcode(int error_code){
 	}
 }
 
-static int ksitoolErrToExitcode(int error_code) {
+static int ksitool_ErrToExitcode(int error_code) {
 	switch (error_code) {
 		case KSI_OK:
 			return EXIT_SUCCESS;
@@ -141,6 +142,46 @@ static int ksitoolErrToExitcode(int error_code) {
 			return EXIT_INVALID_CONF;
 		case KT_UNKNOWN_ERROR:
 			return EXIT_FAILURE;
+		default:
+			return EXIT_FAILURE;
+	}
+}
+
+static int param_set_ErrToExitcode(int error_code) {
+	switch (error_code) {
+		case PST_OK:
+			return EXIT_SUCCESS;
+		case PST_OUT_OF_MEMORY:
+			return EXIT_OUT_OF_MEMORY;
+		case PST_IO_ERROR:
+			return EXIT_IO_ERROR;
+		case PST_INVALID_FORMAT:
+			return EXIT_INVALID_FORMAT;
+		case PST_TASK_MULTIPLE_CONSISTENT_TASKS:
+		case PST_TASK_ZERO_CONSISTENT_TASKS:
+			return EXIT_INVALID_CL_PARAMETERS;
+		default:
+			return EXIT_FAILURE;
+	}
+}
+
+
+
+static int smart_file_ErrToExitcode(int error_code) {
+	switch (error_code) {
+		case SMART_FILE_OK:
+			return EXIT_SUCCESS;
+		case SMART_FILE_OUT_OF_MEM:
+			return EXIT_OUT_OF_MEMORY;
+		case SMART_FILE_INVALID_MODE:
+		case SMART_FILE_UNABLE_TO_OPEN:
+		case SMART_FILE_UNABLE_TO_READ:
+		case SMART_FILE_UNABLE_TO_WRITE:
+		case SMART_FILE_DOES_NOT_EXIST:
+		case SMART_FILE_PIPE_ERROR:
+			return EXIT_IO_ERROR;
+		case SMART_FILE_ACCESS_DENIED:
+			return EXIT_NO_PRIVILEGES;
 		default:
 			return EXIT_FAILURE;
 	}
@@ -186,9 +227,13 @@ int errToExitCode(int error) {
 	int exit;
 
 	if(error < KSITOOL_ERR_BASE)
-		exit = ksiErrToExitcode(error);
+		exit = ksi_ErrToExitcode(error);
+	else if (error >= KSITOOL_ERR_BASE && error < PARAM_SET_ERROR_BASE)
+		exit = ksitool_ErrToExitcode(error);
+	else if (error >= PARAM_SET_ERROR_BASE && error < SMART_FILE_ERROR_BASE)
+		exit = param_set_ErrToExitcode(error);
 	else
-		exit = ksitoolErrToExitcode(error);
+		exit = smart_file_ErrToExitcode(error);
 
 	return exit;
 }
@@ -200,8 +245,10 @@ const char* errToString(int error) {
 		str = KSI_getErrorString(error);
 	else if (error >= KSITOOL_ERR_BASE && error < PARAM_SET_ERROR_BASE)
 		str = ksitoolErrToString(error);
-	else
+	else if (error >= PARAM_SET_ERROR_BASE && error < SMART_FILE_ERROR_BASE)
 		str = PARAM_SET_errorToString(error);
+	else
+		str = SMART_FILE_errorToString(error);
 
 	return str;
 }
