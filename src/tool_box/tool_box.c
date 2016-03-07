@@ -92,7 +92,7 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **o
 
 		res = SMART_FILE_read(file, buf + buf_len, buf_size - buf_len, &count);
 
-		if(res != KT_OK || SMART_FILE_isError(file)) {
+		if(res != SMART_FILE_OK) {
 			ERR_TRCKR_ADD(err, res = KT_IO_ERROR, "Error: Unable to read data from file.");
 			goto cleanup;
 		}
@@ -154,7 +154,7 @@ static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, void *obj, int (*serialize)(
 	}
 
 	res = SMART_FILE_write(file, raw, raw_len, &count);
-	if(res != KT_OK || SMART_FILE_isError(file) || count != raw_len) {
+	if(res != SMART_FILE_OK || count != raw_len) {
 		ERR_TRCKR_ADD(err, res = KT_IO_ERROR, "Error: Unable to write to file.");
 		goto cleanup;
 	}

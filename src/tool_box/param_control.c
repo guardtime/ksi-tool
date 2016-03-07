@@ -319,7 +319,7 @@ static int file_get_hash(ERR_TRCKR *err, KSI_CTX *ctx, const char *fname_in, con
 		write_count = 0;
 
 		res = SMART_FILE_read(in, buf, sizeof(buf), &read_count);
-		if (res != KT_OK || SMART_FILE_isError(in)) {
+		if (res != SMART_FILE_OK) {
 			ERR_TRCKR_ADD(err, res = KT_IO_ERROR, "Error: Unable to read data from file.");
 			goto cleanup;
 		}
@@ -329,7 +329,7 @@ static int file_get_hash(ERR_TRCKR *err, KSI_CTX *ctx, const char *fname_in, con
 
 		if (out != NULL) {
 			res = SMART_FILE_write(out, buf, read_count, &write_count);
-			if (res != KT_OK || SMART_FILE_isError(in) || write_count != read_count) {
+			if (res != SMART_FILE_OK || write_count != read_count) {
 				ERR_TRCKR_ADD(err, res = KT_IO_ERROR, "Error: Unable to write to file.");
 				goto cleanup;
 			}
