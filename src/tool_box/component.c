@@ -38,7 +38,7 @@ struct TOOL_COMPONENT_st {
 	/**
 	 *
 	 */
-	const char *name;
+	char *name;
 	int id;
 
 	/**
@@ -175,7 +175,8 @@ static void tool_component_free(TOOL_COMPONENT *obj) {
 			obj->libloader_free(obj->libloader);
 		}
 
-	free(obj);
+		if (obj->name != NULL) free(obj->name);
+		free(obj);
 	}
 }
 
@@ -292,7 +293,7 @@ void TOOL_COMPONENT_LIST_free(TOOL_COMPONENT_LIST *obj) {
 		for (i = 0; i < obj->count; i++) {
 			tool_component_free(obj->component[i]);
 		}
-
+		free(obj->component);
 		free(obj);
 	}
 }
