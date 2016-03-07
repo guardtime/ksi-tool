@@ -60,6 +60,7 @@ char *KSITOOL_DataHash_toString(KSI_DataHash *hsh, char *buf, size_t buf_len);
 char* KSITOOL_PublicationData_toString(KSI_PublicationData *data, char *buf, size_t buf_len);
 char *KSITOOL_PublicationRecord_toString(KSI_PublicationRecord *rec, char *buf, size_t buf_len);
 
+int KSITOOL_LOG_SmartFile(void *logCtx, int logLevel, const char *message);
 
 #ifdef	__cplusplus
 }

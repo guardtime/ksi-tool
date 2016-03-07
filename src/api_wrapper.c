@@ -25,6 +25,7 @@
 #include <ksi/compatibility.h>
 #include "ksi/net.h"
 #include "tool_box/tool_box.h"
+#include "tool_box/smart_file.h"
 
 #define ERR_APPEND_KSI_ERR_EXT_MSG(err, res, ref_err, msg) \
 		if (res == ref_err) { \
@@ -387,4 +388,39 @@ char *KSITOOL_PublicationRecord_toString(KSI_PublicationRecord *rec, char *buf, 
 cleanup:
 
 	return ret;
+}
+
+static const char *level2str(int level) {
+	switch (level) {
+		case KSI_LOG_DEBUG: return "DEBUG";
+		case KSI_LOG_INFO: return "INFO";
+		case KSI_LOG_NOTICE: return "NOTICE";
+		case KSI_LOG_WARN: return "WARN";
+		case KSI_LOG_ERROR: return "ERROR";
+		default: return "UNKNOWN LOG LEVEL";
+	}
+}
+
+int KSITOOL_LOG_SmartFile(void *logCtx, int logLevel, const char *message) {
+	char time_buf[32];
+	char buf[0xffff];
+	struct tm *tm_info;
+	time_t timer;
+	SMART_FILE *f = (SMART_FILE *) logCtx;
+	size_t count = 0;
+
+	timer = time(NULL);
+
+	tm_info = localtime(&timer);
+	if (tm_info == NULL) {
+		return KSI_UNKNOWN_ERROR;
+	}
+
+	if (f != NULL) {
+		strftime(time_buf, sizeof(time_buf), "%d.%m.%Y %H:%M:%S", tm_info);
+		count = KSI_snprintf(buf, sizeof(buf), "%s [%s] - %s\n", level2str(logLevel), time_buf, message);
+		SMART_FILE_write(f, buf, count, NULL);
+	}
+
+	return KSI_OK;
 }

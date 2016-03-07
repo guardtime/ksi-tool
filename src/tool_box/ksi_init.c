@@ -57,7 +57,7 @@ static int tool_init_ksi_logger(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set, SM
 			goto cleanup;
 		}
 
-		res = KSI_CTX_setLoggerCallback(ksi, KSI_LOG_StreamLogger, SMART_FILE_getFile(tmp));
+		res = KSI_CTX_setLoggerCallback(ksi, KSITOOL_LOG_SmartFile, tmp);
 		ERR_CATCH_MSG(err, res, "Error: Unable to set logger callback function.");
 
 		res = KSI_CTX_setLogLevel(ksi, KSI_LOG_DEBUG);
