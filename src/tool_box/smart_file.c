@@ -67,6 +67,7 @@ static void smart_file_close_unix(void *file);
 static int smart_file_read_unix(void *file, char *raw, size_t raw_len, size_t *count);
 static int smart_file_write_unix(void *file, char *raw, size_t raw_len, size_t *count);
 static int smart_file_get_stream_unix(const char *mode, void **stream);
+static int smart_file_get_error_unix(void);
 #endif
 
 #ifdef WIN_HANDLE
@@ -225,8 +226,22 @@ static int smart_file_get_error_win(void) {
 	error_code = GetLastError();
 
 	switch(error_code) {
+		case ERROR_SUCCESS:
+			smart_file_error_code = SMART_FILE_OK;
+		break;
+
+		case ERROR_BAD_PIPE:
+		case ERROR_PIPE_BUSY:
 		case ERROR_BROKEN_PIPE:
+		case ERROR_NO_DATA:
+		case ERROR_PIPE_NOT_CONNECTED:
 			smart_file_error_code = SMART_FILE_PIPE_ERROR;
+		break;
+
+		case ERROR_DISK_FULL:
+		case ERROR_NOT_ENOUGH_MEMORY:
+		case ERROR_OUTOFMEMORY:
+			smart_file_error_code = SMART_FILE_OUT_OF_MEM;
 		break;
 
 		case ERROR_INSUFFICIENT_BUFFER:
@@ -235,11 +250,29 @@ static int smart_file_get_error_win(void) {
 		break;
 
 		case ERROR_FILE_NOT_FOUND:
+		case ERROR_INVALID_DRIVE:
 			smart_file_error_code =  SMART_FILE_DOES_NOT_EXIST;
 		break;
 
+		case ERROR_BUSY:
+		case ERROR_OPEN_FAILED:
+		case ERROR_DRIVE_LOCKED:
+			smart_file_error_code =  SMART_FILE_UNABLE_TO_OPEN;
+		break;
+
+		case ERROR_FILE_TOO_LARGE:
+			smart_file_error_code =  SMART_FILE_UNABLE_TO_WRITE;
+		break;
+
 		case ERROR_ACCESS_DENIED:
+		case ERROR_WRITE_PROTECT:
 			smart_file_error_code =  SMART_FILE_ACCESS_DENIED;
+		break;
+
+		case ERROR_DIRECTORY:
+		case ERROR_INVALID_NAME:
+		case ERROR_BAD_PATHNAME:
+			smart_file_error_code =  SMART_FILE_INVALID_PATH;
 		break;
 
 		default:
@@ -331,7 +364,8 @@ static int smart_file_open_unix(const char *fname, const char *mode, void **file
 
 	tmp = fopen(fname, mode);
 	if (tmp == NULL) {
-		res = SMART_FILE_UNABLE_TO_OPEN;
+		res = smart_file_get_error_unix();
+		res = (res == SMART_FILE_UNKNOWN_ERROR) ? SMART_FILE_UNABLE_TO_OPEN : res;
 		goto cleanup;
 	}
 
@@ -365,7 +399,8 @@ static int smart_file_read_unix(void *file, char *raw, size_t raw_len, size_t *c
 	read_count = fread(raw, 1, raw_len, fp);
 	/* TODO: Improve error handling.*/
 	if (read_count == 0 && !feof(fp)) {
-		res = SMART_FILE_UNABLE_TO_READ;
+		res = smart_file_get_error_unix();
+		res = (res == SMART_FILE_UNKNOWN_ERROR) ? SMART_FILE_UNABLE_TO_READ : res;
 		goto cleanup;
 	}
 
@@ -384,18 +419,23 @@ cleanup:
 static int smart_file_write_unix(void *file, char *raw, size_t raw_len, size_t *count) {
 	int res;
 	FILE *fp = file;
-	size_t wrrite_count = 0;
+	size_t write_count = 0;
 
 	if (file == NULL || raw == NULL || raw_len == 0) {
 		res = SMART_FILE_INVALID_ARG;
 		goto cleanup;
 	}
 
-	wrrite_count = fwrite(raw, 1, raw_len, fp);
-	/* TODO: Improve error handling.*/
+	write_count = fwrite(raw, 1, raw_len, fp);
+
+	if (write_count != raw_len) {
+		res = smart_file_get_error_unix();
+		res = (res == SMART_FILE_UNKNOWN_ERROR) ? SMART_FILE_UNABLE_TO_WRITE : res;
+		goto cleanup;
+	}
 
 	if (count != NULL) {
-		*count = (size_t)wrrite_count;
+		*count = (size_t)write_count;
 	}
 
 	res = SMART_FILE_OK;
@@ -450,6 +490,39 @@ cleanup:
 
 	return res;
 }
+
+static int smart_file_get_error_unix(void) {
+	int error_code = 0;
+	int smart_file_error_code = 0;
+
+
+	error_code = errno;
+
+	switch(error_code) {
+		case 0:
+			smart_file_error_code =  SMART_FILE_OK;
+		break;
+
+		case ENOENT:
+			smart_file_error_code =  SMART_FILE_DOES_NOT_EXIST;
+		break;
+
+		case EACCES:
+			smart_file_error_code =  SMART_FILE_ACCESS_DENIED;
+		break;
+
+		case EINVAL:
+			smart_file_error_code =  SMART_FILE_INVALID_PATH;
+		break;
+
+		default:
+			smart_file_error_code = SMART_FILE_UNKNOWN_ERROR;
+		break;
+	}
+
+	return smart_file_error_code;
+}
+
 #endif
 
 
@@ -618,6 +691,8 @@ const char* SMART_FILE_errorToString(int error_code) {
 			return "File access denied.";
 		case SMART_FILE_PIPE_ERROR:
 			return "Pipe error.";
+		case SMART_FILE_INVALID_PATH:
+			return "Invalid path.";
 		case SMART_FILE_UNKNOWN_ERROR:
 		default:
 			return "Unknown error.";
