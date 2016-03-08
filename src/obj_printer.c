@@ -36,7 +36,7 @@ void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile){
 
 	if(pubFile == NULL) return;
 
-	print_info("Publications file references:\n");
+	print_info("Publication Records:\n");
 
 	res = KSI_PublicationsFile_getPublications(pubFile, &list_publicationRecord);
 	if(res != KSI_OK) return;
@@ -80,7 +80,7 @@ void OBJPRINT_signaturePublicationReference(KSI_Signature *sig){
 	int h=0;
 	if(sig == NULL) return;
 
-	print_info("Signatures publication references:\n");
+	print_info("Publication Record:\n");
 	res = KSI_Signature_getPublicationRecord(sig, &publicationRecord);
 	if(res != KSI_OK)return ;
 
@@ -228,6 +228,14 @@ void OBJPRINT_signatureSigningTime(const KSI_Signature *sig) {
 	return;
 }
 
+static const char *get_signature_type_from_oid(const char *oid) {
+	if (strcmp(oid, "1.2.840.113549.1.1.11") == 0) {
+		return "PKI";
+	} else {
+		return "(unknown)";
+	}
+}
+
 void OBJPRINT_signatureCertificate(const KSI_Signature *sig) {
 	int res;
 	KSI_CalendarAuthRec *calAuthRec = NULL;
@@ -256,7 +264,7 @@ void OBJPRINT_signatureCertificate(const KSI_Signature *sig) {
 	ret = KSI_OctetString_toString(ID, ':', str_id, sizeof(str_id));
 	if (ret != str_id) goto cleanup;
 
-	print_info("KSI Signatures Calendar authentication record PKI signature:\n");
+	print_info("Calendar Authentication Record %s signature:\n", get_signature_type_from_oid(KSI_Utf8String_cstr(sig_type)));
 	print_info("  Signing certificate ID: %s\n", str_id);
 	print_info("  Signature type: %s\n", KSI_Utf8String_cstr(sig_type));
 
@@ -275,7 +283,7 @@ void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile){
 	int res = 0;
 
 	if(pubfile == NULL) goto cleanup;
-	print_info("Publications file certificates::\n");
+	print_info("Certificates for key-based signature verification:\n");
 
 	res = KSI_PublicationsFile_getCertificates(pubfile, &certReclist);
 	if(res != KSI_OK || certReclist == NULL) goto cleanup;
@@ -346,7 +354,7 @@ void OBJPRINT_signatureDump(KSI_Signature *sig) {
 		print_info("Publication Record.\n\n");
 		OBJPRINT_signaturePublicationReference(sig);
 	} else {
-		print_info("missing.\n\n");
+		print_info("Calendar Blockchain.\n\n");
 	}
 
 	return;
