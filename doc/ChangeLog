@@ -1,3 +1,22 @@
+Version 2.0.0
+
+* IMPROVEMENT: ksitool renamed to ksi and major version increased to 2. (KCT-52)
+* FEATURE: Help ksi -h shows ksi help and ksi <component> -h shows selected component help. (KCT-52)
+* IMPROVEMENT: Ksi has separate man pages: ksi.1, ksi-conf.5, ksi-sign.1, ksi-verify.1, ksi-extend.1 and ksi-pubfile.1. (KCT-52)
+* FEATURE: First parameter (sign, verify, extend, pubfile) defines the tools component that is going to be used. (KCT-52)
+* IMPROVEMENT: Input parameter -i is always the main input. (KCT-52)
+* IMPROVEMENT: Parameter -f is secondary input in verification process for data file or data hash imprint. (KCT-52)
+* IMPROVEMENT: Parameter --ref replaced with --pub-str | -p. (KCT-52)
+* IMPROVEMENT: Parameter --inc replaced with --conf. (KCT-52)
+* IMPROVEMENT: Parameters --user and pass are replaced with --aggr-user, --aggr-key, --ext-user, --ext-key. (TOOL-68, KCT-52)
+* IMPROVEMENT: Parameters n, t, r are replaced with -d. (KCT-52)
+* IMPROVEMENT: Parameter -F replaced with -f. (KCT-52)
+* FEATURE: Verifications has separate modes that can be selected with parameters --ver-int, --ver-key, --ver-cal and --ver-pub. (KCT-52)
+* IMPROVEMENT: Publications file verification is performed under component pubfile. (KCT-52)
+* FEATURE: KSI user info can be embedded to the URL user info fields. (TOOL-86, KCT-52)
+* IMPROVEMENT: Configurations file can hold only service related data. (TOOL-110, KCT-52)
+* IMPROVEMENT: Environment variables KSI_AGGREGATOR and KSI_EXTENDER are replaced with KSI_CONF that contains a path to the default configurations file. (TOOL-110, KCT-52)
+
 Version 1.8
 
 2016-01-26 1.8.0
