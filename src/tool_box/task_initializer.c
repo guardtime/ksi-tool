@@ -156,7 +156,11 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 	if (res != PST_OK) goto cleanup;
 
 	/**
-	 * Check for embedded user info from the urls.
+	 * Check for embedded user info from the URLs. Parameters are stored in layers
+	 * at specified priority. If there are URL (S and X), the most important URL
+	 * values are extracted and it is checked if user info at the given priority level
+	 * exists. If not, user info is extracted from URLs if present and appended to
+	 * the same priority level as URLs.
      */
 	res = extract_user_info_from_url_if_needed(set, "S", "aggr-user", "aggr-pass");
 	if (res != KT_OK) goto cleanup;
