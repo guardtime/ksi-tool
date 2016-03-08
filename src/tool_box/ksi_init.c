@@ -101,9 +101,9 @@ static int tool_init_ksi_network_provider(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SE
 	PARAM_SET_getStr(set, "P", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &pub_url);
 
 	PARAM_SET_getStr(set, "aggr-user", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &aggr_user);
-	PARAM_SET_getStr(set, "aggr-pass", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &aggr_pass);
+	PARAM_SET_getStr(set, "aggr-key", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &aggr_pass);
 	PARAM_SET_getStr(set, "ext-user", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &ext_user);
-	PARAM_SET_getStr(set, "ext-pass", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &ext_pass);
+	PARAM_SET_getStr(set, "ext-key", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &ext_pass);
 
 	PARAM_SET_getObj(set, "C", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&networkConnectionTimeout);
 	PARAM_SET_getObj(set, "c", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&networkTransferTimeout);

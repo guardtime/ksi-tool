@@ -61,7 +61,7 @@ int CONF_initialize_set_functions(PARAM_SET *conf) {
 	PARAM_SET_addControl(conf, "{X}{P}{S}", isFormatOk_url, NULL, convertRepair_url, NULL);
 	if (res != PST_OK) goto cleanup;
 
-	PARAM_SET_addControl(conf, "{aggr-user}{aggr-pass}{ext-pass}{ext-user}", isFormatOk_userPass, NULL, NULL, NULL);
+	PARAM_SET_addControl(conf, "{aggr-user}{aggr-key}{ext-key}{ext-user}", isFormatOk_userPass, NULL, NULL, NULL);
 	if (res != PST_OK) goto cleanup;
 
 	PARAM_SET_addControl(conf, "{cnstr}", isFormatOk_constraint, NULL, convertRepair_constraint, NULL);
@@ -209,13 +209,13 @@ char *conf_help_toString(char *buf, size_t len) {
 		" -S <url>  - specify signing service URL.\n"
 		" --aggr-user <str>\n"
 		"           - user name for signing service.\n"
-		" --aggr-pass <str>\n"
-		"           - password for signing service.\n"
+		" --aggr-key <str>\n"
+		"           - HMAC key for signing service.\n"
 		" -X <url>  - specify extending service URL.\n"
 		" --ext-user <str>\n"
 		"           - user name for extending service.\n"
-		" --ext-pass <str>\n"
-		"           - password for extending service.\n"
+		" --ext-key <str>\n"
+		"           - HMAC key for extending service.\n"
 		" -P <url>  - specify publications file URL (or file with uri scheme 'file://').\n"
 		" --cnstr <oid=value>\n"
 		"           - publications file certificate verification constraints.\n"
@@ -233,13 +233,13 @@ char *conf_help_toString(char *buf, size_t len) {
 		" # KSI Signing service parameters:\n"
 		" -S http://ksigw.test.guardtime.com:3333/gt-signingservice\n"
 		" --aggr-user anon\n"
-		" --aggr-pass anon\n"
+		" --aggr-key anon\n"
 		"\n"
 		" # KSI Extending service:\n"
-		" # Note that ext-pass real value is &h/J\"kv\\G##\n"
+		" # Note that ext-key real value is &h/J\"kv\\G##\n"
 		" -X http://ksigw.test.guardtime.com:8010/gt-extendingservice\n"
 		" --ext-user anon\n"
-		" --ext-pass \"&h/J\\\"kv\\\\G##\"\n"
+		" --ext-key \"&h/J\\\"kv\\\\G##\"\n"
 		"\n"
 		" # KSI Publications file:\n"
 		" -P http://verify.guardtime.com/ksi-publications.bin\n"

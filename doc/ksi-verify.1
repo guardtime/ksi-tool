@@ -15,16 +15,16 @@
 \fBksi verify --ver-int -i \fIin.ksig \fR[\fB-f \fIdata\fR] [\fImore options\fR]
 .br
 .\"
-\fBksi verify --ver-cal -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-pass \fIkey\fR] [\fImore options\fR]
+\fBksi verify --ver-cal -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] [\fImore options\fR]
 .br
 .\"
 \fBksi verify --ver-key -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fImore options\fR]
 .br
 .\"
-\fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-p \fIpubstr \fR[\fB-x -X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-pass \fIkey\fR]] [\fImore options\fR]
+\fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-p \fIpubstr \fR[\fB-x -X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore options\fR]
 .br
 .\"
-\fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fB-T \fItime\fR] \fR[\fB-x -X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-pass \fIkey\fR]] [\fImore options\fR]
+\fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fB-T \fItime\fR] \fR[\fB-x -X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore options\fR]
 .br
 .\"
 .\"
@@ -68,8 +68,8 @@ Specify extending service URL.
 User name for extending service.
 .\"
 .TP
-\fB--ext-pass \fIstr\fR
-Key for extending service.
+\fB--ext-key \fIstr\fR
+HMAC Key for extending service.
 .\"
 .TP
 \fB-x\fR

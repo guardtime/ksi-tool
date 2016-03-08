@@ -8,7 +8,7 @@
 .\"
 .SH SYNOPSIS
 .\"
-\fBksi sign -i \fIinput \fB-o \fIout.ksig \fB-S \fIurl \fR[\fB--aggre-user \fIuser \fB--aggre-pass \fIkey\fR] \fR[\fB-H \fIalg\fR] [\fB-D \fIfile\fR] [\fImore options\fR]
+\fBksi sign -i \fIinput \fB-o \fIout.ksig \fB-S \fIurl \fR[\fB--aggr-user \fIuser \fB--aggr-key \fIkey\fR] \fR[\fB-H \fIalg\fR] [\fB-D \fIfile\fR] [\fImore options\fR]
 .br
 .\"
 .\"
@@ -40,8 +40,8 @@ Specify signing service URL.
 User name for signing service.
 .\"
 .TP
-\fB--aggr-pass \fIstr\fR
-Key for signing service.
+\fB--aggr-key \fIstr\fR
+HMAC Key for signing service.
 .\"
 .TP
 \fB-D\fR | \fB--data-out \fIfile\fR

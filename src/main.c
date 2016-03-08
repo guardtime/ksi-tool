@@ -115,8 +115,8 @@ static void print_general_help(PARAM_SET *set){
 		"  To define default URL-s, system environment variable KSI_CONF must be defined,\n"
 		"  that is going to point to ksi configurations file. Configurations file has\n"
 		"  similar syntax to the command-line, but parameters are placed line by line.\n"
-		"  For extender and aggregator -X <url> [--ext-user <str> --ext-pass <str>] and \n"
-		"  -S <url> [--aggr-user <str> --aggr-pass <str>] must be defined. For publications\n"
+		"  For extender and aggregator -X <url> [--ext-user <str> --ext-key <str>] and \n"
+		"  -S <url> [--aggr-user <str> --aggr-key <str>] must be defined. For publications\n"
 		"  file -P <url> [--cnstr <oid>=<value>] must be defined.\n\n"
 		);
 	}

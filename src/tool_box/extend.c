@@ -126,7 +126,7 @@ char *extend_help_toString(char*buf, size_t len) {
 	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
 		"%s extend -i <in.ksig> -o <out.ksig> -X <url>\n"
-		"        [--ext-user <user> --ext-pass <pass>] -P <url> [--cnstr <oid=value>]...\n"
+		"        [--ext-user <user> --ext-key <pass>] -P <url> [--cnstr <oid=value>]...\n"
 		"        [-T <time>] | [--pub-str <str>] [more options]\n\n"
 
 		" -i <file> - signature file to be extended.\n"
@@ -134,8 +134,8 @@ char *extend_help_toString(char*buf, size_t len) {
 		" -X <url>  - specify extending service URL.\n"
 		" --ext-user <str>\n"
 		"           - user name for extending service.\n"
-		" --ext-pass <str>\n"
-		"           - password for extending service.\n"
+		" --ext-key <str>\n"
+		"           - HMAC key for extending service.\n"
 		" -P <url>  - specify publications file URL (or file with uri scheme 'file://').\n"
 		" --cnstr <oid=value>\n"
 		"           - publications file certificate verification constraints.\n"

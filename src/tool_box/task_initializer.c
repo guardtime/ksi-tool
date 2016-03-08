@@ -162,10 +162,10 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 	 * exists. If not, user info is extracted from URLs if present and appended to
 	 * the same priority level as URLs.
      */
-	res = extract_user_info_from_url_if_needed(set, "S", "aggr-user", "aggr-pass");
+	res = extract_user_info_from_url_if_needed(set, "S", "aggr-user", "aggr-key");
 	if (res != KT_OK) goto cleanup;
 
-	res = extract_user_info_from_url_if_needed(set, "X", "ext-user", "ext-pass");
+	res = extract_user_info_from_url_if_needed(set, "X", "ext-user", "ext-key");
 	if (res != KT_OK) goto cleanup;
 
 	res = KT_OK;

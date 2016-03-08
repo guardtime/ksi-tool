@@ -3,7 +3,7 @@
 
 #include "param_set/param_set.h"
 
-#define CONF_PARAM_DESC "{S}{X}{P}{aggr-user}{aggr-pass}{ext-user}{ext-pass}{cnstr}{V}{W}{C}{c}"
+#define CONF_PARAM_DESC "{S}{X}{P}{aggr-user}{aggr-key}{ext-user}{ext-key}{cnstr}{V}{W}{C}{c}"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -17,7 +17,7 @@ int CONF_createSet(PARAM_SET **conf);
  * Initialize default parameters that are service specific.
  * {V}{W}    - isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, NULL.
  * {X}{P}{S} - isFormatOk_url, NULL, convertRepair_url, NULL
- * {aggre-user}{aggre-pass}{ext-pass}{ext-user}
+ * {aggr-user}{aggr-key}{ext-key}{ext-user}
  *			 - isFormatOk_userPass, NULL, NULL, NULL
  * {cnstr}   - isFormatOk_constraint, NULL, convertRepair_constraint, NULL
  * {c}{C}    - isFormatOk_int, isContentOk_int, NULL, extract_int

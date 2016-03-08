@@ -28,8 +28,8 @@ Specify signing service URL.
 User name for signing service.
 .\"
 .TP
-\fB--aggr-pass \fIstr\fR
-Key for signing service.
+\fB--aggr-key \fIstr\fR
+HMAC Key for signing service.
 .\"
 .TP
 \fB-X \fIurl\fR
@@ -40,8 +40,8 @@ Specify extending service URL.
 User name for extending service
 .\"
 .TP
-\fB--ext-pass \fIstr\fR
-Key for extending service.
+\fB--ext-key \fIstr\fR
+HMAC Key for extending service.
 .\"
 .TP
 \fB-P \fIurl\fR
@@ -86,18 +86,18 @@ An example of configurations file:
 .br
 \fB--aggr-user \fIanon
 .br
-\fB--aggr-pass \fIanon
+\fB--aggr-key \fIanon
 .br
 \fn
 \fR# KSI Extending service:
 .br
-\fR# Note that ext-pass real value is &h/J"kv\\G##
+\fR# Note that ext-key real value is &h/J"kv\\G##
 .br
 \fB-X \fIhttp://ksigw.test.guardtime.com:8010/gt-extendingservice
 .br
 \fB--ext-user \fIanon
 .br
-\fB--ext-pass \fI"&h/J\\"kv\\\\G##"
+\fB--ext-key \fI"&h/J\\"kv\\\\G##"
 .br
 \fn
 .br

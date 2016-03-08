@@ -10,7 +10,7 @@
 .\"
 \fBksi pubfile -P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... \fR[\fB-o \fIpubfile.bin\fR] [\fB-d\fR] [\fB-v\fR] [\fImore options\fR]
 .br
-\fBksi pubfile \fB-T \fItime\fR -X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-pass \fIkey\fR] [\fImore options\fR]
+\fBksi pubfile \fB-T \fItime\fR -X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] [\fImore options\fR]
 .br
 .\"
 .\"
@@ -54,8 +54,8 @@ Specify extending service URL.
 User name for extending service.
 .\"
 .TP
-\fB--ext-pass \fIstr\fR
-Key for extending service.
+\fB--ext-key \fIstr\fR
+HMAC Key for extending service.
 .\"
 .TP
 \fB-T \fItime\fR
