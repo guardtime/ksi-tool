@@ -104,14 +104,14 @@ static void print_general_help(PARAM_SET *set){
 	ext_url = ext_url != NULL ? ext_url : "Not defined.";
 	pub_url = pub_url != NULL ? pub_url : "Not defined.";
 
-	print_info("\nDefault service access URL-s:\n");
+	print_result("\nDefault service access URL-s:\n");
 
 	/**
 	 * Print information about how to define default service access urls, if at
 	 * least one is not defined.
      */
 	if (aggre_url == NULL || ext_url == NULL || pub_url == NULL) {
-		print_info(
+		print_result(
 		"  To define default URL-s, system environment variable KSI_CONF must be defined,\n"
 		"  that is going to point to ksi configurations file. Configurations file has\n"
 		"  similar syntax to the command-line, but parameters are placed line by line.\n"
@@ -124,29 +124,29 @@ static void print_general_help(PARAM_SET *set){
 	/**
 	 * Print info about default services.
      */
-	print_info(
+	print_result(
 	"  Signing:		%s\n"
 	"  Extending/Verifying:	%s\n"
 	"  Publications file:	%s\n\n",
 		aggre_url, ext_url, pub_url
 	);
 
-	print_info("Default publications file certificate constraints:\n");
+	print_result("Default publications file certificate constraints:\n");
 	while (PARAM_SET_getStr(set, "cnstr", NULL, PST_PRIORITY_HIGHEST, i, &cnstr) == PST_OK) {
-		print_info("  %s\n", cnstr);
+		print_result("  %s\n", cnstr);
 		i++;
 	}
 
 	if (i == 0) {
-		print_info("  none\n");
+		print_result("  none\n");
 	} else {
-		print_info("\n");
+		print_result("\n");
 	}
 
 	/**
 	 * Print info about supported hash algorithms.
      */
-	print_info(
+	print_result(
 	"Supported hash algorithms (-H, -F):\n"
 	"  %s\n",
 		hash_algorithms_to_string(buf, sizeof(buf)));
@@ -222,18 +222,18 @@ int main(int argc, char** argv, char **envp) {
 		print_info("%s (C) Guardtime\n\n", KSI_getVersion());
 
 		if (task == NULL) {
-			print_info("Usage %s <task> <arguments>\n", TOOL_getName());
-			print_info("All known tasks:\n");
-			print_info("%s", TOOL_COMPONENT_LIST_toString(components, "  ", buf, sizeof(buf)));
+			print_result("Usage %s <task> <arguments>\n", TOOL_getName());
+			print_result("All known tasks:\n");
+			print_result("%s", TOOL_COMPONENT_LIST_toString(components, "  ", buf, sizeof(buf)));
 		} else {
-			print_info("%s\n", TOOL_COMPONENT_LIST_helpToString(components, TASK_getID(task),buf, sizeof(buf)));
+			print_result("%s\n", TOOL_COMPONENT_LIST_helpToString(components, TASK_getID(task),buf, sizeof(buf)));
 		}
 
 		print_general_help(configuration);
 
 		goto cleanup;
 	} else if (PARAM_SET_isSetByName(set, "version")) {
-		print_info("%s %s (C) Guardtime\n", TOOL_getName(), TOOL_getVersion());
+		print_result("%s %s (C) Guardtime\n", TOOL_getName(), TOOL_getVersion());
 		goto cleanup;
 	}
 
@@ -251,9 +251,9 @@ int main(int argc, char** argv, char **envp) {
 	if (task == NULL) {
 		print_errors("Error: Invalid task. Read help (-h) or man page.\n");
 		if (PARAM_SET_isTypoFailure(set_task_name)) {
-			print_info("%s\n", PARAM_SET_typosToString(set_task_name, PST_TOSTR_NONE, NULL, buf, sizeof(buf)));
+			print_errors("%s\n", PARAM_SET_typosToString(set_task_name, PST_TOSTR_NONE, NULL, buf, sizeof(buf)));
 		} else if (PARAM_SET_isUnknown(set_task_name)){
-			print_info("%s\n", PARAM_SET_unknownsToString(set_task_name, NULL, buf, sizeof(buf)));
+			print_errors("%s\n", PARAM_SET_unknownsToString(set_task_name, NULL, buf, sizeof(buf)));
 		}
 
 		goto cleanup;

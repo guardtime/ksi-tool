@@ -65,11 +65,11 @@ int TASK_INITIALIZER_check_analyze_report(PARAM_SET *set, TASK_SET *task_set, do
 	 * Check for typos and unknown parameters.
      */
 	if (PARAM_SET_isTypoFailure(set)) {
-			print_info("%s\n", PARAM_SET_typosToString(set, PST_TOSTR_DOUBLE_HYPHEN, NULL, buf, sizeof(buf)));
+			print_errors("%s\n", PARAM_SET_typosToString(set, PST_TOSTR_DOUBLE_HYPHEN, NULL, buf, sizeof(buf)));
 			res = KT_INVALID_CMD_PARAM;
 			goto cleanup;
 	} else if (PARAM_SET_isUnknown(set)){
-			print_info("%s\n", PARAM_SET_unknownsToString(set, "Warning: ", buf, sizeof(buf)));
+			print_errors("%s\n", PARAM_SET_unknownsToString(set, "Warning: ", buf, sizeof(buf)));
 	}
 
 	/**
@@ -90,9 +90,9 @@ int TASK_INITIALIZER_check_analyze_report(PARAM_SET *set, TASK_SET *task_set, do
 	if (pTask == NULL) {
 		int ID;
 		if (TASK_SET_isOneFromSetTheTarget(task_set, task_dif, &ID)) {
-			print_info("%s", TASK_SET_howToRepair_toString(task_set, set, ID, NULL, buf, sizeof(buf)));
+			print_errors("%s", TASK_SET_howToRepair_toString(task_set, set, ID, NULL, buf, sizeof(buf)));
 		} else {
-			print_info("%s", TASK_SET_suggestions_toString(task_set, 3, buf, sizeof(buf)));
+			print_errors("%s", TASK_SET_suggestions_toString(task_set, 3, buf, sizeof(buf)));
 		}
 
 		res = KT_INVALID_CMD_PARAM;
