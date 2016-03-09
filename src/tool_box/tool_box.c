@@ -322,7 +322,7 @@ void print_progressDesc(int showTiming, const char *msg, ...) {
 		buf[sizeof(buf) - 1] = 0;
 		va_end(va);
 
-		print_info("%s", buf);
+		print_debug("%s", buf);
 	}
 }
 
@@ -340,9 +340,9 @@ void print_progressResult(int res) {
 		}
 
 		if (res == KT_OK) {
-			print_info("ok.%s\n", timerOn ? time_str : "");
+			print_debug("ok.%s\n", timerOn ? time_str : "");
 		} else {
-			print_info("failed.%s\n", timerOn ? time_str : "");
+			print_debug("failed.%s\n", timerOn ? time_str : "");
 		}
 
 		timerOn = 0;
