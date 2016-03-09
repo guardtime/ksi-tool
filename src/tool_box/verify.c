@@ -149,11 +149,11 @@ int verify_run(int argc, char** argv, char **envp) {
 
 	if (d) {
 		print_info("\n");
-		OBJPRINT_signatureDump(ver_result_sig != NULL ? ver_result_sig : sig);
+		OBJPRINT_signatureDump(ver_result_sig != NULL ? ver_result_sig : sig, print_debug);
 
 		if (hsh != NULL) {
 			print_info("\n");
-			OBJPRINT_Hash(hsh, "Document hash: ");
+			OBJPRINT_Hash(hsh, "Document hash: ", print_debug);
 		}
 	}
 

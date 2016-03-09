@@ -86,7 +86,7 @@ int sign_run(int argc, char** argv, char **envp) {
      */
 	if (d) {
 		print_info("\n");
-		OBJPRINT_signatureDump(sig);
+		OBJPRINT_signatureDump(sig, print_debug);
 	}
 
 cleanup:

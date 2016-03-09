@@ -27,19 +27,19 @@
 extern "C" {
 #endif
 
-void OBJPRINT_signerIdentity(KSI_Signature *sig);
-void OBJPRINT_signaturePublicationReference(KSI_Signature *sig);
-void OBJPRINT_signatureVerificationInfo(KSI_Signature *sig);
-void OBJPRINT_signatureSigningTime(const KSI_Signature *sig);
-void OBJPRINT_signatureCertificate(const KSI_Signature *sig);
-void OBJPRINT_signatureDump(KSI_Signature *sig);
+void OBJPRINT_signerIdentity(KSI_Signature *sig, int (*print)(const char *format, ... ));
+void OBJPRINT_signaturePublicationReference(KSI_Signature *sig, int (*print)(const char *format, ... ));
+void OBJPRINT_signatureVerificationInfo(KSI_Signature *sig, int (*print)(const char *format, ... ));
+void OBJPRINT_signatureSigningTime(const KSI_Signature *sig, int (*print)(const char *format, ... ));
+void OBJPRINT_signatureCertificate(const KSI_Signature *sig, int (*print)(const char *format, ... ));
+void OBJPRINT_signatureDump(KSI_Signature *sig, int (*print)(const char *format, ... ));
 
-void OBJPRINT_Hash(KSI_DataHash *hsh, const char *prefix);
+void OBJPRINT_Hash(KSI_DataHash *hsh, const char *prefix, int (*print)(const char *format, ... ));
 
-void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile);
-void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile);
-void OBJPRINT_publicationsFileSigningCert(KSI_PublicationsFile *pubfile);
-void OBJPRINT_publicationsFileDump(KSI_PublicationsFile *pubfile);
+void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile, int (*print)(const char *format, ... ));
+void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile, int (*print)(const char *format, ... ));
+void OBJPRINT_publicationsFileSigningCert(KSI_PublicationsFile *pubfile, int (*print)(const char *format, ... ));
+void OBJPRINT_publicationsFileDump(KSI_PublicationsFile *pubfile, int (*print)(const char *format, ... ));
 
 #ifdef	__cplusplus
 }

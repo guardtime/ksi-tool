@@ -22,10 +22,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include "obj_printer.h"
-#include "printer.h"
 #include "api_wrapper.h"
 
-void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile){
+void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile, int (*print)(const char *format, ... )){
 	int res = KSI_UNKNOWN_ERROR;
 	KSI_LIST(KSI_PublicationRecord)* list_publicationRecord = NULL;
 	KSI_PublicationRecord *publicationRecord = NULL;
@@ -36,7 +35,7 @@ void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile){
 
 	if(pubFile == NULL) return;
 
-	print_info("Publication Records:\n");
+	print("Publication Records:\n");
 
 	res = KSI_PublicationsFile_getPublications(pubFile, &list_publicationRecord);
 	if(res != KSI_OK) return;
@@ -51,26 +50,26 @@ void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile){
 		pStart = buf;
 		j=1;
 		h=0;
-		if(i) print_info("\n");
+		if(i) print("\n");
 		while((pLineBreak = strchr(pStart, '\n')) != NULL){
 			*pLineBreak = 0;
 			if(h++ < 3)
-				print_info("%s %s\n", "  ", pStart);
+				print("%s %s\n", "  ", pStart);
 			else
-				print_info("%s %2i) %s\n", "    ", j++, pStart);
+				print("%s %2i) %s\n", "    ", j++, pStart);
 			pStart = pLineBreak+1;
 		}
 
 		if(h < 3)
-			print_info("%s %s\n", "  ", pStart);
+			print("%s %s\n", "  ", pStart);
 		else
-			print_info("%s %2i) %s\n", "    ", j++, pStart);
+			print("%s %2i) %s\n", "    ", j++, pStart);
 	}
-	print_info("\n");
+	print("\n");
 	return;
 }
 
-void OBJPRINT_signaturePublicationReference(KSI_Signature *sig){
+void OBJPRINT_signaturePublicationReference(KSI_Signature *sig, int (*print)(const char *format, ... )){
 	int res = KSI_UNKNOWN_ERROR;
 	KSI_PublicationRecord *publicationRecord;
 	char buf[1024];
@@ -80,12 +79,12 @@ void OBJPRINT_signaturePublicationReference(KSI_Signature *sig){
 	int h=0;
 	if(sig == NULL) return;
 
-	print_info("Publication Record:\n");
+	print("Publication Record:\n");
 	res = KSI_Signature_getPublicationRecord(sig, &publicationRecord);
 	if(res != KSI_OK)return ;
 
 	if(publicationRecord == NULL) {
-		print_info("  (No publication records available)\n\n");
+		print("  (No publication records available)\n\n");
 		return;
 	}
 
@@ -96,37 +95,37 @@ void OBJPRINT_signaturePublicationReference(KSI_Signature *sig){
 		*pLineBreak = 0;
 
 		if(h < 3)
-			print_info("%s %s\n", "  ", pStart);
+			print("%s %s\n", "  ", pStart);
 		else
-			print_info("%s %2i) %s\n", "    ", i++, pStart);
+			print("%s %2i) %s\n", "    ", i++, pStart);
 
 		pStart = pLineBreak+1;
 	}
 
 	if(h<3)
-		print_info("%s %s\n", "  ", pStart);
+		print("%s %s\n", "  ", pStart);
 	else
-		print_info("%s %2i) %s\n", "    ", i++, pStart);
-	print_info("\n");
+		print("%s %2i) %s\n", "    ", i++, pStart);
+	print("\n");
 
 	return;
 }
 
-void OBJPRINT_Hash(KSI_DataHash *hsh, const char *prefix) {
+void OBJPRINT_Hash(KSI_DataHash *hsh, const char *prefix, int (*print)(const char *format, ... )) {
 	char buf[1024];
 
 	if (hsh == NULL) return;
 
 	if (KSITOOL_DataHash_toString(hsh, buf, sizeof(buf)) == NULL) return;
 
-	print_info("%s%s\n",
+	print("%s%s\n",
 			prefix == NULL ? "" : prefix,
 			buf
 			);
 
 	return;
 }
-void OBJPRINT_signatureInputHash(KSI_Signature *sig) {
+void OBJPRINT_signatureInputHash(KSI_Signature *sig, int (*print)(const char *format, ... )) {
 	int res;
 	KSI_DataHash *hsh = NULL;
 
@@ -134,36 +133,36 @@ void OBJPRINT_signatureInputHash(KSI_Signature *sig) {
 
 	res = KSI_Signature_getDocumentHash(sig, &hsh);
 	if (res != KSI_OK) {
-		print_info("Input hash: Unable to extract from the signature.\n");
+		print("Input hash: Unable to extract from the signature.\n");
 		return;
 	}
 
-	OBJPRINT_Hash(hsh, "Input hash: ");
+	OBJPRINT_Hash(hsh, "Input hash: ", print);
 
 	return;
 }
 
-void OBJPRINT_signerIdentity(KSI_Signature *sig){
+void OBJPRINT_signerIdentity(KSI_Signature *sig, int (*print)(const char *format, ... )){
 	int res = KSI_UNKNOWN_ERROR;
 	char *signerIdentity = NULL;
 
 	if(sig == NULL) goto cleanup;
 
-	print_info("Signer identity: ");
+	print("Signer identity: ");
 	res = KSI_Signature_getSignerIdentity(sig, &signerIdentity);
 	if(res != KSI_OK){
-		print_info("Unable to get signer identity.\n");
+		print("Unable to get signer identity.\n");
 		goto cleanup;
 	}
 
-	print_info("'%s'.\n", signerIdentity == NULL || strlen(signerIdentity) == 0 ? "Unknown" : signerIdentity);
+	print("'%s'.\n", signerIdentity == NULL || strlen(signerIdentity) == 0 ? "Unknown" : signerIdentity);
 cleanup:
 
 	KSI_free(signerIdentity);
 	return;
 }
 
-void OBJPRINT_signatureVerificationInfo(KSI_Signature *sig){
+void OBJPRINT_signatureVerificationInfo(KSI_Signature *sig, int (*print)(const char *format, ... )){
 	int res = KSI_UNKNOWN_ERROR;
 	const KSI_VerificationResult *sigVerification = NULL;
 	const KSI_VerificationStepResult *result = NULL;
@@ -174,10 +173,10 @@ void OBJPRINT_signatureVerificationInfo(KSI_Signature *sig){
 		return;
 	}
 
-	print_info("Verification steps:\n");
+	print("Verification steps:\n");
 	res = KSI_Signature_getVerificationResult(sig, &sigVerification);
 	if(res != KSI_OK){
-		print_info("Unable to get verification steps\n\n");
+		print("Unable to get verification steps\n\n");
 		return;
 	}
 
@@ -187,19 +186,19 @@ void OBJPRINT_signatureVerificationInfo(KSI_Signature *sig){
 			if(res != KSI_OK){
 				return;
 			}
-			print_info("  0x%03x:\t%s", KSI_VerificationStepResult_getStep(result), KSI_VerificationStepResult_isSuccess(result) ? "OK" : "FAIL");
+			print("  0x%03x:\t%s", KSI_VerificationStepResult_getStep(result), KSI_VerificationStepResult_isSuccess(result) ? "OK" : "FAIL");
 			desc = KSI_VerificationStepResult_getDescription(result);
 			if (desc && *desc) {
-				print_info(" (%s)", desc);
+				print(" (%s)", desc);
 			}
-			print_info("\n");
+			print("\n");
 		}
 	}
-	print_info("\n");
+	print("\n");
 	return;
 }
 
-void OBJPRINT_signatureSigningTime(const KSI_Signature *sig) {
+void OBJPRINT_signatureSigningTime(const KSI_Signature *sig, int (*print)(const char *format, ... )) {
 	int res;
 	KSI_Integer *sigTime = NULL;
 	unsigned long signingTime = 0;
@@ -222,7 +221,7 @@ void OBJPRINT_signatureSigningTime(const KSI_Signature *sig) {
 
 	signingTime = (unsigned long)KSI_Integer_getUInt64(sigTime);
 
-	print_info("Signing time: (%i) %s+00:00\n",
+	print("Signing time: (%i) %s+00:00\n",
 			signingTime, date);
 
 	return;
@@ -236,7 +235,7 @@ static const char *get_signature_type_from_oid(const char *oid) {
 	}
 }
 
-void OBJPRINT_signatureCertificate(const KSI_Signature *sig) {
+void OBJPRINT_signatureCertificate(const KSI_Signature *sig, int (*print)(const char *format, ... )) {
 	int res;
 	KSI_CalendarAuthRec *calAuthRec = NULL;
 	KSI_PKISignedData *pki_data = NULL;
@@ -264,9 +263,9 @@ void OBJPRINT_signatureCertificate(const KSI_Signature *sig) {
 	ret = KSI_OctetString_toString(ID, ':', str_id, sizeof(str_id));
 	if (ret != str_id) goto cleanup;
 
-	print_info("Calendar Authentication Record %s signature:\n", get_signature_type_from_oid(KSI_Utf8String_cstr(sig_type)));
-	print_info("  Signing certificate ID: %s\n", str_id);
-	print_info("  Signature type: %s\n", KSI_Utf8String_cstr(sig_type));
+	print("Calendar Authentication Record %s signature:\n", get_signature_type_from_oid(KSI_Utf8String_cstr(sig_type)));
+	print("  Signing certificate ID: %s\n", str_id);
+	print("  Signature type: %s\n", KSI_Utf8String_cstr(sig_type));
 
 cleanup:
 
@@ -274,7 +273,7 @@ cleanup:
 	return;
 }
 
-void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile){
+void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile, int (*print)(const char *format, ... )){
 	KSI_CertificateRecordList *certReclist = NULL;
 	KSI_CertificateRecord *certRec = NULL;
 	KSI_PKICertificate *cert = NULL;
@@ -283,7 +282,7 @@ void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile){
 	int res = 0;
 
 	if(pubfile == NULL) goto cleanup;
-	print_info("Certificates for key-based signature verification:\n");
+	print("Certificates for key-based signature verification:\n");
 
 	res = KSI_PublicationsFile_getCertificates(pubfile, &certReclist);
 	if(res != KSI_OK || certReclist == NULL) goto cleanup;
@@ -296,7 +295,7 @@ void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile){
 		if(res != KSI_OK || cert == NULL) goto cleanup;
 
 		if(KSI_PKICertificate_toString(cert, buf, sizeof(buf)) != NULL)
-			print_info("%s\n", buf);
+			print("%s\n", buf);
 	}
 
 cleanup:
@@ -304,7 +303,7 @@ cleanup:
 	return;
 }
 
-void OBJPRINT_publicationsFileSigningCert(KSI_PublicationsFile *pubfile) {
+void OBJPRINT_publicationsFileSigningCert(KSI_PublicationsFile *pubfile, int (*print)(const char *format, ... )) {
 	int res;
 	KSI_PKISignature *sig = NULL;
 	KSI_PKICertificate *cert = NULL;
@@ -320,8 +319,8 @@ void OBJPRINT_publicationsFileSigningCert(KSI_PublicationsFile *pubfile) {
 	tmp = KSI_PKICertificate_toString(cert, buf, sizeof(buf));
 	if (tmp != buf) goto cleanup;
 
-	print_info("Publications file signing %s", buf);
-	print_info("\n", buf);
+	print("Publications file signing %s", buf);
+	print("\n", buf);
 
 cleanup:
 
@@ -330,48 +329,48 @@ cleanup:
 	return;
 }
 
-void OBJPRINT_signatureDump(KSI_Signature *sig) {
+void OBJPRINT_signatureDump(KSI_Signature *sig, int (*print)(const char *format, ... )) {
 
-	print_info("KSI Signature dump:\n");
+	print("KSI Signature dump:\n");
 
 	if (sig == NULL) {
-		print_info("(null)\n");
+		print("(null)\n");
 		return;
 	}
 
-	print_info("  ");
-	OBJPRINT_signatureInputHash(sig);
-	print_info("  ");
-	OBJPRINT_signatureSigningTime(sig);
-	print_info("  ");
-	OBJPRINT_signerIdentity(sig);
-	print_info("  Trust anchor: ");
+	print("  ");
+	OBJPRINT_signatureInputHash(sig, print);
+	print("  ");
+	OBJPRINT_signatureSigningTime(sig, print);
+	print("  ");
+	OBJPRINT_signerIdentity(sig, print);
+	print("  Trust anchor: ");
 
 	if (KSITOOL_Signature_isCalendarAuthRecPresent(sig)) {
-		print_info("Calendar Authentication Record.\n\n");
-		OBJPRINT_signatureCertificate(sig);
+		print("Calendar Authentication Record.\n\n");
+		OBJPRINT_signatureCertificate(sig, print);
 	} else if (KSITOOL_Signature_isPublicationRecordPresent(sig)) {
-		print_info("Publication Record.\n\n");
-		OBJPRINT_signaturePublicationReference(sig);
+		print("Publication Record.\n\n");
+		OBJPRINT_signaturePublicationReference(sig, print);
 	} else {
-		print_info("Calendar Blockchain.\n\n");
+		print("Calendar Blockchain.\n\n");
 	}
 
 	return;
 }
 
-void OBJPRINT_publicationsFileDump(KSI_PublicationsFile *pubfile) {
+void OBJPRINT_publicationsFileDump(KSI_PublicationsFile *pubfile, int (*print)(const char *format, ... )) {
 
-	print_info("KSI Signature dump:\n");
+	print("KSI Signature dump:\n");
 
 	if (pubfile == NULL) {
-		print_info("(null)\n");
+		print("(null)\n");
 		return;
 	}
 
-	OBJPRINT_publicationsFileReferences(pubfile);
-	OBJPRINT_publicationsFileCertificates(pubfile);
-	OBJPRINT_publicationsFileSigningCert(pubfile);
+	OBJPRINT_publicationsFileReferences(pubfile, print);
+	OBJPRINT_publicationsFileCertificates(pubfile, print);
+	OBJPRINT_publicationsFileSigningCert(pubfile, print);
 
 	return;
 }

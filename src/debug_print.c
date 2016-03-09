@@ -63,11 +63,11 @@ void DEBUG_verifySignature(KSI_CTX *ksi, int res, KSI_Signature *sig, KSI_DataHa
 	if (ksi == NULL || sig == NULL || res != KSI_VERIFICATION_FAILURE) return;
 
 	stepFailed = debug_getVerificationStepFailed(sig);
-	print_info("KSI Signature Debug info:\n\n");
-	OBJPRINT_signatureDump(sig);
+	print_debug("KSI Signature Debug info:\n\n");
+	OBJPRINT_signatureDump(sig, print_debug);
 
-	print_info("\n");
-	OBJPRINT_signatureVerificationInfo(sig);
+	print_debug("\n");
+	OBJPRINT_signatureVerificationInfo(sig, print_debug);
 
 	if (hsh != NULL) {
 		res = KSI_Signature_getDocumentHash(sig, &input_hash);
@@ -77,22 +77,22 @@ void DEBUG_verifySignature(KSI_CTX *ksi, int res, KSI_Signature *sig, KSI_DataHa
 		}
 
 		if (!KSI_DataHash_equals(hsh, input_hash)) {
-			OBJPRINT_Hash(hsh,        "Document hash:       ");
-			OBJPRINT_Hash(input_hash, "Expected Input hash: ");
+			OBJPRINT_Hash(hsh,        "Document hash:       ", print_debug);
+			OBJPRINT_Hash(input_hash, "Expected Input hash: ", print_debug);
 		}
 	}
 
 	if (stepFailed == KSI_VERIFY_CALAUTHREC_WITH_SIGNATURE) {
 		res = KSI_CTX_getPublicationsFile(ksi, &pubFile);
 		if (res == KSI_OK && pubFile != NULL) {
-			OBJPRINT_publicationsFileCertificates(pubFile);
+			OBJPRINT_publicationsFileCertificates(pubFile, print_debug);
 		}
 	}
 
 
 
 
-	print_info("\n");
+	print_debug("\n");
 }
 
 void DEBUG_verifyPubfile(KSI_CTX *ksi, PARAM_SET *set, int res, KSI_PublicationsFile *pub) {
@@ -103,11 +103,11 @@ void DEBUG_verifyPubfile(KSI_CTX *ksi, PARAM_SET *set, int res, KSI_Publications
 
 
 	if (res == KSI_PKI_CERTIFICATE_NOT_TRUSTED || res == KSI_INVALID_PKI_SIGNATURE) {
-		print_info("\n");
-		OBJPRINT_publicationsFileSigningCert(pub);
+		print_debug("\n");
+		OBJPRINT_publicationsFileSigningCert(pub, print_debug);
 
 		if (PARAM_SET_isSetByName(set, "cnstr")) {
-			print_info("Expected publications file PKI certificate constraints:\n");
+			print_debug("Expected publications file PKI certificate constraints:\n");
 		}
 
 		while (PARAM_SET_getObj(set, "cnstr", NULL, PST_PRIORITY_HIGHEST, i++, (void**)&constraint) == PST_OK) {
@@ -121,7 +121,7 @@ void DEBUG_verifyPubfile(KSI_CTX *ksi, PARAM_SET *set, int res, KSI_Publications
 			ret = STRING_extractRmWhite(constraint, "=", NULL, value, sizeof(value));
 			if(ret != value) continue;
 
-			print_info("  * %s = '%s'\n", OID_getShortDescriptionString(OID), value);
+			print_debug("  * %s = '%s'\n", OID_getShortDescriptionString(OID), value);
 		}
 
 	}

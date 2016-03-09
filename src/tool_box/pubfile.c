@@ -101,7 +101,7 @@ int pubfile_run(int argc, char** argv, char **envp) {
 	if (TASK_getID(task) == 4) goto cleanup;
 
 	if (d) {
-		OBJPRINT_publicationsFileDump(pubfile);
+		OBJPRINT_publicationsFileDump(pubfile, print_debug);
 	}
 
 
