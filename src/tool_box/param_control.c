@@ -320,18 +320,20 @@ static int file_get_hash(ERR_TRCKR *err, KSI_CTX *ctx, const char *fname_in, con
 
 		res = SMART_FILE_read(in, buf, sizeof(buf), &read_count);
 		if (res != SMART_FILE_OK) {
-			ERR_TRCKR_ADD(err, res = KT_IO_ERROR, "Error: Unable to read data from file.");
+			ERR_TRCKR_ADD(err, res, "Error: Unable to read data from file.");
 			goto cleanup;
 		}
 
 		res = KSI_DataHasher_add(hasher, buf, read_count);
 		ERR_CATCH_MSG(err, res, "Error: Unable to add data to hasher.");
 
-		if (out != NULL) {
-			res = SMART_FILE_write(out, buf, read_count, &write_count);
-			if (res != SMART_FILE_OK || write_count != read_count) {
-				ERR_TRCKR_ADD(err, res = KT_IO_ERROR, "Error: Unable to write to file.");
-				goto cleanup;
+		if (!SMART_FILE_isEof(in)) {
+			if (out != NULL) {
+				res = SMART_FILE_write(out, buf, read_count, &write_count);
+				if (res != SMART_FILE_OK || write_count != read_count) {
+					ERR_TRCKR_ADD(err, res, "Error: Unable to write to file.");
+					goto cleanup;
+				}
 			}
 		}
 	}

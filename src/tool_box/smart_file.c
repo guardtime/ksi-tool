@@ -41,7 +41,7 @@ struct SMART_FILE_st {
 	int (*file_open)(const char *fname, const char *mode, void **file);
 	int (*file_write)(void *file, char *raw, size_t raw_len, size_t *count);
 	int (*file_read)(void *file, char *raw, size_t raw_len, size_t *count);
-	int (*file_get_stream)(const char *mode, void **stream);
+	int (*file_get_stream)(const char *mode, void **stream, int *is_close_mandatory);
 	void (*file_close)(void *file);
 
 	int isEOF;
@@ -58,15 +58,15 @@ static int smart_file_open_win(const char *fname, const char *mode, void **file)
 static void smart_file_close_win(void *file);
 static int smart_file_read_win(void *file, char *raw, size_t raw_len, size_t *count);
 static int smart_file_write_win(void *file, char *raw, size_t raw_len, size_t *count);
-static int smart_file_get_error_win(voif);
-static int smart_file_get_stream_win(const char *mode, void **stream);
+static int smart_file_get_error_win(unsigned);
+static int smart_file_get_stream_win(const char *mode, void **stream, int *is_close_mandatory);
 
 #else
 static int smart_file_open_unix(const char *fname, const char *mode, void **file);
 static void smart_file_close_unix(void *file);
 static int smart_file_read_unix(void *file, char *raw, size_t raw_len, size_t *count);
 static int smart_file_write_unix(void *file, char *raw, size_t raw_len, size_t *count);
-static int smart_file_get_stream_unix(const char *mode, void **stream);
+static int smart_file_get_stream_unix(const char *mode, void **stream, int *is_close_mandatory);
 static int smart_file_get_error_unix(void);
 #endif
 
@@ -135,7 +135,7 @@ static int smart_file_open_win(const char *fname, const char *mode, void **file)
 
 	tmp = CreateFile(fname, access, 0, NULL, open_mode, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (tmp == INVALID_HANDLE_VALUE) {
-		res = smart_file_get_error_win();
+		res = smart_file_get_error_win(GetLastError());
 		res = (res == SMART_FILE_UNKNOWN_ERROR) ? SMART_FILE_UNABLE_TO_OPEN : res;
 		goto cleanup;
 	}
@@ -162,6 +162,7 @@ static int smart_file_read_win(void *file, char *raw, size_t raw_len, size_t *co
 	HANDLE tmp = file;
 	DWORD read_count = 0;
 	DWORD raw_size = 0;
+	DWORD error_code = 0;
 
 	if (file == NULL || raw == NULL || raw_len == 0) {
 		res = SMART_FILE_INVALID_ARG;
@@ -170,11 +171,22 @@ static int smart_file_read_win(void *file, char *raw, size_t raw_len, size_t *co
 
 	raw_size = (raw_len > ULONG_MAX) ? ULONG_MAX : (DWORD)raw_len;
 
-	/* TODO: Improve error handling.*/
 	if (!ReadFile(tmp, (void*)raw, raw_size, &read_count, NULL)) {
-		res = smart_file_get_error_win();
-		res = (res == SMART_FILE_UNKNOWN_ERROR) ? SMART_FILE_UNABLE_TO_READ : res;
-		goto cleanup;
+		/**
+		 * When ReadFile reads from pipe (stdin HANDLE) it finishes with success
+		 * and the next read operation fails with ERROR_BROKEN_PIPE that means
+		 * PIPE has been closed. Set status code to success and read count to zero
+		 * to indicate EOF.
+         */
+		error_code = GetLastError();
+		if (GetFileType(tmp) == FILE_TYPE_PIPE && error_code == ERROR_BROKEN_PIPE) {
+			res = SMART_FILE_OK;
+			read_count = 0;
+		} else {
+			res = smart_file_get_error_win(error_code);
+			res = (res == SMART_FILE_UNKNOWN_ERROR) ? SMART_FILE_UNABLE_TO_READ : res;
+			goto cleanup;
+		}
 	}
 
 	if (count != NULL) {
@@ -202,7 +214,7 @@ static int smart_file_write_win(void *file, char *raw, size_t raw_len, size_t *c
 	raw_size = (raw_len > ULONG_MAX) ? ULONG_MAX : (DWORD)raw_len;
 
 	if (!WriteFile(tmp, (void*)raw, raw_size, &write_count, NULL)) {
-		res = smart_file_get_error_win();
+		res = smart_file_get_error_win(GetLastError());
 		res = (res == SMART_FILE_UNKNOWN_ERROR) ? SMART_FILE_UNABLE_TO_WRITE : res;
 		goto cleanup;
 	}
@@ -218,14 +230,11 @@ cleanup:
 	return res;
 }
 
-static int smart_file_get_error_win(void) {
-	DWORD error_code = 0;
+static int smart_file_get_error_win(unsigned error) {
 	int smart_file_error_code = 0;
 
 
-	error_code = GetLastError();
-
-	switch(error_code) {
+	switch(error) {
 		case ERROR_SUCCESS:
 			smart_file_error_code = SMART_FILE_OK;
 		break;
@@ -283,7 +292,7 @@ static int smart_file_get_error_win(void) {
 	return smart_file_error_code;
 }
 
-static int smart_file_get_stream_win(const char *mode, void **stream) {
+static int smart_file_get_stream_win(const char *mode, void **stream, int *is_close_mandatory) {
 	int res;
 	int is_r = 0;
 	int is_w = 0;
@@ -309,12 +318,16 @@ static int smart_file_get_stream_win(const char *mode, void **stream) {
 		goto cleanup;
 	}
 
-	if (fp == INVALID_HANDLE_VALUE) {
-		res = smart_file_get_error_win();
+	if (fp == INVALID_HANDLE_VALUE || fp == NULL) {
+		res = smart_file_get_error_win(GetLastError());
 		res = (res == SMART_FILE_UNKNOWN_ERROR) ? SMART_FILE_UNABLE_TO_OPEN : res;
 		goto cleanup;
 	}
 
+	/**
+	 * Handle to stdin or stdout must be closed.
+     */
+	*is_close_mandatory = 1;
 	*stream = fp;
 	fp = NULL;
 
@@ -445,7 +458,7 @@ cleanup:
 	return res;
 }
 
-static int smart_file_get_stream_unix(const char *mode, void **stream) {
+static int smart_file_get_stream_unix(const char *mode, void **stream, int *is_close_mandatory) {
 	int res;
 	int is_r = 0;
 	int is_w = 0;
@@ -481,6 +494,7 @@ static int smart_file_get_stream_unix(const char *mode, void **stream) {
 	}
 #endif
 
+	*is_close_mandatory = 0;
 	*stream = fp;
 	fp = NULL;
 
@@ -530,6 +544,7 @@ int SMART_FILE_open(const char *fname, const char *mode, SMART_FILE **file) {
 	int res;
 	SMART_FILE *tmp = NULL;
 	int doClose = 0;
+	int must_free = 0;
 
 	tmp = (SMART_FILE*)malloc(sizeof(SMART_FILE));
 	if (tmp == NULL) {
@@ -561,8 +576,9 @@ int SMART_FILE_open(const char *fname, const char *mode, SMART_FILE **file) {
 	 * smart file opener function.
      */
 	if (strcmp(fname, "-") == 0) {
-		res = tmp->file_get_stream(mode, &(tmp->file));
+		res = tmp->file_get_stream(mode, &(tmp->file), &must_free);
 		if (res != SMART_FILE_OK) goto cleanup;
+		tmp->mustBeFreed = must_free;
 	} else {
 		res = tmp->file_open(fname, mode, &(tmp->file));
 		if (res != SMART_FILE_OK) goto cleanup;
@@ -645,6 +661,9 @@ int SMART_FILE_read(SMART_FILE *file, char *raw, size_t raw_len, size_t *count) 
 		return SMART_FILE_NOT_OPEND;
 	}
 
+	/**
+	 * EOF is detected as Read finished without an error and read count is zero.
+     */
 	if (c == 0) {
 		file->isEOF = 1;
 	}
@@ -670,7 +689,7 @@ const char* SMART_FILE_errorToString(int error_code) {
 		case SMART_FILE_OK:
 			return "OK.";
 		case SMART_FILE_OUT_OF_MEM:
-			return "Ksitool out of memory.";
+			return "Out of memory.";
 		case SMART_FILE_INVALID_ARG:
 			return "Invalid argument.";
 		case SMART_FILE_INVALID_MODE:
