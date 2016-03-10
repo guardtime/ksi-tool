@@ -8,9 +8,9 @@
 .\"
 .SH SYNOPSIS
 .\"
-\fBksi pubfile -P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... \fR[\fB-o \fIpubfile.bin\fR] [\fB-d\fR] [\fB-v\fR] [\fImore options\fR]
+\fBksi pubfile -P \fIurl [\fB--dump\fR] [\fB-v \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]...] \fR[\fB-o \fIpubfile.bin\fR] [\fImore options\fR]
 .br
-\fBksi pubfile \fB-T \fItime\fR -X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] [\fImore options\fR]
+\fBksi pubfile \fB-T \fItime\fR \fB-X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] [\fImore options\fR]
 .br
 .\"
 .\"
@@ -63,7 +63,11 @@ Specify a time to create a publication string for as the number of seconds since
 .\"
 .TP
 \fB-d\fR
-Use to dump publications file or get more precise information about errors.
+Print detailed information about processes and errors to \fIstderr\fR.
+.\"
+.TP
+\fB--dump\fR
+Dump Publications file to \fIstdout\fR.
 .\"
 .TP
 \fB--conf \fIfile\fR
@@ -71,7 +75,7 @@ Specify a configurations file to override default service information. It must b
 .\"
 .TP
 \fB--log \fIfile\fR
-Write libksi log into file.
+Write libksi log into file. Use '-' as file name to redirect log to \fIstdout\fR.
 .br
 .\"
 .\"

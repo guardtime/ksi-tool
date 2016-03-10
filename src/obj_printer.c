@@ -361,7 +361,7 @@ void OBJPRINT_signatureDump(KSI_Signature *sig, int (*print)(const char *format,
 
 void OBJPRINT_publicationsFileDump(KSI_PublicationsFile *pubfile, int (*print)(const char *format, ... )) {
 
-	print("KSI Signature dump:\n");
+	print("KSI Publications file dump:\n");
 
 	if (pubfile == NULL) {
 		print("(null)\n");

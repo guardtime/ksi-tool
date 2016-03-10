@@ -49,12 +49,13 @@ int sign_run(int argc, char** argv, char **envp) {
 	SMART_FILE *logfile = NULL;
 	KSI_Signature *sig = NULL;
 	int d = 0;
+	int dump = 0;
 
 	/**
 	 * Extract command line parameters.
      */
 	res = PARAM_SET_new(
-			CONF_generate_desc("{sign}{i}{h}{o}{H}{D|data-out}{d}{log}{conf}", buf, sizeof(buf)),
+			CONF_generate_desc("{sign}{i}{h}{o}{H}{D|data-out}{d}{dump}{log}{conf}", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -74,6 +75,7 @@ int sign_run(int argc, char** argv, char **envp) {
 	if (res != KT_OK) goto cleanup;
 
 	d = PARAM_SET_isSetByName(set, "d");
+	dump = PARAM_SET_isSetByName(set, "dump");
 
 	/**
 	 * If everything OK, run the task.
@@ -84,9 +86,9 @@ int sign_run(int argc, char** argv, char **envp) {
 	/**
 	 * If signature was created without errors print some info on demand.
      */
-	if (d) {
-		print_info("\n");
-		OBJPRINT_signatureDump(sig, print_debug);
+	if (dump) {
+		print_result("\n");
+		OBJPRINT_signatureDump(sig, print_result);
 	}
 
 cleanup:
@@ -96,7 +98,7 @@ cleanup:
 	if (res != KT_OK) {
 		KSI_LOG_debug(ksi, "\n%s", KSITOOL_KSI_ERRTrace_get());
 
-		print_info("\n");
+		print_errors("\n");
 		if (d) 	ERR_TRCKR_printExtendedErrors(err);
 		else 	ERR_TRCKR_printErrors(err);
 	}
@@ -127,7 +129,8 @@ char *sign_help_toString(char*buf, size_t len) {
 		"           - HMAC key for signing service.\n"
 		" --data-out | D <file>\n"
 		"           - save signed data to file.\n"
-		" -d        - print detailed information about processes and errors.\n"
+		" -d        - print detailed information about processes and errors to stderr.\n"
+		" --dump    - dump signature created to stdout.\n"
 		" --conf <file>\n"
 		"           - specify a configurations file to override default service\n"
 		"             information. It must be noted that service info from\n"
@@ -206,7 +209,7 @@ static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_S
 	 */
 	res = KSI_OBJ_saveSignature(err, ksi, tmp, outSigFileName);
 	if (res != KT_OK) goto cleanup;
-	print_info("Signature saved.\n");
+	print_debug("Signature saved.\n");
 
 	*sig = tmp;
 	tmp = NULL;
@@ -239,7 +242,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{o}{D}{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputHash, isContentOk_inputHash, NULL, extract_inputHash);
 	PARAM_SET_addControl(set, "{H}", isFormatOk_hashAlg, isContentOk_hashAlg, NULL, extract_hashAlg);
-	PARAM_SET_addControl(set, "{d}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{d}{dump}", isFormatOk_flag, NULL, NULL, NULL);
 
 	/*					  ID	DESC										MAN			 ATL	FORBIDDEN	IGN	*/
 	TASK_SET_add(task_set, 0,	"Sign data.",								"S,i,o",	 NULL,	"H,D",		NULL);

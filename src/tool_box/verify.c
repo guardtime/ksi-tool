@@ -55,6 +55,7 @@ int verify_run(int argc, char** argv, char **envp) {
 	ERR_TRCKR *err = NULL;
 	SMART_FILE *logfile = NULL;
 	int d;
+	int dump;
 	COMPOSITE extra;
 	KSI_DataHash *hsh = NULL;
 	KSI_Signature *sig = NULL;
@@ -65,7 +66,7 @@ int verify_run(int argc, char** argv, char **envp) {
 	 * Extract command line parameters and also add configuration specific parameters.
      */
 	res = PARAM_SET_new(
-			CONF_generate_desc("{verify}{i}{o}{D}{x}{f}{d}{pub-str|p}{ver-int}{ver-cal}{ver-key}{ver-pub}{log}{silent}{nowarn}{conf}{log}", buf, sizeof(buf)),
+			CONF_generate_desc("{verify}{i}{o}{D}{x}{f}{d}{pub-str|p}{ver-int}{ver-cal}{ver-key}{ver-pub}{log}{dump}{conf}{log}", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -85,6 +86,7 @@ int verify_run(int argc, char** argv, char **envp) {
 	if (res != KT_OK) goto cleanup;
 
 	d = PARAM_SET_isSetByName(set, "d");
+	dump = PARAM_SET_isSetByName(set, "dump");
 
 	extra.ctx = ksi;
 	extra.err = err;
@@ -147,13 +149,13 @@ int verify_run(int argc, char** argv, char **envp) {
 		print_progressResult(res);
 	}
 
-	if (d) {
-		print_info("\n");
-		OBJPRINT_signatureDump(ver_result_sig != NULL ? ver_result_sig : sig, print_debug);
+	if (dump) {
+		print_result("\n");
+		OBJPRINT_signatureDump(ver_result_sig != NULL ? ver_result_sig : sig, print_result);
 
 		if (hsh != NULL) {
-			print_info("\n");
-			OBJPRINT_Hash(hsh, "Document hash: ", print_debug);
+			print_result("\n");
+			OBJPRINT_Hash(hsh, "Document hash: ", print_result);
 		}
 	}
 
@@ -163,10 +165,10 @@ cleanup:
 
 	if (res != KT_OK) {
 		KSI_LOG_debug(ksi, "\n%s", KSITOOL_KSI_ERRTrace_get());
-		print_info("\n");
+		print_debug("\n");
 		DEBUG_verifySignature(ksi, res, ver_result_sig != NULL ? ver_result_sig : sig, hsh);
 
-		print_info("\n");
+		print_errors("\n");
 		if (d) ERR_TRCKR_printExtendedErrors(err);
 		else  ERR_TRCKR_printErrors(err);
 	}
@@ -219,7 +221,8 @@ char *verify_help_toString(char*buf, size_t len) {
 		" -p | --pub-str <str>\n"
 		"           - publication string.\n"
 		" -x        - allow to use extender when using publication based verification.\n"
-		" -d        - print detailed information about processes and errors.\n"
+		" -d        - print detailed information about processes and errors to stderr.\n"
+		" --dump    - dump signature and document hash being verified to stdout.\n"
 		" --conf <file>\n"
 		"           - specify a configurations file to override default service\n"
 		"             information. It must be noted that service info from\n"
@@ -280,7 +283,7 @@ static int verify_internally(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_S
 	print_progressDesc(d, "Verifying signature internally... ");
 	res = KT_OK;
 	print_progressResult(res);
-	print_info("TODO: Internal verification not implemented.\n");
+	print_errors("TODO: Internal verification not implemented.\n");
 
 	res = KT_OK;
 
@@ -411,7 +414,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignature);
 	PARAM_SET_addControl(set, "{f}", isFormatOk_inputHash, isContentOk_inputHash, convertRepair_path, extract_inputHash);
 	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
-	PARAM_SET_addControl(set, "{d}{x}{ver-int}{ver-cal}{ver-key}{ver-pub}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{d}{x}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{pub-str}", isFormatOk_pubString, NULL, NULL, extract_pubString);
 
 	/*					  ID	DESC										MAN							ATL		FORBIDDEN	IGN	*/
@@ -539,7 +542,7 @@ cleanup:
 static int signature_verify_with_user_publication(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature *sig, KSI_Signature **out) {
 	int res;
 	char *refStrn = NULL;
-	int t;
+	int d;
 	int x;
 	int isPubrec;
 	int isCalAuthRec;
@@ -560,7 +563,7 @@ static int signature_verify_with_user_publication(PARAM_SET *set, KSI_CTX *ksi, 
 	res = PARAM_SET_getStr(set, "pub-str", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &refStrn);
 	ERR_CATCH_MSG(err, res, "Error: Unable to get user publication string.");
 
-	t = PARAM_SET_isSetByName(set, "t");
+	d = PARAM_SET_isSetByName(set, "d");
 	x = PARAM_SET_isSetByName(set, "x");
 
 	/**
@@ -588,8 +591,8 @@ static int signature_verify_with_user_publication(PARAM_SET *set, KSI_CTX *ksi, 
 	 * let the real verification for API call.
 	 */
 	if (!isPubrec && !isCalAuthRec && signature_without_trust_record_isPubDataExactMatch(sig, ksi, refStrn)) {
-			print_info("Signature publication record does not exist.\n");
-			print_progressDesc(t, "Adding publication record to the signature generated from publication string... ");
+			print_debug("Signature publication record does not exist.\n");
+			print_progressDesc(d, "Adding publication record to the signature generated from publication string... ");
 
 			res = KSI_Signature_clone(sig, &tmp_sig);
 			ERR_CATCH_MSG(err, res, "Error: Unable to clone signature for verification.");
@@ -601,7 +604,7 @@ static int signature_verify_with_user_publication(PARAM_SET *set, KSI_CTX *ksi, 
 			verify_that = tmp_sig;
 			print_progressResult(res);
 	} else if (isPubrec) {
-		print_info("Signature publication record exists.\n");
+		print_debug("Signature publication record exists.\n");
 		res = KSI_Signature_getPublicationRecord(sig, &sig_pub_rec);
 		ERR_CATCH_MSG(err, res, "Error: Unable to extract publication record from signature.");
 
@@ -613,7 +616,7 @@ static int signature_verify_with_user_publication(PARAM_SET *set, KSI_CTX *ksi, 
 			verify_that = sig;
 		}
 	} else {
-		print_info("Signature publication record does not exist.\n");
+		print_debug("Signature publication record does not exist.\n");
 	}
 
 	/**
@@ -621,7 +624,7 @@ static int signature_verify_with_user_publication(PARAM_SET *set, KSI_CTX *ksi, 
 	 * Let the API to verify the signature and construct the verification result.
      */
 	if (exact_match) {
-		print_progressDesc(t, "Verifying signature with user publication... ");
+		print_progressDesc(d, "Verifying signature with user publication... ");
 
 		res = KSI_Signature_verifyWithPublication(verify_that, ksi, user_pub_data);
 		ERR_CATCH_MSG(err, res, "Error: Verification failed.");
@@ -635,7 +638,7 @@ static int signature_verify_with_user_publication(PARAM_SET *set, KSI_CTX *ksi, 
 	 * compare the signatures signing time with user publication time to examine
 	 * if it is possible to verify the signature after extending.
      */
-	print_progressDesc(t, "Check if verification is possible by extending the signature... ");
+	print_progressDesc(d, "Check if verification is possible by extending the signature... ");
 	res = KSI_Signature_getSigningTime(sig, &sig_signing_time);
 	ERR_CATCH_MSG(err, res, "Error: Unable to get signature signing time.");
 
@@ -659,7 +662,7 @@ static int signature_verify_with_user_publication(PARAM_SET *set, KSI_CTX *ksi, 
 	/**
 	 * As extending is permitted, extend the signature to the user publication.
      */
-	print_progressDesc(t, "Extending signature to publication time of publication string... ");
+	print_progressDesc(d, "Extending signature to publication time of publication string... ");
 	res = KSITOOL_Signature_extendTo(err, sig, ksi, user_pub_time, &tmp_sig);
 	ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
 	print_progressResult(res);
@@ -678,7 +681,7 @@ static int signature_verify_with_user_publication(PARAM_SET *set, KSI_CTX *ksi, 
 	 * If signature has dummy publication record, it is possible to verify it with
 	 * user publication.
 	 */
-	print_progressDesc(t, "Verifying signature with user publication... ");
+	print_progressDesc(d, "Verifying signature with user publication... ");
 	res = KSI_Signature_verifyWithPublication(verify_that, ksi, user_pub_data);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify signature with user publication.");
 	print_progressResult(res);

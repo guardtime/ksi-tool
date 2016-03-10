@@ -54,12 +54,13 @@ int pubfile_run(int argc, char** argv, char **envp) {
 	COMPOSITE extra;
 	char buf[2048];
 	int d;
+	int dump;
 
 	/**
 	 * Extract command line parameters.
      */
 	res = PARAM_SET_new(
-			CONF_generate_desc("{o}{d}{v}{T}{conf}{log}", buf, sizeof(buf)),
+			CONF_generate_desc("{o}{d}{v}{T}{conf}{dump}{log}", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -79,6 +80,7 @@ int pubfile_run(int argc, char** argv, char **envp) {
 	if (res != KT_OK) goto cleanup;
 
 	d = PARAM_SET_isSetByName(set, "d");
+	dump = PARAM_SET_isSetByName(set, "dump");
 
 	extra.ctx = ksi;
 	extra.err = err;
@@ -100,8 +102,8 @@ int pubfile_run(int argc, char** argv, char **envp) {
 
 	if (TASK_getID(task) == 4) goto cleanup;
 
-	if (d) {
-		OBJPRINT_publicationsFileDump(pubfile, print_debug);
+	if (dump && pubfile != NULL) {
+		OBJPRINT_publicationsFileDump(pubfile, print_result);
 	}
 
 
@@ -111,10 +113,10 @@ cleanup:
 
 	if (res != KT_OK) {
 		KSI_LOG_debug(ksi, "\n%s", KSITOOL_KSI_ERRTrace_get());
-		print_info("\n");
+		print_debug("\n");
 		DEBUG_verifyPubfile(ksi, set, res, pubfile);
 
-		print_info("\n");
+		print_errors("\n");
 		if (d) ERR_TRCKR_printExtendedErrors(err);
 		else  ERR_TRCKR_printErrors(err);
 	}
@@ -133,7 +135,7 @@ char *pubfile_help_toString(char*buf, size_t len) {
 	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
 		"%s pubfile -P <url> [--cnstr <oid=value>]... [-V <file>]...\n"
-		"        [-W <file>]... [-o <pubfile.bin>] [-d] [-v] [more options]\n"
+		"        [-W <file>]... [-o <pubfile.bin>] [-d] [-v] [--dump] [more options]\n"
 		"%s pubfile -T <time> -X <url> [--ext-user <user> --ext-key <pass>]\n\n"
 
 		" -P <url>  - specify publications file URL (or file with uri scheme 'file://').\n"
@@ -148,7 +150,8 @@ char *pubfile_help_toString(char*buf, size_t len) {
 		"           - HMAC key for extending service.\n"
 		" -T <time> - specify time to create a publication string for as the number of seconds\n"
 		"             since 1970-01-01 00:00:00 UTC or time string formatted as \"YYYY-MM-DD hh:mm:ss\".\n"
-		" -d        - print detailed information about processes and errors.\n"
+		" -d        - print detailed information about processes and errors to stderr.\n"
+		" --dump    - dump publications file to stdout.\n"
 		" --conf <file>\n"
 		"           - specify a configurations file to override default service\n"
 		"             information. It must be noted that service info from\n"
@@ -202,7 +205,7 @@ static int pubfile_download(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Pu
 	ERR_CATCH_MSG(err, res, "Error: Unable to extract publication time.");
 	print_progressResult(res);
 
-	print_info("Latest publication (%i) %s+00:00.\n",
+	print_debug("Latest publication (%i) %s+00:00.\n",
 			KSI_Integer_getUInt64(pubTime),
 			KSI_Integer_toDateString(pubTime, buf, sizeof(buf)));
 
@@ -316,7 +319,6 @@ static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ks
 	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
 
 	print_progressResult(res);
-	print_info("\n");
 
 	print_result("%s\n", KSITOOL_PublicationData_toString(tmpPubData, buf,sizeof(buf)));
 
@@ -351,17 +353,17 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{o}{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
-	PARAM_SET_addControl(set, "{d}{v}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{d}{v}{dump}", isFormatOk_flag, NULL, NULL, NULL);
 
 	/**
 	 * Define possible tasks.
      */
 	/*					  ID	DESC										MAN			ATL		FORBIDDEN	IGN	*/
-	TASK_SET_add(task_set, 0,	"Verify publications file.",				"P,v",		NULL,	"T,d,o",	NULL);
-	TASK_SET_add(task_set, 1,	"Dump publications file.",					"P,d",		NULL,	"T,o",		NULL);
-	TASK_SET_add(task_set, 2,	"Save publications.",						"P,o",		NULL,	"T,d",		NULL);
-	TASK_SET_add(task_set, 3,	"Save and dump publications file.",			"P,o,d",	NULL,	"T",		NULL);
-	TASK_SET_add(task_set, 4,	"Create publication string.",				"T,X",		NULL,	NULL,		NULL);
+	TASK_SET_add(task_set, 0,	"Verify publications file.",				"P,v",		NULL,	"T,dump,o",	NULL);
+	TASK_SET_add(task_set, 1,	"Dump publications file.",					"P,dump",	NULL,	"T,o",		NULL);
+	TASK_SET_add(task_set, 2,	"Save publications.",						"P,o",		NULL,	"T,dump",	NULL);
+	TASK_SET_add(task_set, 3,	"Save and dump publications file.",			"P,o,dump",	NULL,	"T",		NULL);
+	TASK_SET_add(task_set, 4,	"Create publication string.",				"T,X",		NULL,	"o,dump,v",	NULL);
 
 cleanup:
 

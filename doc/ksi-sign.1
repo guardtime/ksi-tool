@@ -8,7 +8,7 @@
 .\"
 .SH SYNOPSIS
 .\"
-\fBksi sign -i \fIinput \fB-o \fIout.ksig \fB-S \fIurl \fR[\fB--aggr-user \fIuser \fB--aggr-key \fIkey\fR] \fR[\fB-H \fIalg\fR] [\fB-D \fIfile\fR] [\fImore options\fR]
+\fBksi sign -i \fIinput \fB-o \fIout.ksig \fB-S \fIurl \fR[\fB--aggr-user \fIuser \fB--aggr-key \fIkey\fR] \fR[\fB-H \fIalg\fR] [\fB-D \fIfile\fR] [\fB--dump\fR] [\fImore options\fR]
 .br
 .\"
 .\"
@@ -21,11 +21,11 @@ This is a general signing tool for Guardtime Keyless Signature services.
 .\"
 .TP
 \fB-i \fIdata\fR
-File or data hash to be signed. Hash format: <\fIalg\fR>:<\fIhash in hex\fR>.
+File or data hash to be signed. Hash format: <\fIalg\fR>:<\fIhash in hex\fR>. Use '-' as file name to read data to be hashed from \fIstdin\fR.
 .\"
 .TP
 \fB-o \fIfile\fR
-Output file name to store signature token.
+Output file name to store signature token. Use '-' as file name to redirect signature binary stream to \fIstdout\fR.
 .\"
 .TP
 \fB-H \fIalg\fR
@@ -45,11 +45,15 @@ HMAC Key for signing service.
 .\"
 .TP
 \fB-D\fR | \fB--data-out \fIfile\fR
-Save signed data to file. Use when signing a stream.
+Save signed data to file. Use when signing a stream. Use '-' as file name to redirect data being hashed to \fIstdout\fR.
 .\"
 .TP
 \fB-d\fR
-Use to dump signatures data and get more precise info about the warnings.
+Print detailed information about processes and errors to \fIstderr\fR.
+.\"
+.TP
+\fB--dump\fR
+Dump signature created to \fIstdout\fR.
 .\"
 .TP
 \fB--conf \fIfile\fR
@@ -57,7 +61,7 @@ Specify a configurations file to override default service information. It must b
 .\"
 .TP
 \fB--log \fIfile\fR
-Write libksi log into file.
+Write libksi log into file. Use '-' as file name to redirect log to \fIstdout\fR.
 .br
 .\"
 .\"

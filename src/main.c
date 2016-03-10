@@ -167,11 +167,14 @@ int main(int argc, char** argv, char **envp) {
 	char buf[0xffff];
 
 	print_init();
+	print_disable(PRINT_WARNINGS | PRINT_INFO | PRINT_DEBUG);
+	print_enable(PRINT_RESULT | PRINT_ERRORS);
+
 
 	/**
 	 * Define parameter and task set.
      */
-	res = PARAM_SET_new("{h}{version}{conf}", &set);
+	res = PARAM_SET_new("{h}{version}{conf}{debug|d}", &set);
 	if (res != PST_OK) goto cleanup;
 
 	res = TASK_SET_new(&tasks);
@@ -218,8 +221,8 @@ int main(int argc, char** argv, char **envp) {
 	 * Simple tool help handler.
      */
 	if (PARAM_SET_isSetByName(set, "h")) {
-		print_info("%s %s (C) Guardtime\n", TOOL_getName(), TOOL_getVersion());
-		print_info("%s (C) Guardtime\n\n", KSI_getVersion());
+		print_result("%s %s (C) Guardtime\n", TOOL_getName(), TOOL_getVersion());
+		print_result("%s (C) Guardtime\n\n", KSI_getVersion());
 
 		if (task == NULL) {
 			print_result("Usage %s <task> <arguments>\n", TOOL_getName());
@@ -259,6 +262,10 @@ int main(int argc, char** argv, char **envp) {
 		goto cleanup;
 	}
 
+
+	if (PARAM_SET_isSetByName(set, "d")) {
+		print_enable(PRINT_DEBUG);
+	}
 
 	/**
 	 * Run component by its ID.

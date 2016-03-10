@@ -53,11 +53,11 @@ Perform publication based verification.
 .\"
 .TP
 \fB-i \fIdata\fR
-KSI signature file to be verified.
+KSI signature file to be verified. Use '-' as file name to read signatures file from \fIstdin\fR.
 .\"
 .TP
 \fB-f \fIdata\fR
-File or data hash to be verified. Hash format: <alg>:<hash in hex>.
+File or data hash to be verified. Hash format: <alg>:<hash in hex>. Use '-' as file name to read data to be hashed from \fIstdin\fR.
 .\"
 .TP
 \fB-X \fIurl\fR
@@ -101,7 +101,11 @@ Specify an OpenSSL-style trust store directory for publications file verificatio
 .\"
 .TP
 \fB-d\fR
-Use to dump signature file or get more precise information about verification process and errors.
+Print detailed information about processes and errors to \fIstderr\fR.
+.\"
+.TP
+\fB--dump\fR
+Dump signature and document hash being verified to \fIstdout\fR.
 .\"
 .TP
 \fB--conf \fIfile\fR
@@ -109,7 +113,7 @@ Specify a configurations file to override default service information. It must b
 .\"
 .TP
 \fB--log \fIfile\fR
-Write libksi log into file.
+Write libksi log into file. Use '-' as file name to redirect log to \fIstdout\fR.
 .br
 .\"
 .\"

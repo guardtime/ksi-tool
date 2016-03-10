@@ -9,6 +9,7 @@ Version 2.0.0
 * IMPROVEMENT: Parameter --ref replaced with --pub-str | -p. (KCT-52)
 * IMPROVEMENT: Parameter --inc replaced with --conf. (KCT-52)
 * IMPROVEMENT: Parameters --user and pass are replaced with --aggr-user, --aggr-key, --ext-user, --ext-key. (TOOL-68, KCT-52)
+* IMPROVEMENT: Parameters -d is for debugging messages that are printed to stderr. (KCT-52)
 * IMPROVEMENT: Parameters n, t, r are replaced with -d. (KCT-52)
 * IMPROVEMENT: Parameter -F replaced with -f. (KCT-52)
 * FEATURE: Verifications has separate modes that can be selected with parameters --ver-int, --ver-key, --ver-cal and --ver-pub. (KCT-52)

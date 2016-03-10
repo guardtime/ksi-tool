@@ -103,10 +103,10 @@ cleanup:
 
 	if (res != KT_OK) {
 		KSI_LOG_debug(ksi, "\n%s", KSITOOL_KSI_ERRTrace_get());
-		print_info("\n");
+		print_debug("\n");
 		DEBUG_verifySignature(ksi, res, sig, NULL);
 
-		print_info("\n");
+		print_errors("\n");
 		if (d) ERR_TRCKR_printExtendedErrors(err);
 		else  ERR_TRCKR_printErrors(err);
 	}
