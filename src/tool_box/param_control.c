@@ -479,6 +479,8 @@ int isFormatOk_url(const char *url) {
 		return FORMAT_OK;
 	else if(strstr(url, "ksi+tcp://") == url)
 		return FORMAT_OK;
+	else if(strstr(url, "file://") == url)
+		return FORMAT_OK;
 	else
 		return FORMAT_URL_UNKNOWN_SCHEME;
 }
@@ -486,23 +488,30 @@ int isFormatOk_url(const char *url) {
 int convertRepair_url(const char* arg, char* buf, unsigned len) {
 	char *scheme = NULL;
 	unsigned i = 0;
+	int isFile;
+
 	if(arg == NULL || buf == NULL) return 0;
 	scheme = strstr(arg, "://");
+	isFile = strstr(arg, "file://") == arg ? 1 : 0;
 
-	if(scheme == NULL){
+	if (scheme == NULL) {
 		strncpy(buf, "http://", len-1);
-		if(strlen(buf)+strlen(arg) < len)
+		if (strlen(buf)+strlen(arg) < len)
 			strcat(buf, arg);
 		else
 			return 0;
-	}
-	else{
-		while(arg[i] && i < len - 1){
-			if(&arg[i] < scheme){
+	} else {
+		while (arg[i] && i < len - 1) {
+			if (&arg[i] < scheme) {
 				buf[i] = (char)tolower(arg[i]);
-			}
-			else
+			} else {
+#ifdef _WIN32
+				buf[i] = arg[i] == '\\' ? '/' : arg[i];
+#else
 				buf[i] = arg[i];
+#endif
+			}
+
 			i++;
 		}
 		buf[i] = 0;
