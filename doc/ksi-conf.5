@@ -9,7 +9,7 @@
 .SH DESCRIPTION
 .\"
 This file is read by ksi command-line tool \fBksi\fR(1) as KSI service configurations file.
-Configurations file is composed with the following parameters described under section \fB OPTIONS\fR. If configurations file with unknown or invalid key-value pairs is used, an error is generated until user applies all the fixes needed. All \fBksi\fR(1) components that use KSI services must accept the configurations file. It also must be possible to define exactly the same parameters on command-line to override values from configurations file.
+Configurations file is composed with the following parameters described under section \fB OPTIONS\fR. If configurations file with unknown or invalid key-value pairs is used, an error is generated until user applies all the fixes needed. All \fBksi\fR(1) components that use KSI services must accept the configurations file (option \fB--conf \fIfile\fR). It must also be possible to define exactly the same parameters on command-line to override values from configurations file.
 .br
 \n
 All the key-value pairs must be placed one per line. A short parameter or multiple flags must have prefix \fB- \fRand long parameters must have prefix \fB--\fR. To write a comment start the line with \fB#\fR. If some parameter values contain whitespace characters a double quote marks \fB" \fRmust be used to wrap the entire value. If double quote mark \fB" \fRhave to be used inside the value part an escape character \fB\\ \fRmust be typed before the quote mark like that \fB\\"\fR.
@@ -67,9 +67,13 @@ Set network transfer timeout, after successful connect, in s.
 \fB-C \fIint\fR
 Set network Connect timeout in s (is not supported with tcp client).
 .\"
+.TP
+\fB--publications-file-no-verify\fR
+A flag to force the tool to trust the publications file without verifying it. The flag can only be defined on command-line to avoid the usage of insecure configurations files. It must be noted that the \fBoption is insecure \fRand must only be used for testing.
+.\"
 .\"
 .SH ENVIRONMENT
-Program \fBksi\fR(1) uses environment variable \fBKSI_CONF \fRto point to default configurations file.
+Program \fBksi\fR(1) uses environment variable \fBKSI_CONF \fRto point to the default configurations file.
 .\"
 .\"
 .SH EXAMPLES

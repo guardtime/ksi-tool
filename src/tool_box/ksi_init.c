@@ -295,24 +295,25 @@ cleanup:
 
 static int tool_init_ksi_publications_file(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set) {
 	int res = KSI_UNKNOWN_ERROR;
-	KSI_PublicationsFile *tmpPubFile = NULL;
-	char *inPubFileName = NULL;
+	KSI_PublicationsFile *tmp = NULL;
 
 	if (ksi == NULL || err == NULL || set == NULL) {
 		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
-//	TODO: Implement workaround to get publications file from file.
-//	res = KSI_CTX_setPublicationsFile(ksi, tmpPubFile);
-//	ERR_CATCH_MSG(err, res, "Error: Unable to configure publications file.");
-//	tmpPubFile = NULL;
+	/**
+	 * If there is a direct need to not verify publications file do the publications
+	 * file request manually so KSI API do not verify the file extracted by the API
+	 * user.
+     */
+	if (PARAM_SET_isSetByName(set, "publications-file-no-verify")) {
+		KSI_receivePublicationsFile(ksi, &tmp);
+	}
 
 	res = KT_OK;
 
 cleanup:
-
-	KSI_PublicationsFile_free(tmpPubFile);
 
 	return res;
 }

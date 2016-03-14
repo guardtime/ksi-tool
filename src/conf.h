@@ -3,7 +3,7 @@
 
 #include "param_set/param_set.h"
 
-#define CONF_PARAM_DESC "{S}{X}{P}{aggr-user}{aggr-key}{ext-user}{ext-key}{cnstr}{V}{W}{C}{c}"
+#define CONF_PARAM_DESC "{S}{X}{P}{aggr-user}{aggr-key}{ext-user}{ext-key}{cnstr}{V}{W}{C}{c}{publications-file-no-verify}"
 
 #ifdef	__cplusplus
 extern "C" {
