@@ -26,6 +26,7 @@
 #include "ksi/net.h"
 #include "tool_box/tool_box.h"
 #include "tool_box/smart_file.h"
+#include "tool_box/err_trckr.h"
 
 #define ERR_APPEND_KSI_ERR_EXT_MSG(err, res, ref_err, msg) \
 		if (res == ref_err) { \

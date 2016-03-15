@@ -23,6 +23,7 @@
 
 #include "ksitool_err.h"
 #include <ksi/ksi.h>
+#include "tool_box/err_trckr.h"
 
 #ifdef	__cplusplus
 extern "C" {

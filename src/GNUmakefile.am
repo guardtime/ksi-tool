@@ -38,6 +38,8 @@ ksi_SOURCES = \
 	tool_box/param_control.h \
 	tool_box/ksi_init.c \
 	tool_box/ksi_init.h \
+	tool_box/err_trckr.c \
+	tool_box/err_trckr.h \
 	tool_box/tool_box.c \
 	tool_box/tool_box.h \
 	tool_box/pubfile.c \

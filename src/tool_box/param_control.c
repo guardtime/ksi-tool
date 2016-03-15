@@ -25,17 +25,17 @@
 #include <limits.h>
 #include <string.h>
 #include <ksi/ksi.h>
-#include "tool_box.h"
-
-#include "param_control.h"
-//#include "gt_task_support.h"
-#include "obj_printer.h"
+#include <ksi/compatibility.h>
+#include "tool_box/tool_box.h"
+#include "tool_box/err_trckr.h"
+#include "tool_box/param_control.h"
 #include "param_set/param_value.h"
-#include "../param_set/param_set.h"
-#include "../param_set/task_def.h"
+#include "param_set/param_set.h"
+#include "param_set/task_def.h"
+#include "obj_printer.h"
 #include "ksi_init.h"
-#include "../api_wrapper.h"
-#include "ksi/compatibility.h"
+#include "api_wrapper.h"
+
 #ifdef _WIN32
 #	include <io.h>
 #	define F_OK 0

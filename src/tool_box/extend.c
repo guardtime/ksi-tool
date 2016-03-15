@@ -29,6 +29,7 @@
 #include "tool_box/param_control.h"
 #include "tool_box/task_initializer.h"
 #include "tool_box/smart_file.h"
+#include "tool_box/err_trckr.h"
 #include "api_wrapper.h"
 #include "printer.h"
 #include "obj_printer.h"

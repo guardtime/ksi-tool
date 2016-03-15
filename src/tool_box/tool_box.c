@@ -25,7 +25,8 @@
 #include <ctype.h>
 #include <ksi/ksi.h>
 #include <ksi/compatibility.h>
-#include "smart_file.h"
+#include "tool_box/smart_file.h"
+#include "tool_box/err_trckr.h"
 #include "printer.h"
 
 #ifdef _WIN32

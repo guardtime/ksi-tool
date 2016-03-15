@@ -76,8 +76,6 @@ static int param_set_ErrToExitcode(int error_code) {
 	}
 }
 
-
-
 static int smart_file_ErrToExitcode(int error_code) {
 	switch (error_code) {
 		case SMART_FILE_OK:
@@ -162,101 +160,4 @@ const char* errToString(int error) {
 		str = SMART_FILE_errorToString(error);
 
 	return str;
-}
-
-
-
-typedef struct ERR_ENTRY_st {
-	int code;
-	int line;
-	char message[MAX_MESSAGE_LEN];
-	char fileName[MAX_FILE_NAME_LEN];
-} ERR_ENTRY;
-
-struct ERR_TRCKR_st {
-	ERR_ENTRY err[MAX_ERROR_COUNT];
-	unsigned count;
-	int (*printErrors)(const char*, ...);
-};
-
-
-
-
-ERR_TRCKR *ERR_TRCKR_new(int (*printErrors)(const char*, ...)) {
-	ERR_TRCKR *tmp = NULL;
-
-	tmp = (ERR_TRCKR*)malloc(sizeof(ERR_TRCKR));
-	if (tmp == NULL) return NULL;
-
-	tmp->count = 0;
-
-
-	tmp->printErrors = printErrors != NULL ? printErrors : printf;
-
-	return tmp;
-}
-
-void ERR_TRCKR_free(ERR_TRCKR *obj) {
-	free(obj);
-	return;
-}
-
-void ERR_TRCKR_add(ERR_TRCKR *err, int code, const char *fname, int lineN, const char *msg, ...) {
-	va_list va;
-	if (err == NULL || fname == NULL) return;
-	if(err->count >= MAX_ERROR_COUNT ) return;
-
-	va_start(va, msg);
-	vsnprintf(err->err[err->count].message, MAX_MESSAGE_LEN, msg == NULL ? "" : msg, va);
-	va_end(va);
-	err->err[err->count].message[MAX_MESSAGE_LEN -1] = 0;
-
-
-	strncpy(err->err[err->count].fileName, fname, MAX_FILE_NAME_LEN);
-	err->err[err->count].fileName[MAX_FILE_NAME_LEN -1] = 0;
-	err->err[err->count].line = lineN;
-	err->err[err->count].code = code;
-	err->count++;
-
-	return;
-}
-
-void ERR_TRCKR_reset(ERR_TRCKR *err) {
-	if (err == NULL) return;
-	err->count = 0;
-}
-
-
-void ERR_TRCKR_printErrors(ERR_TRCKR *err) {
-	int i;
-
-	if (err == NULL) return;
-
-	for (i = err->count - 1; i >= 0; i--) {
-		if (err->err[i].message[0] == '\0') {
-			err->printErrors("%i) %s%s",i+1,  errToString(err->err[i].code), (err->err[i].message[strlen(err->err[i].message) - 1] == '\n') ? ("") : ("\n"));
-		} else {
-			err->printErrors("%i) %s%s",i+1,  err->err[i].message, (err->err[i].message[strlen(err->err[i].message) - 1] == '\n') ? ("") : ("\n"));
-		}
-	}
-
-	return;
-	}
-
-void ERR_TRCKR_printExtendedErrors(ERR_TRCKR *err) {
-	int i;
-
-	if (err == NULL) return;
-
-	for (i = err->count - 1; i >= 0; i--) {
-		err->printErrors("%i) %s (%i) %s [%s 0x%02x]%s",i+1,
-				err->err[i].fileName,
-				err->err[i].line,
-				err->err[i].message,
-				errToString(err->err[i].code),
-				err->err[i].code,
-				(err->err[i].message[strlen(err->err[i].message) - 1] == '\n') ? ("") : ("\n") );
-	}
-
-	return;
 }
