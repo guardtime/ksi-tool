@@ -53,59 +53,64 @@ KSI general publications file verification tool. See \fBksi-pubfile\fR(1) for mo
 .SH EXIT STATUS
 .TP
 \fB0\fR
-Exit success. Returned if everything is OK.
+\fBExit success.\fR Returned if everything is OK.
 .\"
 .TP
 \fB1
-Exit failure. A general failure occurred.
+\fBExit failure.\fR A general failure occurred.
 .\"
 .TP
 \fB3
-Invalid command-line parameter. The content or format of command-line parameter is invalid. Also a parameter may be missing.
+\fBInvalid command-line parameter.\fR The content or format of command-line parameter is invalid. Also a parameter may be missing.
 .\"
 .TP
 \fB4
-Invalid format. Input data to KSI library is invalid, for example signature or publication file format is invalid.
+\fBInvalid format.\fR Input data to KSI library is invalid, for example signature or publication file format is invalid.
 .\"
 .TP
 \fB5
-Network error. Ksitool is unable to connect to the service, connection is timed out or an HTTP error was returned from the service url.
+\fBNetwork error.\fR Ksitool is unable to connect to the service, connection is timed out or an HTTP error was returned from the service url.
 .\"
 .TP
 \fB6
-Verification error. Verification of signature or document hash failed.
+\fBVerification error.\fR Verification of signature or document hash failed.
 .\"
 .TP
 \fB7
-Extending error. Error in extending a signature or an error was returned by extender.
+\fBExtending error.\fR Error in extending a signature or an error was returned by extender.
 .\"
 .TP
 \fB8
-Aggregation error. Error returned by aggregator.
+\fBAggregation error.\fR Error returned by aggregator.
 .\"
 .TP
 \fB9
-Input / output error. Unable to write or read file.
+\fBInput / output error.\fR Unable to write or read file.
 .\"
 .TP
 \fB10
-Cryptographic error. Error may be generated due to untrusted or unavailable hash algorithm or by an invalid PKI signature or untrusted certificate.
+\fBCryptographic error.\fR Error may be generated due to untrusted or unavailable hash algorithm or by an invalid PKI signature or untrusted certificate.
 .\"
 .TP
 \fB11
-HMAC error. HMAC of aggregation or extend response does not match. 
+\fBHMAC error.\fR HMAC of aggregation or extend response does not match.
 .\"
 .TP
 \fB12
-No privileges. Operating system did not grant privileges to perform an operation.
+\fBNo privileges.\fR Operating system did not grant privileges to perform an operation.
 .\"
 .TP
 \fB13
-System out of memory.
+\fBSystem out of memory.\fR
 .\"
 .TP
 \fB14
-Authentication error. Aggregation or extending service did not accept user identification parameters.
+\fBAuthentication error.\fR Aggregation or extending service did not accept user identification parameters.
+.br
+.\"
+.TP
+\fB16
+\fBInvalid configuration.\fR KSI tool configuration or KSI C API library configuration is invalid.
 .br
 .\"
 .\"
