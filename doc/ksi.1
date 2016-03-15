@@ -9,30 +9,24 @@
 .SH SYNOPSIS
 .\"
 .br
-\fBksi \fR[\fB-h\fR] [\fB--version\fR] [\fImore options\fR]
+\fBksi \fR[\fB-h\fR] [\fB--version\fR]
 .br
-\fBksi \fIcomponent \fR[\fB-h\fR] [\fIservice info\fR] [\fImore options\fR]
+\fBksi \fBcomponent\fR \fB-h\fR
+.br
+\fBksi \fBcomponent\fR [\fIservice info\fR] [\fImore options\fR]
+.\"
 .\"
 .\"
 .SH DESCRIPTION
-.\"
-This is a general signing and signature verification tool for Guardtime Keyless Signature services.
-.\"
-.\"
-.SH OPTIONS
-.\"
-.TP
-\fB-h\fR
-Print help text of program ksi. To print a help text of ksi component use \fB-h\fR with specified component name.
-.\"
-.TP
-\fB--version\fR
-Print version info.
+This is a Guardtime KSI tool that can be used for general KSI related tasks. The most common use cases are signing (\fBksi-sign\fR(1)), extending (\fBksi-extend\fR(1)) and verifying (\fBksi-verify\fR(1)) of the KSI signature. This tool is divided into multiple components where each piece handles the specific task. The first parameter must always be the components name followed by the service related info and other options needed by the operation.
+.br
+
+.br
+To read more about KSI service configuration see \fBksi-conf\fR(1) for more information or read specific components man page.
 .\"
 .\"
 .SH KSI COMPONENTS
 .\"
-
 .TP
 \fBsign\fR
 KSI general signing tool. See \fBksi-sign\fR(1) for more information.
@@ -48,6 +42,18 @@ KSI signing extending tool. See \fBksi-extend\fR(1) for more information.
 .TP
 \fBpubfile\fR
 KSI general publications file verification tool. See \fBksi-pubfile\fR(1) for more information.
+.\"
+
+.SH OPTIONS
+.\"
+.TP
+\fB-h\fR
+Print help text of program ksi. To print a help text of ksi component use \fB-h\fR with specified component name.
+.\"
+.TP
+\fB--version\fR
+Print version info.
+.\"
 .\"
 
 .SH EXIT STATUS
