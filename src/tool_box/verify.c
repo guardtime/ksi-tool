@@ -183,7 +183,7 @@ cleanup:
 	ERR_TRCKR_free(err);
 	KSI_CTX_free(ksi);
 
-	return errToExitCode(res);
+	return KSITOOL_errToExitCode(res);
 }
 
 char *verify_help_toString(char*buf, size_t len) {

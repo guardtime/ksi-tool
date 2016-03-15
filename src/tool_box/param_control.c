@@ -269,7 +269,7 @@ cleanup:
 
 	if (res != KT_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to get hash from command-line");
-		ERR_TRCKR_ADD(err, res, "Error: %s", errToString(res));
+		ERR_TRCKR_ADD(err, res, "Error: %s", KSITOOL_errToString(res));
 	}
 
 	return res;
@@ -932,7 +932,7 @@ int extract_utcTime(void *extra, const char* str, void** obj) {
      */
 
 	res = KSI_Integer_new(ctx, time, &tmp);
-	ERR_CATCH_MSG(err, res, "Error: %s.", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s.", KSITOOL_errToString(res));
 
 	*obj = (void*)tmp;
 	tmp = NULL;

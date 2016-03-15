@@ -74,8 +74,8 @@ enum Ksitool_errors {
 	KT_UNKNOWN_ERROR,
 };
 
-int errToExitCode(int error);
-const char* errToString(int error);
+int KSITOOL_errToExitCode(int error);
+const char* KSITOOL_errToString(int error);
 
 
 

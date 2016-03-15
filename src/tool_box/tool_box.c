@@ -68,14 +68,14 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **o
 
 	res = SMART_FILE_open(path, "rb", &file);
 	if (res != KT_OK) {
-		ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
+		ERR_TRCKR_ADD(err, res, "Error:%s.", KSITOOL_errToString(res));
 		goto cleanup;
 	}
 
 	buf = (unsigned char*)malloc(buf_size);
 	if (buf == NULL) {
 		res = KT_OUT_OF_MEMORY;
-		ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
+		ERR_TRCKR_ADD(err, res, "Error:%s.", KSITOOL_errToString(res));
 		goto cleanup;
 	}
 
@@ -86,7 +86,7 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **o
 			buf = realloc(buf, buf_size);
 			if (buf == NULL) {
 				res = KT_OUT_OF_MEMORY;
-				ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
+				ERR_TRCKR_ADD(err, res, "Error:%s.", KSITOOL_errToString(res));
 				goto cleanup;
 			}
 		}
@@ -104,7 +104,7 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **o
 
 	if (buf_len > UINT_MAX) {
 		res = KT_INDEX_OVF;
-		ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
+		ERR_TRCKR_ADD(err, res, "Error:%s.", KSITOOL_errToString(res));
 		goto cleanup;
 	}
 
@@ -150,7 +150,7 @@ static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, void *obj, int (*serialize)(
 
 	res = SMART_FILE_open(path, "wb", &file);
 	if (res != KT_OK) {
-		ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
+		ERR_TRCKR_ADD(err, res, "Error:%s.", KSITOOL_errToString(res));
 		goto cleanup;
 	}
 
