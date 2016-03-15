@@ -424,3 +424,113 @@ int KSITOOL_LOG_SmartFile(void *logCtx, int logLevel, const char *message) {
 
 	return KSI_OK;
 }
+
+int KSITOOL_KSI_ERR_toExitCode(int error_code) {
+
+	switch (error_code) {
+		case KSI_OK:
+			return EXIT_SUCCESS;
+
+		/**
+		 * General errors.
+         */
+		case KSI_INVALID_ARGUMENT:
+		case KSI_BUFFER_OVERFLOW:
+		case KSI_TLV_PAYLOAD_TYPE_MISMATCH:
+		case KSI_ASYNC_NOT_FINISHED:
+		case KSI_INVALID_PUBLICATION:
+		case KSI_UNKNOWN_ERROR:
+		case KSI_MULTISIG_NOT_FOUND:
+		case KSI_MULTISIG_INVALID_STATE:
+		case KSI_SERVICE_INVALID_REQUEST:
+		case KSI_SERVICE_INVALID_PAYLOAD:
+		case KSI_SERVICE_INTERNAL_ERROR:
+		case KSI_SERVICE_UPSTREAM_ERROR:
+		case KSI_SERVICE_UPSTREAM_TIMEOUT:
+		case KSI_SERVICE_UNKNOWN_ERROR:
+			return EXIT_FAILURE;
+
+		/**
+		 * Extender errors.
+         */
+		case KSI_EXTEND_WRONG_CAL_CHAIN:
+		case KSI_EXTEND_NO_SUITABLE_PUBLICATION:
+		case KSI_SERVICE_EXTENDER_INVALID_TIME_RANGE:
+		case KSI_SERVICE_EXTENDER_DATABASE_MISSING:
+		case KSI_SERVICE_EXTENDER_DATABASE_CORRUPT:
+		case KSI_SERVICE_EXTENDER_REQUEST_TIME_TOO_OLD:
+		case KSI_SERVICE_EXTENDER_REQUEST_TIME_TOO_NEW:
+		case KSI_SERVICE_EXTENDER_REQUEST_TIME_IN_FUTURE:
+			return EXIT_EXTEND_ERROR;
+
+		/**
+		 * Aggregator erros.
+         */
+		case KSI_SERVICE_AGGR_REQUEST_TOO_LARGE:
+		case KSI_SERVICE_AGGR_REQUEST_OVER_QUOTA:
+		case KSI_SERVICE_AGGR_TOO_MANY_REQUESTS:
+		case KSI_SERVICE_AGGR_INPUT_TOO_LONG:
+			return EXIT_AGGRE_ERROR;
+
+		/**
+		 * Network errors.
+         */
+		case KSI_NETWORK_ERROR:
+		case KSI_NETWORK_CONNECTION_TIMEOUT:
+		case KSI_NETWORK_SEND_TIMEOUT:
+		case KSI_NETWORK_RECIEVE_TIMEOUT:
+		case KSI_HTTP_ERROR:
+			return EXIT_NETWORK_ERROR;
+
+		/**
+		 * Configuration errors.
+		 */
+		case KSI_AGGREGATOR_NOT_CONFIGURED:
+		case KSI_EXTENDER_NOT_CONFIGURED:
+		case KSI_PUBLICATIONS_FILE_NOT_CONFIGURED:
+		case KSI_PUBFILE_VERIFICATION_NOT_CONFIGURED:
+			return EXIT_INVALID_CONF;
+
+		/**
+		 * General cryptographic errors.
+         */
+		case KSI_UNTRUSTED_HASH_ALGORITHM:
+		case KSI_UNAVAILABLE_HASH_ALGORITHM:
+		case KSI_PUBLICATIONS_FILE_NOT_SIGNED_WITH_PKI:
+		case KSI_CRYPTO_FAILURE:
+			return EXIT_CRYPTO_ERROR;
+
+		/**
+		 * Verification errors.
+         */
+		case KSI_VERIFICATION_FAILURE:
+		case KSI_INVALID_PKI_SIGNATURE:
+		case KSI_PKI_CERTIFICATE_NOT_TRUSTED:
+			return EXIT_VERIFY_ERROR;
+
+		/**
+		 * Format errors.
+         */
+		case KSI_INVALID_FORMAT:
+		case KSI_INVALID_SIGNATURE:
+			return EXIT_INVALID_FORMAT;
+
+		/**
+		 * HMAC error.
+         */
+		case KSI_HMAC_MISMATCH:
+			return EXIT_HMAC_ERROR;
+
+		case KSI_SERVICE_AUTHENTICATION_FAILURE:
+			return EXIT_AUTH_FAILURE;
+
+		case KSI_OUT_OF_MEMORY:
+			return EXIT_OUT_OF_MEMORY;
+
+		case KSI_IO_ERROR:
+			return EXIT_IO_ERROR;
+
+		default:
+			return EXIT_FAILURE;
+	}
+}

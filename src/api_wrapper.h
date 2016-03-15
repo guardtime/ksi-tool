@@ -62,6 +62,8 @@ char *KSITOOL_PublicationRecord_toString(KSI_PublicationRecord *rec, char *buf, 
 
 int KSITOOL_LOG_SmartFile(void *logCtx, int logLevel, const char *message);
 
+int KSITOOL_KSI_ERR_toExitCode(int error_code);
+
 #ifdef	__cplusplus
 }
 #endif

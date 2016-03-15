@@ -51,7 +51,8 @@ enum Ksitool_exit {
 	EXIT_NO_PRIVILEGES = 12,
 	EXIT_OUT_OF_MEMORY = 13,
 	EXIT_AUTH_FAILURE = 14,
-	EXIT_INVALID_CONF = 15,
+	EXIT_VALUE_RESERVED = 15,
+	EXIT_INVALID_CONF = 16,
 };
 
 enum Ksitool_errors {
