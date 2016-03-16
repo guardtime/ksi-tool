@@ -32,22 +32,10 @@
 #include "param_set/param_value.h"
 #include "param_set/param_set.h"
 #include "param_set/task_def.h"
+#include "tool_box/smart_file.h"
 #include "obj_printer.h"
 #include "ksi_init.h"
 #include "api_wrapper.h"
-
-#ifdef _WIN32
-#	include <io.h>
-#	define F_OK 0
-#else
-#	include <unistd.h>
-#	define _access_s access
-#endif
-
-#include <errno.h>
-
-#include "smart_file.h"
-
 
 
 static int analyze_hexstring_format(const char *hex, double *cor) {
@@ -165,11 +153,6 @@ static int is_imprint(const char *str) {
 
 	if (correctness > 0.5) return 1;
 	else return 0;
-}
-
-static int doFileExists(const char* path){
-	if(_access_s(path, F_OK) == 0) return 0;
-	else return errno;
 }
 
 static int x(char c){
@@ -573,30 +556,23 @@ int isFormatOk_inputFile(const char *path){
 }
 
 int isContentOk_inputFile(const char* path){
-	int fileStatus = EINVAL;
-	if (strcmp(path, "-") == 0) {
-		return PARAM_OK;
-	}else if (isFormatOk_inputFile(path) == FORMAT_OK)
-		fileStatus = doFileExists(path);
-	else
+	if (isFormatOk_inputFile(path) != FORMAT_OK) {
 		return FILE_INVALID_PATH;
-
-	switch (fileStatus) {
-	case 0:
-		return PARAM_OK;
-		break;
-	case EACCES:
-		return FILE_ACCESS_DENIED;
-		break;
-	case ENOENT:
-		return FILE_DOES_NOT_EXIST;
-		break;
-	case EINVAL:
-		return FILE_INVALID_PATH;
-		break;
 	}
 
-	return PARAM_UNKNOWN_ERROR;
+	if (strcmp(path, "-") == 0) {
+		return PARAM_OK;
+	}
+
+	if (!SMART_FILE_doFileExist(path)) {
+		return FILE_DOES_NOT_EXIST;
+	}
+
+	if (!SMART_FILE_isReadAccess(path)) {
+		return FILE_ACCESS_DENIED;
+	}
+
+	return PARAM_OK;
 }
 
 int convertRepair_path(const char* arg, char* buf, unsigned len){
