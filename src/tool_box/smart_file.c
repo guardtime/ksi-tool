@@ -30,10 +30,16 @@
 #	include <io.h>
 #	include <fcntl.h>
 #	define WIN_HANDLE
+#	define F_OK 0
+#	define W_OK 2
+#	define R_OK 4
 #else
+#	include <unistd.h>
 #	define OPENF
 #endif
 
+#include <sys/types.h>
+#include <sys/stat.h>
 
 struct SMART_FILE_st {
 	void *file;
@@ -69,6 +75,17 @@ static int smart_file_write_unix(void *file, char *raw, size_t raw_len, size_t *
 static int smart_file_get_stream_unix(const char *mode, void **stream, int *is_close_mandatory);
 static int smart_file_get_error_unix(void);
 #endif
+
+static int is_access(const char *path, int mode) {
+	int res;
+	if (path == NULL) return 0;
+#ifdef _WIN32
+	res = _access(path, mode) == 0 ? 1 : 0;
+#else
+	res = access(path, mode) == 0 ? 1 : 0;
+#endif
+	return res;
+}
 
 #ifdef WIN_HANDLE
 static int smart_file_init_win(SMART_FILE *file) {
@@ -682,6 +699,27 @@ int SMART_FILE_isEof(SMART_FILE *file) {
 	if (file == NULL) return 0;
 	if (file->isOpen == 0) return 0;
 	return file->isEOF;
+}
+
+int SMART_FILE_doFileExist(const char *path) {
+	int res = 0;
+	if (path == NULL) return 0;
+	res = is_access(path, F_OK);
+	return res;
+}
+
+int SMART_FILE_isWriteAccess(const char *path) {
+	int res = 0;
+	if (path == NULL) return 0;
+	res = is_access(path, F_OK | W_OK);
+	return res;
+}
+
+int SMART_FILE_isReadAccess(const char *path) {
+	int res = 0;
+	if (path == NULL) return 0;
+	res = is_access(path, F_OK | R_OK);
+	return res;
 }
 
 const char* SMART_FILE_errorToString(int error_code) {
