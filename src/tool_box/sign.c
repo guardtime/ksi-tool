@@ -208,7 +208,7 @@ static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_S
 	/**
 	 * Save KSI signature to file.
 	 */
-	res = KSI_OBJ_saveSignature(err, ksi, tmp, outSigFileName);
+	res = KSI_OBJ_saveSignature(err, ksi, tmp, NULL, outSigFileName);
 	if (res != KT_OK) goto cleanup;
 	print_debug("Signature saved.\n");
 

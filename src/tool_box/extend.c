@@ -226,7 +226,7 @@ static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *s
 
 	/* Save signature. */
 	print_progressDesc(d, "Saving signature... ");
-	res = KSI_OBJ_saveSignature(err, ksi, ext, outSigFileName);
+	res = KSI_OBJ_saveSignature(err, ksi, ext, NULL, outSigFileName);
 	if (res != KT_OK) goto cleanup;
 	print_progressResult(res);
 

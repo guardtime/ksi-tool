@@ -54,7 +54,7 @@ static int tool_init_ksi_logger(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set, SM
 	if (outLogfile != NULL) {
 		res = SMART_FILE_open(outLogfile, "w", &tmp);
 		if (res != KT_OK) {
-			ERR_TRCKR_ADD(err, res, "Error:%s.", KSITOOL_errToString(res));
+			ERR_TRCKR_ADD(err, res, "Error: %s", KSITOOL_errToString(res));
 			goto cleanup;
 		}
 

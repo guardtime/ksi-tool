@@ -219,7 +219,7 @@ static int pubfile_download(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Pu
 
 	if (save_to != NULL) {
 		print_progressDesc(d, "Saving publications file... ");
-		res = KSI_OBJ_savePublicationsFile(err, ksi, tmp, save_to);
+		res = KSI_OBJ_savePublicationsFile(err, ksi, tmp, NULL, save_to);
 		ERR_CATCH_MSG(err, res, "Error: Unable to save publications file.");
 		print_progressResult(res);
 	}
