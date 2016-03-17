@@ -289,11 +289,17 @@ static int file_get_hash(ERR_TRCKR *err, KSI_CTX *ctx, const char *fname_in, con
 	 * Open the file, read and hash.
      */
 	res = SMART_FILE_open(fname_in, "rb", &in);
-	if (res != KT_OK) goto cleanup;
+	if (res != KT_OK) {
+		ERR_TRCKR_ADD(err, res, "Error: Unable to open file for reading. %s", KSITOOL_errToString(res));
+		goto cleanup;
+	}
 
 	if (fname_out != NULL) {
 		res = SMART_FILE_open(fname_out, "wb", &out);
-		if (res != KT_OK) goto cleanup;
+		if (res != KT_OK) {
+			ERR_TRCKR_ADD(err, res, "Error: Unable to open file for writing. %s", KSITOOL_errToString(res));
+			goto cleanup;
+		}
 	}
 
 
