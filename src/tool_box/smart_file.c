@@ -23,7 +23,9 @@
 #include <string.h>
 #include <errno.h>
 #include <limits.h>
+#include <ksi/compatibility.h>
 #include "tool_box/smart_file.h"
+#include "tool_box/tool_box.h"
 
 #ifdef _WIN32
 #	include <windows.h>
@@ -556,12 +558,88 @@ static int smart_file_get_error_unix(void) {
 
 #endif
 
+char * generate_file_name(const char *fname, char *buf, size_t buf_len) {
+	char *ret = NULL;
+	char ext[1024] = "";
+	char num[1024] = "";
+	char root[1024] = "";
+	int is_extension = 0;
+	int is_counting = 0;
+	int count = 0;
+
+	ret = STRING_extractAbstract(fname, ".", NULL, ext, sizeof(ext), find_charAfterLastStrn, NULL, NULL);
+	is_extension = ret == ext ? 1 : 0;
+
+	ret = STRING_extractAbstract(fname, "(", ")", num, sizeof(num), find_charAfterLastStrn, find_charBeforeLastStrn, NULL);
+	if (ret == num) {
+		count = atoi(num);
+	}
+	is_counting = count > 0 ? 1 : 0;
+
+	ret = STRING_extractAbstract(fname, NULL,
+										((is_counting) ? ("(") : (is_extension ? "." : NULL))
+										, root, sizeof(root), NULL, find_charBeforeLastStrn, NULL);
+	count++;
+
+	KSI_snprintf(buf, buf_len, "%s(%i)%s%s", root, count,
+		is_extension ? "." : "",
+		is_extension ? ext : "");
+	return buf;
+}
+
+const char * generate_not_existing_file_name(const char *fname, char *buf, size_t buf_len) {
+	const char *pFname = fname;
+	if (fname == NULL || buf == NULL || buf_len == 0) return NULL;
+
+	while (SMART_FILE_doFileExist(pFname)) {
+		pFname = generate_file_name(pFname, buf, buf_len);
+		if (pFname == NULL) return NULL;
+	}
+
+	return pFname;
+}
+
 
 int SMART_FILE_open(const char *fname, const char *mode, SMART_FILE **file) {
 	int res;
 	SMART_FILE *tmp = NULL;
 	int doClose = 0;
 	int must_free = 0;
+	int isStream = 0;
+	const char *pFname = fname;
+	char buf[2048];
+
+	int is_w;
+	int is_f;
+	int is_i;
+	int is_r;
+
+	if (fname == NULL || mode == NULL || file == NULL) {
+		res = SMART_FILE_INVALID_ARG;
+		goto cleanup;
+	}
+
+
+	isStream = strcmp(fname, "-") == 0 ? 1 : 0,
+	is_w = strchr(mode, 'w') == NULL ? 0 : 1;
+	is_f = strchr(mode, 'f') == NULL ? 0 : 1;
+	is_i = strchr(mode, 'i') == NULL ? 0 : 1;
+	is_r = strchr(mode, 'r') == NULL ? 0 : 1;
+
+	/**
+	 * Some special flags that should be checked before going ahead.
+     */
+	if (!isStream) {
+		if (is_w && is_f && SMART_FILE_doFileExist(fname)) {
+			res = SMART_FILE_OVERWRITE_RESTRICTED;
+			goto cleanup;
+		}
+
+		if (is_w && is_i && SMART_FILE_doFileExist(fname)) {
+			pFname = generate_not_existing_file_name(fname, buf, sizeof(buf));
+		}
+	}
+
 
 	tmp = (SMART_FILE*)malloc(sizeof(SMART_FILE));
 	if (tmp == NULL) {
@@ -569,7 +647,7 @@ int SMART_FILE_open(const char *fname, const char *mode, SMART_FILE **file) {
 		goto cleanup;
 	}
 
-	/**
+		/**
 	 * Initialize smart file.
      */
 	tmp->file = NULL;
@@ -592,12 +670,12 @@ int SMART_FILE_open(const char *fname, const char *mode, SMART_FILE **file) {
 	 * If standard strem is wanted, extract the stream object. Otherwise use
 	 * smart file opener function.
      */
-	if (strcmp(fname, "-") == 0) {
+	if (isStream) {
 		res = tmp->file_get_stream(mode, &(tmp->file), &must_free);
 		if (res != SMART_FILE_OK) goto cleanup;
 		tmp->mustBeFreed = must_free;
 	} else {
-		res = tmp->file_open(fname, mode, &(tmp->file));
+		res = tmp->file_open(pFname, mode, &(tmp->file));
 		if (res != SMART_FILE_OK) goto cleanup;
 		tmp->mustBeFreed = 1;
 	}
@@ -744,6 +822,8 @@ const char* SMART_FILE_errorToString(int error_code) {
 			return "File is not opened.";
 		case SMART_FILE_DOES_NOT_EXIST:
 			return "File does not exist.";
+		case SMART_FILE_OVERWRITE_RESTRICTED:
+			return "Overwriting is restricted.";
 		case SMART_FILE_ACCESS_DENIED:
 			return "File access denied.";
 		case SMART_FILE_PIPE_ERROR:
