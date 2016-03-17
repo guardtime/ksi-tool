@@ -401,6 +401,21 @@ const char* find_charAfterStrn(const char *str, const char *findIt) {
 	return (beginning == NULL) ? NULL : beginning + findIt_len;
 }
 
+static const char* find_charAfter_abstract(const char *str, const char *findIt, const char* (*find)(const char *str, const char *findIt)) {
+	size_t findIt_len = 0;
+	const char * beginning = NULL;
+	const char * ret = NULL;
+	findIt_len = strlen(findIt);
+	beginning = find(str, findIt);
+	if (beginning == NULL) return NULL;
+	ret = beginning + findIt_len;
+	return ret;
+}
+
+const char* find_charAfterLastStrn(const char* str, const char* findIt) {
+	return find_charAfter_abstract(str, findIt, STRING_locateLastOccurance);
+}
+
 static const char* find_charBefore_abstract(const char *str, const char *findIt, const char* (*find)(const char *str, const char *findIt)) {
 	const char *right = NULL;
 	right = find(str, findIt);

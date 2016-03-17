@@ -155,6 +155,13 @@ const char* find_charBeforeStrn(const char* str, const char* findIt);
  */
 const char* find_charBeforeLastStrn(const char* str, const char* findIt);
 
+/**
+ * Searching		XX
+ * From				aXXbcXXd
+ * Return value points to d.
+ */
+const char* find_charAfterLastStrn(const char* str, const char* findIt);
+
 #ifdef	__cplusplus
 }
 #endif
