@@ -54,7 +54,7 @@ static int debug_getVerificationStepFailed(KSI_Signature *sig) {
 	return 0;
 }
 
-void DEBUG_verifySignature(KSI_CTX *ksi, int res, KSI_Signature *sig, KSI_DataHash *hsh) {
+void DEBUG_verifySignature(KSI_CTX *ksi, int res, KSI_Signature *sig, KSI_PolicyVerificationResult *result, KSI_DataHash *hsh) {
 	int stepFailed;
 	KSI_PublicationsFile *pubFile = NULL;
 	KSI_DataHash *input_hash = NULL;
@@ -67,7 +67,8 @@ void DEBUG_verifySignature(KSI_CTX *ksi, int res, KSI_Signature *sig, KSI_DataHa
 	OBJPRINT_signatureDump(sig, print_debug);
 
 	print_debug("\n");
-	OBJPRINT_signatureVerificationInfo(sig, print_debug);
+	OBJPRINT_signatureVerificationResultDump(result, print_debug);
+	print_debug("\n");
 
 	if (hsh != NULL) {
 		res = KSI_Signature_getDocumentHash(sig, &input_hash);

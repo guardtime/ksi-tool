@@ -36,7 +36,7 @@
 #include "conf.h"
 #include "tool.h"
 
-static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, COMPOSITE *comp);
+static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, COMPOSITE *comp, KSI_PolicyVerificationResult **result);
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 
 int extend_run(int argc, char** argv, char **envp) {
@@ -48,13 +48,14 @@ int extend_run(int argc, char** argv, char **envp) {
 	SMART_FILE *logfile = NULL;
 	ERR_TRCKR *err = NULL;
 	KSI_Signature *sig = NULL;
+	KSI_PolicyVerificationResult *result;
 	COMPOSITE extra;
 	char buf[2048];
 	int d;
 
 	/**
 	 * Extract command line parameters.
-     */
+	 */
 	res = PARAM_SET_new(
 			CONF_generate_desc("{i}{o}{H}{D}{d}{x}{T}{pub-str|p}{conf}{log}", buf, sizeof(buf)),
 			&set);
@@ -89,7 +90,7 @@ int extend_run(int argc, char** argv, char **envp) {
 		case 0:
 		case 1:
 		case 2:
-			res = extend(set, err, ksi, sig, &extra);
+			res = extend(set, err, ksi, sig, &extra, &result);
 		break;
 		default:
 			res = KT_UNKNOWN_ERROR;
@@ -104,7 +105,7 @@ cleanup:
 	if (res != KT_OK) {
 		KSI_LOG_debug(ksi, "\n%s", KSITOOL_KSI_ERRTrace_get());
 		print_debug("\n");
-		DEBUG_verifySignature(ksi, res, sig, NULL);
+		DEBUG_verifySignature(ksi, res, sig, result, NULL);
 
 		print_errors("\n");
 		if (d) ERR_TRCKR_printExtendedErrors(err);
@@ -159,7 +160,7 @@ const char *extend_get_desc(void) {
 	return "KSI signature extending tool.";
 }
 
-static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, COMPOSITE *extra) {
+static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, COMPOSITE *extra, KSI_PolicyVerificationResult **result) {
 	int res;
 	int d = 0;
 	int T = 0;
@@ -250,13 +251,13 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 
 	/**
 	 * Configure parameter set, control, repair and object extractor function.
-     */
+	 */
 	res = CONF_initialize_set_functions(set);
 	if (res != KT_OK) goto cleanup;
 
 	/**
 	 * Configure parameter set, control, repair and object extractor function.
-     */
+	 */
 	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignature);
@@ -266,7 +267,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 
 	/**
 	 * Define possible tasks.
-     */
+	 */
 	/*					  ID	DESC												MAN					ATL		FORBIDDEN	IGN	*/
 	TASK_SET_add(task_set, 0,	"Extend to the nearest publication.",				"i,o,X,P",			NULL,	"T,pub-str",		NULL);
 	TASK_SET_add(task_set, 1,	"Extend to the specified time.",					"i,o,X,P,T",		NULL,	"pub-str",		NULL);
@@ -275,4 +276,8 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 cleanup:
 
 	return res;
+}
+
+static int verify_signature(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_PolicyVerificationResult **result) {
+	return KT_INVALID_ARGUMENT;
 }
