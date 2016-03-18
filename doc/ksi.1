@@ -9,30 +9,24 @@
 .SH SYNOPSIS
 .\"
 .br
-\fBksi \fR[\fB-h\fR] [\fB--version\fR] [\fImore options\fR]
+\fBksi \fR[\fB-h\fR] [\fB--version\fR]
 .br
-\fBksi \fIcomponent \fR[\fB-h\fR] [\fIservice info\fR] [\fImore options\fR]
+\fBksi \fBcomponent\fR \fB-h\fR
+.br
+\fBksi \fBcomponent\fR [\fIservice info\fR] [\fImore options\fR]
+.\"
 .\"
 .\"
 .SH DESCRIPTION
-.\"
-This is a general signing and signature verification tool for Guardtime Keyless Signature services.
-.\"
-.\"
-.SH OPTIONS
-.\"
-.TP
-\fB-h\fR
-Print help text of program ksi. To print a help text of ksi component use \fB-h\fR with specified component name.
-.\"
-.TP
-\fB--version\fR
-Print version info.
+This is a Guardtime KSI tool that can be used for general KSI related tasks. The most common use cases are signing (\fBksi-sign\fR(1)), extending (\fBksi-extend\fR(1)) and verifying (\fBksi-verify\fR(1)) of the KSI signature. This tool is divided into multiple components where each piece handles the specific task. The first parameter must always be the components name followed by the service related info and other options needed by the operation.
+.br
+
+.br
+To read more about KSI service configuration see \fBksi-conf\fR(1) for more information or read specific components man page.
 .\"
 .\"
 .SH KSI COMPONENTS
 .\"
-
 .TP
 \fBsign\fR
 KSI general signing tool. See \fBksi-sign\fR(1) for more information.
@@ -50,62 +44,79 @@ KSI signing extending tool. See \fBksi-extend\fR(1) for more information.
 KSI general publications file verification tool. See \fBksi-pubfile\fR(1) for more information.
 .\"
 
+.SH OPTIONS
+.\"
+.TP
+\fB-h\fR
+Print help text of program ksi. To print a help text of ksi component use \fB-h\fR with specified component name.
+.\"
+.TP
+\fB--version\fR
+Print version info.
+.\"
+.\"
+
 .SH EXIT STATUS
 .TP
 \fB0\fR
-Exit success. Returned if everything is OK.
+\fBExit success.\fR Returned if everything is OK.
 .\"
 .TP
 \fB1
-Exit failure. A general failure occurred.
+\fBExit failure.\fR A general failure occurred.
 .\"
 .TP
 \fB3
-Invalid command-line parameter. The content or format of command-line parameter is invalid. Also a parameter may be missing.
+\fBInvalid command-line parameter.\fR The content or format of command-line parameter is invalid. Also a parameter may be missing.
 .\"
 .TP
 \fB4
-Invalid format. Input data to KSI library is invalid, for example signature or publication file format is invalid.
+\fBInvalid format.\fR Input data to KSI library is invalid, for example signature or publication file format is invalid.
 .\"
 .TP
 \fB5
-Network error. Ksitool is unable to connect to the service, connection is timed out or an HTTP error was returned from the service url.
+\fBNetwork error.\fR Ksitool is unable to connect to the service, connection is timed out or an HTTP error was returned from the service url.
 .\"
 .TP
 \fB6
-Verification error. Verification of signature or document hash failed.
+\fBVerification error.\fR Verification of signature or document hash failed.
 .\"
 .TP
 \fB7
-Extending error. Error in extending a signature or an error was returned by extender.
+\fBExtending error.\fR Error in extending a signature or an error was returned by extender.
 .\"
 .TP
 \fB8
-Aggregation error. Error returned by aggregator.
+\fBAggregation error.\fR Error returned by aggregator.
 .\"
 .TP
 \fB9
-Input / output error. Unable to write or read file.
+\fBInput / output error.\fR Unable to write or read file.
 .\"
 .TP
 \fB10
-Cryptographic error. Error may be generated due to untrusted or unavailable hash algorithm or by an invalid PKI signature or untrusted certificate.
+\fBCryptographic error.\fR Error may be generated due to untrusted or unavailable hash algorithm or by an invalid PKI signature or untrusted certificate.
 .\"
 .TP
 \fB11
-HMAC error. HMAC of aggregation or extend response does not match. 
+\fBHMAC error.\fR HMAC of aggregation or extend response does not match.
 .\"
 .TP
 \fB12
-No privileges. Operating system did not grant privileges to perform an operation.
+\fBNo privileges.\fR Operating system did not grant privileges to perform an operation.
 .\"
 .TP
 \fB13
-System out of memory.
+\fBSystem out of memory.\fR
 .\"
 .TP
 \fB14
-Authentication error. Aggregation or extending service did not accept user identification parameters.
+\fBAuthentication error.\fR Aggregation or extending service did not accept user identification parameters.
+.br
+.\"
+.TP
+\fB16
+\fBInvalid configuration.\fR KSI tool configuration or KSI C API library configuration is invalid.
 .br
 .\"
 .\"

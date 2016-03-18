@@ -25,7 +25,8 @@
 #include <ctype.h>
 #include <ksi/ksi.h>
 #include <ksi/compatibility.h>
-#include "smart_file.h"
+#include "tool_box/smart_file.h"
+#include "tool_box/err_trckr.h"
 #include "printer.h"
 
 #ifdef _WIN32
@@ -67,14 +68,14 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **o
 
 	res = SMART_FILE_open(path, "rb", &file);
 	if (res != KT_OK) {
-		ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
+		ERR_TRCKR_ADD(err, res, "Error: %s", KSITOOL_errToString(res));
 		goto cleanup;
 	}
 
 	buf = (unsigned char*)malloc(buf_size);
 	if (buf == NULL) {
 		res = KT_OUT_OF_MEMORY;
-		ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
+		ERR_TRCKR_ADD(err, res, "Error: %s", KSITOOL_errToString(res));
 		goto cleanup;
 	}
 
@@ -85,7 +86,7 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **o
 			buf = realloc(buf, buf_size);
 			if (buf == NULL) {
 				res = KT_OUT_OF_MEMORY;
-				ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
+				ERR_TRCKR_ADD(err, res, "Error: %s", KSITOOL_errToString(res));
 				goto cleanup;
 			}
 		}
@@ -103,7 +104,7 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **o
 
 	if (buf_len > UINT_MAX) {
 		res = KT_INDEX_OVF;
-		ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
+		ERR_TRCKR_ADD(err, res, "Error: %s", KSITOOL_errToString(res));
 		goto cleanup;
 	}
 
@@ -127,19 +128,20 @@ cleanup:
 	return res;
 }
 
-static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, void *obj, int (*serialize)(KSI_CTX *ksi, void *obj, unsigned char **raw, size_t *raw_len), const char *path) {
+static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, const char *mode, void *obj, int (*serialize)(KSI_CTX *ksi, void *obj, unsigned char **raw, size_t *raw_len), const char *path) {
 	int res;
 	SMART_FILE *file = NULL;
 	unsigned char *raw = NULL;
 	size_t raw_len = 0;
 	size_t count = 0;
-
+	char mode_sum[32];
 
 	if (err == NULL || ksi == NULL || obj == NULL || serialize == NULL || path == NULL) {
 		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
+	KSI_snprintf(mode_sum, sizeof(mode_sum), "wb%s", (mode == NULL) ? "" : mode);
 
 	res = serialize(ksi, obj, &raw, &raw_len);
 	if (res != KSI_OK) {
@@ -147,9 +149,9 @@ static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, void *obj, int (*serialize)(
 		goto cleanup;
 	}
 
-	res = SMART_FILE_open(path, "wb", &file);
+	res = SMART_FILE_open(path, mode_sum, &file);
 	if (res != KT_OK) {
-		ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
+		ERR_TRCKR_ADD(err, res, "Error: %s", KSITOOL_errToString(res));
 		goto cleanup;
 	}
 
@@ -170,14 +172,14 @@ cleanup:
 }
 
 
-int KSI_OBJ_saveSignature(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *fname) {
+int KSI_OBJ_saveSignature(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *mode, const char *fname) {
 	int res;
 
 	if (ksi == NULL || fname == NULL || sign == NULL) {
 		return KT_INVALID_ARGUMENT;
 	}
 
-	res = saveKsiObj(err, ksi, sign,
+	res = saveKsiObj(err, ksi, mode, sign,
 				(int (*)(KSI_CTX *, void *, unsigned char **, size_t *))KSI_Signature_serialize_wrapper,
 				fname);
 
@@ -188,14 +190,14 @@ int KSI_OBJ_saveSignature(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, con
 	return res;
 }
 
-int KSI_OBJ_savePublicationsFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *fname) {
+int KSI_OBJ_savePublicationsFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *mode, const char *fname) {
 	int res;
 
 	if (ksi == NULL || fname == NULL || pubfile == NULL) {
 		return KT_INVALID_ARGUMENT;
 	}
 
-	res = saveKsiObj(err, ksi, pubfile,
+	res = saveKsiObj(err, ksi, mode, pubfile,
 				(int (*)(KSI_CTX *, void *, unsigned char **, size_t *))KSI_PublicationsFile_serialize,
 				fname);
 
@@ -398,6 +400,21 @@ const char* find_charAfterStrn(const char *str, const char *findIt) {
 	findIt_len = strlen(findIt);
 	beginning = strstr(str, findIt);
 	return (beginning == NULL) ? NULL : beginning + findIt_len;
+}
+
+static const char* find_charAfter_abstract(const char *str, const char *findIt, const char* (*find)(const char *str, const char *findIt)) {
+	size_t findIt_len = 0;
+	const char * beginning = NULL;
+	const char * ret = NULL;
+	findIt_len = strlen(findIt);
+	beginning = find(str, findIt);
+	if (beginning == NULL) return NULL;
+	ret = beginning + findIt_len;
+	return ret;
+}
+
+const char* find_charAfterLastStrn(const char* str, const char* findIt) {
+	return find_charAfter_abstract(str, findIt, STRING_locateLastOccurance);
 }
 
 static const char* find_charBefore_abstract(const char *str, const char *findIt, const char* (*find)(const char *str, const char *findIt)) {

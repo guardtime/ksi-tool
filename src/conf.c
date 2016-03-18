@@ -70,6 +70,9 @@ int CONF_initialize_set_functions(PARAM_SET *conf) {
 	PARAM_SET_addControl(conf, "{c}{C}", isFormatOk_int, isContentOk_int, NULL, extract_int);
 	if (res != PST_OK) goto cleanup;
 
+	PARAM_SET_addControl(conf, "{publications-file-no-verify}", isFormatOk_flag, NULL, NULL, NULL);
+	if (res != PST_OK) goto cleanup;
+
 	res = KT_OK;
 
 cleanup:
@@ -137,7 +140,7 @@ cleanup:
 int CONF_isInvalid(PARAM_SET *set) {
 	if (set == NULL) return 1;
 
-	if (!PARAM_SET_isFormatOK(set) || PARAM_SET_isUnknown(set) || PARAM_SET_isTypoFailure(set)) {
+	if (!PARAM_SET_isFormatOK(set) || PARAM_SET_isUnknown(set) || PARAM_SET_isTypoFailure(set) || PARAM_SET_isSetByName(set, "publications-file-no-verify")) {
 		return 1;
 	} else {
 		return 0;
@@ -163,6 +166,12 @@ char *CONF_errorsToString(PARAM_SET *set, const char *prefix, char *buf, size_t 
 	if (!PARAM_SET_isFormatOK(set)) {
 		PARAM_SET_invalidParametersToString(set, prefix, getParameterErrorString, tmp, sizeof(tmp));
 		count += KSI_snprintf(buf + count, buf_len - count, "%s", tmp);
+	}
+
+	if (PARAM_SET_isSetByName(set, "publications-file-no-verify")) {
+		count += KSI_snprintf(buf + count, buf_len - count, "%sConfigurations flag 'publications-file-no-verify' can only be defined on command-line.\n",
+				prefix == NULL ? "" : prefix);
+
 	}
 
 	return buf;
@@ -223,6 +232,11 @@ char *conf_help_toString(char *buf, size_t len) {
 		" -W <dir>  - specify an OpenSSL-style trust store directory for publications file verification.\n"
 		" -c <num>  - set network transfer timeout, after successful connect, in s.\n"
 		" -C <num>  - set network Connect timeout in s (is not supported with tcp client).\n"
+		" --publications-file-no-verify\n"
+		"           - a flag to force the tool to trust the publications file without\n"
+		"             verifying it. The flag can only be defined on command-line to avoid\n"
+		"             the usage of insecure configurations files. It must be noted that the\n"
+		"             option is insecure and must only be used for testing.\n"
 		"\n"
 		"\n"
 		);

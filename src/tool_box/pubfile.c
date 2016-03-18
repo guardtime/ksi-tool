@@ -31,6 +31,7 @@
 #include "tool_box/param_control.h"
 #include "tool_box/task_initializer.h"
 #include "tool_box/smart_file.h"
+#include "tool_box/err_trckr.h"
 #include "api_wrapper.h"
 #include "printer.h"
 #include "debug_print.h"
@@ -127,7 +128,7 @@ cleanup:
 	ERR_TRCKR_free(err);
 	KSI_CTX_free(ksi);
 
-	return errToExitCode(res);
+	return KSITOOL_errToExitCode(res);
 }
 char *pubfile_help_toString(char*buf, size_t len) {
 	size_t count = 0;
@@ -218,7 +219,7 @@ static int pubfile_download(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Pu
 
 	if (save_to != NULL) {
 		print_progressDesc(d, "Saving publications file... ");
-		res = KSI_OBJ_savePublicationsFile(err, ksi, tmp, save_to);
+		res = KSI_OBJ_savePublicationsFile(err, ksi, tmp, NULL, save_to);
 		ERR_CATCH_MSG(err, res, "Error: Unable to save publications file.");
 		print_progressResult(res);
 	}
@@ -265,18 +266,18 @@ static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ks
 	print_progressDesc(d, "Sending extend request... ");
 
 	res = KSI_Integer_new(ksi, (KSI_uint64_t)start, &reqID);
-	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", KSITOOL_errToString(res));
 	res = KSI_ExtendReq_new(ksi, &extReq);
-	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", KSITOOL_errToString(res));
 	res = KSI_ExtendReq_setAggregationTime(extReq, start);
-	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", KSITOOL_errToString(res));
 	start = NULL;
 	res = KSI_ExtendReq_setPublicationTime(extReq, end);
-	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", KSITOOL_errToString(res));
 	end = NULL;
 
 	res = KSI_ExtendReq_setRequestId(extReq, reqID);
-	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", KSITOOL_errToString(res));
 	res = KSI_sendExtendRequest(ksi, extReq, &request);
 	ERR_CATCH_MSG(err, res, "Error: Unable to send extend request.");
 	res = KSI_RequestHandle_perform(request);
@@ -286,7 +287,7 @@ static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ks
 	ERR_APPEND_KSI_ERR(err, res, KSI_NETWORK_ERROR);
 	ERR_CATCH_MSG(err, res, "Error: Unable to get extend response.");
 	res = KSI_ExtendResp_getStatus(extResp, &respStatus);
-	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", KSITOOL_errToString(res));
 
 	if (respStatus == NULL || !KSI_Integer_equalsUInt(respStatus, 0)) {
 		KSI_Utf8String *errm = NULL;
@@ -304,19 +305,19 @@ static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ks
 	print_progressDesc(1, "Getting publication string... ");
 
 	res = KSI_ExtendResp_getCalendarHashChain(extResp, &chain);
-	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", KSITOOL_errToString(res));
 	res = KSI_CalendarHashChain_aggregate(chain, &extHsh);
 	ERR_CATCH_MSG(err, res, "Error: Unable to aggregate calendar hash chain.");
 	res = KSI_CalendarHashChain_getPublicationTime(chain, &pubTime);
-	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", KSITOOL_errToString(res));
 	res = KSI_PublicationData_new(ksi, &tmpPubData);
-	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", KSITOOL_errToString(res));
 	res = KSI_PublicationData_setImprint(tmpPubData, extHsh);
-	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", KSITOOL_errToString(res));
 	res = KSI_PublicationData_setTime(tmpPubData, pubTime);
-	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", KSITOOL_errToString(res));
 	res = KSI_CalendarHashChain_setPublicationTime(chain, NULL);
-	ERR_CATCH_MSG(err, res, "Error: %s", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s", KSITOOL_errToString(res));
 
 	print_progressResult(res);
 

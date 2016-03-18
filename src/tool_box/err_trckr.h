@@ -18,37 +18,33 @@
  * Guardtime Inc.
  */
 
-#ifndef COMPONENT_H
-#define	COMPONENT_H
+#ifndef ERR_TRCKR_H
+#define	ERR_TRCKR_H
 
+#include <stdio.h>
+
+#define MAX_MESSAGE_LEN 1024
+#define MAX_FILE_NAME_LEN 256
+#define MAX_ERROR_COUNT 128
+
+typedef struct ERR_TRCKR_st ERR_TRCKR;
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
-#include <stdio.h>	
-#include <ksi/ksi.h>
-#include "ksitool_err.h"	
-#include "tool_box/smart_file.h"
-#include "tool_box/err_trckr.h"
+ERR_TRCKR *ERR_TRCKR_new(int (*printErrors)(const char*, ...), const char *(*errCodeToString)(int));
+void ERR_TRCKR_free(ERR_TRCKR *obj);
+void ERR_TRCKR_add(ERR_TRCKR *err, int code, const char *fname, int lineN, const char *msg, ...);
+void ERR_TRCKR_reset(ERR_TRCKR *err);
+void ERR_TRCKR_printErrors(ERR_TRCKR *err);
+void ERR_TRCKR_printExtendedErrors(ERR_TRCKR *err);
 
-/**
- * This function takes PARAM_SET as input and configures KSI_CTX and ERR_TRCKR.
- * Output parameter <ksi_log> is used to close the stream if needed by calling
- * \c SMART_FILE_close. If logging is directed to \c stderr or \c stdrout <ksi_log> will be
- * NULL.
- * 
- * \param set		PARAM_SET given.
- * \param ksi		Output parameter for KSI_CTX.
- * \param error		Output parameter for ERR_TRCKR.
- * \param ksi_log	Output parameter for KSI logging stream.
- * \return KT_OK if successful, error code otherwise.
- */
-int TOOL_init_ksi(PARAM_SET *set, KSI_CTX **ksi, ERR_TRCKR **error, SMART_FILE **ksi_log);
-	
+#define ERR_TRCKR_ADD(err, code, msg, ...) ERR_TRCKR_add(err, code, __FILE__, __LINE__, msg, ##__VA_ARGS__)
+
 #ifdef	__cplusplus
 }
 #endif
 
-#endif	/* COMPONENT_H */
+#endif	/* ERR_TRCKR_H */
 

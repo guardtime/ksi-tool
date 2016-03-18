@@ -24,6 +24,7 @@
 #include "ksitool_err.h"
 #include <ksi/ksi.h>
 #include <ksi/signature_verify.h>
+#include "tool_box/err_trckr.h"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -68,6 +69,8 @@ char* KSITOOL_PublicationData_toString(KSI_PublicationData *data, char *buf, siz
 char *KSITOOL_PublicationRecord_toString(KSI_PublicationRecord *rec, char *buf, size_t buf_len);
 
 int KSITOOL_LOG_SmartFile(void *logCtx, int logLevel, const char *message);
+
+int KSITOOL_KSI_ERR_toExitCode(int error_code);
 
 #ifdef	__cplusplus
 }

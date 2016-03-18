@@ -23,13 +23,15 @@
 
 #include <ksi/ksi.h>
 #include "ksitool_err.h"
+#include "tool_box/err_trckr.h"
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
 	
-int KSI_OBJ_saveSignature(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *fname);
-int KSI_OBJ_savePublicationsFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *fname) ;
+int KSI_OBJ_saveSignature(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *mode, const char *fname);
+int KSI_OBJ_savePublicationsFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *mode, const char *fname) ;
 int KSI_OBJ_loadSignature(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signature **sig);
 int KSI_OBJ_isSignatureExtended(const KSI_Signature *sig);
 
@@ -152,6 +154,13 @@ const char* find_charBeforeStrn(const char* str, const char* findIt);
  * Return value points to c.
  */
 const char* find_charBeforeLastStrn(const char* str, const char* findIt);
+
+/**
+ * Searching		XX
+ * From				aXXbcXXd
+ * Return value points to d.
+ */
+const char* find_charAfterLastStrn(const char* str, const char* findIt);
 
 #ifdef	__cplusplus
 }

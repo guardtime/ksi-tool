@@ -30,6 +30,7 @@
 #include "tool_box/param_control.h"
 #include "tool_box/task_initializer.h"
 #include "tool_box/smart_file.h"
+#include "tool_box/err_trckr.h"
 #include "api_wrapper.h"
 #include "printer.h"
 #include "debug_print.h"
@@ -158,7 +159,7 @@ cleanup:
 	ERR_TRCKR_free(err);
 	KSI_CTX_free(ksi);
 
-	return errToExitCode(res);
+	return KSITOOL_errToExitCode(res);
 }
 
 char *verify_help_toString(char *buf, size_t len) {

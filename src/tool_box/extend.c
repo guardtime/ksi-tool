@@ -20,6 +20,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <ksi/ksi.h>
 #include <ksi/compatibility.h>
 #include "param_set/param_set.h"
@@ -29,6 +30,7 @@
 #include "tool_box/param_control.h"
 #include "tool_box/task_initializer.h"
 #include "tool_box/smart_file.h"
+#include "tool_box/err_trckr.h"
 #include "api_wrapper.h"
 #include "printer.h"
 #include "obj_printer.h"
@@ -38,6 +40,7 @@
 
 static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, COMPOSITE *comp, KSI_PolicyVerificationResult **result);
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
+static char* get_output_file_name_if_not_defined(PARAM_SET *set, ERR_TRCKR *err, char *buf, size_t buf_len);
 
 int extend_run(int argc, char** argv, char **envp) {
 	int res;
@@ -119,19 +122,24 @@ cleanup:
 	ERR_TRCKR_free(err);
 	KSI_CTX_free(ksi);
 
-	return errToExitCode(res);
+	return KSITOOL_errToExitCode(res);
 }
 char *extend_help_toString(char*buf, size_t len) {
 	size_t count = 0;
 
 	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
-		"%s extend -i <in.ksig> -o <out.ksig> -X <url>\n"
+		"%s extend -i <in.ksig> [-o <out.ksig>] -X <url>\n"
 		"        [--ext-user <user> --ext-key <pass>] -P <url> [--cnstr <oid=value>]...\n"
 		"        [-T <time>] | [--pub-str <str>] [more options]\n\n"
 
 		" -i <file> - signature file to be extended.\n"
-		" -o <file> - output file name to store extended signature token.\n"
+		" -o <file> - Output file name to store extended signature token. Use '-'\n"
+		"             as file name to redirect signature binary stream to stdout.\n"
+		"             If not specified signature is saved to the path described as\n"
+		"             <input files path>(nr).ext, where (nr) is generated serial\n"
+		"             number if file name already exists. If specified will always\n"
+		"             overwrite the existing file.\n"
 		" -X <url>  - specify extending service URL.\n"
 		" --ext-user <str>\n"
 		"           - user name for extending service.\n"
@@ -170,10 +178,23 @@ static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *s
 	KSI_PublicationData *pub_data = NULL;
 	char *outSigFileName = NULL;
 	char buf[1024] = "";
+	const char *mode = NULL;
 
 	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || extra == NULL) {
 		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
+	}
+
+	if (!PARAM_SET_isSetByName(set, "o")) {
+		mode = "i";
+		outSigFileName = get_output_file_name_if_not_defined(set, err, buf, sizeof(buf));
+		if (outSigFileName == NULL) {
+			ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Unable to generate output file name.");
+			goto cleanup;
+		}
+	} else {
+		res = PARAM_SET_getStr(set, "o", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &outSigFileName);
+		if (res != PST_OK) goto cleanup;
 	}
 
 	d = PARAM_SET_isSetByName(set, "d");
@@ -197,7 +218,6 @@ static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *s
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify signature.");
 	print_progressResult(res);
 
-	PARAM_SET_getStr(set, "o", NULL, PST_PRIORITY_NONE, PST_INDEX_FIRST, &outSigFileName);
 
 	/* Extend the signature. */
 	if(pubTime != NULL){
@@ -226,7 +246,7 @@ static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *s
 
 	/* Save signature. */
 	print_progressDesc(d, "Saving signature... ");
-	res = KSI_OBJ_saveSignature(err, ksi, ext, outSigFileName);
+	res = KSI_OBJ_saveSignature(err, ksi, ext, mode, outSigFileName);
 	if (res != KT_OK) goto cleanup;
 	print_progressResult(res);
 
@@ -269,13 +289,36 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	 * Define possible tasks.
 	 */
 	/*					  ID	DESC												MAN					ATL		FORBIDDEN	IGN	*/
-	TASK_SET_add(task_set, 0,	"Extend to the nearest publication.",				"i,o,X,P",			NULL,	"T,pub-str",		NULL);
-	TASK_SET_add(task_set, 1,	"Extend to the specified time.",					"i,o,X,P,T",		NULL,	"pub-str",		NULL);
-	TASK_SET_add(task_set, 2,	"Extend to time specified in publications string.",	"i,o,X,P,pub-str",	NULL,	"T",		NULL);
+	TASK_SET_add(task_set, 0,	"Extend to the nearest publication.",				"i,X,P",			NULL,	"T,pub-str",		NULL);
+	TASK_SET_add(task_set, 1,	"Extend to the specified time.",					"i,X,P,T",		NULL,	"pub-str",		NULL);
+	TASK_SET_add(task_set, 2,	"Extend to time specified in publications string.",	"i,X,P,pub-str",	NULL,	"T",		NULL);
 
 cleanup:
 
 	return res;
+}
+
+static char* get_output_file_name_if_not_defined(PARAM_SET *set, ERR_TRCKR *err, char *buf, size_t buf_len) {
+	char *ret = NULL;
+	int res;
+	char *in_file_name = NULL;
+
+	if (set == NULL || err == NULL || buf == NULL || buf_len == 0) goto cleanup;
+
+	res = PARAM_SET_getStr(set, "i", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &in_file_name);
+	if (res != PST_OK) goto cleanup;
+
+	if (strcmp(in_file_name, "-") == 0) {
+		KSI_snprintf(buf, buf_len, "stdin.ksig.ext");
+	} else {
+		KSI_snprintf(buf, buf_len, "%s.ext", in_file_name);
+	}
+
+	ret = buf;
+
+cleanup:
+
+	return ret;
 }
 
 static int verify_signature(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_PolicyVerificationResult **result) {

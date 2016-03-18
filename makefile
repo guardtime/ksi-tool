@@ -77,6 +77,7 @@ TOOL_BOX_OBJ = \
     $(TOOL_BOX_OBJ_DIR)\verify.obj \
     $(TOOL_BOX_OBJ_DIR)\task_initializer.obj \
     $(TOOL_BOX_OBJ_DIR)\smart_file.obj \
+    $(TOOL_BOX_OBJ_DIR)\err_trckr.obj \
     $(TOOL_BOX_OBJ_DIR)\param_control.obj
 
 

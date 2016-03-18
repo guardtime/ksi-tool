@@ -25,29 +25,17 @@
 #include <limits.h>
 #include <string.h>
 #include <ksi/ksi.h>
-#include "tool_box.h"
-
-#include "param_control.h"
-//#include "gt_task_support.h"
-#include "obj_printer.h"
+#include <ksi/compatibility.h>
+#include "tool_box/tool_box.h"
+#include "tool_box/err_trckr.h"
+#include "tool_box/param_control.h"
 #include "param_set/param_value.h"
-#include "../param_set/param_set.h"
-#include "../param_set/task_def.h"
+#include "param_set/param_set.h"
+#include "param_set/task_def.h"
+#include "tool_box/smart_file.h"
+#include "obj_printer.h"
 #include "ksi_init.h"
-#include "../api_wrapper.h"
-#include "ksi/compatibility.h"
-#ifdef _WIN32
-#	include <io.h>
-#	define F_OK 0
-#else
-#	include <unistd.h>
-#	define _access_s access
-#endif
-
-#include <errno.h>
-
-#include "smart_file.h"
-
+#include "api_wrapper.h"
 
 
 static int analyze_hexstring_format(const char *hex, double *cor) {
@@ -167,11 +155,6 @@ static int is_imprint(const char *str) {
 	else return 0;
 }
 
-static int doFileExists(const char* path){
-	if(_access_s(path, F_OK) == 0) return 0;
-	else return errno;
-}
-
 static int x(char c){
 	if (c >= '0' && c <= '9')
 		return c - '0';
@@ -269,7 +252,7 @@ cleanup:
 
 	if (res != KT_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to get hash from command-line");
-		ERR_TRCKR_ADD(err, res, "Error: %s", errToString(res));
+		ERR_TRCKR_ADD(err, res, "Error: %s", KSITOOL_errToString(res));
 	}
 
 	return res;
@@ -306,11 +289,17 @@ static int file_get_hash(ERR_TRCKR *err, KSI_CTX *ctx, const char *fname_in, con
 	 * Open the file, read and hash.
      */
 	res = SMART_FILE_open(fname_in, "rb", &in);
-	if (res != KT_OK) goto cleanup;
+	if (res != KT_OK) {
+		ERR_TRCKR_ADD(err, res, "Error: Unable to open file for reading. %s", KSITOOL_errToString(res));
+		goto cleanup;
+	}
 
 	if (fname_out != NULL) {
 		res = SMART_FILE_open(fname_out, "wb", &out);
-		if (res != KT_OK) goto cleanup;
+		if (res != KT_OK) {
+			ERR_TRCKR_ADD(err, res, "Error: Unable to open file for writing. %s", KSITOOL_errToString(res));
+			goto cleanup;
+		}
 	}
 
 
@@ -479,6 +468,8 @@ int isFormatOk_url(const char *url) {
 		return FORMAT_OK;
 	else if(strstr(url, "ksi+tcp://") == url)
 		return FORMAT_OK;
+	else if(strstr(url, "file://") == url)
+		return FORMAT_OK;
 	else
 		return FORMAT_URL_UNKNOWN_SCHEME;
 }
@@ -486,23 +477,30 @@ int isFormatOk_url(const char *url) {
 int convertRepair_url(const char* arg, char* buf, unsigned len) {
 	char *scheme = NULL;
 	unsigned i = 0;
+	int isFile;
+
 	if(arg == NULL || buf == NULL) return 0;
 	scheme = strstr(arg, "://");
+	isFile = strstr(arg, "file://") == arg ? 1 : 0;
 
-	if(scheme == NULL){
+	if (scheme == NULL) {
 		strncpy(buf, "http://", len-1);
-		if(strlen(buf)+strlen(arg) < len)
+		if (strlen(buf)+strlen(arg) < len)
 			strcat(buf, arg);
 		else
 			return 0;
-	}
-	else{
-		while(arg[i] && i < len - 1){
-			if(&arg[i] < scheme){
+	} else {
+		while (arg[i] && i < len - 1) {
+			if (&arg[i] < scheme) {
 				buf[i] = (char)tolower(arg[i]);
-			}
-			else
+			} else {
+#ifdef _WIN32
+				buf[i] = arg[i] == '\\' ? '/' : arg[i];
+#else
 				buf[i] = arg[i];
+#endif
+			}
+
 			i++;
 		}
 		buf[i] = 0;
@@ -564,30 +562,23 @@ int isFormatOk_inputFile(const char *path){
 }
 
 int isContentOk_inputFile(const char* path){
-	int fileStatus = EINVAL;
-	if (strcmp(path, "-") == 0) {
-		return PARAM_OK;
-	}else if (isFormatOk_inputFile(path) == FORMAT_OK)
-		fileStatus = doFileExists(path);
-	else
+	if (isFormatOk_inputFile(path) != FORMAT_OK) {
 		return FILE_INVALID_PATH;
-
-	switch (fileStatus) {
-	case 0:
-		return PARAM_OK;
-		break;
-	case EACCES:
-		return FILE_ACCESS_DENIED;
-		break;
-	case ENOENT:
-		return FILE_DOES_NOT_EXIST;
-		break;
-	case EINVAL:
-		return FILE_INVALID_PATH;
-		break;
 	}
 
-	return PARAM_UNKNOWN_ERROR;
+	if (strcmp(path, "-") == 0) {
+		return PARAM_OK;
+	}
+
+	if (!SMART_FILE_doFileExist(path)) {
+		return FILE_DOES_NOT_EXIST;
+	}
+
+	if (!SMART_FILE_isReadAccess(path)) {
+		return FILE_ACCESS_DENIED;
+	}
+
+	return PARAM_OK;
 }
 
 int convertRepair_path(const char* arg, char* buf, unsigned len){
@@ -923,7 +914,7 @@ int extract_utcTime(void *extra, const char* str, void** obj) {
      */
 
 	res = KSI_Integer_new(ctx, time, &tmp);
-	ERR_CATCH_MSG(err, res, "Error: %s.", errToString(res));
+	ERR_CATCH_MSG(err, res, "Error: %s.", KSITOOL_errToString(res));
 
 	*obj = (void*)tmp;
 	tmp = NULL;

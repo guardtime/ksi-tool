@@ -24,6 +24,7 @@
 #include "param_set/param_set.h"
 #include "tool_box/ksi_init.h"
 #include "tool_box/smart_file.h"
+#include "tool_box/err_trckr.h"
 #include "ksitool_err.h"
 #include "printer.h"
 #include "api_wrapper.h"
@@ -53,7 +54,7 @@ static int tool_init_ksi_logger(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set, SM
 	if (outLogfile != NULL) {
 		res = SMART_FILE_open(outLogfile, "w", &tmp);
 		if (res != KT_OK) {
-			ERR_TRCKR_ADD(err, res, "Error:%s.", errToString(res));
+			ERR_TRCKR_ADD(err, res, "Error: %s", KSITOOL_errToString(res));
 			goto cleanup;
 		}
 
@@ -295,24 +296,25 @@ cleanup:
 
 static int tool_init_ksi_publications_file(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set) {
 	int res = KSI_UNKNOWN_ERROR;
-	KSI_PublicationsFile *tmpPubFile = NULL;
-	char *inPubFileName = NULL;
+	KSI_PublicationsFile *tmp = NULL;
 
 	if (ksi == NULL || err == NULL || set == NULL) {
 		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
-//	TODO: Implement workaround to get publications file from file.
-//	res = KSI_CTX_setPublicationsFile(ksi, tmpPubFile);
-//	ERR_CATCH_MSG(err, res, "Error: Unable to configure publications file.");
-//	tmpPubFile = NULL;
+	/**
+	 * If there is a direct need to not verify publications file do the publications
+	 * file request manually so KSI API do not verify the file extracted by the API
+	 * user.
+     */
+	if (PARAM_SET_isSetByName(set, "publications-file-no-verify")) {
+		KSI_receivePublicationsFile(ksi, &tmp);
+	}
 
 	res = KT_OK;
 
 cleanup:
-
-	KSI_PublicationsFile_free(tmpPubFile);
 
 	return res;
 }
@@ -332,7 +334,7 @@ int TOOL_init_ksi(PARAM_SET *set, KSI_CTX **ksi, ERR_TRCKR **error, SMART_FILE *
 	 * Initialize error tracker and configure output parameter immediately to be
 	 * able to track errors if this function fails.
      */
-	err = ERR_TRCKR_new(print_errors);
+	err = ERR_TRCKR_new(print_errors, KSITOOL_errToString);
 	if (err == NULL) {
 		res = KT_OUT_OF_MEMORY;
 		print_errors("Error: Unable to initialize error tracker.");
