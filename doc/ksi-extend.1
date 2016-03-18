@@ -8,7 +8,7 @@
 .\"
 .SH SYNOPSIS
 .\"
-\fBksi extend -i \fIin.ksig \fB-o \fIout.ksig \fB-X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... [\fB-T \fItime\fR] | [\fB--pub-str \fIstr\fR] [\fImore options\fR]
+\fBksi extend -i \fIin.ksig \fR[\fB-o \fIout.ksig\fR] \fB-X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... [\fB-T \fItime\fR] | [\fB--pub-str \fIstr\fR] [\fImore options\fR]
 .br
 .\"
 .\"
@@ -25,7 +25,7 @@ KSI signature file to be extended. Use '-' as file name to read signatures file 
 .\"
 .TP
 \fB-o \fIfile\fR
-Output file name to store extended signature. Use '-' as file name to redirect signature binary stream to \fIstdout\fR.
+Output file name to store extended signature token. Use '-' as file name to redirect signature binary stream to \fIstdout\fR. If not specified signature is saved to the path described as <input files path>(nr).ext, where \fI(nr)\fR is generated serial number if file name already exists. If specified will always overwrite the existing file.
 .\"
 .TP
 \fB-X \fIurl\fR
