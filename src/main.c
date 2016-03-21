@@ -271,15 +271,14 @@ int main(int argc, char** argv, char **envp) {
 	 * Run component by its ID.
 	 */
 	retval = TOOL_COMPONENT_LIST_run(components, TASK_getID(task), argc - 1, argv + 1, envp);
-//	printf("PROC RET %X\n", res);
-//	printf("Consistent task is: %i\n", TASK_getID(task));
+
 	res = KT_OK;
 
 
 cleanup:
 
-	if (res != KT_OK) {
-		retval = EXIT_FAILURE;
+	if (res != KT_OK && retval == EXIT_SUCCESS) {
+		retval = KSITOOL_errToExitCode(res);
 	}
 
 	PARAM_SET_free(set);
