@@ -67,7 +67,7 @@ int verify_run(int argc, char** argv, char **envp) {
 	 * Extract command line parameters and also add configuration specific parameters.
      */
 	res = PARAM_SET_new(
-			CONF_generate_desc("{verify}{i}{o}{D}{x}{f}{d}{pub-str|p}{ver-int}{ver-cal}{ver-key}{ver-pub}{log}{dump}{conf}{log}", buf, sizeof(buf)),
+			CONF_generate_desc("{verify}{i}{o}{D}{x}{f}{d}{pub-str}{ver-int}{ver-cal}{ver-key}{ver-pub}{log}{dump}{conf}{log}", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -219,7 +219,7 @@ char *verify_help_toString(char*buf, size_t len) {
 		" -P <url>  - specify publications file URL (or file with uri scheme 'file://').\n"
 		" --cnstr <oid=value>\n"
 		"           - publications file certificate verification constraints.\n"
-		" -p | --pub-str <str>\n"
+		" --pub-str <str>\n"
 		"           - publication string.\n"
 		" -x        - allow to use extender when using publication based verification.\n"
 		" -d        - print detailed information about processes and errors to stderr.\n"

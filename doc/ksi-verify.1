@@ -11,21 +11,27 @@
 .br
 \fBksi verify -i \fIin.ksig \fR[\fB-f \fIdata\fR] [\fImore options\fR]
 .br
+
 .\"
 \fBksi verify --ver-int -i \fIin.ksig \fR[\fB-f \fIdata\fR] [\fImore options\fR]
 .br
+
 .\"
 \fBksi verify --ver-cal -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] [\fImore options\fR]
 .br
+
 .\"
 \fBksi verify --ver-key -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fImore options\fR]
 .br
+
 .\"
-\fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-p \fIpubstr \fR[\fB-x -X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore options\fR]
+\fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB--pub-str \fIpubstr \fR[\fB-x -X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore options\fR]
 .br
+
 .\"
 \fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fB-T \fItime\fR] \fR[\fB-x -X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore options\fR]
 .br
+
 .\"
 .\"
 .SH DESCRIPTION
@@ -80,7 +86,7 @@ Permit to use extender when using publication based verification.
 Specify a publication time to extend to as the number of seconds since 1970-01-01 00:00:00 UTC or time string formatted as "YYYY-MM-DD hh:mm:ss".
 .\"
 .TP
-\fB-p\fR | \fB--pub-str \fIstr\fR
+\fB--pub-str \fIstr\fR
 Specify a publication string to verify with.
 .\"
 .TP
@@ -142,9 +148,9 @@ In the following examples it is assumed that default service urls are defined (s
 \fBksi verify --ver-cal -i \fItest.ksig\fR 
 .RE
 
-\fB4\fR To perform publication  based verification (printed in public media) on KSI signature file \fItest.ext.ksig \fRcall:
+\fB4\fR To perform publication based verification (printed in public media) on KSI signature file \fItest.ext.ksig \fRcall:
 .RS
-\fBksi verify --ver-pub -i \fItest.ext.ksig\fR \fB-p \fIAAAAAA-CWYEKQ-AAIYPA-UJ4GRT-HXMFBE-OTB4AB-XH3PT3-KNIKGV-PYCJXU-HL2TN4-RG6SCC-3ZGSBM
+\fBksi verify --ver-pub -i \fItest.ext.ksig\fR \fB--pub-str \fIAAAAAA-CWYEKQ-AAIYPA-UJ4GRT-HXMFBE-OTB4AB-XH3PT3-KNIKGV-PYCJXU-HL2TN4-RG6SCC-3ZGSBM
 .RE
 
 \fB5\fR To perform publication  based verification (publication from publications file) on KSI signature file \fItest.ext.ksig \fRcall:
@@ -157,9 +163,9 @@ In the following examples it is assumed that default service urls are defined (s
 \fBksi verify --ver-pub -i \fItest.ksig\fR \fB-x
 .RE
 
-\fB7\fR To perform verification on KSI signature \fItest.ksig \fRas possible call and dump its content:
+\fB7\fR To perform verification on KSI signature \fItest.ksig \fRas possible and dump its content call:
 .RS
-\fBksi verify -i \fItest.ksig\fR \fB-d\fR
+\fBksi verify -i \fItest.ksig\fR \fB--dump\fR
 .RE
 
 

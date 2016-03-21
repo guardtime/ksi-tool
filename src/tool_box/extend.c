@@ -59,7 +59,7 @@ int extend_run(int argc, char** argv, char **envp) {
 	 * Extract command line parameters.
      */
 	res = PARAM_SET_new(
-			CONF_generate_desc("{i}{o}{H}{D}{d}{x}{T}{pub-str|p}{conf}{log}", buf, sizeof(buf)),
+			CONF_generate_desc("{i}{o}{H}{D}{d}{x}{T}{pub-str}{conf}{log}", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -149,7 +149,7 @@ char *extend_help_toString(char*buf, size_t len) {
 		"           - publications file certificate verification constraints.\n"
 		" -T <time> - specify a publication time to extend to as the number of seconds\n"
 		"             since 1970-01-01 00:00:00 UTC or time string formatted as \"YYYY-MM-DD hh:mm:ss\".\n"
-		" --pub-str | -p <str>\n"
+		" --pub-str <str>\n"
 		"           - specify a publication string to extend to.\n"
 		" -d        - print detailed information about processes and errors.\n"
 		" --conf <file>\n"

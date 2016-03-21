@@ -251,7 +251,7 @@ char *conf_help_toString(char *buf, size_t len) {
 		"           - a flag to force the tool to trust the publications file without\n"
 		"             verifying it. The flag can only be defined on command-line to avoid\n"
 		"             the usage of insecure configurations files. It must be noted that the\n"
-		"             option is insecure and must only be used for testing.\n"
+		"             option is insecure and may only be used for testing.\n"
 		"\n"
 		"\n"
 		);
