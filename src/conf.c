@@ -140,7 +140,9 @@ cleanup:
 int CONF_isInvalid(PARAM_SET *set) {
 	if (set == NULL) return 1;
 
-	if (!PARAM_SET_isFormatOK(set) || PARAM_SET_isUnknown(set) || PARAM_SET_isTypoFailure(set) || PARAM_SET_isSetByName(set, "publications-file-no-verify")) {
+	if (!PARAM_SET_isFormatOK(set) || PARAM_SET_isUnknown(set) || PARAM_SET_isTypoFailure(set)
+			|| PARAM_SET_isSetByName(set, "publications-file-no-verify")
+			|| PARAM_SET_isSyntaxError(set)) {
 		return 1;
 	} else {
 		return 0;
@@ -152,6 +154,12 @@ char *CONF_errorsToString(PARAM_SET *set, const char *prefix, char *buf, size_t 
 	size_t count = 0;
 
 	if (set == NULL || buf == NULL || buf_len == 0) return NULL;
+
+	if (PARAM_SET_isSyntaxError(set)) {
+		PARAM_SET_syntaxErrorsToString(set, prefix, tmp, sizeof(tmp));
+		count += KSI_snprintf(buf + count, buf_len - count, "%s", tmp);
+		goto cleanup;
+	}
 
 	if (PARAM_SET_isTypoFailure(set)) {
 			PARAM_SET_typosToString(set, PST_TOSTR_DOUBLE_HYPHEN, prefix, tmp, sizeof(tmp));
@@ -174,6 +182,7 @@ char *CONF_errorsToString(PARAM_SET *set, const char *prefix, char *buf, size_t 
 
 	}
 
+cleanup:
 	return buf;
 }
 

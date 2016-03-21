@@ -187,7 +187,7 @@ int main(int argc, char** argv, char **envp) {
 	 * Load the configurations file from environment.
      */
 	res = CONF_fromEnvironment(configuration, "KSI_CONF", envp, 0);
-	if (res != PST_OK) goto cleanup;
+	if (res != PST_OK && res != PST_INVALID_FORMAT) goto cleanup;
 
 
 	/**
@@ -241,7 +241,7 @@ int main(int argc, char** argv, char **envp) {
 	}
 
 	if (CONF_isInvalid(configuration)) {
-		print_errors("KSI Service configuration is invalid:\n");
+		print_errors("KSI configurations file from KSI_CONF is invalid:\n");
 		print_errors("%s\n", CONF_errorsToString(configuration, "  ", buf, sizeof(buf)));
 		res = KT_INVALID_CONF;
 		goto cleanup;
