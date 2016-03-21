@@ -126,7 +126,11 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 	 * Include conf from environment.
      */
 	res = CONF_fromEnvironment(conf_env, "KSI_CONF", envp, PRIORITY_KSI_CONF);
-	if (res != KT_OK) return res;
+	if (res == KT_IO_ERROR) {
+		print_errors("File pointed by KSI_CONF does not exist.\n");
+		res = KT_INVALID_CONF;
+		goto cleanup;
+	} else if (res != KT_OK) return res;
 
 	if (CONF_isInvalid(conf_env)) {
 		print_errors("KSI configurations file from KSI_CONF is invalid:\n");

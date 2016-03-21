@@ -7,6 +7,7 @@
 #include "ksitool_err.h"
 #include "tool_box/tool_box.h"
 #include "tool_box/param_control.h"
+#include "tool_box/smart_file.h"
 #include "printer.h"
 
 char* CONF_generate_desc(char *description, char *buf, size_t buf_len) {
@@ -117,6 +118,11 @@ int CONF_fromEnvironment(PARAM_SET *set, const char *env_name, char **envp, int 
 		if (strcmp(name, env_name) == 0) {
 			if (STRING_extract(*envp, "=", NULL, value, sizeof(value)) == NULL) {
 				res = KT_INVALID_INPUT_FORMAT;
+				goto cleanup;
+			}
+
+			if(!SMART_FILE_doFileExist(value)) {
+				res = KT_IO_ERROR;
 				goto cleanup;
 			}
 

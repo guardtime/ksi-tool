@@ -165,6 +165,7 @@ int main(int argc, char** argv, char **envp) {
 	TASK *task = NULL;
 	int retval = EXIT_SUCCESS;
 	char buf[0xffff];
+	int conf_file_missing = 0;
 
 	print_init();
 	print_disable(PRINT_WARNINGS | PRINT_INFO | PRINT_DEBUG);
@@ -187,8 +188,9 @@ int main(int argc, char** argv, char **envp) {
 	 * Load the configurations file from environment.
      */
 	res = CONF_fromEnvironment(configuration, "KSI_CONF", envp, 0);
-	if (res != PST_OK && res != PST_INVALID_FORMAT) goto cleanup;
+	if (res != PST_OK && res != PST_INVALID_FORMAT && res != KT_IO_ERROR) goto cleanup;
 
+	if (res == KT_IO_ERROR)	conf_file_missing = 1;
 
 	/**
 	 * Get all possible components to run.
@@ -233,16 +235,22 @@ int main(int argc, char** argv, char **envp) {
 		}
 
 		print_general_help(configuration);
-
+		res = KT_OK;
 		goto cleanup;
 	} else if (PARAM_SET_isSetByName(set, "version")) {
 		print_result("%s %s (C) Guardtime\n", TOOL_getName(), TOOL_getVersion());
+		res = KT_OK;
 		goto cleanup;
 	}
 
 	if (CONF_isInvalid(configuration)) {
-		print_errors("KSI configurations file from KSI_CONF is invalid:\n");
-		print_errors("%s\n", CONF_errorsToString(configuration, "  ", buf, sizeof(buf)));
+		if (!conf_file_missing) {
+			print_errors("KSI configurations file from KSI_CONF is invalid:\n");
+			print_errors("%s\n", CONF_errorsToString(configuration, "  ", buf, sizeof(buf)));
+		} else {
+			print_errors("File pointed by KSI_CONF does not exist.\n");
+		}
+
 		res = KT_INVALID_CONF;
 		goto cleanup;
 	}
