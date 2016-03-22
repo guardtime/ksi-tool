@@ -260,7 +260,7 @@ int KSITOOL_SignatureVerify_calendarBased(ERR_TRCKR *err, KSI_Signature *sig, KS
 int KSITOOL_SignatureVerify_keyBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_PolicyVerificationResult **result){
 	int res;
 
-	res = KSI_SignatureVerify_keyBased(sig, ctx, result);
+	res = KSI_SignatureVerify_keyBased(sig, ctx, NULL, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -498,7 +498,7 @@ int KSITOOL_KSI_ERR_toExitCode(int error_code) {
 
 		/**
 		 * General errors.
-         */
+		 */
 		case KSI_INVALID_ARGUMENT:
 		case KSI_BUFFER_OVERFLOW:
 		case KSI_TLV_PAYLOAD_TYPE_MISMATCH:
@@ -517,7 +517,7 @@ int KSITOOL_KSI_ERR_toExitCode(int error_code) {
 
 		/**
 		 * Extender errors.
-         */
+		 */
 		case KSI_EXTEND_WRONG_CAL_CHAIN:
 		case KSI_EXTEND_NO_SUITABLE_PUBLICATION:
 		case KSI_SERVICE_EXTENDER_INVALID_TIME_RANGE:
@@ -530,7 +530,7 @@ int KSITOOL_KSI_ERR_toExitCode(int error_code) {
 
 		/**
 		 * Aggregator erros.
-         */
+		 */
 		case KSI_SERVICE_AGGR_REQUEST_TOO_LARGE:
 		case KSI_SERVICE_AGGR_REQUEST_OVER_QUOTA:
 		case KSI_SERVICE_AGGR_TOO_MANY_REQUESTS:
@@ -539,7 +539,7 @@ int KSITOOL_KSI_ERR_toExitCode(int error_code) {
 
 		/**
 		 * Network errors.
-         */
+		 */
 		case KSI_NETWORK_ERROR:
 		case KSI_NETWORK_CONNECTION_TIMEOUT:
 		case KSI_NETWORK_SEND_TIMEOUT:
@@ -558,7 +558,7 @@ int KSITOOL_KSI_ERR_toExitCode(int error_code) {
 
 		/**
 		 * General cryptographic errors.
-         */
+		 */
 		case KSI_UNTRUSTED_HASH_ALGORITHM:
 		case KSI_UNAVAILABLE_HASH_ALGORITHM:
 		case KSI_PUBLICATIONS_FILE_NOT_SIGNED_WITH_PKI:
@@ -567,7 +567,7 @@ int KSITOOL_KSI_ERR_toExitCode(int error_code) {
 
 		/**
 		 * Verification errors.
-         */
+		 */
 		case KSI_VERIFICATION_FAILURE:
 		case KSI_INVALID_PKI_SIGNATURE:
 		case KSI_PKI_CERTIFICATE_NOT_TRUSTED:
@@ -575,14 +575,14 @@ int KSITOOL_KSI_ERR_toExitCode(int error_code) {
 
 		/**
 		 * Format errors.
-         */
+		 */
 		case KSI_INVALID_FORMAT:
 		case KSI_INVALID_SIGNATURE:
 			return EXIT_INVALID_FORMAT;
 
 		/**
 		 * HMAC error.
-         */
+		 */
 		case KSI_HMAC_MISMATCH:
 			return EXIT_HMAC_ERROR;
 
