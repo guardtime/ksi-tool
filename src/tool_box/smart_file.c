@@ -40,10 +40,15 @@
 #	define OPENF
 #endif
 
+#ifdef _WIN32
+#define snprintf _snprintf
+#endif
+
 #include <sys/types.h>
 #include <sys/stat.h>
 
 struct SMART_FILE_st {
+	char fname[1024];
 	void *file;
 
 	int (*file_open)(const char *fname, const char *mode, void **file);
@@ -651,9 +656,13 @@ int SMART_FILE_open(const char *fname, const char *mode, SMART_FILE **file) {
 	 * Initialize smart file.
      */
 	tmp->file = NULL;
+	tmp->fname[0] = '\0';
 	tmp->isEOF = 0;
 	tmp->isOpen = 0;
 	tmp->mustBeFreed = 0;
+
+	snprintf(tmp->fname, sizeof(tmp->fname), "%s", pFname);
+
 
 	/**
 	 * Initialize implementations.
@@ -771,6 +780,12 @@ int SMART_FILE_read(SMART_FILE *file, char *raw, size_t raw_len, size_t *count) 
 cleanup:
 
 	return res;
+}
+
+const char *SMART_FILE_getFname(SMART_FILE *file) {
+	if (file == NULL) return NULL;
+	if (file->isOpen == 0) return NULL;
+	return file->fname;
 }
 
 int SMART_FILE_isEof(SMART_FILE *file) {
