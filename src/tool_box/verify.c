@@ -143,7 +143,7 @@ cleanup:
 	if (res != KT_OK) {
 		KSI_LOG_debug(ksi, "\n%s", KSITOOL_KSI_ERRTrace_get());
 		print_debug("\n");
-//TODO:		DEBUG_verifySignature(ksi, res, ver_result_sig != NULL ? ver_result_sig : sig, hsh);
+		DEBUG_verifySignature(ksi, res, sig, result, hsh);
 
 		print_errors("\n");
 		if (d) ERR_TRCKR_printExtendedErrors(err);
@@ -170,13 +170,13 @@ char *verify_help_toString(char *buf, size_t len) {
 		"%s verify -i <in.ksig> [-f <data>] [more options]\n"
 		"%s verify --ver-int -i <in.ksig> [-f <data>] [more options]\n"
 		"%s verify --ver-cal -i <in.ksig> [-f <data>] -X <url>\n"
-		"        [--ext-user <user> --ext-key <pass>] [-T <time>] [more options]\n"
+		"        [--ext-user <user> --ext-key <pass>] [more options]\n"
 		"%s verify --ver-key -i <in.ksig> [-f <data>] -P <url>\n"
 		"        [--cnstr <oid=value>]... [more options]\n"
-		"%s verify --ver-pub -i <in.ksig> [-f <data>] -p <pubstring>\n"
+		"%s verify --ver-pub -i <in.ksig> [-f <data>] --pub-str <pubstring>\n"
 		"        [-x -X <url>  [--ext-user <user> --ext-key <pass>]] [more options]\n"
 		"%s verify --ver-pub -i <in.ksig> [-f <data>] -P <url> [--cnstr <oid=value>]...\n"
-		"        [-x -X <url>  [--ext-user <user> --ext-key <pass>][-T <time>]] [more options]\n\n"
+		"        [-x -X <url>  [--ext-user <user> --ext-key <pass>]] [more options]\n\n"
 
 		" --ver-int - verify just internally.\n"
 		" --ver-cal - use calendar based verification (use extender).\n"
@@ -190,12 +190,10 @@ char *verify_help_toString(char *buf, size_t len) {
 		"           - user name for extending service.\n"
 		" --ext-key <str>\n"
 		"           - HMAC key for extending service.\n"
-		" -T <time> - specify a publication time to extend to as the number of seconds\n"
-		"             since 1970-01-01 00:00:00 UTC or time string formatted as \"YYYY-MM-DD hh:mm:ss\".\n"
 		" -P <url>  - specify publications file URL (or file with uri scheme 'file://').\n"
 		" --cnstr <oid=value>\n"
 		"           - publications file certificate verification constraints.\n"
-		" -p | --pub-str <str>\n"
+		" --pub-str <str>\n"
 		"           - publication string.\n"
 		" -x        - allow to use extender when using publication based verification.\n"
 		" -d        - print detailed information about processes and errors to stderr.\n"
@@ -270,7 +268,6 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignature);
 	PARAM_SET_addControl(set, "{f}", isFormatOk_inputHash, isContentOk_inputHash, convertRepair_path, extract_inputHash);
-	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
 	PARAM_SET_addControl(set, "{d}{x}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{pub-str}", isFormatOk_pubString, NULL, NULL, extract_pubString);
 
@@ -282,17 +279,17 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 
 	TASK_SET_add(task_set, 4,	"Publication based verification, "
 								"use publications file, "
-								"extending is restricted.",			"ver-pub,i,P,cnstr",		NULL,	"ver-int,ver-cal,ver-key,x,p",		NULL);
+								"extending is restricted.",			"ver-pub,i,P,cnstr",		NULL,	"ver-int,ver-cal,ver-key,x,T",		NULL);
 	TASK_SET_add(task_set, 5,	"Publication based verification, "
 								"use publications file, "
-								"extending is permitted.",			"ver-pub,i,P,cnstr,x,X",	NULL,	"ver-int,ver-cal,ver-key,p",		NULL);
+								"extending is permitted.",			"ver-pub,i,P,cnstr,x,X",	NULL,	"ver-int,ver-cal,ver-key,T",		NULL);
 
 	TASK_SET_add(task_set, 6,	"Publication based verification, "
 								"use publications string, "
-								"extending is restricted.",			"ver-pub,i,p",				NULL,	"ver-int,ver-cal,ver-key,x,T",		NULL);
+								"extending is restricted.",			"ver-pub,i,pub-str",		NULL,	"ver-int,ver-cal,ver-key,x,T",		NULL);
 	TASK_SET_add(task_set, 7,	"Publication based verification, "
 								"use publications string, "
-								"extending is permitted.",			"ver-pub,i,p,x,X",			NULL,	"ver-int,ver-cal,ver-key,T",		NULL);
+								"extending is permitted.",			"ver-pub,i,pub-str,x,X",	NULL,	"ver-int,ver-cal,ver-key,T",		NULL);
 
 cleanup:
 
