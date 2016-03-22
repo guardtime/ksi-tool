@@ -128,7 +128,7 @@ cleanup:
 	return res;
 }
 
-static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, const char *mode, void *obj, int (*serialize)(KSI_CTX *ksi, void *obj, unsigned char **raw, size_t *raw_len), const char *path) {
+static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, const char *mode, void *obj, int (*serialize)(KSI_CTX *ksi, void *obj, unsigned char **raw, size_t *raw_len), const char *path, char *f, size_t f_len) {
 	int res;
 	SMART_FILE *file = NULL;
 	unsigned char *raw = NULL;
@@ -155,6 +155,10 @@ static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, const char *mode, void *obj,
 		goto cleanup;
 	}
 
+	if (f != NULL && f_len != 0) {
+		KSI_strncpy(f, SMART_FILE_getFname(file), f_len);
+	}
+
 	res = SMART_FILE_write(file, raw, raw_len, &count);
 	if(res != SMART_FILE_OK || count != raw_len) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to write to file.");
@@ -171,8 +175,7 @@ cleanup:
 	return res;
 }
 
-
-int KSI_OBJ_saveSignature(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *mode, const char *fname) {
+int KSI_OBJ_saveSignature(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *mode, const char *fname, char *f, size_t f_len) {
 	int res;
 
 	if (ksi == NULL || fname == NULL || sign == NULL) {
@@ -181,7 +184,7 @@ int KSI_OBJ_saveSignature(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, con
 
 	res = saveKsiObj(err, ksi, mode, sign,
 				(int (*)(KSI_CTX *, void *, unsigned char **, size_t *))KSI_Signature_serialize_wrapper,
-				fname);
+				fname, f, f_len);
 
 	if (res) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to save signature file to '%s'.", fname);
@@ -199,7 +202,7 @@ int KSI_OBJ_savePublicationsFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsF
 
 	res = saveKsiObj(err, ksi, mode, pubfile,
 				(int (*)(KSI_CTX *, void *, unsigned char **, size_t *))KSI_PublicationsFile_serialize,
-				fname);
+				fname, NULL, 0);
 
 	if (res) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to save publication file to '%s'.", fname);

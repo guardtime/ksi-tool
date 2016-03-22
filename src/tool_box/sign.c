@@ -166,6 +166,7 @@ static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_S
 	COMPOSITE extra;
 	const char *mode = NULL;
 	char buf[1024];
+	char real_output_name[1024];
 
 	if(set == NULL || sig == NULL) {
 		res = KT_INVALID_ARGUMENT;
@@ -227,9 +228,9 @@ static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_S
 	/**
 	 * Save KSI signature to file.
 	 */
-	res = KSI_OBJ_saveSignature(err, ksi, tmp, mode, outSigFileName);
+	res = KSI_OBJ_saveSignature(err, ksi, tmp, mode, outSigFileName, real_output_name, sizeof(real_output_name));
 	if (res != KT_OK) goto cleanup;
-	print_debug("Signature saved.\n");
+	print_debug("Signature saved to '%s'.\n", real_output_name);
 
 	*sig = tmp;
 	tmp = NULL;

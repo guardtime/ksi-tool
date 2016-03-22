@@ -177,6 +177,7 @@ static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *s
 	KSI_PublicationData *pub_data = NULL;
 	char *outSigFileName = NULL;
 	char buf[1024] = "";
+	char real_output_name[1024] = "";
 	const char *mode = NULL;
 
 	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || extra == NULL) {
@@ -245,9 +246,11 @@ static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *s
 
 	/* Save signature. */
 	print_progressDesc(d, "Saving signature... ");
-	res = KSI_OBJ_saveSignature(err, ksi, ext, mode, outSigFileName);
+	res = KSI_OBJ_saveSignature(err, ksi, ext, mode, outSigFileName, real_output_name, sizeof(real_output_name));
 	if (res != KT_OK) goto cleanup;
 	print_progressResult(res);
+
+	print_debug("Signature saved to '%s'.\n", real_output_name);
 
 	res = KT_OK;
 
