@@ -7,6 +7,7 @@
 #include "ksitool_err.h"
 #include "tool_box/tool_box.h"
 #include "tool_box/param_control.h"
+#include "tool_box/smart_file.h"
 #include "printer.h"
 
 char* CONF_generate_desc(char *description, char *buf, size_t buf_len) {
@@ -120,6 +121,11 @@ int CONF_fromEnvironment(PARAM_SET *set, const char *env_name, char **envp, int 
 				goto cleanup;
 			}
 
+			if(!SMART_FILE_doFileExist(value)) {
+				res = KT_IO_ERROR;
+				goto cleanup;
+			}
+
 			res = CONF_fromFile(set, value, env_name, priority);
 			if (res != PST_OK) goto cleanup;
 
@@ -140,7 +146,9 @@ cleanup:
 int CONF_isInvalid(PARAM_SET *set) {
 	if (set == NULL) return 1;
 
-	if (!PARAM_SET_isFormatOK(set) || PARAM_SET_isUnknown(set) || PARAM_SET_isTypoFailure(set) || PARAM_SET_isSetByName(set, "publications-file-no-verify")) {
+	if (!PARAM_SET_isFormatOK(set) || PARAM_SET_isUnknown(set) || PARAM_SET_isTypoFailure(set)
+			|| PARAM_SET_isSetByName(set, "publications-file-no-verify")
+			|| PARAM_SET_isSyntaxError(set)) {
 		return 1;
 	} else {
 		return 0;
@@ -152,6 +160,12 @@ char *CONF_errorsToString(PARAM_SET *set, const char *prefix, char *buf, size_t 
 	size_t count = 0;
 
 	if (set == NULL || buf == NULL || buf_len == 0) return NULL;
+
+	if (PARAM_SET_isSyntaxError(set)) {
+		PARAM_SET_syntaxErrorsToString(set, prefix, tmp, sizeof(tmp));
+		count += KSI_snprintf(buf + count, buf_len - count, "%s", tmp);
+		goto cleanup;
+	}
 
 	if (PARAM_SET_isTypoFailure(set)) {
 			PARAM_SET_typosToString(set, PST_TOSTR_DOUBLE_HYPHEN, prefix, tmp, sizeof(tmp));
@@ -174,6 +188,7 @@ char *CONF_errorsToString(PARAM_SET *set, const char *prefix, char *buf, size_t 
 
 	}
 
+cleanup:
 	return buf;
 }
 
@@ -236,7 +251,7 @@ char *conf_help_toString(char *buf, size_t len) {
 		"           - a flag to force the tool to trust the publications file without\n"
 		"             verifying it. The flag can only be defined on command-line to avoid\n"
 		"             the usage of insecure configurations files. It must be noted that the\n"
-		"             option is insecure and must only be used for testing.\n"
+		"             option is insecure and may only be used for testing.\n"
 		"\n"
 		"\n"
 		);

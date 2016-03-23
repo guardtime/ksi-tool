@@ -26,6 +26,7 @@ extern "C" {
 #endif
 
 #include <stddef.h>
+#include <stdio.h>
 
 #ifndef PARAM_SET_ERROR_BASE
 #define		PARAM_SET_ERROR_BASE 0x30001
@@ -353,6 +354,7 @@ int PARAM_SET_isFormatOK(const PARAM_SET *set);
  */
 int PARAM_SET_isTypoFailure(const PARAM_SET *set);
 
+int PARAM_SET_isSyntaxError(const PARAM_SET *set);
 /**
  * Controls if there are some undefined parameters red from command-line or file
  * etc..
@@ -373,9 +375,10 @@ int PARAM_SET_isUnknown(const PARAM_SET *set);
  * \param	fname		files path.
  * \param	source		Source description as c-string. Can be NULL.
  * \param	priority	Priority that can be \c PST_PRIORITY_VALID_BASE (0) or higher.
- * \return PST_OK if successful, error code otherwise.
+ * \return PST_OK if successful, error code otherwise. If file format is invalid,
+ * \c PST_INVALID_FORMAT is returned.
  */
-int PARAM_SET_readFromFile(PARAM_SET *set, const char *fname, const char* source,  int priority);
+int PARAM_SET_readFromFile(PARAM_SET *set, const char *fname, const char* source, int priority);
 
 /**
  * Reads parameter values from command-line into predefined parameter set.
@@ -450,6 +453,10 @@ char* PARAM_SET_invalidParametersToString(const PARAM_SET *set, const char *pref
  * \return Error string.
  */
 const char* PARAM_SET_errorToString(int err);
+
+
+char* PARAM_SET_syntaxErrorsToString(const PARAM_SET *set, const char *prefix, char *buf, size_t buf_len);
+
 /**
  * Function that can be used to separate names from string. A function \c isValidNameChar
  * must be defined to separate valid name characters from all kind of separators.
@@ -487,6 +494,21 @@ const char* extract_next_name(const char* name_string, int (*isValidNameChar)(in
  * \return
  */
 int parse_key_value_pair(const char *line, char *key, char *value, size_t buf_len);
+
+/**
+ * Read a line from a file (opend with fopen in mode r) ant track the lines.
+ * Supported line endings:
+ * MAC  \r		CR		0x0d
+ * Unix \n		LF		0x0a
+ * Win  \r\n	CRLF	0x0d0a
+ * \param	file		a file pointer that is us used for reading from.
+ * \param	buf			a buffer to store the line.
+ * \param	len			size of the buffer.
+ * \param	row_pointer	pointer to the row counting value. Initial value pointed to must be 0. If not used can be NULL.
+ * \param	read_count	pointer to character counting value. If not used can be NULL.
+ * \return Return 0 if successful, EOF if end of file.
+ */
+int read_line(FILE *file, char *buf, size_t len, size_t *row_pointer, size_t *read_count);
 
 #ifdef	__cplusplus
 }

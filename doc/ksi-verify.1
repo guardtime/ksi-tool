@@ -11,26 +11,32 @@
 .br
 \fBksi verify -i \fIin.ksig \fR[\fB-f \fIdata\fR] [\fImore options\fR]
 .br
+
 .\"
 \fBksi verify --ver-int -i \fIin.ksig \fR[\fB-f \fIdata\fR] [\fImore options\fR]
 .br
+
 .\"
 \fBksi verify --ver-cal -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] [\fImore options\fR]
 .br
+
 .\"
 \fBksi verify --ver-key -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fImore options\fR]
 .br
+
 .\"
 \fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB--pub-str \fIpubstr \fR[\fB-x -X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore options\fR]
 .br
+
 .\"
 \fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... \fR[\fB-x -X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore options\fR]
 .br
+
 .\"
 .\"
 .SH DESCRIPTION
 .\"
-This is a KSI signature verification tool. 
+This is a KSI signature verification tool.
 .\"
 .\"
 .SH OPTIONS
@@ -125,20 +131,20 @@ In the following examples it is assumed that default service urls are defined (s
 
 \fB1\fR To perform internal verification on KSI signature file \fItest.ksig \fRand document \fItest \fRcall:
 .RS
-\fBksi verify --ver-int -i \fItest.ksig\fR \fB-f \fItest\fR 
+\fBksi verify --ver-int -i \fItest.ksig\fR \fB-f \fItest\fR
 .RE
 
 \fB2\fR To perform key based verification on freshly created KSI signature file \fItest.ksig \fRand document hash call:
 .RS
-\fBksi verify --ver-key -i \fItest.ksig\fR \fB-f \fISHA-256:c8ef6d57ac28d1b4e95a513959f5fcdd0688380a43d601a5ace1d2e96884690a\fR 
+\fBksi verify --ver-key -i \fItest.ksig\fR \fB-f \fISHA-256:c8ef6d57ac28d1b4e95a513959f5fcdd0688380a43d601a5ace1d2e96884690a\fR
 .RE
 
 \fB3\fR To perform calendar based verification on KSI signature file \fItest.ksig \fRcall:
 .RS
-\fBksi verify --ver-cal -i \fItest.ksig\fR 
+\fBksi verify --ver-cal -i \fItest.ksig\fR
 .RE
 
-\fB4\fR To perform publication  based verification (printed in public media) on KSI signature file \fItest.ext.ksig \fRcall:
+\fB4\fR To perform publication based verification (printed in public media) on KSI signature file \fItest.ext.ksig \fRcall:
 .RS
 \fBksi verify --ver-pub -i \fItest.ext.ksig\fR \fB--pub-str \fIAAAAAA-CWYEKQ-AAIYPA-UJ4GRT-HXMFBE-OTB4AB-XH3PT3-KNIKGV-PYCJXU-HL2TN4-RG6SCC-3ZGSBM
 .RE
@@ -153,9 +159,9 @@ In the following examples it is assumed that default service urls are defined (s
 \fBksi verify --ver-pub -i \fItest.ksig\fR \fB-x
 .RE
 
-\fB7\fR To perform verification on KSI signature \fItest.ksig \fRas possible call and dump its content:
+\fB7\fR To perform verification on KSI signature \fItest.ksig \fRas possible and dump its content call:
 .RS
-\fBksi verify -i \fItest.ksig\fR \fB-d\fR
+\fBksi verify -i \fItest.ksig\fR \fB--dump\fR
 .RE
 
 
@@ -172,5 +178,5 @@ Environment variable \fBKSI_CONF \fR can be defined to set default KSI configura
 
 Guardtime AS, http://www.guardtime.com/
 
-.SH SEE ALSO	
-\fBksi\fR(1), \fBksi-sign\fR(1), \fBksi-extend\fR(1), \fBksi-pubfile\fR(1), \fBksi-conf\fR(5) 
+.SH SEE ALSO
+\fBksi\fR(1), \fBksi-sign\fR(1), \fBksi-extend\fR(1), \fBksi-pubfile\fR(1), \fBksi-conf\fR(5)

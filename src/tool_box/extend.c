@@ -151,7 +151,7 @@ char *extend_help_toString(char*buf, size_t len) {
 		"           - publications file certificate verification constraints.\n"
 		" -T <time> - specify a publication time to extend to as the number of seconds\n"
 		"             since 1970-01-01 00:00:00 UTC or time string formatted as \"YYYY-MM-DD hh:mm:ss\".\n"
-		" --pub-str | -p <str>\n"
+		" --pub-str <str>\n"
 		"           - specify a publication string to extend to.\n"
 		" -d        - print detailed information about processes and errors.\n"
 		" --conf <file>\n"
@@ -179,6 +179,7 @@ static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *s
 	KSI_PublicationData *pub_data = NULL;
 	char *outSigFileName = NULL;
 	char buf[1024] = "";
+	char real_output_name[1024] = "";
 	const char *mode = NULL;
 
 	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || extra == NULL) {
@@ -247,9 +248,11 @@ static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *s
 
 	/* Save signature. */
 	print_progressDesc(d, "Saving signature... ");
-	res = KSI_OBJ_saveSignature(err, ksi, ext, mode, outSigFileName);
+	res = KSI_OBJ_saveSignature(err, ksi, ext, mode, outSigFileName, real_output_name, sizeof(real_output_name));
 	if (res != KT_OK) goto cleanup;
 	print_progressResult(res);
+
+	print_debug("Signature saved to '%s'.\n", real_output_name);
 
 	res = KT_OK;
 

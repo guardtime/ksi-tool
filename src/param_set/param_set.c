@@ -253,6 +253,43 @@ cleanup:
 	return res;
 }
 
+int read_line(FILE *file, char *buf, size_t len, size_t *row_pointer, size_t *read_count) {
+	int c;
+	size_t count = 0;
+	size_t line_coun = 0;
+	int is_line_open = 0;
+	int last = 0;
+
+	if (file == NULL || buf == NULL || len == 0) return 0;
+	buf[0] = '\0';
+
+	while ((c = fgetc(file)) && count < len - 1) {
+		if (c == EOF || (c == '\r' || c == '\n')) {
+			line_coun++;
+			if (c == EOF) break;
+		}
+
+		if (c != '\r' && c != '\n') {
+			is_line_open = 1;
+			buf[count++] = 0xff & c;
+		} else if (is_line_open) {
+			break;
+		}
+	}
+	buf[count] = '\0';
+
+	if (row_pointer != NULL) {
+		*row_pointer += line_coun;
+	}
+
+	if (read_count != NULL) {
+		*read_count = count;
+	}
+
+
+	return (c == EOF) ? EOF : 0;
+}
+
 static unsigned min_of_3(unsigned A, unsigned B,unsigned C){
 	unsigned tmp;
 	tmp = A < B ? A : B;
@@ -666,6 +703,7 @@ int PARAM_SET_new(const char *names, PARAM_SET **set){
 	PARAM **tmp_param = NULL;
 	PARAM *tmp_typo = NULL;
 	PARAM *tmp_unknwon = NULL;
+	PARAM *tmp_syntax = NULL;
 	const char *pName = NULL;
 	int paramCount = 0;
 	int i = 0;
@@ -703,6 +741,7 @@ int PARAM_SET_new(const char *names, PARAM_SET **set){
 	tmp->parameter = NULL;
 	tmp->typos = NULL;
 	tmp->unknown = NULL;
+	tmp->syntax = NULL;
 
 	tmp_param = (PARAM**)calloc(paramCount, sizeof(PARAM*));
 	if(tmp == NULL) {
@@ -719,6 +758,9 @@ int PARAM_SET_new(const char *names, PARAM_SET **set){
 	res = PARAM_new("typo", NULL, 0, &tmp_typo);
 	if(res != PST_OK) goto cleanup;
 
+	res = PARAM_new("syntax", NULL, 0, &tmp_syntax);
+	if(res != PST_OK) goto cleanup;
+
 	res = PARAM_setObjectExtractor(tmp_typo, NULL);
 	if(res != PST_OK) goto cleanup;
 
@@ -728,10 +770,12 @@ int PARAM_SET_new(const char *names, PARAM_SET **set){
 	tmp->count = paramCount;
 	tmp->parameter = tmp_param;
 	tmp->typos = tmp_typo;
+	tmp->syntax = tmp_syntax;
 	tmp->unknown = tmp_unknwon;
 	tmp_typo = NULL;
 	tmp_unknwon = NULL;
 	tmp_param = NULL;
+	tmp_syntax = NULL;
 
 	/**
 	 * Add parameters to the list.
@@ -752,6 +796,7 @@ cleanup:
 
 	PARAM_free(tmp_unknwon);
 	PARAM_free(tmp_typo);
+	PARAM_free(tmp_syntax);
 	PARAM_SET_free(tmp);
 	free(tmp_param);
 
@@ -773,6 +818,7 @@ void PARAM_SET_free(PARAM_SET *set){
 
 	PARAM_free(set->typos);
 	PARAM_free(set->unknown);
+	PARAM_free(set->syntax);
 
 	free(set);
 	return;
@@ -1133,13 +1179,23 @@ int PARAM_SET_isUnknown(const PARAM_SET *set){
 	return count > 0 ? 1 : 0;
 }
 
-int PARAM_SET_readFromFile(PARAM_SET *set, const char *fname, const char* source, int priority){
+int PARAM_SET_isSyntaxError(const PARAM_SET *set){
+	int count = 0;
+	PARAM_getValueCount(set->syntax, NULL, PST_PRIORITY_NONE, &count);
+	return count > 0 ? 1 : 0;
+}
+
+int PARAM_SET_readFromFile(PARAM_SET *set, const char *fname, const char* source, int priority) {
 	int res;
 	FILE *file = NULL;
 	char *ln = NULL;
 	char line[1024];
 	char flag[1024];
 	char arg[1024];
+	char buf[1024];
+	size_t line_nr = 0;
+	size_t error_count = 0;
+	size_t read_count = 0;
 
 	if(fname == NULL || set == NULL) {
 		res = PST_INVALID_ARGUMENT;
@@ -1152,14 +1208,26 @@ int PARAM_SET_readFromFile(PARAM_SET *set, const char *fname, const char* source
 		goto cleanup;
 	}
 
-	while(fgets(line, sizeof(line), file)) {
-		ln = strchr(line, '\n');
-		if(ln != NULL) *ln = 0;
+	do {
+		res = read_line(file, line, sizeof(line), &line_nr, &read_count);
+		if (res == EOF && read_count == 0) break;
 
 		if (isComment(line)) continue;
 
+		flag[0] = '\0';
+		arg[0] = '\0';
 		res = parse_key_value_pair(line, flag, arg, sizeof(flag));
-		if (res != PST_OK) {
+		if (res == PST_INVALID_FORMAT) {
+			snprintf(buf, sizeof(buf), "Syntax error at line %4i. Unknown character. '%.60s'.\n", line_nr, line);
+			PARAM_addValue(set->syntax, buf, source, priority);
+			error_count++;
+			res = PST_OK;
+		} else if (flag[0] != '-' && flag[0] != '\0') {
+			snprintf(buf, sizeof(buf) , "Syntax error at line %4i. Missing character '-'. '%.60s'.\n", line_nr, line);
+			PARAM_addValue(set->syntax, buf, source, priority);
+			error_count++;
+			res = PST_OK;
+		} else if (res != PST_OK) {
 			goto cleanup;
 		}
 
@@ -1173,9 +1241,9 @@ int PARAM_SET_readFromFile(PARAM_SET *set, const char *fname, const char* source
 			if (res != PST_OK) goto cleanup;
 		}
 
-	}
+	} while (read_count != 0);
 
-	res = PST_OK;
+	res = (error_count == 0) ? PST_OK : PST_INVALID_FORMAT;
 
 cleanup:
 
@@ -1381,6 +1449,41 @@ char* PARAM_SET_unknownsToString(const PARAM_SET *set, const char *prefix, char 
 		count += snprintf(buf + count, buf_len - count, "%sUnknown parameter '%s'", use_prefix, name);
 		if(source != NULL) count += snprintf(buf + count, buf_len - count, " from '%s'", source);
 		count += snprintf(buf + count, buf_len - count, ".\n");
+	}
+
+	buf[buf_len - 1] = '\0';
+	return buf;
+}
+
+char* PARAM_SET_syntaxErrorsToString(const PARAM_SET *set, const char *prefix, char *buf, size_t buf_len) {
+	int res;
+	const char *use_prefix = NULL;
+	int i = 0;
+	PARAM_VAL *syntax_error = NULL;
+	const char *name = NULL;
+	const char *source = NULL;
+	size_t count = 0;
+
+
+	if (set == NULL || buf == NULL || buf_len == 0) {
+		return NULL;
+	}
+
+	if (set->syntax->argCount == 0) {
+		buf[0] = '\0';
+		return NULL;
+	}
+
+	use_prefix = prefix == NULL ? "" : prefix;
+
+	for (i = 0; i < set->syntax->argCount; i++) {
+		res = PARAM_getValue(set->syntax, NULL, PST_PRIORITY_NONE, i, &syntax_error);
+		if (res != PST_OK) return NULL;
+
+		res = PARAM_VAL_extract(syntax_error, &name, &source, NULL);
+		if (res != PST_OK) return NULL;
+
+		count += snprintf(buf + count, buf_len - count, "%s%s", use_prefix, name);
 	}
 
 	buf[buf_len - 1] = '\0';

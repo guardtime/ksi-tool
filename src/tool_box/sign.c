@@ -58,7 +58,7 @@ int sign_run(int argc, char** argv, char **envp) {
 	 * Extract command line parameters.
      */
 	res = PARAM_SET_new(
-			CONF_generate_desc("{sign}{i}{h}{o}{H}{D|data-out}{d}{dump}{log}{conf}", buf, sizeof(buf)),
+			CONF_generate_desc("{sign}{i}{h}{o}{H}{data-out}{d}{dump}{log}{conf}", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -134,7 +134,7 @@ char *sign_help_toString(char*buf, size_t len) {
 		"           - user name for signing service.\n"
 		" --aggr-key <str>\n"
 		"           - HMAC key for signing service.\n"
-		" --data-out | D <file>\n"
+		" --data-out <file>\n"
 		"           - save signed data to file.\n"
 		" -d        - print detailed information about processes and errors to stderr.\n"
 		" --dump    - dump signature created to stdout.\n"
@@ -166,6 +166,7 @@ static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_S
 	COMPOSITE extra;
 	const char *mode = NULL;
 	char buf[1024];
+	char real_output_name[1024];
 
 	if(set == NULL || sig == NULL) {
 		res = KT_INVALID_ARGUMENT;
@@ -188,7 +189,7 @@ static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_S
 		if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 	}
 
-	res = PARAM_SET_getStr(set, "D", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &signed_data_out);
+	res = PARAM_SET_getStr(set, "data-out", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &signed_data_out);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 
 	d = PARAM_SET_isSetByName(set, "d");
@@ -227,9 +228,9 @@ static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_S
 	/**
 	 * Save KSI signature to file.
 	 */
-	res = KSI_OBJ_saveSignature(err, ksi, tmp, mode, outSigFileName);
+	res = KSI_OBJ_saveSignature(err, ksi, tmp, mode, outSigFileName, real_output_name, sizeof(real_output_name));
 	if (res != KT_OK) goto cleanup;
-	print_debug("Signature saved.\n");
+	print_debug("Signature saved to '%s'.\n", real_output_name);
 
 	*sig = tmp;
 	tmp = NULL;
@@ -259,16 +260,16 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	if (res != KT_OK) goto cleanup;
 
 	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, NULL);
-	PARAM_SET_addControl(set, "{o}{D}{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
+	PARAM_SET_addControl(set, "{o}{data-out}{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputHash, isContentOk_inputHash, NULL, extract_inputHash);
 	PARAM_SET_addControl(set, "{H}", isFormatOk_hashAlg, isContentOk_hashAlg, NULL, extract_hashAlg);
 	PARAM_SET_addControl(set, "{d}{dump}", isFormatOk_flag, NULL, NULL, NULL);
 
 	/*					  ID	DESC										MAN			 ATL	FORBIDDEN	IGN	*/
-	TASK_SET_add(task_set, 0,	"Sign data.",								"S,i",	 NULL,	"H,D",		NULL);
-	TASK_SET_add(task_set, 1,	"Sign data, specify hash alg.",				"S,i,H",	 NULL,	"D",		NULL);
-	TASK_SET_add(task_set, 2,	"Sign and save data.",						"S,i,D",	 NULL,	"H",		NULL);
-	TASK_SET_add(task_set, 3,	"Sign and save data, specify hash alg.",	"S,i,H,D", NULL,	NULL,		NULL);
+	TASK_SET_add(task_set, 0,	"Sign data.",								"S,i",	 NULL,	"H,data-out",		NULL);
+	TASK_SET_add(task_set, 1,	"Sign data, specify hash alg.",				"S,i,H",	 NULL,	"data-out",		NULL);
+	TASK_SET_add(task_set, 2,	"Sign and save data.",						"S,i,data-out",	 NULL,	"H",		NULL);
+	TASK_SET_add(task_set, 3,	"Sign and save data, specify hash alg.",	"S,i,H,data-out", NULL,	NULL,		NULL);
 
 cleanup:
 

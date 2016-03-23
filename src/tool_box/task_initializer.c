@@ -112,20 +112,28 @@ cleanup:
 int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char **envp) {
 	int res;
 	PARAM_SET *conf_env = NULL;
+	PARAM_SET *conf_file = NULL;
 	char buf[1024];
 	char *conf_file_name = NULL;
 
 	res = CONF_createSet(&conf_env);
 	if (res != KT_OK) goto cleanup;
 
+	res = CONF_createSet(&conf_file);
+	if (res != KT_OK) goto cleanup;
+
 	/**
 	 * Include conf from environment.
      */
 	res = CONF_fromEnvironment(conf_env, "KSI_CONF", envp, PRIORITY_KSI_CONF);
-	if (res != KT_OK) return res;
+	if (res == KT_IO_ERROR) {
+		print_errors("File pointed by KSI_CONF does not exist.\n");
+		res = KT_INVALID_CONF;
+		goto cleanup;
+	} else if (res != KT_OK) return res;
 
 	if (CONF_isInvalid(conf_env)) {
-		print_errors("KSI Service configuration is invalid:\n");
+		print_errors("KSI configurations file from KSI_CONF is invalid:\n");
 		print_errors("%s\n", CONF_errorsToString(conf_env, "  ", buf, sizeof(buf)));
 		res = KT_INVALID_CONF;
 		goto cleanup;
@@ -144,15 +152,26 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 		if (res != PST_OK && res != PST_PARAMETER_INVALID_FORMAT) goto cleanup;
 
 		if (conf_file_name != NULL && res == PST_OK) {
-			res = PARAM_SET_readFromFile(set, conf_file_name, conf_file_name, PRIORITY_KSI_CONF_FILE);
-			if (res != PST_OK) goto cleanup;
+			res = PARAM_SET_readFromFile(conf_file, conf_file_name, conf_file_name, PRIORITY_KSI_CONF_FILE);
+			if (res != PST_OK && res != PST_INVALID_FORMAT) goto cleanup;
+		}
+
+		if (CONF_isInvalid(conf_file)) {
+			print_errors("Configurations file '%s' is invalid:\n", conf_file_name);
+			print_errors("%s\n", CONF_errorsToString(conf_file, "  ", buf, sizeof(buf)));
+			res = KT_INVALID_CONF;
+			goto cleanup;
 		}
 	}
 
+
 	/**
-	 * Merge conf file to the set.
+	 * Merge conf files to the set.
      */
 	res = PARAM_SET_IncludeSet(set, conf_env);
+	if (res != PST_OK) goto cleanup;
+
+	res = PARAM_SET_IncludeSet(set, conf_file);
 	if (res != PST_OK) goto cleanup;
 
 	/**
@@ -173,6 +192,7 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 cleanup:
 
 	PARAM_SET_free(conf_env);
+	PARAM_SET_free(conf_file);
 
 	return res;
 }

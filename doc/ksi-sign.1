@@ -8,7 +8,7 @@
 .\"
 .SH SYNOPSIS
 .\"
-\fBksi sign -i \fIinput \fR[\fB-o \fIout.ksig\fR] \fB-S \fIurl \fR[\fB--aggr-user \fIuser \fB--aggr-key \fIkey\fR] \fR[\fB-H \fIalg\fR] [\fB-D \fIfile\fR] [\fB--dump\fR] [\fImore options\fR]
+\fBksi sign -i \fIinput \fR[\fB-o \fIout.ksig\fR] \fB-S \fIurl \fR[\fB--aggr-user \fIuser \fB--aggr-key \fIkey\fR] \fR[\fB-H \fIalg\fR] [\fB--data-out \fIfile\fR] [\fB--dump\fR] [\fImore options\fR]
 .br
 .\"
 .\"
@@ -44,7 +44,7 @@ User name for signing service.
 HMAC Key for signing service.
 .\"
 .TP
-\fB-D\fR | \fB--data-out \fIfile\fR
+\fB--data-out \fIfile\fR
 Save signed data to file. Use when signing a stream. Use '-' as file name to redirect data being hashed to \fIstdout\fR.
 .\"
 .TP
@@ -92,7 +92,7 @@ In the following examples it is assumed that default service urls are defined (s
 
 \fB4\fR To sign a stream (stdin), save data from stream to \fIfile\fR and save signature to \fIsig.ksig\fR call:
 .RS
-\fBksi -s -f - -D \fIfile\fB -o \fIsig.ksig\fR
+\fBksi -s -i - --data-out \fIfile\fB -o \fIsig.ksig\fR
 .RE
 .\"
 .\"
