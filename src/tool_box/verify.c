@@ -42,7 +42,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 static int verify_data_hash(ERR_TRCKR *err, KSI_Signature *sig, KSI_DataHash *hsh);
 
 static int signature_verify(int id, PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *extra, KSI_CTX *ksi, KSI_Signature *sig, KSI_PolicyVerificationResult **out);
-static int verify_as_possible(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig);
+static int signature_verify_general(PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *extra, KSI_CTX *ksi, KSI_Signature *sig, KSI_PolicyVerificationResult **out);
 static int signature_verify_internally(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_PolicyVerificationResult **out);
 static int signature_verify_key_based(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_PolicyVerificationResult **out);
 static int signature_verify_publication_based_with_user_pub(PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *extra, KSI_CTX *ksi, KSI_Signature *sig, KSI_PolicyVerificationResult **out);
@@ -305,6 +305,10 @@ static int signature_verify(int id, PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 
 	switch(id) {
 		case 0:
+			print_progressDesc(d, "Signature internal verification... ");
+			res = signature_verify_general(set, err, extra, ksi, sig, out);
+			ERR_CATCH_MSG(err, res, "Error: Internal signature verification failed.");
+			break;
 		case 1:
 			print_progressDesc(d, "Signature internal verification... ");
 			res = signature_verify_internally(set, err, ksi, sig, out);
@@ -345,7 +349,42 @@ cleanup:
 	return res;
 }
 
-static int signature_verify_as_possible(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig) {
+static int signature_verify_general(PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *extra, KSI_CTX *ksi, KSI_Signature *sig, KSI_PolicyVerificationResult **out) {
+	int res;
+	int d = PARAM_SET_isSetByName(set, "d");
+	int x = PARAM_SET_isSetByName(set, "x");
+	KSI_PublicationData *pub_data = NULL;
+	KSI_PolicyVerificationResult *verRes = NULL;
+
+	/**
+	 * Get Publication data if available
+	 */
+	if (PARAM_SET_isSetByName(set, "pub-str")) {
+		res = PARAM_SET_getObjExtended(set, "pub-str", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, extra, (void**)&pub_data);
+		ERR_CATCH_MSG(err, res, "Error: Failed to get publication data.");
+	}
+
+	/**
+	 * Verify signature
+	 */
+	print_progressDesc(d, "Verifying signature... ");
+	res = KSITOOL_SignatureVerify_general(err, sig, ksi, pub_data, x, &verRes);
+	ERR_CATCH_MSG(err, res, "Error: Failed to verify signature.");
+
+	*out = verRes;
+	verRes = NULL;
+
+	res = KT_OK;
+
+cleanup:
+
+	print_progressResult(res);
+
+	KSI_PublicationData_free(pub_data);
+	KSI_PolicyVerificationResult_free(verRes);
+
+	return res;
+#if 0
 	int res;
 	int d;
 
@@ -368,6 +407,7 @@ cleanup:
 	print_progressResult(res);
 
 	return res;
+#endif
 }
 
 static int signature_verify_internally(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_PolicyVerificationResult **out) {
