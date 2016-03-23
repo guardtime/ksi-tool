@@ -216,7 +216,7 @@ static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *s
 
 	/* Make sure the signature is ok. */
 	print_progressDesc(d, "Verifying old signature... ");
-	res = KSITOOL_SignatureVerify_internally(err, sig, ksi, result);
+	res = KSITOOL_SignatureVerify_internally(err, sig, ksi, NULL, result);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify signature.");
 	if ((*result)->finalResult.resultCode != VER_RES_OK) {
 		ERR_CATCH_MSG(err, res = KT_KSI_SIG_VER_IMPOSSIBLE, "Error: Failed to verify signature.");
@@ -239,7 +239,7 @@ static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *s
 	print_progressResult(res);
 
 	print_progressDesc(d, "Verifying extended signature... ");
-	res = KSITOOL_SignatureVerify_general(err, ext, ksi, pub_data, 1, result);
+	res = KSITOOL_SignatureVerify_general(err, ext, ksi, NULL, pub_data, 1, result);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify extended signature.");
 	if ((*result)->finalResult.resultCode != VER_RES_OK) {
 		ERR_CATCH_MSG(err, res = KT_KSI_SIG_VER_IMPOSSIBLE, "Error: Unable to verify extended signature.");
