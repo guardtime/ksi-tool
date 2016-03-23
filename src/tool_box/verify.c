@@ -69,7 +69,7 @@ int verify_run(int argc, char **argv, char **envp) {
 	 * Extract command line parameters and also add configuration specific parameters.
 	 */
 	res = PARAM_SET_new(
-			CONF_generate_desc("{verify}{i}{o}{D}{x}{f}{d}{pub-str|p}{ver-int}{ver-cal}{ver-key}{ver-pub}{log}{dump}{conf}{log}", buf, sizeof(buf)),
+			CONF_generate_desc("{verify}{i}{o}{D}{x}{f}{d}{pub-str}{ver-int}{ver-cal}{ver-key}{ver-pub}{log}{dump}{conf}{log}", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -127,7 +127,7 @@ int verify_run(int argc, char **argv, char **envp) {
 	if (PARAM_SET_isSetByName(set, "dump")) {
 		print_result("\n");
 		OBJPRINT_signatureDump(sig, print_result);
-		print_debug("\n");
+		print_result("\n");
 		OBJPRINT_signatureVerificationResultDump(result, print_result);
 
 		if (hsh != NULL) {
@@ -246,10 +246,6 @@ cleanup:
 	return res;
 }
 
-/**
- * Some functionality to workaround API missing functionality.
- */
-
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	int res;
 
@@ -313,38 +309,31 @@ static int signature_verify(int id, PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 			print_progressDesc(d, "Signature internal verification... ");
 			res = signature_verify_internally(set, err, ksi, sig, out);
 			ERR_CATCH_MSG(err, res, "Error: Internal signature verification failed.");
-			goto cleanup;
 			break;
 		case 2:
 			print_progressDesc(d, "Signature calendar-based verification... ");
 			res = signature_verify_calendar_based(set, err, ksi, sig, out);
 			ERR_CATCH_MSG(err, res, "Error: Calendar-based signature verification failed.");
-			goto cleanup;
 			break;
 		case 3:
 			print_progressDesc(d, "Signature key-based verification... ");
 			res = signature_verify_key_based(set, err, ksi, sig, out);
 			ERR_CATCH_MSG(err, res, "Error: Key-based signature verification failed.");
-			goto cleanup;
 			break;
 		case 4:
 		case 5:
 			print_progressDesc(d, "Signature publication-based verification with publication file... ");
 			res = signature_verify_publication_based_with_pubfile(set, err, ksi, sig, out);
 			ERR_CATCH_MSG(err, res, "Error: Publication-based (with publications fine) signature verification failed.");
-			goto cleanup;
 			break;
 		case 6:
 		case 7:
 			print_progressDesc(d, "Signature publication-based verification with user publication string... ");
 			res = signature_verify_publication_based_with_user_pub(set, err, extra, ksi, sig, out);
 			ERR_CATCH_MSG(err, res, "Error: Publication-based (with user publication) signature verification failed.");
-			goto cleanup;
 			break;
 		default:
-			res = KT_UNKNOWN_ERROR;
-			ERR_CATCH_MSG(err, res, "Error: Unknown signature verification task.");
-			goto cleanup;
+			ERR_CATCH_MSG(err, res = KT_UNKNOWN_ERROR, "Error: Unknown signature verification task.");
 			break;
 	}
 
@@ -443,9 +432,6 @@ static int signature_verify_publication_based_with_user_pub(PARAM_SET *set, ERR_
 	/**
 	 * Get Publication data
 	 */
-	if (!PARAM_SET_isSetByName(set, "pub-str")) {
-		ERR_CATCH_MSG(err, res = KT_KSI_SIG_VER_IMPOSSIBLE, "Error: Publication data not set.");
-	}
 	res = PARAM_SET_getObjExtended(set, "pub-str", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, extra, (void**)&pub_data);
 	ERR_CATCH_MSG(err, res, "Error: Failed to get publication data.");
 
@@ -481,7 +467,7 @@ static int signature_verify_publication_based_with_pubfile(PARAM_SET *set, ERR_T
 	 * Verify signature
 	 */
 	print_progressDesc(d, "Verifying signature... ");
-	res = KSITOOL_SignatureVerify_publicationsFileBased(err, sig, ksi, NULL, x, &verRes);
+	res = KSITOOL_SignatureVerify_publicationsFileBased(err, sig, ksi, x, &verRes);
 	ERR_CATCH_MSG(err, res, "Error: Failed to verify signature.");
 
 	*out = verRes;

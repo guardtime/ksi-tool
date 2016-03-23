@@ -163,44 +163,6 @@ cleanup:
 	return;
 }
 
-#if 0
-void OBJPRINT_signatureVerificationInfo(KSI_Signature *sig, int (*print)(const char *format, ... )){
-	int res = KSI_UNKNOWN_ERROR;
-	const KSI_VerificationResult *sigVerification = NULL;
-	const KSI_VerificationStepResult *result = NULL;
-	const char *desc;
-	unsigned int i = 0;
-
-	if(sig == NULL){
-		return;
-	}
-
-	print("Verification steps:\n");
-	res = KSI_Signature_getVerificationResult(sig, &sigVerification);
-	if(res != KSI_OK){
-		print("Unable to get verification steps\n\n");
-		return;
-	}
-
-	if(sigVerification != NULL){
-		for(i=0; i< KSI_VerificationResult_getStepResultCount(sigVerification); i++){
-			res = KSI_VerificationResult_getStepResult(sigVerification, i, &result);
-			if(res != KSI_OK){
-				return;
-			}
-			print("  0x%03x:\t%s", KSI_VerificationStepResult_getStep(result), KSI_VerificationStepResult_isSuccess(result) ? "OK" : "FAIL");
-			desc = KSI_VerificationStepResult_getDescription(result);
-			if (desc && *desc) {
-				print(" (%s)", desc);
-			}
-			print("\n");
-		}
-	}
-	print("\n");
-	return;
-}
-#endif
-
 void OBJPRINT_signatureSigningTime(const KSI_Signature *sig, int (*print)(const char *format, ... )) {
 	int res;
 	KSI_Integer *sigTime = NULL;
@@ -423,7 +385,22 @@ void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *resu
 		return;
 	}
 
-	print("KSI Verification result dump...\n");
+	print("KSI Verification result dump:\n");
+
+	print("  Verification steps:\n");
+	for (i = 0; i < KSI_RuleVerificationResultList_length(result->ruleResults); i++) {
+		KSI_RuleVerificationResult *tmp = NULL;
+
+		res = KSI_RuleVerificationResultList_elementAt(result->ruleResults, i, &tmp);
+		if (res != KSI_OK || tmp == NULL) {
+			return;
+		}
+		print("    %s:\t%s",
+			  getVerificationResultCode(tmp->resultCode),
+			  getVerificationErrorCode(tmp->errorCode));
+		print("    In rule:\t%s::%s", tmp->policyName, tmp->ruleName);
+		print("\n");
+	}
 
 	print("  Final result:\n");
 	print("    %s:\t%s",
@@ -431,21 +408,6 @@ void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *resu
 		  getVerificationErrorCode(result->finalResult.errorCode));
 	print("\n");
 
-	print("  Verification steps:\n");
-
-	for (i = 0; i < KSI_RuleVerificationResultList_length(result->results); i++) {
-		KSI_RuleVerificationResult *tmp = NULL;
-
-		res = KSI_RuleVerificationResultList_elementAt(result->results, i, &tmp);
-		if (res != KSI_OK || tmp == NULL) {
-			return;
-		}
-		print("    %s:\t%s",
-			  getVerificationResultCode(result->finalResult.resultCode),
-			  getVerificationErrorCode(result->finalResult.errorCode));
-		print("    In rule:\t%s", tmp->ruleName);
-		print("\n");
-	}
 	print("\n");
 	return;
 }

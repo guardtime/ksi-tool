@@ -23,6 +23,7 @@
 #include <string.h>
 #include <ksi/ksi.h>
 #include <ksi/compatibility.h>
+#include <ksi/policy.h>
 #include "param_set/param_set.h"
 #include "param_set/task_def.h"
 #include "tool_box/ksi_init.h"
@@ -60,7 +61,7 @@ int extend_run(int argc, char** argv, char **envp) {
 	 * Extract command line parameters.
 	 */
 	res = PARAM_SET_new(
-			CONF_generate_desc("{i}{o}{H}{D}{d}{x}{T}{pub-str|p}{conf}{log}", buf, sizeof(buf)),
+			CONF_generate_desc("{i}{o}{H}{D}{d}{x}{T}{pub-str}{conf}{log}", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -214,8 +215,11 @@ static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *s
 
 	/* Make sure the signature is ok. */
 	print_progressDesc(d, "Verifying old signature... ");
-	res = KSITOOL_Signature_verify(err, sig, ksi);
+	res = KSITOOL_SignatureVerify_internally(err, sig, ksi, result);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify signature.");
+	if ((*result)->finalResult.resultCode != VER_RES_OK) {
+		ERR_CATCH_MSG(err, res = KT_KSI_SIG_VER_IMPOSSIBLE, "Error: Failed to verify signature.");
+	}
 	print_progressResult(res);
 
 
@@ -233,14 +237,11 @@ static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *s
 	}
 	print_progressResult(res);
 
-	if (p) {
-		print_progressDesc(d, "Verifying extended signature with user publication... ");
-		fprintf(stderr, "Error: TODO: implement verification process.");
-		ERR_CATCH_MSG(err, res, "Error: Unable to verify extended signature.");
-	} else {
-		print_progressDesc(d, "Verifying extended signature... ");
-		res = KSITOOL_Signature_verify(err, ext, ksi);
-		ERR_CATCH_MSG(err, res, "Error: Unable to verify extended signature.");
+	print_progressDesc(d, "Verifying extended signature... ");
+	res = KSITOOL_SignatureVerify_general(err, ext, ksi, pub_data, 1, result);
+	ERR_CATCH_MSG(err, res, "Error: Unable to verify extended signature.");
+	if ((*result)->finalResult.resultCode != VER_RES_OK) {
+		ERR_CATCH_MSG(err, res = KT_KSI_SIG_VER_IMPOSSIBLE, "Error: Unable to verify extended signature.");
 	}
 	print_progressResult(res);
 

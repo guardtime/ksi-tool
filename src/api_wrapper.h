@@ -23,7 +23,7 @@
 
 #include "ksitool_err.h"
 #include <ksi/ksi.h>
-#include <ksi/signature_verify.h>
+#include <ksi/policy.h>
 #include "tool_box/err_trckr.h"
 
 #ifdef	__cplusplus
@@ -47,9 +47,6 @@ int KSITOOL_extendSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Signature *sig, KS
 int KSITOOL_Signature_extendTo(ERR_TRCKR *err, const KSI_Signature *signature, KSI_CTX *ctx, KSI_Integer *to, KSI_Signature **extended);
 int KSITOOL_Signature_extend(ERR_TRCKR *err, const KSI_Signature *signature, KSI_CTX *ctx, const KSI_PublicationRecord *pubRec, KSI_Signature **extended);
 int KSITOOL_RequestHandle_getExtendResponse(ERR_TRCKR *err, KSI_CTX *ctx, KSI_RequestHandle *handle, KSI_ExtendResp **resp);
-int KSITOOL_Signature_verify(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx);
-int KSITOOL_Signature_verifyOnline(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx);
-int KSITOOL_Signature_verifyWithPublication(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_PublicationData *pub_data);
 int KSITOOL_Signature_isCalendarAuthRecPresent(const KSI_Signature *sig);
 int KSITOOL_Signature_isPublicationRecordPresent(const KSI_Signature *sig);
 int KSITOOL_createSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_DataHash *dataHash, KSI_Signature **sig);
@@ -58,11 +55,12 @@ int KSITOOL_verifyPublicationsFile(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Publication
 void KSITOOL_KSI_ERRTrace_save(KSI_CTX *ctx);
 const char *KSITOOL_KSI_ERRTrace_get(void);
 
+int KSITOOL_SignatureVerify_general(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_PublicationData *pubdata, int extperm, KSI_PolicyVerificationResult **result);
 int KSITOOL_SignatureVerify_internally(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_PolicyVerificationResult **result);
 int KSITOOL_SignatureVerify_calendarBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_PolicyVerificationResult **result);
 int KSITOOL_SignatureVerify_keyBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_PolicyVerificationResult **result);
-int KSITOOL_SignatureVerify_publicationsFileBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_PublicationsFile *pub_file, int ext_perm, KSI_PolicyVerificationResult **result);
-int KSITOOL_SignatureVerify_userProvidedPublicationBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_PublicationData *pub_data, int ext_perm, KSI_PolicyVerificationResult **result);
+int KSITOOL_SignatureVerify_publicationsFileBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, int extperm, KSI_PolicyVerificationResult **result);
+int KSITOOL_SignatureVerify_userProvidedPublicationBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_PublicationData *pubdata, int extperm, KSI_PolicyVerificationResult **result);
 
 char *KSITOOL_DataHash_toString(KSI_DataHash *hsh, char *buf, size_t buf_len);
 char* KSITOOL_PublicationData_toString(KSI_PublicationData *data, char *buf, size_t buf_len);
