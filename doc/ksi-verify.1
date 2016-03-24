@@ -29,14 +29,14 @@
 .br
 
 .\"
-\fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fB-T \fItime\fR] \fR[\fB-x -X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore options\fR]
+\fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... \fR[\fB-x -X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore options\fR]
 .br
 
 .\"
 .\"
 .SH DESCRIPTION
 .\"
-This is a KSI signature verification tool. 
+This is a KSI signature verification tool.
 .\"
 .\"
 .SH OPTIONS
@@ -80,10 +80,6 @@ HMAC Key for extending service.
 .TP
 \fB-x\fR
 Permit to use extender when using publication based verification.
-.\"
-.TP
-\fB-T \fItime\fR
-Specify a publication time to extend to as the number of seconds since 1970-01-01 00:00:00 UTC or time string formatted as "YYYY-MM-DD hh:mm:ss".
 .\"
 .TP
 \fB--pub-str \fIstr\fR
@@ -135,17 +131,17 @@ In the following examples it is assumed that default service urls are defined (s
 
 \fB1\fR To perform internal verification on KSI signature file \fItest.ksig \fRand document \fItest \fRcall:
 .RS
-\fBksi verify --ver-int -i \fItest.ksig\fR \fB-f \fItest\fR 
+\fBksi verify --ver-int -i \fItest.ksig\fR \fB-f \fItest\fR
 .RE
 
 \fB2\fR To perform key based verification on freshly created KSI signature file \fItest.ksig \fRand document hash call:
 .RS
-\fBksi verify --ver-key -i \fItest.ksig\fR \fB-f \fISHA-256:c8ef6d57ac28d1b4e95a513959f5fcdd0688380a43d601a5ace1d2e96884690a\fR 
+\fBksi verify --ver-key -i \fItest.ksig\fR \fB-f \fISHA-256:c8ef6d57ac28d1b4e95a513959f5fcdd0688380a43d601a5ace1d2e96884690a\fR
 .RE
 
 \fB3\fR To perform calendar based verification on KSI signature file \fItest.ksig \fRcall:
 .RS
-\fBksi verify --ver-cal -i \fItest.ksig\fR 
+\fBksi verify --ver-cal -i \fItest.ksig\fR
 .RE
 
 \fB4\fR To perform publication based verification (printed in public media) on KSI signature file \fItest.ext.ksig \fRcall:
@@ -182,5 +178,5 @@ Environment variable \fBKSI_CONF \fR can be defined to set default KSI configura
 
 Guardtime AS, http://www.guardtime.com/
 
-.SH SEE ALSO	
-\fBksi\fR(1), \fBksi-sign\fR(1), \fBksi-extend\fR(1), \fBksi-pubfile\fR(1), \fBksi-conf\fR(5) 
+.SH SEE ALSO
+\fBksi\fR(1), \fBksi-sign\fR(1), \fBksi-extend\fR(1), \fBksi-pubfile\fR(1), \fBksi-conf\fR(5)

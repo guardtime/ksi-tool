@@ -54,20 +54,19 @@ static int debug_getVerificationStepFailed(KSI_Signature *sig) {
 	return 0;
 }
 
-void DEBUG_verifySignature(KSI_CTX *ksi, int res, KSI_Signature *sig, KSI_DataHash *hsh) {
-	int stepFailed;
+void DEBUG_verifySignature(KSI_CTX *ksi, int res, KSI_Signature *sig, KSI_PolicyVerificationResult *result, KSI_DataHash *hsh) {
 	KSI_PublicationsFile *pubFile = NULL;
 	KSI_DataHash *input_hash = NULL;
 
 
-	if (ksi == NULL || sig == NULL || res != KSI_VERIFICATION_FAILURE) return;
+	if (ksi == NULL || sig == NULL || result == NULL) return;
 
-	stepFailed = debug_getVerificationStepFailed(sig);
 	print_debug("KSI Signature Debug info:\n\n");
 	OBJPRINT_signatureDump(sig, print_debug);
 
 	print_debug("\n");
-	OBJPRINT_signatureVerificationInfo(sig, print_debug);
+	OBJPRINT_signatureVerificationResultDump(result, print_debug);
+	print_debug("\n");
 
 	if (hsh != NULL) {
 		res = KSI_Signature_getDocumentHash(sig, &input_hash);
@@ -82,16 +81,14 @@ void DEBUG_verifySignature(KSI_CTX *ksi, int res, KSI_Signature *sig, KSI_DataHa
 		}
 	}
 
-	if (stepFailed == KSI_VERIFY_CALAUTHREC_WITH_SIGNATURE) {
+	if (!strcmp(result->finalResult.ruleName, "KSI_VerificationRule_PublicationsFilePublicationTimeMatchesExtenderResponse") ||
+		!strcmp(result->finalResult.ruleName, "KSI_VerificationRule_PublicationsFilePublicationHashMatchesExtenderResponse") ||
+		!strcmp(result->finalResult.ruleName, "KSI_VerificationRule_PublicationsFileExtendedSignatureInputHash")) {
 		res = KSI_CTX_getPublicationsFile(ksi, &pubFile);
 		if (res == KSI_OK && pubFile != NULL) {
 			OBJPRINT_publicationsFileCertificates(pubFile, print_debug);
 		}
 	}
-
-
-
-
 	print_debug("\n");
 }
 

@@ -22,6 +22,7 @@
 #define	OBJ_PRINTER_H
 
 #include <ksi/ksi.h>
+#include <ksi/policy.h>
 
 #ifdef	__cplusplus
 extern "C" {
@@ -40,6 +41,8 @@ void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile, in
 void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile, int (*print)(const char *format, ... ));
 void OBJPRINT_publicationsFileSigningCert(KSI_PublicationsFile *pubfile, int (*print)(const char *format, ... ));
 void OBJPRINT_publicationsFileDump(KSI_PublicationsFile *pubfile, int (*print)(const char *format, ... ));
+
+void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *res, int (*print)(const char *format, ... ));
 
 #ifdef	__cplusplus
 }
