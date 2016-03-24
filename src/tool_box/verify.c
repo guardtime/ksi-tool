@@ -299,7 +299,7 @@ static int signature_verify(int id, PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 		case 5:
 			print_progressDesc(d, "Signature publication-based verification with publication file... ");
 			res = signature_verify_publication_based_with_pubfile(set, err, ksi, sig, hsh, out);
-			ERR_CATCH_MSG(err, res, "Error: Publication-based (with publications fine) signature verification failed.");
+			ERR_CATCH_MSG(err, res, "Error: Publication-based (with publications file) signature verification failed.");
 			break;
 		case 6:
 		case 7:
