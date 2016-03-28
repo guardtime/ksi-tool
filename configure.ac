@@ -24,7 +24,7 @@ AC_PREREQ([2.59])
 AC_INIT([ksi], m4_esyscmd([tr -d [:space:] < VERSION]), [support@guardtime.com])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE([foreign -Wall -Werror foreign])
+AM_INIT_AUTOMAKE([foreign -Wall -Werror foreign subdir-objects])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_CONFIG_HEADERS([config.h])
 
@@ -49,7 +49,14 @@ AC_PROG_CC
 
 AC_PROG_LN_S
 # Checks for libraries.
-AC_CHECK_LIB([ksi], [KSI_CTX_new], [], [AC_MSG_FAILURE([Could not find KSI libraries.])])
+AC_ARG_ENABLE(static-build,
+[  --enable-static-build      enable static build of ksitool, it is needed to specify static libraries with LIBS environment variable (e.g. "/usr/local/lib/libksi.a /usr/local/opt/openssl/lib/libcrypto.a /usr/local/lib/libcurl.a -lldap -lz")],
+:, :)
+if test $enable_static_build = "yes" ; then
+    AC_MSG_NOTICE([KSI library will be linked statically])
+else
+    AC_CHECK_LIB([ksi], [KSI_CTX_new], [], [AC_MSG_FAILURE([Could not find KSI libraries.])])
+fi
 
 
 # Checks for header files.
