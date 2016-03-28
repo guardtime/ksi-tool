@@ -247,6 +247,7 @@ cleanup:
 static int tool_init_ksi_trust_store(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set) {
 	int res;
 	KSI_PKITruststore *refTrustStore = NULL;
+	KSI_PKITruststore *tmp = NULL;
 	int i = 0;
 	int V, W;
 	char *lookupFile = NULL;
@@ -267,12 +268,16 @@ static int tool_init_ksi_trust_store(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *se
 	 * Configure KSI trust store.
 	 * TODO: look over Windows and Linux compatibility related with trust store
 	 * configuration.
-	 * TODO: Fix trust store to ignore other certificates if there are certificates
-	 * specified by the user (TOOL-20).
      */
 	if (V || W) {
-		res = KSI_CTX_getPKITruststore(ksi, &refTrustStore);
-		ERR_CATCH_MSG(err, res, "Error: Unable to get PKI trust store.");
+		res = KSI_PKITruststore_new(ksi, 0, &tmp);
+		ERR_CATCH_MSG(err, res, "Error: Unable create new PKI trust store.");
+
+		res = KSI_CTX_setPKITruststore(ksi, tmp);
+		ERR_CATCH_MSG(err, res, "Error: Unable set new PKI trust store.");
+
+		refTrustStore = tmp;
+		tmp = NULL;
 
 		i = 0;
 		while(PARAM_SET_getStr(set, "V", NULL, PST_PRIORITY_HIGHEST, i++, &lookupFile) == PST_OK) {
@@ -290,6 +295,8 @@ static int tool_init_ksi_trust_store(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *se
 	res = KT_OK;
 
 cleanup:
+
+	KSI_PKITruststore_free(tmp);
 
 	return res;
 }
