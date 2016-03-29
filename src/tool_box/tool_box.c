@@ -205,7 +205,7 @@ int KSI_OBJ_savePublicationsFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsF
 				fname, NULL, 0);
 
 	if (res) {
-		ERR_TRCKR_ADD(err, res, "Error: Unable to save publication file to '%s'.", fname);
+		ERR_TRCKR_ADD(err, res, "Error: Unable to save publications file to '%s'.", fname);
 	}
 
 	return res;

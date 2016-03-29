@@ -20,6 +20,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <ksi/ksi.h>
 #include <ksi/net.h>
 #include <ksi/hashchain.h>
@@ -39,7 +40,7 @@
 #include "conf.h"
 #include "tool.h"
 
-static int pubfile_download(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile **pubfile);
+static int pubfile_task(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int id, KSI_PublicationsFile **pubfile);
 static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, COMPOSITE *extra);
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 
@@ -55,7 +56,7 @@ int pubfile_run(int argc, char** argv, char **envp) {
 	COMPOSITE extra;
 	char buf[2048];
 	int d;
-	int dump;
+	int id;
 
 	/**
 	 * Extract command line parameters.
@@ -81,18 +82,17 @@ int pubfile_run(int argc, char** argv, char **envp) {
 	if (res != KT_OK) goto cleanup;
 
 	d = PARAM_SET_isSetByName(set, "d");
-	dump = PARAM_SET_isSetByName(set, "dump");
 
 	extra.ctx = ksi;
 	extra.err = err;
 
-	switch(TASK_getID(task)) {
+	switch(id = TASK_getID(task)) {
 		case 0:
 		case 1:
 		case 2:
+			res = pubfile_task(set, err, ksi, id, &pubfile);
+		break;
 		case 3:
-			res = pubfile_download(set, err, ksi, &pubfile);
-		case 4:
 			res = pubfile_create_pub_string(set, err, ksi, &extra);
 		break;
 		default:
@@ -100,13 +100,6 @@ int pubfile_run(int argc, char** argv, char **envp) {
 			goto cleanup;
 		break;
 	}
-
-	if (TASK_getID(task) == 4) goto cleanup;
-
-	if (dump && pubfile != NULL) {
-		OBJPRINT_publicationsFileDump(pubfile, print_result);
-	}
-
 
 cleanup:
 	print_progressResult(res);
@@ -135,15 +128,20 @@ char *pubfile_help_toString(char*buf, size_t len) {
 
 	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
-		"%s pubfile -P <url> [--cnstr <oid=value>]... [-V <file>]...\n"
-		"        [-W <file>]... [-o <pubfile.bin>] [-d] [-v] [--dump] [more options]\n"
+		"%s pubfile -P <url> --dump [-d]\n"
+		"%s pubfile -P <url> -v --cnstr <oid=value> [-V <file>]... [-W <file>]...\n"
+		"        [-d] [more options]\n"
+		"%s pubfile -P <url> -o <pubfile.bin> --cnstr <oid=value> [-V <file>]...\n"
+		"        [-W <file>]... [-d] [more options]\n"
 		"%s pubfile -T <time> -X <url> [--ext-user <user> --ext-key <pass>]\n\n"
 
 		" -P <url>  - specify publications file URL (or file with uri scheme 'file://').\n"
 		" --cnstr <oid=value>\n"
-		"           - publications file certificate verification constraints.\n"
+		"           - OID and its expected value to verify publications file PKI signature.\n"
+		"             At least one constraint must be defined to be able to verify publications\n"
+		"             file but it is possible to define more.\n"
 		" -o <file> - output file name to store publications file.\n"
-		" -v        - perform publications file verification."
+		" -v        - perform publications file verification.\n"
 		" -X <url>  - specify extending service URL.\n"
 		" --ext-user <str>\n"
 		"           - user name for extending service.\n"
@@ -160,6 +158,8 @@ char *pubfile_help_toString(char*buf, size_t len) {
 		" --log <file>\n"
 		"           - Write libksi log into file.",
 		TOOL_getName(),
+		TOOL_getName(),
+		TOOL_getName(),
 		TOOL_getName()
 	);
 
@@ -170,10 +170,10 @@ const char *pubfile_get_desc(void) {
 	return "KSI general publications file tool.";
 }
 
-static int pubfile_download(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile **pubfile) {
+static int pubfile_task(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int id, KSI_PublicationsFile **pubfile) {
 	int res;
 	int d;
-	int v;
+	int dump;
 	char *save_to = NULL;
 	KSI_PublicationsFile *tmp = NULL;
 	KSI_Integer *pubTime = NULL;
@@ -186,16 +186,22 @@ static int pubfile_download(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Pu
 		goto cleanup;
 	}
 
+	dump = PARAM_SET_isSetByName(set, "dump");
 	d = PARAM_SET_isSetByName(set, "d");
-	v = PARAM_SET_isSetByName(set, "v");
 
 	res = PARAM_SET_getObj(set, "o", NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, (void**)&save_to);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 
+	/**
+	 * Retrieve the publications file and set the output variable for debugging.
+	 * Extract the latest publication time.
+	 */
 	print_progressDesc(d, "Downloading publications file... ");
 	res = KSITOOL_receivePublicationsFile(err, ksi, &tmp);
-	ERR_CATCH_MSG(err, res, "Error: Unable to get publication file.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to get publications file.");
 	print_progressResult(res);
+
+	*pubfile = tmp;
 
 	print_progressDesc(d, "Extracting latest publication time... ");
 	res = KSI_PublicationsFile_getLatestPublication(tmp, NULL, &pubRec);
@@ -210,25 +216,31 @@ static int pubfile_download(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Pu
 			KSI_Integer_getUInt64(pubTime),
 			KSI_Integer_toDateString(pubTime, buf, sizeof(buf)));
 
-	if (v) {
+	/**
+	 * Perform the verification if output is defined or verification is insisted.
+     */
+	if (id != 1) {
 		print_progressDesc(d, "Verifying publications file... ");
 		res = KSITOOL_verifyPublicationsFile(err, ksi, tmp);
-		ERR_CATCH_MSG(err, res, "Error: Unable to verify publication file.");
+		ERR_CATCH_MSG(err, res, "Error: Unable to verify publications file.");
 		print_progressResult(res);
 	}
 
-	if (save_to != NULL) {
+	if (id == 2 && save_to != NULL) {
 		print_progressDesc(d, "Saving publications file... ");
 		res = KSI_OBJ_savePublicationsFile(err, ksi, tmp, NULL, save_to);
 		ERR_CATCH_MSG(err, res, "Error: Unable to save publications file.");
 		print_progressResult(res);
+		print_debug("Publications file saved to '%s'.\n", save_to);
 	}
 
+
 	res = KT_OK;
-	*pubfile = tmp;
-	tmp = NULL;
 
 cleanup:
+	if (dump && tmp != NULL) {
+		OBJPRINT_publicationsFileDump(tmp, print_result);
+	}
 	print_progressResult(res);
 
 	return res;
@@ -359,12 +371,11 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	/**
 	 * Define possible tasks.
      */
-	/*					  ID	DESC										MAN			ATL		FORBIDDEN	IGN	*/
-	TASK_SET_add(task_set, 0,	"Verify publications file.",				"P,v",		NULL,	"T,dump,o",	NULL);
-	TASK_SET_add(task_set, 1,	"Dump publications file.",					"P,dump",	NULL,	"T,o",		NULL);
-	TASK_SET_add(task_set, 2,	"Save publications.",						"P,o",		NULL,	"T,dump",	NULL);
-	TASK_SET_add(task_set, 3,	"Save and dump publications file.",			"P,o,dump",	NULL,	"T",		NULL);
-	TASK_SET_add(task_set, 4,	"Create publication string.",				"T,X",		NULL,	"o,dump,v",	NULL);
+	/*					  ID	DESC										MAN				ATL		FORBIDDEN	IGN	*/
+	TASK_SET_add(task_set, 0,	"Verify publications file.",				"P,cnstr,v",	NULL,	"T,o",		NULL);
+	TASK_SET_add(task_set, 1,	"Dump publications file.",					"P,dump",		NULL,	"T,o,v",	NULL);
+	TASK_SET_add(task_set, 2,	"Download and Verify publications file.",	"P,o,cnstr",	NULL,	"T",		NULL);
+	TASK_SET_add(task_set, 3,	"Create publication string.",				"T,X",			NULL,	"o,dump,v",	NULL);
 
 cleanup:
 

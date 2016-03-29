@@ -100,7 +100,6 @@ void DEBUG_verifyPubfile(KSI_CTX *ksi, PARAM_SET *set, int res, KSI_Publications
 
 
 	if (res == KSI_PKI_CERTIFICATE_NOT_TRUSTED || res == KSI_INVALID_PKI_SIGNATURE) {
-		print_debug("\n");
 		OBJPRINT_publicationsFileSigningCert(pub, print_debug);
 
 		if (PARAM_SET_isSetByName(set, "cnstr")) {
