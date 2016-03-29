@@ -25,35 +25,6 @@
 #include "param_set/param_set.h"
 #include "tool_box/tool_box.h"
 
-static int debug_getVerificationStepFailed(KSI_Signature *sig) {
-	int stat;
-	const KSI_VerificationResult *ver = NULL;
-	const KSI_VerificationStepResult *step;
-	size_t count;
-	size_t i;
-
-	if (sig == NULL) return 0;
-
-	stat = KSI_Signature_getVerificationResult(sig, &ver);
-	if (stat != KSI_OK) return 0;
-
-	count = KSI_VerificationResult_getStepResultCount(ver);
-	if (count == 0) return 0;
-
-	for(i = 0; i < count; i++) {
-		KSI_VerificationResult_getStepResult(ver, i, &step);
-
-		/**
-		 *	If is verification failure.
-		 */
-		if (KSI_VerificationStepResult_isSuccess(step) == 0) {
-			return KSI_VerificationStepResult_getStep(step);
-		}
-	}
-
-	return 0;
-}
-
 void DEBUG_verifySignature(KSI_CTX *ksi, int res, KSI_Signature *sig, KSI_PolicyVerificationResult *result, KSI_DataHash *hsh) {
 	KSI_PublicationsFile *pubFile = NULL;
 	KSI_DataHash *input_hash = NULL;
