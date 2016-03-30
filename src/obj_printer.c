@@ -379,17 +379,17 @@ static const char *getVerificationErrorCode(VerificationErrorCode code) {
 
 static const char *getVerificationStepDescription(size_t step) {
 	switch (step) {
-		case KSI_VERIFY_DOCUMENT: return "Check if signature input hash and document hash match";
-		case KSI_VERIFY_AGGRCHAIN_INTERNALLY: return "Verify the aggregation chain internally";
-		case KSI_VERIFY_AGGRCHAIN_WITH_CALENDAR_CHAIN: return "Verify that calendar chain matches aggregation chain";
-		case KSI_VERIFY_CALCHAIN_INTERNALLY: return "Verify calendar chain internally";
-		case KSI_VERIFY_CALCHAIN_WITH_CALAUTHREC: return "Verify calendar chain using calendar auth record";
-		case KSI_VERIFY_CALCHAIN_WITH_PUBLICATION: return "Verify calendar chain with publication";
-		case KSI_VERIFY_CALCHAIN_ONLINE: return "Verify signature against online calendar";
-		case KSI_VERIFY_CALAUTHREC_WITH_SIGNATURE: return "Verify that calendar authentication record signature is correct";
-		case KSI_VERIFY_PUBFILE_SIGNATURE: return "Verify publication file signature";
-		case KSI_VERIFY_PUBLICATION_WITH_PUBFILE: return "Verify that publication record is stored in KSI Trust provider";
-		case KSI_VERIFY_PUBLICATION_WITH_PUBSTRING: return "Verify that publication record equals to publication string";
+		case KSI_VERIFY_DOCUMENT: return "Verifying document hash.";
+		case KSI_VERIFY_AGGRCHAIN_INTERNALLY: return "Verifying aggregation hash chain internal consistency.";
+		case KSI_VERIFY_AGGRCHAIN_WITH_CALENDAR_CHAIN: return "Verifying aggregation hash chain root.";
+		case KSI_VERIFY_CALCHAIN_INTERNALLY: return "Verifying calendar hash chain internally.";
+		case KSI_VERIFY_CALCHAIN_WITH_CALAUTHREC: return "Verifying calendar hash chain authentication record.";
+		case KSI_VERIFY_CALCHAIN_WITH_PUBLICATION: return "Verifying calendar chain with publication.";
+		case KSI_VERIFY_CALCHAIN_ONLINE: return "Verifying signature online.";
+		case KSI_VERIFY_CALAUTHREC_WITH_SIGNATURE: return "Verifying calendar authentication record.";
+		case KSI_VERIFY_PUBFILE_SIGNATURE: return "Verifying publications file.";
+		case KSI_VERIFY_PUBLICATION_WITH_PUBFILE: return "Verifying publication.";
+		case KSI_VERIFY_PUBLICATION_WITH_PUBSTRING: return "Verifying publication with publication string.";
 		default: return "Unknown step";
 	}
 }
@@ -414,7 +414,7 @@ void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *resu
 	stepsLeft = result->finalResult.stepsPerformed;
 	do {
 		if (result->finalResult.stepsPerformed & step) {
-			print("    %s... %s", getVerificationStepDescription(step),
+			print("    %s.. %s", getVerificationStepDescription(step),
 					(getVerificationStepResult(step, result) ? "OK" : "FAILED"));
 			print("\n");
 		}
