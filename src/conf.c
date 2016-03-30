@@ -217,7 +217,7 @@ int conf_run(int argc, char** argv, char **envp) {
 	argv;
 	envp;
 
-	print_info("%s\n", conf_help_toString(buf, sizeof(buf)));
+	print_result("%s\n", conf_help_toString(buf, sizeof(buf)));
 
 	return EXIT_SUCCESS;
 }
