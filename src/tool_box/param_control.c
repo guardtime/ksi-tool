@@ -561,13 +561,13 @@ int isFormatOk_inputFile(const char *path){
 	return FORMAT_OK;
 }
 
-int isContentOk_inputFile(const char* path){
+int isContentOk_inputFileRestrictPipe(const char* path){
 	if (isFormatOk_inputFile(path) != FORMAT_OK) {
 		return FILE_INVALID_PATH;
 	}
 
 	if (strcmp(path, "-") == 0) {
-		return PARAM_OK;
+		return ONLY_REGULAR_FILES;
 	}
 
 	if (!SMART_FILE_doFileExist(path)) {
@@ -579,6 +579,11 @@ int isContentOk_inputFile(const char* path){
 	}
 
 	return PARAM_OK;
+}
+int isContentOk_inputFile(const char* path){
+	if (path == NULL) return FORMAT_NULLPTR;
+	if (strcmp(path, "-") == 0)	return PARAM_OK;
+	return isContentOk_inputFileRestrictPipe(path);
 }
 
 int convertRepair_path(const char* arg, char* buf, unsigned len){
@@ -1004,6 +1009,7 @@ const char *getParameterErrorString(int res) {
 		case FILE_DOES_NOT_EXIST: return "File does not exist";
 		case FILE_INVALID_PATH: return "Invalid path";
 		case INTEGER_TOO_LARGE: return "Integer value is too large";
+		case ONLY_REGULAR_FILES: return "Data from stdin not supported";
 		default: return "Unknown error";
 	}
 }

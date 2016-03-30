@@ -42,6 +42,7 @@ enum contentStatus {
 	HASH_ALG_INVALID_NAME,
 	HASH_IMPRINT_INVALID_LEN,
 	INTEGER_TOO_LARGE,
+	ONLY_REGULAR_FILES,
 	FILE_ACCESS_DENIED,
 	FILE_DOES_NOT_EXIST,
 	FILE_INVALID_PATH,
@@ -77,6 +78,7 @@ int extract_hashAlg(void *extra, const char* str, void** obj);
 
 int isFormatOk_inputFile(const char *path);
 int isContentOk_inputFile(const char* path);
+int isContentOk_inputFileRestrictPipe(const char* path);
 int extract_inputFile(void *extra, const char* str, void** obj);
 
 int isFormatOk_path(const char *path);

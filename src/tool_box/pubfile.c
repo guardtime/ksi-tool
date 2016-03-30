@@ -43,6 +43,7 @@
 static int pubfile_task(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int id, KSI_PublicationsFile **pubfile);
 static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, COMPOSITE *extra);
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
+static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
 
 int pubfile_run(int argc, char** argv, char **envp) {
 	int res;
@@ -82,6 +83,9 @@ int pubfile_run(int argc, char** argv, char **envp) {
 	if (res != KT_OK) goto cleanup;
 
 	d = PARAM_SET_isSetByName(set, "d");
+
+	res = check_pipe_errors(set, err);
+	if (res != KT_OK) goto cleanup;
 
 	extra.ctx = ksi;
 	extra.err = err;
@@ -363,7 +367,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	res = CONF_initialize_set_functions(set);
 	if (res != KT_OK) goto cleanup;
 
-	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, NULL);
+	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFileRestrictPipe, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{o}{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
 	PARAM_SET_addControl(set, "{d}{v}{dump}", isFormatOk_flag, NULL, NULL, NULL);
@@ -379,5 +383,16 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 
 cleanup:
 
+	return res;
+}
+
+
+static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err) {
+	int res;
+
+	res = get_pipe_out_error(set, err, "o,log", NULL);
+	if (res != KT_OK) goto cleanup;
+
+cleanup:
 	return res;
 }

@@ -40,6 +40,7 @@
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature **sig);
 static char* get_output_file_name_if_not_defined(PARAM_SET *set, ERR_TRCKR *err, char *buf, size_t buf_len);
+static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
 
 int sign_run(int argc, char** argv, char **envp) {
 	int res;
@@ -79,6 +80,9 @@ int sign_run(int argc, char** argv, char **envp) {
 
 	d = PARAM_SET_isSetByName(set, "d");
 	dump = PARAM_SET_isSetByName(set, "dump");
+
+	res = check_pipe_errors(set, err);
+	if (res != KT_OK) goto cleanup;
 
 	/**
 	 * If everything OK, run the task.
@@ -259,7 +263,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	res = CONF_initialize_set_functions(set);
 	if (res != KT_OK) goto cleanup;
 
-	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, NULL);
+	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFileRestrictPipe, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{o}{data-out}{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputHash, isContentOk_inputHash, NULL, extract_inputHash);
 	PARAM_SET_addControl(set, "{H}", isFormatOk_hashAlg, isContentOk_hashAlg, NULL, extract_hashAlg);
@@ -297,4 +301,18 @@ static char* get_output_file_name_if_not_defined(PARAM_SET *set, ERR_TRCKR *err,
 cleanup:
 
 	return ret;
+}
+
+
+static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err) {
+	int res;
+
+	res = get_pipe_out_error(set, err, "o,data-out", "dump");
+	if (res != KT_OK) goto cleanup;
+
+	res = get_pipe_out_error(set, err, "o,data-out,log", NULL);
+	if (res != KT_OK) goto cleanup;
+
+cleanup:
+	return res;
 }

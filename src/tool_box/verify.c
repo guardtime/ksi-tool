@@ -47,6 +47,7 @@ static int signature_verify_key_based(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *k
 static int signature_verify_publication_based_with_user_pub(PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *extra, KSI_CTX *ksi, KSI_Signature *sig, KSI_DataHash *hsh, KSI_PolicyVerificationResult **out);
 static int signature_verify_publication_based_with_pubfile(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi,  KSI_Signature *sig, KSI_DataHash *hsh, KSI_PolicyVerificationResult **out);
 static int signature_verify_calendar_based(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_DataHash *hsh, KSI_PolicyVerificationResult **out);
+static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
 
 int verify_run(int argc, char **argv, char **envp) {
 	int res;
@@ -88,6 +89,10 @@ int verify_run(int argc, char **argv, char **envp) {
 	if (res != KT_OK) goto cleanup;
 
 	d = PARAM_SET_isSetByName(set, "d");
+
+	res = check_pipe_errors(set, err);
+	if (res != KT_OK) goto cleanup;
+
 
 	extra.ctx = ksi;
 	extra.err = err;
@@ -231,7 +236,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	res = CONF_initialize_set_functions(set);
 	if (res != KT_OK) goto cleanup;
 
-	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, NULL);
+	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFileRestrictPipe, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignature);
 	PARAM_SET_addControl(set, "{f}", isFormatOk_inputHash, isContentOk_inputHash, convertRepair_path, extract_inputHash);
@@ -511,3 +516,12 @@ cleanup:
 	return res;
 }
 
+static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err) {
+	int res;
+
+	res = get_pipe_in_error(set, err, "i,f", NULL);
+	if (res != KT_OK) goto cleanup;
+
+cleanup:
+	return res;
+}

@@ -56,7 +56,7 @@ int CONF_initialize_set_functions(PARAM_SET *conf) {
 		goto cleanup;
 	}
 
-	res = PARAM_SET_addControl(conf, "{V}{W}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, NULL);
+	res = PARAM_SET_addControl(conf, "{V}{W}", isFormatOk_inputFile, isContentOk_inputFileRestrictPipe, convertRepair_path, NULL);
 	if (res != PST_OK) goto cleanup;
 
 	PARAM_SET_addControl(conf, "{X}{P}{S}", isFormatOk_url, NULL, convertRepair_url, NULL);

@@ -42,6 +42,7 @@
 static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, COMPOSITE *comp, KSI_PolicyVerificationResult **result);
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 static char* get_output_file_name_if_not_defined(PARAM_SET *set, ERR_TRCKR *err, char *buf, size_t buf_len);
+static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
 
 int extend_run(int argc, char** argv, char **envp) {
 	int res;
@@ -81,6 +82,9 @@ int extend_run(int argc, char** argv, char **envp) {
 	if (res != KT_OK) goto cleanup;
 
 	d = PARAM_SET_isSetByName(set, "d");
+
+	res = check_pipe_errors(set, err);
+	if (res != KT_OK) goto cleanup;
 
 	extra.ctx = ksi;
 	extra.err = err;
@@ -282,7 +286,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	/**
 	 * Configure parameter set, control, repair and object extractor function.
 	 */
-	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, NULL);
+	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFileRestrictPipe, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignature);
 	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
@@ -327,4 +331,17 @@ cleanup:
 
 static int verify_signature(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_PolicyVerificationResult **result) {
 	return KT_INVALID_ARGUMENT;
+}
+
+static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err) {
+	int res;
+
+	res = get_pipe_out_error(set, err, "o", "dump");
+	if (res != KT_OK) goto cleanup;
+
+	res = get_pipe_out_error(set, err, "o,log", NULL);
+	if (res != KT_OK) goto cleanup;
+
+cleanup:
+	return res;
 }
