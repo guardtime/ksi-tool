@@ -56,7 +56,8 @@ PARAMSET_OBJ = \
 	$(PARAMSET_OBJ_DIR)\param_value.obj \
 	$(PARAMSET_OBJ_DIR)\parameter.obj \
 	$(PARAMSET_OBJ_DIR)\param_set.obj \
-	$(PARAMSET_OBJ_DIR)\task_def.obj
+	$(PARAMSET_OBJ_DIR)\task_def.obj \
+	$(PARAMSET_OBJ_DIR)\strn.obj
 
 CMDTOOL_OBJ = \
 	$(OBJ_DIR)\main.obj \

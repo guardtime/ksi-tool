@@ -26,10 +26,7 @@
 #include "param_value.h"
 #include "parameter.h"
 #include "param_set.h"
-
-#ifdef _WIN32
-#define snprintf _snprintf
-#endif
+#include "strn.h"
 
 #define TYPO_SENSITIVITY 10
 #define TYPO_MAX_COUNT 5
@@ -1218,12 +1215,12 @@ int PARAM_SET_readFromFile(PARAM_SET *set, const char *fname, const char* source
 		arg[0] = '\0';
 		res = parse_key_value_pair(line, flag, arg, sizeof(flag));
 		if (res == PST_INVALID_FORMAT) {
-			snprintf(buf, sizeof(buf), "Syntax error at line %4i. Unknown character. '%.60s'.\n", line_nr, line);
+			PST_snprintf(buf, sizeof(buf), "Syntax error at line %4i. Unknown character. '%.60s'.\n", line_nr, line);
 			PARAM_addValue(set->syntax, buf, source, priority);
 			error_count++;
 			res = PST_OK;
 		} else if (flag[0] != '-' && flag[0] != '\0') {
-			snprintf(buf, sizeof(buf) , "Syntax error at line %4i. Missing character '-'. '%.60s'.\n", line_nr, line);
+			PST_snprintf(buf, sizeof(buf) , "Syntax error at line %4i. Missing character '-'. '%.60s'.\n", line_nr, line);
 			PARAM_addValue(set->syntax, buf, source, priority);
 			error_count++;
 			res = PST_OK;
@@ -1372,21 +1369,21 @@ char* PARAM_SET_invalidParametersToString(const PARAM_SET *set, const char *pref
 			res = PARAM_VAL_getErrors(invalid, &formatStatus, &contentStatus);
 			if (res != PST_OK) return NULL;
 
-			count += snprintf(buf + count, buf_len - count, "%s", use_prefix);
+			count += PST_snprintf(buf + count, buf_len - count, "%s", use_prefix);
 			/**
 			 * Add Error string or error code.
 			 */
 			if (getErrString != NULL) {
 				if (formatStatus != 0) {
-					count += snprintf(buf + count, buf_len - count, "%s.", getErrString(formatStatus));
+					count += PST_snprintf(buf + count, buf_len - count, "%s.", getErrString(formatStatus));
 				} else {
-					count += snprintf(buf + count, buf_len - count, "%s.", getErrString(contentStatus));
+					count += PST_snprintf(buf + count, buf_len - count, "%s.", getErrString(contentStatus));
 				}
 			} else {
 				if (formatStatus != 0) {
-					count += snprintf(buf + count, buf_len - count, "Error: 0x%0x.", formatStatus);
+					count += PST_snprintf(buf + count, buf_len - count, "Error: 0x%0x.", formatStatus);
 				} else {
-					count += snprintf(buf + count, buf_len - count, "Error: 0x%0x.", contentStatus);
+					count += PST_snprintf(buf + count, buf_len - count, "Error: 0x%0x.", contentStatus);
 				}
 			}
 
@@ -1394,15 +1391,15 @@ char* PARAM_SET_invalidParametersToString(const PARAM_SET *set, const char *pref
 			 * Add the source, if NULL not included.
 			 */
 			if(source != NULL) {
-				count += snprintf(buf + count, buf_len - count, " Parameter (from '%s') ", source);
+				count += PST_snprintf(buf + count, buf_len - count, " Parameter (from '%s') ", source);
 			} else {
-				count += snprintf(buf + count, buf_len - count, " Parameter ");
+				count += PST_snprintf(buf + count, buf_len - count, " Parameter ");
 			}
 
 			/**
 			 * Add the parameter and its value.
 			 */
-			count += snprintf(buf + count, buf_len - count, "%s%s '%s'.",
+			count += PST_snprintf(buf + count, buf_len - count, "%s%s '%s'.",
 									strlen(parameter->flagName) > 1 ? "--" : "-",
 									parameter->flagName,
 									value != NULL ? value : ""
@@ -1410,7 +1407,8 @@ char* PARAM_SET_invalidParametersToString(const PARAM_SET *set, const char *pref
 
 
 
-			count += snprintf(buf + count, buf_len - count, "\n");
+			count += PST_snprintf(buf + count, buf_len - count, "\n");
+			if (count >= buf_len - 1) return buf;
 		}
 	}
 
@@ -1446,9 +1444,10 @@ char* PARAM_SET_unknownsToString(const PARAM_SET *set, const char *prefix, char 
 		res = PARAM_VAL_extract(unknown, &name, &source, NULL);
 		if (res != PST_OK) return NULL;
 
-		count += snprintf(buf + count, buf_len - count, "%sUnknown parameter '%s'", use_prefix, name);
-		if(source != NULL) count += snprintf(buf + count, buf_len - count, " from '%s'", source);
-		count += snprintf(buf + count, buf_len - count, ".\n");
+		count += PST_snprintf(buf + count, buf_len - count, "%sUnknown parameter '%s'", use_prefix, name);
+		if(source != NULL) count += PST_snprintf(buf + count, buf_len - count, " from '%s'", source);
+		count += PST_snprintf(buf + count, buf_len - count, ".\n");
+		if (count >= buf_len - 1) return buf;
 	}
 
 	buf[buf_len - 1] = '\0';
@@ -1483,7 +1482,8 @@ char* PARAM_SET_syntaxErrorsToString(const PARAM_SET *set, const char *prefix, c
 		res = PARAM_VAL_extract(syntax_error, &name, &source, NULL);
 		if (res != PST_OK) return NULL;
 
-		count += snprintf(buf + count, buf_len - count, "%s%s", use_prefix, name);
+		count += PST_snprintf(buf + count, buf_len - count, "%s%s", use_prefix, name);
+		if (count >= buf_len - 1) return buf;
 	}
 
 	buf[buf_len - 1] = '\0';
@@ -1534,17 +1534,17 @@ char* PARAM_SET_typosToString(PARAM_SET *set, int flags, const char *prefix, cha
 			res = PARAM_getObject(set->typos, name, 0, n, NULL, (void**)&similar);
 			if (res != PST_OK || similar == NULL) return NULL;
 
-			count += snprintf(buf + count, buf_len - count, "%sDid You mean '%s%s' instead of '%s'.\n",
+			count += PST_snprintf(buf + count, buf_len - count, "%sDid You mean '%s%s' instead of '%s'.\n",
 						use_prefix,
 						strlen(similar) > 1 ? d_hyphen : hyphen,
 						similar,
 						name);
+			if (count >= buf_len - 1) return buf;
 		}
 
 		i++;
 	}
 
-	buf[buf_len - 1] = '\0';
 	return buf;
 }
 
@@ -1563,11 +1563,11 @@ char* PARAM_SET_toString(PARAM_SET *set, char *buf, size_t buf_len) {
 	}
 
 
-	count += snprintf(buf + count, buf_len - count, "  %3s %10s %50s %10s\n",
+	count += PST_snprintf(buf + count, buf_len - count, "  %3s %10s %50s %10s\n",
 			"nr", "value", "source", "priority");
 
 	for (i = 0; i < set->count; i++) {
-		count += snprintf(buf + count, buf_len - count, "Parameter: '%s' (%i):\n",
+		count += PST_snprintf(buf + count, buf_len - count, "Parameter: '%s' (%i):\n",
 				set->parameter[i]->flagName, set->parameter[i]->argCount);
 
 
@@ -1576,7 +1576,7 @@ char* PARAM_SET_toString(PARAM_SET *set, char *buf, size_t buf_len) {
 			res = PARAM_VAL_extract(param_value, &value, &source, &priority);
 			if (res != PST_OK) return NULL;
 
-			count += snprintf(buf + count, buf_len - count, "  %2i) '%s' %50s %10i\n",
+			count += PST_snprintf(buf + count, buf_len - count, "  %2i) '%s' %50s %10i\n",
 					n,
 					value == NULL ? "-" : value,
 					source == NULL ? "-" : source,
@@ -1585,7 +1585,7 @@ char* PARAM_SET_toString(PARAM_SET *set, char *buf, size_t buf_len) {
 			n++;
 		}
 	}
-	count += snprintf(buf + count, buf_len - count, "\n");
+	count += PST_snprintf(buf + count, buf_len - count, "\n");
 
 	buf[buf_len - 1] = '\0';
 	return buf;

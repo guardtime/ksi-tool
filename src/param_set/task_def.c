@@ -27,10 +27,7 @@
 #include "param_set.h"
 #include "parameter.h"
 #include "param_set_obj_impl.h"
-
-#ifdef _WIN32
-#define snprintf _snprintf
-#endif
+#include "strn.h"
 
 #define debug_array_printf 	{int n; for(n = 0; n < task_set->count; n++) {printf("[%2.2f:%2i]", task_set->cons[n], task_set->index[n]);}printf("\n");}
 
@@ -442,7 +439,7 @@ char* TASK_DEFINITION_toString(TASK_DEFINITION *def, char *buf, size_t buf_len) 
 
 	c = def->mandatory;
 	while ((c = category_extract_name(c, name, sizeof(name), NULL)) != NULL) {
-		count += snprintf(buf + count, buf_len - count, "%s%s%s",
+		count += PST_snprintf(buf + count, buf_len - count, "%s%s%s",
 				round == 0 ? "" : " ",
 				strlen(name)>1 ? "--" : "-",
 				name);
@@ -451,22 +448,22 @@ char* TASK_DEFINITION_toString(TASK_DEFINITION *def, char *buf, size_t buf_len) 
 
 	c = def->atleast_one;
 	if (c != NULL && c[0] != '\0') {
-		count += snprintf(buf+count, buf_len - count, "%sone or more of (",
+		count += PST_snprintf(buf+count, buf_len - count, "%sone or more of (",
 				(round == 0) ? "" : " ");
 		round = 0;
 
 		while ((c = category_extract_name(c, name, sizeof(name), NULL)) != NULL) {
-			count += snprintf(buf + count, buf_len - count, "%s%s%s",
+			count += PST_snprintf(buf + count, buf_len - count, "%s%s%s",
 					round == 0 ? "" : " ",
 					strlen(name)>1 ? "--" : "-",
 					name);
 			round++;
 		}
 
-		count += snprintf(buf + count, buf_len - count, ")");
+		count += PST_snprintf(buf + count, buf_len - count, ")");
 	}
 
-//	count += snprintf(buf + count, buf_len - count, "\n");
+//	count += PST_snprintf(buf + count, buf_len - count, "\n");
 	return buf;
 }
 
@@ -492,18 +489,18 @@ char *TASK_DEFINITION_howToRepiar_toString(TASK_DEFINITION *def, PARAM_SET *set,
 		if (strlen(name_buffer) == 0) continue;
 		if (!PARAM_SET_isSetByName(set, name_buffer)) {
 			if(!err_printed){
-				count += snprintf(buf + count, buf_len - count, "%sYou have to define flag(s) '%s%s'",
+				count += PST_snprintf(buf + count, buf_len - count, "%sYou have to define flag(s) '%s%s'",
 						pref,
 						strlen(name_buffer)>1 ? "--" : "-",
 						name_buffer);
 				err_printed = 1;
 			}
 			else{
-				count += snprintf(buf + count, buf_len - count, ", '%s%s'", strlen(name_buffer)>1 ? "--" : "-", name_buffer);
+				count += PST_snprintf(buf + count, buf_len - count, ", '%s%s'", strlen(name_buffer)>1 ? "--" : "-", name_buffer);
 			}
 		}
 	}
-	if(err_printed) count += snprintf(buf + count, buf_len - count, ".\n");
+	if(err_printed) count += PST_snprintf(buf + count, buf_len - count, ".\n");
 	/**
 	 * Error about AT LEAST ONE OF flags.
      */
@@ -512,17 +509,17 @@ char *TASK_DEFINITION_howToRepiar_toString(TASK_DEFINITION *def, PARAM_SET *set,
 		pName = def->atleast_one;
 		while((pName = category_extract_name(pName, name_buffer, sizeof(name_buffer), NULL)) != NULL){
 			if(!err_printed){
-				count += snprintf(buf + count, buf_len - count, "%sYou have to define at least one the flag(s) '%s%s'",
+				count += PST_snprintf(buf + count, buf_len - count, "%sYou have to define at least one the flag(s) '%s%s'",
 						pref,
 						strlen(name_buffer)>1 ? "--" : "-",
 						name_buffer);
 				err_printed = 1;
 			}
 			else{
-				count += snprintf(buf + count, buf_len - count, ", '%s%s'", strlen(name_buffer)>1 ? "--" : "-", name_buffer);
+				count += PST_snprintf(buf + count, buf_len - count, ", '%s%s'", strlen(name_buffer)>1 ? "--" : "-", name_buffer);
 			}
 		}
-		if(err_printed) count += snprintf(buf + count, buf_len - count, ".\n");
+		if(err_printed) count += PST_snprintf(buf + count, buf_len - count, ".\n");
 	}
 
 	/**
@@ -533,18 +530,18 @@ char *TASK_DEFINITION_howToRepiar_toString(TASK_DEFINITION *def, PARAM_SET *set,
 	while((pName = category_extract_name(pName, name_buffer, sizeof(name_buffer), NULL)) != NULL){
 		if (PARAM_SET_isSetByName(set, name_buffer)) {
 			if(!err_printed){
-				count += snprintf(buf + count, buf_len - count, "%sYou must not use flag(s) '%s%s'",
+				count += PST_snprintf(buf + count, buf_len - count, "%sYou must not use flag(s) '%s%s'",
 						pref,
 						strlen(name_buffer)>1 ? "--" : "-",
 						name_buffer);
 				err_printed = 1;
 			}
 			else{
-				count += snprintf(buf + count, buf_len - count, ", '%s%s'", strlen(name_buffer)>1 ? "--" : "-", name_buffer);
+				count += PST_snprintf(buf + count, buf_len - count, ", '%s%s'", strlen(name_buffer)>1 ? "--" : "-", name_buffer);
 			}
 		}
 	}
-	if(err_printed) count += snprintf(buf + count, buf_len - count, ".\n");
+	if(err_printed) count += PST_snprintf(buf + count, buf_len - count, ".\n");
 
 	return buf;
 }
@@ -566,19 +563,19 @@ char* TASK_DEFINITION_ignoredParametersToString(TASK_DEFINITION *def, PARAM_SET 
 	while((pName = category_extract_name(pName, name_buffer, sizeof(name_buffer), NULL)) != NULL){
 		if (PARAM_SET_isSetByName(set, name_buffer)) {
 			if(!err_printed){
-				count += snprintf(buf + count, buf_len - count, "%sIgnoring following flag(s) '%s%s'",
+				count += PST_snprintf(buf + count, buf_len - count, "%sIgnoring following flag(s) '%s%s'",
 						pref,
 						strlen(name_buffer)>1 ? "--" : "-",
 						name_buffer);
 				err_printed = 1;
 			}
 			else{
-				count += snprintf(buf + count, buf_len - count, ", '%s%s'", strlen(name_buffer)>1 ? "--" : "-", name_buffer);
+				count += PST_snprintf(buf + count, buf_len - count, ", '%s%s'", strlen(name_buffer)>1 ? "--" : "-", name_buffer);
 			}
 		}
 	}
 
-	if(err_printed) count += snprintf(buf + count, buf_len - count, ".\n");
+	if(err_printed) count += PST_snprintf(buf + count, buf_len - count, ".\n");
 
 	return buf;
 }
@@ -919,9 +916,9 @@ char* TASK_SET_howToRepair_toString(TASK_SET *task_set, PARAM_SET *set, int ID, 
 	for (i = 0; i < task_set->count; i++) {
 		if (task_set->array[i]->id == ID) {
 			if (task_set->array[i]->isConsistent) {
-				count += snprintf(buf + count, buf_len - count, "Task '%s' %s is OK.", task_set->array[i]->name, task_set->array[i]->toString);
+				count += PST_snprintf(buf + count, buf_len - count, "Task '%s' %s is OK.", task_set->array[i]->name, task_set->array[i]->toString);
 			} else {
-				count += snprintf(buf + count, buf_len - count, "Task '%s' %s is invalid:\n", task_set->array[i]->name, task_set->array[i]->toString);
+				count += PST_snprintf(buf + count, buf_len - count, "Task '%s' %s is invalid:\n", task_set->array[i]->name, task_set->array[i]->toString);
 				tmp = TASK_DEFINITION_howToRepiar_toString(task_set->array[i], set, prefix, buf + count, buf_len - count);
 
 				if (tmp == NULL) return NULL;
@@ -945,7 +942,7 @@ char* TASK_SET_suggestions_toString(TASK_SET *task_set, int depth, char *buf, si
 	for (i = 0, n = 0; i < task_set->count && n < depth; i++) {
 		tmp = task_set->array[task_set->index[i]];
 		if (!tmp->isConsistent) {
-			count += snprintf(buf + count, buf_len - count, "Maybe you want to: %s %s\n", tmp->name, tmp->toString);
+			count += PST_snprintf(buf + count, buf_len - count, "Maybe you want to: %s %s\n", tmp->name, tmp->toString);
 			n++;
 		}
 	}
