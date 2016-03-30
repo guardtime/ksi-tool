@@ -341,7 +341,7 @@ void OBJPRINT_publicationsFileDump(KSI_PublicationsFile *pubfile, int (*print)(c
 }
 
 
-static char *getVerificationResultCode(VerificationResultCode code) {
+static const char *getVerificationResultCode(VerificationResultCode code) {
 	switch (code) {
 		case VER_RES_OK:	return "OK";
 		case VER_RES_NA:	return "NA";
@@ -350,7 +350,7 @@ static char *getVerificationResultCode(VerificationResultCode code) {
 	}
 }
 
-static char *getVerificationErrorCode(VerificationErrorCode code) {
+static const char *getVerificationErrorCode(VerificationErrorCode code) {
 	switch (code) {
 		case VER_ERR_GEN_1:	return "[GEN-1] Wrong document.";
 		case VER_ERR_GEN_2:	return "[GEN-2] Verification inconclusive.";
@@ -377,17 +377,52 @@ static char *getVerificationErrorCode(VerificationErrorCode code) {
 	}
 }
 
+static const char *getVerificationStepDescription(size_t step) {
+	switch (step) {
+		case KSI_VERIFY_DOCUMENT: return "Check if signature input hash and document hash match";
+		case KSI_VERIFY_AGGRCHAIN_INTERNALLY: return "Verify the aggregation chain internally";
+		case KSI_VERIFY_AGGRCHAIN_WITH_CALENDAR_CHAIN: return "Verify that calendar chain matches aggregation chain";
+		case KSI_VERIFY_CALCHAIN_INTERNALLY: return "Verify calendar chain internally";
+		case KSI_VERIFY_CALCHAIN_WITH_CALAUTHREC: return "Verify calendar chain using calendar auth record";
+		case KSI_VERIFY_CALCHAIN_WITH_PUBLICATION: return "Verify calendar chain with publication";
+		case KSI_VERIFY_CALCHAIN_ONLINE: return "Verify signature against online calendar";
+		case KSI_VERIFY_CALAUTHREC_WITH_SIGNATURE: return "Verify that calendar authentication record signature is correct";
+		case KSI_VERIFY_PUBFILE_SIGNATURE: return "Verify publication file signature";
+		case KSI_VERIFY_PUBLICATION_WITH_PUBFILE: return "Verify that publication record is stored in KSI Trust provider";
+		case KSI_VERIFY_PUBLICATION_WITH_PUBSTRING: return "Verify that publication record equals to publication string";
+		default: return "Unknown step";
+	}
+}
+
+static int getVerificationStepResult(size_t step, KSI_PolicyVerificationResult *result) {
+	return !!(result->finalResult.stepsPerformed & result->finalResult.stepsSuccessful & step);
+}
+
 void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *result, int (*print)(const char *format, ... )) {
 	int res;
 	unsigned int i = 0;
+	size_t step;
+	size_t stepsLeft;
 
 	if (result == NULL){
 		return;
 	}
 
 	print("KSI Verification result dump:\n");
-
 	print("  Verification steps:\n");
+	step = 1;
+	stepsLeft = result->finalResult.stepsPerformed;
+	do {
+		if (result->finalResult.stepsPerformed & step) {
+			print("    %s... %s", getVerificationStepDescription(step),
+					(getVerificationStepResult(step, result) ? "OK" : "FAILED"));
+			print("\n");
+		}
+		step <<= 1;
+		stepsLeft >>= 1;
+	} while (stepsLeft);
+
+	print("  Verification rules:\n");
 	for (i = 0; i < KSI_RuleVerificationResultList_length(result->ruleResults); i++) {
 		KSI_RuleVerificationResult *tmp = NULL;
 
