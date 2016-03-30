@@ -1007,3 +1007,75 @@ const char *getParameterErrorString(int res) {
 		default: return "Unknown error";
 	}
 }
+
+static int isValidNameChar(int c) {
+	if ((ispunct(c) || isspace(c)) && c != '_' && c != '-') return 0;
+	else return 1;
+}
+
+
+static int get_io_pipe_error(PARAM_SET *set, ERR_TRCKR *err, int isStdin, const char *io_file_names, const char *io_flag_names) {
+	int res;
+	char buf[1024];
+	const char *pName = io_file_names;
+	char *pValue = NULL;
+	size_t count = 0;
+	size_t c = 0;
+	char err_msg[1024];
+
+	if (err == NULL || set == NULL || io_file_names == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	while (pName != NULL && pName[0] != '\0') {
+		pValue = NULL;
+		pName = extract_next_name(pName, isValidNameChar, buf, sizeof(buf), NULL);
+		res = PARAM_SET_getStr(set, buf, NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &pValue);
+		if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
+
+		if (pValue == NULL) continue;
+
+		if (strcmp(pValue, "-") == 0) {
+			c += KSI_snprintf(err_msg + c, sizeof(err_msg) - c, "%s%s%s -",
+					count > 0 ? ", " : "",
+					strlen(buf) > 1 ? "--" : "-",
+					buf);
+			count++;
+		}
+	}
+
+	pName = io_flag_names;
+	while (pName != NULL && pName[0] != '\0') {
+		pName = extract_next_name(pName, isValidNameChar, buf, sizeof(buf), NULL);
+
+		if (PARAM_SET_isSetByName(set, buf)) {
+			c += KSI_snprintf(err_msg + c, sizeof(err_msg) - c, "%s%s%s",
+					count > 0 ? ", " : "",
+					strlen(buf) > 1 ? "--" : "-",
+					buf);
+
+			count++;
+		}
+	}
+	if (count > 1) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: Multiple different simultaneous %s (%s).",
+				isStdin ? "inputs from stdin" : "outputs to stdout",
+				err_msg);
+		goto cleanup;
+	}
+	res = KT_OK;
+
+cleanup:
+
+	return res;
+}
+
+
+int get_pipe_out_error(PARAM_SET *set, ERR_TRCKR *err, const char *out_file_names, const char *print_out_names) {
+	return get_io_pipe_error(set, err, 0, out_file_names, print_out_names);
+}
+
+int get_pipe_in_error(PARAM_SET *set, ERR_TRCKR *err, const char *in_file_names, const char *read_in_flags) {
+	return get_io_pipe_error(set, err, 1, in_file_names, read_in_flags);
+}

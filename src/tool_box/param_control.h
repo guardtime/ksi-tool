@@ -8,6 +8,9 @@
 #ifndef PARAM_CONTROL_H
 #define	PARAM_CONTROL_H
 
+#include "tool_box/err_trckr.h"
+#include "param_set/param_set.h"
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
@@ -113,6 +116,11 @@ int convertRepair_constraint(const char* arg, char* buf, unsigned len);
 
 
 int extract_inputSignature(void *extra, const char* str, void** obj);
+
+
+int get_pipe_out_error(PARAM_SET *set, ERR_TRCKR *err, const char *out_file_names, const char *print_out_names);
+
+int get_pipe_in_error(PARAM_SET *set, ERR_TRCKR *err, const char *in_file_names, const char *read_in_flags);
 
 #ifdef	__cplusplus
 }
