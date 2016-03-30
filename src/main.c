@@ -165,8 +165,13 @@ int main(int argc, char** argv, char **envp) {
 	TASK *task = NULL;
 	int retval = EXIT_SUCCESS;
 	char buf[0xffff];
+	char fname[1024];
 	int conf_file_missing = 0;
 
+	/**
+	 * Configure ksi tool to print only values that are result of the user request
+	 * or an error.
+     */
 	print_init();
 	print_disable(PRINT_WARNINGS | PRINT_INFO | PRINT_DEBUG);
 	print_enable(PRINT_RESULT | PRINT_ERRORS);
@@ -175,7 +180,7 @@ int main(int argc, char** argv, char **envp) {
 	/**
 	 * Define parameter and task set.
      */
-	res = PARAM_SET_new("{h}{version}{conf}{debug|d}", &set);
+	res = PARAM_SET_new("{h}{version}{d}", &set);
 	if (res != PST_OK) goto cleanup;
 
 	res = TASK_SET_new(&tasks);
@@ -187,8 +192,9 @@ int main(int argc, char** argv, char **envp) {
 	/**
 	 * Load the configurations file from environment.
      */
-	res = CONF_fromEnvironment(configuration, "KSI_CONF", envp, 0);
-	if (res != PST_OK && res != PST_INVALID_FORMAT && res != KT_IO_ERROR) goto cleanup;
+	res = CONF_fromEnvironment(configuration, "KSI_CONF", envp, 0, fname, sizeof(fname));
+	res = conf_report_errors(configuration, fname, res);
+	if (res != KT_OK) goto cleanup;
 
 	if (res == KT_IO_ERROR)	conf_file_missing = 1;
 
@@ -197,7 +203,7 @@ int main(int argc, char** argv, char **envp) {
      */
 	res = ksitool_compo_get(tasks, &set_task_name, &components);
 	if (res != PST_OK) {
-		printf("Unable to load: Unable to run components");
+		print_errors("Error: Unable get ksi components.\n");
 		goto cleanup;
 	}
 
@@ -306,7 +312,7 @@ static int ksitool_compo_get(TASK_SET *tasks, PARAM_SET **set, TOOL_COMPONENT_LI
 	/**
 	 * Create parameter list that contains all known tasks.
      */
-	res = PARAM_SET_new("{sign}{extend}{verify}{pubfile}{tlv}{conf}", &tmp_set);
+	res = PARAM_SET_new("{sign}{extend}{verify}{pubfile}{conf}", &tmp_set);
 	if (res != PST_OK) goto cleanup;
 
 	res = TOOL_COMPONENT_LIST_new(32, &tmp_compo);

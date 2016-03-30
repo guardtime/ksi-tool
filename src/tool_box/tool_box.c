@@ -457,6 +457,7 @@ char *STRING_extractAbstract(const char *strn, const char *from, const char *to,
 	if ((end + 1) < beginning) new_len = 0;
 	else new_len = end + 1 - beginning;
 
+	new_len = (new_len + 1 > buf_len) ? buf_len - 1 : new_len;
 	if (KSI_strncpy(buf, beginning, new_len + 1) == NULL) return NULL;
 
 	if (firstChar != NULL) {

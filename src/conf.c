@@ -98,7 +98,7 @@ cleanup:
 	return res;
 }
 
-int CONF_fromEnvironment(PARAM_SET *set, const char *env_name, char **envp, int priority) {
+int CONF_fromEnvironment(PARAM_SET *set, const char *env_name, char **envp, int priority, char *buf, size_t len) {
 	int res;
 	char name[1024];
 	char value[2024];
@@ -120,6 +120,8 @@ int CONF_fromEnvironment(PARAM_SET *set, const char *env_name, char **envp, int 
 				res = KT_INVALID_INPUT_FORMAT;
 				goto cleanup;
 			}
+
+			if (buf) KSI_strncpy(buf, value, len);
 
 			if(!SMART_FILE_doFileExist(value)) {
 				res = KT_IO_ERROR;
@@ -153,6 +155,22 @@ int CONF_isInvalid(PARAM_SET *set) {
 	} else {
 		return 0;
 	}
+}
+
+int conf_report_errors(PARAM_SET *set, const char *fname, int res) {
+	char buf[0xffff];
+	if (res == KT_IO_ERROR) {
+		print_errors("File '%s' pointed by KSI_CONF does not exist.\n", fname);
+		res = KT_INVALID_CONF;
+		goto cleanup;
+	} else if (CONF_isInvalid(set)) {
+		print_errors("File '%s' pointed by KSI_CONF is invalid:\n", fname);
+		print_errors("%s\n", CONF_errorsToString(set, "  ", buf, sizeof(buf)));
+		res = KT_INVALID_CONF;
+		goto cleanup;
+	}
+cleanup:
+	return res;
 }
 
 char *CONF_errorsToString(PARAM_SET *set, const char *prefix, char *buf, size_t buf_len) {

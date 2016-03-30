@@ -15,7 +15,7 @@ int CONF_createSet(PARAM_SET **conf);
 
 /**
  * Initialize default parameters that are service specific.
- * {V}{W}    - isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, NULL.
+ * {V}{W}    - isFormatOk_inputFile, isContentOk_inputFileRestrictPipe, convertRepair_path, NULL.
  * {X}{P}{S} - isFormatOk_url, NULL, convertRepair_url, NULL
  * {aggr-user}{aggr-key}{ext-key}{ext-user}
  *			 - isFormatOk_userPass, NULL, NULL, NULL
@@ -26,7 +26,9 @@ int CONF_createSet(PARAM_SET **conf);
  */
 int CONF_initialize_set_functions(PARAM_SET *conf);
 
-int CONF_fromEnvironment(PARAM_SET *set, const char *env_name, char **envp, int priority);
+int CONF_fromEnvironment(PARAM_SET *set, const char *env_name, char **envp, int priority, char *buf, size_t len);
+
+int conf_report_errors(PARAM_SET *set, const char *fname, int res);
 
 int CONF_isInvalid(PARAM_SET *set);
 

@@ -114,6 +114,7 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 	PARAM_SET *conf_env = NULL;
 	PARAM_SET *conf_file = NULL;
 	char buf[1024];
+	char fname[1024];
 	char *conf_file_name = NULL;
 
 	res = CONF_createSet(&conf_env);
@@ -125,19 +126,9 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 	/**
 	 * Include conf from environment.
      */
-	res = CONF_fromEnvironment(conf_env, "KSI_CONF", envp, PRIORITY_KSI_CONF);
-	if (res == KT_IO_ERROR) {
-		print_errors("File pointed by KSI_CONF does not exist.\n");
-		res = KT_INVALID_CONF;
-		goto cleanup;
-	} else if (res != KT_OK) return res;
-
-	if (CONF_isInvalid(conf_env)) {
-		print_errors("KSI configurations file from KSI_CONF is invalid:\n");
-		print_errors("%s\n", CONF_errorsToString(conf_env, "  ", buf, sizeof(buf)));
-		res = KT_INVALID_CONF;
-		goto cleanup;
-	}
+	res = CONF_fromEnvironment(conf_env, "KSI_CONF", envp, PRIORITY_KSI_CONF, fname, sizeof(fname));
+	res = conf_report_errors(set, fname, res);
+	if (res != KT_OK) goto cleanup;
 
 	/**
 	 * Read conf from command line.
