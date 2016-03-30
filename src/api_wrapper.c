@@ -144,7 +144,6 @@ static int verify_signature(KSI_Signature *sig, KSI_CTX *ctx,
 	int res = KSI_UNKNOWN_ERROR;
 	const KSI_Policy *policy = NULL;
 	KSI_VerificationContext *info = NULL;
-	KSI_PolicyVerificationResult *tmp = NULL;
 
 	if (sig == NULL || ctx == NULL || result == NULL) {
 		res = KSI_INVALID_ARGUMENT;
@@ -194,17 +193,14 @@ static int verify_signature(KSI_Signature *sig, KSI_CTX *ctx,
 	if (res != KSI_OK) goto cleanup;
 
 	/* Verify signature */
-	res = KSI_SignatureVerifier_verify(policy, info, &tmp);
+	res = KSI_SignatureVerifier_verify(policy, info, result);
 	if (res != KSI_OK) goto cleanup;
 
-	*result = tmp;
-	tmp = NULL;
-
-	res = KSI_OK;
+	if (*result && (*result)->finalResult.resultCode != VER_RES_OK) {
+		res = KSI_VERIFICATION_FAILURE;
+	}
 
 cleanup:
-
-	KSI_PolicyVerificationResult_free(tmp);
 
 	/* Clear data references in verification context as we do not own the memory */
 	KSI_VerificationContext_setSignature(info, NULL);
