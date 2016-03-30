@@ -31,7 +31,6 @@ dist_doc_DATA = ../license.txt ../doc/ChangeLog
 EXTRA_DIST = $(man_MANS) $(dist_doc_DATA) 
 ksi_SOURCES = \
 	main.c	\
-	gt_task.h \
 	tool_box/smart_file.c \
 	tool_box/smart_file.h \
 	tool_box/param_control.c \

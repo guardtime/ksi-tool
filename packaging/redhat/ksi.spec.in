@@ -37,10 +37,8 @@ Distribution: Guardtime utilities
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
 
-Requires: libksi >= 3.5
-Requires: libksi < 3.8
-BuildRequires: libksi-devel >= 3.5
-BuildRequires: libksi-devel < 3.8
+Requires: libksi >= 3.8
+BuildRequires: libksi-devel >= 3.8
 
 %description
 Guardtime signing and verification tool. Execute
