@@ -8,30 +8,18 @@
 .\"
 .SH SYNOPSIS
 .\"
-.br
+.HP 4
 \fBksi verify -i \fIin.ksig \fR[\fB-f \fIdata\fR] [\fImore options\fR]
-.br
-
-.\"
+.HP 4
 \fBksi verify --ver-int -i \fIin.ksig \fR[\fB-f \fIdata\fR] [\fImore options\fR]
-.br
-
-.\"
+.HP 4
 \fBksi verify --ver-cal -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] [\fImore options\fR]
-.br
-
-.\"
+.HP 4
 \fBksi verify --ver-key -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fImore options\fR]
-.br
-
-.\"
+.HP 4
 \fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB--pub-str \fIpubstr \fR[\fB-x -X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore options\fR]
-.br
-
-.\"
+.HP 4
 \fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... \fR[\fB-x -X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore options\fR]
-.br
-
 .\"
 .\"
 .SH DESCRIPTION
@@ -58,12 +46,12 @@ Perform key based verification.
 Perform publication based verification.
 .\"
 .TP
-\fB-i \fIdata\fR
+\fB-i \fIsig\fR
 KSI signature file to be verified. Use '-' as file name to read signatures file from \fIstdin\fR.
 .\"
 .TP
 \fB-f \fIdata\fR
-File or data hash to be verified. Hash format: <alg>:<hash in hex>. Use '-' as file name to read data to be hashed from \fIstdin\fR.
+Files path to file to be hashed or data hash imprint to extract the hash value that is going to be verified. Hash format: <alg>:<hash in hex>. Use '-' as file name to read data to be hashed from \fIstdin\fR. Call \fBksi -h \fRto get the list of supported hash algorithms.
 .\"
 .TP
 \fB-X \fIurl\fR

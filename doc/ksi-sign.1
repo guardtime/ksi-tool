@@ -7,7 +7,7 @@
 .\"
 .\"
 .SH SYNOPSIS
-.\"
+.HP 4
 \fBksi sign -i \fIinput \fR[\fB-o \fIout.ksig\fR] \fB-S \fIurl \fR[\fB--aggr-user \fIuser \fB--aggr-key \fIkey\fR] \fR[\fB-H \fIalg\fR] [\fB--data-out \fIfile\fR] [\fB--dump\fR] [\fImore options\fR]
 .br
 .\"
@@ -21,7 +21,7 @@ This is a general signing tool for Guardtime Keyless Signature services.
 .\"
 .TP
 \fB-i \fIdata\fR
-File or data hash to be signed. Hash format: <\fIalg\fR>:<\fIhash in hex\fR>. Use '-' as file name to read data to be hashed from \fIstdin\fR.
+Files path to file to be hashed or data hash imprint to extract the hash value that is going to be signed. Use '-' as file name to read data to be hashed from \fIstdin\fR. Hash imprint format: <\fIalg\fR>:<\fIhash in hex\fR>. Call \fBksi -h \fRto get the list of supported hash algorithms.
 .\"
 .TP
 \fB-o \fIfile\fR
@@ -29,7 +29,7 @@ Output file name to store signature token. Use '-' as file name to redirect sign
 .\"
 .TP
 \fB-H \fIalg\fR
-Use a specific hash algorithm to hash the file to be signed.
+Use a specific hash algorithm to hash the file to be signed. Call \fBksi -h \fRto get the list of supported hash algorithms.
 .\"
 .TP
 \fB-S \fIurl\fR
