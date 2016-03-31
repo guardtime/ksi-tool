@@ -69,7 +69,7 @@ int verify_run(int argc, char **argv, char **envp) {
 	 * Extract command line parameters and also add configuration specific parameters.
 	 */
 	res = PARAM_SET_new(
-			CONF_generate_desc("{verify}{i}{o}{D}{x}{f}{d}{pub-str}{ver-int}{ver-cal}{ver-key}{ver-pub}{log}{dump}{conf}{log}", buf, sizeof(buf)),
+			CONF_generate_desc("{verify}{i}{o}{D}{x}{f}{d}{pub-str}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}{conf}{log}", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -145,10 +145,9 @@ cleanup:
 
 	if (res != KT_OK) {
 		KSI_LOG_debug(ksi, "\n%s", KSITOOL_KSI_ERRTrace_get());
-		if (PARAM_SET_isSetByName(set, "dump")) {
-			print_debug("\n");
-			DEBUG_verifySignature(ksi, res, sig, result, hsh);
-		}
+		print_debug("\n");
+		DEBUG_verifySignature(ksi, res, sig, result, hsh);
+
 		print_errors("\n");
 		if (d) ERR_TRCKR_printExtendedErrors(err);
 		else  ERR_TRCKR_printErrors(err);

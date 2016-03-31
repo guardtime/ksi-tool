@@ -39,7 +39,7 @@
 #include "conf.h"
 #include "tool.h"
 
-static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, COMPOSITE *comp, KSI_PolicyVerificationResult **result);
+static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext, COMPOSITE *comp, KSI_PolicyVerificationResult **result);
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 static char* get_output_file_name_if_not_defined(PARAM_SET *set, ERR_TRCKR *err, char *buf, size_t buf_len);
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
@@ -53,7 +53,8 @@ int extend_run(int argc, char** argv, char **envp) {
 	SMART_FILE *logfile = NULL;
 	ERR_TRCKR *err = NULL;
 	KSI_Signature *sig = NULL;
-	KSI_PolicyVerificationResult *result;
+	KSI_Signature *ext = NULL;
+	KSI_PolicyVerificationResult *result = NULL;
 	COMPOSITE extra;
 	char buf[2048];
 	int d;
@@ -98,12 +99,25 @@ int extend_run(int argc, char** argv, char **envp) {
 		case 0:
 		case 1:
 		case 2:
-			res = extend(set, err, ksi, sig, &extra, &result);
+			res = extend(set, err, ksi, sig, &ext, &extra, &result);
+			if (res != KT_OK) goto cleanup;
 		break;
 		default:
 			res = KT_UNKNOWN_ERROR;
 			goto cleanup;
 		break;
+	}
+
+	if (PARAM_SET_isSetByName(set, "dump")) {
+		print_result("\n");
+		print_result("=== Old signature ===\n");
+		OBJPRINT_signatureDump(sig, print_result);
+		print_result("\n");
+		print_result("=== Extended signature ===\n");
+		OBJPRINT_signatureDump(ext, print_result);
+		print_result("\n");
+		print_result("=== Extended signature verification ===\n");
+		OBJPRINT_signatureVerificationResultDump(result, print_result);
 	}
 
 cleanup:
@@ -112,10 +126,9 @@ cleanup:
 
 	if (res != KT_OK) {
 		KSI_LOG_debug(ksi, "\n%s", KSITOOL_KSI_ERRTrace_get());
-		if (PARAM_SET_isSetByName(set, "dump")) {
-			print_debug("\n");
-			DEBUG_verifySignature(ksi, res, sig, result, NULL);
-		}
+		print_debug("\n");
+		DEBUG_verifySignature(ksi, res, (ext != NULL ? ext : sig), result, NULL);
+
 		print_errors("\n");
 		if (d) ERR_TRCKR_printExtendedErrors(err);
 		else  ERR_TRCKR_printErrors(err);
@@ -125,6 +138,8 @@ cleanup:
 	PARAM_SET_free(set);
 	TASK_SET_free(task_set);
 	KSI_Signature_free(sig);
+	KSI_Signature_free(ext);
+	KSI_PolicyVerificationResult_free(result);
 	ERR_TRCKR_free(err);
 	KSI_CTX_free(ksi);
 
@@ -175,12 +190,11 @@ const char *extend_get_desc(void) {
 	return "KSI signature extending tool.";
 }
 
-static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, COMPOSITE *extra, KSI_PolicyVerificationResult **result) {
+static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext, COMPOSITE *extra, KSI_PolicyVerificationResult **result) {
 	int res;
 	int d = 0;
 	int T = 0;
 	int p = 0;
-	KSI_Signature *ext = NULL;
 	KSI_Integer *pubTime = NULL;
 	KSI_PublicationData *pub_data = NULL;
 	char *outSigFileName = NULL;
@@ -188,7 +202,7 @@ static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *s
 	char real_output_name[1024] = "";
 	const char *mode = NULL;
 
-	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || extra == NULL) {
+	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || ext == NULL || extra == NULL || result == NULL) {
 		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
@@ -225,30 +239,32 @@ static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *s
 	res = KSITOOL_SignatureVerify_internally(err, sig, ksi, NULL, result);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify signature.");
 	print_progressResult(res);
-
+	/* Verification succeeded. Release the verification result */
+	KSI_PolicyVerificationResult_free(*result);
+	*result = NULL;
 
 	/* Extend the signature. */
 	if(pubTime != NULL){
 		print_progressDesc(d, "Extending old signature to %s (%i)... ",
 				KSI_Integer_toDateString(pubTime, buf, sizeof(buf)),
 				KSI_Integer_getUInt64(pubTime));
-		res = KSITOOL_Signature_extendTo(err, sig, ksi, pubTime, &ext);
+		res = KSITOOL_Signature_extendTo(err, sig, ksi, pubTime, ext);
 		ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
 	} else {
 		print_progressDesc(d, "Extending old signature... ");
-		res = KSITOOL_extendSignature(err, ksi, sig, &ext);
+		res = KSITOOL_extendSignature(err, ksi, sig, ext);
 		ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
 	}
 	print_progressResult(res);
 
 	print_progressDesc(d, "Verifying extended signature... ");
-	res = KSITOOL_SignatureVerify_general(err, ext, ksi, NULL, pub_data, 1, result);
+	res = KSITOOL_SignatureVerify_general(err, *ext, ksi, NULL, pub_data, 1, result);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify extended signature.");
 	print_progressResult(res);
 
 	/* Save signature. */
 	print_progressDesc(d, "Saving signature... ");
-	res = KSI_OBJ_saveSignature(err, ksi, ext, mode, outSigFileName, real_output_name, sizeof(real_output_name));
+	res = KSI_OBJ_saveSignature(err, ksi, *ext, mode, outSigFileName, real_output_name, sizeof(real_output_name));
 	if (res != KT_OK) goto cleanup;
 	print_progressResult(res);
 
