@@ -79,10 +79,10 @@ static int appendInvalidServiceUrlError(ERR_TRCKR *err, int res, KSI_CTX *ksi, l
 static int appendBaseErrorIfPresent(ERR_TRCKR *err, int res, KSI_CTX *ksi, long line) {
 	char buf[2048];
 	int ext = 0;
-
+	int tmp;
 	if (res != KSI_OK) {
-		KSI_ERR_getBaseErrorMessage(ksi, buf, sizeof(buf), NULL, &ext);
-		if (buf[0] != 0) {
+		KSI_ERR_getBaseErrorMessage(ksi, buf, sizeof(buf), &tmp, &ext);
+		if (buf[0] != 0 && tmp != KSI_OK) {
 			ERR_TRCKR_add(err, res, __FILE__, line, "Error: %s", buf);
 			appendInvalidServiceUrlError(err, res, ksi, line);
 			return 1;
