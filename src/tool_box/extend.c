@@ -62,7 +62,7 @@ int extend_run(int argc, char** argv, char **envp) {
 	 * Extract command line parameters.
 	 */
 	res = PARAM_SET_new(
-			CONF_generate_desc("{i}{o}{H}{D}{d}{x}{T}{pub-str}{conf}{log}", buf, sizeof(buf)),
+			CONF_generate_desc("{i}{o}{H}{D}{d}{x}{T}{pub-str}{dump}{conf}{log}", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -112,9 +112,10 @@ cleanup:
 
 	if (res != KT_OK) {
 		KSI_LOG_debug(ksi, "\n%s", KSITOOL_KSI_ERRTrace_get());
-		print_debug("\n");
-		DEBUG_verifySignature(ksi, res, sig, result, NULL);
-
+		if (PARAM_SET_isSetByName(set, "dump")) {
+			print_debug("\n");
+			DEBUG_verifySignature(ksi, res, sig, result, NULL);
+		}
 		print_errors("\n");
 		if (d) ERR_TRCKR_printExtendedErrors(err);
 		else  ERR_TRCKR_printErrors(err);
@@ -158,6 +159,7 @@ char *extend_help_toString(char*buf, size_t len) {
 		" --pub-str <str>\n"
 		"           - specify a publication string to extend to.\n"
 		" -d        - print detailed information about processes and errors.\n"
+		" --dump    - dump signature and verification result to stdout.\n"
 		" --conf <file>\n"
 		"           - specify a configurations file to override default service\n"
 		"             information. It must be noted that service info from\n"
@@ -222,9 +224,6 @@ static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *s
 	print_progressDesc(d, "Verifying old signature... ");
 	res = KSITOOL_SignatureVerify_internally(err, sig, ksi, NULL, result);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify signature.");
-	if ((*result)->finalResult.resultCode != VER_RES_OK) {
-		ERR_CATCH_MSG(err, res = KT_KSI_SIG_VER_IMPOSSIBLE, "Error: Failed to verify signature.");
-	}
 	print_progressResult(res);
 
 
@@ -245,9 +244,6 @@ static int extend(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *s
 	print_progressDesc(d, "Verifying extended signature... ");
 	res = KSITOOL_SignatureVerify_general(err, ext, ksi, NULL, pub_data, 1, result);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify extended signature.");
-	if ((*result)->finalResult.resultCode != VER_RES_OK) {
-		ERR_CATCH_MSG(err, res = KT_KSI_SIG_VER_IMPOSSIBLE, "Error: Unable to verify extended signature.");
-	}
 	print_progressResult(res);
 
 	/* Save signature. */
@@ -290,16 +286,16 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignature);
 	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
-	PARAM_SET_addControl(set, "{d}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{d}{dump}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{pub-str}", isFormatOk_pubString, NULL, NULL, extract_pubString);
 
 	/**
 	 * Define possible tasks.
 	 */
-	/*					  ID	DESC												MAN					ATL		FORBIDDEN	IGN	*/
-	TASK_SET_add(task_set, 0,	"Extend to the nearest publication.",				"i,X,P",			NULL,	"T,pub-str",		NULL);
-	TASK_SET_add(task_set, 1,	"Extend to the specified time.",					"i,X,P,T",		NULL,	"pub-str",		NULL);
-	TASK_SET_add(task_set, 2,	"Extend to time specified in publications string.",	"i,X,P,pub-str",	NULL,	"T",		NULL);
+	/*					  ID	DESC												MAN					ATL		FORBIDDEN		IGN	*/
+	TASK_SET_add(task_set, 0,	"Extend to the nearest publication.",				"i,X,P",			NULL,	"T,pub-str",	NULL);
+	TASK_SET_add(task_set, 1,	"Extend to the specified time.",					"i,X,P,T",			NULL,	"pub-str",		NULL);
+	TASK_SET_add(task_set, 2,	"Extend to time specified in publications string.",	"i,X,P,pub-str",	NULL,	"T",			NULL);
 
 cleanup:
 

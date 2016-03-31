@@ -145,9 +145,10 @@ cleanup:
 
 	if (res != KT_OK) {
 		KSI_LOG_debug(ksi, "\n%s", KSITOOL_KSI_ERRTrace_get());
-		print_debug("\n");
-		DEBUG_verifySignature(ksi, res, sig, result, hsh);
-
+		if (PARAM_SET_isSetByName(set, "dump")) {
+			print_debug("\n");
+			DEBUG_verifySignature(ksi, res, sig, result, hsh);
+		}
 		print_errors("\n");
 		if (d) ERR_TRCKR_printExtendedErrors(err);
 		else  ERR_TRCKR_printErrors(err);
@@ -200,7 +201,7 @@ char *verify_help_toString(char *buf, size_t len) {
 		"           - publication string.\n"
 		" -x        - allow to use extender when using publication based verification.\n"
 		" -d        - print detailed information about processes and errors to stderr.\n"
-		" --dump    - dump signature and document hash being verified to stdout.\n"
+		" --dump    - dump signature, document hash being verified and verification result to stdout.\n"
 		" --conf <file>\n"
 		"           - specify a configurations file to override default service\n"
 		"             information. It must be noted that service info from\n"
