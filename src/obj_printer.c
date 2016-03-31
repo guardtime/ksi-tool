@@ -180,14 +180,18 @@ void OBJPRINT_signatureSigningTime(const KSI_Signature *sig, int (*print)(const 
 		return;
 	}
 
-	if (KSI_Integer_toDateString(sigTime, date, sizeof(date)) != date) {
-		return;
+	if (sigTime != NULL) {
+		if (KSI_Integer_toDateString(sigTime, date, sizeof(date)) != date) {
+			return;
+		}
+
+		signingTime = (unsigned long)KSI_Integer_getUInt64(sigTime);
+
+		print("Signing time: (%i) %s+00:00\n",
+			  signingTime, date);
+	} else {
+		print("Signing time: N/A\n");
 	}
-
-	signingTime = (unsigned long)KSI_Integer_getUInt64(sigTime);
-
-	print("Signing time: (%i) %s+00:00\n",
-			signingTime, date);
 
 	return;
 }
