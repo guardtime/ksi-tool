@@ -30,14 +30,16 @@ void DEBUG_verifySignature(KSI_CTX *ksi, int res, KSI_Signature *sig, KSI_Policy
 	KSI_DataHash *input_hash = NULL;
 
 
-	if (ksi == NULL || sig == NULL || result == NULL) return;
+	if (ksi == NULL || sig == NULL) return;
 
 	print_debug("KSI Signature Debug info:\n\n");
 	OBJPRINT_signatureDump(sig, print_debug);
 
-	print_debug("\n");
-	OBJPRINT_signatureVerificationResultDump(result, print_debug);
-	print_debug("\n");
+	if (result != NULL) {
+		print_debug("\n");
+		OBJPRINT_signatureVerificationResultDump(result, print_debug);
+		print_debug("\n");
+	}
 
 	if (hsh != NULL) {
 		res = KSI_Signature_getDocumentHash(sig, &input_hash);

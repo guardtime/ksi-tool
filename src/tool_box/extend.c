@@ -127,7 +127,14 @@ cleanup:
 	if (res != KT_OK) {
 		KSI_LOG_debug(ksi, "\n%s", KSITOOL_KSI_ERRTrace_get());
 		print_debug("\n");
-		DEBUG_verifySignature(ksi, res, (ext != NULL ? ext : sig), result, NULL);
+		if (ext == NULL) {
+			DEBUG_verifySignature(ksi, res, sig, result, NULL);
+		} else {
+			print_debug("=== Old signature ===\n");
+			DEBUG_verifySignature(ksi, res, sig, NULL, NULL);
+			print_debug("=== Extended signature ===\n");
+			DEBUG_verifySignature(ksi, res, ext, result, NULL);
+		}
 
 		print_errors("\n");
 		if (d) ERR_TRCKR_printExtendedErrors(err);
