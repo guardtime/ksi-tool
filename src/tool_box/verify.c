@@ -69,7 +69,7 @@ int verify_run(int argc, char **argv, char **envp) {
 	 * Extract command line parameters and also add configuration specific parameters.
 	 */
 	res = PARAM_SET_new(
-			CONF_generate_desc("{verify}{i}{o}{D}{x}{f}{d}{pub-str}{ver-int}{ver-cal}{ver-key}{ver-pub}{log}{dump}{conf}{log}", buf, sizeof(buf)),
+			CONF_generate_desc("{verify}{i}{o}{D}{x}{f}{d}{pub-str}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}{conf}{log}", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -200,7 +200,7 @@ char *verify_help_toString(char *buf, size_t len) {
 		"           - publication string.\n"
 		" -x        - allow to use extender when using publication based verification.\n"
 		" -d        - print detailed information about processes and errors to stderr.\n"
-		" --dump    - dump signature and document hash being verified to stdout.\n"
+		" --dump    - dump signature, document hash being verified and verification result to stdout.\n"
 		" --conf <file>\n"
 		"           - specify a configurations file to override default service\n"
 		"             information. It must be noted that service info from\n"

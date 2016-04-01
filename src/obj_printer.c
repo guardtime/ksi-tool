@@ -437,7 +437,7 @@ void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *resu
 		print("    %s:\t%s",
 			  getVerificationResultCode(tmp->resultCode),
 			  getVerificationErrorCode(tmp->errorCode));
-		print("    In rule:\t%s::%s", tmp->policyName, tmp->ruleName);
+		print("\tIn rule:\t%s::%s", tmp->policyName, tmp->ruleName);
 		print("\n");
 	}
 
