@@ -53,6 +53,8 @@ static int ksitool_ErrToExitcode(int error_code) {
 			return EXIT_INVALID_CONF;
 		case KT_UNKNOWN_ERROR:
 			return EXIT_FAILURE;
+		case KT_KSI_SIG_VER_IMPOSSIBLE:
+			return EXIT_VERIFY_ERROR;
 		default:
 			return EXIT_FAILURE;
 	}
