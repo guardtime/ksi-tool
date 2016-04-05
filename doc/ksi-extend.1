@@ -8,13 +8,21 @@
 .\"
 .SH SYNOPSIS
 .\"
-\fBksi extend -i \fIin.ksig \fR[\fB-o \fIout.ksig\fR] \fB-X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... [\fB-T \fItime\fR] | [\fB--pub-str \fIstr\fR] [\fImore options\fR]
+.HP 4
+\fBksi extend -i \fIin.ksig \fR[\fB-o \fIout.ksig\fR] \fB-X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... [\fImore options\fR]
+.HP 4
+\fBksi extend -i \fIin.ksig \fR[\fB-o \fIout.ksig\fR] \fB-X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fB--pub-str \fIstr \fR[\fImore options\fR]
+.HP 4
+\fBksi extend -i \fIin.ksig \fR[\fB-o \fIout.ksig\fR] \fB-X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-T \fItime \fR[\fImore options\fR]
 .br
 .\"
 .\"
 .SH DESCRIPTION
 .\"
-This is a KSI signature extending tool.
+.HP 0
+This is a KSI signature extending tool that can be used to extend the signature and link it with a publication. After extending the signature it can be verified by publication-based verification where only publication string from published media is needed to perform the verification (see \fBksi-verify\fR(1)\fR).
+.HP 0
+To be able to extend the KSI signature and link the publication record with it user must have an access to a KSI extending service and trusted KSI publications file. By default signature is extended to the earliest available publication relative to the signing time. To extend to a specific publication from the publications file specify the publications string with option \fB--pub-str\fR.It is also possible to extend to the specified time with option \fB-T \fRbut this is not recommended as the extended signature will have no signature nor publication record thus can only be verified by calendar-based verification only.
 .\"
 .\"
 .SH OPTIONS
@@ -25,7 +33,7 @@ KSI signature file to be extended. Use '-' as file name to read signatures file 
 .\"
 .TP
 \fB-o \fIfile\fR
-Output file name to store extended signature token. Use '-' as file name to redirect signature binary stream to \fIstdout\fR. If not specified signature is saved to the path described as <input files path>(nr).ext, where \fI(nr)\fR is generated serial number if file name already exists. If specified will always overwrite the existing file.
+Output file name to store the extended signature token. Use '-' as file name to redirect signature binary stream to \fIstdout\fR. If not specified signature is saved to the path described as <input files path>(nr).ext, where \fI(nr)\fR is generated serial number if file name already exists. If specified will always overwrite the existing file.
 .\"
 .TP
 \fB-X \fIurl\fR
@@ -46,12 +54,13 @@ Specify publications file URL (or file with uri scheme 'file://').
 .TP
 \fB--cnstr \fIoid\fR=\fIvalue\fR
 OID and its expected value to verify publications file PKI signature. At least one constraint must be defined to be able to verify publications file but it is possible to define more. All values from lower priority source are ignored, where default configurations file is the lowest and command-line is the highest.
+.\"
+.TP
+\fB--pub-str \fIstr\fR
+Specify a publication record by its publication string to extend to.
 .TP
 \fB-T \fItime\fR
 Specify a publication time to extend to as the number of seconds since 1970-01-01 00:00:00 UTC or time string formatted as "YYYY-MM-DD hh:mm:ss".
-.TP
-\fB--pub-str \fIstr\fR
-Specify a publication string to extend to.
 .\"
 .TP
 \fB-d\fR
@@ -76,19 +85,34 @@ See \fBksi\fR(1) for more information.
 .SH EXAMPLES
 .\"
 In the following examples it is assumed that default service urls are defined (see \fBksi\fR(1) \fRfor more information).
-
-
-\fB1 \fRTo extend a signature \fIsig.ksig\fR and save it as \fIext.ksig\fR call:
-.RS
+.\"
+.TP 2
+\fB1
+\fRTo extend a signature \fIsig.ksig\fR to the earliest available publication and save it as \fIext.ksig\fR call:
+.LP
+.RS 4
+.HP 4
 \fBksi extend -i \fIsig.ksig \fB-o \fIext.ksig
 .RE
-
-\fB2 \fRTo extend a signature \fIsig.ksig\fR to s specified calendar time \fI2015-05-05 00:00:00 \fRand save it as \fIext.ksig\fR call:
-.RS
+.\"
+.TP 2
+\fB2
+\fRTo extend a signature \fIsig.ksig\fR to s specified publication (Publication string available from Financial Times, ISSN: 0307-1766, 2016-03-17):
+.LP
+.RS 4
+.HP 4
+\fBksi extend -i \fIsig.ksig \fB-o \fIext.ksig \fB--pub-str \fIAAAAAA-CW45II-AAKWRK-F7FBNM-KB6FNV-DYYFW7-PJQN6F-JKZWBQ-3OQYZO-HCB7RA-YNYAGA-ODRL2V
+.RE
+.\"
+.TP 2
+\fB3
+\fRTo extend a signature \fIsig.ksig\fR to specified calendar time \fI2015-05-05 00:00:00 \fRand save it as \fIext.ksig\fR call:
+.LP
+.RS 4
+.HP 4
 \fBksi extend -i \fIsig.ksig \fB-o \fIext.ksig \fB-T \fI"2015-05-05 00:00:00"
 .RE
-
-.RE
+.LP
 .\"
 .\"
 .\"
