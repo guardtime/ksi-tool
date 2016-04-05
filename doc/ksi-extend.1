@@ -20,9 +20,9 @@
 .SH DESCRIPTION
 .\"
 .HP 0
-This is a KSI signature extending tool that can be used to extend the signature and link it with a publication. After extending the signature it can be verified by publication-based verification where only publication string from published media is needed to perform the verification (see \fBksi-verify\fR(1)\fR).
+This is a KSI signature extending tool that can be used to extend the signature and link it with a publication. After the signature is extended it can be verified by publication-based verification where only publication string from published media is needed to perform the verification (see \fBksi-verify\fR(1)\fR).
 .HP 0
-To be able to extend the KSI signature and link the publication record with it user must have an access to a KSI extending service and trusted KSI publications file. By default signature is extended to the earliest available publication relative to the signing time. To extend to a specific publication from the publications file specify the publications string with option \fB--pub-str\fR.It is also possible to extend to the specified time with option \fB-T \fRbut this is not recommended as the extended signature will have no signature nor publication record thus can only be verified by calendar-based verification only.
+To be able to extend the KSI signature and link the publication record with it user must have an access to a KSI extending service and trusted KSI publications file. By default signature is extended to the earliest available publication relative to the signing time. To extend to a specific publication from the publications file specify the publications string with option \fB--pub-str\fR. It is also possible to extend to the specified time with option \fB-T \fRbut this is not recommended as the extended signature will have no signature nor publication record thus can only be verified by calendar-based verification only.
 .\"
 .\"
 .SH OPTIONS
