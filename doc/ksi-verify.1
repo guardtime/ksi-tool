@@ -24,7 +24,18 @@
 .\"
 .SH DESCRIPTION
 .\"
-This is a KSI signature verification tool.
+This is a KSI signature verification tool. There are four main verification policies related with a specific command line option that can be applied to a KSI signature. Signature can be verified with or without the file the signature was created for or with its pre calculated hash value. Possible verification polices:
+.LP
+.IP \(bu 4
+Internal verification. Only signatures internal consistency is checked and no verification against any trust anchor is performed. This step is always performed during other polices. No external resource is needed.
+.IP \(bu 4
+Calendar-based verification. Signature is verified against calendar database. Verification is done by checking if the calculated output hash value of the aggregation hash chain exists in the calendar database at the same time the signature was created. Access to a trusted KSI extender is needed.
+.IP \(bu 4
+Key-based verification. Signature must contain a calendar hash chain and a calendar authentication record that can be verified against the signing certificates. To be able to perform key-based verification user must have an access to a trusted KSI publications file with signing certificates in it.
+.IP \(bu 4
+Publication-based verification. Signature must be extended (see \fBksi-extend\fR(1)) to a time of publication and contain a publication record. Verification is done by checking the signatures internal consistency and comparing the signatures publication record with publication data retrieved from publications file or publication string given from printed media. Trusted publications file or a copy of a printed media with corresponding published publication string in it is needed.
+.LP
+It must be noted that only publication-based verification should be used in long term as it does not rely on any keys and trusted services. The other polices can be used temporarily when the signature is created and there is not yet a publication to extend the signature to.
 .\"
 .\"
 .SH OPTIONS
@@ -35,15 +46,15 @@ Perform internal verification.
 .\"
 .TP
 \fB--ver-cal\fR
-Perform calendar based verification (use extending service).
+Perform calendar-based verification (use extending service).
 .\"
 .TP
 \fB--ver-key\fR
-Perform key based verification.
+Perform key-based verification.
 .\"
 .TP
 \fB--ver-pub\fR
-Perform publication based verification.
+Perform publication-based verification.
 .\"
 .TP
 \fB-i \fIsig\fR
