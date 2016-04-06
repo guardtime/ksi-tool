@@ -30,10 +30,36 @@
                                 Source="..\..\$(var.tool_file)"
                                 ProcessorArchitecture="$(var.platform)">
                             </File>
-                            <File 
+
+                            <File
                                 Id="doc_pdf"
                                 Source="..\..\doc\ksi.pdf">
-                            </File>                          
+                            </File>
+
+                            <File
+                                Id="doc_sign_pdf"
+                                Source="..\..\doc\ksi-sign.pdf">
+                            </File>
+
+                            <File
+                                Id="doc_extend_pdf"
+                                Source="..\..\doc\ksi-extend.pdf">
+                            </File>
+
+                            <File
+                                Id="doc_verify_pdf"
+                                Source="..\..\doc\ksi-verify.pdf">
+                            </File>
+
+                            <File
+                                Id="doc_pubfile_pdf"
+                                Source="..\..\doc\ksi-pubfile.pdf">
+                            </File>
+
+                            <File
+                                Id="doc_conf_pdf"
+                                Source="..\..\doc\ksi-conf.pdf">
+                            </File>
                             <Environment Id="KSI_PATH" Name="KSI_PATH" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="no" />
                             <Environment Id="Path" Name="Path" Value=";%KSI_PATH%" Permanent="no" Part="last" Action="set" System="no" />
                         </Component>
