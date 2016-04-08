@@ -54,12 +54,14 @@ void DEBUG_verifySignature(KSI_CTX *ksi, int res, KSI_Signature *sig, KSI_Policy
 		}
 	}
 
-	if (!strcmp(result->finalResult.ruleName, "KSI_VerificationRule_PublicationsFilePublicationTimeMatchesExtenderResponse") ||
-		!strcmp(result->finalResult.ruleName, "KSI_VerificationRule_PublicationsFilePublicationHashMatchesExtenderResponse") ||
-		!strcmp(result->finalResult.ruleName, "KSI_VerificationRule_PublicationsFileExtendedSignatureInputHash")) {
-		res = KSI_CTX_getPublicationsFile(ksi, &pubFile);
-		if (res == KSI_OK && pubFile != NULL) {
-			OBJPRINT_publicationsFileCertificates(pubFile, print_debug);
+	if (result) {
+		if (!strcmp(result->finalResult.ruleName, "KSI_VerificationRule_PublicationsFilePublicationTimeMatchesExtenderResponse") ||
+			!strcmp(result->finalResult.ruleName, "KSI_VerificationRule_PublicationsFilePublicationHashMatchesExtenderResponse") ||
+			!strcmp(result->finalResult.ruleName, "KSI_VerificationRule_PublicationsFileExtendedSignatureInputHash")) {
+			res = KSI_CTX_getPublicationsFile(ksi, &pubFile);
+			if (res == KSI_OK && pubFile != NULL) {
+				OBJPRINT_publicationsFileCertificates(pubFile, print_debug);
+			}
 		}
 	}
 	print_debug("\n");
