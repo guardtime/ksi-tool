@@ -117,14 +117,24 @@ cleanup:
 }
 
 void PARAM_VAL_free(PARAM_VAL *rootValue) {
+	PARAM_VAL *current = NULL;
+	PARAM_VAL *next = NULL;
+	PARAM_VAL *to_be_freed = NULL;
+
 	if(rootValue == NULL) return;
 
-	if(rootValue->next != NULL)
-		PARAM_VAL_free(rootValue->next);
+	to_be_freed = rootValue;
+	next = rootValue;
 
-	free(rootValue->cstr_value);
-	free(rootValue->source);
-	free(rootValue);
+	do {
+		to_be_freed = next;
+		next = next->next;
+		free(to_be_freed->cstr_value);
+		free(to_be_freed->source);
+		free(to_be_freed);
+	} while (next != NULL);
+
+	return;
 }
 
 static int param_val_getPriority(PARAM_VAL *rootValue, int type, int *prio) {
