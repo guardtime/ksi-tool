@@ -273,10 +273,10 @@ static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ks
 	}
 
 
-	d = PARAM_SET_isSetByName(set, "t");
-//	PARAM_SET_getIntValue(set, "T", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &start);
+	d = PARAM_SET_isSetByName(set, "d");
+
 	res = PARAM_SET_getObjExtended(set, "T", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, extra, (void**)&start);
-	if (res != KT_OK) goto cleanup;
+	ERR_CATCH_MSG(err, res, "Error: Unable to extract the time value to create the publication string for.");
 	end = KSI_Integer_ref(start);
 
 	print_progressDesc(d, "Sending extend request... ");
