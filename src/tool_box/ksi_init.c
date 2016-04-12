@@ -20,6 +20,7 @@
 
 #include <ksi/ksi.h>
 #include <ksi/pkitruststore.h>
+#include <ksi/compatibility.h>
 #include <string.h>
 #include "param_set/param_set.h"
 #include "tool_box/ksi_init.h"
@@ -199,7 +200,7 @@ static int tool_init_ksi_pub_cert_constraints(KSI_CTX *ksi, ERR_TRCKR *err, PARA
 		char *value = NULL;
 		char tmp[1024];
 			PARAM_SET_getStr(set, "cnstr", NULL, PST_PRIORITY_NONE, i, &constraint);
-			strncpy(tmp, constraint, sizeof(tmp));
+			KSI_strncpy(tmp, constraint, sizeof(tmp));
 
 			oid = tmp;
 			value = strchr(tmp, '=');

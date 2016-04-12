@@ -40,10 +40,6 @@
 #	define OPENF
 #endif
 
-#ifdef _WIN32
-#define snprintf _snprintf
-#endif
-
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -661,7 +657,7 @@ int SMART_FILE_open(const char *fname, const char *mode, SMART_FILE **file) {
 	tmp->isOpen = 0;
 	tmp->mustBeFreed = 0;
 
-	snprintf(tmp->fname, sizeof(tmp->fname), "%s", pFname);
+	KSI_snprintf(tmp->fname, sizeof(tmp->fname), "%s", pFname);
 
 
 	/**

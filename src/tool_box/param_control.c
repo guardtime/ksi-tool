@@ -484,7 +484,7 @@ int convertRepair_url(const char* arg, char* buf, unsigned len) {
 	isFile = strstr(arg, "file://") == arg ? 1 : 0;
 
 	if (scheme == NULL) {
-		strncpy(buf, "http://", len-1);
+		KSI_strncpy(buf, "http://", len-1);
 		if (strlen(buf)+strlen(arg) < len)
 			strcat(buf, arg);
 		else
@@ -590,7 +590,7 @@ int convertRepair_path(const char* arg, char* buf, unsigned len){
 	char *toBeReplaced = NULL;
 
 	if(arg == NULL || buf == NULL) return 0;
-	strncpy(buf, arg, len-1);
+	KSI_strncpy(buf, arg, len - 1);
 
 
 	toBeReplaced = buf;
@@ -969,7 +969,7 @@ int convertRepair_constraint(const char* arg, char* buf, unsigned len) {
 	const char *oid = NULL;
 
 	if(arg == NULL || buf == NULL) return 0;
-	strncpy(buf, arg, len-1);
+	KSI_strncpy(buf, arg, len-1);
 
 	value = strchr(arg, '=');
 	if (value == NULL) return 0;

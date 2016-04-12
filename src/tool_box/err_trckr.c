@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include "tool_box/err_trckr.h"
+#include <ksi/compatibility.h>
 
 typedef struct ERR_ENTRY_st {
 	int code;
@@ -68,12 +69,12 @@ void ERR_TRCKR_add(ERR_TRCKR *err, int code, const char *fname, int lineN, const
 	if(err->count >= MAX_ERROR_COUNT ) return;
 
 	va_start(va, msg);
-	vsnprintf(err->err[err->count].message, MAX_MESSAGE_LEN, msg == NULL ? "" : msg, va);
+	KSI_vsnprintf(err->err[err->count].message, MAX_MESSAGE_LEN, msg == NULL ? "" : msg, va);
 	va_end(va);
 	err->err[err->count].message[MAX_MESSAGE_LEN -1] = 0;
 
 
-	strncpy(err->err[err->count].fileName, fname, MAX_FILE_NAME_LEN);
+	KSI_strncpy(err->err[err->count].fileName, fname, MAX_FILE_NAME_LEN);
 	err->err[err->count].fileName[MAX_FILE_NAME_LEN -1] = 0;
 	err->err[err->count].line = lineN;
 	err->err[err->count].code = code;

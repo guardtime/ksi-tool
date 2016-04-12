@@ -30,7 +30,6 @@
 #include "printer.h"
 
 #ifdef _WIN32
-#define snprintf _snprintf
 #	include <windows.h>
 #	include <io.h>
 #	include <fcntl.h>
@@ -323,7 +322,7 @@ void print_progressDesc(int showTiming, const char *msg, ...) {
 		}
 
 		va_start(va, msg);
-		vsnprintf(buf, sizeof(buf), msg, va);
+		KSI_vsnprintf(buf, sizeof(buf), msg, va);
 		buf[sizeof(buf) - 1] = 0;
 		va_end(va);
 
@@ -340,7 +339,7 @@ void print_progressResult(int res) {
 		if (timerOn == 1) {
 			measureLastCall();
 
-			snprintf(time_str, sizeof(time_str), " (%i ms)", elapsed_time_ms);
+			KSI_snprintf(time_str, sizeof(time_str), " (%i ms)", elapsed_time_ms);
 			time_str[sizeof(time_str) - 1] = 0;
 		}
 

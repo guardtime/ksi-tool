@@ -24,12 +24,12 @@
 #include <ctype.h>
 #include <string.h>
 #include "tool_box.h"
+#include "param_set/strn.h"
 #include "ksitool_err.h"
 #include "tool.h"
 
 #ifdef _WIN32
 #include <Windows.h>
-#define snprintf _snprintf
 #endif
 
 typedef struct TOOL_COMPONENT_st TOOL_COMPONENT;
@@ -364,8 +364,8 @@ char *TOOL_COMPONENT_LIST_helpToString(TOOL_COMPONENT_LIST *list, int id, char *
 	for (i = 0; i < list->count; i++) {
 		if (list->component[i]->id == id) {
 			if (list->component[i]->help_toString == NULL) {
-				count += snprintf(buf + count, buf_len - count, "%s %s help.\n", TOOL_getName(), list->component[i]->name);
-				count += snprintf(buf + count, buf_len - count, "Unavailable.\n");
+				count += PST_snprintf(buf + count, buf_len - count, "%s %s help.\n", TOOL_getName(), list->component[i]->name);
+				count += PST_snprintf(buf + count, buf_len - count, "Unavailable.\n");
 			}
 			return list->component[i]->help_toString(buf, buf_len);
 		}
@@ -395,7 +395,7 @@ char* TOOL_COMPONENT_LIST_toString(TOOL_COMPONENT_LIST *list, const char* preffi
 		}
 	}
 
-	snprintf(format, sizeof(format), "%%s%%-%is ", max_size);
+	PST_snprintf(format, sizeof(format), "%%s%%-%is ", max_size);
 
 	/**
 	 * Generate help string for all known tasks.
@@ -406,14 +406,14 @@ char* TOOL_COMPONENT_LIST_toString(TOOL_COMPONENT_LIST *list, const char* preffi
 		/**
 		 * Print the tasks name.
          */
-		count += snprintf(buf + count, buf_len - count, format,
+		count += PST_snprintf(buf + count, buf_len - count, format,
 				preffix == NULL ? "" : preffix,
 				list->component[i]->name);
 
 		/**
 		 * Print the description.
 		 */
-		count += snprintf(buf + count, buf_len - count, "- %s\n",
+		count += PST_snprintf(buf + count, buf_len - count, "- %s\n",
 				list->component[i]->getDesc == NULL ? "description not available." : list->component[i]->getDesc());
 	}
 
