@@ -63,7 +63,7 @@ static int appendInvalidServiceUrlError(ERR_TRCKR *err, int res, KSI_CTX *ksi, l
 			return 1;
 		}
 	} else if (res == KSI_PUBLICATIONS_FILE_NOT_CONFIGURED) {
-			ERR_TRCKR_add(err, res, __FILE__, line, "Error: Publications file must be configured (-b <file> or -P <url>)!", serviceName);
+			ERR_TRCKR_add(err, res, __FILE__, line, "Error: Publications file must be configured (-P <url>)!", serviceName);
 	} else {
 		appendInvalidPubfileUrlOrFileError(err, res, ksi, line);
 	}
