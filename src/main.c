@@ -166,7 +166,6 @@ int main(int argc, char** argv, char **envp) {
 	int retval = EXIT_SUCCESS;
 	char buf[0xffff];
 	char fname[1024];
-	int conf_file_missing = 0;
 
 	/**
 	 * Configure ksi tool to print only values that are result of the user request
@@ -195,8 +194,6 @@ int main(int argc, char** argv, char **envp) {
 	res = CONF_fromEnvironment(configuration, "KSI_CONF", envp, 0, fname, sizeof(fname));
 	res = conf_report_errors(configuration, fname, res);
 	if (res != KT_OK) goto cleanup;
-
-	if (res == KT_IO_ERROR)	conf_file_missing = 1;
 
 	/**
 	 * Get all possible components to run.
@@ -250,13 +247,8 @@ int main(int argc, char** argv, char **envp) {
 	}
 
 	if (CONF_isInvalid(configuration)) {
-		if (!conf_file_missing) {
-			print_errors("KSI configurations file from KSI_CONF is invalid:\n");
-			print_errors("%s\n", CONF_errorsToString(configuration, "  ", buf, sizeof(buf)));
-		} else {
-			print_errors("File pointed by KSI_CONF does not exist.\n");
-		}
-
+		print_errors("KSI configurations file from KSI_CONF is invalid:\n");
+		print_errors("%s\n", CONF_errorsToString(configuration, "  ", buf, sizeof(buf)));
 		res = KT_INVALID_CONF;
 		goto cleanup;
 	}

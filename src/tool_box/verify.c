@@ -69,7 +69,7 @@ int verify_run(int argc, char **argv, char **envp) {
 	 * Extract command line parameters and also add configuration specific parameters.
 	 */
 	res = PARAM_SET_new(
-			CONF_generate_desc("{verify}{i}{o}{D}{x}{f}{d}{pub-str}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}{conf}{log}", buf, sizeof(buf)),
+			CONF_generate_param_set_desc("{i}{x}{f}{d}{pub-str}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}{conf}{log}", "XP", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -233,7 +233,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	/**
 	 * Configure parameter set, control, repair and object extractor function.
 	 */
-	res = CONF_initialize_set_functions(set);
+	res = CONF_initialize_set_functions(set, "XP");
 	if (res != KT_OK) goto cleanup;
 
 	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFileRestrictPipe, convertRepair_path, NULL);

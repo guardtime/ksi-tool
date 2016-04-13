@@ -59,7 +59,7 @@ int sign_run(int argc, char** argv, char **envp) {
 	 * Extract command line parameters.
      */
 	res = PARAM_SET_new(
-			CONF_generate_desc("{sign}{i}{h}{o}{H}{data-out}{d}{dump}{log}{conf}", buf, sizeof(buf)),
+			CONF_generate_param_set_desc("{sign}{i}{o}{H}{data-out}{d}{dump}{log}{conf}", "S", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -260,7 +260,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	/**
 	 * Configure parameter set, control, repair and object extractor function.
      */
-	res = CONF_initialize_set_functions(set);
+	res = CONF_initialize_set_functions(set, "S");
 	if (res != KT_OK) goto cleanup;
 
 	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFileRestrictPipe, convertRepair_path, NULL);

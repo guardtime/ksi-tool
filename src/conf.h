@@ -3,14 +3,26 @@
 
 #include "param_set/param_set.h"
 
-#define CONF_PARAM_DESC "{S}{X}{P}{aggr-user}{aggr-key}{ext-user}{ext-key}{cnstr}{V}{W}{C}{c}{publications-file-no-verify}"
-
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
-char* CONF_generate_desc(char *description, char *buf, size_t buf_len);
-	
+/**
+ * Generate \c PARAM_SET description and add configuration specific parameters.
+ * \param description	-	Add extra descriptions.
+ * \param flags			-	Add X, S and P do add extender, aggregator and publications file specific parameters.
+ * \param buf			-	Buffer to store the description string.
+ * \param buf_len		-	The size of the buffer to store the description strng.
+ * \return \c buf if successful, NULL otherwise.
+ */
+char* CONF_generate_param_set_desc(char *description, const char *flags, char *buf, size_t buf_len);
+
+/**
+ * Creates a PARAM_SET object that is fully configured to support all paraeters
+ * defined for ksi configurations file.
+ * \param conf	-	Output parameter for PARAM_SET object.
+ * \return KT_OK if successful, error code otherwise.
+ */
 int CONF_createSet(PARAM_SET **conf);
 
 /**
@@ -22,9 +34,10 @@ int CONF_createSet(PARAM_SET **conf);
  * {cnstr}   - isFormatOk_constraint, NULL, convertRepair_constraint, NULL
  * {c}{C}    - isFormatOk_int, isContentOk_int, NULL, extract_int
  * \param conf	parameter set object.
+ * \param flags	-	Add X, S and P do add extender, aggregator and publications file specific configuration.
  * \return KT_OK if successful, error code otherwise.
  */
-int CONF_initialize_set_functions(PARAM_SET *conf);
+int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags);
 
 /**
  * Loads configurations file from environment variable \c env_name that points to the path

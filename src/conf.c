@@ -10,13 +10,34 @@
 #include "tool_box/smart_file.h"
 #include "printer.h"
 
-char* CONF_generate_desc(char *description, char *buf, size_t buf_len) {
+char* CONF_generate_param_set_desc(char *description, const char *flags, char *buf, size_t buf_len) {
 	char *extra_desc = NULL;
+	int is_S = 0;
+	int is_X = 0;
+	int is_P = 0;
+	size_t count = 0;
+
 
 	if (buf == NULL || buf_len == 0) return NULL;
 
+	is_S = strchr(flags, 'S') != NULL ? 1 : 0;
+	is_X = strchr(flags, 'X') != NULL ? 1 : 0;
+	is_P = strchr(flags, 'P') != NULL ? 1 : 0;
+
 	extra_desc = (description == NULL) ? "" : description;
-	KSI_snprintf(buf, buf_len, "%s%s", extra_desc, CONF_PARAM_DESC);
+	count += KSI_snprintf(buf + count, buf_len - count, "{C}{c}%s", extra_desc);
+
+	if (is_S) {
+		count += KSI_snprintf(buf + count, buf_len - count, "{S}{aggr-user}{aggr-key}");
+	}
+
+	if (is_X) {
+		count += KSI_snprintf(buf + count, buf_len - count, "{X}{ext-user}{ext-key}");
+	}
+
+	if (is_P) {
+		count += KSI_snprintf(buf + count, buf_len - count, "{P}{cnstr}{V}{W}{publications-file-no-verify}");
+	}
 
 	return buf;
 }
@@ -31,10 +52,10 @@ int CONF_createSet(PARAM_SET **conf) {
 		goto cleanup;
 	}
 
-	res = PARAM_SET_new(CONF_generate_desc(NULL, buf, sizeof(buf)), &tmp);
+	res = PARAM_SET_new(CONF_generate_param_set_desc(NULL, "SXP", buf, sizeof(buf)), &tmp);
 	if (res != PST_OK) goto cleanup;
 
-	res = CONF_initialize_set_functions(tmp);
+	res = CONF_initialize_set_functions(tmp, "SXP");
 	if (res != PST_OK) goto cleanup;
 
 	*conf = tmp;
@@ -48,31 +69,55 @@ cleanup:
 	return res;
 }
 
-int CONF_initialize_set_functions(PARAM_SET *conf) {
-	int res;
+int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
+	int res = KT_UNKNOWN_ERROR;
+	int is_S = 0;
+	int is_X = 0;
+	int is_P = 0;
+
 
 	if (conf == NULL) {
 		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
-	res = PARAM_SET_addControl(conf, "{V}{W}", isFormatOk_inputFile, isContentOk_inputFileRestrictPipe, convertRepair_path, NULL);
+	is_S = strchr(flags, 'S') != NULL ? 1 : 0;
+	is_X = strchr(flags, 'X') != NULL ? 1 : 0;
+	is_P = strchr(flags, 'P') != NULL ? 1 : 0;
+
+	if (is_P) {
+		res = PARAM_SET_addControl(conf, "{V}{W}", isFormatOk_inputFile, isContentOk_inputFileRestrictPipe, convertRepair_path, NULL);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_addControl(conf, "{P}", isFormatOk_url, NULL, convertRepair_url, NULL);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_addControl(conf, "{publications-file-no-verify}", isFormatOk_flag, NULL, NULL, NULL);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_addControl(conf, "{cnstr}", isFormatOk_constraint, NULL, convertRepair_constraint, NULL);
+		if (res != PST_OK) goto cleanup;
+	}
+
+	if (is_S) {
+		res = PARAM_SET_addControl(conf, "{S}", isFormatOk_url, NULL, convertRepair_url, NULL);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_addControl(conf, "{aggr-user}{aggr-key}", isFormatOk_userPass, NULL, NULL, NULL);
+		if (res != PST_OK) goto cleanup;
+	}
+
+	if (is_X) {
+		res = PARAM_SET_addControl(conf, "{X}", isFormatOk_url, NULL, convertRepair_url, NULL);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_addControl(conf, "{ext-key}{ext-user}", isFormatOk_userPass, NULL, NULL, NULL);
+		if (res != PST_OK) goto cleanup;
+	}
+
+	res = PARAM_SET_addControl(conf, "{c}{C}", isFormatOk_int, isContentOk_int, NULL, extract_int);
 	if (res != PST_OK) goto cleanup;
 
-	PARAM_SET_addControl(conf, "{X}{P}{S}", isFormatOk_url, NULL, convertRepair_url, NULL);
-	if (res != PST_OK) goto cleanup;
-
-	PARAM_SET_addControl(conf, "{aggr-user}{aggr-key}{ext-key}{ext-user}", isFormatOk_userPass, NULL, NULL, NULL);
-	if (res != PST_OK) goto cleanup;
-
-	PARAM_SET_addControl(conf, "{cnstr}", isFormatOk_constraint, NULL, convertRepair_constraint, NULL);
-	if (res != PST_OK) goto cleanup;
-
-	PARAM_SET_addControl(conf, "{c}{C}", isFormatOk_int, isContentOk_int, NULL, extract_int);
-	if (res != PST_OK) goto cleanup;
-
-	PARAM_SET_addControl(conf, "{publications-file-no-verify}", isFormatOk_flag, NULL, NULL, NULL);
-	if (res != PST_OK) goto cleanup;
 
 	res = KT_OK;
 

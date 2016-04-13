@@ -224,9 +224,9 @@ static int extract_user_info_from_url_if_needed(PARAM_SET *set, const char *flag
 	 * Extract the url withe the greatest priority for further examination.
      */
 	res = PARAM_SET_getStr(set, flag_name, NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &url);
-	if (res != PST_OK && res != PST_PARAMETER_EMPTY && res != PST_PARAMETER_INVALID_FORMAT) {
+	if (res != PST_OK && res != PST_PARAMETER_EMPTY && res != PST_PARAMETER_INVALID_FORMAT && res != PST_PARAMETER_NOT_FOUND) {
 		goto cleanup;
-	} else if (res == PST_PARAMETER_EMPTY || res == PST_PARAMETER_INVALID_FORMAT) {
+	} else if (res == PST_PARAMETER_EMPTY || res == PST_PARAMETER_INVALID_FORMAT || res == PST_PARAMETER_NOT_FOUND) {
 		res = KT_OK;
 		goto cleanup;
 	}

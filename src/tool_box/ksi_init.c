@@ -170,7 +170,7 @@ static int tool_init_ksi_pub_cert_constraints(KSI_CTX *ksi, ERR_TRCKR *err, PARA
 	 * Extract all constraints from the highest priority level.
 	 */
 	res = PARAM_SET_getValueCount(set, "{cnstr}", NULL, PST_PRIORITY_HIGHEST, &constraint_count);
-	if (res != PST_OK && res != PST_PARAMETER_EMPTY) {
+	if (res != PST_OK && res != PST_PARAMETER_EMPTY && res != PST_PARAMETER_NOT_FOUND) {
 		ERR_TRCKR_ADD(err, res, NULL);
 		goto cleanup;
 	}
