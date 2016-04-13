@@ -81,11 +81,21 @@ cleanup:
 	return res;
 }
 
-int CONF_fromFile(PARAM_SET *set, const char *fname, const char *source, int priority) {
+static int conf_fromFile(PARAM_SET *set, const char *fname, const char *source, int priority) {
 	int res;
 
 	if (fname == NULL || set == NULL) {
 		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	if (!SMART_FILE_doFileExist(fname)) {
+		res = KT_IO_ERROR;
+		goto cleanup;
+	}
+
+	if (!SMART_FILE_isReadAccess(fname)) {
+		res = KT_NO_PRIVILEGES;
 		goto cleanup;
 	}
 
@@ -123,12 +133,7 @@ int CONF_fromEnvironment(PARAM_SET *set, const char *env_name, char **envp, int 
 
 			if (buf) KSI_strncpy(buf, value, len);
 
-			if(!SMART_FILE_doFileExist(value)) {
-				res = KT_IO_ERROR;
-				goto cleanup;
-			}
-
-			res = CONF_fromFile(set, value, env_name, priority);
+			res = conf_fromFile(set, value, env_name, priority);
 			if (res != PST_OK) goto cleanup;
 
 			break;
@@ -160,11 +165,15 @@ int CONF_isInvalid(PARAM_SET *set) {
 int conf_report_errors(PARAM_SET *set, const char *fname, int res) {
 	char buf[0xffff];
 	if (res == KT_IO_ERROR) {
-		print_errors("File '%s' pointed by KSI_CONF does not exist.\n", fname);
+		print_errors("Error: Configurations file '%s' pointed by KSI_CONF does not exist.\n", fname);
+		res = KT_INVALID_CONF;
+		goto cleanup;
+	} else if (res == KT_NO_PRIVILEGES) {
+		print_errors("Error: User has no privileges to access configurations file '%s' pointed by KSI_CONF.\n", fname);
 		res = KT_INVALID_CONF;
 		goto cleanup;
 	} else if (CONF_isInvalid(set)) {
-		print_errors("File '%s' pointed by KSI_CONF is invalid:\n", fname);
+		print_errors("Error: Configurations file '%s' pointed by KSI_CONF is invalid:\n", fname);
 		print_errors("%s\n", CONF_errorsToString(set, "  ", buf, sizeof(buf)));
 		res = KT_INVALID_CONF;
 		goto cleanup;
