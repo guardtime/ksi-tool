@@ -265,6 +265,7 @@ int main(int argc, char** argv, char **envp) {
 			print_errors("%s\n", PARAM_SET_unknownsToString(set_task_name, NULL, buf, sizeof(buf)));
 		}
 
+		res = KT_INVALID_CMD_PARAM;
 		goto cleanup;
 	}
 

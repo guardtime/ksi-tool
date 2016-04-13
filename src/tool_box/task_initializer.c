@@ -69,7 +69,9 @@ int TASK_INITIALIZER_check_analyze_report(PARAM_SET *set, TASK_SET *task_set, do
 			res = KT_INVALID_CMD_PARAM;
 			goto cleanup;
 	} else if (PARAM_SET_isUnknown(set)){
-			print_errors("%s\n", PARAM_SET_unknownsToString(set, "Warning: ", buf, sizeof(buf)));
+			print_errors("%s\n", PARAM_SET_unknownsToString(set, "Error: ", buf, sizeof(buf)));
+			res = KT_INVALID_CMD_PARAM;
+			goto cleanup;
 	}
 
 	/**
