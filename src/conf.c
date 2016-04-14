@@ -2,7 +2,7 @@
  *
  * GUARDTIME CONFIDENTIAL
  *
- * Copyright (C) [2015] Guardtime, Inc
+ * Copyright (C) [2016] Guardtime, Inc
  * All Rights Reserved
  *
  * NOTICE:  All information contained herein is, and remains, the
