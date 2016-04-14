@@ -179,7 +179,7 @@ int main(int argc, char** argv, char **envp) {
 	/**
 	 * Define parameter and task set.
      */
-	res = PARAM_SET_new("{h}{version}{d}", &set);
+	res = PARAM_SET_new("{h|help}{version}{d}", &set);
 	if (res != PST_OK) goto cleanup;
 
 	res = TASK_SET_new(&tasks);
@@ -225,7 +225,7 @@ int main(int argc, char** argv, char **envp) {
 	/**
 	 * Simple tool help handler.
      */
-	if (PARAM_SET_isSetByName(set, "h")) {
+	if (PARAM_SET_isSetByName(set, "h") || (argc < 2 && task == NULL) || (argc < 3 && task != NULL)) {
 		print_result("%s %s (C) Guardtime\n", TOOL_getName(), TOOL_getVersion());
 		print_result("%s (C) Guardtime\n\n", KSI_getVersion());
 
