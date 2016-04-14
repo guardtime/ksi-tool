@@ -1,3 +1,23 @@
+/**************************************************************************
+ *
+ * GUARDTIME CONFIDENTIAL
+ *
+ * Copyright (C) [2015] Guardtime, Inc
+ * All Rights Reserved
+ *
+ * NOTICE:  All information contained herein is, and remains, the
+ * property of Guardtime Inc and its suppliers, if any.
+ * The intellectual and technical concepts contained herein are
+ * proprietary to Guardtime Inc and its suppliers and may be
+ * covered by U.S. and Foreign Patents and patents in process,
+ * and are protected by trade secret or copyright law.
+ * Dissemination of this information or reproduction of this
+ * material is strictly forbidden unless prior written permission
+ * is obtained from Guardtime Inc.
+ * "Guardtime" and "KSI" are trademarks or registered trademarks of
+ * Guardtime Inc.
+ */
+
 #include "conf.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -302,23 +322,23 @@ char *conf_help_toString(char *buf, size_t len) {
 		);
 
 	count += KSI_snprintf(buf + count, len - count,
-		" -S <url>  - specify signing service URL.\n"
+		" -S <URL>  - specify signing service URL.\n"
 		" --aggr-user <str>\n"
 		"           - user name for signing service.\n"
 		" --aggr-key <str>\n"
 		"           - HMAC key for signing service.\n"
-		" -X <url>  - specify extending service URL.\n"
+		" -X <URL>  - specify extending service URL.\n"
 		" --ext-user <str>\n"
 		"           - user name for extending service.\n"
 		" --ext-key <str>\n"
 		"           - HMAC key for extending service.\n"
-		" -P <url>  - specify publications file URL (or file with uri scheme 'file://').\n"
+		" -P <URL>  - specify publications file URL (or file with URI scheme 'file://').\n"
 		" --cnstr <oid=value>\n"
 		"           - publications file certificate verification constraints.\n"
 		" -V <file> - specify an OpenSSL-style trust store file for publications file verification.\n"
 		" -W <dir>  - specify an OpenSSL-style trust store directory for publications file verification.\n"
 		" -c <num>  - set network transfer timeout, after successful connect, in s.\n"
-		" -C <num>  - set network Connect timeout in s (is not supported with tcp client).\n"
+		" -C <num>  - set network Connect timeout in s (is not supported with TCP client).\n"
 		" --publications-file-no-verify\n"
 		"           - a flag to force the tool to trust the publications file without\n"
 		"             verifying it. The flag can only be defined on command-line to avoid\n"

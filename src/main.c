@@ -116,8 +116,8 @@ static void print_general_help(PARAM_SET *set){
 		"  that is going to point to ksi configurations file. Configurations file has\n"
 		"  similar syntax to the command-line, but parameters are placed line by line.\n"
 		"  For extender and aggregator -X <url> [--ext-user <str> --ext-key <str>] and \n"
-		"  -S <url> [--aggr-user <str> --aggr-key <str>] must be defined. For publications\n"
-		"  file -P <url> [--cnstr <oid>=<value>] must be defined.\n\n"
+		"  -S <URL> [--aggr-user <str> --aggr-key <str>] must be defined. For publications\n"
+		"  file -P <URL> [--cnstr <oid>=<value>] must be defined.\n\n"
 		);
 	}
 
@@ -147,7 +147,7 @@ static void print_general_help(PARAM_SET *set){
 	 * Print info about supported hash algorithms.
      */
 	print_result(
-	"Supported hash algorithms (-H, -F):\n"
+	"Supported hash algorithms:\n"
 	"  %s\n",
 		hash_algorithms_to_string(buf, sizeof(buf)));
 }
@@ -168,7 +168,7 @@ int main(int argc, char** argv, char **envp) {
 	char fname[1024];
 
 	/**
-	 * Configure ksi tool to print only values that are result of the user request
+	 * Configure KSI tool to print only values that are result of the user request
 	 * or an error.
      */
 	print_init();

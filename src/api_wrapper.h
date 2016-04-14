@@ -63,7 +63,7 @@ int KSITOOL_SignatureVerify_publicationsFileBased(ERR_TRCKR *err, KSI_Signature 
 int KSITOOL_SignatureVerify_userProvidedPublicationBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh, KSI_PublicationData *pubdata, int extperm, KSI_PolicyVerificationResult **result);
 
 char *KSITOOL_DataHash_toString(KSI_DataHash *hsh, char *buf, size_t buf_len);
-char* KSITOOL_PublicationData_toString(KSI_PublicationData *data, char *buf, size_t buf_len);
+char *KSITOOL_PublicationData_toString(KSI_PublicationData *data, char *buf, size_t buf_len);
 char *KSITOOL_PublicationRecord_toString(KSI_PublicationRecord *rec, char *buf, size_t buf_len);
 
 int KSITOOL_LOG_SmartFile(void *logCtx, int logLevel, const char *message);

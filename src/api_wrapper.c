@@ -63,7 +63,7 @@ static int appendInvalidServiceUrlError(ERR_TRCKR *err, int res, KSI_CTX *ksi, l
 			return 1;
 		}
 	} else if (res == KSI_PUBLICATIONS_FILE_NOT_CONFIGURED) {
-			ERR_TRCKR_add(err, res, __FILE__, line, "Error: Publications file must be configured (-P <url>)!", serviceName);
+			ERR_TRCKR_add(err, res, __FILE__, line, "Error: Publications file must be configured (-P <URL>)!", serviceName);
 	} else {
 		appendInvalidPubfileUrlOrFileError(err, res, ksi, line);
 	}
@@ -450,7 +450,7 @@ char *KSITOOL_DataHash_toString(KSI_DataHash *hsh, char *buf, size_t buf_len) {
 	return buf;
 }
 
-char* KSITOOL_PublicationData_toString(KSI_PublicationData *data, char *buf, size_t buf_len) {
+char *KSITOOL_PublicationData_toString(KSI_PublicationData *data, char *buf, size_t buf_len) {
 	char *ret = NULL;
 	int res;
 	char tmp[1024];

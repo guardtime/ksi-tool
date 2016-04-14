@@ -172,14 +172,14 @@ char *verify_help_toString(char *buf, size_t len) {
 		"Usage:\n"
 		"%s verify -i <in.ksig> [-f <data>] [more options]\n"
 		"%s verify --ver-int -i <in.ksig> [-f <data>] [more options]\n"
-		"%s verify --ver-cal -i <in.ksig> [-f <data>] -X <url>\n"
+		"%s verify --ver-cal -i <in.ksig> [-f <data>] -X <URL>\n"
 		"        [--ext-user <user> --ext-key <pass>] [more options]\n"
-		"%s verify --ver-key -i <in.ksig> [-f <data>] -P <url>\n"
+		"%s verify --ver-key -i <in.ksig> [-f <data>] -P <URL>\n"
 		"        [--cnstr <oid=value>]... [more options]\n"
 		"%s verify --ver-pub -i <in.ksig> [-f <data>] --pub-str <pubstring>\n"
-		"        [-x -X <url>  [--ext-user <user> --ext-key <pass>]] [more options]\n"
-		"%s verify --ver-pub -i <in.ksig> [-f <data>] -P <url> [--cnstr <oid=value>]...\n"
-		"        [-x -X <url>  [--ext-user <user> --ext-key <pass>]] [more options]\n\n"
+		"        [-x -X <URL>  [--ext-user <user> --ext-key <pass>]] [more options]\n"
+		"%s verify --ver-pub -i <in.ksig> [-f <data>] -P <URL> [--cnstr <oid=value>]...\n"
+		"        [-x -X <URL>  [--ext-user <user> --ext-key <pass>]] [more options]\n\n"
 
 		" --ver-int - verify just internally.\n"
 		" --ver-cal - use calendar based verification (use extender).\n"
@@ -188,12 +188,12 @@ char *verify_help_toString(char *buf, size_t len) {
 		" -i <file> - signature file to be verified.\n"
 		" -f <data> - file or data hash to be verified. Hash format: <alg>:<hash in hex>.\n"
 		"             as file on local machine).\n"
-		" -X <url>  - specify extending service URL.\n"
+		" -X <URL>  - specify extending service URL.\n"
 		" --ext-user <str>\n"
 		"           - user name for extending service.\n"
 		" --ext-key <str>\n"
 		"           - HMAC key for extending service.\n"
-		" -P <url>  - specify publications file URL (or file with uri scheme 'file://').\n"
+		" -P <URL>  - specify publications file URL (or file with URI scheme 'file://').\n"
 		" --cnstr <oid=value>\n"
 		"           - publications file certificate verification constraints.\n"
 		" --pub-str <str>\n"
@@ -281,7 +281,7 @@ static int signature_verify(int id, PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 
 	switch(id) {
 		case 0:
-			print_progressDesc(d, "Signature verification acctording to trust anchor... ");
+			print_progressDesc(d, "Signature verification according to trust anchor... ");
 			res = signature_verify_general(set, err, extra, ksi, sig, hsh, out);
 			break;
 		case 1:

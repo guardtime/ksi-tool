@@ -13,13 +13,13 @@
 .HP 4
 \fBksi verify --ver-int -i \fIin.ksig \fR[\fB-f \fIdata\fR] [\fImore options\fR]
 .HP 4
-\fBksi verify --ver-cal -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] [\fImore options\fR]
+\fBksi verify --ver-cal -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] [\fImore options\fR]
 .HP 4
-\fBksi verify --ver-key -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fImore options\fR]
+\fBksi verify --ver-key -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIURL \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fImore options\fR]
 .HP 4
-\fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB--pub-str \fIpubstr \fR[\fB-x -X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore options\fR]
+\fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB--pub-str \fIpubstr \fR[\fB-x -X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore options\fR]
 .HP 4
-\fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... \fR[\fB-x -X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore options\fR]
+\fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIURL \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... \fR[\fB-x -X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore options\fR]
 .\"
 .\"
 .SH DESCRIPTION
@@ -65,7 +65,7 @@ KSI signature file to be verified. Use '-' as file name to read signatures file 
 Files path to file to be hashed or data hash imprint to extract the hash value that is going to be verified. Hash format: <alg>:<hash in hex>. Use '-' as file name to read data to be hashed from \fIstdin\fR. Call \fBksi -h \fRto get the list of supported hash algorithms.
 .\"
 .TP
-\fB-X \fIurl\fR
+\fB-X \fIURL\fR
 Specify extending service URL.
 .\"
 .TP
@@ -85,8 +85,8 @@ Permit to use extender when using publication based verification.
 Specify a publication string to verify with.
 .\"
 .TP
-\fB-P \fIurl\fR
-Specify publications file URL (or file with uri scheme 'file://').
+\fB-P \fIURL\fR
+Specify publications file URL (or file with URI scheme 'file://').
 .\"
 .TP
 \fB--cnstr \fIoid\fR=\fIvalue\fR
@@ -126,7 +126,7 @@ See \fBksi\fR(1) for more information.
 .\"
 .SH EXAMPLES
 .\"
-In the following examples it is assumed that default service urls are defined (see \fBksi\fR(1) \fRfor more information). Signature files with extension \fB.ksig \fRare not and files with extension \fB.ext.ksig \fRare extended signatures.
+In the following examples it is assumed that default service URLs are defined (see \fBksi\fR(1) \fRfor more information). Signature files with extension \fB.ksig \fRare not and files with extension \fB.ext.ksig \fRare extended signatures.
 
 \fB1\fR To perform internal verification on KSI signature file \fItest.ksig \fRand document \fItest \fRcall:
 .RS
