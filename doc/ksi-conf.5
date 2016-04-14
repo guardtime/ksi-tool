@@ -11,7 +11,7 @@
 This file is read by KSI command-line tool \fBksi\fR(1) as KSI service configurations file.
 Configurations file is composed with the following parameters described under section \fB OPTIONS\fR. If configurations file with unknown or invalid key-value pairs is used, an error is generated until user applies all the fixes needed. All \fBksi\fR(1) components that use KSI services must accept the configurations file (option \fB--conf \fIfile\fR). It must also be possible to define exactly the same parameters on command-line to override values from configurations file.
 .LP
-All the key-value pairs must be placed one per line. A short parameter or multiple flags must have prefix \fB- \fRand long parameters must have prefix \fB--\fR. To write a comment start the line with \fB#\fR. If some parameter values contain whitespace characters a double quote marks \fB" \fRmust be used to wrap the entire value. If double quote mark \fB" \fRhave to be used inside the value part an escape character \fB\\ \fRmust be typed before the quote mark like that \fB\\"\fR.
+All the key-value pairs must be placed one per line. A short parameter or multiple flags must have prefix \fB- \fRand long parameters must have prefix \fB--\fR. To write a comment start the line with \fB#\fR. If some parameter values contain whitespace characters a double quote marks (\fB"\fR) must be used to wrap the entire value. If double quote mark have to be used inside the value part an escape character (\fB\\\fR) must be typed before the quote mark (\fB\\"\fR).
 .br
 .\"
 .\"
@@ -60,11 +60,11 @@ Specify an OpenSSL-style trust store directory for publications file verificatio
 .\"
 .TP
 \fB-c \fIint\fR
-Set network transfer timeout, after successful connect, in s.
+Set network transfer timeout, after successful connect, in seconds.
 .\"
 .TP
 \fB-C \fIint\fR
-Set network Connect timeout in s (is not supported with TCP client).
+Set network connect timeout in seconds (is not supported with TCP client).
 .\"
 .TP
 \fB--publications-file-no-verify\fR
@@ -85,7 +85,7 @@ An example of configurations file:
 .br
 \fR# KSI Signing service parameters:
 .br
-\fB-S \fIhttp://ksigw.test.guardtime.com:3333/gt-signingservice
+\fB-S \fIhttp://example.gateway.com:3333/gt-signingservice
 .br
 \fB--aggr-user \fIanon
 .br
@@ -96,7 +96,7 @@ An example of configurations file:
 .br
 \fR# Note that ext-key real value is &h/J"kv\\G##
 .br
-\fB-X \fIhttp://ksigw.test.guardtime.com:8010/gt-extendingservice
+\fB-X \fIhttp://example.gateway.com:8010/gt-extendingservice
 .br
 \fB--ext-user \fIanon
 .br
