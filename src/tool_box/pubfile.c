@@ -132,12 +132,12 @@ char *pubfile_help_toString(char*buf, size_t len) {
 
 	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
-		"%s pubfile -P <URL> --dump [-d]\n"
-		"%s pubfile -P <URL> -v --cnstr <oid=value> [-V <file>]... [-W <file>]...\n"
+		" %s pubfile -P <URL> --dump [-d]\n"
+		" %s pubfile -P <URL> -v --cnstr <oid=value> [-V <file>]... [-W <file>]...\n"
 		"        [-d] [more options]\n"
-		"%s pubfile -P <URL> -o <pubfile.bin> --cnstr <oid=value> [-V <file>]...\n"
+		" %s pubfile -P <URL> -o <pubfile.bin> --cnstr <oid=value> [-V <file>]...\n"
 		"        [-W <dir>]... [-d] [more options]\n"
-		"%s pubfile -T <time> -X <URL> [--ext-user <user> --ext-key <pass>]\n\n"
+		" %s pubfile -T <time> -X <URL> [--ext-user <user> --ext-key <pass>]\n\n"
 
 		" -P <URL>  - specify publications file URL (or file with URI scheme 'file://').\n"
 		" --cnstr <oid=value>\n"

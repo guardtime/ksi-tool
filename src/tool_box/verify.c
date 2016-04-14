@@ -170,15 +170,15 @@ char *verify_help_toString(char *buf, size_t len) {
 
 	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
-		"%s verify -i <in.ksig> [-f <data>] [more options]\n"
-		"%s verify --ver-int -i <in.ksig> [-f <data>] [more options]\n"
-		"%s verify --ver-cal -i <in.ksig> [-f <data>] -X <URL>\n"
+		" %s verify -i <in.ksig> [-f <data>] [more options]\n"
+		" %s verify --ver-int -i <in.ksig> [-f <data>] [more options]\n"
+		" %s verify --ver-cal -i <in.ksig> [-f <data>] -X <URL>\n"
 		"        [--ext-user <user> --ext-key <pass>] [more options]\n"
-		"%s verify --ver-key -i <in.ksig> [-f <data>] -P <URL>\n"
+		" %s verify --ver-key -i <in.ksig> [-f <data>] -P <URL>\n"
 		"        [--cnstr <oid=value>]... [more options]\n"
-		"%s verify --ver-pub -i <in.ksig> [-f <data>] --pub-str <pubstring>\n"
+		" %s verify --ver-pub -i <in.ksig> [-f <data>] --pub-str <pubstring>\n"
 		"        [-x -X <URL>  [--ext-user <user> --ext-key <pass>]] [more options]\n"
-		"%s verify --ver-pub -i <in.ksig> [-f <data>] -P <URL> [--cnstr <oid=value>]...\n"
+		" %s verify --ver-pub -i <in.ksig> [-f <data>] -P <URL> [--cnstr <oid=value>]...\n"
 		"        [-x -X <URL>  [--ext-user <user> --ext-key <pass>]] [more options]\n\n"
 
 		" --ver-int - verify just internally.\n"

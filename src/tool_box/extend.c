@@ -187,7 +187,7 @@ char *extend_help_toString(char*buf, size_t len) {
 
 	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
-		"%s extend -i <in.ksig> [-o <out.ksig>] -X <URL>\n"
+		" %s extend -i <in.ksig> [-o <out.ksig>] -X <URL>\n"
 		"        [--ext-user <user> --ext-key <pass>] -P <URL> [--cnstr <oid=value>]...\n"
 		"        [--pub-str <str>] [more options]\n\n"
 		" -i <file> - signature file to be extended.\n"

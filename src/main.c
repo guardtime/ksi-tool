@@ -73,7 +73,7 @@ static char *hash_algorithms_to_string(char *buf, size_t buf_len) {
 	return buf;
 }
 
-static void print_general_help(PARAM_SET *set){
+static void print_general_help(PARAM_SET *set, const char *KSI_CONF){
 	int res;
 	const char *toolVersion = NULL;
 	const char *apiVersion = NULL;
@@ -100,26 +100,14 @@ static void print_general_help(PARAM_SET *set){
 	res = PARAM_SET_getStr(set, "P", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &pub_url);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) return;
 
+
 	aggre_url = aggre_url != NULL ? aggre_url : "Not defined.";
 	ext_url = ext_url != NULL ? ext_url : "Not defined.";
 	pub_url = pub_url != NULL ? pub_url : "Not defined.";
 
-	print_result("\nDefault service access URL-s:\n");
-
-	/**
-	 * Print information about how to define default service access urls, if at
-	 * least one is not defined.
-     */
-	if (aggre_url == NULL || ext_url == NULL || pub_url == NULL) {
-		print_result(
-		"  To define default URL-s, system environment variable KSI_CONF must be defined,\n"
-		"  that is going to point to ksi configurations file. Configurations file has\n"
-		"  similar syntax to the command-line, but parameters are placed line by line.\n"
-		"  For extender and aggregator -X <url> [--ext-user <str> --ext-key <str>] and \n"
-		"  -S <URL> [--aggr-user <str> --aggr-key <str>] must be defined. For publications\n"
-		"  file -P <URL> [--cnstr <oid>=<value>] must be defined.\n\n"
-		);
-	}
+	print_result("\n");
+	if (KSI_CONF != NULL && KSI_CONF[0] != '\0') print_result("KSI_CONF=%s\n", KSI_CONF);
+	print_result("Configured service access URL-s:\n");
 
 	/**
 	 * Print info about default services.
@@ -138,7 +126,7 @@ static void print_general_help(PARAM_SET *set){
 	}
 
 	if (i == 0) {
-		print_result("  none\n");
+		print_result("  none\n\n");
 	} else {
 		print_result("\n");
 	}
@@ -165,7 +153,7 @@ int main(int argc, char** argv, char **envp) {
 	TASK *task = NULL;
 	int retval = EXIT_SUCCESS;
 	char buf[0xffff];
-	char fname[1024];
+	char fname[1024] = "";
 
 	/**
 	 * Configure KSI tool to print only values that are result of the user request
@@ -230,14 +218,17 @@ int main(int argc, char** argv, char **envp) {
 		print_result("%s (C) Guardtime\n\n", KSI_getVersion());
 
 		if (task == NULL) {
-			print_result("Usage %s <task> <arguments>\n", TOOL_getName());
-			print_result("All known tasks:\n");
+			print_result("Usage:\n", TOOL_getName());
+			print_result("  %s [-h] [--version]\n", TOOL_getName());
+			print_result("  %s <component> -h\n", TOOL_getName());
+			print_result("  %s <component> [service info] [more options] -h\n\n", TOOL_getName());
+			print_result("All known components:\n");
 			print_result("%s", TOOL_COMPONENT_LIST_toString(components, "  ", buf, sizeof(buf)));
 		} else {
 			print_result("%s\n", TOOL_COMPONENT_LIST_helpToString(components, TASK_getID(task),buf, sizeof(buf)));
 		}
 
-		print_general_help(configuration);
+		print_general_help(configuration, fname);
 		res = KT_OK;
 		goto cleanup;
 	} else if (PARAM_SET_isSetByName(set, "version")) {

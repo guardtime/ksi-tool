@@ -124,7 +124,7 @@ char *sign_help_toString(char*buf, size_t len) {
 
 	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
-		"%s sign -i <input> [-o <out.ksig>] [-H <alg>] -S <URL>\n"
+		" %s sign -i <input> [-o <out.ksig>] [-H <alg>] -S <URL>\n"
 		"[--aggr-user <user> --aggr-key <pass>][--data-out <file>][more options]\n\n"
 		" -i <data> - file or data hash to be signed. Hash format: <alg>:<hash in hex>.\n"
 		" -o <file> - Output file name to store signature token. Use '-' as file name\n"
