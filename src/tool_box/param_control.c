@@ -604,6 +604,7 @@ int convertRepair_path(const char* arg, char* buf, unsigned len){
 
 int isFormatOk_path(const char *path) {
 	if(path == NULL) return FORMAT_NULLPTR;
+	if(path[0] == '\0') return FORMAT_NOCONTENT;
 	return FORMAT_OK;
 }
 
