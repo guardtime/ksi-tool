@@ -351,7 +351,7 @@ static int date_is_valid(struct tm *time_st) {
     int mm = time_st->tm_mon + 1;
     int yy = time_st->tm_year + 1900;
 
-	if (mm < 1 || mm > 12 || dd < 1 || yy < 1900) {
+	if (mm < 1 || mm > 12 || dd < 1 || yy < 2007 || yy >= 2036) {
         return 0;
     }
 
