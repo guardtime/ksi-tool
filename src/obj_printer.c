@@ -435,16 +435,20 @@ void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *resu
 			return;
 		}
 		print("    %s:\t%s",
-			  getVerificationResultCode(tmp->resultCode),
-			  getVerificationErrorCode(tmp->errorCode));
+				getVerificationResultCode(tmp->resultCode),
+				getVerificationErrorCode(tmp->errorCode));
 		print("\tIn rule:\t%s::%s", tmp->policyName, tmp->ruleName);
 		print("\n");
 	}
 
 	print("  Final result:\n");
 	print("    %s:\t%s",
-		  getVerificationResultCode(result->finalResult.resultCode),
-		  getVerificationErrorCode(result->finalResult.errorCode));
+			getVerificationResultCode(result->finalResult.resultCode),
+			getVerificationErrorCode(result->finalResult.errorCode));
+	if (result->finalResult.resultCode != VER_RES_OK)
+	{
+		print(" (In %s)", result->finalResult.ruleName);
+	}
 	print("\n");
 
 	print("\n");
