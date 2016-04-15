@@ -413,7 +413,7 @@ void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *resu
 	}
 
 	print("KSI Verification result dump:\n");
-	print("  Verification steps:\n");
+	print("  Verification abstract:\n");
 	step = 1;
 	stepsLeft = result->finalResult.stepsPerformed;
 	do {
@@ -426,7 +426,7 @@ void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *resu
 		stepsLeft >>= 1;
 	} while (stepsLeft);
 
-	print("  Verification rules:\n");
+	print("  Verification details:\n");
 	for (i = 0; i < KSI_RuleVerificationResultList_length(result->ruleResults); i++) {
 		KSI_RuleVerificationResult *tmp = NULL;
 		static const char *rulePrefix = "KSI_VerificationRule_";
