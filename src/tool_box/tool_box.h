@@ -24,6 +24,7 @@
 #include <ksi/ksi.h>
 #include "ksitool_err.h"
 #include "tool_box/err_trckr.h"
+#include "param_set/param_set.h"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -40,6 +41,8 @@ const char *OID_getFromString(const char *str);
 
 void print_progressDesc(int showTiming, const char *msg, ...);
 void print_progressResult(int res);
+
+const char *getPublicationsFileRetrieveDescriptionString(PARAM_SET *set);
 
 char *STRING_getBetweenWhitespace(const char *strn, char *buf, size_t buf_len);
 

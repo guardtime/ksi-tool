@@ -206,7 +206,7 @@ static int pubfile_task(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int id, KS
 	 * Retrieve the publications file and set the output variable for debugging.
 	 * Extract the latest publication time.
 	 */
-	print_progressDesc(d, "Downloading publications file... ");
+	print_progressDesc(d, "%s", getPublicationsFileRetrieveDescriptionString(set));
 	res = KSITOOL_receivePublicationsFile(err, ksi, &tmp);
 	ERR_CATCH_MSG(err, res, "Error: Unable to get publications file.");
 	print_progressResult(res);

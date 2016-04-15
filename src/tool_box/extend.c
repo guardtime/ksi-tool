@@ -296,7 +296,7 @@ static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX
 
 	d = PARAM_SET_isSetByName(set, "d");
 
-	print_progressDesc(d, "Receiving publications file... ");
+	print_progressDesc(d, "%s", getPublicationsFileRetrieveDescriptionString(set));
 	res = KSITOOL_receivePublicationsFile(err, ksi, &pubFile);
 	ERR_CATCH_MSG(err, res, "Error: Unable receive publications file.");
 	print_progressResult(res);
@@ -386,7 +386,7 @@ static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_C
 	res = PARAM_SET_getStr(set, "pub-str", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &pubs_str);
 	ERR_CATCH_MSG(err, res, "Error: Unable get publication string.");
 
-	print_progressDesc(d, "Receiving publications file... ");
+	print_progressDesc(d, "%s", getPublicationsFileRetrieveDescriptionString(set));
 	res = KSITOOL_receivePublicationsFile(err, ksi, &pubFile);
 	ERR_CATCH_MSG(err, res, "Error: Unable receive publications file.");
 	print_progressResult(res);
