@@ -354,29 +354,29 @@ static const char *getVerificationResultCode(VerificationResultCode code) {
 	}
 }
 
-static const char *getVerificationErrorCode(VerificationErrorCode code) {
+const char *OBJPRINT_getVerificationErrorCode(VerificationErrorCode code) {
 	switch (code) {
-		case VER_ERR_GEN_1:	return "[GEN-1] Wrong document.";
-		case VER_ERR_GEN_2:	return "[GEN-2] Verification inconclusive.";
-		case VER_ERR_INT_1:	return "[INT-1] Inconsistent aggregation hash chains.";
-		case VER_ERR_INT_2:	return "[INT-2] Inconsistent aggregation hash chain aggregation times.";
-		case VER_ERR_INT_3:	return "[INT-3] Calendar hash chain input hash mismatch.";
-		case VER_ERR_INT_4:	return "[INT-4] Calendar hash chain aggregation time mismatch.";
-		case VER_ERR_INT_5:	return "[INT-5] Calendar hash chain shape inconsistent with aggregation time.";
-		case VER_ERR_INT_6:	return "[INT-6] Calendar hash chain time inconsistent with calendar auth record time.";
-		case VER_ERR_INT_7:	return "[INT-7] Calendar hash chain time inconsistent with publication time.";
-		case VER_ERR_INT_8:	return "[INT-8] Calendar hash chain root has inconsistent with calendar auth record time.";
-		case VER_ERR_INT_9:	return "[INT-9] Calendar hash chain root has inconsistent with publication time.";
-		case VER_ERR_PUB_1:	return "[PUB-1] Extender response calendar root hash mismatch.";
-		case VER_ERR_PUB_2:	return "[PUB-2] Extender response inconsistent.";
-		case VER_ERR_PUB_3:	return "[PUB-3] Extender response input hash mismatch.";
-		case VER_ERR_KEY_1:	return "[KEY-1] Certificate not found.";
-		case VER_ERR_KEY_2:	return "[KEY-2] PKI signature not verified with certificate.";
-		case VER_ERR_CAL_1:	return "[CAL-1] Calendar root hash mismatch.";
-		case VER_ERR_CAL_2:	return "[CAL-2] Aggregation hash chain root hash and calendar hash chain input hash mismatch.";
-		case VER_ERR_CAL_3:	return "[CAL-3] Aggregation time mismatch.";
-		case VER_ERR_CAL_4:	return "[CAL-4] Aggregation hash chain right links are inconsistent.";
-		case VER_ERR_NONE:	return "No error.";
+		case VER_ERR_GEN_1:	return "[GEN-1] Wrong document";
+		case VER_ERR_GEN_2:	return "[GEN-2] Verification inconclusive";
+		case VER_ERR_INT_1:	return "[INT-1] Inconsistent aggregation hash chains";
+		case VER_ERR_INT_2:	return "[INT-2] Inconsistent aggregation hash chain aggregation times";
+		case VER_ERR_INT_3:	return "[INT-3] Calendar hash chain input hash mismatch";
+		case VER_ERR_INT_4:	return "[INT-4] Calendar hash chain aggregation time mismatch";
+		case VER_ERR_INT_5:	return "[INT-5] Calendar hash chain shape inconsistent with aggregation time";
+		case VER_ERR_INT_6:	return "[INT-6] Calendar hash chain time inconsistent with calendar auth record time";
+		case VER_ERR_INT_7:	return "[INT-7] Calendar hash chain time inconsistent with publication time";
+		case VER_ERR_INT_8:	return "[INT-8] Calendar hash chain root has inconsistent with calendar auth record time";
+		case VER_ERR_INT_9:	return "[INT-9] Calendar hash chain root has inconsistent with publication time";
+		case VER_ERR_PUB_1:	return "[PUB-1] Extender response calendar root hash mismatch";
+		case VER_ERR_PUB_2:	return "[PUB-2] Extender response inconsistent";
+		case VER_ERR_PUB_3:	return "[PUB-3] Extender response input hash mismatch";
+		case VER_ERR_KEY_1:	return "[KEY-1] Certificate not found";
+		case VER_ERR_KEY_2:	return "[KEY-2] PKI signature not verified with certificate";
+		case VER_ERR_CAL_1:	return "[CAL-1] Calendar root hash mismatch";
+		case VER_ERR_CAL_2:	return "[CAL-2] Aggregation hash chain root hash and calendar hash chain input hash mismatch";
+		case VER_ERR_CAL_3:	return "[CAL-3] Aggregation time mismatch";
+		case VER_ERR_CAL_4:	return "[CAL-4] Aggregation hash chain right links are inconsistent";
+		case VER_ERR_NONE:	return "No error";
 		default:			return "UNKNOWN";
 	}
 }
@@ -434,17 +434,17 @@ void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *resu
 		if (res != KSI_OK || tmp == NULL) {
 			return;
 		}
-		print("    %s:\t%s",
+		print("    %s:\t%s.",
 				getVerificationResultCode(tmp->resultCode),
-				getVerificationErrorCode(tmp->errorCode));
+				OBJPRINT_getVerificationErrorCode(tmp->errorCode));
 		print("\tIn rule:\t%s::%s", tmp->policyName, tmp->ruleName);
 		print("\n");
 	}
 
 	print("  Final result:\n");
-	print("    %s:\t%s",
+	print("    %s:\t%s.",
 			getVerificationResultCode(result->finalResult.resultCode),
-			getVerificationErrorCode(result->finalResult.errorCode));
+			OBJPRINT_getVerificationErrorCode(result->finalResult.errorCode));
 	if (result->finalResult.resultCode != VER_RES_OK)
 	{
 		print(" (In %s)", result->finalResult.ruleName);
