@@ -57,7 +57,7 @@ TESTSIG="ok-sig-2014-08-01.1.ksig"
 
 echo \# Running tests on `uname -n` at `date '+%F %T %Z'`, start time: ${DATE}
 
-plan_tests 109
+plan_tests 103
 
 
 diag "######    Publications file download"
@@ -190,7 +190,7 @@ diag "--------------------------------------------------------------------------
 
 
 diag "######    Verify freshly created signature token using publication file"
-okx $exec -v -b ${tmp}/pub.bin -i ${tmp}/tmp.ksig -f ${resource_dir}/testFile --log -
+okx $exec -v -b ${tmp}/pub.bin -i ${tmp}/tmp.ksig -f ${resource_dir}/testFile
 
 diag "######    Verifying extended signature using publication file"
 okx $exec -v -b ${tmp}/pub.bin -i ${tmp}/ext.ksig
