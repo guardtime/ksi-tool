@@ -52,9 +52,11 @@ AC_PROG_LN_S
 AC_ARG_ENABLE(static-build,
 [  --enable-static-build      enable static build of ksitool, it is needed to specify static libraries with LIBS environment variable (e.g. "/usr/local/lib/libksi.a /usr/local/opt/openssl/lib/libcrypto.a /usr/local/lib/libcurl.a -lldap -lz")],
 :, :)
-if test $enable_static_build = "yes" ; then
+if test "$enable_static_build" = "yes" ; then
     AC_MSG_NOTICE([KSI library will be linked statically])
 else
+    AC_CHECK_LIB([crypto], [SHA256_Init], [], [AC_MSG_FAILURE([Could not find OpenSSL 0.9.8+ libraries.])])
+    AC_CHECK_LIB([curl], [curl_easy_init], [], [AC_MSG_FAILURE([Could nod find Curl libraries.])])
     AC_CHECK_LIB([ksi], [KSI_CTX_new], [], [AC_MSG_FAILURE([Could not find KSI libraries.])])
 fi
 
