@@ -49,7 +49,7 @@ echo \# Certificate: $url_c
 SH1_HASH="a7d2c6238a92878b2a578c2477e8a33f9d8591ab"
 SH256_HASH="11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d"
 RIPEMD160_HASH="e889d4393145736ebdfb3702dd3180f5c6cffade"
-SHA224_HASH="9b7ea5330761e8b50b36af0d61c10bc227c908ee57a545d40131cfa3"
+#SHA224_HASH="9b7ea5330761e8b50b36af0d61c10bc227c908ee57a545d40131cfa3"
 SHA384_HASH="a5ac3bb2fa156480d1cf437c54481d9c77a145b682879e92e30a8b79f0a45a001be7969ffa02d81af0610b784ae72f4f"
 SHA512_HASH="09e3fc9d3669eaf53d3afeb60e6a73af2c7c7b01a0fe49127253e0d466ba3d1c85ed541593775a12a880378335eeda5fc0ad5700920e11ed315f4b49f37c6d26"
 
@@ -94,8 +94,8 @@ okx $exec -s -F SHA-256:${SH256_HASH} -o ${tmp}/h_sha256.ksig -S ${KSI_TCP_AGGRE
 diag "######    Sign raw hash using RIPEMD-160 over TCP"
 okx $exec -s -F RIPEMD-160:${RIPEMD160_HASH} -o ${tmp}/h_r160.ksig -S ${KSI_TCP_AGGREGATOR} ${KSI_TCP_LOGIN}
 
-diag "######    Sign raw hash using SHA-224 over TCP"
-okx $exec -s -F SHA-224:${SHA224_HASH} -o ${tmp}/h_sha224.ksig -S ${KSI_TCP_AGGREGATOR} ${KSI_TCP_LOGIN}
+#diag "######    Sign raw hash using SHA-224 over TCP"
+#okx $exec -s -F SHA-224:${SHA224_HASH} -o ${tmp}/h_sha224.ksig -S ${KSI_TCP_AGGREGATOR} ${KSI_TCP_LOGIN}
 
 diag "######    Sign raw hash using SHA2-384 over TCP"
 okx $exec -s -F SHA-384:${SHA384_HASH} -o ${tmp}/h_sha384.ksig -S ${KSI_TCP_AGGREGATOR} ${KSI_TCP_LOGIN}
@@ -131,9 +131,9 @@ diag "######    Sign and verify using algorithm: RIPEMD-160"
 okx $exec -s -H RIPEMD-160 -f ${resource_dir}/testFile -o ${tmp}/f_ripemd160.ksig
 okx $exec -v -i ${tmp}/f_ripemd160.ksig -f ${resource_dir}/testFile
 
-diag "######    Sign and verify using algorithm: SHA2-224"
-okx $exec -s -H SHA2-224 -f ${resource_dir}/testFile -o ${tmp}/f_sha224.ksig
-okx $exec -v -i ${tmp}/f_sha224.ksig -f ${resource_dir}/testFile
+#diag "######    Sign and verify using algorithm: SHA2-224"
+#okx $exec -s -H SHA2-224 -f ${resource_dir}/testFile -o ${tmp}/f_sha224.ksig
+#okx $exec -v -i ${tmp}/f_sha224.ksig -f ${resource_dir}/testFile
 
 diag "######    Sign and verify using algorithm: SHA2-384"
 okx $exec -s -H SHA2-384 -f ${resource_dir}/testFile -o ${tmp}/f_sha384.ksig
@@ -157,9 +157,9 @@ diag "######    Sign and verify raw hash using RIPEMD-160"
 okx $exec -s -F RIPEMD-160:${RIPEMD160_HASH} -o ${tmp}/h_r160.ksig
 okx $exec -v -i ${tmp}/h_r160.ksig -f ${resource_dir}/testFile
 
-diag "######    Sign and verify raw hash using SHA-224"
-okx $exec -s -F SHA-224:${SHA224_HASH} -o ${tmp}/h_sha224.ksig
-okx $exec -v -i ${tmp}/h_sha224.ksig -f ${resource_dir}/testFile
+#diag "######    Sign and verify raw hash using SHA-224"
+#okx $exec -s -F SHA-224:${SHA224_HASH} -o ${tmp}/h_sha224.ksig
+#okx $exec -v -i ${tmp}/h_sha224.ksig -f ${resource_dir}/testFile
 
 diag "######    Sign and verify raw hash using SHA2-384"
 okx $exec -s -F SHA-384:${SHA384_HASH} -o ${tmp}/h_sha384.ksig
@@ -190,7 +190,7 @@ diag "--------------------------------------------------------------------------
 
 
 diag "######    Verify freshly created signature token using publication file"
-okx $exec -v -b ${tmp}/pub.bin -i ${tmp}/tmp.ksig -f ${resource_dir}/testFile
+okx $exec -v -b ${tmp}/pub.bin -i ${tmp}/tmp.ksig -f ${resource_dir}/testFile --log -
 
 diag "######    Verifying extended signature using publication file"
 okx $exec -v -b ${tmp}/pub.bin -i ${tmp}/ext.ksig
@@ -213,8 +213,8 @@ okx $exec -v -i ${tmp}/ext_btw_pubs.ksig --ref AAAAAA-CUHKBL-OAN7KE-CYZANC-HVJCQ
 diag "######    Verify raw hash using SHA-1"
 okx $exec -v -i ${resource_dir}/sha1.ksig -f ${resource_dir}/testFile
 
-diag "######    Verify raw hash using SHA-224"
-okx $exec -v -i ${resource_dir}/sha224.ksig -f ${resource_dir}/testFile
+#diag "######    Verify raw hash using SHA-224"
+#okx $exec -v -i ${resource_dir}/sha224.ksig -f ${resource_dir}/testFile
 
 diag "######    Verify raw hash using SHA-256"
 okx $exec -v -i ${resource_dir}/sha256.ksig -f ${resource_dir}/testFile
@@ -293,7 +293,7 @@ diag "--------------------------------------------------------------------------
 like "`$exec -p -T 969085709 2>&1`" "The request asked for hash values older than the oldest round" "Error Unable to Get Publication string"
 diag "------------------------------------------------------------------------------";
 
-like "`$exec -p -t -o $tmp/tpub.bin -E wrong@email.mail 2>&1`" "Error: Unexpected OID value for PKI Certificate constraint." "Error wrong E-mail"
+like "`$exec -p -t -o $tmp/tpub.bin --cnstr email=wrong@email.mail 2>&1`" "Error: Unexpected OID value for PKI Certificate constraint." "Error wrong E-mail"
 diag "------------------------------------------------------------------------------";
 
 like "`$exec -s -F SHA-1:${SH1_HASH} -o ${tmp}/tmp_n.ksig --user nouserpresent --pass asd 2>&1`" "The request could not be authenticated" "Error Wrong user specified"

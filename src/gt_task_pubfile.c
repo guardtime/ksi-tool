@@ -55,6 +55,9 @@ int GT_publicationsFileTask(TASK *task){
 		res = GT_publicationsFileTask_downloadPublicationsFile(task, ksi, err, &publicationsFile);
 		if (res != KT_OK) goto cleanup;
 
+		res = KSITOOL_verifyPublicationsFile(err, ksi, publicationsFile);
+		if (res != KT_OK) goto cleanup;
+
 		res = savePublicationFile(err, ksi, publicationsFile, outPubFileName);
 		if (res != KT_OK) goto cleanup;
 		print_info("Publications file '%s' saved.\n", outPubFileName);
