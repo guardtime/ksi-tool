@@ -402,6 +402,12 @@ static int getVerificationStepResult(size_t step, KSI_PolicyVerificationResult *
 	return !!(result->finalResult.stepsPerformed & result->finalResult.stepsSuccessful & step);
 }
 
+static char *getPrintableRuleName(const char *rule) {
+	static const char *rulePrefix = "KSI_VerificationRule_";
+	/* Do not print the prefix of the API rule name. Full rule name is, eg: KSI_VerificationRule_DocumentHashDoesNotExist. */
+	return (rule + (strstr(rule, rulePrefix) == NULL ? 0 : strlen(rulePrefix)));
+}
+
 void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *result, int (*print)(const char *format, ... )) {
 	int res;
 	unsigned int i = 0;
@@ -413,7 +419,7 @@ void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *resu
 	}
 
 	print("KSI Verification result dump:\n");
-	print("  Verification steps:\n");
+	print("  Verification abstract:\n");
 	step = 1;
 	stepsLeft = result->finalResult.stepsPerformed;
 	do {
@@ -426,7 +432,7 @@ void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *resu
 		stepsLeft >>= 1;
 	} while (stepsLeft);
 
-	print("  Verification rules:\n");
+	print("  Verification details:\n");
 	for (i = 0; i < KSI_RuleVerificationResultList_length(result->ruleResults); i++) {
 		KSI_RuleVerificationResult *tmp = NULL;
 
@@ -437,7 +443,8 @@ void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *resu
 		print("    %s:\t%s.",
 				getVerificationResultCode(tmp->resultCode),
 				OBJPRINT_getVerificationErrorCode(tmp->errorCode));
-		print("\tIn rule:\t%s::%s", tmp->policyName, tmp->ruleName);
+		print("\tIn rule:");
+		print("\t%s", getPrintableRuleName(tmp->ruleName));
 		print("\n");
 	}
 
@@ -445,9 +452,11 @@ void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *resu
 	print("    %s:\t%s.",
 			getVerificationResultCode(result->finalResult.resultCode),
 			OBJPRINT_getVerificationErrorCode(result->finalResult.errorCode));
+	/* Print also rule name in case of an error. */
 	if (result->finalResult.resultCode != VER_RES_OK)
 	{
-		print(" (In %s)", result->finalResult.ruleName);
+		print("\tIn rule:");
+		print("\t%s", getPrintableRuleName(result->finalResult.ruleName));
 	}
 	print("\n");
 
