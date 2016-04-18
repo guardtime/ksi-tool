@@ -354,29 +354,29 @@ static const char *getVerificationResultCode(VerificationResultCode code) {
 	}
 }
 
-static const char *getVerificationErrorCode(VerificationErrorCode code) {
+const char *OBJPRINT_getVerificationErrorCode(VerificationErrorCode code) {
 	switch (code) {
-		case VER_ERR_GEN_1:	return "[GEN-1] Wrong document.";
-		case VER_ERR_GEN_2:	return "[GEN-2] Verification inconclusive.";
-		case VER_ERR_INT_1:	return "[INT-1] Inconsistent aggregation hash chains.";
-		case VER_ERR_INT_2:	return "[INT-2] Inconsistent aggregation hash chain aggregation times.";
-		case VER_ERR_INT_3:	return "[INT-3] Calendar hash chain input hash mismatch.";
-		case VER_ERR_INT_4:	return "[INT-4] Calendar hash chain aggregation time mismatch.";
-		case VER_ERR_INT_5:	return "[INT-5] Calendar hash chain shape inconsistent with aggregation time.";
-		case VER_ERR_INT_6:	return "[INT-6] Calendar hash chain time inconsistent with calendar auth record time.";
-		case VER_ERR_INT_7:	return "[INT-7] Calendar hash chain time inconsistent with publication time.";
-		case VER_ERR_INT_8:	return "[INT-8] Calendar hash chain root has inconsistent with calendar auth record time.";
-		case VER_ERR_INT_9:	return "[INT-9] Calendar hash chain root has inconsistent with publication time.";
-		case VER_ERR_PUB_1:	return "[PUB-1] Extender response calendar root hash mismatch.";
-		case VER_ERR_PUB_2:	return "[PUB-2] Extender response inconsistent.";
-		case VER_ERR_PUB_3:	return "[PUB-3] Extender response input hash mismatch.";
-		case VER_ERR_KEY_1:	return "[KEY-1] Certificate not found.";
-		case VER_ERR_KEY_2:	return "[KEY-2] PKI signature not verified with certificate.";
-		case VER_ERR_CAL_1:	return "[CAL-1] Calendar root hash mismatch.";
-		case VER_ERR_CAL_2:	return "[CAL-2] Aggregation hash chain root hash and calendar hash chain input hash mismatch.";
-		case VER_ERR_CAL_3:	return "[CAL-3] Aggregation time mismatch.";
-		case VER_ERR_CAL_4:	return "[CAL-4] Aggregation hash chain right links are inconsistent.";
-		case VER_ERR_NONE:	return "No error.";
+		case VER_ERR_GEN_1:	return "[GEN-1] Wrong document";
+		case VER_ERR_GEN_2:	return "[GEN-2] Verification inconclusive";
+		case VER_ERR_INT_1:	return "[INT-1] Inconsistent aggregation hash chains";
+		case VER_ERR_INT_2:	return "[INT-2] Inconsistent aggregation hash chain aggregation times";
+		case VER_ERR_INT_3:	return "[INT-3] Calendar hash chain input hash mismatch";
+		case VER_ERR_INT_4:	return "[INT-4] Calendar hash chain aggregation time mismatch";
+		case VER_ERR_INT_5:	return "[INT-5] Calendar hash chain shape inconsistent with aggregation time";
+		case VER_ERR_INT_6:	return "[INT-6] Calendar hash chain time inconsistent with calendar auth record time";
+		case VER_ERR_INT_7:	return "[INT-7] Calendar hash chain time inconsistent with publication time";
+		case VER_ERR_INT_8:	return "[INT-8] Calendar hash chain root has inconsistent with calendar auth record time";
+		case VER_ERR_INT_9:	return "[INT-9] Calendar hash chain root has inconsistent with publication time";
+		case VER_ERR_PUB_1:	return "[PUB-1] Extender response calendar root hash mismatch";
+		case VER_ERR_PUB_2:	return "[PUB-2] Extender response inconsistent";
+		case VER_ERR_PUB_3:	return "[PUB-3] Extender response input hash mismatch";
+		case VER_ERR_KEY_1:	return "[KEY-1] Certificate not found";
+		case VER_ERR_KEY_2:	return "[KEY-2] PKI signature not verified with certificate";
+		case VER_ERR_CAL_1:	return "[CAL-1] Calendar root hash mismatch";
+		case VER_ERR_CAL_2:	return "[CAL-2] Aggregation hash chain root hash and calendar hash chain input hash mismatch";
+		case VER_ERR_CAL_3:	return "[CAL-3] Aggregation time mismatch";
+		case VER_ERR_CAL_4:	return "[CAL-4] Aggregation hash chain right links are inconsistent";
+		case VER_ERR_NONE:	return "No error";
 		default:			return "UNKNOWN";
 	}
 }
@@ -400,6 +400,12 @@ static const char *getVerificationStepDescription(size_t step) {
 
 static int getVerificationStepResult(size_t step, KSI_PolicyVerificationResult *result) {
 	return !!(result->finalResult.stepsPerformed & result->finalResult.stepsSuccessful & step);
+}
+
+static char *getPrintableRuleName(const char *rule) {
+	static const char *rulePrefix = "KSI_VerificationRule_";
+	/* Do not print the prefix of the API rule name. Full rule name is, eg: KSI_VerificationRule_DocumentHashDoesNotExist. */
+	return (rule + (strstr(rule, rulePrefix) == NULL ? 0 : strlen(rulePrefix)));
 }
 
 void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *result, int (*print)(const char *format, ... )) {
@@ -429,25 +435,29 @@ void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *resu
 	print("  Verification details:\n");
 	for (i = 0; i < KSI_RuleVerificationResultList_length(result->ruleResults); i++) {
 		KSI_RuleVerificationResult *tmp = NULL;
-		static const char *rulePrefix = "KSI_VerificationRule_";
 
 		res = KSI_RuleVerificationResultList_elementAt(result->ruleResults, i, &tmp);
 		if (res != KSI_OK || tmp == NULL) {
 			return;
 		}
-		print("    %s:\t%s",
-			  getVerificationResultCode(tmp->resultCode),
-			  getVerificationErrorCode(tmp->errorCode));
+		print("    %s:\t%s.",
+				getVerificationResultCode(tmp->resultCode),
+				OBJPRINT_getVerificationErrorCode(tmp->errorCode));
 		print("\tIn rule:");
-		/* Do not print the prefix of the API rule name. Full rule name is, eg: KSI_VerificationRule_DocumentHashDoesNotExist. */
-		print("\t%s", tmp->ruleName + (strstr(tmp->ruleName, rulePrefix) == NULL ? 0 : strlen(rulePrefix)));
+		print("\t%s", getPrintableRuleName(tmp->ruleName));
 		print("\n");
 	}
 
 	print("  Final result:\n");
-	print("    %s:\t%s",
-		  getVerificationResultCode(result->finalResult.resultCode),
-		  getVerificationErrorCode(result->finalResult.errorCode));
+	print("    %s:\t%s.",
+			getVerificationResultCode(result->finalResult.resultCode),
+			OBJPRINT_getVerificationErrorCode(result->finalResult.errorCode));
+	/* Print also rule name in case of an error. */
+	if (result->finalResult.resultCode != VER_RES_OK)
+	{
+		print("\tIn rule:");
+		print("\t%s", getPrintableRuleName(result->finalResult.ruleName));
+	}
 	print("\n");
 
 	print("\n");

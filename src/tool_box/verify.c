@@ -281,36 +281,29 @@ static int signature_verify(int id, PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 
 	switch(id) {
 		case 0:
-			print_progressDesc(d, "Signature verification acctording to trust anchor... ");
 			res = signature_verify_general(set, err, extra, ksi, sig, hsh, out);
-			break;
+			goto cleanup;
 		case 1:
-			print_progressDesc(d, "Signature internal verification... ");
 			res = signature_verify_internally(set, err, ksi, sig, hsh, out);
-			break;
+			goto cleanup;
 		case 2:
-			print_progressDesc(d, "Signature calendar-based verification... ");
 			res = signature_verify_calendar_based(set, err, ksi, sig, hsh, out);
-			break;
+			goto cleanup;
 		case 3:
-			print_progressDesc(d, "Signature key-based verification... ");
 			res = signature_verify_key_based(set, err, ksi, sig, hsh, out);
-			break;
+			goto cleanup;
 		case 4:
 		case 5:
-			print_progressDesc(d, "Signature publication-based verification with publications file... ");
 			res = signature_verify_publication_based_with_pubfile(set, err, ksi, sig, hsh, out);
-			break;
+			goto cleanup;
 		case 6:
 		case 7:
-			print_progressDesc(d, "Signature publication-based verification with user publication string... ");
 			res = signature_verify_publication_based_with_user_pub(set, err, extra, ksi, sig, hsh, out);
-			break;
+			goto cleanup;
 		default:
 			ERR_CATCH_MSG(err, res = KT_UNKNOWN_ERROR, "Error: Unknown signature verification task.");
-			break;
+			goto cleanup;
 	}
-	ERR_CATCH_MSG(err, res, "Error: Signature verification failed.");
 
 cleanup:
 	print_progressResult(res);
@@ -325,6 +318,7 @@ static int signature_verify_general(PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 	int d = PARAM_SET_isSetByName(set, "d");
 	int x = PARAM_SET_isSetByName(set, "x");
 	KSI_PublicationData *pub_data = NULL;
+	static const char *task = "Signature verification according to trust anchor";
 
 	/**
 	 * Get Publication data if available
@@ -337,9 +331,9 @@ static int signature_verify_general(PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 	/**
 	 * Verify signature
 	 */
-	print_progressDesc(d, "Verifying signature... ");
+	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_general(err, sig, ksi, hsh, pub_data, x, out);
-	ERR_CATCH_MSG(err, res, "Error: Failed to verify signature.");
+	ERR_CATCH_MSG(err, res, "Error: %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode), task);
 
 	res = KT_OK;
 
@@ -357,12 +351,13 @@ static int signature_verify_internally(PARAM_SET *set, ERR_TRCKR *err,
 									   KSI_PolicyVerificationResult **out) {
 	int res;
 	int d;
+	static const char *task = "Signature internal verification";
 
 	d = PARAM_SET_isSetByName(set, "d");
 
-	print_progressDesc(d, "Verifying signature... ");
+	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_internally(err, sig, ksi, hsh, out);
-	ERR_CATCH_MSG(err, res, "Error: Failed to verify signature.");
+	ERR_CATCH_MSG(err, res, "Error: %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode), task);
 
 	res = KT_OK;
 
@@ -379,13 +374,14 @@ static int signature_verify_key_based(PARAM_SET *set, ERR_TRCKR *err,
 									  KSI_PolicyVerificationResult **out) {
 	int res;
 	int d = PARAM_SET_isSetByName(set, "d");
+	static const char *task = "Signature key-based verification";
 
 	/**
 	 * Verify signature
 	 */
-	print_progressDesc(d, "Verifying signature... ");
+	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_keyBased(err, sig, ksi, hsh, out);
-	ERR_CATCH_MSG(err, res, "Error: Failed to verify signature.");
+	ERR_CATCH_MSG(err, res, "Error: %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode), task);
 
 	res = KT_OK;
 
@@ -403,6 +399,7 @@ static int signature_verify_publication_based_with_user_pub(PARAM_SET *set, ERR_
 	int d = PARAM_SET_isSetByName(set, "d");
 	int x = PARAM_SET_isSetByName(set, "x");
 	KSI_PublicationData *pub_data = NULL;
+	static const char *task = "Signature publication-based verification with user publication string";
 
 	/**
 	 * Get Publication data
@@ -413,9 +410,9 @@ static int signature_verify_publication_based_with_user_pub(PARAM_SET *set, ERR_
 	/**
 	 * Verify signature
 	 */
-	print_progressDesc(d, "Verifying signature... ");
+	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_userProvidedPublicationBased(err, sig, ksi, hsh, pub_data, x, out);
-	ERR_CATCH_MSG(err, res, "Error: Failed to verify signature.");
+	ERR_CATCH_MSG(err, res, "Error: %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode), task);
 
 	res = KT_OK;
 
@@ -434,13 +431,14 @@ static int signature_verify_publication_based_with_pubfile(PARAM_SET *set, ERR_T
 	int res;
 	int d = PARAM_SET_isSetByName(set, "d");
 	int x = PARAM_SET_isSetByName(set, "x");
+	static const char *task = "Signature publication-based verification with publications file";
 
 	/**
 	 * Verify signature
 	 */
-	print_progressDesc(d, "Verifying signature... ");
+	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_publicationsFileBased(err, sig, ksi, hsh, x, out);
-	ERR_CATCH_MSG(err, res, "Error: Failed to verify signature.");
+	ERR_CATCH_MSG(err, res, "Error: %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode), task);
 
 	res = KT_OK;
 
@@ -457,13 +455,14 @@ static int signature_verify_calendar_based(PARAM_SET *set, ERR_TRCKR *err,
 	int res;
 	int d = PARAM_SET_isSetByName(set, "d");
 	KSI_Integer *pubTime = NULL;
+	static const char *task = "Signature calendar-based verification";
 
 	/**
 	 * Verify signature
 	 */
-	print_progressDesc(d, "Verifying signature... ");
+	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_calendarBased(err, sig, ksi, hsh, out);
-	ERR_CATCH_MSG(err, res, "Error: Failed to verify signature.");
+	ERR_CATCH_MSG(err, res, "Error: %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode), task);
 
 	res = KT_OK;
 
