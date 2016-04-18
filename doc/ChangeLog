@@ -1,3 +1,7 @@
+Version 1.10
+
+2016-18-04 1.10.0
+
 * IMPROVEMENT: Enabled autotools option subdir-objects to remove build errors (on Mac OS and Ubuntu). (TOOL-97)
 * IMPROVEMENT: Added option to build static ksitool. (TOOL-103)
 * IMPROVEMENT: Possibility to create installer package for Mac OS with static ksitool. (KCT-77, TOOL-25).
