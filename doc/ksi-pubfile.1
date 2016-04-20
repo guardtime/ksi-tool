@@ -105,17 +105,22 @@ In the following examples it is assumed that default service urls are defined (s
 \fBksi pubfile --dump -P \fIfile://pubfile.bin\fR
 .RE
 
-\fB3\fR To download and verify a publication file \fIpubfile.bin\fR call:
+\fB3\fR To verify a publications file \fIpubfile.bin\fR from local disk call:
+.RS
+\fBksi pubfile -v -P \fIfile:///home/user/publications/pubfile.bin\fR
+.RE
+
+\fB4\fR To download and verify a publication file \fIpubfile.bin\fR call:
 .RS
 \fBksi pubfile -o \fIpubfile.bin\fR \fB--cnstr \fIemail=publications@guardtime.com
 .RE
 
-\fB4\fR To verify a publications file with only certificates defined on command-line call:
+\fB5\fR To verify a publications file with only certificates defined on command-line call:
 .RS
 \fBksi pubfile -v -V \fIcertificate_1.bin \fB-V \fIcertificate_2.bin \fB--cnstr \fIemail=publications@guardtime.com
 .RE
 
-\fB5\fR To create a publication string call:
+\fB6\fR To create a publication string call:
 .RS
 \fBksi pubfile -T \fR"\fI2015-10-15 00:00:00\fR" 
 .RE
