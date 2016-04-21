@@ -9,11 +9,11 @@
 .SH SYNOPSIS
 .\"
 .HP 4
-\fBksi extend -i \fIin.ksig \fR[\fB-o \fIout.ksig\fR] \fB-X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... [\fImore options\fR]
+\fBksi extend -i \fIin.ksig \fR[\fB-o \fIout.ksig\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-P \fIURL \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... [\fImore options\fR]
 .HP 4
-\fBksi extend -i \fIin.ksig \fR[\fB-o \fIout.ksig\fR] \fB-X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-P \fIurl \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fB--pub-str \fIstr \fR[\fImore options\fR]
+\fBksi extend -i \fIin.ksig \fR[\fB-o \fIout.ksig\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-P \fIURL \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fB--pub-str \fIstr \fR[\fImore options\fR]
 .HP 4
-\fBksi extend -i \fIin.ksig \fR[\fB-o \fIout.ksig\fR] \fB-X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-T \fItime \fR[\fImore options\fR]
+\fBksi extend -i \fIin.ksig \fR[\fB-o \fIout.ksig\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-T \fItime \fR[\fImore options\fR]
 .br
 .\"
 .\"
@@ -36,7 +36,7 @@ KSI signature file to be extended. Use '-' as file name to read signatures file 
 Output file name to store the extended signature token. Use '-' as file name to redirect signature binary stream to \fIstdout\fR. If not specified signature is saved to the path described as <input files path>(nr).ext, where \fI(nr)\fR is generated serial number if file name already exists. If specified will always overwrite the existing file.
 .\"
 .TP
-\fB-X \fIurl\fR
+\fB-X \fIURL\fR
 Specify extending service URL.
 .\"
 .TP
@@ -48,8 +48,8 @@ User name for extending service.
 HMAC Key for extending service.
 .\"
 .TP
-\fB-P \fIurl\fR
-Specify publications file URL (or file with uri scheme 'file://').
+\fB-P \fIURL\fR
+Specify publications file URL (or file with URI scheme 'file://').
 .\"
 .TP
 \fB--cnstr \fIoid\fR=\fIvalue\fR
@@ -84,7 +84,7 @@ See \fBksi\fR(1) for more information.
 .\"
 .SH EXAMPLES
 .\"
-In the following examples it is assumed that default service urls are defined (see \fBksi\fR(1) \fRfor more information).
+In the following examples it is assumed that default service URLs are defined (see \fBksi\fR(1) \fRfor more information).
 .\"
 .TP 2
 \fB1

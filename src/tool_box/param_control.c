@@ -2,7 +2,7 @@
  *
  * GUARDTIME CONFIDENTIAL
  *
- * Copyright (C) [2015] Guardtime, Inc
+ * Copyright (C) [2015 -2016] Guardtime, Inc
  * All Rights Reserved
  *
  * NOTICE:  All information contained herein is, and remains, the
@@ -351,7 +351,7 @@ static int date_is_valid(struct tm *time_st) {
     int mm = time_st->tm_mon + 1;
     int yy = time_st->tm_year + 1900;
 
-	if (mm < 1 || mm > 12 || dd < 1 || yy < 1900) {
+	if (mm < 1 || mm > 12 || dd < 1 || yy < 2007 || yy >= 2036) {
         return 0;
     }
 
@@ -604,6 +604,7 @@ int convertRepair_path(const char* arg, char* buf, unsigned len){
 
 int isFormatOk_path(const char *path) {
 	if(path == NULL) return FORMAT_NULLPTR;
+	if(path[0] == '\0') return FORMAT_NOCONTENT;
 	return FORMAT_OK;
 }
 

@@ -2,7 +2,7 @@
  *
  * GUARDTIME CONFIDENTIAL
  *
- * Copyright (C) [2015] Guardtime, Inc
+ * Copyright (C) [2016] Guardtime, Inc
  * All Rights Reserved
  *
  * NOTICE:  All information contained herein is, and remains, the
@@ -187,8 +187,8 @@ char *extend_help_toString(char*buf, size_t len) {
 
 	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
-		"%s extend -i <in.ksig> [-o <out.ksig>] -X <url>\n"
-		"        [--ext-user <user> --ext-key <pass>] -P <url> [--cnstr <oid=value>]...\n"
+		" %s extend -i <in.ksig> [-o <out.ksig>] -X <URL>\n"
+		"        [--ext-user <user> --ext-key <pass>] -P <URL> [--cnstr <oid=value>]...\n"
 		"        [--pub-str <str>] [more options]\n\n"
 		" -i <file> - signature file to be extended.\n"
 		" -o <file> - Output file name to store extended signature token. Use '-'\n"
@@ -197,12 +197,12 @@ char *extend_help_toString(char*buf, size_t len) {
 		"             <input files path>(nr).ext, where (nr) is generated serial\n"
 		"             number if file name already exists. If specified will always\n"
 		"             overwrite the existing file.\n"
-		" -X <url>  - specify extending service URL.\n"
+		" -X <URL>  - specify extending service URL.\n"
 		" --ext-user <str>\n"
 		"           - user name for extending service.\n"
 		" --ext-key <str>\n"
 		"           - HMAC key for extending service.\n"
-		" -P <url>  - specify publications file URL (or file with uri scheme 'file://').\n"
+		" -P <URL>  - specify publications file URL (or file with URI scheme 'file://').\n"
 		" --cnstr <oid=value>\n"
 		"           - publications file certificate verification constraints.\n"
 		" --pub-str <str>\n"
@@ -296,7 +296,7 @@ static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX
 
 	d = PARAM_SET_isSetByName(set, "d");
 
-	print_progressDesc(d, "Receiving publications file... ");
+	print_progressDesc(d, "%s", getPublicationsFileRetrieveDescriptionString(set));
 	res = KSITOOL_receivePublicationsFile(err, ksi, &pubFile);
 	ERR_CATCH_MSG(err, res, "Error: Unable receive publications file.");
 	print_progressResult(res);
@@ -386,7 +386,7 @@ static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_C
 	res = PARAM_SET_getStr(set, "pub-str", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &pubs_str);
 	ERR_CATCH_MSG(err, res, "Error: Unable get publication string.");
 
-	print_progressDesc(d, "Receiving publications file... ");
+	print_progressDesc(d, "%s", getPublicationsFileRetrieveDescriptionString(set));
 	res = KSITOOL_receivePublicationsFile(err, ksi, &pubFile);
 	ERR_CATCH_MSG(err, res, "Error: Unable receive publications file.");
 	print_progressResult(res);
@@ -443,7 +443,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	 * Configure parameter set, control, repair and object extractor function.
 	 */
 	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFileRestrictPipe, convertRepair_path, NULL);
-	PARAM_SET_addControl(set, "{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
+	PARAM_SET_addControl(set, "{log}{o}", isFormatOk_path, NULL, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignature);
 	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
 	PARAM_SET_addControl(set, "{d}{dump}", isFormatOk_flag, NULL, NULL, NULL);

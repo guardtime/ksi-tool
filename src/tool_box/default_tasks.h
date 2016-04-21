@@ -1,8 +1,21 @@
-/* 
- * File:   default_tasks.h
- * Author: Taavi
+/**************************************************************************
  *
- * Created on February 4, 2016, 11:44 AM
+ * GUARDTIME CONFIDENTIAL
+ *
+ * Copyright (C) [2016] Guardtime, Inc
+ * All Rights Reserved
+ *
+ * NOTICE:  All information contained herein is, and remains, the
+ * property of Guardtime Inc and its suppliers, if any.
+ * The intellectual and technical concepts contained herein are
+ * proprietary to Guardtime Inc and its suppliers and may be
+ * covered by U.S. and Foreign Patents and patents in process,
+ * and are protected by trade secret or copyright law.
+ * Dissemination of this information or reproduction of this
+ * material is strictly forbidden unless prior written permission
+ * is obtained from Guardtime Inc.
+ * "Guardtime" and "KSI" are trademarks or registered trademarks of
+ * Guardtime Inc.
  */
 
 #ifndef DEFAULT_TASKS_H

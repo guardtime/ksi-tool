@@ -2,7 +2,7 @@
  *
  * GUARDTIME CONFIDENTIAL
  *
- * Copyright (C) [2015] Guardtime, Inc
+ * Copyright (C) [2016] Guardtime, Inc
  * All Rights Reserved
  *
  * NOTICE:  All information contained herein is, and remains, the
@@ -132,21 +132,27 @@ char *pubfile_help_toString(char*buf, size_t len) {
 
 	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
-		"%s pubfile -P <url> --dump [-d]\n"
-		"%s pubfile -P <url> -v --cnstr <oid=value> [-V <file>]... [-W <file>]...\n"
+		" %s pubfile -P <URL> --dump [-d]\n"
+		" %s pubfile -P <URL> -v --cnstr <oid=value> [-V <file>]... [-W <file>]...\n"
 		"        [-d] [more options]\n"
-		"%s pubfile -P <url> -o <pubfile.bin> --cnstr <oid=value> [-V <file>]...\n"
-		"        [-W <file>]... [-d] [more options]\n"
-		"%s pubfile -T <time> -X <url> [--ext-user <user> --ext-key <pass>]\n\n"
+		" %s pubfile -P <URL> -o <pubfile.bin> --cnstr <oid=value> [-V <file>]...\n"
+		"        [-W <dir>]... [-d] [more options]\n"
+		" %s pubfile -T <time> -X <URL> [--ext-user <user> --ext-key <pass>]\n\n"
 
-		" -P <url>  - specify publications file URL (or file with uri scheme 'file://').\n"
+		" -P <URL>  - specify publications file URL (or file with URI scheme 'file://').\n"
 		" --cnstr <oid=value>\n"
 		"           - OID and its expected value to verify publications file PKI signature.\n"
 		"             At least one constraint must be defined to be able to verify publications\n"
 		"             file but it is possible to define more.\n"
+		" -V        - Specify an OpenSSL-style trust store file for publications file verification.\n"
+		"             All values from lower priority source are ignored, where default configurations\n"
+		"             file is the lowest and command-line is the highest.\n"
+		" -W        - Specify an OpenSSL-style trust store directory for publications file verification.\n"
+		"             All values from lower priority source are ignored, where default configurations file\n"
+		"             is the lowest and command-line is the highest.\n"
 		" -o <file> - output file name to store publications file.\n"
 		" -v        - perform publications file verification.\n"
-		" -X <url>  - specify extending service URL.\n"
+		" -X <URL>  - specify extending service URL.\n"
 		" --ext-user <str>\n"
 		"           - user name for extending service.\n"
 		" --ext-key <str>\n"
@@ -200,7 +206,7 @@ static int pubfile_task(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int id, KS
 	 * Retrieve the publications file and set the output variable for debugging.
 	 * Extract the latest publication time.
 	 */
-	print_progressDesc(d, "Downloading publications file... ");
+	print_progressDesc(d, "%s", getPublicationsFileRetrieveDescriptionString(set));
 	res = KSITOOL_receivePublicationsFile(err, ksi, &tmp);
 	ERR_CATCH_MSG(err, res, "Error: Unable to get publications file.");
 	print_progressResult(res);
@@ -279,7 +285,9 @@ static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ks
 	ERR_CATCH_MSG(err, res, "Error: Unable to extract the time value to create the publication string for.");
 	end = KSI_Integer_ref(start);
 
-	print_progressDesc(d, "Sending extend request... ");
+	print_progressDesc(d, "Sending extend request to %s (%lu)... ",
+			KSI_Integer_toDateString(start, buf, sizeof(buf)),
+			KSI_Integer_getUInt64(start));
 
 	res = KSI_Integer_new(ksi, (KSI_uint64_t)start, &reqID);
 	ERR_CATCH_MSG(err, res, "Error: %s", KSITOOL_errToString(res));
@@ -309,7 +317,12 @@ static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ks
 		KSI_Utf8String *errm = NULL;
 		res = KSI_ExtendResp_getErrorMsg(extResp, &errm);
 		if (res == KSI_OK && KSI_Utf8String_cstr(errm) != NULL) {
-			ERR_TRCKR_ADD(err, res, "Extender returned error %llu: '%s'.", (unsigned long long)KSI_Integer_getUInt64(respStatus), KSI_Utf8String_cstr(errm));
+			KSI_Integer *extender_status = NULL;
+
+			res = KSI_ExtendResp_getStatus(extResp, &extender_status);
+			ERR_CATCH_MSG(err, res, "Error: %s", KSITOOL_errToString(res));
+
+			ERR_TRCKR_ADD(err, res = KSI_convertExtenderStatusCode(extender_status), "Extender returned error %llu: '%s'.", (unsigned long long)KSI_Integer_getUInt64(respStatus), KSI_Utf8String_cstr(errm));
 		}else{
 			ERR_TRCKR_ADD(err, res, "Extender returned error %llu.", (unsigned long long)KSI_Integer_getUInt64(respStatus));
 		}

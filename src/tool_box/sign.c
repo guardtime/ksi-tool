@@ -2,7 +2,7 @@
  *
  * GUARDTIME CONFIDENTIAL
  *
- * Copyright (C) [2015] Guardtime, Inc
+ * Copyright (C) [2016] Guardtime, Inc
  * All Rights Reserved
  *
  * NOTICE:  All information contained herein is, and remains, the
@@ -124,7 +124,7 @@ char *sign_help_toString(char*buf, size_t len) {
 
 	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
-		"%s sign -i <input> [-o <out.ksig>] [-H <alg>] -S <url>\n"
+		" %s sign -i <input> [-o <out.ksig>] [-H <alg>] -S <URL>\n"
 		"[--aggr-user <user> --aggr-key <pass>][--data-out <file>][more options]\n\n"
 		" -i <data> - file or data hash to be signed. Hash format: <alg>:<hash in hex>.\n"
 		" -o <file> - Output file name to store signature token. Use '-' as file name\n"
@@ -133,7 +133,7 @@ char *sign_help_toString(char*buf, size_t len) {
 		"             where (nr) is generated serial number if file name already exists.\n"
 		"             If specified will always overwrite the existing file.\n"
 		" -H <alg>  - use a specific hash algorithm to hash the file to be signed.\n"
-		" -S <url>  - specify signing service URL.\n"
+		" -S <URL>  - specify signing service URL.\n"
 		" --aggr-user <str>\n"
 		"           - user name for signing service.\n"
 		" --aggr-key <str>\n"
