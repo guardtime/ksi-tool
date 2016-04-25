@@ -333,7 +333,7 @@ static int signature_verify_general(PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 	 */
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_general(err, sig, ksi, hsh, pub_data, x, out);
-	ERR_CATCH_MSG(err, res, "Error: %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode), task);
+	ERR_CATCH_MSG(err, res, "Error: [%s] %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode), OBJPRINT_getVerificationErrorDescription((*out)->finalResult.errorCode), task);
 
 	res = KT_OK;
 
@@ -357,7 +357,7 @@ static int signature_verify_internally(PARAM_SET *set, ERR_TRCKR *err,
 
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_internally(err, sig, ksi, hsh, out);
-	ERR_CATCH_MSG(err, res, "Error: %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode), task);
+	ERR_CATCH_MSG(err, res, "Error: [%s] %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode), OBJPRINT_getVerificationErrorDescription((*out)->finalResult.errorCode), task);
 
 	res = KT_OK;
 
@@ -381,7 +381,7 @@ static int signature_verify_key_based(PARAM_SET *set, ERR_TRCKR *err,
 	 */
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_keyBased(err, sig, ksi, hsh, out);
-	ERR_CATCH_MSG(err, res, "Error: %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode), task);
+	ERR_CATCH_MSG(err, res, "Error: [%s] %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode), OBJPRINT_getVerificationErrorDescription((*out)->finalResult.errorCode), task);
 
 	res = KT_OK;
 
@@ -412,7 +412,7 @@ static int signature_verify_publication_based_with_user_pub(PARAM_SET *set, ERR_
 	 */
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_userProvidedPublicationBased(err, sig, ksi, hsh, pub_data, x, out);
-	ERR_CATCH_MSG(err, res, "Error: %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode), task);
+	ERR_CATCH_MSG(err, res, "Error: [%s] %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode), OBJPRINT_getVerificationErrorDescription((*out)->finalResult.errorCode), task);
 
 	res = KT_OK;
 
@@ -438,7 +438,7 @@ static int signature_verify_publication_based_with_pubfile(PARAM_SET *set, ERR_T
 	 */
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_publicationsFileBased(err, sig, ksi, hsh, x, out);
-	ERR_CATCH_MSG(err, res, "Error: %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode), task);
+	ERR_CATCH_MSG(err, res, "Error: [%s] %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode), OBJPRINT_getVerificationErrorDescription((*out)->finalResult.errorCode), task);
 
 	res = KT_OK;
 
@@ -462,7 +462,7 @@ static int signature_verify_calendar_based(PARAM_SET *set, ERR_TRCKR *err,
 	 */
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_calendarBased(err, sig, ksi, hsh, out);
-	ERR_CATCH_MSG(err, res, "Error: %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode), task);
+	ERR_CATCH_MSG(err, res, "Error: [%s] %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode), OBJPRINT_getVerificationErrorDescription((*out)->finalResult.errorCode), task);
 
 	res = KT_OK;
 
