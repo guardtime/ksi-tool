@@ -42,7 +42,7 @@ void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile, 
 void OBJPRINT_publicationsFileSigningCert(KSI_PublicationsFile *pubfile, int (*print)(const char *format, ... ));
 void OBJPRINT_publicationsFileDump(KSI_PublicationsFile *pubfile, int (*print)(const char *format, ... ));
 
-const char *OBJPRINT_getVerificationErrorCode(VerificationErrorCode code);
+const char *OBJPRINT_getVerificationErrorCode(KSI_VerificationErrorCode code);
 void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *res, int (*print)(const char *format, ... ));
 
 #ifdef	__cplusplus
