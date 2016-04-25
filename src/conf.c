@@ -286,14 +286,35 @@ cleanup:
 
 
 int conf_run(int argc, char** argv, char **envp) {
+	int res;
+	PARAM_SET *set = NULL;
 	char buf[0xffff];
-	argc;
-	argv;
-	envp;
+
+	res = PARAM_SET_new("{h|help}", &set);
+	if (res != PST_OK) goto cleanup;
+
+	PARAM_SET_readFromCMD(set, argc, argv, "CMD", 3);
+
+	/**
+	 * Check for typos and unknown parameters.
+     */
+	if (PARAM_SET_isTypoFailure(set)) {
+			print_errors("%s\n", PARAM_SET_typosToString(set, PST_TOSTR_DOUBLE_HYPHEN, NULL, buf, sizeof(buf)));
+			res = KT_INVALID_CMD_PARAM;
+			goto cleanup;
+	} else if (PARAM_SET_isUnknown(set)){
+			print_errors("%s\n", PARAM_SET_unknownsToString(set, "Error: ", buf, sizeof(buf)));
+			res = KT_INVALID_CMD_PARAM;
+			goto cleanup;
+	}
 
 	print_result("%s\n", conf_help_toString(buf, sizeof(buf)));
 
-	return EXIT_SUCCESS;
+	res = KT_OK;
+
+cleanup:
+
+	return KSITOOL_errToExitCode(res);
 }
 
 char *conf_help_toString(char *buf, size_t len) {
