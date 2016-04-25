@@ -63,7 +63,7 @@ int pubfile_run(int argc, char** argv, char **envp) {
 	 * Extract command line parameters.
      */
 	res = PARAM_SET_new(
-			CONF_generate_param_set_desc("{o}{d}{v}{T}{conf}{dump}{log}", "XP", buf, sizeof(buf)),
+			CONF_generate_param_set_desc("{o}{d}{v}{T}{conf}{dump}{log}{h|help}", "XP", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
