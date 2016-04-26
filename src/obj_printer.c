@@ -2,7 +2,7 @@
  *
  * GUARDTIME CONFIDENTIAL
  *
- * Copyright (C) [2015] Guardtime, Inc
+ * Copyright (C) [2015 - 2016] Guardtime, Inc
  * All Rights Reserved
  *
  * NOTICE:  All information contained herein is, and remains, the
@@ -26,34 +26,34 @@
 #include "api_wrapper.h"
 
 typedef struct {
-	VerificationErrorCode errorCode;
+	KSI_VerificationErrorCode errorCode;
 	const char *code;
 	const char *description;
 } verificationErrorDetail_st;
 
 static const verificationErrorDetail_st verification_error[] = {
-	{ VER_ERR_GEN_1,	"GEN-1",	"Wrong document" },
-	{ VER_ERR_GEN_2,	"GEN-2",	"Verification inconclusive" },
-	{ VER_ERR_INT_1,	"INT-1",	"Inconsistent aggregation hash chains" },
-	{ VER_ERR_INT_2,	"INT-2",	"Inconsistent aggregation hash chain aggregation times" },
-	{ VER_ERR_INT_3,	"INT-3",	"Calendar hash chain input hash mismatch" },
-	{ VER_ERR_INT_4,	"INT-4",	"Calendar hash chain aggregation time mismatch" },
-	{ VER_ERR_INT_5,	"INT-5",	"Calendar hash chain shape inconsistent with aggregation time" },
-	{ VER_ERR_INT_6,	"INT-6",	"Calendar hash chain time inconsistent with calendar auth record time" },
-	{ VER_ERR_INT_7,	"INT-7",	"Calendar hash chain time inconsistent with publication time" },
-	{ VER_ERR_INT_8,	"INT-8",	"Calendar hash chain root hash is inconsistent with calendar auth record input hash" },
-	{ VER_ERR_INT_9,	"INT-9",	"Calendar hash chain root hash is inconsistent with published hash value" },
-	{ VER_ERR_INT_10,	"INT-10",	"Aggregation hash chain chain index mismatch" },
-	{ VER_ERR_PUB_1,	"PUB-1",	"Extender response calendar root hash mismatch" },
-	{ VER_ERR_PUB_2,	"PUB-2",	"Extender response inconsistent" },
-	{ VER_ERR_PUB_3,	"PUB-3",	"Extender response input hash mismatch" },
-	{ VER_ERR_KEY_1,	"KEY-1",	"Certificate not found" },
-	{ VER_ERR_KEY_2,	"KEY-2",	"PKI signature not verified with certificate" },
-	{ VER_ERR_CAL_1,	"CAL-1",	"Calendar root hash mismatch" },
-	{ VER_ERR_CAL_2,	"CAL-2",	"Aggregation hash chain root hash and calendar hash chain input hash mismatch" },
-	{ VER_ERR_CAL_3,	"CAL-3",	"Aggregation time mismatch" },
-	{ VER_ERR_CAL_4,	"CAL-4",	"Aggregation hash chain right links are inconsistent" },
-	{ VER_ERR_NONE,	"",	"No error" }
+	{ KSI_VER_ERR_GEN_1,	"GEN-1",	"Wrong document" },
+	{ KSI_VER_ERR_GEN_2,	"GEN-2",	"Verification inconclusive" },
+	{ KSI_VER_ERR_INT_1,	"INT-1",	"Inconsistent aggregation hash chains" },
+	{ KSI_VER_ERR_INT_2,	"INT-2",	"Inconsistent aggregation hash chain aggregation times" },
+	{ KSI_VER_ERR_INT_3,	"INT-3",	"Calendar hash chain input hash mismatch" },
+	{ KSI_VER_ERR_INT_4,	"INT-4",	"Calendar hash chain aggregation time mismatch" },
+	{ KSI_VER_ERR_INT_5,	"INT-5",	"Calendar hash chain shape inconsistent with aggregation time" },
+	{ KSI_VER_ERR_INT_6,	"INT-6",	"Calendar hash chain time inconsistent with calendar auth record time" },
+	{ KSI_VER_ERR_INT_7,	"INT-7",	"Calendar hash chain time inconsistent with publication time" },
+	{ KSI_VER_ERR_INT_8,	"INT-8",	"Calendar hash chain root hash is inconsistent with calendar auth record input hash" },
+	{ KSI_VER_ERR_INT_9,	"INT-9",	"Calendar hash chain root hash is inconsistent with published hash value" },
+	{ KSI_VER_ERR_INT_10,	"INT-10",	"Aggregation hash chain chain index mismatch" },
+	{ KSI_VER_ERR_PUB_1,	"PUB-1",	"Extender response calendar root hash mismatch" },
+	{ KSI_VER_ERR_PUB_2,	"PUB-2",	"Extender response inconsistent" },
+	{ KSI_VER_ERR_PUB_3,	"PUB-3",	"Extender response input hash mismatch" },
+	{ KSI_VER_ERR_KEY_1,	"KEY-1",	"Certificate not found" },
+	{ KSI_VER_ERR_KEY_2,	"KEY-2",	"PKI signature not verified with certificate" },
+	{ KSI_VER_ERR_CAL_1,	"CAL-1",	"Calendar root hash mismatch" },
+	{ KSI_VER_ERR_CAL_2,	"CAL-2",	"Aggregation hash chain root hash and calendar hash chain input hash mismatch" },
+	{ KSI_VER_ERR_CAL_3,	"CAL-3",	"Aggregation time mismatch" },
+	{ KSI_VER_ERR_CAL_4,	"CAL-4",	"Aggregation hash chain right links are inconsistent" },
+	{ KSI_VER_ERR_NONE,	"",	"No error" }
 };
 
 void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile, int (*print)(const char *format, ... )){
@@ -376,16 +376,16 @@ void OBJPRINT_publicationsFileDump(KSI_PublicationsFile *pubfile, int (*print)(c
 }
 
 
-static const char *getVerificationResultCode(VerificationResultCode code) {
+static const char *getVerificationResultCode(KSI_VerificationResultCode code) {
 	switch (code) {
-		case VER_RES_OK:	return "OK";
-		case VER_RES_NA:	return "NA";
-		case VER_RES_FAIL:	return "FAIL";
+		case KSI_VER_RES_OK:	return "OK";
+		case KSI_VER_RES_NA:	return "NA";
+		case KSI_VER_RES_FAIL:	return "FAIL";
 		default:			return "UNKNOWN";
 	}
 }
 
-static const verificationErrorDetail_st *getVerificationErrorDetails(VerificationErrorCode code) {
+static const verificationErrorDetail_st *getVerificationErrorDetails(KSI_VerificationErrorCode code) {
 	size_t i;
 	size_t size = sizeof(verification_error) / sizeof(verificationErrorDetail_st);
 
@@ -395,13 +395,13 @@ static const verificationErrorDetail_st *getVerificationErrorDetails(Verificatio
 	return NULL;
 }
 
-const char *OBJPRINT_getVerificationErrorCode(VerificationErrorCode code) {
+const char *OBJPRINT_getVerificationErrorCode(KSI_VerificationErrorCode code) {
 	const verificationErrorDetail_st *details = getVerificationErrorDetails(code);
 
 	return (details != NULL ? details->code : "Unknown");
 }
 
-const char *OBJPRINT_getVerificationErrorDescription(VerificationErrorCode code) {
+const char *OBJPRINT_getVerificationErrorDescription(KSI_VerificationErrorCode code) {
 	const verificationErrorDetail_st *details = getVerificationErrorDetails(code);
 
 	return (details != NULL ? details->description : "Unknown");
@@ -436,12 +436,12 @@ static const char *getPrintableRuleName(const char *rule) {
 
 static void printRuleVerificationResult(int (*print)(const char *format, ... ), KSI_RuleVerificationResult *result, int printRuleWhenOk) {
 	print("    %s:", getVerificationResultCode(result->resultCode));
-	if (result->errorCode != VER_ERR_NONE) {
+	if (result->errorCode != KSI_VER_ERR_NONE) {
 		print("\t[%s]", OBJPRINT_getVerificationErrorCode(result->errorCode));
 	}
 	print(" %s.", OBJPRINT_getVerificationErrorDescription(result->errorCode));
-	if (result->resultCode != VER_RES_OK ||
-			printRuleWhenOk && result->resultCode == VER_RES_OK) {
+	if (result->resultCode != KSI_VER_RES_OK ||
+			printRuleWhenOk && result->resultCode == KSI_VER_RES_OK) {
 		print("\tIn rule:");
 		print("\t%s", getPrintableRuleName(result->ruleName));
 	}

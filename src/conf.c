@@ -1,3 +1,23 @@
+/**************************************************************************
+ *
+ * GUARDTIME CONFIDENTIAL
+ *
+ * Copyright (C) [2016] Guardtime, Inc
+ * All Rights Reserved
+ *
+ * NOTICE:  All information contained herein is, and remains, the
+ * property of Guardtime Inc and its suppliers, if any.
+ * The intellectual and technical concepts contained herein are
+ * proprietary to Guardtime Inc and its suppliers and may be
+ * covered by U.S. and Foreign Patents and patents in process,
+ * and are protected by trade secret or copyright law.
+ * Dissemination of this information or reproduction of this
+ * material is strictly forbidden unless prior written permission
+ * is obtained from Guardtime Inc.
+ * "Guardtime" and "KSI" are trademarks or registered trademarks of
+ * Guardtime Inc.
+ */
+
 #include "conf.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -266,14 +286,35 @@ cleanup:
 
 
 int conf_run(int argc, char** argv, char **envp) {
+	int res;
+	PARAM_SET *set = NULL;
 	char buf[0xffff];
-	argc;
-	argv;
-	envp;
+
+	res = PARAM_SET_new("{h|help}", &set);
+	if (res != PST_OK) goto cleanup;
+
+	PARAM_SET_readFromCMD(set, argc, argv, "CMD", 3);
+
+	/**
+	 * Check for typos and unknown parameters.
+     */
+	if (PARAM_SET_isTypoFailure(set)) {
+			print_errors("%s\n", PARAM_SET_typosToString(set, PST_TOSTR_DOUBLE_HYPHEN, NULL, buf, sizeof(buf)));
+			res = KT_INVALID_CMD_PARAM;
+			goto cleanup;
+	} else if (PARAM_SET_isUnknown(set)){
+			print_errors("%s\n", PARAM_SET_unknownsToString(set, "Error: ", buf, sizeof(buf)));
+			res = KT_INVALID_CMD_PARAM;
+			goto cleanup;
+	}
 
 	print_result("%s\n", conf_help_toString(buf, sizeof(buf)));
 
-	return EXIT_SUCCESS;
+	res = KT_OK;
+
+cleanup:
+
+	return KSITOOL_errToExitCode(res);
 }
 
 char *conf_help_toString(char *buf, size_t len) {
@@ -293,7 +334,7 @@ char *conf_help_toString(char *buf, size_t len) {
 		"Following key-value pairs must be placed one per line. To write a comment use #\n"
 		"at the beginning of the line. If unknown or invalid key-value pairs are used,\n"
 		"an error is generated until user applies all fixes needed.\n\n"
-		"If some parameter values contain whitespace characters double quote mark\"\n"
+		"If some parameter values contain whitespace characters double quote mark(\")\n"
 		"must be used to wrap the entire value. If double quote mark have to be used\n"
 		"inside the value part an escape character must be typed before the quote mark\n"
 		"like that \\\"\n"
@@ -302,23 +343,23 @@ char *conf_help_toString(char *buf, size_t len) {
 		);
 
 	count += KSI_snprintf(buf + count, len - count,
-		" -S <url>  - specify signing service URL.\n"
+		" -S <URL>  - specify signing service URL.\n"
 		" --aggr-user <str>\n"
 		"           - user name for signing service.\n"
 		" --aggr-key <str>\n"
 		"           - HMAC key for signing service.\n"
-		" -X <url>  - specify extending service URL.\n"
+		" -X <URL>  - specify extending service URL.\n"
 		" --ext-user <str>\n"
 		"           - user name for extending service.\n"
 		" --ext-key <str>\n"
 		"           - HMAC key for extending service.\n"
-		" -P <url>  - specify publications file URL (or file with uri scheme 'file://').\n"
+		" -P <URL>  - specify publications file URL (or file with URI scheme 'file://').\n"
 		" --cnstr <oid=value>\n"
 		"           - publications file certificate verification constraints.\n"
 		" -V <file> - specify an OpenSSL-style trust store file for publications file verification.\n"
 		" -W <dir>  - specify an OpenSSL-style trust store directory for publications file verification.\n"
-		" -c <num>  - set network transfer timeout, after successful connect, in s.\n"
-		" -C <num>  - set network Connect timeout in s (is not supported with tcp client).\n"
+		" -c <num>  - set network transfer timeout, after successful connect, in seconds.\n"
+		" -C <num>  - set network connect timeout in seconds (is not supported with TCP client).\n"
 		" --publications-file-no-verify\n"
 		"           - a flag to force the tool to trust the publications file without\n"
 		"             verifying it. The flag can only be defined on command-line to avoid\n"
@@ -332,13 +373,13 @@ char *conf_help_toString(char *buf, size_t len) {
 		"An example configurations file:\n\n"
 		" # --- BEGINNING ---\n"
 		" # KSI Signing service parameters:\n"
-		" -S http://ksigw.test.guardtime.com:3333/gt-signingservice\n"
+		" -S http://example.gateway.com:3333/gt-signingservice\n"
 		" --aggr-user anon\n"
 		" --aggr-key anon\n"
 		"\n"
 		" # KSI Extending service:\n"
 		" # Note that ext-key real value is &h/J\"kv\\G##\n"
-		" -X http://ksigw.test.guardtime.com:8010/gt-extendingservice\n"
+		" -X http://example.gateway.com:8010/gt-extendingservice\n"
 		" --ext-user anon\n"
 		" --ext-key \"&h/J\\\"kv\\\\G##\"\n"
 		"\n"

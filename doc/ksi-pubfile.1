@@ -9,13 +9,13 @@
 .SH SYNOPSIS
 .\"
 .HP 4
-\fBksi pubfile -P \fIurl \fB--dump\fR
+\fBksi pubfile -P \fIURL \fB--dump\fR
 .HP 4
-\fBksi pubfile -P \fIurl \fB-o \fIpubfile.bin \fB--cnstr \fIoid\fR=\fIvalue \fR... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fImore options\fR]
+\fBksi pubfile -P \fIURL \fB-o \fIpubfile.bin \fB--cnstr \fIoid\fR=\fIvalue \fR... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fImore options\fR]
 .HP 4
-\fBksi pubfile -P \fIurl \fB-v \fB--cnstr \fIoid\fR=\fIvalue \fR... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fImore options\fR]
+\fBksi pubfile -P \fIURL \fB-v \fB--cnstr \fIoid\fR=\fIvalue \fR... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fImore options\fR]
 .HP 4
-\fBksi pubfile \fB-T \fItime\fR \fB-X \fIurl \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] [\fImore options\fR]
+\fBksi pubfile \fB-T \fItime\fR \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] [\fImore options\fR]
 .br
 .\"
 .\"
@@ -27,8 +27,8 @@ This is a KSI publications file tool for performing publications file related ge
 .SH OPTIONS
 .\"
 .TP
-\fB-P \fIurl\fR
-Specify publications file URL (or file with uri scheme 'file://').
+\fB-P \fIURL\fR
+Specify publications file URL (or file with URI scheme 'file://').
 .\"
 .TP
 \fB--cnstr \fIoid\fR=\fIvalue\fR
@@ -36,7 +36,7 @@ OID and its expected value to verify publications file PKI signature. At least o
 .\"
 .TP
 \fB-v\fR
-Perform publications file verification. Note that when \fB-o \fRis used to save signatures file verifications is always performed.
+Perform publications file verification. Note that when \fB-o \fRis used to save signatures file verification is always performed.
 .\"
 .TP
 \fB-V \fIfile\fR
@@ -51,7 +51,7 @@ Specify an OpenSSL-style trust store directory for publications file verificatio
 Output file name to store publications file. Use '-' as file name to redirect publications file binary stream to \fIstdout\fR. Publications file is always verified before saving.
 .\"
 .TP
-\fB-X \fIurl\fR
+\fB-X \fIURL\fR
 Specify extending service URL.
 .\"
 .TP
@@ -92,10 +92,10 @@ See \fBksi\fR(1) for more information.
 .\"
 .SH EXAMPLES
 .\"
-In the following examples it is assumed that default service urls are defined (see \fBksi\fR(1) \fRfor more information).
+In the following examples it is assumed that default service URLs are defined (see \fBksi\fR(1) \fRfor more information).
 
 
-\fB1\fR To dump a publications file from default url call:
+\fB1\fR To dump a publications file from default URL call:
 .RS
 \fBksi pubfile --dump
 .RE
@@ -105,17 +105,22 @@ In the following examples it is assumed that default service urls are defined (s
 \fBksi pubfile --dump -P \fIfile://pubfile.bin\fR
 .RE
 
-\fB3\fR To download and verify a publication file \fIpubfile.bin\fR call:
+\fB3\fR To verify a publications file \fIpubfile.bin\fR from local disk call:
+.RS
+\fBksi pubfile -v -P \fIfile:///home/user/publications/pubfile.bin\fR
+.RE
+
+\fB4\fR To download and verify a publication file \fIpubfile.bin\fR call:
 .RS
 \fBksi pubfile -o \fIpubfile.bin\fR \fB--cnstr \fIemail=publications@guardtime.com
 .RE
 
-\fB4\fR To verify a publications file with only certificates defined on command-line call:
+\fB5\fR To verify a publications file with only certificates defined on command-line call:
 .RS
 \fBksi pubfile -v -V \fIcertificate_1.bin \fB-V \fIcertificate_2.bin \fB--cnstr \fIemail=publications@guardtime.com
 .RE
 
-\fB5\fR To create a publication string call:
+\fB6\fR To create a publication string call:
 .RS
 \fBksi pubfile -T \fR"\fI2015-10-15 00:00:00\fR" 
 .RE

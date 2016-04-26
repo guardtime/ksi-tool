@@ -2,7 +2,7 @@
  *
  * GUARDTIME CONFIDENTIAL
  *
- * Copyright (C) [2015] Guardtime, Inc
+ * Copyright (C) [2015 - 2016] Guardtime, Inc
  * All Rights Reserved
  *
  * NOTICE:  All information contained herein is, and remains, the
@@ -103,7 +103,7 @@ static const char* ksitoolErrToString(int error_code) {
 		case KSI_OK:
 			return "OK.";
 		case KT_OUT_OF_MEMORY:
-			return "Ksitool out of memory.";
+			return "KSI tool out of memory.";
 		case KT_INVALID_ARGUMENT:
 			return "Invalid argument.";
 		case KT_UNABLE_TO_SET_STREAM_MODE:

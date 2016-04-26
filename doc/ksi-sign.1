@@ -8,7 +8,7 @@
 .\"
 .SH SYNOPSIS
 .HP 4
-\fBksi sign -i \fIinput \fR[\fB-o \fIout.ksig\fR] \fB-S \fIurl \fR[\fB--aggr-user \fIuser \fB--aggr-key \fIkey\fR] \fR[\fB-H \fIalg\fR] [\fB--data-out \fIfile\fR] [\fB--dump\fR] [\fImore options\fR]
+\fBksi sign -i \fIinput \fR[\fB-o \fIout.ksig\fR] \fB-S \fIURL \fR[\fB--aggr-user \fIuser \fB--aggr-key \fIkey\fR] \fR[\fB-H \fIalg\fR] [\fB--data-out \fIfile\fR] [\fB--dump\fR] [\fImore options\fR]
 .br
 .\"
 .\"
@@ -32,7 +32,7 @@ Output file name to store signature token. Use '-' as file name to redirect sign
 Use a specific hash algorithm to hash the file to be signed. Call \fBksi -h \fRto get the list of supported hash algorithms.
 .\"
 .TP
-\fB-S \fIurl\fR
+\fB-S \fIURL\fR
 Specify signing service URL.
 .\"
 .TP
@@ -73,7 +73,7 @@ See \fBksi\fR(1) for more information.
 .\"
 .SH EXAMPLES
 .\"
-In the following examples it is assumed that default service urls are defined (see \fBksi\fR(1) \fRfor more information).
+In the following examples it is assumed that default service URLs are defined (see \fBksi\fR(1) \fRfor more information).
 
 \fB1\fR To sign a file \fIfile\fR and save signature to \fIsig.ksig\fR call:
 .RS

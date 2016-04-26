@@ -2,7 +2,7 @@
  *
  * GUARDTIME CONFIDENTIAL
  *
- * Copyright (C) [2015] Guardtime, Inc
+ * Copyright (C) [2016] Guardtime, Inc
  * All Rights Reserved
  *
  * NOTICE:  All information contained herein is, and remains, the
@@ -27,6 +27,7 @@
 #include <ksi/compatibility.h>
 #include "tool_box/smart_file.h"
 #include "tool_box/err_trckr.h"
+#include "param_set/param_set.h"
 #include "printer.h"
 
 #ifdef _WIN32
@@ -353,7 +354,25 @@ void print_progressResult(int res) {
 	}
 }
 
+const char *getPublicationsFileRetrieveDescriptionString(PARAM_SET *set) {
+	int res;
+	const char *pub_desc_str = "Receiving publications file... ";
+	char *pubfile_uri = NULL;
+	int isFile = 0;
 
+	if (set == NULL) goto cleanup;
+
+	res = PARAM_SET_getStr(set, "P", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &pubfile_uri);
+	if (res != PST_OK) goto cleanup;
+
+	if (strstr(pubfile_uri, "file://") != NULL) {
+		pub_desc_str = "Loading publications file from file... ";
+	}
+
+cleanup:
+
+	return pub_desc_str;
+}
 
 char *STRING_getBetweenWhitespace(const char *strn, char *buf, size_t buf_len) {
 	const char *beginning = NULL;

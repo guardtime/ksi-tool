@@ -2,7 +2,7 @@
  *
  * GUARDTIME CONFIDENTIAL
  *
- * Copyright (C) [2015] Guardtime, Inc
+ * Copyright (C) [2015 - 2016] Guardtime, Inc
  * All Rights Reserved
  *
  * NOTICE:  All information contained herein is, and remains, the
@@ -42,8 +42,8 @@ void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile, 
 void OBJPRINT_publicationsFileSigningCert(KSI_PublicationsFile *pubfile, int (*print)(const char *format, ... ));
 void OBJPRINT_publicationsFileDump(KSI_PublicationsFile *pubfile, int (*print)(const char *format, ... ));
 
-const char *OBJPRINT_getVerificationErrorCode(VerificationErrorCode code);
-const char *OBJPRINT_getVerificationErrorDescription(VerificationErrorCode code);
+const char *OBJPRINT_getVerificationErrorCode(KSI_VerificationErrorCode code);
+const char *OBJPRINT_getVerificationErrorDescription(KSI_VerificationErrorCode code);
 
 void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *res, int (*print)(const char *format, ... ));
 
