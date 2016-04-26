@@ -43,6 +43,8 @@ void OBJPRINT_publicationsFileSigningCert(KSI_PublicationsFile *pubfile, int (*p
 void OBJPRINT_publicationsFileDump(KSI_PublicationsFile *pubfile, int (*print)(const char *format, ... ));
 
 const char *OBJPRINT_getVerificationErrorCode(KSI_VerificationErrorCode code);
+const char *OBJPRINT_getVerificationErrorDescription(KSI_VerificationErrorCode code);
+
 void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *res, int (*print)(const char *format, ... ));
 
 #ifdef	__cplusplus
