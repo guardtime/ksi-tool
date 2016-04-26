@@ -196,7 +196,7 @@ static int verify_signature(KSI_Signature *sig, KSI_CTX *ctx,
 	res = KSI_SignatureVerifier_verify(policy, info, result);
 	if (res != KSI_OK) goto cleanup;
 
-	if (*result && (*result)->finalResult.resultCode != VER_RES_OK) {
+	if (*result && (*result)->finalResult.resultCode != KSI_VER_RES_OK) {
 		res = KSI_VERIFICATION_FAILURE;
 	}
 
