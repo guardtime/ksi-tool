@@ -51,14 +51,14 @@ static int KSI_Signature_serialize_wrapper(KSI_CTX *ksi, KSI_Signature *sig, uns
 	return KSI_Signature_serialize(sig, raw, raw_len);
 }
 
-static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **obj,	int (*parse)(KSI_CTX *ksi, unsigned char *raw, unsigned raw_len, void **obj), void (*obj_free)(void*)) {
+static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **obj,	int (*parse)(KSI_CTX *ksi, unsigned char *raw, unsigned raw_len, void **obj), void (*obj_free)(void*), const char *name) {
 	int res;
 	SMART_FILE *file = NULL;
-	unsigned char *buf = NULL;
-	size_t buf_size = 0xffff;
-	size_t buf_len = 0;
+	unsigned char buf[0xfff + 4];
+	unsigned char dummy[1];
 	void *tmp = NULL;
-	size_t count = 0;
+	size_t data_len = 0;
+	size_t dummy_len = 0;
 
 
 	if (ksi == NULL || path == NULL || obj == NULL || parse == NULL || obj_free == NULL) {
@@ -72,45 +72,26 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **o
 		goto cleanup;
 	}
 
-	buf = (unsigned char*)malloc(buf_size);
-	if (buf == NULL) {
-		res = KT_OUT_OF_MEMORY;
-		ERR_TRCKR_ADD(err, res, "Error: %s", KSITOOL_errToString(res));
+	res = SMART_FILE_read(file, buf, sizeof(buf), &data_len);
+	if(res != SMART_FILE_OK) {
+		ERR_TRCKR_ADD(err, res, "Error: Unable to read %s from file.", name);
 		goto cleanup;
 	}
 
-
-	while (!SMART_FILE_isEof(file)) {
-		if (buf_len + 1 >= buf_size) {
-			buf_size += 0xffff;
-			buf = realloc(buf, buf_size);
-			if (buf == NULL) {
-				res = KT_OUT_OF_MEMORY;
-				ERR_TRCKR_ADD(err, res, "Error: %s", KSITOOL_errToString(res));
-				goto cleanup;
-			}
-		}
-
-		res = SMART_FILE_read(file, buf + buf_len, buf_size - buf_len, &count);
-
-		if(res != SMART_FILE_OK) {
-			ERR_TRCKR_ADD(err, res, "Error: Unable to read data from file.");
-			goto cleanup;
-		}
-
-		buf_len += count;
-		count = 0;
-	}
-
-	if (buf_len > UINT_MAX) {
-		res = KT_INDEX_OVF;
-		ERR_TRCKR_ADD(err, res, "Error: %s", KSITOOL_errToString(res));
+	res = SMART_FILE_read(file, dummy, sizeof(dummy), &dummy_len);
+	if(res != SMART_FILE_OK) {
+		ERR_TRCKR_ADD(err, res, "Error: Unable to read data from file.");
 		goto cleanup;
 	}
 
-	res = parse(ksi, buf, (unsigned)buf_len, &tmp);
+	if (dummy_len != 0 || !SMART_FILE_isEof(file)) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_INPUT_FORMAT, "Error: Input file too long for a valid %s file.", name);
+		goto cleanup;
+	}
+
+	res = parse(ksi, buf, (unsigned)data_len, &tmp);
 	if (res != KSI_OK) {
-		ERR_TRCKR_ADD(err, res, "Error: Unable to parse.");
+		ERR_TRCKR_ADD(err, res, "Error: Unable to parse %s.", name);
 		goto cleanup;
 	}
 
@@ -122,7 +103,6 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **o
 cleanup:
 
 	SMART_FILE_close(file);
-	free(buf);
 	obj_free(tmp);
 
 	return res;
@@ -221,7 +201,8 @@ int KSI_OBJ_loadSignature(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_S
 	res = load_ksi_obj(err, ksi, fname,
 				(void**)sig,
 				(int (*)(KSI_CTX *, unsigned char*, unsigned, void**))KSI_Signature_parse,
-				(void (*)(void *))KSI_Signature_free);
+				(void (*)(void *))KSI_Signature_free,
+				"KSI Signature");
 
 	if (res) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to load signature file from '%s'.", fname);
