@@ -173,10 +173,9 @@ cleanup:
 	return res;
 }
 
-int CONF_fromEnvironment(PARAM_SET *set, const char *env_name, char **envp, int priority, char *buf, size_t len) {
+int CONF_fromEnvironment(PARAM_SET *set, const char *env_name, char **envp, int priority) {
 	int res;
-	char name[1024];
-	char value[2024];
+	const char *conf_file_name = NULL;
 
 
 	if (env_name == NULL || envp == NULL || set == NULL) {
@@ -184,29 +183,15 @@ int CONF_fromEnvironment(PARAM_SET *set, const char *env_name, char **envp, int 
 		goto cleanup;
 	}
 
-	while (*envp!=NULL) {
-		if (STRING_extractAbstract(*envp, NULL, "=", name, sizeof(name), NULL, NULL, NULL) == NULL) {
-			envp++;
-			continue;
-		}
+	res = CONF_LoadEnvNameContent(set, env_name, envp);
+	if (res != KT_OK) goto cleanup;
 
-		if (strcmp(name, env_name) == 0) {
-			if (STRING_extract(*envp, "=", NULL, value, sizeof(value)) == NULL) {
-				res = KT_INVALID_INPUT_FORMAT;
-				goto cleanup;
-			}
+	conf_file_name = CONF_getEnvNameContent();
 
-			if (buf) KSI_strncpy(buf, value, len);
-
-			res = conf_fromFile(set, value, env_name, priority);
-			if (res != PST_OK) goto cleanup;
-
-			break;
-		}
-
-        envp++;
-    }
-
+	if (conf_file_name != NULL) {
+		res = conf_fromFile(set, conf_file_name, CONF_getEnvNameContent(), priority);
+		if (res != PST_OK) goto cleanup;
+	}
 
 	res = KT_OK;
 
@@ -397,4 +382,61 @@ char *conf_help_toString(char *buf, size_t len) {
 
 const char *conf_get_desc(void) {
 	return "KSI Service configuration file utility.";
+}
+
+int env_is_loaded = 0;
+static char env_var_name[1024];
+static char env_name_content[2048];
+
+int CONF_LoadEnvNameContent(PARAM_SET *set, const char *env_name, char **envp) {
+	int res;
+	char name[1024];
+	char value[2024];
+
+
+	if (env_name == NULL || envp == NULL || set == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	env_is_loaded = 0;
+
+	while (*envp!=NULL) {
+		if (STRING_extractAbstract(*envp, NULL, "=", name, sizeof(name), NULL, NULL, NULL) == NULL) {
+			envp++;
+			continue;
+		}
+
+		if (strcmp(name, env_name) == 0) {
+			if (STRING_extract(*envp, "=", NULL, value, sizeof(value)) == NULL) {
+				res = KT_INVALID_INPUT_FORMAT;
+				goto cleanup;
+			}
+
+			KSI_strncpy(env_var_name, name, sizeof(env_name));
+			KSI_strncpy(env_name_content, value, sizeof(env_name_content));
+			env_is_loaded = 1;
+			break;
+		}
+
+        envp++;
+    }
+
+
+
+	res = KT_OK;
+
+cleanup:
+
+	return res;
+}
+
+const char *CONF_getEnvName(void) {
+	if (env_is_loaded == 0) return NULL;
+	else return env_var_name;
+}
+
+const char *CONF_getEnvNameContent(void) {
+	if (env_is_loaded == 0) return NULL;
+	else return env_name_content;
 }

@@ -153,7 +153,6 @@ int main(int argc, char** argv, char **envp) {
 	TASK *task = NULL;
 	int retval = EXIT_SUCCESS;
 	char buf[0xffff];
-	char fname[1024] = "";
 
 	/**
 	 * Configure KSI tool to print only values that are result of the user request
@@ -179,8 +178,8 @@ int main(int argc, char** argv, char **envp) {
 	/**
 	 * Load the configurations file from environment.
      */
-	res = CONF_fromEnvironment(configuration, "KSI_CONF", envp, 0, fname, sizeof(fname));
-	res = conf_report_errors(configuration, fname, res);
+	res = CONF_fromEnvironment(configuration, "KSI_CONF", envp, 0);
+	res = conf_report_errors(configuration, CONF_getEnvName(), res);
 	if (res != KT_OK) goto cleanup;
 
 	/**
@@ -228,7 +227,7 @@ int main(int argc, char** argv, char **envp) {
 			print_result("%s\n", TOOL_COMPONENT_LIST_helpToString(components, TASK_getID(task),buf, sizeof(buf)));
 		}
 
-		print_general_help(configuration, fname);
+		print_general_help(configuration, CONF_getEnvNameContent());
 		res = KT_OK;
 		goto cleanup;
 	} else if (PARAM_SET_isSetByName(set, "version")) {

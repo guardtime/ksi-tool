@@ -116,7 +116,6 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 	PARAM_SET *conf_env = NULL;
 	PARAM_SET *conf_file = NULL;
 	char buf[1024];
-	char fname[1024];
 	char *conf_file_name = NULL;
 
 	res = CONF_createSet(&conf_env);
@@ -128,8 +127,8 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 	/**
 	 * Include conf from environment.
      */
-	res = CONF_fromEnvironment(conf_env, "KSI_CONF", envp, PRIORITY_KSI_CONF, fname, sizeof(fname));
-	res = conf_report_errors(set, fname, res);
+	res = CONF_fromEnvironment(conf_env, "KSI_CONF", envp, PRIORITY_KSI_CONF);
+	res = conf_report_errors(set, CONF_getEnvNameContent(), res);
 	if (res != KT_OK) goto cleanup;
 
 	/**

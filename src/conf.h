@@ -27,6 +27,10 @@
 extern "C" {
 #endif
 
+int CONF_LoadEnvNameContent(PARAM_SET *set, const char *env_name, char **envp);
+const char *CONF_getEnvName(void);
+const char *CONF_getEnvNameContent(void);	
+	
 /**
  * Generate \c PARAM_SET description and add configuration specific parameters.
  * \param description	-	Add extra descriptions.
@@ -66,12 +70,10 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags);
  * \param env_name	- The name of the environment variable.
  * \param env		- Pointer to the pointer to c-string values representing environment variables.
  * \param priority	- The priority of the parameters.
- * \param buf		- Pointer to the buffer to store the value of the specified environment variable. Can be NULL.
- * \param len		- The size of the buffer.
  * \return KT_OK if successful, error code otherwise. KT_IO_ERROR if file do not exist or
  * KT_NO_PRIVILEGES if access is not permitted.
  */
-int CONF_fromEnvironment(PARAM_SET *set, const char *env_name, char **envp, int priority, char *buf, size_t len);
+int CONF_fromEnvironment(PARAM_SET *set, const char *env_name, char **envp, int priority);
 
 int conf_report_errors(PARAM_SET *set, const char *fname, int res);
 
