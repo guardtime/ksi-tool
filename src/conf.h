@@ -30,7 +30,8 @@ extern "C" {
 int CONF_LoadEnvNameContent(PARAM_SET *set, const char *env_name, char **envp);
 const char *CONF_getEnvName(void);
 const char *CONF_getEnvNameContent(void);	
-	
+int CONF_isEnvSet(void);
+
 /**
  * Generate \c PARAM_SET description and add configuration specific parameters.
  * \param description	-	Add extra descriptions.

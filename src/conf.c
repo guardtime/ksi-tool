@@ -29,6 +29,9 @@
 #include "tool_box/param_control.h"
 #include "tool_box/smart_file.h"
 #include "printer.h"
+#include "tool.h"
+
+static void print_conf_file(const char *fname, int (*print)(const char *format, ... ));
 
 char* CONF_generate_param_set_desc(char *description, const char *flags, char *buf, size_t buf_len) {
 	char *extra_desc = NULL;
@@ -275,7 +278,7 @@ int conf_run(int argc, char** argv, char **envp) {
 	PARAM_SET *set = NULL;
 	char buf[0xffff];
 
-	res = PARAM_SET_new("{h|help}", &set);
+	res = PARAM_SET_new("{h|help}{dump}{d}", &set);
 	if (res != PST_OK) goto cleanup;
 
 	PARAM_SET_readFromCMD(set, argc, argv, "CMD", 3);
@@ -293,7 +296,21 @@ int conf_run(int argc, char** argv, char **envp) {
 			goto cleanup;
 	}
 
-	print_result("%s\n", conf_help_toString(buf, sizeof(buf)));
+
+	if (PARAM_SET_isSetByName(set, "dump")) {
+		if (CONF_isEnvSet()) {
+			print_conf_file(CONF_getEnvNameContent(), print_result);
+		}
+	} else if (PARAM_SET_isSetByName(set, "d")) {
+		if (CONF_isEnvSet()) {
+			print_debug("%s", CONF_getEnvNameContent());
+		}
+	} else {
+		print_result("%s\n", conf_help_toString(buf, sizeof(buf)));
+	}
+
+
+
 
 	res = KT_OK;
 
@@ -306,6 +323,15 @@ char *conf_help_toString(char *buf, size_t len) {
 	size_t count = 0;
 
 	if (buf == NULL || len == 0) return NULL;
+
+	count += KSI_snprintf(buf + count, len - count,
+		"Usage:\n"
+		" %s conf -h | -d | --dump \n"
+		" -d        - print KSI_CONF value to stderr if is configured.\n"
+		" --dump    - dump configurations file pointed by KSI_CONF to stdout.\n"
+		" -h        - print the current help message.\n\n"
+			, TOOL_getName()
+			);
 
 	count += KSI_snprintf(buf + count, len - count,
 		"KSI Configurations file help:\n\n"
@@ -431,6 +457,10 @@ cleanup:
 	return res;
 }
 
+int CONF_isEnvSet(void) {
+	return env_is_loaded;
+}
+
 const char *CONF_getEnvName(void) {
 	if (env_is_loaded == 0) return NULL;
 	else return env_var_name;
@@ -439,4 +469,23 @@ const char *CONF_getEnvName(void) {
 const char *CONF_getEnvNameContent(void) {
 	if (env_is_loaded == 0) return NULL;
 	else return env_name_content;
+}
+
+static void print_conf_file(const char *fname, int (*print)(const char *format, ... )) {
+	FILE *f = NULL;
+	char buf[1024];
+	size_t count = 0;
+
+	if (fname == NULL || print == NULL) return;
+
+	f = fopen(fname, "r");
+	if (f == NULL) print("Error: Unable to read file for printing '%s'.\n", fname);
+
+	while (!feof(f)) {
+		buf[0] = '\0';
+		count = fread(buf, 1, sizeof(buf) - 1, f);
+		if (feof(f)) buf[count] = '\0';
+		print("%s", buf);
+	}
+	return;
 }
