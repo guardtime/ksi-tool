@@ -122,17 +122,22 @@ int verify_run(int argc, char **argv, char **envp) {
 	 * Verify the signature accordingly to the selected method.
 	 */
 	res = signature_verify(TASK_getID(task), set, err, &extra, ksi, sig, hsh, &result);
-	if (res != KT_OK) goto cleanup;
+	/* Fall through: if (res != KT_OK) goto cleanup; */
 
-	/**
-	 * Dump the gathered data
-	 */
 	if (PARAM_SET_isSetByName(set, "dump")) {
+		/**
+		 * Dump signature
+		 */
 		print_result("\n");
 		OBJPRINT_signatureDump(sig, print_result);
+		/**
+		 * Dump verification result data
+		 */
 		print_result("\n");
 		OBJPRINT_signatureVerificationResultDump(result, print_result);
-
+		/**
+		 * Dump document hash
+		 */
 		if (PARAM_SET_isSetByName(set, "f")) {
 			print_result("\n");
 			OBJPRINT_Hash(hsh, "Document hash: ", print_result);
