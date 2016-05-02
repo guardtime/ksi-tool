@@ -1,5 +1,6 @@
 Version 2.0.0
 
+* IMPROVEMENT: Signature over maximum tlv size is not loaded. (BUG-198)
 * IMPROVEMENT: ksitool renamed to ksi and major version increased to 2. (KCT-52)
 * IMPROVEMENT: Parameter -T has time limit from year 2007 to 2035. (BUG-237)
 * FEATURE: Signing and extending do not need output parameter -o. (KCT-52)
@@ -22,6 +23,7 @@ Version 2.0.0
 * IMPROVEMENT: Configurations file can hold only service related data. (TOOL-110, KCT-52)
 * IMPROVEMENT: Environment variables KSI_AGGREGATOR and KSI_EXTENDER are replaced with KSI_CONF that contains a path to the default configurations file. (TOOL-110, KCT-52)
 * IMPROVEMENT: If -V or -W is used certificates from default trust store are ignored (does not affect Windows trust store). (TOOL-20)
+* IMPROVEMENT: Signature over maximum tlv size is not loaded. (BUG-198)
 
 Version 1.8
 
