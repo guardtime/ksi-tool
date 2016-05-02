@@ -165,6 +165,15 @@ const char* find_charBeforeLastStrn(const char* str, const char* findIt);
  */
 const char* find_charAfterLastStrn(const char* str, const char* findIt);
 
+/**
+ * Converts a path relative to a reference path if original path is not a full path.
+ * \param refFilePah	A reference path.
+ * \param origPath		Original path.
+ * \param buf			Buffer that is used fit the relative path.
+ * \param buf_len		Size of the buffer.
+ * \return \c origPath or buf if successful, NULL if an error occurred.
+ */
+const char *PATH_getPathRelativeToFile(const char *refFilePath, const char *origPath, char *buf, size_t buf_len);
 #ifdef	__cplusplus
 }
 #endif

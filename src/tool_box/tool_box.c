@@ -548,3 +548,75 @@ const char *STRING_getChunks(const char *strn, char *buf, size_t buf_len) {
 	string_removeChars(buf, '"');
 	return next;
 }
+
+static const char *path_removeFile(const char *origPath, char *buf, size_t buf_len) {
+	char *beginingOfFile = NULL;
+	size_t path_len;
+	char *ret = NULL;
+
+#ifdef _WIN32
+	beginingOfFile = strrchr(origPath, '\\');
+	if (beginingOfFile == NULL) {
+		beginingOfFile = strrchr(origPath, '/');
+	}
+#else
+	beginingOfFile = strrchr(origPath, '/');
+#endif
+
+	if (beginingOfFile ==  NULL) {
+		buf[0] = '\0';
+		return buf;
+	}
+
+	path_len = beginingOfFile - origPath;
+	if (path_len + 1 > buf_len) return NULL;
+
+	ret = KSI_strncpy(buf, origPath, path_len + 1);
+	buf[path_len + 1] = 0;
+	return  ret;
+}
+
+const char *PATH_getPathRelativeToFile(const char *refFilePath, const char *origPath, char *buf, size_t buf_len) {
+	size_t origPath_len;
+	size_t refPath_len;
+	char refPath_last_char;
+	char refPathAppend[2] = {0,0};
+	int isAbsolute = 0;
+	char path_buf[2048];
+	const char *refPath = NULL;
+
+	refPath = path_removeFile(refFilePath, path_buf, sizeof(path_buf));
+	refPath_len = strlen(refPath);
+	origPath_len = strlen(origPath);
+	if (origPath_len == 0) return NULL;
+
+	/**
+	 * Check if origPath is relative or absolute path.
+	 */
+#ifndef _WIN32
+	if (origPath[0] == '/') isAbsolute = 1;
+	else isAbsolute = 0;
+#else
+	if (origPath_len >= 3 && origPath[1] == ':' && (origPath[2] == '/' || origPath[2] == '\\')) isAbsolute = 1;
+	else isAbsolute = 0;
+#endif
+
+	if (isAbsolute == 1) {
+		return origPath;
+	} else {
+		/**
+		 * If ref path has last char as \ or / then do nothing
+		 */
+		refPath_last_char = (refPath_len == 0) ? '\0' : refPath[refPath_len - 1];
+
+		if (refPath_last_char != '\0' && refPath_last_char != '/' && refPath_last_char != '\\') {
+			refPathAppend[0] = '/';
+		} else {
+			refPathAppend[0] = '\0';
+		}
+
+		KSI_snprintf(buf, buf_len, "%s%s%s", refPath, refPathAppend, origPath);
+		path_buf[buf_len - 1] = '\0';
+		return buf;
+	}
+}
