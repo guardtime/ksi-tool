@@ -590,7 +590,7 @@ const char *PATH_getPathRelativeToFile(const char *refFilePath, const char *orig
 	origPath_len = strlen(origPath);
 	if (origPath_len == 0) return NULL;
 
-	/**
+		/**
 	 * Check if origPath is relative or absolute path.
 	 */
 #ifndef _WIN32
@@ -614,9 +614,29 @@ const char *PATH_getPathRelativeToFile(const char *refFilePath, const char *orig
 		} else {
 			refPathAppend[0] = '\0';
 		}
-
 		KSI_snprintf(buf, buf_len, "%s%s%s", refPath, refPathAppend, origPath);
 		path_buf[buf_len - 1] = '\0';
 		return buf;
 	}
+}
+
+const char *PATH_URI_getPathRelativeToFile(const char *refFilePath, const char *origPath, char *buf, size_t buf_len) {
+	int isFileUri = 0;
+	const char *pOrigPath = origPath;
+	char buf_inner[2048];
+
+	/**
+	 * Check if uri scheme is file, if not return the original uri.
+     */
+	if (origPath == NULL) return NULL;
+	isFileUri = (strstr(origPath, "file://") == origPath) ? 1 : 0;
+	if (isFileUri && strlen(origPath) == 7) return origPath;
+	if (!isFileUri) return origPath;
+
+	/**
+	 * If uri scheme is file, cut the files path and convert. Append to file scheme.
+     */
+	pOrigPath = isFileUri ? origPath + 7 : origPath;
+	KSI_snprintf(buf, buf_len, "file://%s", PATH_getPathRelativeToFile(refFilePath, pOrigPath, buf_inner, sizeof(buf_inner)));
+	return buf;
 }

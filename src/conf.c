@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <ksi/compatibility.h>
 #include "param_set/param_set.h"
 #include "ksitool_err.h"
@@ -194,6 +195,11 @@ int CONF_fromEnvironment(PARAM_SET *set, const char *env_name, char **envp, int 
 	if (conf_file_name != NULL) {
 		res = conf_fromFile(set, conf_file_name, env_name, priority);
 		if (res != PST_OK) goto cleanup;
+
+		if (convertPaths) {
+			res = CONF_convertFilePaths(set, conf_file_name, "{W}{V}{P}", env_name, priority);
+			if (res != PST_OK) goto cleanup;
+		}
 	}
 
 	res = KT_OK;
@@ -488,4 +494,85 @@ static void print_conf_file(const char *fname, int (*print)(const char *format, 
 		print("%s", buf);
 	}
 	return;
+}
+
+static int conf_convert_path(PARAM_SET *set, const char *conf_file, const char *param_name, const char *source, int prio) {
+	int res = KT_INVALID_ARGUMENT;
+	int count = 0;
+	int i = 0;
+	char *value = NULL;
+	char buf[1024];
+	const char *new_file_name = NULL;
+
+	if (set == NULL || conf_file == NULL || param_name == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	res = PARAM_SET_getValueCount(set, param_name, source, prio, &count);
+	if (res != PST_OK) goto cleanup;
+
+
+	for (i = 0; i < count; i++) {
+		value = NULL;
+		new_file_name = NULL;
+		buf[0] = '\0';
+
+		/* Get a parameter and convert the path. Add the value to the top of the list.*/
+		res = PARAM_SET_getStr(set, param_name, source, prio, i, &value);
+		if (res != PST_OK && res != PST_PARAMETER_INVALID_FORMAT) goto cleanup;
+
+		if (value == NULL) {
+			new_file_name = NULL;
+		} else {
+			if (strcmp(param_name, "P") == 0) {
+				new_file_name = PATH_URI_getPathRelativeToFile(conf_file, value, buf, sizeof(buf));
+			} else {
+				new_file_name = PATH_getPathRelativeToFile(conf_file, value, buf, sizeof(buf));
+			}
+		}
+
+		res = PARAM_SET_add(set, param_name, new_file_name, source, prio);
+		if (res != PST_OK) goto cleanup;
+
+		/* Remove the old value. */
+		res = PARAM_SET_clearValue(set, param_name, source, prio, i);
+		if (res != PST_OK) goto cleanup;
+
+	}
+
+	res = KT_OK;
+
+cleanup:
+
+	return res;
+}
+
+
+static int isValidNameChar(int c) {
+	if ((ispunct(c) || isspace(c)) && c != '_' && c != '-') return 0;
+	else return 1;
+}
+
+int CONF_convertFilePaths(PARAM_SET *set, const char *conf_file, const char *names, const char *source, int prio) {
+	int res;
+	char buf[1024];
+	const char *pName = names;
+
+	if (set == NULL || names == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	while (pName != NULL && pName[0] != '\0') {
+		pName = extract_next_name(pName, isValidNameChar, buf, sizeof(buf), NULL);
+		res = conf_convert_path(set, conf_file, buf, source, prio);
+		if (res != KT_OK) goto cleanup;
+	}
+
+	res = KT_OK;
+
+cleanup:
+
+	return res;
 }

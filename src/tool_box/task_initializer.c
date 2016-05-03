@@ -127,7 +127,7 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 	/**
 	 * Include conf from environment.
      */
-	res = CONF_fromEnvironment(conf_env, "KSI_CONF", envp, PRIORITY_KSI_CONF, 0);
+	res = CONF_fromEnvironment(conf_env, "KSI_CONF", envp, PRIORITY_KSI_CONF, 1);
 	res = conf_report_errors(set, CONF_getEnvNameContent(), res);
 	if (res != KT_OK) goto cleanup;
 
@@ -146,6 +146,9 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 		if (conf_file_name != NULL && res == PST_OK) {
 			res = PARAM_SET_readFromFile(conf_file, conf_file_name, conf_file_name, PRIORITY_KSI_CONF_FILE);
 			if (res != PST_OK && res != PST_INVALID_FORMAT) goto cleanup;
+
+			res = CONF_convertFilePaths(conf_file, conf_file_name, "{W}{V}{P}", conf_file_name, PRIORITY_KSI_CONF_FILE);
+			if (res != PST_OK) goto cleanup;
 		}
 
 		if (CONF_isInvalid(conf_file)) {

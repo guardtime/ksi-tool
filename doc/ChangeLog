@@ -25,6 +25,8 @@ Version 2.0.0
 * IMPROVEMENT: If -V or -W is used certificates from default trust store are ignored (does not affect Windows trust store). (TOOL-20)
 * IMPROVEMENT: Signature over maximum tlv size is not loaded. (BUG-198)
 * IMPROVEMENT: Task conf has flags -d and --dump for dumping configurations files path and its content. (TOOL-139)
+* IMPROVEMENT: Parameters V, W a P (with file:// scheme) defined in configurations file support file names relative to the configurations file. (TOOL-110)
+
 Version 1.8
 
 2016-01-26 1.8.0

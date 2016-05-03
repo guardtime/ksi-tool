@@ -174,6 +174,8 @@ const char* find_charAfterLastStrn(const char* str, const char* findIt);
  * \return \c origPath or buf if successful, NULL if an error occurred.
  */
 const char *PATH_getPathRelativeToFile(const char *refFilePath, const char *origPath, char *buf, size_t buf_len);
+
+const char *PATH_URI_getPathRelativeToFile(const char *refFilePath, const char *origPath, char *buf, size_t buf_len);
 #ifdef	__cplusplus
 }
 #endif
