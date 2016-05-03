@@ -71,10 +71,12 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags);
  * \param env_name	- The name of the environment variable.
  * \param env		- Pointer to the pointer to c-string values representing environment variables.
  * \param priority	- The priority of the parameters.
+ * \convertPaths    - If this flag is set all paths in configurations file that are not full
+ *						paths are interpreted as paths relative to the configurations file. 
  * \return KT_OK if successful, error code otherwise. KT_IO_ERROR if file do not exist or
  * KT_NO_PRIVILEGES if access is not permitted.
  */
-int CONF_fromEnvironment(PARAM_SET *set, const char *env_name, char **envp, int priority);
+int CONF_fromEnvironment(PARAM_SET *set, const char *env_name, char **envp, int priority, int convertPaths);
 
 int conf_report_errors(PARAM_SET *set, const char *fname, int res);
 

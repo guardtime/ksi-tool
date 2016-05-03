@@ -176,7 +176,7 @@ cleanup:
 	return res;
 }
 
-int CONF_fromEnvironment(PARAM_SET *set, const char *env_name, char **envp, int priority) {
+int CONF_fromEnvironment(PARAM_SET *set, const char *env_name, char **envp, int priority, int convertPaths) {
 	int res;
 	const char *conf_file_name = NULL;
 
@@ -192,7 +192,7 @@ int CONF_fromEnvironment(PARAM_SET *set, const char *env_name, char **envp, int 
 	conf_file_name = CONF_getEnvNameContent();
 
 	if (conf_file_name != NULL) {
-		res = conf_fromFile(set, conf_file_name, CONF_getEnvNameContent(), priority);
+		res = conf_fromFile(set, conf_file_name, env_name, priority);
 		if (res != PST_OK) goto cleanup;
 	}
 
@@ -439,7 +439,7 @@ int CONF_LoadEnvNameContent(PARAM_SET *set, const char *env_name, char **envp) {
 				goto cleanup;
 			}
 
-			KSI_strncpy(env_var_name, name, sizeof(env_name));
+			KSI_strncpy(env_var_name, name, sizeof(env_var_name));
 			KSI_strncpy(env_name_content, value, sizeof(env_name_content));
 			env_is_loaded = 1;
 			break;

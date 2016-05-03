@@ -127,7 +127,7 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 	/**
 	 * Include conf from environment.
      */
-	res = CONF_fromEnvironment(conf_env, "KSI_CONF", envp, PRIORITY_KSI_CONF);
+	res = CONF_fromEnvironment(conf_env, "KSI_CONF", envp, PRIORITY_KSI_CONF, 0);
 	res = conf_report_errors(set, CONF_getEnvNameContent(), res);
 	if (res != KT_OK) goto cleanup;
 

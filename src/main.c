@@ -178,8 +178,8 @@ int main(int argc, char** argv, char **envp) {
 	/**
 	 * Load the configurations file from environment.
      */
-	res = CONF_fromEnvironment(configuration, "KSI_CONF", envp, 0);
-	res = conf_report_errors(configuration, CONF_getEnvName(), res);
+	res = CONF_fromEnvironment(configuration, "KSI_CONF", envp, 0, 0);
+	res = conf_report_errors(configuration, CONF_getEnvNameContent(), res);
 	if (res != KT_OK) goto cleanup;
 
 	/**
