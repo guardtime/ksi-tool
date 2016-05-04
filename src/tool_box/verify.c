@@ -245,16 +245,16 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 
 	/*					  ID	DESC								MAN							ATL		FORBIDDEN							IGN	*/
 	TASK_SET_add(task_set, 0,	"Verify.",							"i",						NULL,	"ver-int,ver-cal,ver-key,ver-pub",	NULL);
-	TASK_SET_add(task_set, 1,	"Verify internally.",				"ver-int,i",				NULL,	"ver-cal,ver-key,ver-pub,T,x",		NULL);
-	TASK_SET_add(task_set, 2,	"Calendar based verification.",		"ver-cal,i,X",				NULL,	"ver-int,ver-key,ver-pub",			NULL);
-	TASK_SET_add(task_set, 3,	"Key based verification.",			"ver-key,i,P,cnstr",		NULL,	"ver-int,ver-cal,ver-pub,T,x",		NULL);
+	TASK_SET_add(task_set, 1,	"Verify internally.",				"ver-int,i",				NULL,	"ver-cal,ver-key,ver-pub,T,x,pub-str",		NULL);
+	TASK_SET_add(task_set, 2,	"Calendar based verification.",		"ver-cal,i,X",				NULL,	"ver-int,ver-key,ver-pub,pub-str",			NULL);
+	TASK_SET_add(task_set, 3,	"Key based verification.",			"ver-key,i,P,cnstr",		NULL,	"ver-int,ver-cal,ver-pub,T,x,pub-str",		NULL);
 
 	TASK_SET_add(task_set, 4,	"Publication based verification, "
 								"use publications file, "
-								"extending is restricted.",			"ver-pub,i,P,cnstr",		NULL,	"ver-int,ver-cal,ver-key,x,T",		NULL);
+								"extending is restricted.",			"ver-pub,i,P,cnstr",		NULL,	"ver-int,ver-cal,ver-key,x,T,pub-str",		NULL);
 	TASK_SET_add(task_set, 5,	"Publication based verification, "
 								"use publications file, "
-								"extending is permitted.",			"ver-pub,i,P,cnstr,x,X",	NULL,	"ver-int,ver-cal,ver-key,T",		NULL);
+								"extending is permitted.",			"ver-pub,i,P,cnstr,x,X",	NULL,	"ver-int,ver-cal,ver-key,T,pub-str",		NULL);
 
 	TASK_SET_add(task_set, 6,	"Publication based verification, "
 								"use publications string, "
