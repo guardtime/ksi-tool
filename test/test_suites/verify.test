@@ -1,10 +1,82 @@
-# Successful signing.
+# Successful verification.
+
+# ------ Trust anchor based verification. ------
+
+# Trust anchor: Calendar Authentication Record.
+EXECUTABLE verify -i test/resource/signature/ok-sig-2014-04-30.1.ksig -d --dump --conf test/resource/conf/verify-conf.cfg
+>>>  /(Trust anchor: Calendar Authentication Record.)/
+>>>2 /(Signature verification according to trust anchor)(.*ok.*)/
+>>>= 0
+
+# Trust anchor: Publication Record (with user publication string). 
+EXECUTABLE verify -i test/resource/signature/ok-sig-2014-04-30.1-extended.ksig --pub-str AAAAAA-CTOQBY-AAMJYH-XZPM6T-UO6U6V-2WJMHQ-EJMVXR-JEAGID-2OY7P5-XFFKYI-QIF2LG-YOV7SO -d --dump --conf test/resource/conf/verify-conf.cfg
+>>>  /(Trust anchor: Publication Record.)/
+>>>2 /(Signature verification according to trust anchor)(.*ok.*)/
+>>>= 0
+
+# Trust anchor: Publication Record (with publications file). 
+#EXECUTABLE verify -i test/resource/signature/ok-sig-2014-04-30.1-extended.ksig -d --dump --conf test/resource/conf/verify-conf.cfg
+#>>>  /(Trust anchor: Publication Record.)/
+#>>>2 /(Signature verification according to trust anchor)(.*ok.*)/
+#>>>= 0
+
+# Trust anchor: Calendar Blockchain. 
+EXECUTABLE verify -i test/resource/signature/ok-sig-without-calendar-authentication-record.ksig -d --dump  --conf test/resource/conf/verify-conf.cfg
+>>>  /(Trust anchor: Calendar Blockchain.)/
+>>>2 /(Signature verification according to trust anchor)(.*ok.*)/
+>>>= 0
+
+# Verify document hash
+EXECUTABLE verify -i test/resource/signature/ok-sig-2014-04-30.1.ksig -d -f SHA2-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d --conf test/resource/conf/verify-conf.cfg
+>>>2 /(Reading documents hash)(.*ok.*)
+(Signature verification according to trust anchor)(.*ok.*)/
+>>>= 0
+
+# Verify document integrity.
+EXECUTABLE verify -i test/resource/signature/ok-sig-sha1.ksig -f test/resource/file/testFile -d --conf test/resource/conf/verify-conf.cfg
+>>>2 /(Reading documents hash)(.*ok.*)
+(Signature verification according to trust anchor)(.*ok.*)/
+>>>= 0
+
+
+# ------ Publication based verification, use publications file. ------
+
+
+
+# ------ Publication based verification, use publications string. ------
+
+#ok-signatures/ok-sig-2014-08-01.1.ext.ksig is extended to
+#AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
+
+EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig --pub-str AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4 -d -x --conf test/resource/conf/verify-conf.cfg
+>>>2 /(Signature publication-based verification with user publication string)(.*ok.*)/
+>>>= 0
+
+
+# ------ Key based verification. ------
 
 # KSI verify --key-based signature where input hash is hashed with SHA1.
-EXECUTABLE verify --ver-key -i test/resource/ok-signatures/sha1.ksig -f test/resource/testFile -d
+EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-sha1.ksig -f test/resource/testFile -d --conf test/resource/conf/verify-conf.cfg
 >>>2 /(Reading documents hash)(.*ok.*)
 (Signature key-based verification)(.*ok.*)/
 >>>= 0
 
-#ok-signatures/ok-sig-2014-08-01.1.ext.ksig is extended to
-#AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
+
+# ------ Calendar based verification. ------
+
+
+
+
+
+
+
+
+
+
+# Failed verification.
+
+
+
+
+
+
