@@ -104,7 +104,7 @@ int verify_run(int argc, char **argv, char **envp) {
 	print_progressResult(res);
 
 	/**
-	 * Get document hash if provided by user
+	 * Get document hash if provided by user.
 	 */
 	if (PARAM_SET_isSetByName(set, "f")) {
 		res = KSI_Signature_getHashAlgorithm(sig, &alg);
@@ -126,17 +126,17 @@ int verify_run(int argc, char **argv, char **envp) {
 
 	if (PARAM_SET_isSetByName(set, "dump")) {
 		/**
-		 * Dump signature
+		 * Dump signature.
 		 */
 		print_result("\n");
 		OBJPRINT_signatureDump(sig, print_result);
 		/**
-		 * Dump verification result data
+		 * Dump verification result data.
 		 */
 		print_result("\n");
 		OBJPRINT_signatureVerificationResultDump(result, print_result);
 		/**
-		 * Dump document hash
+		 * Dump document hash.
 		 */
 		if (PARAM_SET_isSetByName(set, "f")) {
 			print_result("\n");
@@ -326,7 +326,7 @@ static int signature_verify_general(PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 	static const char *task = "Signature verification according to trust anchor";
 
 	/**
-	 * Get Publication data if available
+	 * Get Publication data if available.
 	 */
 	if (PARAM_SET_isSetByName(set, "pub-str")) {
 		res = PARAM_SET_getObjExtended(set, "pub-str", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, extra, (void**)&pub_data);
@@ -334,7 +334,7 @@ static int signature_verify_general(PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 	}
 
 	/**
-	 * Verify signature
+	 * Verify signature.
 	 */
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_general(err, sig, ksi, hsh, pub_data, x, out);
@@ -382,7 +382,7 @@ static int signature_verify_key_based(PARAM_SET *set, ERR_TRCKR *err,
 	static const char *task = "Signature key-based verification";
 
 	/**
-	 * Verify signature
+	 * Verify signature.
 	 */
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_keyBased(err, sig, ksi, hsh, out);
@@ -407,13 +407,13 @@ static int signature_verify_publication_based_with_user_pub(PARAM_SET *set, ERR_
 	static const char *task = "Signature publication-based verification with user publication string";
 
 	/**
-	 * Get Publication data
+	 * Get Publication data.
 	 */
 	res = PARAM_SET_getObjExtended(set, "pub-str", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, extra, (void**)&pub_data);
 	ERR_CATCH_MSG(err, res, "Error: Failed to get publication data.");
 
 	/**
-	 * Verify signature
+	 * Verify signature.
 	 */
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_userProvidedPublicationBased(err, sig, ksi, hsh, pub_data, x, out);
@@ -439,7 +439,7 @@ static int signature_verify_publication_based_with_pubfile(PARAM_SET *set, ERR_T
 	static const char *task = "Signature publication-based verification with publications file";
 
 	/**
-	 * Verify signature
+	 * Verify signature.
 	 */
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_publicationsFileBased(err, sig, ksi, hsh, x, out);
@@ -463,7 +463,7 @@ static int signature_verify_calendar_based(PARAM_SET *set, ERR_TRCKR *err,
 	static const char *task = "Signature calendar-based verification";
 
 	/**
-	 * Verify signature
+	 * Verify signature.
 	 */
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_calendarBased(err, sig, ksi, hsh, out);
