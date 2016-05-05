@@ -1,0 +1,38 @@
+# Extend test result verification.
+
+# Verify signature extended to the nearest publication.
+# Publication string: AAAAAA-CVUWRI-AANGVK-SV7GJL-36LN65-AVJYZR-6XRZSL-HIMRH3-6GU7WR-YNRY7C-X2XEC3-YOVLRM
+# Publication date: 2015-07-15 00:00:00 UTC
+EXECUTABLE verify --ver-pub --conf test/test.cfg -i test/out/extend/nearest.pub.ext.ksig -d --pub-str AAAAAA-CVUWRI-AANGVK-SV7GJL-36LN65-AVJYZR-6XRZSL-HIMRH3-6GU7WR-YNRY7C-X2XEC3-YOVLRM
+>>>2 /(Signature publication-based verification with user publication string)(.*ok.*)/
+>>>= 0
+
+# Verify signature extended and written to stdout.
+# Publication string: AAAAAA-CVUWRI-AANGVK-SV7GJL-36LN65-AVJYZR-6XRZSL-HIMRH3-6GU7WR-YNRY7C-X2XEC3-YOVLRM
+# Publication date: 2015-07-15 00:00:00 UTC
+EXECUTABLE verify --ver-pub --conf test/test.cfg -i test/out/extend/piped.nearest.pub.ext.ksig -d --pub-str AAAAAA-CVUWRI-AANGVK-SV7GJL-36LN65-AVJYZR-6XRZSL-HIMRH3-6GU7WR-YNRY7C-X2XEC3-YOVLRM
+>>>2 /(Signature publication-based verification with user publication string)(.*ok.*)/
+>>>= 0
+
+# Verify signature extended to the specified publication (that is the nearest).
+# Publication string: AAAAAA-CVUWRI-AANGVK-SV7GJL-36LN65-AVJYZR-6XRZSL-HIMRH3-6GU7WR-YNRY7C-X2XEC3-YOVLRM
+# Publication date: 2015-07-15 00:00:00 UTC
+EXECUTABLE verify --ver-pub --conf test/test.cfg -i test/out/extend/specified.nearest.pub.ext.ksig -d --pub-str AAAAAA-CVUWRI-AANGVK-SV7GJL-36LN65-AVJYZR-6XRZSL-HIMRH3-6GU7WR-YNRY7C-X2XEC3-YOVLRM
+>>>2 /(Signature publication-based verification with user publication string)(.*ok.*)/
+>>>= 0
+
+# Verify signature extended to the specified publication (that is not the nearest publication).
+# Publication string: AAAAAA-CWN5MA-AAK3AP-WSCETA-RKKP5V-OIITKT-XODBUJ-RQVGAI-DL7PHU-V6M2UY-DCTGDK-B47JCA
+# Publication date: 2015-12-15 00:00:00 UTC
+EXECUTABLE verify --ver-pub --conf test/test.cfg -i test/out/extend/specified.pub.ext.ksig -d --pub-str AAAAAA-CWN5MA-AAK3AP-WSCETA-RKKP5V-OIITKT-XODBUJ-RQVGAI-DL7PHU-V6M2UY-DCTGDK-B47JCA
+>>>2 /(Signature publication-based verification with user publication string)(.*ok.*)/
+>>>= 0
+
+# Verify signature extended to the specified time without no publication record.
+# Publication string: AAAAAA-CVWIVC-QAIVKJ-SIRUQZ-MZBJPS-T7P2UX-DDX4JF-KLMCXI-TXIKGF-B6MAJQ-JIJPTD-C2EDEO
+# Publication date: (1437739560) 2015-07-24 12:06:00 UTC
+EXECUTABLE verify --ver-pub --conf test/test.cfg -i test/out/extend/specified.no-pub.ext.ksig -d --pub-str AAAAAA-CVWIVC-QAIVKJ-SIRUQZ-MZBJPS-T7P2UX-DDX4JF-KLMCXI-TXIKGF-B6MAJQ-JIJPTD-C2EDEO -x
+>>>2 /(Signature publication-based verification with user publication string)(.*ok.*)/
+>>>= 0
+
+

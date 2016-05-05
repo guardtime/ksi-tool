@@ -395,7 +395,7 @@ static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_C
 	res = KSI_PublicationsFile_getPublicationDataByPublicationString(pubFile, pubs_str, &pub_rec);
 	ERR_CATCH_MSG(err, res, "Error: Unable get publication record from publications file.");
 	if (pub_rec == NULL) {
-		ERR_TRCKR_ADD(err, res = KT_KSI_SIG_VER_IMPOSSIBLE, "Error: Unable to verify signature as publication record not found from publications file.");
+		ERR_TRCKR_ADD(err, res = KT_PUBFILE_HAS_NO_PUBREC_TO_EXTEND_TO, "Error: Unable to extend signature as publication record not found from publications file.");
 		goto cleanup;
 	}
 	print_progressResult(res);
