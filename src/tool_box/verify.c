@@ -38,6 +38,26 @@
 #include "conf.h"
 #include "tool.h"
 
+enum {
+	/* Trust anchor based verification. */
+	ANC_BASED_DEFAULT,
+	ANC_BASED_PUB_FILE,
+	ANC_BASED_PUB_FILE_X,
+	ANC_BASED_PUB_SRT,
+	ANC_BASED_PUB_SRT_X,
+	/* Internal verification. */
+	INT_BASED,
+	/* Calendar based verification. */
+	CAL_BASED,
+	KEY_BASED,
+	/* Publication based verification, use publications file. */
+	PUB_BASED_FILE,
+	PUB_BASED_FILE_X,
+	/* Publication based verification, use publication string. */
+	PUB_BASED_STR,
+	PUB_BASED_STR_X
+};
+
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 
 static int signature_verify(int id, PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *extra, KSI_CTX *ksi, KSI_Signature *sig, KSI_DataHash *hsh, KSI_PolicyVerificationResult **out);
@@ -243,26 +263,40 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{d}{x}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{pub-str}", isFormatOk_pubString, NULL, NULL, extract_pubString);
 
-	/*					  ID	DESC								MAN							ATL		FORBIDDEN							IGN	*/
-	TASK_SET_add(task_set, 0,	"Verify.",							"i",						NULL,	"ver-int,ver-cal,ver-key,ver-pub",	NULL);
-	TASK_SET_add(task_set, 1,	"Verify internally.",				"ver-int,i",				NULL,	"ver-cal,ver-key,ver-pub,T,x,pub-str",		NULL);
-	TASK_SET_add(task_set, 2,	"Calendar based verification.",		"ver-cal,i,X",				NULL,	"ver-int,ver-key,ver-pub,pub-str",			NULL);
-	TASK_SET_add(task_set, 3,	"Key based verification.",			"ver-key,i,P,cnstr",		NULL,	"ver-int,ver-cal,ver-pub,T,x,pub-str",		NULL);
+	/*						ID						DESC								MAN							ATL		FORBIDDEN											IGN	*/
+	TASK_SET_add(task_set,	ANC_BASED_DEFAULT,		"Verify.",							"i",						NULL,	"ver-int,ver-cal,ver-key,ver-pub,P,cnstr,pub-str",	NULL);
+	TASK_SET_add(task_set,	ANC_BASED_PUB_FILE,		"Verify, "
+													"use publications file, "
+													"extending is restricted.",			"i,P,cnstr",				NULL,	"ver-int,ver-cal,ver-key,ver-pub,x,T,pub-str",		NULL);
+	TASK_SET_add(task_set,	ANC_BASED_PUB_FILE_X,	"Verify, "
+													"use publications file, "
+													"extending is permitted.",			"i,P,cnstr,x,X",			NULL,	"ver-int,ver-cal,ver-key,ver-pub,T,pub-str",		NULL);
+	TASK_SET_add(task_set,	ANC_BASED_PUB_SRT,		"Verify, "
+													"use publications string, "
+													"extending is restricted.",			"i,pub-str",				NULL,	"ver-int,ver-cal,ver-key,ver-pub,x",				NULL);
+	TASK_SET_add(task_set,	ANC_BASED_PUB_SRT_X,	"Verify, "
+													"use publications string, "
+													"extending is permitted.",			"i,pub-str,x,X",			NULL,	"ver-int,ver-cal,ver-key,ver-pub",					NULL);
 
-	TASK_SET_add(task_set, 4,	"Publication based verification, "
-								"use publications file, "
-								"extending is restricted.",			"ver-pub,i,P,cnstr",		NULL,	"ver-int,ver-cal,ver-key,x,T,pub-str",		NULL);
-	TASK_SET_add(task_set, 5,	"Publication based verification, "
-								"use publications file, "
-								"extending is permitted.",			"ver-pub,i,P,cnstr,x,X",	NULL,	"ver-int,ver-cal,ver-key,T,pub-str",		NULL);
+	TASK_SET_add(task_set,	INT_BASED,				"Verify internally.",				"ver-int,i",				NULL,	"ver-cal,ver-key,ver-pub,T,x,pub-str",				NULL);
 
-	TASK_SET_add(task_set, 6,	"Publication based verification, "
-								"use publications string, "
-								"extending is restricted.",			"ver-pub,i,pub-str",		NULL,	"ver-int,ver-cal,ver-key,x,T",		NULL);
-	TASK_SET_add(task_set, 7,	"Publication based verification, "
-								"use publications string, "
-								"extending is permitted.",			"ver-pub,i,pub-str,x,X",	NULL,	"ver-int,ver-cal,ver-key,T",		NULL);
+	TASK_SET_add(task_set,	CAL_BASED,				"Calendar based verification.",		"ver-cal,i,X",				NULL,	"ver-int,ver-key,ver-pub,pub-str",					NULL);
 
+	TASK_SET_add(task_set,	KEY_BASED,				"Key based verification.",			"ver-key,i,P,cnstr",		NULL,	"ver-int,ver-cal,ver-pub,T,x,pub-str",				NULL);
+
+	TASK_SET_add(task_set,	PUB_BASED_FILE,			"Publication based verification, "
+													"use publications file, "
+													"extending is restricted.",			"ver-pub,i,P,cnstr",		NULL,	"ver-int,ver-cal,ver-key,x,T,pub-str",				NULL);
+	TASK_SET_add(task_set,	PUB_BASED_FILE_X,		"Publication based verification, "
+													"use publications file, "
+													"extending is permitted.",			"ver-pub,i,P,cnstr,x,X",	NULL,	"ver-int,ver-cal,ver-key,T,pub-str",				NULL);
+
+	TASK_SET_add(task_set,	PUB_BASED_STR,			"Publication based verification, "
+													"use publications string, "
+													"extending is restricted.",			"ver-pub,i,pub-str",		NULL,	"ver-int,ver-cal,ver-key,x,T",						NULL);
+	TASK_SET_add(task_set,	PUB_BASED_STR_X,		"Publication based verification, "
+													"use publications string, "
+													"extending is permitted.",			"ver-pub,i,pub-str,x,X",	NULL,	"ver-int,ver-cal,ver-key,T",						NULL);
 cleanup:
 
 	return res;
@@ -280,24 +314,28 @@ static int signature_verify(int id, PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 	}
 
 	switch(id) {
-		case 0:
+		case ANC_BASED_DEFAULT:
+		case ANC_BASED_PUB_FILE:
+		case ANC_BASED_PUB_FILE_X:
+		case ANC_BASED_PUB_SRT:
+		case ANC_BASED_PUB_SRT_X:
 			res = signature_verify_general(set, err, extra, ksi, sig, hsh, out);
 			goto cleanup;
-		case 1:
+		case INT_BASED:
 			res = signature_verify_internally(set, err, ksi, sig, hsh, out);
 			goto cleanup;
-		case 2:
+		case CAL_BASED:
 			res = signature_verify_calendar_based(set, err, ksi, sig, hsh, out);
 			goto cleanup;
-		case 3:
+		case KEY_BASED:
 			res = signature_verify_key_based(set, err, ksi, sig, hsh, out);
 			goto cleanup;
-		case 4:
-		case 5:
+		case PUB_BASED_FILE:
+		case PUB_BASED_FILE_X:
 			res = signature_verify_publication_based_with_pubfile(set, err, ksi, sig, hsh, out);
 			goto cleanup;
-		case 6:
-		case 7:
+		case PUB_BASED_STR:
+		case PUB_BASED_STR_X:
 			res = signature_verify_publication_based_with_user_pub(set, err, extra, ksi, sig, hsh, out);
 			goto cleanup;
 		default:

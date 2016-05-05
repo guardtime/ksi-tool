@@ -15,10 +15,10 @@ EXECUTABLE verify -i test/resource/signature/ok-sig-2014-04-30.1-extended.ksig -
 >>>= 0
 
 # Trust anchor: Publication Record (with publications file). 
-#EXECUTABLE verify -i test/resource/signature/ok-sig-2014-04-30.1-extended.ksig -d --dump --conf test/resource/conf/verify-conf.cfg
-#>>>  /(Trust anchor: Publication Record.)/
-#>>>2 /(Signature verification according to trust anchor)(.*ok.*)/
-#>>>= 0
+EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -d --dump --conf test/resource/conf/verify-conf.cfg
+>>>  /(Trust anchor: Publication Record.)/
+>>>2 /(Signature verification according to trust anchor)(.*ok.*)/
+>>>= 0
 
 # Trust anchor: Calendar Blockchain. 
 EXECUTABLE verify -i test/resource/signature/ok-sig-without-calendar-authentication-record.ksig -d --dump  --conf test/resource/conf/verify-conf.cfg
