@@ -1,52 +1,52 @@
 # Successful signing.
 
 # KSI Simple sign.
-EXECUTABLE sign -i test\resource\TestData.txt -o test\out\sign\TestData.txt.ksig -d
+EXECUTABLE sign -i test/resource/file/testFile -o test/out/sign/testFile.ksig -d
 >>>2 /Signature saved to/
 >>>= 0
 
 # KSI sign and hash with specified hash algorithm SHA1.
-EXECUTABLE sign -i test\resource\TestData.txt -H SHA1 -o test\out\sign\TestData.txt.sha1.ksig -d
+EXECUTABLE sign -i test/resource/file/testFile -H SHA1 -o test/out/sign/testFile.sha1.ksig -d
 >>>2 /Signature saved to/
 >>>= 0
 
 # KSI sign and hash with specified hash algorithm SHA2-256.
-EXECUTABLE sign -i test\resource\TestData.txt -H SHA2-256 -o test\out\sign\TestData.txt.sha256.ksig -d
+EXECUTABLE sign -i test/resource/file/testFile -H SHA2-256 -o test/out/sign/testFile.sha256.ksig -d
 >>>2 /Signature saved to/
 >>>= 0
 
 # KSI sign and hash with specified hash algorithm SHA2-384
-EXECUTABLE sign -i test\resource\TestData.txt -H SHA2-384 -o test\out\sign\TestData.txt.sha384.ksig -d
+EXECUTABLE sign -i test/resource/file/testFile -H SHA2-384 -o test/out/sign/testFile.sha384.ksig -d
 >>>2 /Signature saved to/
 >>>= 0
 
 # KSI sign and hash with specified hash algorithm SHA2-512.
-EXECUTABLE sign -i test\resource\TestData.txt -H SHA2-512 -o test\out\sign\TestData.txt.sha512.ksig -d
+EXECUTABLE sign -i test/resource/file/testFile -H SHA2-512 -o test/out/sign/testFile.sha512.ksig -d
 >>>2 /Signature saved to/
 >>>= 0
 
 # KSI Sign imprint SHA1.
-EXECUTABLE sign -i SHA1:a7d2c6238a92878b2a578c2477e8a33f9d8591ab -o test\out\sign\imprint_sha1.ksig -d
+EXECUTABLE sign -i SHA1:a7d2c6238a92878b2a578c2477e8a33f9d8591ab -o test/out/sign/imprint_sha1.ksig -d
 >>>2 /Signature saved to/
 >>>= 0
 
 # KSI Sign imprint SHA256.
-EXECUTABLE sign -i SHA256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test\out\sign\imprint_sha256.ksig -d
+EXECUTABLE sign -i SHA256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/imprint_sha256.ksig -d
 >>>2 /Signature saved to/
 >>>= 0
 
 # KSI Sign imprint SHA384.
-EXECUTABLE sign -i SHA384:a5ac3bb2fa156480d1cf437c54481d9c77a145b682879e92e30a8b79f0a45a001be7969ffa02d81af0610b784ae72f4f -o test\out\sign\imprint_sha384.ksig -d
+EXECUTABLE sign -i SHA384:a5ac3bb2fa156480d1cf437c54481d9c77a145b682879e92e30a8b79f0a45a001be7969ffa02d81af0610b784ae72f4f -o test/out/sign/imprint_sha384.ksig -d
 >>>2 /Signature saved to/
 >>>= 0
 
 # KSI Sign imprint SHA512.
-EXECUTABLE sign -i SHA512:09e3fc9d3669eaf53d3afeb60e6a73af2c7c7b01a0fe49127253e0d466ba3d1c85ed541593775a12a880378335eeda5fc0ad5700920e11ed315f4b49f37c6d26 -o test\out\sign\imprint_sha512.ksig -d
+EXECUTABLE sign -i SHA512:09e3fc9d3669eaf53d3afeb60e6a73af2c7c7b01a0fe49127253e0d466ba3d1c85ed541593775a12a880378335eeda5fc0ad5700920e11ed315f4b49f37c6d26 -o test/out/sign/imprint_sha512.ksig -d
 >>>2 /Signature saved to/
 >>>= 0
 
 # KSI Sign stream, output stream to stdout.
-EXECUTABLE sign -i - -o test\out\sign\stream_signature.ksig --data-out - -d
+EXECUTABLE sign -i - -o test/out/sign/stream_signature.ksig --data-out - -d
 <<<
 Data From Stdin
 >>>
@@ -55,7 +55,7 @@ Data From Stdin
 >>>= 0
 
 # KSI Sign stream, output stream to file, pipe signature to file.
-EXECUTABLE sign -i - -o - --data-out test\out\sign\piped_data.txt -d > test\out\sign\piped_signature.ksig
+EXECUTABLE sign -i - -o - --data-out test/out/sign/piped_data.txt -d > test/out/sign/piped_signature.ksig
 <<<
 Data From Stdin
 >>>2 /Signature saved to/
@@ -66,21 +66,21 @@ Data From Stdin
 # Unsuccessful signing.
 
 # KSI Sign Multiple different simultaneous outputs to stdout 1.
-EXECUTABLE sign -i - -o test\out\sign\shold_not_be.1.ksig --data-out - -d --dump
+EXECUTABLE sign -i - -o test/out/sign/shold_not_be.1.ksig --data-out - -d --dump
 <<<
 Data From Stdin
 >>>2 /Error: Multiple different simultaneous outputs to stdout/
 >>>= 3
 
 # KSI Sign Multiple different simultaneous outputs to stdout 2.
-EXECUTABLE sign -i - -o - --log - -d --dump > test\out\sign\shold_not_be.2.ksig
+EXECUTABLE sign -i - -o - --log - -d --dump > test/out/sign/shold_not_be.2.ksig
 <<<
 Data From Stdin
 >>>2 /Error: Multiple different simultaneous outputs to stdout/
 >>>= 3
 
 # KSI Sign Multiple different simultaneous outputs to stdout 3.
-EXECUTABLE sign -i - -o - -d --dump > test\out\sign\shold_not_be.3.ksig
+EXECUTABLE sign -i - -o - -d --dump > test/out/sign/shold_not_be.3.ksig
 <<<
 Data From Stdin
 >>>2 /Error: Multiple different simultaneous outputs to stdout/
