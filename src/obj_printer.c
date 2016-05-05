@@ -465,7 +465,7 @@ void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *resu
 	do {
 		if (result->finalResult.stepsPerformed & step) {
 			print("    %s.. %s", getVerificationStepDescription(step),
-					(getVerificationStepResult(step, result) ? "OK" : "FAILED"));
+					(getVerificationStepResult(step, result) ? "ok" : "failed"));
 			print("\n");
 		}
 		step <<= 1;
