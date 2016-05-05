@@ -38,19 +38,53 @@ EXECUTABLE verify -i test/resource/signature/ok-sig-sha1.ksig -f test/resource/f
 (Signature verification according to trust anchor)(.*ok.*)/
 >>>= 0
 
+# Verify newly created signature. 
+# Current test case expects that signing tests have been completed and 'testFile.ksig' signature file created.
+EXECUTABLE verify -i test/out/testFile.ksig -d --conf test/resource/conf/verify-conf.cfg
+>>>2 /(Signature verification according to trust anchor)(.*ok.*)/
+>>>= 0
+
 # ------ Internal verification. ------
 
-EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-2014-04-30.1.ksig -d --conf test/resource/conf/verify-conf.cfg
+# Verify signature internally
+EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-2014-04-30.1.ksig -d --dump --conf test/resource/conf/verify-conf.cfg
+>>>  /(Verifying calendar hash chain internally)(.*ok.*)
+(.*)(Verifying calendar hash chain authentication record)(.*ok.*)/
 >>>2 /(Signature internal verification)(.*ok.*)/
 >>>= 0
 
+# Verify document hash
 EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-2014-04-30.1.ksig -d -f SHA2-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d --conf test/resource/conf/verify-conf.cfg
 >>>2 /(Reading documents hash)(.*ok.*)
 (Signature internal verification)(.*ok.*)/
 >>>= 0
 
+# Verify document integrity.
+EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-sha1.ksig -f test/resource/file/testFile -d --conf test/resource/conf/verify-conf.cfg
+>>>2 /(Reading documents hash)(.*ok.*)
+(Signature internal verification)(.*ok.*)/
+>>>= 0
+
+# Verify extended signature internally
+EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-2014-04-30.1-extended.ksig -d --dump --conf test/resource/conf/verify-conf.cfg
+>>>  /(Verifying calendar hash chain internally)(.*ok.*)
+(.*)( Verifying calendar chain with publication)(.*ok.*)/
+>>>2 /(Signature internal verification)(.*ok.*)/
+>>>= 0
+
 # ------ Publication based verification, use publications file. ------
 
+EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -d --dump --conf test/resource/conf/verify-conf.cfg
+>>>  /(PublicationsFileContainsSignaturePublication)
+(.*)(Final result)/
+>>>2 /(Signature publication-based verification with publications file)(.*ok.*)/
+>>>= 0
+
+EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-04-30.1.ksig -x -d --dump --conf test/resource/conf/verify-conf.cfg
+>>>  /(PublicationsFileExtendedSignatureInputHash)
+(.*)(Final result)/
+>>>2 /(Signature publication-based verification with publications file)(.*ok.*)/
+>>>= 0
 
 
 # ------ Publication based verification, use publications string. ------
@@ -62,7 +96,7 @@ EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.k
 
 # ------ Key based verification. ------
 
-# KSI verify --key-based signature where input hash is hashed with SHA1.
+# Verify signature where input hash is hashed with SHA1.
 EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-sha1.ksig -f test/resource/testFile -d --conf test/resource/conf/verify-conf.cfg
 >>>2 /(Reading documents hash)(.*ok.*)
 (Signature key-based verification)(.*ok.*)/
@@ -82,6 +116,11 @@ EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-sha1.ksig -f test/
 
 # Failed verification.
 
+EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-04-30.1.ksig -d --dump --conf test/resource/conf/verify-conf.cfg
+>>>  /(PublicationsFileContainsPublication)
+(.*GEN-2.*ExtendingPermittedVerification)/
+>>>2 /(Signature publication-based verification with publications file)(.*failed.*)/
+>>>= 6
 
 
 
