@@ -32,23 +32,11 @@ void DEBUG_verifySignature(KSI_CTX *ksi, int res, KSI_Signature *sig, KSI_Policy
 
 	if (ksi == NULL || sig == NULL) return;
 
-	print_debug("KSI Signature Debug info:\n\n");
-	OBJPRINT_signatureDump(sig, print_debug);
-
-	if (result != NULL) {
-		print_debug("\n");
-		OBJPRINT_signatureVerificationResultDump(result, print_debug);
-		print_debug("\n");
-	}
-
 	if (hsh != NULL) {
 		res = KSI_Signature_getDocumentHash(sig, &input_hash);
 		if (res != KSI_OK) {
 			print_errors("Error: Unable to extract signatures input hash.\n");
-			return;
-		}
-
-		if (!KSI_DataHash_equals(hsh, input_hash)) {
+		} else if (!KSI_DataHash_equals(hsh, input_hash)) {
 			OBJPRINT_Hash(hsh,        "Document hash:       ", print_debug);
 			OBJPRINT_Hash(input_hash, "Expected Input hash: ", print_debug);
 		}
