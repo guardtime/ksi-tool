@@ -7,7 +7,7 @@ EXECUTABLE verify --ver-pub --conf test/test.cfg -i test/out/extend/nearest.pub.
 >>>2 /(Signature publication-based verification with user publication string)(.*ok.*)/
 >>>= 0
 
-# Verify signature extended and writtento stdout.
+# Verify signature extended and written to stdout.
 # Publication string: AAAAAA-CVUWRI-AANGVK-SV7GJL-36LN65-AVJYZR-6XRZSL-HIMRH3-6GU7WR-YNRY7C-X2XEC3-YOVLRM
 # Publication date: 2015-07-15 00:00:00 UTC
 EXECUTABLE verify --ver-pub --conf test/test.cfg -i test/out/extend/piped.nearest.pub.ext.ksig -d --pub-str AAAAAA-CVUWRI-AANGVK-SV7GJL-36LN65-AVJYZR-6XRZSL-HIMRH3-6GU7WR-YNRY7C-X2XEC3-YOVLRM
