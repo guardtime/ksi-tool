@@ -55,6 +55,8 @@ static int ksitool_ErrToExitcode(int error_code) {
 			return EXIT_FAILURE;
 		case KT_KSI_SIG_VER_IMPOSSIBLE:
 			return EXIT_VERIFY_ERROR;
+		case KT_PUBFILE_HAS_NO_PUBREC_TO_EXTEND_TO:
+			return EXIT_EXTEND_ERROR;
 		default:
 			return EXIT_FAILURE;
 	}
@@ -126,6 +128,8 @@ static const char* ksitoolErrToString(int error_code) {
 			return "User has no privileges.";
 		case KT_KSI_SIG_VER_IMPOSSIBLE:
 			return "Verification can't be performed.";
+		case KT_PUBFILE_HAS_NO_PUBREC_TO_EXTEND_TO:
+			return "No publication record found to extend to.";
 		case KT_UNKNOWN_ERROR:
 			return "Unknown error.";
 		default:
