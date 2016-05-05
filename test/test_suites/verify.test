@@ -182,6 +182,14 @@ Signature calendar-based verification.*ok.*/
 
 # ------ Internal verification. ------
 
+# Wrong document hash.
+EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-2014-08-01.1.ksig -d --dump -f SHA2-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b87720 --conf test/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
+>>>  /Final result.*
+.*GEN-1.*DocumentHashVerification/
+>>>2 /(Reading documents hash)(.*ok.*)
+(Signature internal verification)(.*failed.*)/
+>>>= 6
+
 
 
 
