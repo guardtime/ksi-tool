@@ -1,0 +1,18 @@
+# Successful signing.
+
+# Simple static signing 1.
+EXECUTABLE sign --conf test/resource/conf/static-sign-1.cfg -i SHA2-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/static-1.ksig -d
+>>>2 /Signature saved to/
+>>>= 0
+
+# Simple static signing 2.
+EXECUTABLE sign --conf test/resource/conf/static-sign-2.cfg -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/static-2.ksig -d 
+>>>2 /Signature saved to/
+>>>= 0
+
+# Unsuccessful signing.
+
+# Simple static signing 2.
+EXECUTABLE sign --conf test/resource/conf/static-sign-1.cfg -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/static_shold_not_be.1.ksig -d --aggr-key canon
+>>>2 /(Error: Unable to create signature.)(.*HMAC mismatch. 0x20e.*)/
+>>>= 11
