@@ -1,4 +1,4 @@
-# Verify signatures created during .
+# Verify signatures created during signing.
 
 # Verify KSI Signature. Use internal verification policy.
 EXECUTABLE verify --ver-int -i test/out/sign/testFile.sha1.ksig -d
