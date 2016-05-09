@@ -1,0 +1,59 @@
+# ======================== Successful verification. ========================
+
+# Extend signature to the nearest publication.
+EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/ok-sig-2014-08-01.1-extended.ksig -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
+>>>2 /(Extend the signature to the earliest available publication)(.*ok.*)
+(Verifying extended signature)(.*ok.*)
+(Saving signature)(.*ok.*)/
+>>>= 0
+
+# Extend signature to the nearest publication. Specify extending service URI.
+EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/ok-sig-2014-08-01.1-extended.ksig -d -X file://test/resource/server/ok-sig-2014-08-01.1-extend_response.tlv --ext-user anon --ext-key anon
+>>>2 /(Extend the signature to the earliest available publication)(.*ok.*)
+(Verifying extended signature)(.*ok.*)
+(Saving signature)(.*ok.*)/
+>>>= 0
+
+# Extend extended signature to the nearest publication.
+EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/ok-sig-2014-08-01.1-extended.ksig -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
+>>>2 /(Extend the signature to the earliest available publication)(.*ok.*)
+(Verifying extended signature)(.*ok.*)
+(Saving signature)(.*ok.*)/
+>>>= 0
+
+# TODO: SDK does not support multi-response tlv files yet.
+# Extend signature to head.
+#EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.no-cal-hashchain.ksig -o test/out/extend/ok-sig-2014-08-01.1-extended-head.ksig -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response-head.cfg
+#>>>2 /(Extend the signature to the earliest available publication)(.*ok.*)
+#(Verifying extended signature)(.*ok.*)
+#(Saving signature)(.*ok.*)/
+#>>>= 0
+
+# TODO: SDK does not support multi-response tlv files yet.
+# Extend signature to head.
+#EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/ok-sig-2014-08-01.1-extended-head.ksig -T 1462454749 -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response-head.cfg
+#>>>2 /(Extend the signature to the earliest available publication)(.*ok.*)
+#(Verifying extended signature)(.*ok.*)
+#(Saving signature)(.*ok.*)/
+#>>>= 0
+
+
+# ======================== Failed verification.     ========================
+
+# Extend signature to the nearest publication. Server response has wrong request id.
+# Request id:  1
+# Response id: 2
+EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/ok-sig-2014-08-01.1-extended.ksig -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response-req_id_2.cfg
+>>>2 /(Extend the signature to the earliest available publication)(.*failed.*)
+{1,}.{0,}
+(.*)(Error: Request id's mismatch)(.*)/
+>>>= 1
+
+# Extend signature to the nearest publication. Server response publication time mismatch.
+# Request time:  (1408060800) 15 Aug 2014 00:00:00
+# Response time: (1442275200) 15 Sep 2015 00:00:00
+EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/ok-sig-2014-08-01.1-extended.ksig -d -X file://test/resource/server/ok-sig-2015-09-13.extend_response.tlv --ext-user anon --ext-key anon
+>>>2 /(Extend the signature to the earliest available publication)(.*failed.*)
+{1,}.{0,}
+(.*)(Error: Publication time mismatch)(.*)/
+>>>= 1
