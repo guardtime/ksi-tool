@@ -35,4 +35,16 @@ EXECUTABLE verify --ver-pub --conf test/test.cfg -i test/out/extend/specified.no
 >>>2 /(Signature publication-based verification with user publication string)(.*ok.*)/
 >>>= 0
 
+# Verify signature extended to the specified time without no publication record.
+# Publication string: AAAAAA-CVWIVC-QAIVKJ-SIRUQZ-MZBJPS-T7P2UX-DDX4JF-KLMCXI-TXIKGF-B6MAJQ-JIJPTD-C2EDEO
+# Publication date: (1437739560) 2015-07-24 12:06:00 UTC
+EXECUTABLE verify --ver-cal --conf test/test.cfg -i test/out/extend/specified.no-pub.ext.ksig -d
+>>>2 /(Signature calendar-based verification)(.*ok.*)/
+>>>= 0
 
+# Verify signature extended to the specified publication (that is not the nearest publication).
+# Publication string: AAAAAA-CWN5MA-AAK3AP-WSCETA-RKKP5V-OIITKT-XODBUJ-RQVGAI-DL7PHU-V6M2UY-DCTGDK-B47JCA
+# Publication date: 2015-12-15 00:00:00 UTC
+EXECUTABLE verify --ver-cal --conf test/test.cfg -i test/out/extend/specified.pub.ext.ksig -d
+>>>2 /(Signature calendar-based verification)(.*ok.*)/
+>>>= 0

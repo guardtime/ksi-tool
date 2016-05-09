@@ -1,4 +1,22 @@
-# Verify signatures created during .
+# Verify signatures created during signing.
+
+# Verify KSI Signature. Use internal verification policy.
+EXECUTABLE verify --ver-int -i test/out/sign/testFile.sha1.ksig -d
+>>>2 /(Reading signature)(.*ok.*)
+(Signature internal verification)(.*ok.*)/
+>>>= 0
+
+# Verify KSI Signature with input hash (SHA1). Use internal verification policy.
+EXECUTABLE verify --ver-int -f test/resource/file/testFile -i test/out/sign/testFile.sha1.ksig -d
+>>>2 /(Reading documents hash)(.*ok.*)
+(Signature internal verification)(.*ok.*)/
+>>>= 0
+
+# Verify KSI Signature created from SHA2-256 imprint. Use internal verification policy.
+EXECUTABLE verify --ver-int -f SHA256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -i test/out/sign/imprint_sha256.ksig -d
+>>>2 /(Reading documents hash)(.*ok.*)
+(Signature internal verification)(.*ok.*)/
+>>>= 0
 
 # Verify KSI Simple sign.
 EXECUTABLE verify --ver-key -f test/resource/file/testFile -i test/out/sign/testFile.ksig -d
@@ -64,4 +82,10 @@ EXECUTABLE verify --ver-key -f test/out/sign/piped_data.txt -i test/out/sign/str
 EXECUTABLE verify --ver-key -f test/out/sign/piped_data.txt -i test/out/sign/piped_signature.ksig -d
 >>>2 /(Reading documents hash)(.*ok.*)
 (Signature key-based verification)(.*ok.*)/
+>>>= 0
+
+# Verify signature piped to stdout.
+EXECUTABLE verify --ver-cal -i test/out/sign/piped_signature.ksig -d --dump
+>>>  /(Verifying signature online)(.*ok.*)/
+>>>2 /(Signature calendar-based verification)(.*ok.*)/
 >>>= 0
