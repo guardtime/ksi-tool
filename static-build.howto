@@ -14,6 +14,5 @@ Mac OS:
 
 Linux:
 	Build static ksitool:
-	* Set LIBS environment variable to "/usr/local/lib/libksi.a /usr/local/lib/libcurl.a libraries/openssl-1.0.2d/libssl.a libraries/openssl-1.0.2d/libcrypto.a -lz -ldl"
-	* ./configure --enable-static-build
-	* make
+	* Make sure libksi-devel is installed.
+	* ./rebuild-static.sh
