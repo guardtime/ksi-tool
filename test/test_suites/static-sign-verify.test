@@ -1,4 +1,4 @@
-# Verify signatures created during .
+# Verify signatures created during signing.
 
 # Simple static signing 1.
 EXECUTABLE verify --ver-key --conf test/resource/conf/static-sign-1.cfg -f SHA2-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -i test/out/sign/static-1.ksig -d
