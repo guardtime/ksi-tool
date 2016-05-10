@@ -50,15 +50,19 @@ AC_PROG_CC
 AC_PROG_LN_S
 # Checks for libraries.
 AC_ARG_ENABLE(static-build,
-[  --enable-static-build      enable static linking of ksi library)],
-:, :)
+[  --enable-static-build      enable static linking of ksi library)],:,:)
 if test "$enable_static_build" = "yes" ; then
     AC_MSG_NOTICE([KSI library will be linked statically.])
     AC_CHECK_LIB([ksi], [KSI_CTX_new], [LIBS="-Wl,-Bstatic -lksi -Wl,-Bdynamic $LIBS"], [AC_MSG_FAILURE([Could not find KSI libraries.])])
+    KSI_RPM_BUILD_FLAGS="--enable-static-build"
 else
     AC_MSG_NOTICE([KSI library will be linked dynamically.])
     AC_CHECK_LIB([ksi], [KSI_CTX_new], [], [AC_MSG_FAILURE([Could not find KSI libraries.])])
+    KSI_RPM_DEPENDECY="Requires: libksi >= 3.8"
 fi
+
+AC_SUBST(KSI_RPM_DEPENDECY)
+AC_SUBST(KSI_RPM_BUILD_FLAGS)
 
 AC_CHECK_LIB([crypto], [SHA256_Init], [], [AC_MSG_FAILURE([Could not find OpenSSL 0.9.8+ libraries.])])
 AC_CHECK_LIB([curl], [curl_easy_init], [], [AC_MSG_FAILURE([Could nod find Curl libraries.])])
