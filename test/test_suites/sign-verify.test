@@ -1,91 +1,91 @@
 # Verify signatures created during signing.
 
 # Verify KSI Signature. Use internal verification policy.
-EXECUTABLE verify --ver-int -i test/out/sign/testFile.sha1.ksig -d
+EXECUTABLE verify --ver-int --conf test/test.cfg -i test/out/sign/testFile.sha1.ksig -d
 >>>2 /(Reading signature)(.*ok.*)
 (Signature internal verification)(.*ok.*)/
 >>>= 0
 
 # Verify KSI Signature with input hash (SHA1). Use internal verification policy.
-EXECUTABLE verify --ver-int -f test/resource/file/testFile -i test/out/sign/testFile.sha1.ksig -d
+EXECUTABLE verify --ver-int --conf test/test.cfg -f test/resource/file/testFile -i test/out/sign/testFile.sha1.ksig -d
 >>>2 /(Reading documents hash)(.*ok.*)
 (Signature internal verification)(.*ok.*)/
 >>>= 0
 
 # Verify KSI Signature created from SHA2-256 imprint. Use internal verification policy.
-EXECUTABLE verify --ver-int -f SHA256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -i test/out/sign/imprint_sha256.ksig -d
+EXECUTABLE verify --ver-int --conf test/test.cfg -f SHA256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -i test/out/sign/imprint_sha256.ksig -d
 >>>2 /(Reading documents hash)(.*ok.*)
 (Signature internal verification)(.*ok.*)/
 >>>= 0
 
 # Verify KSI Simple sign.
-EXECUTABLE verify --ver-key -f test/resource/file/testFile -i test/out/sign/testFile.ksig -d
+EXECUTABLE verify --ver-key --conf test/test.cfg -f test/resource/file/testFile -i test/out/sign/testFile.ksig -d
 >>>2 /(Reading documents hash)(.*ok.*)
 (Signature key-based verification)(.*ok.*)/
 >>>= 0
 
 # Verify KSI Signature with input hash (SHA1).
-EXECUTABLE verify --ver-key -f test/resource/file/testFile -i test/out/sign/testFile.sha1.ksig -d
+EXECUTABLE verify --ver-key --conf test/test.cfg -f test/resource/file/testFile -i test/out/sign/testFile.sha1.ksig -d
 >>>2 /(Reading documents hash)(.*ok.*)
 (Signature key-based verification)(.*ok.*)/
 >>>= 0
 
 # Verify KSI Signature with input hash (SHA2-256).
-EXECUTABLE verify --ver-key -f test/resource/file/testFile -i test/out/sign/testFile.sha256.ksig -d
+EXECUTABLE verify --ver-key --conf test/test.cfg -f test/resource/file/testFile -i test/out/sign/testFile.sha256.ksig -d
 >>>2 /(Reading documents hash)(.*ok.*)
 (Signature key-based verification)(.*ok.*)/
 >>>= 0
 
 # Verify KSI Signature with input hash (SHA2-384).
-EXECUTABLE verify --ver-key -f test/resource/file/testFile -i test/out/sign/testFile.sha384.ksig -d
+EXECUTABLE verify --ver-key --conf test/test.cfg -f test/resource/file/testFile -i test/out/sign/testFile.sha384.ksig -d
 >>>2 /(Reading documents hash)(.*ok.*)
 (Signature key-based verification)(.*ok.*)/
 >>>= 0
 
 # Verify KSI Signature with input hash (SHA2-512).
-EXECUTABLE verify --ver-key -f test/resource/file/testFile -i test/out/sign/testFile.sha512.ksig -d
+EXECUTABLE verify --ver-key --conf test/test.cfg -f test/resource/file/testFile -i test/out/sign/testFile.sha512.ksig -d
 >>>2 /(Reading documents hash)(.*ok.*)
 (Signature key-based verification)(.*ok.*)/
 >>>= 0
 
 # Verify KSI Signature created from SHA1 imprint.
-EXECUTABLE verify --ver-key -f SHA1:a7d2c6238a92878b2a578c2477e8a33f9d8591ab -i test/out/sign/imprint_sha1.ksig -d
+EXECUTABLE verify --ver-key --conf test/test.cfg -f SHA1:a7d2c6238a92878b2a578c2477e8a33f9d8591ab -i test/out/sign/imprint_sha1.ksig -d
 >>>2 /(Reading documents hash)(.*ok.*)
 (Signature key-based verification)(.*ok.*)/
 >>>= 0
 
 # Verify KSI Signature created from SHA2-256 imprint.
-EXECUTABLE verify --ver-key -f SHA256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -i test/out/sign/imprint_sha256.ksig -d
+EXECUTABLE verify --ver-key --conf test/test.cfg -f SHA256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -i test/out/sign/imprint_sha256.ksig -d
 >>>2 /(Reading documents hash)(.*ok.*)
 (Signature key-based verification)(.*ok.*)/
 >>>= 0
 
 # Verify KSI Signature created from SHA2-284 imprint.
-EXECUTABLE verify --ver-key -f SHA384:a5ac3bb2fa156480d1cf437c54481d9c77a145b682879e92e30a8b79f0a45a001be7969ffa02d81af0610b784ae72f4f -i test/out/sign/imprint_sha384.ksig -d
+EXECUTABLE verify --ver-key --conf test/test.cfg -f SHA384:a5ac3bb2fa156480d1cf437c54481d9c77a145b682879e92e30a8b79f0a45a001be7969ffa02d81af0610b784ae72f4f -i test/out/sign/imprint_sha384.ksig -d
 >>>2 /(Reading documents hash)(.*ok.*)
 (Signature key-based verification)(.*ok.*)/
 >>>= 0
 
 # Verify KSI Signature created from SHA2-512 imprint.
-EXECUTABLE verify --ver-key -f SHA512:09e3fc9d3669eaf53d3afeb60e6a73af2c7c7b01a0fe49127253e0d466ba3d1c85ed541593775a12a880378335eeda5fc0ad5700920e11ed315f4b49f37c6d26 -i test/out/sign/imprint_sha512.ksig -d
+EXECUTABLE verify --ver-key --conf test/test.cfg -f SHA512:09e3fc9d3669eaf53d3afeb60e6a73af2c7c7b01a0fe49127253e0d466ba3d1c85ed541593775a12a880378335eeda5fc0ad5700920e11ed315f4b49f37c6d26 -i test/out/sign/imprint_sha512.ksig -d
 >>>2 /(Reading documents hash)(.*ok.*)
 (Signature key-based verification)(.*ok.*)/
 >>>= 0
 
 # Verify signature created from stream.
-EXECUTABLE verify --ver-key -f test/out/sign/piped_data.txt -i test/out/sign/stream_signature.ksig -d
+EXECUTABLE verify --ver-key --conf test/test.cfg -f test/out/sign/piped_data.txt -i test/out/sign/stream_signature.ksig -d
 >>>2 /(Reading documents hash)(.*ok.*)
 (Signature key-based verification)(.*ok.*)/
 >>>= 0
 
 # Verify signature piped to stdout.
-EXECUTABLE verify --ver-key -f test/out/sign/piped_data.txt -i test/out/sign/piped_signature.ksig -d
+EXECUTABLE verify --ver-key --conf test/test.cfg -f test/out/sign/piped_data.txt -i test/out/sign/piped_signature.ksig -d
 >>>2 /(Reading documents hash)(.*ok.*)
 (Signature key-based verification)(.*ok.*)/
 >>>= 0
 
 # Verify signature piped to stdout.
-EXECUTABLE verify --ver-cal -i test/out/sign/piped_signature.ksig -d --dump
+EXECUTABLE verify --ver-cal --conf test/test.cfg -i test/out/sign/piped_signature.ksig -d --dump
 >>>  /(Verifying signature online)(.*ok.*)/
 >>>2 /(Signature calendar-based verification)(.*ok.*)/
 >>>= 0
