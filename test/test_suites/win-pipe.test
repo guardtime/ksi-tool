@@ -1,0 +1,14 @@
+# Successful signing and extending pipe tests for Windows.
+
+# KSI Sign stream and pipe KSI signature file to verification.
+EXECUTABLE sign --conf test/test.cfg -i - -o - | bin\ksi.exe verify --conf test/test.cfg --ver-key -i - -d
+<<< 
+Data From Stdin
+>>>2 /(Reading signature)(.*ok.*)
+(Signature key-based verification)(.*ok.*)/
+>>>= 0
+
+# KSI Extend signature and pipe extend signature to verification.
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ksig -o - | bin\ksi.exe verify --ver-pub --conf test/test.cfg -i - -d --pub-str AAAAAA-CVUWRI-AANGVK-SV7GJL-36LN65-AVJYZR-6XRZSL-HIMRH3-6GU7WR-YNRY7C-X2XEC3-YOVLRM
+>>>2 /(Signature publication-based verification with user publication string)(.*ok.*)/
+>>>= 0

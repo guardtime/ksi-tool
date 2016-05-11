@@ -1,0 +1,18 @@
+# Misuse of extending command-line.
+
+# Invalid usage of pipe.
+
+# KSI Sign Multiple different simultaneous outputs to stdout 1.
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ksig -o - --log - > test/out/extend/extend_cmd_should_not_be.1.ksig
+>>>2 /Error: Multiple different simultaneous outputs to stdout/
+>>>= 3
+
+# KSI Sign Multiple different simultaneous outputs to stdout 2.
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ksig -o - --dump > test/out/extend/extend_cmd_should_not_be.2.ksig
+>>>2 /Error: Multiple different simultaneous outputs to stdout/
+>>>= 3
+
+# KSI Sign Multiple different simultaneous outputs to stdout 3.
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ksig -o - --dump --log - > test/out/extend/extend_cmd_should_not_be.3.ksig
+>>>2 /Error: Multiple different simultaneous outputs to stdout/
+>>>= 3
