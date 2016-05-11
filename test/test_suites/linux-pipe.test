@@ -1,4 +1,4 @@
-# Successful signing and extending for Windows.
+# Successful signing and extending pipe tests.
 
 # KSI Sign stream and pipe KSI signature file to verification.
 EXECUTABLE sign --conf test/test.cfg -i - -o - | src/ksi verify --conf test/test.cfg --ver-key -i - -d
