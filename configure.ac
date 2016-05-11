@@ -52,8 +52,16 @@ AC_PROG_LN_S
 AC_ARG_ENABLE(static-build,
 [  --enable-static-build      enable static linking of ksi library)],:,:)
 if test "$enable_static_build" = "yes" ; then
+    AC_CANONICAL_HOST
+
+    if test "${host_os#*linux}" != "$host_os"; then
+        dy_link_flag="-Bdynamic"
+    else
+        dy_link_flag="-dynamic"
+    fi
+
     AC_MSG_NOTICE([KSI library will be linked statically.])
-    AC_CHECK_LIB([ksi], [KSI_CTX_new], [LIBS="-Wl,-Bstatic -lksi -Wl,-Bdynamic $LIBS"], [AC_MSG_FAILURE([Could not find KSI libraries.])])
+    AC_CHECK_LIB([ksi], [KSI_CTX_new], [LIBS="-Wl,-static -lksi -Wl,$dy_link_flag $LIBS"], [AC_MSG_FAILURE([Could not find KSI libraries.])])
     KSI_RPM_BUILD_FLAGS="--enable-static-build"
 else
     AC_MSG_NOTICE([KSI library will be linked dynamically.])
