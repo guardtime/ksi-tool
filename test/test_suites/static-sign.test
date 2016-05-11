@@ -13,35 +13,35 @@ EXECUTABLE sign --conf test/resource/conf/static-sign-2.cfg -i SHA-256:11a700b0c
 # Unsuccessful signing.
 
 # Aggregator returs a package with invalid HMAC.
-EXECUTABLE sign --conf test/resource/conf/static-sign-1.cfg -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/static_shold_not_be.1.ksig -d --aggr-key canon
+EXECUTABLE sign --conf test/resource/conf/static-sign-1.cfg -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/static_should_not_be.1.ksig -d --aggr-key canon
 >>>2 /(Error: Unable to create signature.)(.*HMAC mismatch. 0x20e.*)/
 >>>= 11
 
 # Unknown critical tag aggregation response.
-EXECUTABLE sign --conf test/resource/conf/static-sign-1.cfg -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/static_shold_not_be.2.ksig -d -S file://test/resource/server/nok_aggr_response_bad_tag.tlv
+EXECUTABLE sign --conf test/resource/conf/static-sign-1.cfg -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/static_should_not_be.2.ksig -d -S file://test/resource/server/nok_aggr_response_bad_tag.tlv
 >>>2 /(Error: Unable to create signature)(.*)
 (.*)(Error: Unknown critical tag)/
 >>>= 4
 
 # Aggregation response is missing header.
-EXECUTABLE sign --conf test/resource/conf/static-sign-1.cfg -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/static_shold_not_be.3.ksig -d -S file://test/resource/server/nok_aggr_response_missing_header.tlv
+EXECUTABLE sign --conf test/resource/conf/static-sign-1.cfg -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/static_should_not_be.3.ksig -d -S file://test/resource/server/nok_aggr_response_missing_header.tlv
 >>>2 /(Error: Unable to create signature)/
 >>>= 4
 
 # Aggregation response contains not NUL terminated string (login id).
-EXECUTABLE sign --conf test/resource/conf/static-sign-1.cfg -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/static_shold_not_be.4.ksig -d -S file://test/resource/server/nok_aggr_response-1.tlv
+EXECUTABLE sign --conf test/resource/conf/static-sign-1.cfg -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/static_should_not_be.4.ksig -d -S file://test/resource/server/nok_aggr_response-1.tlv
 >>>2 /(Error: Unable to create signature)(.*)
 (.*)(Error: String value is not null-terminated)/
 >>>= 4
 
 # Aggregation response contains invalid hash chain.
-EXECUTABLE sign --conf test/resource/conf/static-sign-1.cfg -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/static_shold_not_be.5.ksig -d -S file://test/resource/server/nok_aggr_response-invalid-aggr-chain.tlv
+EXECUTABLE sign --conf test/resource/conf/static-sign-1.cfg -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/static_should_not_be.5.ksig -d -S file://test/resource/server/nok_aggr_response-invalid-aggr-chain.tlv
 >>>2 /(Error: Unable to create signature)(.*)
 (.*)(Error: Internal verification of signature failed)/
 >>>= 6
 
 # Aggregator returned error response (Although the real request generated is OK).
-EXECUTABLE sign --conf test/resource/conf/static-sign-1.cfg -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/static_shold_not_be.6.ksig -d -S file://test/resource/server/ok_aggr_err_response-1.tlv
+EXECUTABLE sign --conf test/resource/conf/static-sign-1.cfg -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/static_should_not_be.6.ksig -d -S file://test/resource/server/ok_aggr_err_response-1.tlv
 >>>2 /(Error: Unable to create signature)(.*)
 (.*)(Error: The request contained invalid payload)/
 >>>= 1
