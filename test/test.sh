@@ -1,4 +1,3 @@
-
 rm -f test/out/sign 2> /dev/null
 rm -f test/out/extend 2> /dev/null
 mkdir -p test/out/sign
@@ -12,4 +11,5 @@ test/test_suites/extend.test \
 test/test_suites/extend-verify.test \
 test/test_suites/static-verify.test \
 test/test_suites/static-sign-verify.test \
+test/test_suites/static-extend.test \
 --with=src/ksi -- -j1
