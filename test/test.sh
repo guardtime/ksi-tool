@@ -12,4 +12,7 @@ test/test_suites/extend-verify.test \
 test/test_suites/static-verify.test \
 test/test_suites/static-sign-verify.test \
 test/test_suites/static-extend.test \
+test/test_suites/linux-pipe.test \
+test/test_suites/sign-cmd.test \
+test/test_suites/extend-cmd.test \
 --with=src/ksi -- -j1
