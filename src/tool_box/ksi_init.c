@@ -199,7 +199,7 @@ static int tool_init_ksi_pub_cert_constraints(KSI_CTX *ksi, ERR_TRCKR *err, PARA
 		char *oid = NULL;
 		char *value = NULL;
 		char tmp[1024];
-			PARAM_SET_getStr(set, "cnstr", NULL, PST_PRIORITY_NONE, i, &constraint);
+			PARAM_SET_getStr(set, "cnstr", NULL, PST_PRIORITY_HIGHEST, i, &constraint);
 			KSI_strncpy(tmp, constraint, sizeof(tmp));
 
 			oid = tmp;
