@@ -21,6 +21,6 @@ EXECUTABLE pubfile -v --cnstr E=publications@guardtime.com -P file://test/resour
 >>>= 4
 
 # Try to verify publications file that has invalid signature.
+#TODO: OpenSSL and CryptoAPI behave differently.
 EXECUTABLE pubfile -v -d --cnstr E=publications@guardtime.com -P file://test/resource/publication/nok-publications-wrong-signature.bin
->>>2 /(Invalid PKI signature)(.*0x108.*)/
->>>= 6
+>>>= /6|10/
