@@ -54,7 +54,7 @@ static int KSI_Signature_serialize_wrapper(KSI_CTX *ksi, KSI_Signature *sig, uns
 static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **obj,	int (*parse)(KSI_CTX *ksi, unsigned char *raw, unsigned raw_len, void **obj), void (*obj_free)(void*), const char *name) {
 	int res;
 	SMART_FILE *file = NULL;
-	unsigned char buf[0xfff + 4];
+	unsigned char buf[0xffff + 4];
 	unsigned char dummy[1];
 	void *tmp = NULL;
 	size_t data_len = 0;

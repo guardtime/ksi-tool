@@ -15,4 +15,5 @@ test/test_suites/static-extend.test \
 test/test_suites/linux-pipe.test \
 test/test_suites/sign-cmd.test \
 test/test_suites/extend-cmd.test \
+test/test_suites/static-verify-invalid-signatures.test \
 --with=src/ksi -- -j1
