@@ -60,29 +60,3 @@ EXECUTABLE sign --conf test/test.cfg -i - -o - --data-out test/out/sign/piped_da
 Data From Stdin
 >>>2 /Signature saved to/
 >>>= 0
-
-
-
-# Unsuccessful signing.
-
-# KSI Sign Multiple different simultaneous outputs to stdout 1.
-EXECUTABLE sign --conf test/test.cfg -i - -o test/out/sign/shold_not_be.1.ksig --data-out - -d --dump
-<<<
-Data From Stdin
->>>2 /Error: Multiple different simultaneous outputs to stdout/
->>>= 3
-
-# KSI Sign Multiple different simultaneous outputs to stdout 2.
-EXECUTABLE sign --conf test/test.cfg -i - -o - --log - -d --dump > test/out/sign/shold_not_be.2.ksig
-<<<
-Data From Stdin
->>>2 /Error: Multiple different simultaneous outputs to stdout/
->>>= 3
-
-# KSI Sign Multiple different simultaneous outputs to stdout 3.
-EXECUTABLE sign --conf test/test.cfg -i - -o - -d --dump > test/out/sign/shold_not_be.3.ksig
-<<<
-Data From Stdin
->>>2 /Error: Multiple different simultaneous outputs to stdout/
->>>= 3
-
