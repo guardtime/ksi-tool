@@ -1,0 +1,75 @@
+# Successful signing.
+
+# Verify pubfile without saving it.
+EXECUTABLE pubfile --conf test/resource/conf/static-pubfile.cfg -v -d 
+>>>2 /(Loading publications file from file)(.*ok.*)
+(.*)
+(.*)
+(.*)(Verifying publications file)(.*ok.*)/
+>>>= 0
+
+# Download and verify pubfile.
+EXECUTABLE pubfile --conf test/resource/conf/static-pubfile.cfg -d -o test/out/pubfile/pubfile.bin
+>>>2 /(Loading publications file from file)(.*ok.*)
+(.*)
+(.*)
+(.*)(Verifying publications file)(.*ok.*)
+(Saving publications file)(.*ok.*)/
+>>>= 0
+
+# Download and dump publications file without verifying it.
+EXECUTABLE pubfile --conf test/resource/conf/static-pubfile.cfg -d --dump
+>>> /(KSI Publications file dump)(.*)
+(.*)(Publication Records)(.*)/
+>>>2 /(Loading publications file from file)(.*ok.*)
+(Extracting latest publication time)(.*ok.*)/
+>>>= 0
+
+# Download, verify and dump publications file.
+EXECUTABLE pubfile --conf test/resource/conf/static-pubfile.cfg -d -v --dump
+>>> /(KSI Publications file dump)(.*)
+(.*)(Publication Records)(.*)
+(.*)(AAAAAA-CQPNJA-AAJK36-H657MZ-AWADXK-M6JR77-JLERGT-UORVBU-5FZLTO-6D6YAU-UZZFF2-VQDGOV)/
+>>>2 /(Loading publications file from file)(.*ok.*)
+(Extracting latest publication time)(.*ok.*)
+(.*)
+(.*)(Verifying publications file)(.*ok.*)/
+>>>= 0
+
+# Verify publications file with specified constraints (use short names).
+EXECUTABLE pubfile --conf test/resource/conf/static-pubfile.cfg -d -v --dump --cnstr E=test@test.com --cnstr CN="Guardtime Test" --cnstr O=Guardtime --cnstr C=EE
+>>> /(KSI Publications file dump)(.*)
+(.*)(Publication Records)(.*)/
+>>>2 /(Loading publications file from file)(.*ok.*)
+(.*)
+(.*)
+(.*)(Verifying publications file)(.*ok.*)/
+>>>= 0
+
+# Verify publications file with specified constraints (use long names).
+EXECUTABLE pubfile --conf test/resource/conf/static-pubfile.cfg -d -v --dump --cnstr email=test@test.com --cnstr "common_name=Guardtime Test" --cnstr organization=Guardtime --cnstr country=EE
+>>> /(KSI Publications file dump)(.*)
+(.*)(Publication Records)(.*)/
+>>>2 /(Loading publications file from file)(.*ok.*)
+(.*)
+(.*)
+(.*)(Verifying publications file)(.*ok.*)/
+>>>= 0
+
+# Verify publications file with specified constraints (use OID).
+EXECUTABLE pubfile --conf test/resource/conf/static-pubfile.cfg -d -v --dump --cnstr 1.2.840.113549.1.9.1=test@test.com --cnstr "2.5.4.3=Guardtime Test" --cnstr 2.5.4.10=Guardtime --cnstr 2.5.4.6=EE
+>>> /(KSI Publications file dump)(.*)
+(.*)(Publication Records)(.*)/
+>>>2 /(Loading publications file from file)(.*ok.*)
+(.*)
+(.*)
+(.*)(Verifying publications file)(.*ok.*)/
+>>>= 0
+
+# Create a publications string .
+EXECUTABLE pubfile --conf test/resource/conf/static-pubfile.cfg -T "2016-01-01 0:0:0" 
+>>> /(Publication string)(.*)(AAAAAA-CWQXAY-AAOUE3-EPPK5M-PUIQ3O-FGLWLC-HCTG4I-EQPG3O-D4SDAJ-USXGYD-VKHIWB-PY3ZJD)(.*)
+(.*)(Publication date)(.*)(2016-01-01 00:00:00)(.*)
+(.*)(Published hash)(.*)(SHA2-256:d426c8f7abac7d110db8a65d96238a66e209079b6e1f24302692b9b03aa8e8b0)(.*)/
+>>>= 0
+

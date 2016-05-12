@@ -1,0 +1,26 @@
+# ============ Invalid verification verification. ============
+
+# Try to verify publications file thats contains critical unknown elements.
+EXECUTABLE pubfile -v --cnstr E=publications@guardtime.com -P file://test/resource/publication/nok-publications-contains-unknown-critical-element.bin
+>>>2 /(Error: Unknown critical tag)(.*0x02.*)/
+>>>= 4
+
+# Try to verify publications file thats contains critical unknown elements in header.
+EXECUTABLE pubfile -v --cnstr E=publications@guardtime.com -P file://test/resource/publication/nok-publications-new-critical-element-in-publication-header.bin
+>>>2 /(Error: Unknown critical tag)(.*0x701.*)(.*0x05.*)/
+>>>= 4
+
+# Try to verify publications file thats contains critical unknown elements in publication record.
+EXECUTABLE pubfile -v --cnstr E=publications@guardtime.com -P file://test/resource/publication/nok-publications-new-critical-element-in-publication-record.bin
+>>>2 /(Error: Unknown critical tag)(.*0x703.*)(.*0x01.*)/
+>>>= 4
+
+# Try to verify publications file that has no signature.
+EXECUTABLE pubfile -v --cnstr E=publications@guardtime.com -P file://test/resource/publication/nok-publications-no-signature.bin
+>>>2 /(Error: Mandatory element missing)(.*0x704.*)/
+>>>= 4
+
+# Try to verify publications file that has invalid signature.
+EXECUTABLE pubfile -v -d --cnstr E=publications@guardtime.com -P file://test/resource/publication/nok-publications-wrong-signature.bin
+>>>2 /(Invalid PKI signature)(.*0x108.*)/
+>>>= 6
