@@ -1,4 +1,4 @@
-# Successful signing.
+# Static publications file test.
 
 # Verify pubfile without saving it.
 EXECUTABLE pubfile --conf test/resource/conf/static-pubfile.cfg -v -d 

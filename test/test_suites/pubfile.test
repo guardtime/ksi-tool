@@ -1,4 +1,4 @@
-# Successful signing.
+# Publications file test.
 
 # Verify pubfile without saving it.
 EXECUTABLE pubfile --conf test/test.cfg -v -d 

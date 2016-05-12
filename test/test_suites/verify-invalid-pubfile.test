@@ -1,6 +1,6 @@
-# ============ Invalid verification verification. ============
+# ============ Verification and parsing of invalid publications files. ============
 
-# Try to verify publications file thats contains critical unknown elements.
+# Try to verify publications file that contains critical unknown elements.
 EXECUTABLE pubfile -v --cnstr E=publications@guardtime.com -P file://test/resource/publication/nok-publications-contains-unknown-critical-element.bin
 >>>2 /(Error: Unknown critical tag)(.*0x02.*)/
 >>>= 4
