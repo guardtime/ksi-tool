@@ -37,6 +37,7 @@
 #include "ksi_init.h"
 #include "api_wrapper.h"
 
+static int isContentOk_imprint(const char *imprint);
 
 static int analyze_hexstring_format(const char *hex, double *cor) {
 	int i = 0;
@@ -133,23 +134,24 @@ cleanup:
 	return res;
 }
 
-static int is_imprint(const char *str) {
+int is_imprint(const char *str) {
 	int res;
 	KSI_HashAlgorithm alg = KSI_HASHALG_INVALID;
 	int isColon = 0;
 	char hex[1024];
-	double correctness = 0;
+	double correctness = 1;
 	double tmp = 0;
-
 
 	res = imprint_extract_fields(str, &alg, &isColon, hex, sizeof(hex));
 	if (res != KT_OK) return 0;
 
-	if (isColon) correctness += 0.2;
-	if (alg != KSI_HASHALG_INVALID) correctness += 0.4;
+	if (!isColon) correctness = 0;
+	if (alg == KSI_HASHALG_INVALID) correctness = 0;
 
 	analyze_hexstring_format(hex, &tmp);
-	correctness += 0.4 * tmp;
+	if (tmp < 1.0) correctness = 0;
+
+	if (isContentOk_imprint(str) != PARAM_OK) correctness = 0;
 
 	if (correctness > 0.5) return 1;
 	else return 0;
@@ -672,7 +674,7 @@ int isFormatOk_imprint(const char *imprint){
 	return analyze_hexstring_format(colon + 1, NULL);
 }
 
-int isContentOk_imprint(const char *imprint) {
+static int isContentOk_imprint(const char *imprint) {
 	int res = PARAM_INVALID;
 	char hash[1024];
 	KSI_HashAlgorithm alg_id = KSI_HASHALG_INVALID;

@@ -137,6 +137,7 @@ int get_pipe_out_error(PARAM_SET *set, ERR_TRCKR *err, const char *out_file_name
 
 int get_pipe_in_error(PARAM_SET *set, ERR_TRCKR *err, const char *in_file_names, const char *read_in_flags);
 
+int is_imprint(const char *str);
 #ifdef	__cplusplus
 }
 #endif

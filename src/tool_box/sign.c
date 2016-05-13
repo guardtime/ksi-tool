@@ -41,6 +41,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature **sig);
 static char* get_output_file_name_if_not_defined(PARAM_SET *set, ERR_TRCKR *err, char *buf, size_t buf_len);
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
+static int check_hash_algo_errors(PARAM_SET *set, ERR_TRCKR *err);
 
 int sign_run(int argc, char** argv, char **envp) {
 	int res;
@@ -82,6 +83,9 @@ int sign_run(int argc, char** argv, char **envp) {
 	dump = PARAM_SET_isSetByName(set, "dump");
 
 	res = check_pipe_errors(set, err);
+	if (res != KT_OK) goto cleanup;
+
+	res = check_hash_algo_errors(set, err);
 	if (res != KT_OK) goto cleanup;
 
 	/**
@@ -314,5 +318,24 @@ static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err) {
 	if (res != KT_OK) goto cleanup;
 
 cleanup:
+	return res;
+}
+
+static int check_hash_algo_errors(PARAM_SET *set, ERR_TRCKR *err) {
+	int res;
+	char *i_value = NULL;
+
+	res = PARAM_SET_getStr(set, "i", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &i_value);
+	if (res != KT_OK) goto cleanup;
+
+	if (PARAM_SET_isSetByName(set, "H") && is_imprint(i_value)) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: Unable to use -H and -i together as input is hash imprint.");
+		goto cleanup;
+	}
+
+	res = KT_OK;
+
+cleanup:
+
 	return res;
 }
