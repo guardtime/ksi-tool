@@ -1,0 +1,77 @@
+# Misuse of verify command-line.
+
+# Invalid usage of pipe.
+
+# Try to read multiple inputs from stdin that should not support stdin.
+EXECUTABLE verify --conf - -V - -W -
+>>>2 /(.*Data from stdin not supported.*)(.*CMD.*)(.*--conf.*)
+(.*Data from stdin not supported.*)(.*CMD.*)(.*-V.*)
+(.*Data from stdin not supported.*)(.*CMD.*)(.*-W.*)/
+>>>= 3
+
+# Try to use invalid publications string 1.
+EXECUTABLE verify --pub-str
+>>>2 /(.*Parameter must have value.*)(.*CMD.*)(.*--pub-str.*)/
+>>>= 3
+
+# Try to use invalid publications string 2.
+EXECUTABLE verify --pub-str ""
+>>>2 /(.*Parameter has no content.*)(.*CMD.*)(.*--pub-str.*)/
+>>>= 3
+
+# Try to use invalid publications string 3.
+EXECUTABLE verify --pub-str 1ds-232-123
+>>>2 /(.*Invalid base32 character.*)(.*CMD.*)(.*--pub-str.*)/
+>>>= 3
+
+# Use not existing file name that is similar to imprint 1.
+EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-sha1.ksig -f SHA:a7d2c6238a92878b2a578c2477e8a33f9d8591ab
+>>>2 /(File does not exist)(.*CMD.*)(.*SHA:a7d2c6238a92878b2a578c2477e8a33f9d8591ab.*)/
+>>>= 3
+
+# Use not existing file name that is similar to imprint 2.
+EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-sha1.ksig -f SHA1:
+>>>2 /(File does not exist)(.*CMD.*)(.*SHA1:.*)/
+>>>= 3
+
+# Use not existing file name that is similar to imprint 3.
+EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-sha1.ksig -f SHA1:a7d2c6238a92878b2a578c2477e8a33f9d8591ax
+>>>2 /(File does not exist)(.*CMD.*)(.*SHA1:a7d2c6238a92878b2a578c2477e8a33f9d8591ax.*)/
+>>>= 3
+
+
+# Use empty OID's.
+EXECUTABLE verify --ver-key -i test\resource\signature\ok-sig-sha1.ksig --cnstr "" --cnstr 
+>>>2 /(Parameter has no content)(.*CMD.*)(.*--cnstr.*)
+(.*Parameter must have value)(.*CMD.*)(.*--cnstr.*)/
+>>>= 3
+
+# Use invalid --cnstr.
+EXECUTABLE verify --ver-key -i test\resource\signature\ok-sig-sha1.ksig --cnstr = --cnstr =A --cnstr B=
+>>>2 /(Parameter is invalid)(.*CMD.*)(.*--cnstr.*)
+(Parameter is invalid)(.*CMD.*)(.*--cnstr.*)
+(Parameter is invalid)(.*CMD.*)(.*--cnstr.*)/
+>>>= 3
+
+# Use invalid OID string representation.
+EXECUTABLE verify --ver-key -i test\resource\signature\ok-sig-sha1.ksig --cnstr A=B
+>>>2 /(OID is invalid)(.*CMD.*)(.*--cnstr.*)/
+>>>= 3
+
+
+
+# Try to use conflicting flags together.
+
+EXECUTABLE verify --ver-cal --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ksig --pub-str AAAAAA-CWYEKQ-AAIYPA-UJ4GRT-HXMFBE-OTB4AB-XH3PT3-KNIKGV-PYCJXU-HL2TN4-RG6SCC-3ZGSBM 
+>>>2 /(.*Task.*)(.*Calendar based verification.*)(.*is invalid.*)
+(.*You must not use flag.*)(.*--pub-str.*)/
+>>>= 3
+
+EXECUTABLE verify --ver-key --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ksig -x
+>>>2 /(.*Maybe you want to.*)(.*Key based verification.*)/
+>>>= 3
+
+#TODO: Error message needs refactoring!
+EXECUTABLE verify --ver-int --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ksig -x
+>>>= 3
+

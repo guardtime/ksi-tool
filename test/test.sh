@@ -21,4 +21,5 @@ test/test_suites/static-verify-invalid-signatures.test \
 test/test_suites/pubfile.test \
 test/test_suites/static-pubfile.test \
 test/test_suites/verify-invalid-pubfile.test \
+test/test_suites/verify-cmd.test \
 --with=src/ksi -- -j1
