@@ -1,7 +1,9 @@
 rmdir /S /Q test\out\sign
 rmdir /S /Q test\out\extend
+rmdir /S /Q test\out\pubfile
 mkdir test\out\sign
 mkdir test\out\extend
+mkdir test\out\pubfile
 
 shelltest ^
 test\test_suites\sign.test ^
@@ -16,4 +18,7 @@ test\test_suites\win-pipe.test ^
 test\test_suites\sign-cmd.test ^
 test\test_suites\extend-cmd.test ^
 test\test_suites\static-verify-invalid-signatures.test ^
+test\test_suites\pubfile.test ^
+test\test_suites\static-pubfile.test ^
+test\test_suites\verify-invalid-pubfile.test ^
 --with=bin\ksi.exe -- -j1
