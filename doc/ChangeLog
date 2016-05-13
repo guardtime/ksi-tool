@@ -26,6 +26,7 @@ Version 2.0.0
 * IMPROVEMENT: Signature over maximum tlv size is not loaded. (BUG-198)
 * IMPROVEMENT: Task conf has flags -d and --dump for dumping configurations files path and its content. (TOOL-139)
 * IMPROVEMENT: Parameters V, W a P (with file:// scheme) defined in configurations file support file names relative to the configurations file. (TOOL-110)
+* FEATURE: libksi can be linked statically with ksi tool. (TOOL-137)
 
 Version 1.8
 
