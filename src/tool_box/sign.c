@@ -107,7 +107,7 @@ cleanup:
 	KSITOOL_KSI_ERRTrace_save(ksi);
 
 	if (res != KT_OK) {
-		KSI_LOG_debug(ksi, "\n%s", KSITOOL_KSI_ERRTrace_get());
+		KSITOOL_KSI_ERRTrace_LOG(ksi);
 
 		print_errors("\n");
 		if (d) 	ERR_TRCKR_printExtendedErrors(err);
