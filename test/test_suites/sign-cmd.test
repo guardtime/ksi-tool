@@ -3,78 +3,111 @@
 # Invalid usage of pipe.
 
 # Try to read conf from stdin.
-EXECUTABLE sign --conf - -i SHA1:a7d2c6238a92878b2a578c2477e8a33f9d8591ab -o test/out/sign/should_not_be.9.ksig -d
+EXECUTABLE sign --conf - -i SHA1:a7d2c6238a92878b2a578c2477e8a33f9d8591ab -o test/out/sign/should_not_be.1.ksig -d
 >>>2 /Data from stdin not supported/
 >>>= 3
 
 # Sign Multiple different simultaneous outputs to stdout 1.
-EXECUTABLE sign --conf test/test.cfg -i - -o test/out/sign/should_not_be.1.ksig --data-out - -d --dump
+EXECUTABLE sign --conf test/test.cfg -i - -o test/out/sign/should_not_be.2.ksig --data-out - -d --dump
 <<<
 Data From Stdin
 >>>2 /Error: Multiple different simultaneous outputs to stdout/
 >>>= 3
 
 # Sign Multiple different simultaneous outputs to stdout 2.
-EXECUTABLE sign --conf test/test.cfg -i - -o - --log - -d --dump > test/out/sign/should_not_be.2.ksig
+EXECUTABLE sign --conf test/test.cfg -i - -o - --log - -d --dump > test/out/sign/should_not_be.3.ksig
 <<<
 Data From Stdin
 >>>2 /Error: Multiple different simultaneous outputs to stdout/
 >>>= 3
 
 # Sign Multiple different simultaneous outputs to stdout 3.
-EXECUTABLE sign --conf test/test.cfg -i - -o - -d --dump > test/out/sign/should_not_be.3.ksig
+EXECUTABLE sign --conf test/test.cfg -i - -o - -d --dump > test/out/sign/should_not_be.4.ksig
 <<<
 Data From Stdin
 >>>2 /Error: Multiple different simultaneous outputs to stdout/
 >>>= 3
 
 # Use Configurations file that does not exist.
-EXECUTABLE sign --conf missing_file -i test/resource/file/testFile -o test/out/sign/should_not_be.4.ksig
+EXECUTABLE sign --conf missing_file -i test/resource/file/testFile -o test/out/sign/should_not_be.5.ksig
 >>>2 /(File does not exist)(.*CMD.*)(.*--conf.*)(.*missing_file.*)/
 >>>= 3
 
 # Use input file that does not exist.
-EXECUTABLE sign --conf test/test.cfg -i missing_file -o test/out/sign/should_not_be.5.ksig
+EXECUTABLE sign --conf test/test.cfg -i missing_file -o test/out/sign/should_not_be.7.ksig
 >>>2 /(File does not exist)(.*CMD.*)(.*-i.*)(.*missing_file.*)/
 >>>= 3
 
 # Use unknown hash algorithm.
-EXECUTABLE sign --conf test/test.cfg -i test/resource/file/testFile -o test/out/sign/should_not_be.6.ksig -H unknown
+EXECUTABLE sign --conf test/test.cfg -i test/resource/file/testFile -o test/out/sign/should_not_be.8.ksig -H unknown
 >>>2 /(Algorithm name is incorrect)(.*CMD.*)(.*-H.*)(.*unknown.*)/
 >>>= 3
 
 # Use empty string as hash algorithm name.
-EXECUTABLE sign --conf test/test.cfg -i test/resource/file/testFile -o test/out/sign/should_not_be.7.ksig -H ""
+EXECUTABLE sign --conf test/test.cfg -i test/resource/file/testFile -o test/out/sign/should_not_be.9.ksig -H ""
 >>>2 /(Parameter has no content)(.*CMD.*)(.*-H.*)(.*''.*)/
 >>>= 3
 
 # Use -H as flag.
-EXECUTABLE sign --conf test/test.cfg -i test/resource/file/testFile -o test/out/sign/should_not_be.8.ksig -H
+EXECUTABLE sign --conf test/test.cfg -i test/resource/file/testFile -o test/out/sign/should_not_be.10.ksig -H
 >>>2 /(Parameter must have value)(.*CMD.*)(.*-H.*)(.*''.*)/
 >>>= 3
 
 # Use input as imprint and -H together.
-EXECUTABLE sign --conf test/test.cfg -i SHA1:a7d2c6238a92878b2a578c2477e8a33f9d8591ab -H SHA1 -o test/out/sign/should_not_be.9.ksig -d
+EXECUTABLE sign --conf test/test.cfg -i SHA1:a7d2c6238a92878b2a578c2477e8a33f9d8591ab -H SHA1 -o test/out/sign/should_not_be.11.ksig -d
 >>>2 /Error: Unable to use -H and -i together as input is hash imprint/
 >>>= 3
 
 # Use not existing file name that is similar to imprint 1.
-EXECUTABLE sign --conf test/test.cfg -i SHA:a7d2c6238a92878b2a578c2477e8a33f9d8591ab -o test/out/sign/should_not_be.9.ksig -d
+EXECUTABLE sign --conf test/test.cfg -i SHA:a7d2c6238a92878b2a578c2477e8a33f9d8591ab -o test/out/sign/should_not_be.12.ksig -d
 >>>2 /(File does not exist)(.*CMD.*)(.*SHA:a7d2c6238a92878b2a578c2477e8a33f9d8591ab.*)/
 >>>= 3
 
 # Use not existing file name that is similar to imprint 2.
-EXECUTABLE sign --conf test/test.cfg -i SHA1: -o test/out/sign/should_not_be.9.ksig -d
+EXECUTABLE sign --conf test/test.cfg -i SHA1: -o test/out/sign/should_not_be.13.ksig -d
 >>>2 /(File does not exist)(.*CMD.*)(.*SHA1:.*)/
 >>>= 3
 
 # Use not existing file name that is similar to imprint 3.
-EXECUTABLE sign --conf test/test.cfg -i SHA1:a7d2c6238a92878b2a578c2477e8a33f9d8591ax -o test/out/sign/should_not_be.9.ksig -d
+EXECUTABLE sign --conf test/test.cfg -i SHA1:a7d2c6238a92878b2a578c2477e8a33f9d8591ax -o test/out/sign/should_not_be.14.ksig -d
 >>>2 /(File does not exist)(.*CMD.*)(.*SHA1:a7d2c6238a92878b2a578c2477e8a33f9d8591ax.*)/
 >>>= 3
 
 # Try to use invalid flags as aggregator key and user.
-EXECUTABLE sign --conf test/test.cfg -i SHA1:a7d2c6238a92878b2a578c2477e8a33f9d8591ab -o test/out/sign/should_not_be.9.ksig -d --aggr-k --agr-usr
+EXECUTABLE sign --conf test/test.cfg -i SHA1:a7d2c6238a92878b2a578c2477e8a33f9d8591ab -o test/out/sign/should_not_be.15.ksig -d --aggr-k --agr-usr
 >>>2 /(.*--aggr-key.*)(.*instead of.*)(.*aggr-k.*)
 (.*--aggr-user.*)(.*instead of.*)(.*agr-usr.*)/
 >>>= 3
+
+
+# Verify that the signatures that should not be created do not exist.
+
+EXECUTABLE verify --ver-int -d -i test/out/sign/should_not_be.3.ksig
+>>>2 /(Error: Input file is empty)(.*0x10006.*)/
+>>>= 4
+
+EXECUTABLE verify --ver-int -d -i test/out/sign/should_not_be.4.ksig
+>>>2 /(Error: Input file is empty)(.*0x10006.*)/
+>>>= 4
+
+EXECUTABLE verify --ver-int -d -i test/out/sign/should_not_be.1.ksig -i test/out/sign/should_not_be.2.ksig -i test/out/sign/should_not_be.5.ksig -i test/out/sign/should_not_be.6.ksig -i test/out/sign/should_not_be.7.ksig
+>>>2 /(File does not exist)(.*CMD.*)(.*-i.*)(.*1.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*2.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*5.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*6.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*7.*)/
+>>>= 3
+
+EXECUTABLE verify --ver-int -d -i test/out/sign/should_not_be.8.ksig -i test/out/sign/should_not_be.9.ksig -i test/out/sign/should_not_be.10.ksig -i test/out/sign/should_not_be.11.ksig -i test/out/sign/should_not_be.12.ksig
+>>>2 /(File does not exist)(.*CMD.*)(.*-i.*)(.*8.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*9.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*10.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*11.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*12.*)/
+>>>= 3
+
+#EXECUTABLE verify --ver-int -d -i test/out/sign/should_not_be.13.ksig -i test/out/sign/should_not_be.14.ksig -i test/out/sign/should_not_be.15.ksig 
+#>>>2 /(File does not exist)(.*CMD.*)(.*-i.*)(.*13.*)
+#(File does not exist)(.*CMD.*)(.*-i.*)(.*14.*)
+#(File does not exist)(.*CMD.*)(.*-i.*)(.*15.*)/
+#>>>= 3
