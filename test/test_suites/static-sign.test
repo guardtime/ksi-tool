@@ -45,3 +45,17 @@ EXECUTABLE sign --conf test/resource/conf/static-sign-1.cfg -i SHA-256:11a700b0c
 >>>2 /(Error: Unable to create signature)(.*)
 (.*)(Error: The request contained invalid payload)/
 >>>= 1
+
+# Verify that the signatures that should not have been be created do not exist.
+
+EXECUTABLE verify --ver-int -d -i test/out/sign/static_should_not_be.1.ksig -i test/out/sign/static_should_not_be.2.ksig -i test/out/sign/static_should_not_be.3.ksig -i test/out/sign/static_should_not_be.4.ksig -i test/out/sign/static_should_not_be.5.ksig
+>>>2 /(File does not exist)(.*CMD.*)(.*-i.*)(.*1.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*2.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*3.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*4.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*5.*)/
+>>>= 3
+
+EXECUTABLE verify --ver-int -d -i test/out/sign/static_should_not_be.6.ksig
+>>>2 /(File does not exist)(.*CMD.*)(.*-i.*)(.*6.*)/
+>>>= 3
