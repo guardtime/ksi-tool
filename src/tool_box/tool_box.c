@@ -89,6 +89,11 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **o
 		goto cleanup;
 	}
 
+	if (data_len == 0) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_INPUT_FORMAT, "Error: Input file is empty.", name);
+		goto cleanup;
+	}
+
 	res = parse(ksi, buf, (unsigned)data_len, &tmp);
 	if (res != KSI_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to parse %s.", name);
