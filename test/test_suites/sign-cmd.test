@@ -80,7 +80,7 @@ EXECUTABLE sign --conf test/test.cfg -i SHA1:a7d2c6238a92878b2a578c2477e8a33f9d8
 >>>= 3
 
 
-# Verify that the signatures that should not be created do not exist.
+# Verify that the signatures that should not have been created do not exist.
 
 EXECUTABLE verify --ver-int -d -i test/out/sign/should_not_be.3.ksig
 >>>2 /(Error: Input file is empty)(.*0x10006.*)/

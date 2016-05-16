@@ -64,7 +64,7 @@ EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ks
 >>>= 7
 
 
-# Verify that the signatures that should not have been be created do not exist.
+# Verify that the signatures that should not have been created do not exist.
 
 EXECUTABLE verify --ver-int -d -i test/out/extend/should-not-be-1.ksig -i test/out/extend/should-not-be-2.ksig -i test/out/extend/should-not-be-3.ksig
 >>>2 /(File does not exist)(.*CMD.*)(.*-i.*)(.*1.*)
