@@ -17,8 +17,8 @@ EXECUTABLE verify --ver-int -i test/resource/signature/nok-sig-2014-12-04.invali
 
 # Try to parse (verify) file that has no content.
 EXECUTABLE verify --ver-int -i test/resource/file/null -d 
->>>2 /(Error: Unable to parse KSI Signature)(.*0x100.*)/
->>>= 1
+>>>2 /(Error: Input file is empty)(.*0x10006.*)/
+>>>= 4
 
 # Try to parse (verify) a blob thats size is equal to maximum TLV size.
 EXECUTABLE verify --ver-int -i test/resource/file/file_max_tlv_size -d 

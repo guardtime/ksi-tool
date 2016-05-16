@@ -62,3 +62,12 @@ EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ks
 EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ksig -o test/out/extend/should-not-be-3.ksig -d --pub-str AAAAAA-CVWIVC-QAIVKJ-SIRUQZ-MZBJPS-T7P2UX-DDX4JF-KLMCXI-TXIKGF-B6MAJQ-JIJPTD-C2EDEO
 >>>2 /(Error: Unable to extend signature as publication record not found from publications file.)(.*0x10014.*)/
 >>>= 7
+
+
+# Verify that the signatures that should not have been created do not exist.
+
+EXECUTABLE verify --ver-int -d -i test/out/extend/should-not-be-1.ksig -i test/out/extend/should-not-be-2.ksig -i test/out/extend/should-not-be-3.ksig
+>>>2 /(File does not exist)(.*CMD.*)(.*-i.*)(.*1.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*2.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*3.*)/
+>>>= 3
