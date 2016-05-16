@@ -2,6 +2,13 @@
 
 # Invalid usage of pipe.
 
+# Try to read multiple inputs from stdin that should not support stdin.
+EXECUTABLE extend --conf - -V - -W -
+>>>2 /(.*Data from stdin not supported.*)(.*CMD.*)(.*--conf.*)
+(.*Data from stdin not supported.*)(.*CMD.*)(.*-V.*)
+(.*Data from stdin not supported.*)(.*CMD.*)(.*-W.*)/
+>>>= 3
+
 # KSI Sign Multiple different simultaneous outputs to stdout 1.
 EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ksig -o - --log - > test/out/extend/extend_cmd_should_not_be.1.ksig
 >>>2 /Error: Multiple different simultaneous outputs to stdout/
@@ -16,3 +23,59 @@ EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ks
 EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ksig -o - --dump --log - > test/out/extend/extend_cmd_should_not_be.3.ksig
 >>>2 /Error: Multiple different simultaneous outputs to stdout/
 >>>= 3
+
+# Try to extend to invalid date 1. Year is out of range.
+EXECUTABLE extend -T "1899-12-12 00:00:00" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ksig -o test/out/extend/extend_cmd_should_not_be.1.ksig -d
+>>>2 /(Time out of range)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
+# Try to extend to invalid date 2. Year is out of range of Guardtime technology.
+EXECUTABLE extend -T "2006-1-1 00:00:00" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ksig -o test/out/extend/extend_cmd_should_not_be.1.ksig -d
+>>>2 /(Time out of range)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
+# Try to extend to invalid date 3.1. Month is out of range.
+EXECUTABLE extend -T "2015-13-15 00:00:00" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ksig -o test/out/extend/extend_cmd_should_not_be.1.ksig -d
+>>>2 /(Time out of range)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
+# Try to extend to invalid date 3.2. Month is out of range.
+EXECUTABLE extend -T "2015-0-15 00:00:00" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ksig -o test/out/extend/extend_cmd_should_not_be.1.ksig -d
+>>>2 /(Time out of range)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
+# Try to extend to invalid date 4.1 Invalid Day - not a leap year.
+EXECUTABLE extend -T "2013-2-29 00:00:00" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ksig -o test/out/extend/extend_cmd_should_not_be.1.ksig -d
+>>>2 /(Time out of range)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
+# Try to extend to invalid date 4.2. Invalid Day.
+EXECUTABLE extend -T "2015-09-31 00:00:00" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ksig -o test/out/extend/extend_cmd_should_not_be.1.ksig -d
+>>>2 /(Time out of range)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
+# Try to extend to invalid date 4.3. Invalid Day.
+EXECUTABLE extend -T "2015-09-0 00:00:00" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ksig -o test/out/extend/extend_cmd_should_not_be.1.ksig -d
+>>>2 /(Time out of range)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
+# Try to extend to invalid date 5. Invalid Hour.
+EXECUTABLE extend -T "2015-10-30 24:00:00" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ksig -o test/out/extend/extend_cmd_should_not_be.1.ksig -d
+>>>2 /(Time out of range)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
+# Try to extend to invalid date 5. Invalid Min.
+EXECUTABLE extend -T "2015-10-30 00:60:00" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ksig -o test/out/extend/extend_cmd_should_not_be.1.ksig -d
+>>>2 /(Time out of range)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
+# Try to extend to invalid date 6. Invalid Sec.
+EXECUTABLE extend -T "2015-10-30 00:00:60" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ksig -o test/out/extend/extend_cmd_should_not_be.1.ksig -d
+>>>2 /(Time out of range)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
+# Try to extend to invalid date 6. Invalid format.
+EXECUTABLE extend -T "12-15-2015 00:00:60" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1.ksig -o test/out/extend/extend_cmd_should_not_be.1.ksig -d
+>>>2 /(Time not formatted as)(.*YYYY-MM-DD hh:mm:ss.*)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
