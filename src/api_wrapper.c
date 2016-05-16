@@ -434,6 +434,16 @@ const char *KSITOOL_KSI_ERRTrace_get(void) {
 	return err_buf;
 }
 
+void KSITOOL_KSI_ERRTrace_LOG(KSI_CTX *ksi) {
+	const char *err_trace = NULL;
+	if (ksi == NULL) return;
+
+	err_trace = KSITOOL_KSI_ERRTrace_get();
+	if (err_trace != NULL && err_trace[0] != '\0') {
+		KSI_LOG_debug(ksi, "\n%s", KSITOOL_KSI_ERRTrace_get());
+	}
+}
+
 char *KSITOOL_DataHash_toString(KSI_DataHash *hsh, char *buf, size_t buf_len) {
 	char tmp[1024];
 	char alg_hex_str[3] = {0, 0, 0};

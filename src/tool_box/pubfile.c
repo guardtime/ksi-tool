@@ -110,7 +110,7 @@ cleanup:
 	KSITOOL_KSI_ERRTrace_save(ksi);
 
 	if (res != KT_OK) {
-		KSI_LOG_debug(ksi, "\n%s", KSITOOL_KSI_ERRTrace_get());
+		KSITOOL_KSI_ERRTrace_LOG(ksi);
 		print_debug("\n");
 		DEBUG_verifyPubfile(ksi, set, res, pubfile);
 
