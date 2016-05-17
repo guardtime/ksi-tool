@@ -63,3 +63,58 @@ EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/ou
 {1,}.{0,}
 (.*)(Error: Publication time mismatch)(.*)/
 >>>= 1
+
+# Invalid request.
+EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/should_not_be.ksig -d -X file://test/resource/server/ok-ext-err-resp-101.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+>>>2 /(Error: Unable to extend signature)(.*0x400.*)/
+>>>= 1
+
+# Authentication error.
+EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/should_not_be.ksig -d -X file://test/resource/server/ok-ext-err-resp-102.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+>>>2 /(The request could not be authenticated)(.*0x401.*)/
+>>>= 14
+
+# Invalid payload.
+EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/should_not_be.ksig -d -X file://test/resource/server/ok-ext-err-resp-103.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+>>>2 /(Error: Unable to extend signature)(.*0x402.*)/
+>>>= 1
+
+# The request asked for a hash chain going backwards in time.
+EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/should_not_be.ksig -d -X file://test/resource/server/ok-ext-err-resp-104.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+>>>2 /(Error: Unable to extend signature)(.*0x501.*)/
+>>>= 7
+
+# The request asked for hash values older than the oldest round in the server's database.
+EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/should_not_be.ksig -d -X file://test/resource/server/ok-ext-err-resp-105.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+>>>2 /(Error: Unable to extend signature)(.*0x504.*)/
+>>>= 7
+
+# The request asked for hash values newer than the newest round in the server's database.
+EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/should_not_be.ksig -d -X file://test/resource/server/ok-ext-err-resp-106.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+>>>2 /(Error: Unable to extend signature)(.*0x505.*)/
+>>>= 7
+
+# The server encountered unspecified critical errors connecting to upstream servers.
+EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/should_not_be.ksig -d -X file://test/resource/server/ok-ext-err-resp-200.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+>>>2 /(Error: Unable to extend signature)(.*0x403.*)/
+>>>= 1
+
+# The server misses the internal database needed to service the request (most likely it has not been initialized yet).
+EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/should_not_be.ksig -d -X file://test/resource/server/ok-ext-err-resp-201.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+>>>2 /(Error: Unable to extend signature)(.*0x502.*)/
+>>>= 7
+
+# The server's internal database is in an inconsistent state.
+EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/should_not_be.ksig -d -X file://test/resource/server/ok-ext-err-resp-202.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+>>>2 /(Error: Unable to extend signature)(.*0x503.*)/
+>>>= 7
+
+# The server encountered unspecified critical errors connecting to upstream servers.
+EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/should_not_be.ksig -d -X file://test/resource/server/ok-ext-err-resp-300.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+>>>2 /(Error: Unable to extend signature)(.*0x404.*)/
+>>>= 1
+
+# No response from upstream extenders.
+EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/should_not_be.ksig -d -X file://test/resource/server/ok-ext-err-resp-301.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+>>>2 /(Error: Unable to extend signature)(.*0x405.*)/
+>>>= 1
