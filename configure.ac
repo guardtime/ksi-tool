@@ -46,6 +46,7 @@ AC_DEFINE_UNQUOTED(TOOL_NAME, "AC_PACKAGE_NAME", [Commit id])
 
 # Checks for programs.
 AC_PROG_CC
+AM_PROG_CC_C_O
 
 AC_PROG_LN_S
 # Checks for libraries.
