@@ -5,6 +5,10 @@ mkdir test\out\sign
 mkdir test\out\extend
 mkdir test\out\pubfile
 
+setlocal
+
+set KSI_CONF=test/resource/conf/default-not-working-conf.cfg
+
 shelltest ^
 test\test_suites\sign.test ^
 test\test_suites\static-sign.test ^
@@ -22,4 +26,7 @@ test\test_suites\pubfile.test ^
 test\test_suites\static-pubfile.test ^
 test\test_suites\verify-invalid-pubfile.test ^
 test\test_suites\verify-cmd.test ^
+test\test_suites\default-conf.test ^
 --with=bin\ksi.exe -- -j1
+
+endlocal
