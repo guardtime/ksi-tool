@@ -1,0 +1,72 @@
+# KSI_CONF test.
+# To run this test file successfully it is important that it is run by corresponding
+# test script that configures temporary KSI_CONF environment variable.  
+
+# Check if KSI_CONF is set.
+EXECUTABLE conf -d
+>>>2 /(test\/resource\/conf\/default-not-working-conf.cfg)/
+>>>= 0
+
+# Check if KSI_CONF dump works.
+EXECUTABLE conf --dump
+>>> /(This is default not working configurations file)/
+>>>= 0
+
+# Dump default publications file. Add external configurations file as empty file.
+EXECUTABLE pubfile --dump --conf test/resource/file/null
+>>> /(Dummy publication nr 1)/
+>>>= 0
+
+# Check if KSI_CONF is displayd in -h message.
+EXECUTABLE -h
+>>> /(Configured service access URL-s)(.*)
+(.*Signing.*)(.*file:\/\/test\/resource\/server\/ok_aggr_err_response-1.tlv.*)
+(.*Extending.*)(.*file:\/\/test\/resource\/server\/ok-ext-err-resp-102.tlv.*)
+(.*Publications file.*)(.*ok-pub-one-record-1.bin.*)/
+>>>= 0
+
+# Try to sign an imprint, signing should end with invalid payload error.
+EXECUTABLE sign -d -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d
+>>>2 /(The request contained invalid payload)(.*0x402.*)/
+>>>= 1
+
+# Try to verify default publications file. It should fail as certificate and constraints are not set correctly.
+EXECUTABLE pubfile -v
+>>>2 /(The PKI certificate is not trusted)/
+>>>= 6
+
+# Verify default publications file with correct verification info from external configurations file.
+EXECUTABLE pubfile -d -v --conf test/resource/conf/ok-verification-info.cfg
+>>>2 /(Verifying publications file)(.*ok.*)/
+>>>= 0
+
+# Verify default publications file with correct certificate and constraints from command-line.
+EXECUTABLE pubfile -d -v -V test/resource/certificates/ok-test.crt --cnstr E=test@test.com
+>>>2 /(Verifying publications file)(.*ok.*)/
+>>>= 0
+
+# Verify default publications file with correct certificate and constraints from command-line.
+# Override default verification info with invalid configurations file from command-line. 
+EXECUTABLE pubfile -d -v -V test/resource/certificates/ok-test.crt --cnstr E=test@test.com --conf test/resource/conf/nok-verification-info.cfg
+>>>2 /(Verifying publications file)(.*ok.*)/
+>>>= 0
+
+# Override default configurations file. Perform publications file verification. 
+EXECUTABLE pubfile -v -d --conf test/resource/conf/ok-conf-1.cfg
+>>>2 /(Verifying publications file)(.*ok.*)/
+>>>= 0
+
+# Override default configurations file. Dump publications file.
+EXECUTABLE pubfile --dump --conf test/resource/conf/ok-conf-1.cfg
+>>> /(Dummy publication nr 2)/
+>>>= 0
+
+# Dump publications file from command-line thus overriding all configurations file.
+EXECUTABLE pubfile --dump -P file://test/resource/publication/ok-pub-one-record-3.bin --conf test/resource/conf/ok-conf-1.cfg
+>>> /(Dummy publication nr 3)/
+>>>= 0
+
+
+
+
+

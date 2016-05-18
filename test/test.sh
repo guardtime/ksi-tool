@@ -5,6 +5,8 @@ mkdir -p test/out/sign
 mkdir -p test/out/extend
 mkdir -p test/out/pubfile
 
+export KSI_CONF=test/resource/conf/default-not-working-conf.cfg
+
 shelltest \
 test/test_suites/sign.test \
 test/test_suites/static-sign.test \
@@ -22,4 +24,6 @@ test/test_suites/pubfile.test \
 test/test_suites/static-pubfile.test \
 test/test_suites/verify-invalid-pubfile.test \
 test/test_suites/verify-cmd.test \
+test/test_suites/default-conf.test \
+test/test_suites/invalid-conf.test \
 --with=src/ksi -- -j1
