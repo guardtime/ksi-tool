@@ -1,4 +1,4 @@
-# KSI_CONF test
+# KSI_CONF test.
 # To run this test file successfully it is important that it is run by corresponding
 # test script that configures temporary KSI_CONF environment variable.  
 
@@ -12,8 +12,8 @@ EXECUTABLE conf --dump
 >>> /(This is default not working configurations file)/
 >>>= 0
 
-# Dump default publications file.
-EXECUTABLE pubfile --dump
+# Dump default publications file. Add external configurations file as empty file.
+EXECUTABLE pubfile --dump --conf test/resource/file/null
 >>> /(Dummy publication nr 1)/
 >>>= 0
 
