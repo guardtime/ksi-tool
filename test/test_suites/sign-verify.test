@@ -86,6 +86,6 @@ EXECUTABLE verify --ver-key --conf test/test.cfg -f test/out/sign/piped_data.txt
 
 # Verify signature piped to stdout.
 EXECUTABLE verify --ver-key --conf test/test.cfg -i test/out/sign/piped_signature.ksig -d --dump
->>>  /(Verifying signature online)(.*ok.*)/
->>>2 /(Signature calendar-based verification)(.*ok.*)/
+>>>2 /(Reading signature)(.*ok.*)
+(Signature key-based verification)(.*ok.*)/
 >>>= 0

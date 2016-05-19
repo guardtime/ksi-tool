@@ -246,6 +246,6 @@ EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-2014-08-01.1.ext.k
 # Signature without calendar hash chain attached. Wrong extender response.
 EXECUTABLE verify --ver-cal -i test/resource/signature/ok-sig-2014-08-01.1.no-cal-hashchain.ksig -d --dump --conf test/resource/conf/verify-test_ok-sig-2015-09-13.extend_response.cfg
 >>>  /Final result.*
-.*GEN-2.*ExtendedSignatureCalendarChainInputHash/
+.*CAL-2.*ExtendedSignatureCalendarChainInputHash/
 >>>2 /Signature calendar-based verification.*failed.*/
->>>= 1
+>>>= 6
