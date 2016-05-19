@@ -85,7 +85,7 @@ EXECUTABLE verify --ver-key --conf test/test.cfg -f test/out/sign/piped_data.txt
 >>>= 0
 
 # Verify signature piped to stdout.
-EXECUTABLE verify --ver-cal --conf test/test.cfg -i test/out/sign/piped_signature.ksig -d --dump
+EXECUTABLE verify --ver-key --conf test/test.cfg -i test/out/sign/piped_signature.ksig -d --dump
 >>>  /(Verifying signature online)(.*ok.*)/
 >>>2 /(Signature calendar-based verification)(.*ok.*)/
 >>>= 0
