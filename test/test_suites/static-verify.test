@@ -138,7 +138,7 @@ EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-2014-08-01.1.ksig 
 >>>= 0
 
 # Verify signature where input hash is hashed with SHA1.
-EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-sha1.ksig -f test/resource/testFile -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
+EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-sha1.ksig -f test/resource/file/testFile -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>2 /(Reading documents hash)(.*ok.*)
 (Signature key-based verification)(.*ok.*)/
 >>>= 0
