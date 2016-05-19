@@ -327,6 +327,7 @@ static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ks
 			ERR_TRCKR_ADD(err, res, "Extender returned error %llu.", (unsigned long long)KSI_Integer_getUInt64(respStatus));
 		}
 	}
+	if (res != KT_OK) goto cleanup;
 
 	print_progressResult(res);
 
