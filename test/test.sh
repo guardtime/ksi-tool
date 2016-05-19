@@ -27,3 +27,6 @@ test/test_suites/verify-cmd.test \
 test/test_suites/default-conf.test \
 test/test_suites/invalid-conf.test \
 --with=src/ksi -- -j1
+exit_code=$?
+
+exit $exit_code

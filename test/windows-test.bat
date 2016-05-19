@@ -29,5 +29,8 @@ test\test_suites\verify-cmd.test ^
 test\test_suites\default-conf.test ^
 test\test_suites\invalid-conf.test ^
 --with=bin\ksi.exe -- -j1
+set exit_code=%errorlevel%
 
 endlocal
+
+exit /B %exit_code%
