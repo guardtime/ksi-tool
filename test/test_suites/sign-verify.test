@@ -85,7 +85,16 @@ EXECUTABLE verify --ver-key --conf test/test.cfg -f test/out/sign/piped_data.txt
 >>>= 0
 
 # Verify signature piped to stdout.
-EXECUTABLE verify --ver-cal --conf test/test.cfg -i test/out/sign/piped_signature.ksig -d --dump
->>>  /(Verifying signature online)(.*ok.*)/
->>>2 /(Signature calendar-based verification)(.*ok.*)/
+EXECUTABLE verify --ver-key --conf test/test.cfg -i test/out/sign/piped_signature.ksig -d --dump
+>>>2 /(Signature key-based verification)(.*ok.*)/
 >>>= 0
+
+# Try to verify just created signature.
+EXECUTABLE sign --conf test/test.cfg -i SHA256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/imprint_sha256_sv.ksig -d
+>>>2 /Signature saved to/
+>>>= 0
+EXECUTABLE verify --ver-cal --conf test/test.cfg -i test/out/sign/imprint_sha256_sv.ksig -d --dump
+>>>  /.*Trust anchor: Calendar Authentication Record.*/
+>>>2 /.*Error: Signature calendar-based verification failed.*
+.*Error: Extender returned error 263.*/
+>>>= 7
