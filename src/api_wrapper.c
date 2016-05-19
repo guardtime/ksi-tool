@@ -138,62 +138,46 @@ static void appendPubFileErros(ERR_TRCKR *err, int res) {
 static int verify_signature(KSI_Signature *sig, KSI_CTX *ctx,
 							KSI_DataHash *hsh, KSI_uint64_t rootLevel,
 							int extAllowed, KSI_PublicationsFile *pubFile, KSI_PublicationData *pubData,
-							int (*getPolicy)(KSI_CTX *, const KSI_Policy **),
+							const KSI_Policy *policy, 
 							KSI_PolicyVerificationResult **result) {
 
 	int res = KSI_UNKNOWN_ERROR;
-	const KSI_Policy *policy = NULL;
-	KSI_VerificationContext *info = NULL;
+	KSI_VerificationContext info;
 
-	if (sig == NULL || ctx == NULL || result == NULL) {
+	if (sig == NULL || ctx == NULL || policy == NULL || result == NULL) {
 		res = KSI_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
 	/* Create verification context */
-	res = KSI_VerificationContext_create(ctx, &info);
+	res = KSI_VerificationContext_init(&info, ctx);
 	if (res != KSI_OK) goto cleanup;
 
 	/* Init signature in verification context */
-	res = KSI_VerificationContext_setSignature(info, sig);
-	if (res != KSI_OK) goto cleanup;
+	info.signature = sig;
 
 	/* Init document hash in verification context */
-	if (hsh != NULL) {
-		res = KSI_VerificationContext_setDocumentHash(info, hsh);
-		if (res != KSI_OK) goto cleanup;
-	}
+	info.documentHash = hsh;
 
 	/* Init publications file in verification context*/
-	if (pubFile != NULL) {
-		res = KSI_VerificationContext_setPublicationsFile(info, pubFile);
-		if (res != KSI_OK) goto cleanup;
-	}
+	info.userPublicationsFile = pubFile;
 
 	/* Init user publication data in verification context */
-	if (pubData != NULL) {
-		res = KSI_VerificationContext_setUserPublication(info, pubData);
-		if (res != KSI_OK) goto cleanup;
-	}
+	info.userPublication = pubData;
 
 	/* Init aggregation level in verification context */
 	if (rootLevel > 0xff) {
 		res = KSI_INVALID_FORMAT;
 		goto cleanup;
 	}
-	res = KSI_VerificationContext_setAggregationLevel(info, rootLevel);
-	if (res != KSI_OK) goto cleanup;
+
+	info.docAggrLevel = rootLevel;
 
 	/* Init extention permission in verification context */
-	res = KSI_VerificationContext_setExtendingAllowed(info, !!extAllowed);
-	if (res != KSI_OK) goto cleanup;
-
-	/* Get the desired verification policy */
-	res = getPolicy(ctx, &policy);
-	if (res != KSI_OK) goto cleanup;
+	info.extendingAllowed = !!extAllowed;
 
 	/* Verify signature */
-	res = KSI_SignatureVerifier_verify(policy, info, result);
+	res = KSI_SignatureVerifier_verify(policy, &info, result);
 	if (res != KSI_OK) goto cleanup;
 
 	if (*result && (*result)->finalResult.resultCode != KSI_VER_RES_OK) {
@@ -203,11 +187,7 @@ static int verify_signature(KSI_Signature *sig, KSI_CTX *ctx,
 cleanup:
 
 	/* Clear data references in verification context as we do not own the memory */
-	KSI_VerificationContext_setSignature(info, NULL);
-	KSI_VerificationContext_setDocumentHash(info, NULL);
-	KSI_VerificationContext_setPublicationsFile(info, NULL);
-	KSI_VerificationContext_setUserPublication(info, NULL);
-	KSI_VerificationContext_free(info);
+	KSI_VerificationContext_clean(&info);
 
 	return res;
 }
@@ -294,7 +274,7 @@ int KSITOOL_SignatureVerify_internally(ERR_TRCKR *err, KSI_Signature *sig, KSI_C
 									   KSI_PolicyVerificationResult **result) {
 	int res;
 
-	res = verify_signature(sig, ctx, hsh, 0, 0, NULL, NULL, KSI_Policy_getInternal, result);
+	res = verify_signature(sig, ctx, hsh, 0, 0, NULL, NULL, KSI_VERIFICATION_POLICY_INTERNAL, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 	appendBaseErrorIfPresent(err, res, ctx, __LINE__);
 
@@ -305,7 +285,7 @@ int KSITOOL_SignatureVerify_calendarBased(ERR_TRCKR *err, KSI_Signature *sig, KS
 										  KSI_PolicyVerificationResult **result) {
 	int res;
 
-	res = verify_signature(sig, ctx, hsh, 0, 1, NULL, NULL, KSI_Policy_getCalendarBased, result);
+	res = verify_signature(sig, ctx, hsh, 0, 1, NULL, NULL, KSI_VERIFICATION_POLICY_CALENDAR_BASED, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -319,7 +299,7 @@ int KSITOOL_SignatureVerify_keyBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX
 									 KSI_PolicyVerificationResult **result){
 	int res;
 
-	res = verify_signature(sig, ctx, hsh, 0, 0, NULL, NULL, KSI_Policy_getKeyBased, result);
+	res = verify_signature(sig, ctx, hsh, 0, 0, NULL, NULL, KSI_VERIFICATION_POLICY_KEY_BASED, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -333,7 +313,7 @@ int KSITOOL_SignatureVerify_publicationsFileBased(ERR_TRCKR *err, KSI_Signature 
 												  KSI_PolicyVerificationResult **result){
 	int res;
 
-	res = verify_signature(sig, ctx, hsh, 0, extperm, NULL, NULL, KSI_Policy_getPublicationsFileBased, result);
+	res = verify_signature(sig, ctx, hsh, 0, extperm, NULL, NULL, KSI_VERIFICATION_POLICY_PUBLICATIONS_FILE_BASED, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -351,7 +331,7 @@ int KSITOOL_SignatureVerify_userProvidedPublicationBased(ERR_TRCKR *err, KSI_Sig
 
 	if (pubdata == NULL) return KSI_INVALID_FORMAT;
 
-	res = verify_signature(sig, ctx, hsh, 0, extperm, NULL, pubdata, KSI_Policy_getUserProvidedPublicationBased, result);
+	res = verify_signature(sig, ctx, hsh, 0, extperm, NULL, pubdata, KSI_VERIFICATION_POLICY_USER_PUBLICATION_BASED, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
