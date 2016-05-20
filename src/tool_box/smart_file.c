@@ -567,22 +567,53 @@ char * generate_file_name(const char *fname, char *buf, size_t buf_len) {
 	int is_extension = 0;
 	int is_counting = 0;
 	int count = 0;
+	int i = 0;
+	int root_offset = 0;
 
+
+	/**
+	 * Extract the files extension.
+     */
 	ret = STRING_extractAbstract(fname, ".", NULL, ext, sizeof(ext), find_charAfterLastStrn, NULL, NULL);
-	is_extension = ret == ext ? 1 : 0;
+	is_extension = (ret == ext) ? 1 : 0;
+	/**
+	 * According to the knowledge that the extension exist or not, extract the
+	 * files name serial number.
+     */
+	if (is_extension) {
+		ret = STRING_extractAbstract(fname, "_", ext, num, sizeof(num), find_charAfterLastStrn, find_charBeforeLastStrn, NULL);
+		root_offset += (int)strlen(ext);
+	} else {
+		ret = STRING_extractAbstract(fname, "_", NULL, num, sizeof(num), find_charAfterLastStrn, NULL, NULL);
+	}
 
-	ret = STRING_extractAbstract(fname, "(", ")", num, sizeof(num), find_charAfterLastStrn, find_charBeforeLastStrn, NULL);
+	/**
+	 * Determine if value between _value[.ext] is integer or not.
+     */
 	if (ret == num) {
-		count = atoi(num);
+		int is_integer = 0;
+
+		for(i = 0; i < strlen(num) - 1; i++) {
+			if (isdigit(num[i])) {
+				is_integer = 1;
+			} else {
+				is_integer = 0;
+				break;
+			}
+		}
+
+		if (is_integer) {
+			root_offset += (int)strlen(num);
+			count = atoi(num);
+		}
+
 	}
 	is_counting = count > 0 ? 1 : 0;
 
-	ret = STRING_extractAbstract(fname, NULL,
-										((is_counting) ? ("(") : (is_extension ? "." : NULL))
-										, root, sizeof(root), NULL, find_charBeforeLastStrn, NULL);
+	KSI_strncpy(root, fname, strlen(fname) - root_offset);
 	count++;
 
-	KSI_snprintf(buf, buf_len, "%s(%i)%s%s", root, count,
+	KSI_snprintf(buf, buf_len, "%s_%i%s%s", root, count,
 		is_extension ? "." : "",
 		is_extension ? ext : "");
 	return buf;
