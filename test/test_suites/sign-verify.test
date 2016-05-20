@@ -89,4 +89,3 @@ EXECUTABLE verify --ver-key --conf test/test.cfg -i test/out/sign/piped_signatur
 >>>2 /(Reading signature)(.*ok.*)
 (Signature key-based verification)(.*ok.*)/
 >>>= 0
->>>>>>> NEW_UI
