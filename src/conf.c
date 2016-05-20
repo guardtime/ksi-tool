@@ -197,7 +197,7 @@ int CONF_fromEnvironment(PARAM_SET *set, const char *env_name, char **envp, int 
 		if (res != PST_OK) goto cleanup;
 
 		if (convertPaths) {
-			res = CONF_convertFilePaths(set, conf_file_name, "{W}{V}{P}", env_name, priority);
+			res = CONF_convertFilePaths(set, conf_file_name, "{W}{V}{P}{X}{S}", env_name, priority);
 			if (res != PST_OK) goto cleanup;
 		}
 	}
@@ -525,7 +525,7 @@ static int conf_convert_path(PARAM_SET *set, const char *conf_file, const char *
 		if (value == NULL) {
 			new_file_name = NULL;
 		} else {
-			if (strcmp(param_name, "P") == 0) {
+			if (strcmp(param_name, "P") == 0 || strcmp(param_name, "X") == 0 || strcmp(param_name, "S") == 0) {
 				new_file_name = PATH_URI_getPathRelativeToFile(conf_file, value, buf, sizeof(buf));
 			} else {
 				new_file_name = PATH_getPathRelativeToFile(conf_file, value, buf, sizeof(buf));

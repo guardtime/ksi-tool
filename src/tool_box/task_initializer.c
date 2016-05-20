@@ -147,7 +147,7 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 			res = PARAM_SET_readFromFile(conf_file, conf_file_name, conf_file_name, PRIORITY_KSI_CONF_FILE);
 			if (res != PST_OK && res != PST_INVALID_FORMAT) goto cleanup;
 
-			res = CONF_convertFilePaths(conf_file, conf_file_name, "{W}{V}{P}", conf_file_name, PRIORITY_KSI_CONF_FILE);
+			res = CONF_convertFilePaths(conf_file, conf_file_name, "{W}{V}{P}{X}{S}", conf_file_name, PRIORITY_KSI_CONF_FILE);
 			if (res != PST_OK) goto cleanup;
 		}
 

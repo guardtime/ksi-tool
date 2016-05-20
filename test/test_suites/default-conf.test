@@ -20,8 +20,8 @@ EXECUTABLE pubfile --dump --conf test/resource/file/null
 # Check if KSI_CONF is displayd in -h message.
 EXECUTABLE -h
 >>> /(Configured service access URL-s)(.*)
-(.*Signing.*)(.*file:\/\/test\/resource\/server\/ok_aggr_err_response-1.tlv.*)
-(.*Extending.*)(.*file:\/\/test\/resource\/server\/ok-ext-err-resp-102.tlv.*)
+(.*Signing.*)(.*server\/ok_aggr_err_response-1.tlv.*)
+(.*Extending.*)(.*server\/ok-ext-err-resp-102.tlv.*)
 (.*Publications file.*)(.*ok-pub-one-record-1.bin.*)/
 >>>= 0
 
