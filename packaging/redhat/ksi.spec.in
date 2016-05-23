@@ -36,6 +36,7 @@ Packager: Guardtime AS <info@guardtime.com>
 Distribution: Guardtime utilities
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
+# Dependencies are set in config.ac
 @KSI_RPM_DEPENDECY@
 @KSI_BUILD_DEPENDECY@
 
