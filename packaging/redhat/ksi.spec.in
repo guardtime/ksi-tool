@@ -37,7 +37,7 @@ Distribution: Guardtime utilities
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
 @KSI_RPM_DEPENDECY@
-BuildRequires: libksi-devel >= 3.8
+@KSI_BUILD_DEPENDECY@
 
 %description
 Guardtime signing and verification tool. Execute
