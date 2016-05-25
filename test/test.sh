@@ -1,10 +1,26 @@
-rm -f test/out/sign 2> /dev/null
-rm -f test/out/extend 2> /dev/null
-rm -f test/out/pubfile 2> /dev/null
+# Remove test output directories.  
+rm -rf test/out/sign 2> /dev/null
+rm -rf test/out/extend 2> /dev/null
+rm -rf test/out/pubfile 2> /dev/null
+rm -rf test/out/fname 2> /dev/null
+
+# Create test output directories.
 mkdir -p test/out/sign
 mkdir -p test/out/extend
 mkdir -p test/out/pubfile
+mkdir -p test/out/fname
 
+# Create some test files to output directory.
+cp test/resource/file/testFile	test/out/fname/_
+cp test/resource/file/testFile	test/out/fname/10__
+cp test/resource/file/testFile	test/out/fname/test_file
+cp test/resource/file/testFile	test/out/fname/a_23_500
+cp test/resource/file/testFile	test/out/fname/a_23_1000
+cp test/resource/file/testFile	test/out/fname/a_23_1000.ksig
+cp test/resource/file/testFile	test/out/fname/a_23_1000_5.ksig
+cp test/resource/signature/ok-sig-2014-08-01.1.ksig test/out/fname/ok-sig.ksig
+
+# Define KSI_CONF for temporary testing.
 export KSI_CONF=test/resource/conf/default-not-working-conf.cfg
 
 shelltest \
@@ -26,6 +42,7 @@ test/test_suites/verify-invalid-pubfile.test \
 test/test_suites/verify-cmd.test \
 test/test_suites/default-conf.test \
 test/test_suites/invalid-conf.test \
+test/test_suites/file-name-gen.test \
 --with=src/ksi -- -j1
 exit_code=$?
 

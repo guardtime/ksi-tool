@@ -588,15 +588,56 @@ char * generate_file_name(const char *fname, int count, char *buf, size_t buf_le
 	return buf;
 }
 
-const char * generate_not_existing_file_name(const char *fname, char *buf, size_t buf_len) {
+const char * generate_not_existing_file_name(const char *fname, char *buf, size_t buf_len, int use_binary_search) {
 	const char *pFname = fname;
 	int i = 1;
+	unsigned ceil = 16;
+	int j = 1;
+	int a = 0;
+	int b = 0;
+	int d = 0;
+
 	if (fname == NULL || buf == NULL || buf_len == 0) return NULL;
 
-	while (SMART_FILE_doFileExist(pFname)) {
+	/**
+	 * Support for binary search algorithm.
+     */
+	if (use_binary_search) {
+		/**
+		 * Search the highest file name that does not exist.
+		 */
+		do {
+			ceil <<=1;
+			pFname = generate_file_name(fname, ceil, buf, buf_len);
+			if (pFname == NULL) return NULL;
+		} while (SMART_FILE_doFileExist(pFname));
+
+		/**
+		 * Use the binary search algorithm to find file name range.
+		 */
+		a = j;
+		b = ceil;
+		do {
+			j = (a + b) / 2;
+			d = b - a;
+
+			pFname = generate_file_name(fname, j, buf, buf_len);
+			if (pFname == NULL) return NULL;
+
+
+			if (SMART_FILE_doFileExist(pFname)) {
+				a = j;
+			} else {
+				b = j;
+			}
+		} while (d > 2);
+		i = a;
+	}
+
+	do {
 		pFname = generate_file_name(fname, i++, buf, buf_len);
 		if (pFname == NULL) return NULL;
-	}
+	} while (SMART_FILE_doFileExist(pFname));
 
 	return pFname;
 }
@@ -638,7 +679,7 @@ int SMART_FILE_open(const char *fname, const char *mode, SMART_FILE **file) {
 		}
 
 		if (is_w && is_i && SMART_FILE_doFileExist(fname)) {
-			pFname = generate_not_existing_file_name(fname, buf, sizeof(buf));
+			pFname = generate_not_existing_file_name(fname, buf, sizeof(buf), 1);
 		}
 	}
 
