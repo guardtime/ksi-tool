@@ -83,3 +83,7 @@ EXECUTABLE verify --ver-int -i test/resource/signature/nok-sig-with-invalid-publ
 >>>2 /(.*Error.*)(.*INT-9*)(.*Calendar hash chain root hash is inconsistent with published hash value.*)(.*0x20a.*)/
 >>>= 6
 
+# Try to verify a signature that contains meta data that may be interpreted as imprint. 
+EXECUTABLE verify --ver-int -i test/resource/signature/nok-sig-untrusted-meta-data.ksig -d
+>>>2 /(.*Error.*)(.*INT-11*)(.*The meta-data record in the aggregation hash chain may not be trusted.*)(.*0x20a.*)/
+>>>= 6

@@ -34,7 +34,7 @@ EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.ksig -d -f SHA2
 >>>= 0
 
 # Verify document integrity.
-EXECUTABLE verify -i test/resource/signature/ok-sig-sha1.ksig -f test/resource/file/testFile -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
+EXECUTABLE verify -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -f test/resource/file/testFile -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>2 /(Reading documents hash)(.*ok.*)
 (Signature verification according to trust anchor)(.*ok.*)/
 >>>= 0
@@ -58,7 +58,7 @@ EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-2014-08-01.1.ksig 
 >>>= 0
 
 # Verify document integrity.
-EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-sha1.ksig -f test/resource/file/testFile -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
+EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -f test/resource/file/testFile -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>2 /(Reading documents hash)(.*ok.*)
 (Signature internal verification)(.*ok.*)/
 >>>= 0
@@ -147,7 +147,7 @@ EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-2014-08-01.1.ksig 
 >>>= 0
 
 # Verify signature where input hash is hashed with SHA1.
-EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-sha1.ksig -f test/resource/file/testFile -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
+EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -f test/resource/file/testFile -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>2 /(Reading documents hash)(.*ok.*)
 (Signature key-based verification)(.*ok.*)/
 >>>= 0

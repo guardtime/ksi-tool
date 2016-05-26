@@ -44,6 +44,7 @@ static const verificationErrorDetail_st verification_error[] = {
 	{ KSI_VER_ERR_INT_8,	"INT-8",	"Calendar hash chain root hash is inconsistent with calendar auth record input hash" },
 	{ KSI_VER_ERR_INT_9,	"INT-9",	"Calendar hash chain root hash is inconsistent with published hash value" },
 	{ KSI_VER_ERR_INT_10,	"INT-10",	"Aggregation hash chain chain index mismatch" },
+	{ KSI_VER_ERR_INT_11,	"INT-11",	"The meta-data record in the aggregation hash chain may not be trusted" },
 	{ KSI_VER_ERR_PUB_1,	"PUB-1",	"Extender response calendar root hash mismatch" },
 	{ KSI_VER_ERR_PUB_2,	"PUB-2",	"Extender response inconsistent" },
 	{ KSI_VER_ERR_PUB_3,	"PUB-3",	"Extender response input hash mismatch" },
