@@ -322,6 +322,8 @@ int conf_run(int argc, char** argv, char **envp) {
 
 cleanup:
 
+	PARAM_SET_free(set);
+
 	return KSITOOL_errToExitCode(res);
 }
 
