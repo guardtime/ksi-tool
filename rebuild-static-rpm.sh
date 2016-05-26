@@ -23,8 +23,19 @@
 BUILD_DIR=~/rpmbuild
 version=$(tr -d [:space:] < VERSION)
 
+conf_args="--enable-static-build"
+
+if [ "$#" -eq 1 ]; then
+	libksi_path="$1"
+	export CPPFLAGS=-I$libksi_path/include
+	export LDFLAGS=-L$libksi_path/lib
+	export LD_LIBRARY_PATH=$libksi_path/lib
+else
+	conf_args+=" --enable-use-installed-libksi"
+fi
+
 autoreconf -if && \
-./configure --enable-static-build $* && \
+./configure $conf_args && \
 make clean && \
 make dist && \
 mkdir -p $BUILD_DIR/{BUILD,RPMS,SOURCES,SPECS,SRPMS,tmp} && \
