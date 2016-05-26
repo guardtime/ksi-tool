@@ -19,6 +19,7 @@ cp test/resource/file/testFile	test/out/fname/a_23_1000
 cp test/resource/file/testFile	test/out/fname/a_23_1000.ksig
 cp test/resource/file/testFile	test/out/fname/a_23_1000_5.ksig
 cp test/resource/signature/ok-sig-2014-08-01.1.ksig test/out/fname/ok-sig.ksig
+cp test/resource/signature/ok-sig-2014-08-01.1.ksig test/out/fname/ok-sig
 
 # Define KSI_CONF for temporary testing.
 export KSI_CONF=test/resource/conf/default-not-working-conf.cfg

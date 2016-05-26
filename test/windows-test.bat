@@ -19,7 +19,7 @@ copy /Y test\resource\file\testFile	test\out\fname\a_23_1000
 copy /Y test\resource\file\testFile	test\out\fname\a_23_1000.ksig
 copy /Y test\resource\file\testFile	test\out\fname\a_23_1000_5.ksig
 copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\fname\ok-sig.ksig
-
+copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\fname\ok-sig
 REM Define KSI_CONF for temporary testing.
 setlocal
 
