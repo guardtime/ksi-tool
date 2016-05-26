@@ -853,6 +853,28 @@ int SMART_FILE_isReadAccess(const char *path) {
 	return res;
 }
 
+int SMART_FILE_hasFileExtension(const char *path, const char *ext) {
+	int res = 0;
+	size_t path_len = 0;
+	size_t ext_len = 0;
+	const char *pPath = NULL;
+
+	if (path == NULL || ext == NULL) return 0;
+
+	path_len = strlen(path);
+	ext_len = strlen(ext);
+
+	if (ext_len >= path_len) return 0;
+
+	pPath = path + (path_len - ext_len);
+
+	if ((*(pPath - 1) == '.') && strcmp(pPath, ext) == 0) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
 const char* SMART_FILE_errorToString(int error_code) {
 	switch (error_code) {
 		case SMART_FILE_OK:

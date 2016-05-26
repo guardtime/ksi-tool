@@ -194,7 +194,7 @@ char *extend_help_toString(char*buf, size_t len) {
 		" -o <file> - Output file name to store extended signature token. Use '-'\n"
 		"             as file name to redirect signature binary stream to stdout.\n"
 		"             If not specified signature is saved to the path described as\n"
-		"             <input files path>_nr.ext, where nr is generated sequential\n"
+		"             <input files path>_nr.ext.ksig, where nr is generated sequential\n"
 		"             number if file name already exists. If specified will always\n"
 		"             overwrite the existing file.\n"
 		" -X <URL>  - specify extending service URL.\n"
@@ -466,6 +466,7 @@ static char* get_output_file_name_if_not_defined(PARAM_SET *set, ERR_TRCKR *err,
 	char *ret = NULL;
 	int res;
 	char *in_file_name = NULL;
+	size_t count = 0;
 
 	if (set == NULL || err == NULL || buf == NULL || buf_len == 0) goto cleanup;
 
@@ -473,9 +474,14 @@ static char* get_output_file_name_if_not_defined(PARAM_SET *set, ERR_TRCKR *err,
 	if (res != PST_OK) goto cleanup;
 
 	if (strcmp(in_file_name, "-") == 0) {
-		KSI_snprintf(buf, buf_len, "stdin.ksig.ext");
+		KSI_snprintf(buf, buf_len, "stdin.ext.ksig");
 	} else {
-		KSI_snprintf(buf, buf_len, "%s.ext", in_file_name);
+		if (SMART_FILE_hasFileExtension(in_file_name, "ksig")) {
+			count += KSI_snprintf(buf + count, buf_len - count , "%s", in_file_name);
+			count += KSI_snprintf(buf + count - 4, buf_len - count, "ext.ksig");
+		} else {
+			KSI_snprintf(buf, buf_len, "%s.ext.ksig", in_file_name);
+		}
 	}
 
 	ret = buf;

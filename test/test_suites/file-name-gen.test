@@ -98,15 +98,30 @@ EXECUTABLE sign --conf test/resource/conf/static-sign-3.cfg -i test/out/fname/a_
 
 # Extend signature to the nearest publication 6.1.
 EXECUTABLE extend -i test/out/fname/ok-sig.ksig -d -X file://test/resource/server/ok-sig-2014-08-01.1-extend_response.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
->>>2 /(.*Signature saved to.*)(.*ok-sig.ksig.ext)/
+>>>2 /(.*Signature saved to.*)(.*ok-sig.ext.ksig)/
 >>>= 0
 
 # Extend signature to the nearest publication 6.2.
 EXECUTABLE extend -i test/out/fname/ok-sig.ksig -d -X file://test/resource/server/ok-sig-2014-08-01.1-extend_response.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
->>>2 /(.*Signature saved to.*)(.*ok-sig.ksig_1.ext)/
+>>>2 /(.*Signature saved to.*)(.*ok-sig.ext_1.ksig)/
 >>>= 0
 
 # Extend signature to the nearest publication 6.3.
 EXECUTABLE extend -i test/out/fname/ok-sig.ksig -d -X file://test/resource/server/ok-sig-2014-08-01.1-extend_response.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
->>>2 /(.*Signature saved to.*)(.*ok-sig.ksig_2.ext)/
+>>>2 /(.*Signature saved to.*)(.*ok-sig.ext_2.ksig)/
+>>>= 0
+
+# Extend signature to the nearest publication 6.4.
+EXECUTABLE extend -i test/out/fname/ok-sig -d -X file://test/resource/server/ok-sig-2014-08-01.1-extend_response.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+>>>2 /(.*Signature saved to.*)(.*ok-sig.ext_3.ksig)/
+>>>= 0
+
+# Extend signature to the nearest publication 6.5.
+EXECUTABLE extend -i test/out/fname/ok-sig -d -X file://test/resource/server/ok-sig-2014-08-01.1-extend_response.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+>>>2 /(.*Signature saved to.*)(.*ok-sig.ext_4.ksig)/
+>>>= 0
+
+# Extend signature to the nearest publication 6.6.
+EXECUTABLE extend -i test/out/fname/ok-sig -d -X file://test/resource/server/ok-sig-2014-08-01.1-extend_response.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+>>>2 /(.*Signature saved to.*)(.*ok-sig.ext_5.ksig)/
 >>>= 0
