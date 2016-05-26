@@ -194,7 +194,7 @@ char *extend_help_toString(char*buf, size_t len) {
 		" -o <file> - Output file name to store extended signature token. Use '-'\n"
 		"             as file name to redirect signature binary stream to stdout.\n"
 		"             If not specified signature is saved to the path described as\n"
-		"             <input files path>_nr.ext, where _nr is generated serial\n"
+		"             <input files path>_nr.ext, where nr is generated sequential\n"
 		"             number if file name already exists. If specified will always\n"
 		"             overwrite the existing file.\n"
 		" -X <URL>  - specify extending service URL.\n"

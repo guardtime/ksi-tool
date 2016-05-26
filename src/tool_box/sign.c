@@ -134,7 +134,7 @@ char *sign_help_toString(char*buf, size_t len) {
 		" -o <file> - Output file name to store signature token. Use '-' as file name\n"
 		"             to redirect signature binary stream to stdout. If not specified\n"
 		"             signature is saved to the path described as <input files path>_nr.ksig,\n"
-		"             where _nr is generated serial number if file name already exists.\n"
+		"             where nr is generated sequential number if file name already exists.\n"
 		"             If specified will always overwrite the existing file.\n"
 		" -H <alg>  - use a specific hash algorithm to hash the file to be signed.\n"
 		" -S <URL>  - specify signing service URL.\n"

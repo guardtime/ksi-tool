@@ -559,7 +559,7 @@ static int smart_file_get_error_unix(void) {
 
 #endif
 
-char * generate_file_name(const char *fname, int count, char *buf, size_t buf_len) {
+char *generate_file_name(const char *fname, int count, char *buf, size_t buf_len) {
 	char *ret = NULL;
 	char ext[1024] = "";
 	char num[1024] = "";
@@ -572,7 +572,7 @@ char * generate_file_name(const char *fname, int count, char *buf, size_t buf_le
 
 	/**
 	 * Extract the files extension.
-     */
+	 */
 	ret = STRING_extractAbstract(fname, ".", NULL, ext, sizeof(ext), find_charAfterLastStrn, NULL, NULL);
 	is_extension = (ret == ext) ? 1 : 0;
 
@@ -588,7 +588,7 @@ char * generate_file_name(const char *fname, int count, char *buf, size_t buf_le
 	return buf;
 }
 
-const char * generate_not_existing_file_name(const char *fname, char *buf, size_t buf_len, int use_binary_search) {
+const char *generate_not_existing_file_name(const char *fname, char *buf, size_t buf_len, int use_binary_search) {
 	const char *pFname = fname;
 	int i = 1;
 	unsigned ceil = 16;
@@ -601,7 +601,7 @@ const char * generate_not_existing_file_name(const char *fname, char *buf, size_
 
 	/**
 	 * Support for binary search algorithm.
-     */
+	 */
 	if (use_binary_search) {
 		/**
 		 * Search the highest file name that does not exist.
