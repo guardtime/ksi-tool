@@ -91,7 +91,7 @@ EXECUTABLE verify --ver-int -d -i test/out/sign/should_not_be.4.ksig
 >>>= 4
 
 # Try to verify a signature by key-based verification if publications file do not exist.
-EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-sha1.ksig -P file://test/that_file_do_not_exist --cnstr E=test@test.com
+EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-2014-08-01.1.ksig -P file://test/that_file_do_not_exist --cnstr E=test@test.com
 >>>2 /(.*Error.*)(.*Signature key-based verification failed.*)
 (.*Error.*)(.*Unable to open file.*)/
 >>>= 9

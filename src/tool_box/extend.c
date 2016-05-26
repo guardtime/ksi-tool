@@ -320,6 +320,7 @@ static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX
 cleanup:
 	print_progressResult(res);
 
+	KSI_PublicationsFile_free(pubFile);
 	KSI_Signature_free(tmp);
 
 	return res;
@@ -420,6 +421,7 @@ static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_C
 cleanup:
 	print_progressResult(res);
 
+	KSI_PublicationsFile_free(pubFile);
 	KSI_Signature_free(tmp);
 
 	return res;

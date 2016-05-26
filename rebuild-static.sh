@@ -21,12 +21,23 @@
 
 PRF=ksi-$(tr -d [:space:] < VERSION)
 
+conf_args="--enable-static-build"
+
+if [ "$#" -eq 1 ]; then
+	libksi_path="$1"
+	export CPPFLAGS=-I$libksi_path/include
+	export LDFLAGS=-L$libksi_path/lib
+	export LD_LIBRARY_PATH=$libksi_path/lib
+else
+	conf_args+=" --enable-use-installed-libksi"
+fi
+
 rm -f ${PRF}*.tar.gz && \
 mkdir -p config m4 && \
 echo Running autoreconf... && \
 autoreconf -if && \
 echo Running configure script... && \
-./configure --enable-static-build $* && \
+./configure $conf_args && \
 echo Running make... && \
 make clean && \
 make \

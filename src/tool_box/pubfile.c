@@ -119,6 +119,7 @@ cleanup:
 		else  ERR_TRCKR_printErrors(err);
 	}
 
+	KSI_PublicationsFile_free(pubfile);
 	SMART_FILE_close(logfile);
 	PARAM_SET_free(set);
 	TASK_SET_free(task_set);
