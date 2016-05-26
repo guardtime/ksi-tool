@@ -1,0 +1,127 @@
+# This test is for testing ksi tool automatic file name generation. To be able
+# run this test successfully it is necessary to run this script by corresponding
+# test script as some test data has to be generated.
+
+# Sign Files without extension 1.0.
+EXECUTABLE sign --conf test/resource/conf/static-sign-3.cfg -i test/out/fname/_ -d
+>>>2 /(.*Signature saved to.*)(.*_.ksig)/
+>>>= 0
+
+# Sign Files without extension 1.1.
+EXECUTABLE sign --conf test/resource/conf/static-sign-3.cfg -i test/out/fname/_ -d
+>>>2 /(.*Signature saved to.*)(.*__1.ksig)/
+>>>= 0
+
+# Sign Files without extension 1.2.
+EXECUTABLE sign --conf test/resource/conf/static-sign-3.cfg -i test/out/fname/_ -d
+>>>2 /(.*Signature saved to.*)(.*__2.ksig)/
+>>>= 0
+
+# Sign Files without extension 2.0.
+EXECUTABLE sign --conf test/resource/conf/static-sign-3.cfg -i test/out/fname/test_file -d
+>>>2 /(.*Signature saved to.*)(.*test_file.ksig)/
+>>>= 0
+
+# Sign Files without extension 2.1.
+EXECUTABLE sign --conf test/resource/conf/static-sign-3.cfg -i test/out/fname/test_file -d
+>>>2 /(.*Signature saved to.*)(.*test_file_1.ksig)/
+>>>= 0
+
+# Sign Files without extension 2.2.
+EXECUTABLE sign --conf test/resource/conf/static-sign-3.cfg -i test/out/fname/test_file -d
+>>>2 /(.*Signature saved to.*)(.*test_file_2.ksig)/
+>>>= 0
+
+
+# Sign Files without extension 3.1.
+EXECUTABLE sign --conf test/resource/conf/static-sign-3.cfg -i test/out/fname/10__ -d
+>>>2 /(.*Signature saved to.*)(.*10__.ksig)/
+>>>= 0
+
+# Sign Files without extension 3.2.
+EXECUTABLE sign --conf test/resource/conf/static-sign-3.cfg -i test/out/fname/10__ -d
+>>>2 /(.*Signature saved to.*)(.*10___1.ksig)/
+>>>= 0
+
+# Sign Files without extension 3.3.
+EXECUTABLE sign --conf test/resource/conf/static-sign-3.cfg -i test/out/fname/10__ -d
+>>>2 /(.*Signature saved to.*)(.*10___2.ksig)/
+>>>= 0
+
+
+# Sign Files without extension 4.1 (a_23_500.ksig does not exist).
+EXECUTABLE sign --conf test/resource/conf/static-sign-3.cfg -i test/out/fname/a_23_500 -d
+>>>2 /(.*Signature saved to.*)(.*a_23_500.ksig)/
+>>>= 0
+
+# Sign Files without extension 4.2.
+EXECUTABLE sign --conf test/resource/conf/static-sign-3.cfg -i test/out/fname/a_23_500 -d
+>>>2 /(.*Signature saved to.*)(.*a_23_500_1.ksig)/
+>>>= 0
+
+# Sign Files without extension 4.3.
+EXECUTABLE sign --conf test/resource/conf/static-sign-3.cfg -i test/out/fname/a_23_500 -d
+>>>2 /(.*Signature saved to.*)(.*a_23_500_2.ksig)/
+>>>= 0
+
+# Sign Files without extension 4.4.
+EXECUTABLE sign --conf test/resource/conf/static-sign-3.cfg -i test/out/fname/a_23_500 -d
+>>>2 /(.*Signature saved to.*)(.*a_23_500_3.ksig)/
+>>>= 0
+
+# Sign Files without extension 5.1 (a_23_1000.ksig does exist).
+EXECUTABLE sign --conf test/resource/conf/static-sign-3.cfg -i test/out/fname/a_23_1000 -d
+>>>2 /(.*Signature saved to.*)(.*a_23_1000_1.ksig)/
+>>>= 0
+
+# Sign Files without extension 5.2.
+EXECUTABLE sign --conf test/resource/conf/static-sign-3.cfg -i test/out/fname/a_23_1000 -d
+>>>2 /(.*Signature saved to.*)(.*a_23_1000_2.ksig)/
+>>>= 0
+
+# Sign Files without extension 5.3.
+EXECUTABLE sign --conf test/resource/conf/static-sign-3.cfg -i test/out/fname/a_23_1000 -d
+>>>2 /(.*Signature saved to.*)(.*a_23_1000_3.ksig)/
+>>>= 0
+
+# Sign Files without extension 5.4
+EXECUTABLE sign --conf test/resource/conf/static-sign-3.cfg -i test/out/fname/a_23_1000 -d
+>>>2 /(.*Signature saved to.*)(.*a_23_1000_4.ksig)/
+>>>= 0
+
+# Sign Files without extension 5.5 (a_23_1000_5.ksig exist)
+EXECUTABLE sign --conf test/resource/conf/static-sign-3.cfg -i test/out/fname/a_23_1000 -d
+>>>2 /(.*Signature saved to.*)(.*a_23_1000_6.ksig)/
+>>>= 0
+
+# Test if same thing works with extending. As the algorithm is the same as with signing as extent testing is not needed.
+
+# Extend signature to the nearest publication 6.1.
+EXECUTABLE extend -i test/out/fname/ok-sig.ksig -d -X file://test/resource/server/ok-sig-2014-08-01.1-extend_response.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+>>>2 /(.*Signature saved to.*)(.*ok-sig.ext.ksig)/
+>>>= 0
+
+# Extend signature to the nearest publication 6.2.
+EXECUTABLE extend -i test/out/fname/ok-sig.ksig -d -X file://test/resource/server/ok-sig-2014-08-01.1-extend_response.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+>>>2 /(.*Signature saved to.*)(.*ok-sig.ext_1.ksig)/
+>>>= 0
+
+# Extend signature to the nearest publication 6.3.
+EXECUTABLE extend -i test/out/fname/ok-sig.ksig -d -X file://test/resource/server/ok-sig-2014-08-01.1-extend_response.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+>>>2 /(.*Signature saved to.*)(.*ok-sig.ext_2.ksig)/
+>>>= 0
+
+# Extend signature to the nearest publication 6.4.
+EXECUTABLE extend -i test/out/fname/ok-sig -d -X file://test/resource/server/ok-sig-2014-08-01.1-extend_response.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+>>>2 /(.*Signature saved to.*)(.*ok-sig.ext_3.ksig)/
+>>>= 0
+
+# Extend signature to the nearest publication 6.5.
+EXECUTABLE extend -i test/out/fname/ok-sig -d -X file://test/resource/server/ok-sig-2014-08-01.1-extend_response.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+>>>2 /(.*Signature saved to.*)(.*ok-sig.ext_4.ksig)/
+>>>= 0
+
+# Extend signature to the nearest publication 6.6.
+EXECUTABLE extend -i test/out/fname/ok-sig -d -X file://test/resource/server/ok-sig-2014-08-01.1-extend_response.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+>>>2 /(.*Signature saved to.*)(.*ok-sig.ext_5.ksig)/
+>>>= 0

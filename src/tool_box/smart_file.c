@@ -559,43 +559,85 @@ static int smart_file_get_error_unix(void) {
 
 #endif
 
-char * generate_file_name(const char *fname, char *buf, size_t buf_len) {
+char *generate_file_name(const char *fname, int count, char *buf, size_t buf_len) {
 	char *ret = NULL;
 	char ext[1024] = "";
 	char num[1024] = "";
 	char root[1024] = "";
 	int is_extension = 0;
 	int is_counting = 0;
-	int count = 0;
+	int i = 0;
+	int root_offset = 0;
 
+
+	/**
+	 * Extract the files extension.
+	 */
 	ret = STRING_extractAbstract(fname, ".", NULL, ext, sizeof(ext), find_charAfterLastStrn, NULL, NULL);
-	is_extension = ret == ext ? 1 : 0;
+	is_extension = (ret == ext) ? 1 : 0;
 
-	ret = STRING_extractAbstract(fname, "(", ")", num, sizeof(num), find_charAfterLastStrn, find_charBeforeLastStrn, NULL);
-	if (ret == num) {
-		count = atoi(num);
+	if (is_extension) {
+		root_offset += (int)strlen(ext);
 	}
-	is_counting = count > 0 ? 1 : 0;
 
-	ret = STRING_extractAbstract(fname, NULL,
-										((is_counting) ? ("(") : (is_extension ? "." : NULL))
-										, root, sizeof(root), NULL, find_charBeforeLastStrn, NULL);
-	count++;
+	KSI_strncpy(root, fname, strlen(fname) - root_offset);
 
-	KSI_snprintf(buf, buf_len, "%s(%i)%s%s", root, count,
+	KSI_snprintf(buf, buf_len, "%s_%i%s%s", root, count,
 		is_extension ? "." : "",
 		is_extension ? ext : "");
 	return buf;
 }
 
-const char * generate_not_existing_file_name(const char *fname, char *buf, size_t buf_len) {
+const char *generate_not_existing_file_name(const char *fname, char *buf, size_t buf_len, int use_binary_search) {
 	const char *pFname = fname;
+	int i = 1;
+	unsigned ceil = 16;
+	int j = 1;
+	int a = 0;
+	int b = 0;
+	int d = 0;
+
 	if (fname == NULL || buf == NULL || buf_len == 0) return NULL;
 
-	while (SMART_FILE_doFileExist(pFname)) {
-		pFname = generate_file_name(pFname, buf, buf_len);
-		if (pFname == NULL) return NULL;
+	/**
+	 * Support for binary search algorithm.
+	 */
+	if (use_binary_search) {
+		/**
+		 * Search the highest file name that does not exist.
+		 */
+		do {
+			ceil <<=1;
+			pFname = generate_file_name(fname, ceil, buf, buf_len);
+			if (pFname == NULL) return NULL;
+		} while (SMART_FILE_doFileExist(pFname));
+
+		/**
+		 * Use the binary search algorithm to find file name range.
+		 */
+		a = j;
+		b = ceil;
+		do {
+			j = (a + b) / 2;
+			d = b - a;
+
+			pFname = generate_file_name(fname, j, buf, buf_len);
+			if (pFname == NULL) return NULL;
+
+
+			if (SMART_FILE_doFileExist(pFname)) {
+				a = j;
+			} else {
+				b = j;
+			}
+		} while (d > 2);
+		i = a;
 	}
+
+	do {
+		pFname = generate_file_name(fname, i++, buf, buf_len);
+		if (pFname == NULL) return NULL;
+	} while (SMART_FILE_doFileExist(pFname));
 
 	return pFname;
 }
@@ -637,7 +679,7 @@ int SMART_FILE_open(const char *fname, const char *mode, SMART_FILE **file) {
 		}
 
 		if (is_w && is_i && SMART_FILE_doFileExist(fname)) {
-			pFname = generate_not_existing_file_name(fname, buf, sizeof(buf));
+			pFname = generate_not_existing_file_name(fname, buf, sizeof(buf), 1);
 		}
 	}
 
@@ -809,6 +851,28 @@ int SMART_FILE_isReadAccess(const char *path) {
 	if (path == NULL) return 0;
 	res = is_access(path, F_OK | R_OK);
 	return res;
+}
+
+int SMART_FILE_hasFileExtension(const char *path, const char *ext) {
+	int res = 0;
+	size_t path_len = 0;
+	size_t ext_len = 0;
+	const char *pPath = NULL;
+
+	if (path == NULL || ext == NULL) return 0;
+
+	path_len = strlen(path);
+	ext_len = strlen(ext);
+
+	if (ext_len >= path_len) return 0;
+
+	pPath = path + (path_len - ext_len);
+
+	if ((*(pPath - 1) == '.') && strcmp(pPath, ext) == 0) {
+		return 1;
+	} else {
+		return 0;
+	}
 }
 
 const char* SMART_FILE_errorToString(int error_code) {
