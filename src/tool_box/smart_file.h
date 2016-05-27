@@ -80,6 +80,7 @@ int SMART_FILE_isEof(SMART_FILE *file);
 int SMART_FILE_doFileExist(const char *path);
 int SMART_FILE_isWriteAccess(const char *path);
 int SMART_FILE_isReadAccess(const char *path);
+int SMART_FILE_hasFileExtension(const char *path, const char *ext);
 
 const char* SMART_FILE_errorToString(int error_code);
 
