@@ -50,7 +50,7 @@ EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/ou
 # Extend signature to head. Verification extender response id is wrong.
 # Request id:  2
 # Response id: 0xdead
-EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/ok-sig-2014-08-01.1-extended-1462454749.ksig -T 1462454749 -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-multi-extend_response-head-wrong_ver_req_id.cfg
+EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/ok-sig-2014-08-01.1-extended-1462454749-2.ksig -T 1462454749 -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-multi-extend_response-head-wrong_ver_req_id.cfg
 >>>2 /(Extending the signature to 2016-05-05 13:25:49)(.*ok.*)
 (Verifying extended signature)(.*failed.*)/
 >>>= 1
