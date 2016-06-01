@@ -22,7 +22,7 @@ Keyless Signature Infrastructure (KSI) is an industrial scale blockchain platfor
 .LP
 KSI command line tool enables the access to the KSI blockchain and its functions from the shell. It can be used for signing data in files or other sources, extending existing KSI signatures and verifying them using different trust anchors. The first argument of the tool is the KSI command followed by the KSI service configuration parameters and options.
 .LP
-See \fBksi-conf\fR(1) or man page of specific KSI command for more information about KSI service configuration.
+See \fBksi-conf\fR(5) or man page of specific KSI command for more information about KSI service configuration.
 .LP
 .SH KSI COMMANDS
 .LP
@@ -36,7 +36,7 @@ Verifies existing KSI signature. See \fBksi-verify\fR(1) for more information.
 .\"
 .TP
 \fBextend\fR
-Extends existing KSI signature to a given publication. See \fBksi-extend\fR(1) for more information.
+Extends existing KSI signature to the given publication. See \fBksi-extend\fR(1) for more information.
 .\"
 .TP
 \fBpubfile\fR
@@ -92,7 +92,7 @@ Print version info.
 .\"
 .TP
 \fB10
-\fBError may be generated due to untrusted or unavailable hash algorithm or by an invalid PKI signature / untrusted certificate.
+\fBCryptographic error.\fR Error may be generated due to untrusted or unavailable hash algorithm or by an invalid PKI signature / untrusted certificate.
 .\"
 .TP
 \fB11

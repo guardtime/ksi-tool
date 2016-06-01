@@ -360,7 +360,8 @@ char *conf_help_toString(char *buf, size_t len) {
 		"  unknown or invalid key-value pairs is used, an error is generated.\n\n"
 
 		"  In configuration file each key-value pair must be placed on a single line. Start\n"
-		"  the line with # to write a comment.\n\n"
+		"  the line with # to write a comment. Not full paths (V, W and P with URI scheme\n"
+		"  file://) are interpreted as relative to the configurations file.\n\n"
 
 		"All known parameters:\n"
 		);

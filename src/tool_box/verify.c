@@ -207,9 +207,9 @@ char *verify_help_toString(char *buf, size_t len) {
 		"        [-x -X <URL>  [--ext-user <user> --ext-key <pass>]] [more options]\n\n"
 
 		" --ver-int - verify just internally.\n"
-		" --ver-cal - use calendar based verification (use extender).\n"
+		" --ver-cal - use calendar based verification (use extending service).\n"
 		" --ver-key - use key based verification.\n"
-		" --ver-pub - use publication based verification (offline if used with --pub-str or -P).\n"
+		" --ver-pub - use publication based verification (use with -x to permit extending).\n"
 		" -i <file> - signature file to be verified.\n"
 		" -f <data> - file or data hash to be verified. Hash format: <alg>:<hash in hex>.\n"
 		"             as file on local machine).\n"

@@ -14,18 +14,18 @@
 .\"
 .SH DESCRIPTION
 .\"
-Signs the given input such as content of a given file or a pre-computed hash value with KSI. User must have access to KSI signing service (KSI Aggregator) for signing. Note that until not extended, the signatures can be verified using the copy of calendar blockchain at KSI Extender (calendar-based verification) or using the PKI signature in the calendar authentication record (key-based verification, temporary only). See ksi-verify(1) for details.
+Signs the given input such as content of a given file or a pre-computed hash value with KSI. User must have access to KSI signing service (KSI Aggregator) for signing. Note that until not extended, the signatures can be verified using the copy of calendar blockchain at KSI Extender (calendar-based verification) or using the PKI signature in the calendar authentication record (key-based verification, temporary only). See \fBksi-verify\fR(1) for details.
 .\"
 .\"
 .SH OPTIONS
 .\"
 .TP
 \fB-i \fIdata\fR
-The data is either the path to the file to be hashed and signed or a hash imprint in case the data to be signed has been hashed already. Use ’-’ as file name to read data to be hashed from \fIstdin\fR. Hash imprint format: <\fIalg\fR>:<\fIhash in hex\fR>. Use \fB-h\fR to get the list of supported hash algorithms. Note that only the main data stream of the file is hashed, any extensions of specific file systems are ignored (e.g. the alternate data streams of NTFS are not signed).
+The data is either the path to the file to be hashed and signed or a hash imprint in case the data to be signed has been hashed already. Use '-' as file name to read data to be hashed from \fIstdin\fR. Hash imprint format: <\fIalg\fR>:<\fIhash in hex\fR>. Use \fB-h\fR to get the list of supported hash algorithms. Note that only the main data stream of the file is hashed, any extensions of specific file systems are ignored (e.g. the alternate data streams of NTFS are not signed).
 .\"
 .TP
 \fB-o \fIfile\fR
-Output file path for the signature. Use ’-’ as file name to redirect signature binary stream to \fIstdout\fR. If not specified, the signature is saved to <input file>.ksig (or <input file>_<nr>.ksig, where <nr> is auto-incremented counter if the output file already exists). If specified, will always overwrite the existing file.
+Output file path for the signature. Use '-' as file name to redirect signature binary stream to \fIstdout\fR. If not specified, the signature is saved to <input file>.ksig (or <input file>_<nr>.ksig, where <nr> is auto-incremented counter if the output file already exists). If specified, will always overwrite the existing file.
 .\"
 .TP
 \fB-H \fIalg\fR
@@ -61,7 +61,7 @@ Read configuration options from given file. It must be noted that configuration 
 .\"
 .TP
 \fB--log \fIfile\fR
-Write libksi log to given file. Use ’-’ as file name to redirect log to \fIstdout\fR.
+Write libksi log to given file. Use '-' as file name to redirect log to \fIstdout\fR.
 .br
 .\"
 .\"

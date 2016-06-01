@@ -19,7 +19,7 @@ in a file specified by the \fBKSI_CONF\fR (lowest priority)
 .LP
 If a configuration option is specified in more than one source (e.g. both directly on command-line argument and in a configuration file) the source with the highest priority will be used. A short parameter or multiple flags must have prefix \fB-\fR and long parameters have prefix \fB--\fR. If some parameter values contain whitespace characters double quote marks (\fB"\fR) must be used to wrap the entire value. If double quote mark or backslash have to be used inside the value part an escape character (\fB\\\fR) must be typed before the charcater(\fB\\"\fR or \fB\\\\\fR). If configuration option with unknown or invalid key-value pairs is used, an error is generated.
 .LP
-In configuration file each key-value pair must be placed on a single line. Start the line with \fB#\fR to write a comment.
+In configuration file each key-value pair must be placed on a single line. Start the line with \fB#\fR to write a comment. Not full paths (V, W and P with URI scheme file://) are interpreted as relative to the configurations file.
 .LP
 .SH OPTIONS
 .br
@@ -108,7 +108,7 @@ An example of configurations file:
 .br
 \fB--aggr-key \fIanon
 .br
-\fn
+.LP
 \fR# KSI Extending service:
 .br
 \fR# Note that ext-key real value is &h/J"kv\\G##
@@ -119,7 +119,7 @@ An example of configurations file:
 .br
 \fB--ext-key \fI"&h/J\\"kv\\\\G##"
 .br
-\fn
+.LP
 .br
 \fR# KSI Publications file:
 .br
