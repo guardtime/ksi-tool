@@ -1,4 +1,6 @@
-Version 2.0.0
+Version 2.0
+
+2016-06-01 2.0.0
 
 * IMPROVEMENT: Signature over maximum tlv size is not loaded. (BUG-198)
 * IMPROVEMENT: ksitool renamed to ksi and major version increased to 2. (KCT-52)
