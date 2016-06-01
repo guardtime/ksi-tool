@@ -3,7 +3,7 @@
 .\"
 .\"
 .SH NAME
-\fBksi \fR- Guardtime command-line tool for KSI (Keyless Signature Infrastructure) service.
+\fBksi \fR- Keyless Signature Infrastructure (KSI) command-line tool.
 .\"
 .\"
 .SH SYNOPSIS
@@ -11,51 +11,48 @@
 .br
 \fBksi \fR[\fB-h\fR] [\fB--version\fR]
 .br
-\fBksi \fBcomponent\fR \fB-h\fR
+\fBksi \fBcommand\fR \fB-h\fR
 .br
-\fBksi \fBcomponent\fR [\fIservice info\fR] [\fImore options\fR]
+\fBksi \fBcommand\fR [\fIservice_parameters\fR] [\fIoptions\fR]
 .\"
 .\"
 .\"
 .SH DESCRIPTION
-This is a Guardtime KSI tool that can be used for general KSI related tasks. The most common use cases are signing (\fBksi-sign\fR(1)), extending (\fBksi-extend\fR(1)) and verifying (\fBksi-verify\fR(1)) of the KSI signature. This tool is divided into multiple components where each piece handles the specific task. The first parameter must always be the components name followed by the service related info and other options needed by the operation.
-.br
-
-.br
-To read more about KSI service configuration see \fBksi-conf\fR(1) for more information or read specific components man page.
-.\"
-.\"
-.SH KSI COMPONENTS
-.\"
+Keyless Signature Infrastructure (KSI) is an industrial scale blockchain platform that cryptographically ensures data integrity and proves time of existence. Its keyless signatures, based on hash chains, link data to global calendar blockchain.
+.LP
+KSI command line tool enables the access to the KSI blockchain and its functions from the shell. It can be used for signing data in files or other sources, extending existing KSI signatures and verifying them using different trust anchors. The first argument of the tool is the KSI command followed by the KSI service configuration parameters and options.
+.LP
+See \fBksi-conf\fR(1) or man page of specific KSI command for more information about KSI service configuration.
+.LP
+.SH KSI COMMANDS
+.LP
 .TP
 \fBsign\fR
-KSI general signing tool. See \fBksi-sign\fR(1) for more information.
+Signs the given input with KSI. See \fBksi-sign\fR(1) for more information.
 .\"
 .TP
 \fBverify\fR
-KSI signing verification tool. See \fBksi-verify\fR(1) for more information.
+Verifies existing KSI signature. See \fBksi-verify\fR(1) for more information.
 .\"
 .TP
 \fBextend\fR
-KSI signing extending tool. See \fBksi-extend\fR(1) for more information.
+Extends existing KSI signature to a given publication. See \fBksi-extend\fR(1) for more information.
 .\"
 .TP
 \fBpubfile\fR
-KSI publications file verification tool. See \fBksi-pubfile\fR(1) for more information.
+Downloads and verifies KSI publications file. See \fBksi-pubfile\fR(1) for more information.
 .\"
-
 .SH OPTIONS
 .\"
 .TP
 \fB-h\fR
-Print help text of program ksi. To print a help text of ksi component use \fB-h\fR with specified component name.
+Print help text. Use \fBksi component -h\fR to print help for the specific command.
 .\"
 .TP
 \fB--version\fR
 Print version info.
 .\"
 .\"
-
 .SH EXIT STATUS
 .TP
 \fB0\fR
@@ -67,7 +64,7 @@ Print version info.
 .\"
 .TP
 \fB3
-\fBInvalid command-line parameter.\fR The content or format of command-line parameter is invalid. Also a parameter may be missing.
+\fBInvalid command-line parameter.\fR The content or format of a command-line parameter is invalid or a parameter is missing.
 .\"
 .TP
 \fB4
@@ -75,7 +72,7 @@ Print version info.
 .\"
 .TP
 \fB5
-\fBNetwork error.\fR KSI tool is unable to connect to the service, connection is timed out or an HTTP error was returned from the service URL.
+\fBNetwork error.\fR KSI tool is unable to connect to the service, connection is timed out or an HTTP error was returned from the KSI service.
 .\"
 .TP
 \fB6
@@ -83,19 +80,19 @@ Print version info.
 .\"
 .TP
 \fB7
-\fBExtending error.\fR Error in extending a signature or an error was returned by extender.
+\fBExtending error.\fR Error in extending a signature or an error was returned by KSI Extender.
 .\"
 .TP
 \fB8
-\fBAggregation error.\fR Error returned by aggregator.
+\fBAggregation error.\fR Error returned by KSI Aggregator.
 .\"
 .TP
 \fB9
-\fBInput / output error.\fR Unable to write or read file.
+\fBInput / output error.\fR Unable to read or write file.
 .\"
 .TP
 \fB10
-\fBCryptographic error.\fR Error may be generated due to untrusted or unavailable hash algorithm or by an invalid PKI signature or untrusted certificate.
+\fBError may be generated due to untrusted or unavailable hash algorithm or by an invalid PKI signature / untrusted certificate.
 .\"
 .TP
 \fB11
@@ -111,7 +108,7 @@ Print version info.
 .\"
 .TP
 \fB14
-\fBAuthentication error.\fR Aggregation or extending service did not accept user identification parameters.
+\fBAuthentication error.\fR KSI Aggregation or Extending service did not accept the provided access credentials.
 .br
 .\"
 .TP
@@ -121,16 +118,14 @@ Print version info.
 .\"
 .\"
 .\"
-
-
-.SH ENVIRONMENT	
-
-To define default service info environment variables \fBKSI_CONF \fRmust be specified that contains path to KSI configurations file (see \fBksi-conf\fR(5)). Print ksi help (\fB-h\fR) to check if default service info is available.
-
-
+.SH ENVIRONMENT
+.LP
+The \fBKSI_CONF\fR environment variable points to the KSI configuration file containing the KSI service related parameters such as the URLs to the KSI Aggregator and Extender service and the corresponding access credentials. See \fBksi-conf\fR(5) for more information.
+.LP
 .SH AUTHOR
-
+.LP
 Guardtime AS, http://www.guardtime.com/
-
-.SH SEE ALSO	
+.LP
+.SH SEE ALSO
+.LP
 \fBksi-sign\fR(1), \fBksi-verify\fR(1), \fBksi-extend\fR(1), \fBksi-pubfile\fR(1), \fBksi-conf\fR(5) 

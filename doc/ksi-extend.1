@@ -3,7 +3,7 @@
 .\"
 .\"
 .SH NAME
-\fBksi extend \fR- Guardtime command-line tool for extending KSI Signatures.
+\fBksi extend \fR- Extend KSI signature with KSI command-line tool.
 .\"
 .\"
 .SH SYNOPSIS
@@ -18,57 +18,80 @@
 .\"
 .\"
 .SH DESCRIPTION
-.\"
-.HP 0
-This is a KSI signature extending tool that can be used to extend the KSI signature to the time of a publication. After signature is extended and a publication record is attached it can be verified by publication-based verification where only trusted publications file or a copy of a printed media with corresponding publication string in it is needed to perform the verification (see \fBksi-verify\fR(1)\fR).
-.HP 0
-User must have an access to a KSI extending service and trusted KSI publications file, to be able to extend the KSI signature and link the publication record with it. By default signature is extended to the earliest available publication relative to the signing time. To extend to a specific publication from the publications file specify the publication string with option \fB--pub-str\fR. It is also possible to extend to the specified time with option \fB-T \fRbut this is not recommended as the extended signature will have no signature nor publication record thus can only be verified by calendar-based verification only. In that case publications file is not required.
+.LP
+Extends the given KSI signature to the time of given publication. After signature is extended and the corresponding publication record is attached, the signature can be verified by publication-based verification where only trusted publications file or a publication string in printed media is needed to perform the verification. See \fBksi-verify\fR(1) for details.
+.LP
+User must have access to KSI extending service and trusted KSI publications file to extend the KSI signature. By default signature is extended to the earliest available publication. Use the option \fB--pub-str\fR to extend signature to the publication denoted by the given publication string. It is also possible to extend to the specified time with option \fB-T\fR but this is not recommended as the extended signature will have no calendar authentication nor publication record and can only be verified by calendar-based verification.
 .\"
 .\"
 .SH OPTIONS
 .\"
 .TP
 \fB-i \fIdata\fR
-KSI signature file to be extended. Use '-' as file name to read signatures file from \fIstdin\fR.
+ File path to the KSI signature file to be extended. Use ’-’ as the path to read the signature from \fIstdin\fR.
 .\"
 .TP
 \fB-o \fIfile\fR
-Output file name to store the extended signature token. Use '-' as file name to redirect signature binary stream to \fIstdout\fR. If not specified signature is saved to the path described as <input files path>_nr.ext.ksig, where \fInr\fR is generated sequential number if file name already exists. If specified will always overwrite the existing file.
+Output file path for the extended signature. Use ’-’ as the path to redirect the signature binary stream to \fIstdout\fR. If not specified, the signature is saved to <input file>.ext.ksig (or <input file>_<nr>.ext where \fInr\fR is auto-incremented counter if the output file already exists). If specified, existing file is always overwritten.
 .\"
 .TP
 \fB-X \fIURL\fR
-Specify extending service URL.
+Extending service (KSI Extender) URL.
 .\"
 .TP
 \fB--ext-user \fIstr\fR
-User name for extending service.
+Username for extending service.
 .\"
 .TP
 \fB--ext-key \fIstr\fR
-HMAC Key for extending service.
+HMAC key for extending service.
 .\"
 .TP
 \fB-P \fIURL\fR
-Specify publications file URL (or file with URI scheme 'file://').
+Publications file URL (or file with URI scheme 'file://').
 .\"
 .TP
 \fB--cnstr \fIoid\fR=\fIvalue\fR
-OID and its expected value to verify publications file PKI signature. At least one constraint must be defined to be able to verify publications file but it is possible to define more. All values from lower priority source are ignored, where default configurations file is the lowest and command-line is the highest.
+OID of the PKI certificate field (e.g. e-mail address) and the expected value to qualify the certificate for verification of publications file PKI signature. At least one constraint must be defined. All values from lower priority source are ignored.
+.RS
+.HP 0
+For more common OID's there are convenience names defined:
+.IP \(bu 4
+\fBE\fR or \fBemail\fR for OID 1.2.840.113549.1.9.1
+.IP \(bu 4
+\fBCN\fR or \fBcname\fR for OID 2.5.4.3
+.IP \(bu 4
+\fBC or \fBcountry\fR for OID 2.5.4.6
+.IP \(bu 4
+\fBO\fR or \fBorg\fR for OID 2.5.4.10
+.RE
+.\"
+.TP
+\fB-V \fIfile\fR
+Certificate file in PEM format for publications file verification. All values from lower priority source are ignored.
+.\"
+.TP
+\fB-W \fIdir\fR
+Specify an OpenSSL-style trust store directory for publications file verification. All values from lower priority source are ignored, where default configurations file is the lowest and command-line is the highest. All values from lower priority source are ignored.
 .\"
 .TP
 \fB--pub-str \fIstr\fR
-Specify a publication record by its publication string to extend to.
+Publication record as publication string to extend signature to.
 .TP
 \fB-T \fItime\fR
-Specify a publication time to extend to as the number of seconds since 1970-01-01 00:00:00 UTC or time string formatted as "YYYY-MM-DD hh:mm:ss".
+Publication time to extend to as the number of seconds since 1970-01-01 00:00:00 UTC time formatted as "YYYY-MM-DD hh:mm:ss".
 .\"
 .TP
 \fB-d\fR
 Print detailed information about processes and errors to \fIstderr\fR.
 .\"
 .TP
+\fB--dump\fR
+Dump extended signature and verification info in human-readable format to \fIstdout\fR.
+.\"
+.TP
 \fB--conf \fIfile\fR
-Specify a configurations file to override default service information. It must be noted that service info from command-line will override the configurations file. See \fBksi\fR(1) and \fBksi-conf\fR(5) for more information.
+Read configuration options from given file. It must be noted that configuration options given explicitly on command line will override the ones in the configuration file. See \fBksi-conf\fR(5) for more information.
 .\"
 .TP
 \fB--log \fIfile\fR
@@ -84,7 +107,7 @@ See \fBksi\fR(1) for more information.
 .\"
 .SH EXAMPLES
 .\"
-In the following examples it is assumed that default service URLs are defined (see \fBksi\fR(1) \fRfor more information).
+In the following examples it is assumed that KSI service configuration options (URLs, access credentials) are defined. See \fBksi-conf\fR(5) for more information.
 .\"
 .TP 2
 \fB1
@@ -97,7 +120,7 @@ In the following examples it is assumed that default service URLs are defined (s
 .\"
 .TP 2
 \fB2
-\fRTo extend a signature \fIsig.ksig\fR to s specified publication (Publication string available from Financial Times, ISSN: 0307-1766, 2016-03-17):
+\fRTo extend a signature \fIsig.ksig\fR to s specified publication (the publication string available from Financial Times, ISSN: 0307-1766, 2016-03-17 given as example):
 .LP
 .RS 4
 .HP 4
@@ -113,15 +136,14 @@ In the following examples it is assumed that default service URLs are defined (s
 \fBksi extend -i \fIsig.ksig \fB-o \fIext.ksig \fB-T \fI"2015-05-05 00:00:00"
 .RE
 .LP
-.\"
-.\"
-.\"
 .SH ENVIRONMENT
-Environment variable \fBKSI_CONF \fR can be defined to set default KSI configurations file. See \fBksi\fR(1) and \fBksi-conf\fR(5) for more information.
-
+.LP
+Use the environment variable \fBKSI_CONF\fR to define the default configuration file. See \fBksi-conf\fR(5) for more information.
+.LP
 .SH AUTHOR
-
+.LP
 Guardtime AS, http://www.guardtime.com/
-
+.LP
 .SH SEE ALSO	
+.LP
 \fBksi\fR(1), \fBksi-sign\fR(1), \fBksi-verify\fR(1), \fBksi-pubfile\fR(1), \fBksi-conf\fR(5) 
