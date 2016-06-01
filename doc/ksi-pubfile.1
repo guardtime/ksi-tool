@@ -3,7 +3,7 @@
 .\"
 .\"
 .SH NAME
-\fBksi pubfile \fR- Guardtime command-line tool for verifying and dumping KSI publications file.
+\fBksi pubfile \fR- Verify and dump KSI publications file with KSI command-line tool.
 .\"
 .\"
 .SH SYNOPSIS
@@ -21,42 +21,54 @@
 .\"
 .SH DESCRIPTION
 .\"
-This is a KSI publications file tool for performing publications file related general tasks. 
+Verifies and dumps the content of KSI publications file. The KSI publications file contains information on all the existing publications records and the PKI certificates that are used to verify the calendar authentication records of KSI signatures.
 .\"
 .\"
 .SH OPTIONS
 .\"
 .TP
 \fB-P \fIURL\fR
-Specify publications file URL (or file with URI scheme 'file://').
+Publications file URL (or file with URI scheme 'file://').
 .\"
 .TP
 \fB--cnstr \fIoid\fR=\fIvalue\fR
-OID and its expected value to verify publications file PKI signature. At least one constraint must be defined to be able to verify publications file but it is possible to define more. All values from lower priority source are ignored, where default configurations file is the lowest and command-line is the highest.
+OID of the PKI certificate field (e.g. e-mail address) and the expected value to qualify the certificate for verification of publications file PKI signature. At least one constraint must be defined. All values from lower priority source are ignored.
+.RS
+.HP 0
+For more common OID's there are convenience names defined:
+.IP \(bu 4
+\fBE\fR or \fBemail\fR for OID 1.2.840.113549.1.9.1
+.IP \(bu 4
+\fBCN\fR or \fBcname\fR for OID 2.5.4.3
+.IP \(bu 4
+\fBC or \fBcountry\fR for OID 2.5.4.6
+.IP \(bu 4
+\fBO\fR or \fBorg\fR for OID 2.5.4.10
+.RE
 .\"
 .TP
 \fB-v\fR
-Perform publications file verification. Note that when \fB-o \fRis used to save signatures file verification is always performed.
+Perform publications file verification. Note that when \fB-o \fRis used to save publications file, the verification is performed implicitly.
 .\"
 .TP
 \fB-V \fIfile\fR
-Specify an OpenSSL-style trust store file for publications file verification. All values from lower priority source are ignored, where default configurations file is the lowest and command-line is the highest.
+Certificate file in PEM format for publications file verification. All values from lower priority source are ignored.
 .\"
 .TP
 \fB-W \fIdir\fR
-Specify an OpenSSL-style trust store directory for publications file verification. All values from lower priority source are ignored, where default configurations file is the lowest and command-line is the highest.
+OpenSSL-style trust store directory for publications file PKI signature verification. All values from lower priority source are ignored.
 .\"
 .TP
 \fB-o \fIfile\fR
-Output file name to store publications file. Use '-' as file name to redirect publications file binary stream to \fIstdout\fR. Publications file is always verified before saving.
+Output file path to store publications file. Use '-' as file name to redirect publications file binary stream to \fIstdout\fR. Publications file is always verified before saving.
 .\"
 .TP
 \fB-X \fIURL\fR
-Specify extending service URL.
+Extending service (KSI Extender) URL.
 .\"
 .TP
 \fB--ext-user \fIstr\fR
-User name for extending service.
+Username for extending service.
 .\"
 .TP
 \fB--ext-key \fIstr\fR
@@ -72,15 +84,15 @@ Print detailed information about processes and errors to \fIstderr\fR.
 .\"
 .TP
 \fB--dump\fR
-Dump Publications file to \fIstdout\fR. Without any extra flags publications file verification is not performed.
+Dump publications file in human-readable format to \fIstdout\fR. Without any extra flags publications file verification is not performed.
 .\"
 .TP
 \fB--conf \fIfile\fR
-Specify a configurations file to override default service information. It must be noted that service info from command-line will override the configurations file. See \fBksi\fR(1) and \fBksi-conf\fR(5) for more information.
+Read configuration options from given file. It must be noted that configuration options given explicitly on command line will override the ones in the configuration file. See \fBksi-conf\fR(5) for more information.
 .\"
 .TP
 \fB--log \fIfile\fR
-Write libksi log into file. Use '-' as file name to redirect log to \fIstdout\fR.
+Write Write libksi log to given file. Use '-' as file name to redirect log to \fIstdout\fR.
 .br
 .\"
 .\"
@@ -92,15 +104,15 @@ See \fBksi\fR(1) for more information.
 .\"
 .SH EXAMPLES
 .\"
-In the following examples it is assumed that default service URLs are defined (see \fBksi\fR(1) \fRfor more information).
+In the following examples it is assumed that KSI service configuration options (URLs, access credentials) are defined. See \fBksi-conf\fR(5) for more information.
 
 
-\fB1\fR To dump a publications file from default URL call:
+\fB1\fR To dump the publications file from default URL call:
 .RS
 \fBksi pubfile --dump
 .RE
 
-\fB2\fR To dump a publications file \fIpubfile.bin\fR from local disk call (verification is not performed):
+\fB2\fR To dump the publications file \fIpubfile.bin\fR on local file system (verification is not performed):
 .RS
 \fBksi pubfile --dump -P \fIfile://pubfile.bin\fR
 .RE
@@ -110,12 +122,12 @@ In the following examples it is assumed that default service URLs are defined (s
 \fBksi pubfile -v -P \fIfile:///home/user/publications/pubfile.bin\fR
 .RE
 
-\fB4\fR To download and verify a publication file \fIpubfile.bin\fR call:
+\fB4\fR To download, verify and save the publications file to \fIpubfile.bin\fR from default URL (verification is performed automatically when saving) call:
 .RS
 \fBksi pubfile -o \fIpubfile.bin\fR \fB--cnstr \fIemail=publications@guardtime.com
 .RE
 
-\fB5\fR To verify a publications file with only certificates defined on command-line call:
+\fB5\fR To verify the publications file with only certificates defined on command-line call:
 .RS
 \fBksi pubfile -v -V \fIcertificate_1.bin \fB-V \fIcertificate_2.bin \fB--cnstr \fIemail=publications@guardtime.com
 .RE
@@ -131,7 +143,7 @@ In the following examples it is assumed that default service URLs are defined (s
 .\"
 .\"
 .SH ENVIRONMENT
-Environment variable \fBKSI_CONF \fR can be defined to set default KSI configurations file. See \fBksi\fR(1) and \fBksi-conf\fR(5) for more information.
+Use the environment variable \fBKSI_CONF\fR to define the default configuration file. See \fBksi-conf\fR(5) for more information.
 
 .SH AUTHOR
 

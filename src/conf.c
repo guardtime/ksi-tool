@@ -322,6 +322,8 @@ int conf_run(int argc, char** argv, char **envp) {
 
 cleanup:
 
+	PARAM_SET_free(set);
+
 	return KSITOOL_errToExitCode(res);
 }
 
@@ -341,39 +343,48 @@ char *conf_help_toString(char *buf, size_t len) {
 
 	count += KSI_snprintf(buf + count, len - count,
 		"KSI Configurations file help:\n\n"
-		"To define default KSI service access parameters a configurations file must be\n"
-		"defined. Default configurations file is searched from the path pointed from\n"
-		"environment variable KSI_CONF. Values from the default configurations file can\n"
-		"be overloaded with a specific configurations file given from the command-line\n"
-		"(--conf <file>) or just typing the same parameters to the command-line.\n"
-		"\n"
-		"Configurations file is composed with following parameters described below.\n"
-		"Following key-value pairs must be placed one per line. To write a comment use #\n"
-		"at the beginning of the line. If unknown or invalid key-value pairs are used,\n"
-		"an error is generated until user applies all fixes needed.\n\n"
-		"If some parameter values contain whitespace characters double quote mark(\")\n"
-		"must be used to wrap the entire value. If double quote mark have to be used\n"
-		"inside the value part an escape character must be typed before the quote mark\n"
-		"like that \\\"\n"
-		"\n"
-		"All known parameters that can be used:\n"
+		"  The KSI command-line tool has several configuration options, most of them are\n"
+		"  related to the KSI service configuration (e.g. KSI signing service URL and access\n"
+		"  credentials). The configuration options are described below. There are following\n"
+		"  ways to specify these configuration options:\n\n"
+
+		"   * directly on command line (highest priority)\n"
+		"   * in a file specified by the --conf command-line argument\n"
+		"   * in a file specified by the KSI_CONF (lowest priority)\n\n"
+
+		"  If a configuration option is specified in more than one source (e.g. both directly\n"
+		"  on command-line argument and in a configuration file) the source with the highest\n"
+		"  priority will be used. A short parameter or multiple flags must have prefix - and\n"
+		"  long parameters have prefix --. If some parameter values contain whitespace\n"
+		"  characters double quote marks (\") must be used to wrap the entire value. If double\n"
+		"  quote mark or backslash have to be used inside the value part an escape character\n"
+		"  (\\) must be typed before the charcater(\\\" or \\\\). If configuration option with\n"
+		"  unknown or invalid key-value pairs is used, an error is generated.\n\n"
+
+		"  In configuration file each key-value pair must be placed on a single line. Start\n"
+		"  the line with # to write a comment. Not full paths (V, W and P with URI scheme\n"
+		"  file://) are interpreted as relative to the configurations file.\n\n"
+
+		"All known parameters:\n"
 		);
 
 	count += KSI_snprintf(buf + count, len - count,
-		" -S <URL>  - specify signing service URL.\n"
+		" -S <URL>  - signing service (KSI Aggregator) URL.\n"
 		" --aggr-user <str>\n"
-		"           - user name for signing service.\n"
+		"           - username for signing service.\n"
 		" --aggr-key <str>\n"
 		"           - HMAC key for signing service.\n"
-		" -X <URL>  - specify extending service URL.\n"
+		" -X <URL>  - Extending service (KSI Extender) URL.\n"
 		" --ext-user <str>\n"
-		"           - user name for extending service.\n"
+		"           - username for extending service.\n"
 		" --ext-key <str>\n"
 		"           - HMAC key for extending service.\n"
-		" -P <URL>  - specify publications file URL (or file with URI scheme 'file://').\n"
+		" -P <URL>  - publications file URL (or file with URI scheme 'file://').\n"
 		" --cnstr <oid=value>\n"
-		"           - publications file certificate verification constraints.\n"
-		" -V <file> - specify an OpenSSL-style trust store file for publications file verification.\n"
+		"           - OID of the PKI certificate field (e.g. e-mail address) and the expected\n"
+		"             value to qualify the certificate for verification of publications file\n"
+		"             PKI signature. At least one constraint must be defined.\n"
+		" -V        - Certificate file in PEM format for publications file verification.\n"
 		" -W <dir>  - specify an OpenSSL-style trust store directory for publications file verification.\n"
 		" -c <num>  - set network transfer timeout, after successful connect, in seconds.\n"
 		" -C <num>  - set network connect timeout in seconds (is not supported with TCP client).\n"

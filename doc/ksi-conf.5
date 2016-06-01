@@ -3,68 +3,86 @@
 .\"
 .\"
 .SH NAME
-\fBksi.conf \fR- KSI (Keyless Signature Infrastructure) service configuration file.
+\fBksi.conf \fR- Keyless Signature Infrastructure (KSI) command-line tool configuration file.
 .\"
 .\"
 .SH DESCRIPTION
-.\"
-This file is read by KSI command-line tool \fBksi\fR(1) as KSI service configurations file.
-Configurations file is composed of the following parameters described under section \fB OPTIONS\fR. If configurations file with unknown or invalid key-value pairs is used, an error is generated until user applies all the fixes needed.
 .LP
-All the key-value pairs must be placed one per line. A short parameter or multiple flags must have prefix \fB- \fRand long parameters must have prefix \fB--\fR. To write a comment start the line with \fB#\fR. If some parameter values contain whitespace characters a double quote marks (\fB"\fR) must be used to wrap the entire value. If double quote mark have to be used inside the value part an escape character (\fB\\\fR) must be typed before the quote mark (\fB\\"\fR).
-.br
-.\"
-.\"
+The KSI command-line tool has several configuration options, most of them are related to the KSI service configuration (e.g. KSI signing service URL and access credentials). The configuration options are described in the \fBOPTIONS\fR section below. There are following ways to specify these configuration options:
+.LP
+.IP \(bu 4
+directly on command line (highest priority)
+.IP \(bu 4
+in a file specified by the \fB--conf\fR command-line argument
+.IP \(bu 4
+in a file specified by the \fBKSI_CONF\fR (lowest priority)
+.LP
+If a configuration option is specified in more than one source (e.g. both directly on command-line argument and in a configuration file) the source with the highest priority will be used. A short parameter or multiple flags must have prefix \fB-\fR and long parameters have prefix \fB--\fR. If some parameter values contain whitespace characters double quote marks (\fB"\fR) must be used to wrap the entire value. If double quote mark or backslash have to be used inside the value part an escape character (\fB\\\fR) must be typed before the charcater(\fB\\"\fR or \fB\\\\\fR). If configuration option with unknown or invalid key-value pairs is used, an error is generated.
+.LP
+In configuration file each key-value pair must be placed on a single line. Start the line with \fB#\fR to write a comment. Not full paths (V, W and P with URI scheme file://) are interpreted as relative to the configurations file.
+.LP
 .SH OPTIONS
 .br
 .\"
 .TP
 \fB-S \fIURL\fR
-Specify signing service URL.
+Signing service (KSI Aggregator) URL.
 .\"
 .TP
 \fB--aggr-user \fIstr\fR
-User name for signing service.
+Username for signing service.
 .\"
 .TP
 \fB--aggr-key \fIstr\fR
-HMAC Key for signing service.
+HMAC key for signing service.
 .\"
 .TP
 \fB-X \fIURL\fR
-Specify extending service URL.
+Extending service (KSI Extender) URL.
 .\"
 .TP
 \fB--ext-user \fIstr\fR
-User name for extending service
+Username for extending service.
 .\"
 .TP
 \fB--ext-key \fIstr\fR
-HMAC Key for extending service.
+HMAC key for extending service.
 .\"
 .TP
 \fB-P \fIURL\fR
-Specify publications file URL (or file with URI scheme 'file://').
+Publications file URL  (or file with URI scheme 'file://').
 .\"
 .TP
 \fB--cnstr \fIoid\fR=\fIvalue\fR
-OID and its expected value to verify publications file PKI signature. At least one constraint must be defined to be able to verify publications file but it is possible to define more.
+OID of the PKI certificate field (e.g. e-mail address) and the expected value to qualify the certificate for verification of publications file PKI signature. At least one constraint must be defined.
+.RS
+.HP 0
+For more common OID's there are convenience names defined:
+.IP \(bu 4
+\fBE\fR or \fBemail\fR for OID 1.2.840.113549.1.9.1
+.IP \(bu 4
+\fBCN\fR or \fBcname\fR for OID 2.5.4.3
+.IP \(bu 4
+\fBC or \fBcountry\fR for OID 2.5.4.6
+.IP \(bu 4
+\fBO\fR or \fBorg\fR for OID 2.5.4.10
+.RE
 .\"
 .TP
 \fB-V \fIfile\fR
-Specify an OpenSSL-style trust store file for publications file verification.
+Certificate file in PEM format for publications file verification.
 .\"
 .TP
 \fB-W \fIdir\fR
 Specify an OpenSSL-style trust store directory for publications file verification.
 .\"
 .TP
-\fB-c \fIint\fR
-Set network transfer timeout, after successful connect, in seconds.
+\fB-C \fIint\fR
+Network connect timeout in seconds  (is not supported with TCP client).
 .\"
 .TP
-\fB-C \fIint\fR
-Set network connect timeout in seconds (is not supported with TCP client).
+\fB-c \fIint\fR
+Network transfer timeout, after successful connect, in seconds.
 .\"
 .TP
 \fB--publications-file-no-verify\fR
@@ -73,7 +91,6 @@ A flag to force the tool to trust the publications file without verifying it. Th
 .\"
 .SH ENVIRONMENT
 Program \fBksi\fR(1) uses environment variable \fBKSI_CONF \fRto point to the default configurations file.
-.\"
 .\"
 .SH EXAMPLES
 An example of configurations file:
@@ -91,7 +108,7 @@ An example of configurations file:
 .br
 \fB--aggr-key \fIanon
 .br
-\fn
+.LP
 \fR# KSI Extending service:
 .br
 \fR# Note that ext-key real value is &h/J"kv\\G##
@@ -102,7 +119,7 @@ An example of configurations file:
 .br
 \fB--ext-key \fI"&h/J\\"kv\\\\G##"
 .br
-\fn
+.LP
 .br
 \fR# KSI Publications file:
 .br
@@ -123,5 +140,5 @@ An example of configurations file:
 Guardtime AS, http://www.guardtime.com/
 .\"
 .\"
-.SH SEE ALSO	
-\fBksi-sign\fR(1), \fBksi-verify\fR(1), \fBksi-extend\fR(1), \fBksi-pubfile\fR(1), \fBksi-conf\fR(5) 
+.SH SEE ALSO
+\fBksi-sign\fR(1), \fBksi-verify\fR(1), \fBksi-extend\fR(1), \fBksi-pubfile\fR(1)

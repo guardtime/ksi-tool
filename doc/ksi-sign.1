@@ -3,7 +3,7 @@
 .\"
 .\"
 .SH NAME
-\fBksi sign \fR- Guardtime command-line tool for creating KSI Signatures.
+\fBksi sign \fR- Sign data with KSI command-line tool.
 .\"
 .\"
 .SH SYNOPSIS
@@ -14,30 +14,30 @@
 .\"
 .SH DESCRIPTION
 .\"
-This is a general signing tool for Guardtime Keyless Signature services. As the signature created contains a calendar authentication record as trust anchor it can be verified by key-based and calendar-based verification only (see \fBksi-verify\fR(1)). \fBThe signature should be extended as soon as the first publication becomes available\fR. After the signature is extended (see \fBksi-extend\fR(1)) it is linked with a publication and can be verified by publication-based verification that relies only on the hash functions.
+Signs the given input such as content of a given file or a pre-computed hash value with KSI. User must have access to KSI signing service (KSI Aggregator) for signing. Note that until not extended, the signatures can be verified using the copy of calendar blockchain at KSI Extender (calendar-based verification) or using the PKI signature in the calendar authentication record (key-based verification, temporary only). See \fBksi-verify\fR(1) for details.
 .\"
 .\"
 .SH OPTIONS
 .\"
 .TP
 \fB-i \fIdata\fR
-Files path to file to be hashed or data hash imprint to extract the hash value that is going to be signed. Use '-' as file name to read data to be hashed from \fIstdin\fR. Hash imprint format: <\fIalg\fR>:<\fIhash in hex\fR>. Call \fBksi -h \fRto get the list of supported hash algorithms.
+The data is either the path to the file to be hashed and signed or a hash imprint in case the data to be signed has been hashed already. Use '-' as file name to read data to be hashed from \fIstdin\fR. Hash imprint format: <\fIalg\fR>:<\fIhash in hex\fR>. Use \fB-h\fR to get the list of supported hash algorithms. Note that only the main data stream of the file is hashed, any extensions of specific file systems are ignored (e.g. the alternate data streams of NTFS are not signed).
 .\"
 .TP
 \fB-o \fIfile\fR
-Output file name to store signature token. Use '-' as file name to redirect signature binary stream to \fIstdout\fR. If not specified signature is saved to the path described as <input files path>_nr.ksig, where \fInr\fR is generated sequential number if file name already exists. If specified will always overwrite the existing file.
+Output file path for the signature. Use '-' as file name to redirect signature binary stream to \fIstdout\fR. If not specified, the signature is saved to <input file>.ksig (or <input file>_<nr>.ksig, where <nr> is auto-incremented counter if the output file already exists). If specified, will always overwrite the existing file.
 .\"
 .TP
 \fB-H \fIalg\fR
-Use a specific hash algorithm to hash the file to be signed. Call \fBksi -h \fRto get the list of supported hash algorithms.
+Use the given hash algorithm to hash the file to be signed. Use \fBksi -h \fRto get the list of supported hash algorithms.
 .\"
 .TP
 \fB-S \fIURL\fR
-Specify signing service URL.
+URL Signing service (KSI Aggregator) URL.
 .\"
 .TP
 \fB--aggr-user \fIstr\fR
-User name for signing service.
+Username for signing service.
 .\"
 .TP
 \fB--aggr-key \fIstr\fR
@@ -53,15 +53,15 @@ Print detailed information about processes and errors to \fIstderr\fR.
 .\"
 .TP
 \fB--dump\fR
-Dump signature created to \fIstdout\fR.
+Dump signature created in human-readable format to \fIstdout\fR.
 .\"
 .TP
 \fB--conf \fIfile\fR
-Specify a configurations file to override default service information. It must be noted that service info from command-line will override the configurations file. See \fBksi\fR(1) and \fBksi-conf\fR(5) for more information.
+Read configuration options from given file. It must be noted that configuration options given explicitly on command line will override the ones in the configuration file. See \fBksi-conf\fR(5) for more information.
 .\"
 .TP
 \fB--log \fIfile\fR
-Write libksi log into file. Use '-' as file name to redirect log to \fIstdout\fR.
+Write libksi log to given file. Use '-' as file name to redirect log to \fIstdout\fR.
 .br
 .\"
 .\"
@@ -72,37 +72,56 @@ See \fBksi\fR(1) for more information.
 .\"
 .\"
 .SH EXAMPLES
-.\"
-In the following examples it is assumed that default service URLs are defined (see \fBksi\fR(1) \fRfor more information).
-
-\fB1\fR To sign a file \fIfile\fR and save signature to \fIsig.ksig\fR call:
-.RS
+.LP
+In the following examples it is assumed that KSI service configuration options (URLs, access credentials) are defined. See \fBksi-conf\fR(5) for more information.
+.LP
+.TP 2
+\fB1
+\fRTo sign a file \fIfile\fR and save signature to \fIsig.ksig\fR call:
+.LP
+.RS 4
+.HP 4
 \fBksi sign -i \fIfile\fR \fB-o \fIsig.ksig\fR
 .RE
-
-\fB2\fR To sign a data hash (hashed with SHA256) and save the resulting signature to file \fIsig.ksig\fR call:
-.RS
-\fBksi sign -i\fI SHA-256:c8ef6d57ac28d1b4e95a513959f5fcdd0688380a43d601a5ace1d2e96884690a\fR -o \fIsig.ksig\fB
+.\"
+.TP 2
+\fB2
+\fR To sign a data hash (hashed with SHA256) and save the resulting signature to file \fIsig.ksig\fR call:
+.LP
+.RS 4
+.HP 4
+\fBksi sign -i\fI SHA-256:c8ef6d57ac28d1b4e95a513959\\f5fcdd0688380a43d601a5ace1d2e96884690a\fR -o \fIsig.ksig\fB
 .RE
-
-\fB3\fR To sign a data file \fIfile\fR with non-default algorithm \fI SHA1\fR call:
-.RS
+.LP
+.\"
+.TP 2
+\fB3
+\fR To sign a data file \fIfile\fR with non-default algorithm \fI SHA1\fR call:
+.LP
+.RS 4
+.HP 4
 \fBksi sign -i \fIfile\fB -H\fI SHA1\fB -o\fI sig.ksig\fR 
 .RE
-
-\fB4\fR To sign a stream (stdin), save data from stream to \fIfile\fR and save signature to \fIsig.ksig\fR call:
-.RS
-\fBksi -s -i - --data-out \fIfile\fB -o \fIsig.ksig\fR
+.LP
+.\"
+.TP 2
+\fB4
+\fR To sign a stream (stdin), save data from stream to \fIfile\fR and save signature to \fIsig.ksig\fR call:
+.LP
+.RS 4
+.HP 4
+\fBksi sign -i \fIfile\fB -H\fI SHA1\fB -o\fI sig.ksig\fR 
 .RE
-.\"
-.\"
+.LP
 .\"
 .SH ENVIRONMENT
-Environment variable \fBKSI_CONF \fR can be defined to set default KSI configurations file. See \fBksi\fR(1) and \fBksi-conf\fR(5) for more information.
-
+.LP
+Use the environment variable \fBKSI_CONF\fR to define the default configuration file. See \fBksi-conf\fR(5) for more information.
+.LP
 .SH AUTHOR
-
+.LP
 Guardtime AS, http://www.guardtime.com/
-
+.LP
 .SH SEE ALSO	
+.LP
 \fBksi\fR(1), \fBksi-verify\fR(1), \fBksi-extend\fR(1), \fBksi-pubfile\fR(1), \fBksi-conf\fR(5)
