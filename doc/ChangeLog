@@ -23,7 +23,6 @@ Version 2.0.0
 * IMPROVEMENT: Configurations file can hold only service related data. (TOOL-110, KCT-52)
 * IMPROVEMENT: Environment variables KSI_AGGREGATOR and KSI_EXTENDER are replaced with KSI_CONF that contains a path to the default configurations file. (TOOL-110, KCT-52)
 * IMPROVEMENT: If -V or -W is used certificates from default trust store are ignored (does not affect Windows trust store). (TOOL-20)
-* IMPROVEMENT: Signature over maximum tlv size is not loaded. (BUG-198)
 * IMPROVEMENT: Task conf has flags -d and --dump for dumping configurations files path and its content. (TOOL-139)
 * IMPROVEMENT: Parameters V, W a P (with file:// scheme) defined in configurations file support file names relative to the configurations file. (TOOL-110)
 * FEATURE: libksi can be linked statically with ksi tool. (TOOL-137)

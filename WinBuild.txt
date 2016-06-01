@@ -20,17 +20,17 @@
 Building with Microsoft Visual Studio
 =====================================
 
-	This document describes how to build KSI command-line tool ksitool using
+	This document describes how to build ksi command-line tool KSI tool using
 	Microsoft Visual Studio tools and different libraries.
 	
 	
 Prerequisites
 =====================================
 
-	To be able to build ksitool one must have the following software pieces:
+	To be able to build ksi one must have the following software pieces:
 
 		1) Microsoft Visual Studio 10 or Windows SDK 7.1 for building tools.
-		2) Guardtime KSI API 3.1.0
+		2) Guardtime KSI API
 		3) Cryptography provider (must have one)
 			3.1) OpenSSL 0.9.8g (recommended).
 			3.2) Windows native CryptoAPI.
@@ -78,7 +78,7 @@ Build process
 	
 	Below is the abstract structure of the project that describes the location
 	of the source code, make files and output. Root directory contains top-level
-	build scripts that are used to build ksitool. After successful build obj and
+	build scripts that are used to build ksi tool. After successful build obj and
 	out directory is created. Obj directory contains compiled obj files. Out 
 	directory contains executable.
 	
@@ -86,7 +86,7 @@ Build process
     WinBuild.bat
     makefile
     
-	//Source code for ksitool
+	//Source code for ksi tool
 	src
       | *.c
       | *.h
@@ -110,8 +110,8 @@ Configuring build scripts
 	
 	Make file has following tasks:
 	
-		1)default	- build ksitool executable.
-		2)installer - build ksitool Windows installer (KSI_LIB must be lib).
+		1)default	- build ksi tool executable.
+		2)installer - build ksi tool Windows installer (KSI_LIB must be lib).
 		3)clean 	- clean build.
 	
 		
