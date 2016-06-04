@@ -60,58 +60,6 @@ struct TOOL_COMPONENT_LIST_st {
 	size_t size;
 };
 
-
-static int loadLibrary(const char *fname, void **lib) {
-#ifdef _WIN32
-	HMODULE tmp = NULL;
-#else
-	void *tmp = NULL;
-#endif
-
-	if (fname == NULL  || lib == NULL) {
-		return KT_INVALID_ARGUMENT;
-	}
-
-#ifdef _WIN32
-	tmp = LoadLibrary(fname);
-	if (tmp == NULL) return KT_UNABLE_TO_LOAD_LIB;
-#else
-	tmp = NULL;
-#endif
-
-	*lib = (void*)tmp;
-	return KT_OK;
-}
-
-static void freeLibrary(void *lib) {
-#ifdef _WIN32
-	HMODULE plugin = (HMODULE)lib;
-	if (lib == NULL) return;
-	FreeLibrary(plugin);
-#else
-	;
-#endif
-}
-
-static int getFunctionPointer(void *lib, const char *funcName, void **func) {
-	void *funcPointer = NULL;
-	if (lib == NULL || funcName == NULL || func == NULL) {
-		return KT_INVALID_ARGUMENT;
-	}
-#ifdef _WIN32
-	funcPointer = (void*) GetProcAddress(lib, funcName);
-#else
-	funcPointer = NULL;
-#endif
-	if (funcPointer == NULL) {
-		return KT_FUNCTION_NOT_FOUND;
-	}
-
-	*func = funcPointer;
-	return KT_OK;
-}
-
-
 static int tool_component_new(char *name, int (*run)(int argc, char **argv, char **envp), char* (*help_toString)(char *buf, size_t buf_len), const char* (*getDesc)(void), int id, TOOL_COMPONENT **new) {
 	int res;
 	TOOL_COMPONENT *tmp = NULL;
@@ -126,7 +74,7 @@ static int tool_component_new(char *name, int (*run)(int argc, char **argv, char
 
 	/**
 	 * Create empty TOOL_COMPONENT object and initialize function pointers.
-     */
+	 */
 	tmp = (TOOL_COMPONENT*)malloc(sizeof(TOOL_COMPONENT));
 	if (tmp == NULL) {
 		res = KT_OUT_OF_MEMORY;
@@ -143,7 +91,7 @@ static int tool_component_new(char *name, int (*run)(int argc, char **argv, char
 
 	/**
 	 * Initialize name.
-     */
+	 */
 	name_len = strlen(name);
 
 	tmp_name = (char*)malloc(name_len + 1);
@@ -179,71 +127,6 @@ static void tool_component_free(TOOL_COMPONENT *obj) {
 		free(obj);
 	}
 }
-
-static int tool_component_load(char *name, const char *fname, int id, TOOL_COMPONENT **new) {
-	int res;
-	TOOL_COMPONENT *tmp;
-	void *lib = NULL;
-	void *run = NULL;
-	void *help_toString = NULL;
-	void *get_desc = NULL;
-
-	if (name == NULL || fname == NULL) {
-		res = KT_INVALID_ARGUMENT;
-		goto cleanup;
-	}
-
-	/**
-	 * Load the library and functions needed.
-     */
-	res = loadLibrary(fname, &lib);
-	if (res != KT_OK) goto cleanup;
-
-	res = getFunctionPointer(lib, RUN_FUNC_NAME, &run);
-	if (res != KT_OK) goto cleanup;
-
-	res = getFunctionPointer(lib, HELP_FUNC_NAME, &help_toString);
-	if (res != KT_OK) goto cleanup;
-
-	res = getFunctionPointer(lib, DESC_FUNC_NAME, &get_desc);
-	if (res != KT_OK) goto cleanup;
-
-	res = tool_component_new(name,
-		(int (*)(int , char **, char **))run,
-		(char* (*)(char *, size_t))help_toString,
-		(const char* (*)(void))get_desc,
-		id,
-		&tmp);
-	if (res != KT_OK) goto cleanup;
-
-	tmp->libloader = lib;
-	tmp->libloader_free = freeLibrary;
-	lib = NULL;
-
-	*new = tmp;
-	tmp = NULL;
-	res = KT_OK;
-
-cleanup:
-
-	tool_component_free(tmp);
-	freeLibrary(lib);
-
-	return res;
-}
-
-static int tool_component_run(TOOL_COMPONENT *new, int argc, char **argv, char **envp) {
-	if (new == NULL || argc == 0 || argv == NULL || envp == NULL) return KT_INVALID_ARGUMENT;
-	if (new->run == NULL) return KT_COMPONENT_HAS_NO_IMPLEMENTATION;
-	return new->run(argc, argv, envp);
-}
-
-static char* tool_component_helpToString(TOOL_COMPONENT *new, char *buf, size_t buf_len) {
-	if (new == NULL || buf == NULL || buf_len == 0) return NULL;
-	if (new->help_toString == NULL) return NULL;
-	return new->help_toString(buf, buf_len);
-}
-
 
 int TOOL_COMPONENT_LIST_new(size_t max_size, TOOL_COMPONENT_LIST **new) {
 	int res;
@@ -387,7 +270,7 @@ char* TOOL_COMPONENT_LIST_toString(TOOL_COMPONENT_LIST *list, const char* preffi
 
 	/**
 	 * Extract the largest task name, and create a formats sting.
-     */
+	 */
 	for (i = 0; i < list->count; i++) {
 		tmp = strlen(list->component[i]->name);
 		if (tmp > max_size) {
@@ -399,13 +282,13 @@ char* TOOL_COMPONENT_LIST_toString(TOOL_COMPONENT_LIST *list, const char* preffi
 
 	/**
 	 * Generate help string for all known tasks.
-     */
+	 */
 	for (i = 0; i < list->count; i++) {
 		/*TODO: If lines are too long make it possible to fix the format.*/
 		tmp = strlen(list->component[i]->name);
 		/**
 		 * Print the tasks name.
-         */
+		 */
 		count += PST_snprintf(buf + count, buf_len - count, format,
 				preffix == NULL ? "" : preffix,
 				list->component[i]->name);

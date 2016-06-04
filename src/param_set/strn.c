@@ -36,6 +36,7 @@ static size_t param_set_vsnprintf(char *buf, size_t n, const char *format, va_li
 	}
 	ret = (size_t) tmp;
 #else
+	if (tmp);
 	ret = vsnprintf(buf, n, format, va);
 	if (ret >= n) {
 		ret = n - 1;
