@@ -74,7 +74,6 @@ if test "$enable_static_build" = "yes" ; then
 else
 	AC_MSG_NOTICE([KSI library will be linked dynamically.])
 	AC_CHECK_LIB([ksi], [KSI_CTX_new], [], [AC_MSG_FAILURE([Could not find KSI libraries.])])
-	KSI_RPM_DEPENDECY="Requires: libksi-devel >= $libksi_ver"
 	KSI_BUILD_DEPENDECY="BuildRequires: libksi-devel >= $libksi_ver"
 fi
 
