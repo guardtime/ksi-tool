@@ -1,0 +1,55 @@
+KSI COMMAND-LINE TOOL TEST README
+
+ This document will describe how to configure and run the ksi command-line tool
+ tests properly. Also the dependences and brief overview of files related to the
+ tests will be described.
+
+
+DEPENDECES
+
+ * shelltestrunner - mandatory for every test.
+ * valgrind (for memory tests only, unix)
+
+ 
+TEST RELATED FILES
+
+ All files related to the tests can be found from directory 'test' that is
+ located in ksi comman-line root directory.
+ 
+ resource         - directory containing all test resource files
+                    (e.g. signatures, files to be signed, server responses).
+ test_suites      - directory containing all test suites.
+ 
+ test.cfg.sample  - sample configurations file that is needed to run tests.
+ TEST-README      - You are reading it right now.
+ convert-to-memory-test.sh 
+                  - helper scrip that converts regular test to valgrind
+				    memory test (unix only). Should not be called by the user.
+					Is used by memory-test.sh internally.
+ windows-test.bat - run tests on windows platform.
+ test.sh          - run tests on unix platform.
+ memory-test.sh   - run valgrind memory tests.
+ 
+ 
+CONFIGURING TESTS
+
+ To configure tests a configurations file must be specified with valid
+ publications file, aggregator and extender URL's with corresponding access
+ credentials. See test.cfg.sample and read ksi conf -h or man conf to learn
+ how to write the ksi configurations file. The file must be located in 'test'
+ directory.
+ 
+ 
+RUNNING TESTS
+
+ Tests must be run from ksi comman-line root directory and the output is
+ generated to 'test/out'. Tests must be run by corresponding test script
+ found from test folder to ensure that test environment is configured
+ properly. The exit code is 0 on success and 1 on failure. 
+ 
+ To run tests on windows call:
+    test\windows-test.bat
+ 
+ To run tests on centos:
+    test/test.sh
+    test/memory-test.sh
