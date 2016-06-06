@@ -4,6 +4,11 @@ KSI COMMAND-LINE TOOL TEST README
  tests properly. Also the dependences and brief overview of files related to the
  tests will be described.
 
+ Tests can be run with ksi built within the project or with ksi installed on the
+ machine. On unix platforms ksi binary file is located in src and on Windoes
+ in bin directory. If the platform specific binary exists the tests are run with
+ the corresponding binary, otherwise the installed binary is used.
+
 
 DEPENDECES
 

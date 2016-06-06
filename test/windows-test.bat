@@ -46,6 +46,14 @@ setlocal
 
 set KSI_CONF=test/resource/conf/default-not-working-conf.cfg
 
+REM If ksi tool in project directory is available use that one, if not
+REM use the one installed in the machine.
+if exist bin\ksi.exe (
+    set tool=bin\ksi.exe
+) else (
+    set tool=ksi
+)
+
 shelltest ^
 test\test_suites\sign.test ^
 test\test_suites\static-sign.test ^
@@ -66,7 +74,7 @@ test\test_suites\verify-cmd.test ^
 test\test_suites\default-conf.test ^
 test\test_suites\invalid-conf.test ^
 test\test_suites\file-name-gen.test ^
---with=bin\ksi.exe -- -j1
+--with=%tool% -- -j1
 set exit_code=%errorlevel%
 
 endlocal
