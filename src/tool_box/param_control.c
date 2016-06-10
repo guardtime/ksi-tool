@@ -36,6 +36,7 @@
 #include "obj_printer.h"
 #include "ksi_init.h"
 #include "api_wrapper.h"
+#include "common.h"
 
 static int isContentOk_imprint(const char *imprint);
 
@@ -479,9 +480,11 @@ int isFormatOk_url(const char *url) {
 int convertRepair_url(const char* arg, char* buf, unsigned len) {
 	char *scheme = NULL;
 	unsigned i = 0;
+	int isFile;
 
 	if(arg == NULL || buf == NULL) return 0;
 	scheme = strstr(arg, "://");
+	isFile = (strstr(arg, "file://") == arg);
 
 	if (scheme == NULL) {
 		KSI_strncpy(buf, "http://", len-1);
@@ -493,12 +496,14 @@ int convertRepair_url(const char* arg, char* buf, unsigned len) {
 		while (arg[i] && i < len - 1) {
 			if (&arg[i] < scheme) {
 				buf[i] = (char)tolower(arg[i]);
-			} else {
 #ifdef _WIN32
-				buf[i] = arg[i] == '\\' ? '/' : arg[i];
+			} else if (arg[i] == '\\' && isFile) {
+				buf[i] = '/';
 #else
-				buf[i] = arg[i];
+				VARIABLE_IS_NOT_USED(isFile);
 #endif
+			} else {
+				buf[i] = arg[i];
 			}
 
 			i++;

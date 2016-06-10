@@ -18,8 +18,8 @@
  * Guardtime Inc.
  */
 
-#ifndef TOOL_H
-#define	TOOL_H
+#ifndef COMMON_H
+#define	COMMON_H
 
 #ifdef	__cplusplus
 extern "C" {
@@ -33,5 +33,5 @@ extern "C" {
 }
 #endif
 
-#endif	/* TOOL_H */
+#endif	/* COMMON_H */
 
