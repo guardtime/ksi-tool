@@ -21,11 +21,13 @@
 #include <stdio.h>
 #include <limits.h>
 #include "strn.h"
+#include "../common.h"
 
 
 static size_t param_set_vsnprintf(char *buf, size_t n, const char *format, va_list va){
 	size_t ret = 0;
 	int tmp;
+
 	if (buf == NULL || n > INT_MAX || n == 0 || format == NULL) goto cleanup;
 #ifdef _WIN32
 	/* NOTE: If there is empty space in buf, it will be filled with 0x00 or 0xfe. */
@@ -36,7 +38,7 @@ static size_t param_set_vsnprintf(char *buf, size_t n, const char *format, va_li
 	}
 	ret = (size_t) tmp;
 #else
-	if (tmp);
+	VARIABLE_IS_NOT_USED(tmp);
 	ret = vsnprintf(buf, n, format, va);
 	if (ret >= n) {
 		ret = n - 1;
