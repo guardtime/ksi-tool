@@ -441,8 +441,8 @@ static void printRuleVerificationResult(int (*print)(const char *format, ... ), 
 		print("\t[%s]", OBJPRINT_getVerificationErrorCode(result->errorCode));
 	}
 	print(" %s.", OBJPRINT_getVerificationErrorDescription(result->errorCode));
-	if (result->resultCode != KSI_VER_RES_OK ||
-			printRuleWhenOk && result->resultCode == KSI_VER_RES_OK) {
+	if ((result->resultCode != KSI_VER_RES_OK) ||
+			(printRuleWhenOk && result->resultCode == KSI_VER_RES_OK)) {
 		print("\tIn rule:");
 		print("\t%s", getPrintableRuleName(result->ruleName));
 	}

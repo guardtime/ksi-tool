@@ -47,7 +47,7 @@ static char *OID_ORGANIZATION[] = {KSI_CERT_ORGANIZATION, "O", "org", "organizat
 static char **OID_INFO[] = {OID_EMAIL, OID_COMMON_NAME, OID_COUNTRY, OID_ORGANIZATION, NULL};
 
 static int KSI_Signature_serialize_wrapper(KSI_CTX *ksi, KSI_Signature *sig, unsigned char **raw, size_t *raw_len) {
-	ksi;
+	if (ksi);
 	return KSI_Signature_serialize(sig, raw, raw_len);
 }
 
@@ -72,13 +72,13 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **o
 		goto cleanup;
 	}
 
-	res = SMART_FILE_read(file, buf, sizeof(buf), &data_len);
+	res = SMART_FILE_read(file, (char *)buf, sizeof(buf), &data_len);
 	if(res != SMART_FILE_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to read %s from file.", name);
 		goto cleanup;
 	}
 
-	res = SMART_FILE_read(file, dummy, sizeof(dummy), &dummy_len);
+	res = SMART_FILE_read(file, (char *)dummy, sizeof(dummy), &dummy_len);
 	if(res != SMART_FILE_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to read data from file.");
 		goto cleanup;
@@ -144,7 +144,7 @@ static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, const char *mode, void *obj,
 		KSI_strncpy(f, SMART_FILE_getFname(file), f_len);
 	}
 
-	res = SMART_FILE_write(file, raw, raw_len, &count);
+	res = SMART_FILE_write(file, (char *)raw, raw_len, &count);
 	if(res != SMART_FILE_OK || count != raw_len) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to write to file.");
 		goto cleanup;
@@ -274,25 +274,25 @@ static int timerOn = 0;
 
 static unsigned int measureLastCall(void){
 #ifdef _WIN32
-    static LARGE_INTEGER thisCall;
-    static LARGE_INTEGER lastCall;
-    LARGE_INTEGER frequency;        // ticks per second
+	static LARGE_INTEGER thisCall;
+	static LARGE_INTEGER lastCall;
+	LARGE_INTEGER frequency;        // ticks per second
 
 	QueryPerformanceFrequency(&frequency);
 	QueryPerformanceCounter(&thisCall);
 
-    elapsed_time_ms = (unsigned)((thisCall.QuadPart - lastCall.QuadPart) * 1000.0 / frequency.QuadPart);
+	elapsed_time_ms = (unsigned)((thisCall.QuadPart - lastCall.QuadPart) * 1000.0 / frequency.QuadPart);
 #else
-    static struct timeval thisCall = {0, 0};
-    static struct timeval lastCall = {0, 0};
+	static struct timeval thisCall = {0, 0};
+	static struct timeval lastCall = {0, 0};
 
-    gettimeofday(&thisCall, NULL);
+	gettimeofday(&thisCall, NULL);
 
-    elapsed_time_ms = (unsigned)((thisCall.tv_sec - lastCall.tv_sec) * 1000.0 + (thisCall.tv_usec - lastCall.tv_usec) / 1000.0);
+	elapsed_time_ms = (unsigned)((thisCall.tv_sec - lastCall.tv_sec) * 1000.0 + (thisCall.tv_usec - lastCall.tv_usec) / 1000.0);
 #endif
 
-    lastCall = thisCall;
-    return elapsed_time_ms;
+	lastCall = thisCall;
+	return elapsed_time_ms;
 }
 
 void print_progressDesc(int showTiming, const char *msg, ...) {
@@ -344,7 +344,6 @@ const char *getPublicationsFileRetrieveDescriptionString(PARAM_SET *set) {
 	int res;
 	const char *pub_desc_str = "Receiving publications file... ";
 	char *pubfile_uri = NULL;
-	int isFile = 0;
 
 	if (set == NULL) goto cleanup;
 
@@ -505,7 +504,7 @@ cleanup:
 
 static const char* find_group_start(const char *str, const char *ignore) {
 	size_t i = 0;
-	ignore;
+	if (ignore);
 	while (str[i] && isspace(str[i])) i++;
 	return (i == 0) ? str : &str[i];
 }
@@ -515,7 +514,7 @@ static const char* find_group_end(const char *str, const char *ignore) {
 	int is_firs_non_whsp_found = 0;
 	size_t i = 0;
 
-	ignore;
+	if (ignore);
 	while (str[i]) {
 		if (!isspace(str[i])) is_firs_non_whsp_found = 1;
 		if (isspace(str[i]) && is_quato_opend == 0 && is_firs_non_whsp_found) return &str[i - 1];
@@ -632,7 +631,7 @@ const char *PATH_URI_getPathRelativeToFile(const char *refFilePath, const char *
 
 	/**
 	 * Check if uri scheme is file, if not return the original uri.
-     */
+	 */
 	if (origPath == NULL) return NULL;
 	isFileUri = (strstr(origPath, "file://") == origPath) ? 1 : 0;
 	if (isFileUri && strlen(origPath) == 7) return origPath;
@@ -640,7 +639,7 @@ const char *PATH_URI_getPathRelativeToFile(const char *refFilePath, const char *
 
 	/**
 	 * If uri scheme is file, cut the files path and convert. Append to file scheme.
-     */
+	 */
 	pOrigPath = isFileUri ? origPath + 7 : origPath;
 	KSI_snprintf(buf, buf_len, "file://%s", PATH_getPathRelativeToFile(refFilePath, pOrigPath, buf_inner, sizeof(buf_inner)));
 	return buf;

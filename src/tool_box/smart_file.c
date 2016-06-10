@@ -137,7 +137,7 @@ static int smart_file_open_win(const char *fname, const char *mode, void **file)
 
 	/**
 	 * Configure the IO mode.
-     */
+	 */
 	if (is_r) {
 		access |= GENERIC_READ;
 		open_mode |= OPEN_EXISTING;
@@ -197,7 +197,7 @@ static int smart_file_read_win(void *file, char *raw, size_t raw_len, size_t *co
 		 * and the next read operation fails with ERROR_BROKEN_PIPE that means
 		 * PIPE has been closed. Set status code to success and read count to zero
 		 * to indicate EOF.
-         */
+		 */
 		error_code = GetLastError();
 		if (GetFileType(tmp) == FILE_TYPE_PIPE && error_code == ERROR_BROKEN_PIPE) {
 			res = SMART_FILE_OK;
@@ -346,7 +346,7 @@ static int smart_file_get_stream_win(const char *mode, void **stream, int *is_cl
 
 	/**
 	 * Handle to stdin or stdout must be closed.
-     */
+	 */
 	*is_close_mandatory = 1;
 	*stream = fp;
 	fp = NULL;
@@ -482,7 +482,6 @@ static int smart_file_get_stream_unix(const char *mode, void **stream, int *is_c
 	int res;
 	int is_r = 0;
 	int is_w = 0;
-	int is_b = 0;
 	FILE *fp = NULL;
 
 	if (mode == NULL || stream == NULL) {
@@ -492,7 +491,6 @@ static int smart_file_get_stream_unix(const char *mode, void **stream, int *is_c
 
 	is_r = strchr(mode, 'r') == NULL ? 0 : 1;
 	is_w = strchr(mode, 'w') == NULL ? 0 : 1;
-	is_b = strchr(mode, 'b') == NULL ? 0 : 1;
 
 
 	if (is_r) {
@@ -503,16 +501,6 @@ static int smart_file_get_stream_unix(const char *mode, void **stream, int *is_c
 		res = SMART_FILE_INVALID_MODE;
 		goto cleanup;
 	}
-
-#ifdef _WIN32
-	if (is_b) {
-		res = _setmode(_fileno(fp),_O_BINARY);
-		if (res == -1) {
-			res = SMART_FILE_PIPE_ERROR;
-			goto cleanup;
-		}
-	}
-#endif
 
 	*is_close_mandatory = 0;
 	*stream = fp;
@@ -562,13 +550,9 @@ static int smart_file_get_error_unix(void) {
 char *generate_file_name(const char *fname, int count, char *buf, size_t buf_len) {
 	char *ret = NULL;
 	char ext[1024] = "";
-	char num[1024] = "";
 	char root[1024] = "";
 	int is_extension = 0;
-	int is_counting = 0;
-	int i = 0;
 	int root_offset = 0;
-
 
 	/**
 	 * Extract the files extension.
@@ -646,7 +630,6 @@ const char *generate_not_existing_file_name(const char *fname, char *buf, size_t
 int SMART_FILE_open(const char *fname, const char *mode, SMART_FILE **file) {
 	int res;
 	SMART_FILE *tmp = NULL;
-	int doClose = 0;
 	int must_free = 0;
 	int isStream = 0;
 	const char *pFname = fname;
@@ -655,7 +638,6 @@ int SMART_FILE_open(const char *fname, const char *mode, SMART_FILE **file) {
 	int is_w;
 	int is_f;
 	int is_i;
-	int is_r;
 
 	if (fname == NULL || mode == NULL || file == NULL) {
 		res = SMART_FILE_INVALID_ARG;
@@ -667,11 +649,10 @@ int SMART_FILE_open(const char *fname, const char *mode, SMART_FILE **file) {
 	is_w = strchr(mode, 'w') == NULL ? 0 : 1;
 	is_f = strchr(mode, 'f') == NULL ? 0 : 1;
 	is_i = strchr(mode, 'i') == NULL ? 0 : 1;
-	is_r = strchr(mode, 'r') == NULL ? 0 : 1;
 
 	/**
 	 * Some special flags that should be checked before going ahead.
-     */
+	 */
 	if (!isStream) {
 		if (is_w && is_f && SMART_FILE_doFileExist(fname)) {
 			res = SMART_FILE_OVERWRITE_RESTRICTED;
@@ -692,7 +673,7 @@ int SMART_FILE_open(const char *fname, const char *mode, SMART_FILE **file) {
 
 		/**
 	 * Initialize smart file.
-     */
+	 */
 	tmp->file = NULL;
 	tmp->fname[0] = '\0';
 	tmp->isEOF = 0;
@@ -704,7 +685,7 @@ int SMART_FILE_open(const char *fname, const char *mode, SMART_FILE **file) {
 
 	/**
 	 * Initialize implementations.
-     */
+	 */
 #ifdef WIN_HANDLE
 	res = smart_file_init_win(tmp);
 	if (res != SMART_FILE_OK) goto cleanup;
@@ -716,7 +697,7 @@ int SMART_FILE_open(const char *fname, const char *mode, SMART_FILE **file) {
 	/**
 	 * If standard strem is wanted, extract the stream object. Otherwise use
 	 * smart file opener function.
-     */
+	 */
 	if (isStream) {
 		res = tmp->file_get_stream(mode, &(tmp->file), &must_free);
 		if (res != SMART_FILE_OK) goto cleanup;
@@ -805,7 +786,7 @@ int SMART_FILE_read(SMART_FILE *file, char *raw, size_t raw_len, size_t *count) 
 
 	/**
 	 * EOF is detected as Read finished without an error and read count is zero.
-     */
+	 */
 	if (c == 0) {
 		file->isEOF = 1;
 	}
@@ -854,7 +835,6 @@ int SMART_FILE_isReadAccess(const char *path) {
 }
 
 int SMART_FILE_hasFileExtension(const char *path, const char *ext) {
-	int res = 0;
 	size_t path_len = 0;
 	size_t ext_len = 0;
 	const char *pPath = NULL;

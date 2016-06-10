@@ -94,6 +94,8 @@ AC_TYPE_SIZE_T
 # Checks for library functions.
 AC_CHECK_FUNCS([strchr])
 
+# Add more warnings
+CFLAGS+=" -Wall"
 
 AC_CONFIG_FILES([GNUmakefile src/GNUmakefile packaging/redhat/ksi.spec])
 AC_OUTPUT

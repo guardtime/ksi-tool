@@ -75,8 +75,6 @@ static char *hash_algorithms_to_string(char *buf, size_t buf_len) {
 
 static void print_general_help(PARAM_SET *set, const char *KSI_CONF){
 	int res;
-	const char *toolVersion = NULL;
-	const char *apiVersion = NULL;
 	char *aggre_url = NULL;
 	char *ext_url = NULL;
 	char *pub_url = NULL;
@@ -87,9 +85,6 @@ static void print_general_help(PARAM_SET *set, const char *KSI_CONF){
 	if (set == NULL) {
 		return;
 	}
-
-	toolVersion = TOOL_getVersion();
-	apiVersion = KSI_getVersion();
 
 	res = PARAM_SET_getStr(set, "S", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &aggre_url);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) return;
@@ -111,7 +106,7 @@ static void print_general_help(PARAM_SET *set, const char *KSI_CONF){
 
 	/**
 	 * Print info about default services.
-     */
+	 */
 	print_result(
 	"  Signing:		%s\n"
 	"  Extending/Verifying:	%s\n"
@@ -133,7 +128,7 @@ static void print_general_help(PARAM_SET *set, const char *KSI_CONF){
 
 	/**
 	 * Print info about supported hash algorithms.
-     */
+	 */
 	print_result(
 	"Supported hash algorithms:\n"
 	"  %s\n",
@@ -157,7 +152,7 @@ int main(int argc, char** argv, char **envp) {
 	/**
 	 * Configure KSI tool to print only values that are result of the user request
 	 * or an error.
-     */
+	 */
 	print_init();
 	print_disable(PRINT_WARNINGS | PRINT_INFO | PRINT_DEBUG);
 	print_enable(PRINT_RESULT | PRINT_ERRORS);
@@ -165,7 +160,7 @@ int main(int argc, char** argv, char **envp) {
 
 	/**
 	 * Define parameter and task set.
-     */
+	 */
 	res = PARAM_SET_new("{h|help}{version}{d}", &set);
 	if (res != PST_OK) goto cleanup;
 
@@ -177,14 +172,14 @@ int main(int argc, char** argv, char **envp) {
 
 	/**
 	 * Load the configurations file from environment.
-     */
+	 */
 	res = CONF_fromEnvironment(configuration, "KSI_CONF", envp, 0, 1);
 	res = conf_report_errors(configuration, CONF_getEnvNameContent(), res);
 	if (res != KT_OK) goto cleanup;
 
 	/**
 	 * Get all possible components to run.
-     */
+	 */
 	res = ksitool_compo_get(tasks, &set_task_name, &components);
 	if (res != PST_OK) {
 		print_errors("Error: Unable get ksi components.\n");
@@ -193,7 +188,7 @@ int main(int argc, char** argv, char **envp) {
 
 	/**
 	 * Add the values to the set.
-     */
+	 */
 	res = PARAM_SET_add(set_task_name, argv[1], NULL, NULL, 0);
 
 	if (argc > 1) {
@@ -202,7 +197,7 @@ int main(int argc, char** argv, char **envp) {
 
 	/**
 	 * Extract the task.
-     */
+	 */
 	res = TASK_SET_analyzeConsistency(tasks, set_task_name, 0.2);
 	if (res != PST_OK) goto cleanup;
 
@@ -211,7 +206,7 @@ int main(int argc, char** argv, char **envp) {
 
 	/**
 	 * Simple tool help handler.
-     */
+	 */
 	if (PARAM_SET_isSetByName(set, "h") || (argc < 2 && task == NULL) || (argc < 3 && task != NULL)) {
 		print_result("%s %s (C) Guardtime\n", TOOL_getName(), TOOL_getVersion());
 		print_result("%s (C) Guardtime\n\n", KSI_getVersion());
@@ -246,7 +241,7 @@ int main(int argc, char** argv, char **envp) {
 
 	/**
 	 * Invalid task. Give user some hints.
-     */
+	 */
 	if (task == NULL) {
 		print_errors("Error: Invalid task. Read help (-h) or man page.\n");
 		if (PARAM_SET_isTypoFailure(set_task_name)) {
@@ -294,7 +289,7 @@ static int ksitool_compo_get(TASK_SET *tasks, PARAM_SET **set, TOOL_COMPONENT_LI
 
 	/**
 	 * Create parameter list that contains all known tasks.
-     */
+	 */
 	res = PARAM_SET_new("{sign}{extend}{verify}{pubfile}{conf}", &tmp_set);
 	if (res != PST_OK) goto cleanup;
 
@@ -303,7 +298,7 @@ static int ksitool_compo_get(TASK_SET *tasks, PARAM_SET **set, TOOL_COMPONENT_LI
 
 	/**
 	 * Define all components as possible tasks.
-     */
+	 */
 	TASK_SET_add(tasks, 0, "Sign", "sign", NULL, NULL, NULL);
 	TASK_SET_add(tasks, 1, "Verify", "verify", NULL, NULL, NULL);
 	TASK_SET_add(tasks, 2, "extend", "extend", NULL, NULL, NULL);
@@ -312,7 +307,7 @@ static int ksitool_compo_get(TASK_SET *tasks, PARAM_SET **set, TOOL_COMPONENT_LI
 
 	/**
 	 * Define tool component as runnable.
-     */
+	 */
 	TOOL_COMPONENT_LIST_add(tmp_compo, "sign", sign_run, sign_help_toString,  sign_get_desc, 0);
 	TOOL_COMPONENT_LIST_add(tmp_compo, "verify", verify_run, verify_help_toString, verify_get_desc, 1);
 	TOOL_COMPONENT_LIST_add(tmp_compo, "extend", extend_run, extend_help_toString, extend_get_desc, 2);

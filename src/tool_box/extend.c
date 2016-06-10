@@ -65,7 +65,7 @@ int extend_run(int argc, char** argv, char **envp) {
 	char fnmae[2048];
 	char mode[2];
 	char buf[2048];
-	int d;
+	int d = 0;
 
 	/**
 	 * Extract command line parameters.
@@ -195,7 +195,7 @@ char *extend_help_toString(char*buf, size_t len) {
 		" -o <file> - output  file path for the extended signature. Use '-' as the path\n"
 		"             to redirect the signature binary stream to stdout. If not specified\n"
 		"             the  signature is  saved  to  <input  file>.ext.ksig. If  specified,\n"
-        "             existing file is always overwritten.\n"
+		"             existing file is always overwritten.\n"
 		" -X <URL>  - Extending service (KSI Extender) URL.\n"
 		" --ext-user <str>\n"
 		"           - username for extending service.\n"
@@ -494,10 +494,6 @@ static char* get_output_file_name_if_not_defined(PARAM_SET *set, ERR_TRCKR *err,
 cleanup:
 
 	return ret;
-}
-
-static int verify_signature(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_PolicyVerificationResult **result) {
-	return KT_INVALID_ARGUMENT;
 }
 
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err) {

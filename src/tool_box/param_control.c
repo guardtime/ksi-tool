@@ -36,6 +36,7 @@
 #include "obj_printer.h"
 #include "ksi_init.h"
 #include "api_wrapper.h"
+#include "common.h"
 
 static int isContentOk_imprint(const char *imprint);
 
@@ -289,7 +290,7 @@ static int file_get_hash(ERR_TRCKR *err, KSI_CTX *ctx, const char *fname_in, con
 
 	/**
 	 * Open the file, read and hash.
-     */
+	 */
 	res = SMART_FILE_open(fname_in, "rb", &in);
 	if (res != KT_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to open file for reading. %s", KSITOOL_errToString(res));
@@ -348,29 +349,29 @@ cleanup:
 }
 
 static int date_is_valid(struct tm *time_st) {
-    int days = 31;
-    int dd = time_st->tm_mday;
-    int mm = time_st->tm_mon + 1;
-    int yy = time_st->tm_year + 1900;
+	int days = 31;
+	int dd = time_st->tm_mday;
+	int mm = time_st->tm_mon + 1;
+	int yy = time_st->tm_year + 1900;
 
 	if (mm < 1 || mm > 12 || dd < 1 || yy < 2007 || yy >= 2036) {
-        return 0;
-    }
+		return 0;
+	}
 
-    if (mm == 2) {
-        days = 28;
+	if (mm == 2) {
+		days = 28;
 		/* Its a leap year */
-        if (yy % 400 == 0 || (yy % 4 == 0 && yy % 100 != 0)) {
-            days = 29;
-        }
-    } else if (mm == 4 || mm == 6 || mm == 9 || mm == 11) {
-        days = 30;
-    }
+		if (yy % 400 == 0 || (yy % 4 == 0 && yy % 100 != 0)) {
+			days = 29;
+		}
+	} else if (mm == 4 || mm == 6 || mm == 9 || mm == 11) {
+		days = 30;
+	}
 
-    if (dd > days) {
-        return 0;
-    }
-    return 1;
+	if (dd > days) {
+		return 0;
+	}
+	return 1;
 }
 
 static int string_to_tm(const char *time, struct tm *time_st) {
@@ -452,7 +453,7 @@ int isInteger(const char *str) {
 	if (str == NULL) return 0;
 	if (str[0] == '\0') return 0;
 
-	while (C = 0xff & str[i++]) {
+	while ((C = 0xff & str[i++]) != '\0') {
 		if (!isdigit(C)) return 0;
 	}
 	return 1;
@@ -483,7 +484,7 @@ int convertRepair_url(const char* arg, char* buf, unsigned len) {
 
 	if(arg == NULL || buf == NULL) return 0;
 	scheme = strstr(arg, "://");
-	isFile = strstr(arg, "file://") == arg ? 1 : 0;
+	isFile = (strstr(arg, "file://") == arg);
 
 	if (scheme == NULL) {
 		KSI_strncpy(buf, "http://", len-1);
@@ -495,12 +496,14 @@ int convertRepair_url(const char* arg, char* buf, unsigned len) {
 		while (arg[i] && i < len - 1) {
 			if (&arg[i] < scheme) {
 				buf[i] = (char)tolower(arg[i]);
-			} else {
 #ifdef _WIN32
-				buf[i] = arg[i] == '\\' ? '/' : arg[i];
+			} else if (arg[i] == '\\' && isFile) {
+				buf[i] = '/';
 #else
-				buf[i] = arg[i];
+				VARIABLE_IS_NOT_USED(isFile);
 #endif
+			} else {
+				buf[i] = arg[i];
 			}
 
 			i++;
@@ -551,7 +554,7 @@ int isContentOk_int(const char* integer) {
 
 int extract_int(void *extra, const char* str,  void** obj){
 	int *pI = (int*)obj;
-	extra;
+	if (extra);
 	*pI = atoi(str);
 	return PST_OK;
 }
@@ -614,7 +617,7 @@ int extract_inputFile(void *extra, const char* str, void** obj) {
 	int res;
 	SMART_FILE *tmp = NULL;
 
-	extra;
+	if (extra);
 	if (str == NULL) {
 		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
@@ -649,7 +652,7 @@ int extract_hashAlg(void *extra, const char* str, void** obj) {
 	const char *hash_alg_name = NULL;
 	KSI_HashAlgorithm *hash_id = (KSI_HashAlgorithm*)obj;
 
-	extra;
+	if (extra);
 	hash_alg_name = str != NULL ? (str) : ("default");
 	*hash_id = KSI_getHashAlgorithmByName(hash_alg_name);
 
@@ -712,12 +715,10 @@ int extract_imprint(void *extra, const char* str, void** obj) {
 	int res;
 	void **extra_array = (void**)extra;
 	COMPOSITE *comp = NULL;
-	PARAM_SET *set = NULL;
 	KSI_CTX *ctx = NULL;
 	ERR_TRCKR *err = NULL;
 	KSI_DataHash *tmp = NULL;
 
-	set = (PARAM_SET*)extra_array[0];
 	comp = (COMPOSITE*)extra_array[1];
 	ctx = comp->ctx;
 	err = comp->err;
@@ -750,8 +751,8 @@ int isFormatOk_inputHash(const char *str) {
 }
 
 int isContentOk_inputHash(const char *str) {
-	if (str == NULL) FORMAT_NULLPTR;
-	if(strlen(str) == 0) return FORMAT_NOCONTENT;
+	if (str == NULL) return FORMAT_NULLPTR;
+	if (strlen(str) == 0) return FORMAT_NOCONTENT;
 
 	if (is_imprint(str)) {
 		return isContentOk_imprint(str);
@@ -825,7 +826,7 @@ int isFormatOk_pubString(const char *str) {
 	if (str == NULL) return FORMAT_NULLPTR;
 	if (str[0] == '\0') return FORMAT_NOCONTENT;
 
-	while (C = 0xff & str[i++]) {
+	while ((C = 0xff & str[i++]) != '\0') {
 		if (strchr(base32EncodeTable, C) == NULL) {
 			return FORMAT_INVALID_BASE32_CHAR;
 		}
@@ -903,7 +904,7 @@ int extract_utcTime(void *extra, const char* str, void** obj) {
 	/**
 	 * If input is integer, extract its value. If input is time string convert it
 	 * to time.
-     */
+	 */
 	if (isInteger(str)) {
 		int t = 0;
 		res = extract_int(extra, str,  (void**)&t);
@@ -919,7 +920,7 @@ int extract_utcTime(void *extra, const char* str, void** obj) {
 
 	/**
 	 * Create KSI_Integer for output parameter.
-     */
+	 */
 
 	res = KSI_Integer_new(ctx, time, &tmp);
 	ERR_CATCH_MSG(err, res, "Error: %s.", KSITOOL_errToString(res));
