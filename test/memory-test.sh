@@ -69,6 +69,14 @@ generate_test file-name-gen.test
 
 # Run generated test scripts.
 
+# If ksi tool in project directory is available use that one, if not
+# use the one installed in the machine.
+if [ ! -f src/ksi ]; then
+	tool=ksi
+else
+	tool=src/ksi
+fi
+
 shelltest \
 $mem_test_dir/sign.test \
 $mem_test_dir/static-sign.test \
@@ -88,7 +96,7 @@ $mem_test_dir/verify-cmd.test \
 $mem_test_dir/default-conf.test \
 $mem_test_dir/invalid-conf.test \
 $mem_test_dir/file-name-gen.test \
---with="valgrind --leak-check=full src/ksi" -- -j1
+--with="valgrind --leak-check=full $tool" -- -j1
 exit_code=$?
 
 exit $exit_code

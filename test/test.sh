@@ -45,6 +45,14 @@ cp test/resource/signature/ok-sig-2014-08-01.1.ksig test/out/fname/ok-sig
 # Define KSI_CONF for temporary testing.
 export KSI_CONF=test/resource/conf/default-not-working-conf.cfg
 
+# If ksi tool in project directory is available use that one, if not
+# use the one installed in the machine.
+if [ ! -f src/ksi ]; then
+	tool=ksi
+else
+	tool=src/ksi
+fi
+
 shelltest \
 test/test_suites/sign.test \
 test/test_suites/static-sign.test \
@@ -65,7 +73,7 @@ test/test_suites/verify-cmd.test \
 test/test_suites/default-conf.test \
 test/test_suites/invalid-conf.test \
 test/test_suites/file-name-gen.test \
---with=src/ksi -- -j1
+--with=$tool -- -j1
 exit_code=$?
 
 exit $exit_code
