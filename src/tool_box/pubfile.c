@@ -56,12 +56,12 @@ int pubfile_run(int argc, char** argv, char **envp) {
 	ERR_TRCKR *err = NULL;
 	COMPOSITE extra;
 	char buf[2048];
-	int d;
+	int d = 0;
 	int id;
 
 	/**
 	 * Extract command line parameters.
-     */
+	 */
 	res = PARAM_SET_new(
 			CONF_generate_param_set_desc("{o}{d}{v}{T}{conf}{dump}{log}{h|help}", "XP", buf, sizeof(buf)),
 			&set);
@@ -180,8 +180,8 @@ const char *pubfile_get_desc(void) {
 
 static int pubfile_task(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int id, KSI_PublicationsFile **pubfile) {
 	int res;
-	int d;
-	int dump;
+	int d = 0;
+	int dump = 0;
 	char *save_to = NULL;
 	KSI_PublicationsFile *tmp = NULL;
 	KSI_Integer *pubTime = NULL;
@@ -226,7 +226,7 @@ static int pubfile_task(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int id, KS
 
 	/**
 	 * Perform the verification if output is defined or verification is insisted.
-     */
+	 */
 	if (id != 1) {
 		print_progressDesc(d, "Verifying publications file... ");
 		res = KSITOOL_verifyPublicationsFile(err, ksi, tmp);
@@ -375,7 +375,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 
 	/**
 	 * Configure parameter set, control, repair and object extractor function.
-     */
+	 */
 	res = CONF_initialize_set_functions(set, "XP");
 	if (res != KT_OK) goto cleanup;
 
@@ -386,7 +386,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 
 	/**
 	 * Define possible tasks.
-     */
+	 */
 	/*					  ID	DESC										MAN				ATL		FORBIDDEN	IGN	*/
 	TASK_SET_add(task_set, 0,	"Verify publications file.",				"P,cnstr,v",	NULL,	"T,o",		NULL);
 	TASK_SET_add(task_set, 1,	"Dump publications file.",					"P,dump",		NULL,	"T,o,v",	NULL);

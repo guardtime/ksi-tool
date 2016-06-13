@@ -78,7 +78,7 @@ int verify_run(int argc, char **argv, char **envp) {
 	KSI_CTX *ksi = NULL;
 	ERR_TRCKR *err = NULL;
 	SMART_FILE *logfile = NULL;
-	int d;
+	int d = 0;
 	COMPOSITE extra;
 	KSI_DataHash *hsh = NULL;
 	KSI_Signature *sig = NULL;
@@ -317,7 +317,6 @@ static int signature_verify(int id, PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 							KSI_CTX *ksi, KSI_Signature *sig, KSI_DataHash *hsh,
 							KSI_PolicyVerificationResult **out) {
 	int res;
-	int d = PARAM_SET_isSetByName(set, "d");
 
 	if (set == NULL || err == NULL || ksi == NULL || sig == NULL || out == NULL) {
 		res = KT_INVALID_ARGUMENT;
@@ -350,7 +349,7 @@ static int signature_verify(int id, PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 			res = signature_verify_publication_based_with_user_pub(set, err, extra, ksi, sig, hsh, out);
 			goto cleanup;
 		default:
-			ERR_CATCH_MSG(err, res = KT_UNKNOWN_ERROR, "Error: Unknown signature verification task.");
+			ERR_CATCH_MSG(err, (res = KT_UNKNOWN_ERROR), "Error: Unknown signature verification task.");
 			goto cleanup;
 	}
 
