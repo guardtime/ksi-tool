@@ -28,7 +28,7 @@ man_MANS = \
 
 dist_doc_DATA = ../license.txt ../doc/ChangeLog
 
-EXTRA_DIST = $(man_MANS) $(dist_doc_DATA)
+EXTRA_DIST = ../VERSION $(man_MANS) $(dist_doc_DATA)
 ksi_SOURCES = \
 	main.c	\
 	tool_box/smart_file.c \
