@@ -25,10 +25,10 @@ man_MANS = \
 	../doc/ksi-extend.1 \
 	../doc/ksi-pubfile.1 \
 	../doc/ksi-verify.1
-	
+
 dist_doc_DATA = ../license.txt ../doc/ChangeLog
 
-EXTRA_DIST = $(man_MANS) $(dist_doc_DATA) 
+EXTRA_DIST = $(man_MANS) $(dist_doc_DATA)
 ksi_SOURCES = \
 	main.c	\
 	tool_box/smart_file.c \
@@ -62,6 +62,7 @@ ksi_SOURCES = \
 	param_set/strn.c \
 	param_set/strn.h \
 	tool.h \
+	common.h \
 	conf.c \
 	conf.h \
 	printer.c \
@@ -74,4 +75,4 @@ ksi_SOURCES = \
 	obj_printer.h \
 	debug_print.c \
 	debug_print.h
-	
+
