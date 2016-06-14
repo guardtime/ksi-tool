@@ -9,17 +9,17 @@
 .SH SYNOPSIS
 .\"
 .HP 4
-\fBksi verify -i \fIin.ksig \fR[\fB-f \fIdata\fR] [\fImore options\fR]
+\fBksi verify -i \fIin.ksig \fR[\fB-f \fIdata\fR] [\fImore_options\fR]
 .HP 4
-\fBksi verify --ver-int -i \fIin.ksig \fR[\fB-f \fIdata\fR] [\fImore options\fR]
+\fBksi verify --ver-int -i \fIin.ksig \fR[\fB-f \fIdata\fR] [\fImore_options\fR]
 .HP 4
-\fBksi verify --ver-cal -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] [\fImore options\fR]
+\fBksi verify --ver-cal -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] [\fImore_options\fR]
 .HP 4
-\fBksi verify --ver-key -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIURL \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fImore options\fR]
+\fBksi verify --ver-key -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIURL \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fImore_options\fR]
 .HP 4
-\fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB--pub-str \fIpubstr \fR[\fB-x -X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore options\fR]
+\fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB--pub-str \fIpubstr \fR[\fB-x -X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore_options\fR]
 .HP 4
-\fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIURL \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... \fR[\fB-x -X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore options\fR]
+\fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIURL \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... \fR[\fB-x -X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore_options\fR]
 .\"
 .\"
 .SH DESCRIPTION
@@ -57,8 +57,8 @@ Perform key-based verification.
 Perform publication-based verification (use with \fB-x\fR to permit extending).
 .\"
 .TP
-\fB-i \fIsig\fR
-KSI signature file to be verified. Use '-' as file name to read signatures file from \fIstdin\fR.
+\fB-i \fIin.ksig\fR
+Signature file to be verified. Use '-' as file name to read signature file from \fIstdin\fR.
 .\"
 .TP
 \fB-f \fIdata\fR
@@ -86,7 +86,7 @@ Publication string to verify with.
 .\"
 .TP
 \fB-P \fIURL\fR
-Specify publications file URL (or file with URI scheme 'file://').
+Publications file URL (or file with URI scheme 'file://').
 .\"
 .TP
 \fB--cnstr \fIoid\fR=\fIvalue\fR
@@ -118,7 +118,7 @@ Print detailed information about processes and errors to \fIstderr\fR.
 .\"
 .TP
 \fB--dump\fR
-Dump signature and document hash being verified  in human-readable format to \fIstdout\fR.
+Dump signature and document hash being verified in human-readable format to \fIstdout\fR.
 .\"
 .TP
 \fB--conf \fIfile\fR
@@ -126,7 +126,7 @@ Read configuration options from given file. It must be noted that configuration 
 .\"
 .TP
 \fB--log \fIfile\fR
-Write libksi log into file. Use '-' as file name to redirect log to \fIstdout\fR.
+Write libksi log to given file. Use '-' as file name to redirect log to \fIstdout\fR.
 .br
 .\"
 .\"

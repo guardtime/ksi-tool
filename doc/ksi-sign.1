@@ -20,11 +20,11 @@ Signs the given input such as content of a given file or a pre-computed hash val
 .SH OPTIONS
 .\"
 .TP
-\fB-i \fIdata\fR
-The data is either the path to the file to be hashed and signed or a hash imprint in case the data to be signed has been hashed already. Use '-' as file name to read data to be hashed from \fIstdin\fR. Hash imprint format: <\fIalg\fR>:<\fIhash in hex\fR>. Use \fB-h\fR to get the list of supported hash algorithms. Note that only the main data stream of the file is hashed, any extensions of specific file systems are ignored (e.g. the alternate data streams of NTFS are not signed).
+\fB-i \fIinput\fR
+The input is either the path to the file to be hashed and signed or a hash imprint in case the data to be signed has been hashed already. Use '-' as file name to read data to be hashed from \fIstdin\fR. Hash imprint format: <\fIalg\fR>:<\fIhash in hex\fR>. Use \fB-h\fR to get the list of supported hash algorithms. Note that only the main data stream of the file is hashed, any extensions of specific file systems are ignored (e.g. the alternate data streams of NTFS are not signed).
 .\"
 .TP
-\fB-o \fIfile\fR
+\fB-o \fIout.ksig\fR
 Output file path for the signature. Use '-' as file name to redirect signature binary stream to \fIstdout\fR. If not specified, the signature is saved to <input file>.ksig (or <input file>_<nr>.ksig, where <nr> is auto-incremented counter if the output file already exists). If specified, will always overwrite the existing file.
 .\"
 .TP
@@ -36,11 +36,11 @@ Use the given hash algorithm to hash the file to be signed. Use \fBksi -h \fRto 
 URL Signing service (KSI Aggregator) URL.
 .\"
 .TP
-\fB--aggr-user \fIstr\fR
+\fB--aggr-user \fIuser\fR
 Username for signing service.
 .\"
 .TP
-\fB--aggr-key \fIstr\fR
+\fB--aggr-key \fIkey\fR
 HMAC Key for signing service.
 .\"
 .TP
