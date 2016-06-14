@@ -212,11 +212,17 @@ int main(int argc, char** argv, char **envp) {
 		print_result("%s (C) Guardtime\n\n", KSI_getVersion());
 
 		if (task == NULL) {
-			print_result("Usage:\n", TOOL_getName());
-			print_result("  %s [-h] [--version]\n", TOOL_getName());
-			print_result("  %s <component> -h\n", TOOL_getName());
-			print_result("  %s <component> [service info] [more options] -h\n\n", TOOL_getName());
-			print_result("All known components:\n");
+			print_result(
+				"Usage:\n"
+				"  %s [-h] [--version]\n"
+				"  %s command -h\n"
+				"  %s command [service_parameters] [options]\n"
+				"\n"
+				"Commands:\n",
+				TOOL_getName(),
+				TOOL_getName(),
+				TOOL_getName()
+			);
 			print_result("%s", TOOL_COMPONENT_LIST_toString(components, "  ", buf, sizeof(buf)));
 		} else {
 			print_result("%s\n", TOOL_COMPONENT_LIST_helpToString(components, TASK_getID(task),buf, sizeof(buf)));

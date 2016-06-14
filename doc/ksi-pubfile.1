@@ -11,11 +11,11 @@
 .HP 4
 \fBksi pubfile -P \fIURL \fB--dump\fR
 .HP 4
-\fBksi pubfile -P \fIURL \fB-o \fIpubfile.bin \fB--cnstr \fIoid\fR=\fIvalue \fR... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fImore options\fR]
+\fBksi pubfile -P \fIURL \fB-v \fB--cnstr \fIoid\fR=\fIvalue \fR... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fImore_options\fR]
 .HP 4
-\fBksi pubfile -P \fIURL \fB-v \fB--cnstr \fIoid\fR=\fIvalue \fR... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fImore options\fR]
+\fBksi pubfile -P \fIURL \fB-o \fIpubfile.bin \fB--cnstr \fIoid\fR=\fIvalue \fR... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fImore_options\fR]
 .HP 4
-\fBksi pubfile \fB-T \fItime\fR \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] [\fImore options\fR]
+\fBksi pubfile \fB-T \fItime\fR \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] [\fImore_options\fR]
 .br
 .\"
 .\"
@@ -76,7 +76,7 @@ HMAC Key for extending service.
 .\"
 .TP
 \fB-T \fItime\fR
-Specify a time to create a publication string for as the number of seconds since 1970-01-01 00:00:00 UTC or time string formatted as "YYYY-MM-DD hh:mm:ss".
+Time to create a publication string for as the number of seconds since 1970-01-01 00:00:00 UTC or time string formatted as "YYYY-MM-DD hh:mm:ss".
 .\"
 .TP
 \fB-d\fR
@@ -92,7 +92,7 @@ Read configuration options from given file. It must be noted that configuration 
 .\"
 .TP
 \fB--log \fIfile\fR
-Write Write libksi log to given file. Use '-' as file name to redirect log to \fIstdout\fR.
+Write libksi log to given file. Use '-' as file name to redirect log to \fIstdout\fR.
 .br
 .\"
 .\"

@@ -134,37 +134,41 @@ char *pubfile_help_toString(char*buf, size_t len) {
 	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
 		" %s pubfile -P <URL> --dump [-d]\n"
-		" %s pubfile -P <URL> -v --cnstr <oid=value> [-V <file>]... [-W <file>]...\n"
-		"        [-d] [more options]\n"
-		" %s pubfile -P <URL> -o <pubfile.bin> --cnstr <oid=value> [-V <file>]...\n"
-		"        [-W <dir>]... [-d] [more options]\n"
-		" %s pubfile -T <time> -X <URL> [--ext-user <user> --ext-key <pass>]\n\n"
-
-		" -P <URL>  - publications file URL (or file with URI scheme 'file://').\n"
+		" %s pubfile -P <URL> -v --cnstr <oid=value>... [-V <file>]... [-W <file>]...\n"
+		"        [-d] [more_options]\n"
+		" %s pubfile -P <URL> -o <pubfile.bin> --cnstr <oid=value>... [-V <file>]...\n"
+		"        [-W <dir>]... [-d] [more_options]\n"
+		" %s pubfile -T <time> -X <URL> [--ext-user <user> --ext-key <key>]\n"
+		"\n"
+		" -P <URL>  - Publications file URL (or file with URI scheme 'file://').\n"
 		" --cnstr <oid=value>\n"
 		"           - OID of the PKI certificate field (e.g. e-mail address) and the expected\n"
 		"             value to qualify the certificate for verification of publications file\n"
 		"             PKI signature. At least one constraint must be defined.\n"
-		" -V        - certificate file in PEM format for publications file verification.\n"
+		" -v        - Perform publications file verification. Note that when -o is used to\n"
+		"             save publications file, the verification is performed implicitly.\n"
+		" -V        - Certificate file in PEM format for publications file verification.\n"
 		"             All values from lower priority source are ignored.\n"
-		" -o <file> - output file name to store publications file.\n"
-		" -v        - perform publications file verification.\n"
+		" -o <pubfile.bin>\n"
+		"           - Output file path to store publications file. Use '-' as file name\n"
+		"             to redirect publications file binary stream to stdout. Publications file\n"
+		"             is always verified before saving.\n"
 		" -X <URL>  - Extending service (KSI Extender) URL.\n"
 		" --ext-user <str>\n"
-		"           - username for extending service.\n"
-		" --ext-key <str>\n"
+		"           - Username for extending service.\n"
+		" --ext-key <key>\n"
 		"           - HMAC key for extending service.\n"
-		" -T <time> - specify time to create a publication string for as the number of seconds\n"
+		" -T <time> - Time to create a publication string for as the number of seconds\n"
 		"             since 1970-01-01 00:00:00 UTC or time string formatted as \"YYYY-MM-DD hh:mm:ss\".\n"
-		" -d        - print detailed information about processes and errors to stderr.\n"
-		" --dump    - dump publications file in human-readable format to stdout. Without any extra flags \n"
-		"             publications file verification is not performed. stdout.\n"
+		" -d        - Print detailed information about processes and errors to stderr.\n"
+		" --dump    - Dump publications file in human-readable format to stdout. Without any extra\n"
+		"             flags publications file verification is not performed.\n"
 		" --conf <file>\n"
-		"             read configuration options from given file. It must be noted\n"
+		"             Read configuration options from given file. It must be noted\n"
 		"             that configuration options given explicitly on command line will\n"
 		"             override the ones in the configuration file.\n"
 		" --log <file>\n"
-		"           - Write libksi log to given file.",
+		"           - Write libksi log to given file. Use '-' as file name to redirect log to stdout.\n",
 		TOOL_getName(),
 		TOOL_getName(),
 		TOOL_getName(),
@@ -175,7 +179,7 @@ char *pubfile_help_toString(char*buf, size_t len) {
 }
 
 const char *pubfile_get_desc(void) {
-	return "KSI general publications file tool.";
+	return "Downloads and verifies KSI publications file.";
 }
 
 static int pubfile_task(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int id, KSI_PublicationsFile **pubfile) {

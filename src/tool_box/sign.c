@@ -58,7 +58,7 @@ int sign_run(int argc, char** argv, char **envp) {
 
 	/**
 	 * Extract command line parameters.
-     */
+	 */
 	res = PARAM_SET_new(
 			CONF_generate_param_set_desc("{sign}{i}{o}{H}{data-out}{d}{dump}{log}{conf}{h|help}", "S", buf, sizeof(buf)),
 			&set);
@@ -90,13 +90,13 @@ int sign_run(int argc, char** argv, char **envp) {
 
 	/**
 	 * If everything OK, run the task.
-     */
+	 */
 	res = sign_save_to_file(set, ksi, err, &sig);
 	if (res != KSI_OK) goto cleanup;
 
 	/**
 	 * If signature was created without errors print some info on demand.
-     */
+	 */
 	if (dump) {
 		print_result("\n");
 		OBJPRINT_signatureDump(sig, print_result);
@@ -128,32 +128,41 @@ char *sign_help_toString(char*buf, size_t len) {
 
 	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
-		" %s sign -i <input> [-o <out.ksig>] [-H <alg>] -S <URL>\n"
-		"     [--aggr-user <user> --aggr-key <pass>][--data-out <file>][more options]\n\n"
-		" -i <data> - The data is either the path to the file to be hashed and signed or\n"
+		" %s sign -i <input> [-o <out.ksig>] -S <URL>\n"
+		"         [--aggr-user <user> --aggr-key <key>] [-H <alg>] [--data-out <file>] [more_options]\n"
+		"\n"
+		"\n"
+		" -i <input>\n"
+		"           - The data is either the path to the file to be hashed and signed or\n"
 		"             a hash imprint in case  the  data  to be signed has been hashed\n"
 		"             already. Use '-' as file name to read data to be hashed from stdin.\n"
 		"             Hash imprint format: <alg>:<hash in hex>.\n"
-		" -o <file> - Output  file  path  for  the  signature. Use '-' as file name to\n"
-		"             redirect signature binary stream to  stdout. If  not  specified,\n"
-		"             the  signature  is  saved  to  <inputfile>.ksig. If specified, will\n"
-		"             always overwrite the existing file.\n"
-		" -H <alg>  - use the given hash algorithm to hash the file to be signed.\n"
+		" -o <out.ksig>\n"
+		"           - Output file path for the signature. Use '-' as file name to redirect\n"
+		"             signature binary stream to stdout. If not specified, the signature is\n"
+		"             saved to <input file>.ksig (or <input file>_<nr>.ksig, where <nr> is\n"
+		"             auto-incremented counter if the output file already exists). If specified,\n"
+		"             will always overwrite the existing file.\n"
+		" -H <alg> \n"
+		"           - use the given hash algorithm to hash the file to be signed.\n"
+		"             Use ksi -h to get the list of supported hash algorithms.\n"
 		" -S <URL>  - Signing service (KSI Aggregator) URL.\n"
 		" --aggr-user <str>\n"
-		"           - username for signing service.\n"
+		"           - Username for signing service.\n"
 		" --aggr-key <str>\n"
 		"           - HMAC key for signing service.\n"
 		" --data-out <file>\n"
-		"           - save signed data to file.\n"
-		" -d        - print detailed information about processes and errors to stderr.\n"
-		" --dump    - dump signature created in human-readable format to stdout.\n"
+		"           - Save signed data to file. Use when signing an incoming stream.\n"
+		"             Use '-' as file name to redirect data being hashed to stdout.\n"
+		" -d        - Print detailed information about processes and errors to stderr.\n"
+		" --dump    - Dump signature created in human-readable format to stdout.\n"
 		" --conf <file>\n"
-		"             read configuration options from given file. It must be noted\n"
+		"           - Read configuration options from given file. It must be noted\n"
 		"             that configuration options given explicitly on command line will\n"
 		"             override the ones in the configuration file.\n"
 		" --log <file>\n"
-		"           - Write libksi log to given file.",
+		"           - Write libksi log to given file. Use '-' as file name to redirect\n"
+		"             log to stdout.\n",
 		TOOL_getName()
 	);
 
@@ -161,7 +170,7 @@ char *sign_help_toString(char*buf, size_t len) {
 }
 
 const char *sign_get_desc(void) {
-	return "KSI general signing tool.";
+	return "Signs the given input with KSI.";
 }
 
 
@@ -186,7 +195,7 @@ static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_S
 	/**
 	 * Extract the signature output file name and signed data output file name if present.
 	 * Set file save extra mode to 'i' as incremental write.
-     */
+	 */
 	if (!PARAM_SET_isSetByName(set, "o")) {
 		mode = "i";
 		outSigFileName = get_output_file_name_if_not_defined(set, err, buf, sizeof(buf));
@@ -208,7 +217,7 @@ static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_S
 	 * Extract the hash algorithm. If not specified, set algorithm as default.
 	 * It must be noted that if hash is extracted from imprint, has algorithm has
 	 * no effect.
-     */
+	 */
 	if (PARAM_SET_isSetByName(set, "H")) {
 		res = PARAM_SET_getObjExtended(set, "H", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, NULL, (void**)&algo);
 		if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
@@ -218,7 +227,7 @@ static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_S
 
 	/**
 	 * Initialize helper data structure, retrieve the has and sign the hash value.
-     */
+	 */
 	extra.ctx = ksi;
 	extra.err = err;
 	extra.h_alg = &algo;
@@ -265,7 +274,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 
 	/**
 	 * Configure parameter set, control, repair and object extractor function.
-     */
+	 */
 	res = CONF_initialize_set_functions(set, "S");
 	if (res != KT_OK) goto cleanup;
 
