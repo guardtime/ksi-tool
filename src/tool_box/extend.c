@@ -188,45 +188,57 @@ char *extend_help_toString(char*buf, size_t len) {
 	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
 		" %s extend -i <in.ksig> [-o <out.ksig>] -X <URL>\n"
-		"        [--ext-user <user> --ext-key <pass>] -P <URL> [--cnstr <oid=value>]...\n"
-		"        [--pub-str <str>] [more options]\n\n"
-		" -i <file> - file path to the KSI signature file to be extended. Use '-' as the\n"
+		"    [--ext-user <user> --ext-key <key>] -P <URL> [--cnstr <oid=value>]... [more_options]\n"
+		" %s extend -i <in.ksig> [-o <out.ksig>] -X <URL>\n"
+		"    [--ext-user <user> --ext-key <key>] -P <URL> [--cnstr <oid=value>]... [--pub-str <str>] [more_options]\n"
+		" %s extend -i <in.ksig> [-o <out.ksig>] -X <URL>\n"
+		"    [--ext-user <user> --ext-key <key>] -T time [more_options]\n"
+		"\n"
+		" -i <in.ksig>\n"
+		"           - File path to the KSI signature file to be extended. Use '-' as the\n"
 		"             path to read the signature from stdin.\n"
-		" -o <file> - output  file path for the extended signature. Use '-' as the path\n"
-		"             to redirect the signature binary stream to stdout. If not specified\n"
-		"             the  signature is  saved  to  <input  file>.ext.ksig. If  specified,\n"
+		" -o <out.ksig>\n"
+		"           - Output file path for the extended signature. Use '-' as the path to redirect\n"
+		"             the signature binary stream to stdout. If not specified, the signature is saved\n"
+		"             to <in.ksig>.ext.ksig (or <in.ksig>.ext_<nr>.ksig where <nr> is\n"
+		"             auto-incremented counter if the output file already exists). If specified,\n"
 		"             existing file is always overwritten.\n"
 		" -X <URL>  - Extending service (KSI Extender) URL.\n"
-		" --ext-user <str>\n"
-		"           - username for extending service.\n"
-		" --ext-key <str>\n"
+		" --ext-user <user>\n"
+		"           - Username for extending service.\n"
+		" --ext-key <key>\n"
 		"           - HMAC key for extending service.\n"
-		" -P <URL>  - publications file URL (or file with URI scheme 'file://').\n"
+		" -P <URL>  - Publications file URL (or file with URI scheme 'file://').\n"
 		" --cnstr <oid=value>\n"
 		"           - OID of the PKI certificate field (e.g. e-mail address) and the expected\n"
 		"             value to qualify the certificate for verification of publications file\n"
 		"             PKI signature. At least one constraint must be defined.\n"
-		" -V        - certificate file in PEM format for publications file verification.\n"
-		"             All values from lower priority source are ignored.\n"
 		" --pub-str <str>\n"
-		"           - publication record as publication string to extend the signature to.\n"
-		" -T <time> - publication time to extend to as the number of seconds since\n"
+		"           - Publication record as publication string to extend the signature to.\n"
+		" -T <time> - Publication time to extend to as the number of seconds since\n"
 		"             1970-01-01 00:00:00 UTC or time string formatted as \"YYYY-MM-DD hh:mm:ss\".\n"
-		" -d        - print detailed information about processes and errors.\n"
-		" --dump    - dump extended signature and verification info in human-readable format to stdout.\n"
+		"\n"
+		"\n"
+		" -V        - Certificate file in PEM format for publications file verification.\n"
+		"             All values from lower priority source are ignored.\n"
+		" -d        - Print detailed information about processes and errors.\n"
+		" --dump    - Dump extended signature and verification info in human-readable format to stdout.\n"
 		" --conf <file>\n"
-		"             read configuration options from given file. It must be noted\n"
+		"             Read configuration options from given file. It must be noted\n"
 		"             that configuration options given explicitly on command line will\n"
 		"             override the ones in the configuration file.\n"
 		" --log <file>\n"
-		"           - Write libksi log to given file.",
+		"           - Write libksi log to given file. Use '-' as file name to redirect\n"
+		"             log to stdout.\n",
+		TOOL_getName(),
+		TOOL_getName(),
 		TOOL_getName()
-		);
+	);
 
 	return buf;
 }
 const char *extend_get_desc(void) {
-	return "KSI signature extending tool.";
+	return "Extends existing KSI signature to the given publication.";
 }
 
 static char* get_output_name(PARAM_SET *set, ERR_TRCKR *err, char *buf, size_t buf_len, char *mode) {
