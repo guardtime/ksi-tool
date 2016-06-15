@@ -144,7 +144,7 @@ char *sign_help_toString(char*buf, size_t len) {
 		"             auto-incremented counter if the output file already exists). If specified,\n"
 		"             will always overwrite the existing file.\n"
 		" -H <alg> \n"
-		"           - use the given hash algorithm to hash the file to be signed.\n"
+		"           - Use the given hash algorithm to hash the file to be signed.\n"
 		"             Use ksi -h to get the list of supported hash algorithms.\n"
 		" -S <URL>  - Signing service (KSI Aggregator) URL.\n"
 		" --aggr-user <str>\n"
