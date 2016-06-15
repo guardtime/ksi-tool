@@ -9,11 +9,11 @@
 .SH SYNOPSIS
 .\"
 .HP 4
-\fBksi extend -i \fIin.ksig \fR[\fB-o \fIout.ksig\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-P \fIURL \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... [\fImore options\fR]
+\fBksi extend -i \fIin.ksig \fR[\fB-o \fIout.ksig\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-P \fIURL \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... [\fImore_options\fR]
 .HP 4
-\fBksi extend -i \fIin.ksig \fR[\fB-o \fIout.ksig\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-P \fIURL \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fB--pub-str \fIstr \fR[\fImore options\fR]
+\fBksi extend -i \fIin.ksig \fR[\fB-o \fIout.ksig\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-P \fIURL \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fB--pub-str \fIstr \fR[\fImore_options\fR]
 .HP 4
-\fBksi extend -i \fIin.ksig \fR[\fB-o \fIout.ksig\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-T \fItime \fR[\fImore options\fR]
+\fBksi extend -i \fIin.ksig \fR[\fB-o \fIout.ksig\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-T \fItime \fR[\fImore_options\fR]
 .br
 .\"
 .\"
@@ -27,23 +27,23 @@ User must have access to KSI extending service and trusted KSI publications file
 .SH OPTIONS
 .\"
 .TP
-\fB-i \fIdata\fR
+\fB-i \fIin.ksig\fR
 File path to the KSI signature file to be extended. Use '-' as the path to read the signature from \fIstdin\fR.
 .\"
 .TP
-\fB-o \fIfile\fR
-Output file path for the extended signature. Use '-' as the path to redirect the signature binary stream to \fIstdout\fR. If not specified, the signature is saved to <input file>.ext.ksig (or <input file>_<nr>.ext where \fInr\fR is auto-incremented counter if the output file already exists). If specified, existing file is always overwritten.
+\fB-o \fIout.ksig\fR
+Output file path for the extended signature. Use '-' as the path to redirect the signature binary stream to \fIstdout\fR. If not specified, the signature is saved to <in.ksig>.ext.ksig (or <in.ksig>ext_<nr>.ksig where \fInr\fR is auto-incremented counter if the output file already exists). If specified, existing file is always overwritten.
 .\"
 .TP
 \fB-X \fIURL\fR
 Extending service (KSI Extender) URL.
 .\"
 .TP
-\fB--ext-user \fIstr\fR
+\fB--ext-user \fIuser\fR
 Username for extending service.
 .\"
 .TP
-\fB--ext-key \fIstr\fR
+\fB--ext-key \fIkey\fR
 HMAC key for extending service.
 .\"
 .TP
@@ -67,19 +67,21 @@ For more common OID's there are convenience names defined:
 .RE
 .\"
 .TP
+
+\fB--pub-str \fIstr\fR
+Publication record as publication string to extend signature to.
+.\"
+.TP
+\fB-T \fItime\fR
+Publication time to extend to as the number of seconds since 1970-01-01 00:00:00 UTC or time formatted as "YYYY-MM-DD hh:mm:ss".
+.\"
+.TP
 \fB-V \fIfile\fR
 Certificate file in PEM format for publications file verification. All values from lower priority source are ignored.
 .\"
 .TP
 \fB-W \fIdir\fR
 Specify an OpenSSL-style trust store directory for publications file verification. All values from lower priority source are ignored, where default configurations file is the lowest and command-line is the highest. All values from lower priority source are ignored.
-.\"
-.TP
-\fB--pub-str \fIstr\fR
-Publication record as publication string to extend signature to.
-.TP
-\fB-T \fItime\fR
-Publication time to extend to as the number of seconds since 1970-01-01 00:00:00 UTC time formatted as "YYYY-MM-DD hh:mm:ss".
 .\"
 .TP
 \fB-d\fR
@@ -95,7 +97,7 @@ Read configuration options from given file. It must be noted that configuration 
 .\"
 .TP
 \fB--log \fIfile\fR
-Write libksi log into file. Use '-' as file name to redirect log to \fIstdout\fR.
+Write libksi log to given file. Use '-' as file name to redirect log to \fIstdout\fR.
 .br
 .\"
 .\"

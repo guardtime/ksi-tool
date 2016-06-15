@@ -194,50 +194,52 @@ char *verify_help_toString(char *buf, size_t len) {
 	size_t count = 0;
 
 	count += KSI_snprintf(buf + count, len - count,
-		"Usage:\n"
-		" %s verify -i <in.ksig> [-f <data>] [more options]\n"
-		" %s verify --ver-int -i <in.ksig> [-f <data>] [more options]\n"
+		"Usage:"
+		" %s verify -i <in.ksig> [-f <data>] [more_options]\n"
+		" %s verify --ver-int -i <in.ksig> [-f <data>] [more_options]\n"
 		" %s verify --ver-cal -i <in.ksig> [-f <data>] -X <URL>\n"
-		"        [--ext-user <user> --ext-key <pass>] [more options]\n"
+		"     [--ext-user <user> --ext-key <key>] [more_options]\n"
 		" %s verify --ver-key -i <in.ksig> [-f <data>] -P <URL>\n"
-		"        [--cnstr <oid=value>]... [more options]\n"
+		"     [--cnstr <oid=value>]... [more_options]\n"
 		" %s verify --ver-pub -i <in.ksig> [-f <data>] --pub-str <pubstring>\n"
-		"        [-x -X <URL>  [--ext-user <user> --ext-key <pass>]] [more options]\n"
+		"     [-x -X <URL>  [--ext-user <user> --ext-key <key>]] [more_options]\n"
 		" %s verify --ver-pub -i <in.ksig> [-f <data>] -P <URL> [--cnstr <oid=value>]...\n"
-		"        [-x -X <URL>  [--ext-user <user> --ext-key <pass>]] [more options]\n\n"
-
-		" --ver-int - verify just internally.\n"
-		" --ver-cal - use calendar based verification (use extending service).\n"
-		" --ver-key - use key based verification.\n"
-		" --ver-pub - use publication based verification (use with -x to permit extending).\n"
-		" -i <file> - KSI signature file to be verified. Use '-' as file name to read signatures\n"
-		"             file from stdin.\n"
-		" -f <data> - files path to file to be hashed or data hash imprint to extract the hash\n"
-        "             value that is going to be verified. Hash format: <alg>:<hash in hex>. Use\n"
-		"             '-' as file name to read data to be hashed from stdin.\n"
-		" -X <URL>  - extending service (KSI Extender) URL.\n"
-		" --ext-user <str>\n"
-		"           - username for extending service.\n"
-		" --ext-key <str>\n"
+		"        [-x -X <URL>  [--ext-user <user> --ext-key <key>]] [more_options]\n"
+		"\n"
+		" --ver-int - Perform internal verification.\n"
+		" --ver-cal - Perform calendar-based verification (use extending service).\n"
+		" --ver-key - Perform key-based verification.\n"
+		" --ver-pub - Perform publication-based verification (use with -x to permit extending).\n"
+		" -i <in.ksig>\n"
+		"           - Signature file to be verified. Use '-' as file name to read\n"
+		"             the signature from stdin.\n"
+		" -f <data> - Path to file to be hashed or data hash imprint to extract the hash\n"
+		"             value that is going to be verified. Hash format: <alg>:<hash in hex>.\n"
+		"             Use '-' as file name to read data to be hashed from stdin.\n"
+		" -x        - Permit to use extender for publication-based verification.\n"
+		" -X <URL>  - Extending service (KSI Extender) URL.\n"
+		" --ext-user <user>\n"
+		"           - Username for extending service.\n"
+		" --ext-key <key>\n"
 		"           - HMAC key for extending service.\n"
-		" -P <URL>  - publications file URL (or file with URI scheme 'file://').\n"
+		" --pub-str <str>\n"
+		"           - Publication string to verify with.\n"
+		" -P <URL>  - Publications file URL (or file with URI scheme 'file://').\n"
 		" --cnstr <oid=value>\n"
 		"           - OID of the PKI certificate field (e.g. e-mail address) and the expected\n"
 		"             value to qualify the certificate for verification of publications file\n"
 		"             PKI signature. At least one constraint must be defined.\n"
 		" -V        - Certificate file in PEM format for publications file verification.\n"
 		"             All values from lower priority source are ignored.\n"
-		" --pub-str <str>\n"
-		"           - publication string to verify with.\n"
-		" -x        - allow to use extender when using publication based verification.\n"
-		" -d        - print detailed information about processes and errors to stderr.\n"
-		" --dump    - dump signature and document hash being verified  in human-readable format to stdout.\n"
+		"\n"
+		" -d        - Print detailed information about processes and errors to stderr.\n"
+		" --dump    - Dump signature and document hash being verified in human-readable format to stdout.\n"
 		" --conf <file>\n"
-		"             read configuration options from given file. It must be noted\n"
+		"             Read configuration options from given file. It must be noted\n"
 		"             that configuration options given explicitly on command line will\n"
 		"             override the ones in the configuration file.\n"
 		" --log <file>\n"
-		"           - Write libksi log to given file.",
+		"           - Write libksi log to given file. Use '-' as file name to redirect log to stdout.\n",
 		TOOL_getName(),
 		TOOL_getName(),
 		TOOL_getName(),
@@ -250,7 +252,7 @@ char *verify_help_toString(char *buf, size_t len) {
 }
 
 const char *verify_get_desc(void) {
-	return "KSI signature verification tool.";
+	return "Verifies existing KSI signature.";
 }
 
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
