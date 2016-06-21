@@ -41,12 +41,14 @@ BIN_DIR = bin
 
 PARAMSET_SRC_DIR = $(SRC_DIR)\param_set
 PARAMSET_OBJ_DIR = $(OBJ_DIR)\param_set
+TOOL_BOX_SRC_DIR = $(SRC_DIR)\tool_box
+TOOL_BOX_OBJ_DIR = $(OBJ_DIR)\tool_box
 
 VERSION_FILE = VERSION
 COMM_ID_FILE = COMMIT_ID
 
 
-TOOL_NAME = ksitool
+TOOL_NAME = ksi
 
 #Objects for making command-line tool
 
@@ -54,25 +56,32 @@ PARAMSET_OBJ = \
 	$(PARAMSET_OBJ_DIR)\param_value.obj \
 	$(PARAMSET_OBJ_DIR)\parameter.obj \
 	$(PARAMSET_OBJ_DIR)\param_set.obj \
-	$(PARAMSET_OBJ_DIR)\task_def.obj
+	$(PARAMSET_OBJ_DIR)\task_def.obj \
+	$(PARAMSET_OBJ_DIR)\strn.obj
 
 CMDTOOL_OBJ = \
-	$(OBJ_DIR)\gt_task_support.obj \
-	$(OBJ_DIR)\gt_task_extend.obj \
-	$(OBJ_DIR)\gt_task_pubfile.obj \
-	$(OBJ_DIR)\gt_task_sign.obj \
-	$(OBJ_DIR)\gt_task_verify.obj \
-	$(OBJ_DIR)\gt_task_other.obj \
-	$(OBJ_DIR)\ksitool.obj \
-	$(OBJ_DIR)\gt_cmd_control.obj \
+	$(OBJ_DIR)\main.obj \
 	$(OBJ_DIR)\printer.obj \
+	$(OBJ_DIR)\conf.obj \
 	$(OBJ_DIR)\ksitool_err.obj \
 	$(OBJ_DIR)\api_wrapper.obj \
 	$(OBJ_DIR)\obj_printer.obj \
 	$(OBJ_DIR)\debug_print.obj
 	
+TOOL_BOX_OBJ = \
+    $(TOOL_BOX_OBJ_DIR)\component.obj \
+    $(TOOL_BOX_OBJ_DIR)\tool_box.obj \
+    $(TOOL_BOX_OBJ_DIR)\ksi_init.obj \
+    $(TOOL_BOX_OBJ_DIR)\pubfile.obj \
+    $(TOOL_BOX_OBJ_DIR)\extend.obj \
+    $(TOOL_BOX_OBJ_DIR)\sign.obj \
+    $(TOOL_BOX_OBJ_DIR)\verify.obj \
+    $(TOOL_BOX_OBJ_DIR)\task_initializer.obj \
+    $(TOOL_BOX_OBJ_DIR)\smart_file.obj \
+    $(TOOL_BOX_OBJ_DIR)\err_trckr.obj \
+    $(TOOL_BOX_OBJ_DIR)\param_control.obj
 
-	
+
 #Compiler and linker configuration
 
 
@@ -80,7 +89,7 @@ EXT_LIB = libksiapi$(RTL).lib \
 	user32.lib gdi32.lib advapi32.lib Ws2_32.lib
 	  
 	
-CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE  /I$(SRC_DIR) /I$(PARAMSET_SRC_DIR) /I$(KSI_DIR)\include
+CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE  /I$(SRC_DIR) /I$(PARAMSET_SRC_DIR) /I$(TOOL_BOX_SRC_DIR) /I$(KSI_DIR)\include /DTOOL_NAME=\"$(TOOL_NAME)\"
 LDFLAGS = /NOLOGO /LIBPATH:"$(KSI_DIR)\$(KSI_LIB)"
 
 !IF "$(KSI_LIB)" == "dll"
@@ -153,8 +162,8 @@ CCFLAGS = $(CCFLAGS) /DVERSION=\"$(VER)\"
 default: $(BIN_DIR)\$(TOOL_NAME).exe 
 
 #Linking 
-$(BIN_DIR)\$(TOOL_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(PARAMSET_OBJ_DIR) $(CMDTOOL_OBJ) $(PARAMSET_OBJ)
-	link $(LDFLAGS) /OUT:$@ $(CMDTOOL_OBJ) $(PARAMSET_OBJ) $(EXT_LIB)
+$(BIN_DIR)\$(TOOL_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(PARAMSET_OBJ_DIR) $(TOOL_BOX_OBJ_DIR) $(CMDTOOL_OBJ) $(PARAMSET_OBJ) $(TOOL_BOX_OBJ)
+	link $(LDFLAGS) /OUT:$@ $(CMDTOOL_OBJ) $(PARAMSET_OBJ) $(TOOL_BOX_OBJ) $(EXT_LIB)
 !IF "$(KSI_LIB)" == "dll"
 	xcopy "$(KSI_DIR)\$(KSI_LIB)\libksiapi$(RTL).dll" "$(BIN_DIR)\" /Y
 !ENDIF
@@ -166,11 +175,13 @@ $(BIN_DIR)\$(TOOL_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(PARAMSET_OBJ_DIR) $(CMDTOOL
 {$(PARAMSET_SRC_DIR)\}.c{$(PARAMSET_OBJ_DIR)\}.obj:
 	cl /c /$(RTL) $(CCFLAGS) /Fo$@ $<
 
+{$(TOOL_BOX_SRC_DIR)\}.c{$(TOOL_BOX_OBJ_DIR)\}.obj:
+	cl /c /$(RTL) $(CCFLAGS) /Fo$@ $<
 	
 
 #Folder factory	
 	
-$(OBJ_DIR) $(PARAMSET_OBJ_DIR) $(BIN_DIR):
+$(OBJ_DIR) $(PARAMSET_OBJ_DIR) $(TOOL_BOX_OBJ_DIR) $(BIN_DIR):
 	@if not exist $@ mkdir $@
 
 !IF "$(KSI_LIB)" == "lib"
@@ -180,8 +191,8 @@ installer:$(BIN_DIR) $(OBJ_DIR) $(BIN_DIR)\$(TOOL_NAME).exe
 !MESSAGE Please install WiX to build installer.
 !ELSE
 	cd packaging\win
-	candle.exe ksitool.wxs -o ..\..\obj\ksitool.wixobj -dVersion=$(VER) -dName=$(TOOL_NAME) -dKsitool=$(BIN_DIR)\$(TOOL_NAME).exe -darch=$(INSTALL_MACHINE)
-	light.exe ..\..\obj\ksitool.wixobj -o ..\..\bin\ksitool -pdbout ..\..\bin\ksitool.wixpdb -cultures:en-us -ext WixUIExtension
+	candle.exe ksi.wxs -o ..\..\obj\ksi.wixobj -dVersion=$(VER) -dName=$(TOOL_NAME) -dtool_file=$(BIN_DIR)\$(TOOL_NAME).exe -darch=$(INSTALL_MACHINE)
+	light.exe ..\..\obj\ksi.wixobj -o ..\..\bin\ksi -pdbout ..\..\bin\ksi.wixpdb -cultures:en-us -ext WixUIExtension
 	cd ..\..
 !ENDIF
 

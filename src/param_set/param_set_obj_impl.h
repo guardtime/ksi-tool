@@ -78,6 +78,7 @@ struct PARAM_SET_st {
 	PARAM **parameter;
 	PARAM *typos;
 	PARAM *unknown;
+	PARAM *syntax;
 };
 
 struct TASK_st{

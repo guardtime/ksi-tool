@@ -1,0 +1,34 @@
+#
+# GUARDTIME CONFIDENTIAL
+#
+# Copyright (C) [2016] Guardtime, Inc
+# All Rights Reserved
+#
+# NOTICE:  All information contained herein is, and remains, the
+# property of Guardtime Inc and its suppliers, if any.
+# The intellectual and technical concepts contained herein are
+# proprietary to Guardtime Inc and its suppliers and may be
+# covered by U.S. and Foreign Patents and patents in process,
+# and are protected by trade secret or copyright law.
+# Dissemination of this information or reproduction of this
+# material is strictly forbidden unless prior written permission
+# is obtained from Guardtime Inc.
+# "Guardtime" and "KSI" are trademarks or registered trademarks of
+# Guardtime Inc.
+#
+
+
+# Successful signing and extending pipe tests.
+
+# KSI Sign stream and pipe KSI signature file to verification.
+EXECUTABLE sign --conf test/test.cfg -i - -o - | src/ksi verify --conf test/test.cfg --ver-key -i - -d
+<<< 
+Data From Stdin
+>>>2 /(Reading signature)(.*ok.*)
+(Signature key-based verification)(.*ok.*)/
+>>>= 0
+
+# KSI Extend signature and pipe extend signature to verification.
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o - | src/ksi verify --ver-pub --conf test/test.cfg -i - -d --pub-str AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
+>>>2 /(Signature publication-based verification with user publication string)(.*ok.*)/
+>>>= 0

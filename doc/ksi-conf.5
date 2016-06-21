@@ -1,0 +1,144 @@
+.TH KSI-CONF 5
+.\"
+.\"
+.\"
+.SH NAME
+\fBksi.conf \fR- Keyless Signature Infrastructure (KSI) command-line tool configuration file.
+.\"
+.\"
+.SH DESCRIPTION
+.LP
+The KSI command-line tool has several configuration options, most of them are related to the KSI service configuration (e.g. KSI signing service URL and access credentials). The configuration options are described in the \fBOPTIONS\fR section below. There are following ways to specify these configuration options:
+.LP
+.IP \(bu 4
+directly on command line (highest priority)
+.IP \(bu 4
+in a file specified by the \fB--conf\fR command-line argument
+.IP \(bu 4
+in a file specified by the \fBKSI_CONF\fR (lowest priority)
+.LP
+If a configuration option is specified in more than one source (e.g. both directly on command-line argument and in a configuration file) the source with the highest priority will be used. A short parameter or multiple flags must have prefix \fB-\fR and long parameters have prefix \fB--\fR. If some parameter values contain whitespace characters double quote marks (\fB"\fR) must be used to wrap the entire value. If double quote mark or backslash have to be used inside the value part an escape character (\fB\\\fR) must be typed before the charcater(\fB\\"\fR or \fB\\\\\fR). If configuration option with unknown or invalid key-value pairs is used, an error is generated.
+.LP
+In configuration file each key-value pair must be placed on a single line. Start the line with \fB#\fR to write a comment. Not full paths (V, W and P with URI scheme file://) are interpreted as relative to the configurations file.
+.LP
+.SH OPTIONS
+.br
+.\"
+.TP
+\fB-S \fIURL\fR
+Signing service (KSI Aggregator) URL.
+.\"
+.TP
+\fB--aggr-user \fIstr\fR
+Username for signing service.
+.\"
+.TP
+\fB--aggr-key \fIstr\fR
+HMAC key for signing service.
+.\"
+.TP
+\fB-X \fIURL\fR
+Extending service (KSI Extender) URL.
+.\"
+.TP
+\fB--ext-user \fIstr\fR
+Username for extending service.
+.\"
+.TP
+\fB--ext-key \fIstr\fR
+HMAC key for extending service.
+.\"
+.TP
+\fB-P \fIURL\fR
+Publications file URL  (or file with URI scheme 'file://').
+.\"
+.TP
+\fB--cnstr \fIoid\fR=\fIvalue\fR
+OID of the PKI certificate field (e.g. e-mail address) and the expected value to qualify the certificate for verification of publications file PKI signature. At least one constraint must be defined.
+.RS
+.HP 0
+For more common OID's there are convenience names defined:
+.IP \(bu 4
+\fBE\fR or \fBemail\fR for OID 1.2.840.113549.1.9.1
+.IP \(bu 4
+\fBCN\fR or \fBcname\fR for OID 2.5.4.3
+.IP \(bu 4
+\fBC or \fBcountry\fR for OID 2.5.4.6
+.IP \(bu 4
+\fBO\fR or \fBorg\fR for OID 2.5.4.10
+.RE
+.\"
+.TP
+\fB-V \fIfile\fR
+Certificate file in PEM format for publications file verification.
+.\"
+.TP
+\fB-W \fIdir\fR
+Specify an OpenSSL-style trust store directory for publications file verification.
+.\"
+.TP
+\fB-C \fIint\fR
+Network connect timeout in seconds  (is not supported with TCP client).
+.\"
+.TP
+\fB-c \fIint\fR
+Network transfer timeout, after successful connect, in seconds.
+.\"
+.TP
+\fB--publications-file-no-verify\fR
+A flag to force the tool to trust the publications file without verifying it. The flag can only be defined on command-line to avoid the usage of insecure configurations files. It must be noted that the \fBoption is insecure \fRand may only be used for testing.
+.\"
+.\"
+.SH ENVIRONMENT
+Program \fBksi\fR(1) uses environment variable \fBKSI_CONF \fRto point to the default configurations file.
+.\"
+.SH EXAMPLES
+An example of configurations file:
+.LP
+.RS
+\fR# --- BEGINNING ---
+.br
+\fR#
+.br
+\fR# KSI Signing service parameters:
+.br
+\fB-S \fIhttp://example.gateway.com:3333/gt-signingservice
+.br
+\fB--aggr-user \fIanon
+.br
+\fB--aggr-key \fIanon
+.br
+.LP
+\fR# KSI Extending service:
+.br
+\fR# Note that ext-key real value is &h/J"kv\\G##
+.br
+\fB-X \fIhttp://example.gateway.com:8010/gt-extendingservice
+.br
+\fB--ext-user \fIanon
+.br
+\fB--ext-key \fI"&h/J\\"kv\\\\G##"
+.br
+.LP
+.br
+\fR# KSI Publications file:
+.br
+\fB-P \fIhttp://verify.guardtime.com/ksi-publications.bin
+.br
+\fB--cnstr \fIemail=publications@guardtime.com
+.br
+\fB--cnstr \fI"org=Guardtime AS"
+.br
+\fR#
+.br
+\fR# --- END ---
+.br
+.RE
+.\"
+.\"
+.SH AUTHOR
+Guardtime AS, http://www.guardtime.com/
+.\"
+.\"
+.SH SEE ALSO
+\fBksi-sign\fR(1), \fBksi-verify\fR(1), \fBksi-extend\fR(1), \fBksi-pubfile\fR(1)

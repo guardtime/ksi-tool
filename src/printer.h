@@ -2,7 +2,7 @@
  *
  * GUARDTIME CONFIDENTIAL
  *
- * Copyright (C) [2015] Guardtime, Inc
+ * Copyright (C) [2015 - 2016] Guardtime, Inc
  * All Rights Reserved
  *
  * NOTICE:  All information contained herein is, and remains, the
@@ -28,6 +28,7 @@
 #define	PRINT_INFO  0x02
 #define	PRINT_WARNINGS  0x04
 #define	PRINT_ERRORS  0x08
+#define	PRINT_DEBUG  0x10
 
 
 
@@ -43,7 +44,7 @@ int print_result(const char *format, ... );
 int print_info(const char *format, ... );
 int print_warnings(const char *format, ... );
 int print_errors(const char *format, ... );
-
+int print_debug(const char *format, ... );
 #ifdef	__cplusplus
 }
 #endif
