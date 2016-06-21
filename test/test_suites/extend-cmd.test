@@ -1,0 +1,131 @@
+#
+# GUARDTIME CONFIDENTIAL
+#
+# Copyright (C) [2016] Guardtime, Inc
+# All Rights Reserved
+#
+# NOTICE:  All information contained herein is, and remains, the
+# property of Guardtime Inc and its suppliers, if any.
+# The intellectual and technical concepts contained herein are
+# proprietary to Guardtime Inc and its suppliers and may be
+# covered by U.S. and Foreign Patents and patents in process,
+# and are protected by trade secret or copyright law.
+# Dissemination of this information or reproduction of this
+# material is strictly forbidden unless prior written permission
+# is obtained from Guardtime Inc.
+# "Guardtime" and "KSI" are trademarks or registered trademarks of
+# Guardtime Inc.
+#
+
+# Misuse of extending command-line.
+
+# Invalid usage of pipe.
+
+# Try to read multiple inputs from stdin that should not support stdin.
+EXECUTABLE extend --conf - -V - -W -
+>>>2 /(.*Data from stdin not supported.*)(.*CMD.*)(.*--conf.*)
+(.*Data from stdin not supported.*)(.*CMD.*)(.*-V.*)
+(.*Data from stdin not supported.*)(.*CMD.*)(.*-W.*)/
+>>>= 3
+
+# KSI Sign Multiple different simultaneous outputs to stdout 1.
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -o - --log - > test/out/extend/extend_cmd_should_not_be.1.ksig
+>>>2 /Error: Multiple different simultaneous outputs to stdout/
+>>>= 3
+
+# KSI Sign Multiple different simultaneous outputs to stdout 2.
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -o - --dump > test/out/extend/extend_cmd_should_not_be.2.ksig
+>>>2 /Error: Multiple different simultaneous outputs to stdout/
+>>>= 3
+
+# KSI Sign Multiple different simultaneous outputs to stdout 3.
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -o - --dump --log - > test/out/extend/extend_cmd_should_not_be.3.ksig
+>>>2 /Error: Multiple different simultaneous outputs to stdout/
+>>>= 3
+
+# Try to extend to invalid date 1. Year is out of range.
+EXECUTABLE extend -T "1899-12-12 00:00:00" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -o test/out/extend/extend_cmd_should_not_be.4.ksig -d
+>>>2 /(Time out of range)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
+# Try to extend to invalid date 2. Year is out of range of Guardtime technology.
+EXECUTABLE extend -T "2006-1-1 00:00:00" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -o test/out/extend/extend_cmd_should_not_be.5.ksig -d
+>>>2 /(Time out of range)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
+# Try to extend to invalid date 3.1. Month is out of range.
+EXECUTABLE extend -T "2015-13-15 00:00:00" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -o test/out/extend/extend_cmd_should_not_be.6.ksig -d
+>>>2 /(Time out of range)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
+# Try to extend to invalid date 3.2. Month is out of range.
+EXECUTABLE extend -T "2015-0-15 00:00:00" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -o test/out/extend/extend_cmd_should_not_be.7.ksig -d
+>>>2 /(Time out of range)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
+# Try to extend to invalid date 4.1 Invalid Day - not a leap year.
+EXECUTABLE extend -T "2013-2-29 00:00:00" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -o test/out/extend/extend_cmd_should_not_be.8.ksig -d
+>>>2 /(Time out of range)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
+# Try to extend to invalid date 4.2. Invalid Day.
+EXECUTABLE extend -T "2015-09-31 00:00:00" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -o test/out/extend/extend_cmd_should_not_be.9.ksig -d
+>>>2 /(Time out of range)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
+# Try to extend to invalid date 4.3. Invalid Day.
+EXECUTABLE extend -T "2015-09-0 00:00:00" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -o test/out/extend/extend_cmd_should_not_be.10.ksig -d
+>>>2 /(Time out of range)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
+# Try to extend to invalid date 5. Invalid Hour.
+EXECUTABLE extend -T "2015-10-30 24:00:00" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -o test/out/extend/extend_cmd_should_not_be.11.ksig -d
+>>>2 /(Time out of range)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
+# Try to extend to invalid date 5. Invalid Min.
+EXECUTABLE extend -T "2015-10-30 00:60:00" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -o test/out/extend/extend_cmd_should_not_be.12.ksig -d
+>>>2 /(Time out of range)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
+# Try to extend to invalid date 6. Invalid Sec.
+EXECUTABLE extend -T "2015-10-30 00:00:60" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -o test/out/extend/extend_cmd_should_not_be.13.ksig -d
+>>>2 /(Time out of range)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
+# Try to extend to invalid date 6. Invalid format.
+EXECUTABLE extend -T "12-15-2015 00:00:60" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -o test/out/extend/extend_cmd_should_not_be.14.ksig -d
+>>>2 /(Time not formatted as)(.*YYYY-MM-DD hh:mm:ss.*)(.*CMD.*)(.*-T.*)/
+>>>= 3
+
+
+# Verify that the signatures that should not have been created do not exist.
+
+EXECUTABLE verify --ver-int -d -i test/out/extend/extend_cmd_should_not_be.1.ksig
+>>>2 /(Error: Input file is empty)(.*0x10006.*)/
+>>>= 4
+
+EXECUTABLE verify --ver-int -d -i test/out/extend/extend_cmd_should_not_be.2.ksig
+>>>2 /(Error: Input file is empty)(.*0x10006.*)/
+>>>= 4
+
+EXECUTABLE verify --ver-int -d -i test/out/extend/extend_cmd_should_not_be.3.ksig
+>>>2 /(Error: Input file is empty)(.*0x10006.*)/
+>>>= 4
+
+EXECUTABLE verify --ver-int -d -i test/out/extend/extend_cmd_should_not_be.4.ksig -i test/out/extend/extend_cmd_should_not_be.5.ksig -i test/out/extend/extend_cmd_should_not_be.6.ksig -i test/out/extend/extend_cmd_should_not_be.7.ksig -i test/out/extend/extend_cmd_should_not_be.8.ksig
+>>>2 /(File does not exist)(.*CMD.*)(.*-i.*)(.*4.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*5.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*6.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*7.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*8.*)/
+>>>= 3
+
+EXECUTABLE verify --ver-int -d -i test/out/extend/extend_cmd_should_not_be.9.ksig -i test/out/extend/extend_cmd_should_not_be.10.ksig -i test/out/extend/extend_cmd_should_not_be.11.ksig -i test/out/extend/extend_cmd_should_not_be.12.ksig -i test/out/extend/extend_cmd_should_not_be.13.ksig -i test/out/extend/extend_cmd_should_not_be.14.ksig
+>>>2 /(File does not exist)(.*CMD.*)(.*-i.*)(.*9.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*10.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*11.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*12.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*13.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*14.*)/
+>>>= 3

@@ -1,0 +1,69 @@
+#
+# GUARDTIME CONFIDENTIAL
+#
+# Copyright (C) [2016] Guardtime, Inc
+# All Rights Reserved
+#
+# NOTICE:  All information contained herein is, and remains, the
+# property of Guardtime Inc and its suppliers, if any.
+# The intellectual and technical concepts contained herein are
+# proprietary to Guardtime Inc and its suppliers and may be
+# covered by U.S. and Foreign Patents and patents in process,
+# and are protected by trade secret or copyright law.
+# Dissemination of this information or reproduction of this
+# material is strictly forbidden unless prior written permission
+# is obtained from Guardtime Inc.
+# "Guardtime" and "KSI" are trademarks or registered trademarks of
+# Guardtime Inc.
+#
+
+# Extend test result verification.
+
+# Verify signature extended to the nearest publication.
+# Publication string: AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
+# Publication date: 2014-08-15 00:00:00 UTC
+EXECUTABLE verify --ver-pub --conf test/test.cfg -i test/out/extend/nearest.pub.ext.ksig -d --pub-str AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
+>>>2 /(Signature publication-based verification with user publication string)(.*ok.*)/
+>>>= 0
+
+# Verify signature extended and written to stdout.
+# Publication string: AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
+# Publication date: 2014-08-15 00:00:00 UTC
+EXECUTABLE verify --ver-pub --conf test/test.cfg -i test/out/extend/piped.nearest.pub.ext.ksig -d --pub-str AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
+>>>2 /(Signature publication-based verification with user publication string)(.*ok.*)/
+>>>= 0
+
+# Verify signature extended to the specified publication (that is the nearest).
+# Publication string: AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
+# Publication date: 2014-08-15 00:00:00 UTC UTC
+EXECUTABLE verify --ver-pub --conf test/test.cfg -i test/out/extend/specified.nearest.pub.ext.ksig -d --pub-str AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
+>>>2 /(Signature publication-based verification with user publication string)(.*ok.*)/
+>>>= 0
+
+# Verify signature extended to the specified publication (that is not the nearest publication).
+# Publication string: AAAAAA-CWN5MA-AAK3AP-WSCETA-RKKP5V-OIITKT-XODBUJ-RQVGAI-DL7PHU-V6M2UY-DCTGDK-B47JCA
+# Publication date: 2015-12-15 00:00:00 UTC
+EXECUTABLE verify --ver-pub --conf test/test.cfg -i test/out/extend/specified.pub.ext.ksig -d --pub-str AAAAAA-CWN5MA-AAK3AP-WSCETA-RKKP5V-OIITKT-XODBUJ-RQVGAI-DL7PHU-V6M2UY-DCTGDK-B47JCA
+>>>2 /(Signature publication-based verification with user publication string)(.*ok.*)/
+>>>= 0
+
+# Verify signature extended to the specified time without no publication record.
+# Publication string: AAAAAA-CVWIVC-QAIVKJ-SIRUQZ-MZBJPS-T7P2UX-DDX4JF-KLMCXI-TXIKGF-B6MAJQ-JIJPTD-C2EDEO
+# Publication date: (1437739560) 2015-07-24 12:06:00 UTC
+EXECUTABLE verify --ver-pub --conf test/test.cfg -i test/out/extend/specified.no-pub.ext.ksig -d --pub-str AAAAAA-CVWIVC-QAIVKJ-SIRUQZ-MZBJPS-T7P2UX-DDX4JF-KLMCXI-TXIKGF-B6MAJQ-JIJPTD-C2EDEO -x
+>>>2 /(Signature publication-based verification with user publication string)(.*ok.*)/
+>>>= 0
+
+# Verify signature extended to the specified time without no publication record.
+# Publication string: AAAAAA-CVWIVC-QAIVKJ-SIRUQZ-MZBJPS-T7P2UX-DDX4JF-KLMCXI-TXIKGF-B6MAJQ-JIJPTD-C2EDEO
+# Publication date: (1437739560) 2015-07-24 12:06:00 UTC
+EXECUTABLE verify --ver-cal --conf test/test.cfg -i test/out/extend/specified.no-pub.ext.ksig -d
+>>>2 /(Signature calendar-based verification)(.*ok.*)/
+>>>= 0
+
+# Verify signature extended to the specified publication (that is not the nearest publication).
+# Publication string: AAAAAA-CWN5MA-AAK3AP-WSCETA-RKKP5V-OIITKT-XODBUJ-RQVGAI-DL7PHU-V6M2UY-DCTGDK-B47JCA
+# Publication date: 2015-12-15 00:00:00 UTC
+EXECUTABLE verify --ver-cal --conf test/test.cfg -i test/out/extend/specified.pub.ext.ksig -d
+>>>2 /(Signature calendar-based verification)(.*ok.*)/
+>>>= 0

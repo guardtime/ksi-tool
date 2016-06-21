@@ -27,10 +27,7 @@
 #include "param_set.h"
 #include "parameter.h"
 #include "param_set_obj_impl.h"
-
-#ifdef _WIN32
-#define snprintf _snprintf
-#endif
+#include "strn.h"
 
 #define debug_array_printf 	{int n; for(n = 0; n < task_set->count; n++) {printf("[%2.2f:%2i]", task_set->cons[n], task_set->index[n]);}printf("\n");}
 
@@ -89,12 +86,6 @@ static int category_get_missing_flag_count(const char* category, PARAM_SET *set)
 	return missedFlags;
 }
 
-static int category_is_first_flag_set(const char* category, PARAM_SET *set){
-	char buf[1024];
-	category_extract_name(category, buf, sizeof(buf), NULL);
-	return PARAM_SET_isSetByName(set, buf);
-}
-
 static int task_definition_getAtLeastOneSetMetrica(TASK_DEFINITION *def, PARAM_SET *set, int *count, int *missing){
 	int atleastOneOfCount = 0;
 	int atleastOneOfMissing = 0;
@@ -122,38 +113,6 @@ static int task_definition_getAtLeastOneSetMetrica(TASK_DEFINITION *def, PARAM_S
 	}
 	return PST_OK;
 }
-
-static int taskDefinition_getDefManCount(TASK_DEFINITION *def){
-	if (def == NULL)
-		return -1;
-
-	return (category_get_parameter_count(def->mandatory) + ((def->atleast_one == NULL || def->atleast_one[0] == '\0') ? 0 : 1));
-}
-
-static int getConsistency(TASK_DEFINITION **def, int def_count, int getLowest, double *max) {
-	int i;
-	double tmp;
-
-	if (def == NULL || def[0] == NULL || def_count == 0 || max == NULL) {
-		return PST_INVALID_ARGUMENT;
-	}
-
-	tmp = def[0]->consistency;
-	for (i = 0; i < def_count; i++) {
-		if (def[i] == NULL) return PST_INVALID_ARGUMENT;
-
-		/* Extract the highest or the lowest consistency. */
-		if (getLowest) {
-			if (tmp > def[i]->consistency) tmp = def[i]->consistency;
-		} else {
-			if (tmp < def[i]->consistency) tmp = def[i]->consistency;
-		}
-	}
-
-	*max = tmp;
-	return PST_OK;
-}
-
 
 static int TASK_new(TASK_DEFINITION *pDef, PARAM_SET *pSet, TASK **new){
 	TASK *tmp = NULL;
@@ -204,7 +163,7 @@ int TASK_DEFINITION_new(int id, const char *name, const char *man, const char *a
 
 	/**
 	 * Construct new and empty task definition data structure.
-     */
+	 */
 	tmp = (TASK_DEFINITION*)malloc(sizeof(TASK_DEFINITION));
 	if(tmp == NULL) {
 		res = PST_OUT_OF_MEMORY;
@@ -221,7 +180,7 @@ int TASK_DEFINITION_new(int id, const char *name, const char *man, const char *a
 
 	/**
 	 * Initialize data structure.
-     */
+	 */
 	res = new_string(name, &tmp->name);
 	if (res != PST_OK) goto cleanup;
 
@@ -244,7 +203,7 @@ int TASK_DEFINITION_new(int id, const char *name, const char *man, const char *a
 	/**
 	 * TODO: check if make sens.
 	 * Create a string representation of the task.
-     */
+	 */
 	if (TASK_DEFINITION_toString(tmp, buf, sizeof(buf)) != NULL){
 		res = new_string(buf, &tmp->toString);
 		if (res != PST_OK) goto cleanup;
@@ -359,7 +318,7 @@ int TASK_DEFINITION_getMoreConsistent(TASK_DEFINITION *A, TASK_DEFINITION *B, PA
 
 	/**
 	 * Analyse consistency of task definition A and B.
-     */
+	 */
 	res = TASK_DEFINITION_analyzeConsistency(A, set, &consisteny_A);
 	if (res != PST_OK) goto cleanup;
 
@@ -370,7 +329,7 @@ int TASK_DEFINITION_getMoreConsistent(TASK_DEFINITION *A, TASK_DEFINITION *B, PA
 	/**
 	 * If two tasks have very similar consistency, examine two tasks and select
 	 * the task that is more consistent.
-     */
+	 */
 	if (fabs(consisteny_A - consisteny_B) <= sensitivity) {
 		/**
 		 * Get the count of parameters that are set and do NOT exist under both
@@ -442,7 +401,7 @@ char* TASK_DEFINITION_toString(TASK_DEFINITION *def, char *buf, size_t buf_len) 
 
 	c = def->mandatory;
 	while ((c = category_extract_name(c, name, sizeof(name), NULL)) != NULL) {
-		count += snprintf(buf + count, buf_len - count, "%s%s%s",
+		count += PST_snprintf(buf + count, buf_len - count, "%s%s%s",
 				round == 0 ? "" : " ",
 				strlen(name)>1 ? "--" : "-",
 				name);
@@ -451,22 +410,22 @@ char* TASK_DEFINITION_toString(TASK_DEFINITION *def, char *buf, size_t buf_len) 
 
 	c = def->atleast_one;
 	if (c != NULL && c[0] != '\0') {
-		count += snprintf(buf+count, buf_len - count, "%sone or more of (",
+		count += PST_snprintf(buf+count, buf_len - count, "%sone or more of (",
 				(round == 0) ? "" : " ");
 		round = 0;
 
 		while ((c = category_extract_name(c, name, sizeof(name), NULL)) != NULL) {
-			count += snprintf(buf + count, buf_len - count, "%s%s%s",
+			count += PST_snprintf(buf + count, buf_len - count, "%s%s%s",
 					round == 0 ? "" : " ",
 					strlen(name)>1 ? "--" : "-",
 					name);
 			round++;
 		}
 
-		count += snprintf(buf + count, buf_len - count, ")");
+		count += PST_snprintf(buf + count, buf_len - count, ")");
 	}
 
-//	count += snprintf(buf + count, buf_len - count, "\n");
+//	count += PST_snprintf(buf + count, buf_len - count, "\n");
 	return buf;
 }
 
@@ -486,65 +445,65 @@ char *TASK_DEFINITION_howToRepiar_toString(TASK_DEFINITION *def, PARAM_SET *set,
 
 	/**
 	 * Error about MANDATORY flags.
-     */
+	 */
 	pName = def->mandatory;
 	while((pName = category_extract_name(pName, name_buffer, sizeof(name_buffer), NULL)) != NULL) {
 		if (strlen(name_buffer) == 0) continue;
 		if (!PARAM_SET_isSetByName(set, name_buffer)) {
 			if(!err_printed){
-				count += snprintf(buf + count, buf_len - count, "%sYou have to define flag(s) '%s%s'",
+				count += PST_snprintf(buf + count, buf_len - count, "%sYou have to define flag(s) '%s%s'",
 						pref,
 						strlen(name_buffer)>1 ? "--" : "-",
 						name_buffer);
 				err_printed = 1;
 			}
 			else{
-				count += snprintf(buf + count, buf_len - count, ", '%s%s'", strlen(name_buffer)>1 ? "--" : "-", name_buffer);
+				count += PST_snprintf(buf + count, buf_len - count, ", '%s%s'", strlen(name_buffer)>1 ? "--" : "-", name_buffer);
 			}
 		}
 	}
-	if(err_printed) count += snprintf(buf + count, buf_len - count, ".\n");
+	if(err_printed) count += PST_snprintf(buf + count, buf_len - count, ".\n");
 	/**
 	 * Error about AT LEAST ONE OF flags.
-     */
+	 */
 	if ((category_get_parameter_count(def->atleast_one) - category_get_missing_flag_count(def->atleast_one, set)) == 0) {
 		err_printed = 0;
 		pName = def->atleast_one;
 		while((pName = category_extract_name(pName, name_buffer, sizeof(name_buffer), NULL)) != NULL){
 			if(!err_printed){
-				count += snprintf(buf + count, buf_len - count, "%sYou have to define at least one the flag(s) '%s%s'",
+				count += PST_snprintf(buf + count, buf_len - count, "%sYou have to define at least one the flag(s) '%s%s'",
 						pref,
 						strlen(name_buffer)>1 ? "--" : "-",
 						name_buffer);
 				err_printed = 1;
 			}
 			else{
-				count += snprintf(buf + count, buf_len - count, ", '%s%s'", strlen(name_buffer)>1 ? "--" : "-", name_buffer);
+				count += PST_snprintf(buf + count, buf_len - count, ", '%s%s'", strlen(name_buffer)>1 ? "--" : "-", name_buffer);
 			}
 		}
-		if(err_printed) count += snprintf(buf + count, buf_len - count, ".\n");
+		if(err_printed) count += PST_snprintf(buf + count, buf_len - count, ".\n");
 	}
 
 	/**
 	 * Error about FORBITTEN flags.
-     */
+	 */
 	pName = def->forbitten;
 	err_printed = 0;
 	while((pName = category_extract_name(pName, name_buffer, sizeof(name_buffer), NULL)) != NULL){
 		if (PARAM_SET_isSetByName(set, name_buffer)) {
 			if(!err_printed){
-				count += snprintf(buf + count, buf_len - count, "%sYou must not use flag(s) '%s%s'",
+				count += PST_snprintf(buf + count, buf_len - count, "%sYou must not use flag(s) '%s%s'",
 						pref,
 						strlen(name_buffer)>1 ? "--" : "-",
 						name_buffer);
 				err_printed = 1;
 			}
 			else{
-				count += snprintf(buf + count, buf_len - count, ", '%s%s'", strlen(name_buffer)>1 ? "--" : "-", name_buffer);
+				count += PST_snprintf(buf + count, buf_len - count, ", '%s%s'", strlen(name_buffer)>1 ? "--" : "-", name_buffer);
 			}
 		}
 	}
-	if(err_printed) count += snprintf(buf + count, buf_len - count, ".\n");
+	if(err_printed) count += PST_snprintf(buf + count, buf_len - count, ".\n");
 
 	return buf;
 }
@@ -566,19 +525,19 @@ char* TASK_DEFINITION_ignoredParametersToString(TASK_DEFINITION *def, PARAM_SET 
 	while((pName = category_extract_name(pName, name_buffer, sizeof(name_buffer), NULL)) != NULL){
 		if (PARAM_SET_isSetByName(set, name_buffer)) {
 			if(!err_printed){
-				count += snprintf(buf + count, buf_len - count, "%sIgnoring following flag(s) '%s%s'",
+				count += PST_snprintf(buf + count, buf_len - count, "%sIgnoring following flag(s) '%s%s'",
 						pref,
 						strlen(name_buffer)>1 ? "--" : "-",
 						name_buffer);
 				err_printed = 1;
 			}
 			else{
-				count += snprintf(buf + count, buf_len - count, ", '%s%s'", strlen(name_buffer)>1 ? "--" : "-", name_buffer);
+				count += PST_snprintf(buf + count, buf_len - count, ", '%s%s'", strlen(name_buffer)>1 ? "--" : "-", name_buffer);
 			}
 		}
 	}
 
-	if(err_printed) count += snprintf(buf + count, buf_len - count, ".\n");
+	if(err_printed) count += PST_snprintf(buf + count, buf_len - count, ".\n");
 
 	return buf;
 }
@@ -596,7 +555,7 @@ int TASK_SET_new(TASK_SET **new) {
 
 	/**
 	 * Construct new and empty task definition data structure.
-     */
+	 */
 	tmp = (TASK_SET*)malloc(sizeof(TASK_SET));
 	if(tmp == NULL) {
 		res = PST_OUT_OF_MEMORY;
@@ -703,7 +662,7 @@ int TASK_SET_analyzeConsistency(TASK_SET *task_set, PARAM_SET *set, double sensi
 
 	/**
 	 * Analyze consistency.
-     */
+	 */
 	for (i = 0; i < task_set->count; i++) {
 		res = TASK_DEFINITION_analyzeConsistency(task_set->array[i], set, &cons);
 		if (res != PST_OK) goto cleanup;
@@ -720,7 +679,7 @@ int TASK_SET_analyzeConsistency(TASK_SET *task_set, PARAM_SET *set, double sensi
 	 * Sort tasks consistency. Starting from more consistent (index == 0) and end
 	 * with less consistent. If consistency is very similar analyze the order
 	 * in more precise way.
-     */
+	 */
 //	debug_array_printf
 	for (i = 0; i < task_set->count; i++) {
 		for (j = i + 1; j < task_set->count; j++) {
@@ -803,7 +762,7 @@ int TASK_SET_getConsistentTask(TASK_SET *task_set, TASK **task) {
 
 	/**
 	 * If there is not exactly one consistent task there must be a error.
-     */
+	 */
 	if (task_set->consistent_count != 1) {
 		res = task_set->consistent_count == 0 ? PST_TASK_ZERO_CONSISTENT_TASKS : PST_TASK_MULTIPLE_CONSISTENT_TASKS;
 		goto cleanup;
@@ -812,7 +771,7 @@ int TASK_SET_getConsistentTask(TASK_SET *task_set, TASK **task) {
 	/**
 	 * Check for the single consistent value (as in some cases its not the first
 	 * in the list, but is only consistent one) Create new task;
-     */
+	 */
 
 	for (i = 0; i < task_set->count; i++) {
 		consistent = task_set->array[task_set->index[i]];
@@ -919,9 +878,9 @@ char* TASK_SET_howToRepair_toString(TASK_SET *task_set, PARAM_SET *set, int ID, 
 	for (i = 0; i < task_set->count; i++) {
 		if (task_set->array[i]->id == ID) {
 			if (task_set->array[i]->isConsistent) {
-				count += snprintf(buf + count, buf_len - count, "Task '%s' %s is OK.", task_set->array[i]->name, task_set->array[i]->toString);
+				count += PST_snprintf(buf + count, buf_len - count, "Task '%s' %s is OK.", task_set->array[i]->name, task_set->array[i]->toString);
 			} else {
-				count += snprintf(buf + count, buf_len - count, "Task '%s' %s is invalid:\n", task_set->array[i]->name, task_set->array[i]->toString);
+				count += PST_snprintf(buf + count, buf_len - count, "Task '%s' %s is invalid:\n", task_set->array[i]->name, task_set->array[i]->toString);
 				tmp = TASK_DEFINITION_howToRepiar_toString(task_set->array[i], set, prefix, buf + count, buf_len - count);
 
 				if (tmp == NULL) return NULL;
@@ -945,7 +904,7 @@ char* TASK_SET_suggestions_toString(TASK_SET *task_set, int depth, char *buf, si
 	for (i = 0, n = 0; i < task_set->count && n < depth; i++) {
 		tmp = task_set->array[task_set->index[i]];
 		if (!tmp->isConsistent) {
-			count += snprintf(buf + count, buf_len - count, "Maybe you want to: %s %s\n", tmp->name, tmp->toString);
+			count += PST_snprintf(buf + count, buf_len - count, "Maybe you want to: %s %s\n", tmp->name, tmp->toString);
 			n++;
 		}
 	}

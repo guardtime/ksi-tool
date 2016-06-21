@@ -1,7 +1,7 @@
 #
 # GUARDTIME CONFIDENTIAL
 #
-# Copyright (C) [2015] Guardtime, Inc
+# Copyright (C) [2015 - 2016] Guardtime, Inc
 # All Rights Reserved
 #
 # NOTICE:  All information contained herein is, and remains, the
@@ -21,7 +21,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.59])
-AC_INIT([ksitool], m4_esyscmd([tr -d [:space:] < VERSION]), [support@guardtime.com])
+AC_INIT([ksi], m4_esyscmd([tr -d [:space:] < VERSION]), [support@guardtime.com])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign -Wall -Werror foreign subdir-objects])
@@ -35,29 +35,54 @@ AC_CHECK_PROG(git_installed,git,"yes", "no")
 AC_MSG_CHECKING([for commit id])
 commit_id=""
 if test "$git_installed" = "yes" -a -x ".git"; then
-    commit_id=$(git log -n 1 --format="%H")
-    AC_MSG_RESULT([$commit_id])
-    AC_DEFINE_UNQUOTED(COMMIT_ID, "$commit_id", [Commit id])
+	commit_id=$(git log -n 1 --format="%H")
+	AC_MSG_RESULT([$commit_id])
+	AC_DEFINE_UNQUOTED(COMMIT_ID, "$commit_id", [Commit id])
 else
-    AC_MSG_RESULT([no])
+	AC_MSG_RESULT([no])
 fi
+
+AC_DEFINE_UNQUOTED(TOOL_NAME, "AC_PACKAGE_NAME", [Commit id])
 
 # Checks for programs.
 AC_PROG_CC
+AM_PROG_CC_C_O
 
 AC_PROG_LN_S
-
 # Checks for libraries.
-AC_ARG_ENABLE(static-build,
-[  --enable-static-build      enable static build of ksitool, it is needed to specify static libraries with LIBS environment variable (e.g. "/usr/local/lib/libksi.a /usr/local/opt/openssl/lib/libcrypto.a /usr/local/lib/libcurl.a -lldap -lz")],
-:, :)
+libksi_ver="3.8"
+AC_ARG_ENABLE(static-build,         
+[  --enable-static-build              enable static linking of ksi library)],:,:)
+AC_ARG_ENABLE(use-installed-libksi, 
+[  --enable-use-installed-libksi      use installed ksi library)],:,:)
 if test "$enable_static_build" = "yes" ; then
-    AC_MSG_NOTICE([KSI library will be linked statically])
+	AC_CANONICAL_HOST
+
+	if test "${host_os#*linux}" != "$host_os"; then
+		dy_link_flag="-Bdynamic"
+	else
+		dy_link_flag="-dynamic"
+	fi
+
+	AC_MSG_NOTICE([KSI library will be linked statically.])
+	AC_CHECK_LIB([ksi], [KSI_CTX_new], [LIBS="-Wl,-static -lksi -Wl,$dy_link_flag $LIBS"], [AC_MSG_FAILURE([Could not find KSI libraries.])])
+	KSI_RPM_BUILD_FLAGS="--enable-static-build"
+	
+	if test "$enable_use_installed_libksi" = "yes" ; then
+		KSI_BUILD_DEPENDECY="BuildRequires: libksi-devel >= $libksi_ver"
+	fi
 else
-    AC_CHECK_LIB([crypto], [SHA256_Init], [], [AC_MSG_FAILURE([Could not find OpenSSL 0.9.8+ libraries.])])
-    AC_CHECK_LIB([curl], [curl_easy_init], [], [AC_MSG_FAILURE([Could nod find Curl libraries.])])
-    AC_CHECK_LIB([ksi], [KSI_CTX_new], [], [AC_MSG_FAILURE([Could not find KSI libraries.])])
+	AC_MSG_NOTICE([KSI library will be linked dynamically.])
+	AC_CHECK_LIB([ksi], [KSI_CTX_new], [], [AC_MSG_FAILURE([Could not find KSI libraries.])])
+	KSI_BUILD_DEPENDECY="BuildRequires: libksi-devel >= $libksi_ver"
 fi
+
+AC_SUBST(KSI_RPM_DEPENDECY)
+AC_SUBST(KSI_BUILD_DEPENDECY)
+AC_SUBST(KSI_RPM_BUILD_FLAGS)
+
+AC_CHECK_LIB([crypto], [SHA256_Init], [], [AC_MSG_FAILURE([Could not find OpenSSL 0.9.8+ libraries.])])
+AC_CHECK_LIB([curl], [curl_easy_init], [], [AC_MSG_FAILURE([Could nod find Curl libraries.])])
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h])
@@ -69,8 +94,8 @@ AC_TYPE_SIZE_T
 # Checks for library functions.
 AC_CHECK_FUNCS([strchr])
 
+# Add more warnings
+CFLAGS+=" -Wall"
 
-
-
-AC_CONFIG_FILES([GNUmakefile src/GNUmakefile packaging/redhat/ksitool.spec])
+AC_CONFIG_FILES([GNUmakefile src/GNUmakefile packaging/redhat/ksi.spec])
 AC_OUTPUT
