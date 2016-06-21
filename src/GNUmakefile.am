@@ -1,7 +1,7 @@
 #
 # GUARDTIME CONFIDENTIAL
 #
-# Copyright (C) [2015] Guardtime, Inc
+# Copyright (C) [2015 - 2016] Guardtime, Inc
 # All Rights Reserved
 #
 # NOTICE:  All information contained herein is, and remains, the
@@ -17,24 +17,39 @@
 # Guardtime Inc.
 #
 
-bin_PROGRAMS = ksitool
-man_MANS = ../doc/ksitool.1
+bin_PROGRAMS = ksi
+man_MANS = \
+	../doc/ksi.1 \
+	../doc/ksi-conf.5 \
+	../doc/ksi-sign.1 \
+	../doc/ksi-extend.1 \
+	../doc/ksi-pubfile.1 \
+	../doc/ksi-verify.1
+
 dist_doc_DATA = ../license.txt ../doc/ChangeLog
 
-EXTRA_DIST = $(man_MANS) $(dist_doc_DATA) 
-ksitool_SOURCES = \
-	ksitool.c	\
-	gt_cmd_common.h \
-	gt_task.h \
-	gt_task_support.c \
-	gt_task_support.h \
-	gt_task_sign.c \
-	gt_task_extend.c \
-	gt_task_verify.c \
-	gt_task_other.c \
-	gt_task_pubfile.c \
-	gt_cmd_control.c \
-	gt_cmd_control.h \
+EXTRA_DIST = ../VERSION $(man_MANS) $(dist_doc_DATA)
+ksi_SOURCES = \
+	main.c	\
+	tool_box/smart_file.c \
+	tool_box/smart_file.h \
+	tool_box/param_control.c \
+	tool_box/param_control.h \
+	tool_box/ksi_init.c \
+	tool_box/ksi_init.h \
+	tool_box/err_trckr.c \
+	tool_box/err_trckr.h \
+	tool_box/tool_box.c \
+	tool_box/tool_box.h \
+	tool_box/pubfile.c \
+	tool_box/sign.c \
+	tool_box/verify.c \
+	tool_box/extend.c \
+	tool_box/default_tasks.h \
+	tool_box/component.c \
+	tool_box/component.h \
+	tool_box/task_initializer.c \
+	tool_box/task_initializer.h \
 	param_set/param_set_obj_impl.h \
 	param_set/param_value.c \
 	param_set/param_value.h \
@@ -44,6 +59,12 @@ ksitool_SOURCES = \
 	param_set/param_set.h \
 	param_set/task_def.c \
 	param_set/task_def.h \
+	param_set/strn.c \
+	param_set/strn.h \
+	tool.h \
+	common.h \
+	conf.c \
+	conf.h \
 	printer.c \
 	printer.h \
 	ksitool_err.c \
@@ -54,4 +75,4 @@ ksitool_SOURCES = \
 	obj_printer.h \
 	debug_print.c \
 	debug_print.h
-	
+

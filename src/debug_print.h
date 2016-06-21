@@ -2,7 +2,7 @@
  *
  * GUARDTIME CONFIDENTIAL
  *
- * Copyright (C) [2015] Guardtime, Inc
+ * Copyright (C) [2015 - 2016] Guardtime, Inc
  * All Rights Reserved
  *
  * NOTICE:  All information contained herein is, and remains, the
@@ -22,14 +22,15 @@
 #define	DEBUG_PRINT_H
 
 #include <ksi/ksi.h>
-#include "param_set/task_def.h"
+#include <ksi/policy.h>
+#include "param_set/param_set.h"
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
-void DEBUG_verifySignature(KSI_CTX *ksi, TASK *task, int res, KSI_Signature *sig);
-void DEBUG_verifyPubfile(KSI_CTX *ksi, TASK *task, int res, KSI_PublicationsFile *pub);
+void DEBUG_verifySignature(KSI_CTX *ksi, int res, KSI_Signature *sig, KSI_PolicyVerificationResult *result, KSI_DataHash *hsh);
+void DEBUG_verifyPubfile(KSI_CTX *ksi, PARAM_SET *set, int res, KSI_PublicationsFile *pub);
 
 
 #ifdef	__cplusplus

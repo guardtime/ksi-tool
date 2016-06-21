@@ -1,8 +1,0 @@
-Package: ksitool
-Version: @VER@
-Section: utils
-Priority: optional
-Architecture: @ARCH@
-Depends: libksi (>= 3.5)
-Maintainer: Guardtime <support@guardtime.com>
-Description: Command-line tool to access Guardtime KSI service.

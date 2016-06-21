@@ -2,7 +2,7 @@
  *
  * GUARDTIME CONFIDENTIAL
  *
- * Copyright (C) [2015] Guardtime, Inc
+ * Copyright (C) [2015 - 2016] Guardtime, Inc
  * All Rights Reserved
  *
  * NOTICE:  All information contained herein is, and remains, the
@@ -18,96 +18,58 @@
  * Guardtime Inc.
  */
 
+#include "debug_print.h"
 #include <string.h>
 #include "printer.h"
 #include "obj_printer.h"
-#include "debug_print.h"
-#include "gt_task_support.h"
-#include "param_set/param_value.h"
+#include "param_set/param_set.h"
+#include "tool_box/tool_box.h"
 
-static int debug_getVerificationStepFailed(KSI_Signature *sig) {
-	int stat;
-	const KSI_VerificationResult *ver = NULL;
-	const KSI_VerificationStepResult *step;
-	size_t count;
-	size_t i;
-	const char *desc = NULL;
+void DEBUG_verifySignature(KSI_CTX *ksi, int res, KSI_Signature *sig, KSI_PolicyVerificationResult *result, KSI_DataHash *hsh) {
+	KSI_PublicationsFile *pubFile = NULL;
+	KSI_DataHash *input_hash = NULL;
 
-	if (sig == NULL) return 0;
 
-	stat = KSI_Signature_getVerificationResult(sig, &ver);
-	if (stat != KSI_OK) return 0;
+	if (ksi == NULL || sig == NULL) return;
 
-	count = KSI_VerificationResult_getStepResultCount(ver);
-	if (count == 0) return 0;
-
-	for(i = 0; i < count; i++) {
-		KSI_VerificationResult_getStepResult(ver, i, &step);
-
-		/**
-		 *	If is verification failure.
-		 */
-		if (KSI_VerificationStepResult_isSuccess(step) == 0) {
-			return KSI_VerificationStepResult_getStep(step);
+	if (hsh != NULL) {
+		res = KSI_Signature_getDocumentHash(sig, &input_hash);
+		if (res != KSI_OK) {
+			print_errors("Error: Unable to extract signatures input hash.\n");
+		} else if (!KSI_DataHash_equals(hsh, input_hash)) {
+			OBJPRINT_Hash(hsh,        "Document hash:       ", print_debug);
+			OBJPRINT_Hash(input_hash, "Expected Input hash: ", print_debug);
 		}
 	}
 
-	return 0;
-}
-
-void DEBUG_verifySignature(KSI_CTX *ksi, TASK *task, int res, KSI_Signature *sig) {
-	PARAM_SET *set = NULL;
-	bool d;
-	int stepFailed;
-	KSI_PublicationsFile *pubFile = NULL;
-
-	if (ksi == NULL || task == NULL || sig == NULL) return;
-
-
-	set = TASK_getSet(task);
-	d = PARAM_SET_isSetByName(set, "d");
-
-	if (d && res == KSI_VERIFICATION_FAILURE) {
-		stepFailed = debug_getVerificationStepFailed(sig);
-		print_info("\n");
-		OBJPRINT_signatureVerificationInfo(sig);
-
-		/**/
-		if (stepFailed == KSI_VERIFY_CALAUTHREC_WITH_SIGNATURE) {
-			OBJPRINT_signatureCertificate(sig);
-
+	if (result) {
+		if (!strcmp(result->finalResult.ruleName, "KSI_VerificationRule_PublicationsFilePublicationTimeMatchesExtenderResponse") ||
+			!strcmp(result->finalResult.ruleName, "KSI_VerificationRule_PublicationsFilePublicationHashMatchesExtenderResponse") ||
+			!strcmp(result->finalResult.ruleName, "KSI_VerificationRule_PublicationsFileExtendedSignatureInputHash")) {
 			res = KSI_CTX_getPublicationsFile(ksi, &pubFile);
 			if (res == KSI_OK && pubFile != NULL) {
-				OBJPRINT_publicationsFileCertificates(pubFile);
+				OBJPRINT_publicationsFileCertificates(pubFile, print_debug);
 			}
-		} else if (stepFailed == KSI_VERIFY_CALCHAIN_ONLINE) {
-			OBJPRINT_signatureSigningTime(sig);
 		}
 	}
+	print_debug("\n");
 }
 
-void DEBUG_verifyPubfile(KSI_CTX *ksi, TASK *task, int res, KSI_PublicationsFile *pub) {
-	PARAM_SET *set = NULL;
-	bool d;
+void DEBUG_verifyPubfile(KSI_CTX *ksi, PARAM_SET *set, int res, KSI_PublicationsFile *pub) {
 	char *constraint = NULL;
 	unsigned i = 0;
 
-	if (ksi == NULL || task == NULL || pub == NULL) return;
+	if (ksi == NULL || pub == NULL) return;
 
 
-	set = TASK_getSet(task);
-	d = PARAM_SET_isSetByName(set, "d");
-
-	if (d && (res == KSI_PKI_CERTIFICATE_NOT_TRUSTED || res == KSI_INVALID_PKI_SIGNATURE)) {
-		print_info("\n");
-		OBJPRINT_publicationsFileSigningCert(pub);
-
+	if (res == KSI_PKI_CERTIFICATE_NOT_TRUSTED || res == KSI_INVALID_PKI_SIGNATURE) {
+		OBJPRINT_publicationsFileSigningCert(pub, print_debug);
 
 		if (PARAM_SET_isSetByName(set, "cnstr")) {
-			print_info("Expected publications file PKI certificate constraints:\n");
+			print_debug("Expected publications file PKI certificate constraints:\n");
 		}
 
-		while (PARAM_SET_getStrValue(set, "cnstr", NULL, PST_PRIORITY_NONE, i++, &constraint) == PST_OK) {
+		while (PARAM_SET_getObj(set, "cnstr", NULL, PST_PRIORITY_HIGHEST, i++, (void**)&constraint) == PST_OK) {
 			char OID[1204];
 			char value[1204];
 			char *ret = NULL;
@@ -118,7 +80,7 @@ void DEBUG_verifyPubfile(KSI_CTX *ksi, TASK *task, int res, KSI_PublicationsFile
 			ret = STRING_extractRmWhite(constraint, "=", NULL, value, sizeof(value));
 			if(ret != value) continue;
 
-			print_info("  * %s = '%s'\n", OID_getShortDescriptionString(OID), value);
+			print_debug("  * %s = '%s'\n", OID_getShortDescriptionString(OID), value);
 		}
 
 	}

@@ -1,3 +1,34 @@
+Version 2.0
+
+2016-06-01 2.0.0
+
+* IMPROVEMENT: Signature over maximum tlv size is not loaded. (BUG-198)
+* IMPROVEMENT: ksitool renamed to ksi and major version increased to 2. (KCT-52)
+* IMPROVEMENT: Parameter -T has time limit from year 2007 to 2035. (BUG-237)
+* FEATURE: Signing and extending do not need output parameter -o. (KCT-52)
+* FEATURE: Help ksi -h shows ksi help and ksi <command> -h shows selected command help. (KCT-52)
+* IMPROVEMENT: Ksi has separate man pages: ksi.1, ksi-conf.5, ksi-sign.1, ksi-verify.1, ksi-extend.1 and ksi-pubfile.1. (KCT-52)
+* FEATURE: First parameter (sign, verify, extend, pubfile) defines the tools command that is going to be used. (KCT-52)
+* IMPROVEMENT: ksi tool is silen by default. (KCT-52)
+* FEATURE: New flag --dump to print signature and publications file to stdout. (KCT-52)
+* IMPROVEMENT: Input parameter -i is always the main input. (KCT-52)
+* IMPROVEMENT: Parameter -f is secondary input in verification process for data file or data hash imprint. (KCT-52)
+* IMPROVEMENT: Parameter --ref replaced with --pub-str. (KCT-52)
+* IMPROVEMENT: Parameter --inc replaced with --conf. (KCT-52)
+* IMPROVEMENT: Parameters --user and pass are replaced with --aggr-user, --aggr-key, --ext-user, --ext-key. (TOOL-68, KCT-52)
+* IMPROVEMENT: Parameters -d is for debugging messages that are printed to stderr. (KCT-52)
+* IMPROVEMENT: Parameters n, t, r are replaced with combination of -d and --dump. (KCT-52)
+* IMPROVEMENT: Parameter -F replaced with -f. (KCT-52)
+* FEATURE: Verifications has separate modes that can be selected with parameters --ver-int, --ver-key, --ver-cal and --ver-pub. (KCT-52)
+* IMPROVEMENT: Publications file verification is performed under command pubfile. (KCT-52)
+* FEATURE: KSI user info can be embedded to the URL user info fields. (TOOL-86, KCT-52)
+* IMPROVEMENT: Configurations file can hold only service related data. (TOOL-110, KCT-52)
+* IMPROVEMENT: Environment variables KSI_AGGREGATOR and KSI_EXTENDER are replaced with KSI_CONF that contains a path to the default configurations file. (TOOL-110, KCT-52)
+* IMPROVEMENT: If -V or -W is used certificates from default trust store are ignored (does not affect Windows trust store). (TOOL-20)
+* IMPROVEMENT: Task conf has flags -d and --dump for dumping configurations files path and its content. (TOOL-139)
+* IMPROVEMENT: Parameters V, W a P (with file:// scheme) defined in configurations file support file names relative to the configurations file. (TOOL-110)
+* FEATURE: libksi can be linked statically with ksi tool. (TOOL-137)
+
 Version 1.9
 
 2016-03-04 1.9.0

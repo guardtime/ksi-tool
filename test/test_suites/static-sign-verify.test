@@ -1,0 +1,33 @@
+#
+# GUARDTIME CONFIDENTIAL
+#
+# Copyright (C) [2016] Guardtime, Inc
+# All Rights Reserved
+#
+# NOTICE:  All information contained herein is, and remains, the
+# property of Guardtime Inc and its suppliers, if any.
+# The intellectual and technical concepts contained herein are
+# proprietary to Guardtime Inc and its suppliers and may be
+# covered by U.S. and Foreign Patents and patents in process,
+# and are protected by trade secret or copyright law.
+# Dissemination of this information or reproduction of this
+# material is strictly forbidden unless prior written permission
+# is obtained from Guardtime Inc.
+# "Guardtime" and "KSI" are trademarks or registered trademarks of
+# Guardtime Inc.
+#
+
+
+# Verify signatures created during signing.
+
+# Simple static signing 1.
+EXECUTABLE verify --ver-key --conf test/resource/conf/static-sign-1.cfg -f SHA2-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -i test/out/sign/static-1.ksig -d
+>>>2 /(Reading documents hash)(.*ok.*)
+(Signature key-based verification)(.*ok.*)/
+>>>= 0
+
+# Simple static signing 2.
+EXECUTABLE verify --ver-key --conf test/resource/conf/static-sign-2.cfg -f SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -i test/out/sign/static-2.ksig -d
+>>>2 /(Reading documents hash)(.*ok.*)
+(Signature key-based verification)(.*ok.*)/
+>>>= 0

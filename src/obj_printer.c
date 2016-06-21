@@ -2,7 +2,7 @@
  *
  * GUARDTIME CONFIDENTIAL
  *
- * Copyright (C) [2015] Guardtime, Inc
+ * Copyright (C) [2015 - 2016] Guardtime, Inc
  * All Rights Reserved
  *
  * NOTICE:  All information contained herein is, and remains, the
@@ -19,11 +19,45 @@
  */
 
 #include <ksi/pkitruststore.h>
+#include <ksi/policy.h>
 #include <string.h>
+#include <stdlib.h>
 #include "obj_printer.h"
-#include "printer.h"
+#include "api_wrapper.h"
 
-void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile){
+typedef struct {
+	KSI_VerificationErrorCode errorCode;
+	const char *code;
+	const char *description;
+} verificationErrorDetail_st;
+
+static const verificationErrorDetail_st verification_error[] = {
+	{ KSI_VER_ERR_GEN_1,	"GEN-1",	"Wrong document" },
+	{ KSI_VER_ERR_GEN_2,	"GEN-2",	"Verification inconclusive" },
+	{ KSI_VER_ERR_INT_1,	"INT-1",	"Inconsistent aggregation hash chains" },
+	{ KSI_VER_ERR_INT_2,	"INT-2",	"Inconsistent aggregation hash chain aggregation times" },
+	{ KSI_VER_ERR_INT_3,	"INT-3",	"Calendar hash chain input hash mismatch" },
+	{ KSI_VER_ERR_INT_4,	"INT-4",	"Calendar hash chain aggregation time mismatch" },
+	{ KSI_VER_ERR_INT_5,	"INT-5",	"Calendar hash chain shape inconsistent with aggregation time" },
+	{ KSI_VER_ERR_INT_6,	"INT-6",	"Calendar hash chain time inconsistent with calendar auth record time" },
+	{ KSI_VER_ERR_INT_7,	"INT-7",	"Calendar hash chain time inconsistent with publication time" },
+	{ KSI_VER_ERR_INT_8,	"INT-8",	"Calendar hash chain root hash is inconsistent with calendar auth record input hash" },
+	{ KSI_VER_ERR_INT_9,	"INT-9",	"Calendar hash chain root hash is inconsistent with published hash value" },
+	{ KSI_VER_ERR_INT_10,	"INT-10",	"Aggregation hash chain chain index mismatch" },
+	{ KSI_VER_ERR_INT_11,	"INT-11",	"The meta-data record in the aggregation hash chain may not be trusted" },
+	{ KSI_VER_ERR_PUB_1,	"PUB-1",	"Extender response calendar root hash mismatch" },
+	{ KSI_VER_ERR_PUB_2,	"PUB-2",	"Extender response inconsistent" },
+	{ KSI_VER_ERR_PUB_3,	"PUB-3",	"Extender response input hash mismatch" },
+	{ KSI_VER_ERR_KEY_1,	"KEY-1",	"Certificate not found" },
+	{ KSI_VER_ERR_KEY_2,	"KEY-2",	"PKI signature not verified with certificate" },
+	{ KSI_VER_ERR_CAL_1,	"CAL-1",	"Calendar root hash mismatch" },
+	{ KSI_VER_ERR_CAL_2,	"CAL-2",	"Aggregation hash chain root hash and calendar hash chain input hash mismatch" },
+	{ KSI_VER_ERR_CAL_3,	"CAL-3",	"Aggregation time mismatch" },
+	{ KSI_VER_ERR_CAL_4,	"CAL-4",	"Aggregation hash chain right links are inconsistent" },
+	{ KSI_VER_ERR_NONE,	"",	"No error" }
+};
+
+void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile, int (*print)(const char *format, ... )){
 	int res = KSI_UNKNOWN_ERROR;
 	KSI_LIST(KSI_PublicationRecord)* list_publicationRecord = NULL;
 	KSI_PublicationRecord *publicationRecord = NULL;
@@ -34,7 +68,7 @@ void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile){
 
 	if(pubFile == NULL) return;
 
-	print_info("Publications file references:\n");
+	print("Publication Records:\n");
 
 	res = KSI_PublicationsFile_getPublications(pubFile, &list_publicationRecord);
 	if(res != KSI_OK) return;
@@ -44,31 +78,31 @@ void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile){
 		res = KSI_PublicationRecordList_elementAt(list_publicationRecord, i, &publicationRecord);
 		if(res != KSI_OK) return;
 
-		if(KSI_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
+		if(KSITOOL_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
 
 		pStart = buf;
 		j=1;
 		h=0;
-		if(i) print_info("\n");
+		if(i) print("\n");
 		while((pLineBreak = strchr(pStart, '\n')) != NULL){
 			*pLineBreak = 0;
 			if(h++ < 3)
-				print_info("%s %s\n", "  ", pStart);
+				print("%s %s\n", "  ", pStart);
 			else
-				print_info("%s %2i) %s\n", "    ", j++, pStart);
+				print("%s %2i) %s\n", "    ", j++, pStart);
 			pStart = pLineBreak+1;
 		}
 
 		if(h < 3)
-			print_info("%s %s\n", "  ", pStart);
+			print("%s %s\n", "  ", pStart);
 		else
-			print_info("%s %2i) %s\n", "    ", j++, pStart);
+			print("%s %2i) %s\n", "    ", j++, pStart);
 	}
-	print_info("\n");
+	print("\n");
 	return;
 }
 
-void OBJPRINT_signaturePublicationReference(KSI_Signature *sig){
+void OBJPRINT_signaturePublicationReference(KSI_Signature *sig, int (*print)(const char *format, ... )){
 	int res = KSI_UNKNOWN_ERROR;
 	KSI_PublicationRecord *publicationRecord;
 	char buf[1024];
@@ -78,96 +112,90 @@ void OBJPRINT_signaturePublicationReference(KSI_Signature *sig){
 	int h=0;
 	if(sig == NULL) return;
 
-	print_info("Signatures publication references:\n");
+	print("Publication Record:\n");
 	res = KSI_Signature_getPublicationRecord(sig, &publicationRecord);
 	if(res != KSI_OK)return ;
 
 	if(publicationRecord == NULL) {
-		print_info("  (No publication records available)\n\n");
+		print("  (No publication records available)\n\n");
 		return;
 	}
 
-	if(KSI_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
+	if(KSITOOL_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
 	pStart = buf;
 
 	while((pLineBreak = strchr(pStart, '\n')) != NULL){
 		*pLineBreak = 0;
 
 		if(h < 3)
-			print_info("%s %s\n", "  ", pStart);
+			print("%s %s\n", "  ", pStart);
 		else
-			print_info("%s %2i) %s\n", "    ", i++, pStart);
+			print("%s %2i) %s\n", "    ", i++, pStart);
 
 		pStart = pLineBreak+1;
 	}
 
 	if(h<3)
-		print_info("%s %s\n", "  ", pStart);
+		print("%s %s\n", "  ", pStart);
 	else
-		print_info("%s %2i) %s\n", "    ", i++, pStart);
-	print_info("\n");
+		print("%s %2i) %s\n", "    ", i++, pStart);
+	print("\n");
 
 	return;
 }
 
-void OBJPRINT_signerIdentity(KSI_Signature *sig){
+void OBJPRINT_Hash(KSI_DataHash *hsh, const char *prefix, int (*print)(const char *format, ... )) {
+	char buf[1024];
+
+	if (hsh == NULL) return;
+
+	if (KSITOOL_DataHash_toString(hsh, buf, sizeof(buf)) == NULL) return;
+
+	print("%s%s\n",
+			prefix == NULL ? "" : prefix,
+			buf
+			);
+
+	return;
+}
+void OBJPRINT_signatureInputHash(KSI_Signature *sig, int (*print)(const char *format, ... )) {
+	int res;
+	KSI_DataHash *hsh = NULL;
+
+	if (sig == NULL) return;
+
+	res = KSI_Signature_getDocumentHash(sig, &hsh);
+	if (res != KSI_OK) {
+		print("Input hash: Unable to extract from the signature.\n");
+		return;
+	}
+
+	OBJPRINT_Hash(hsh, "Input hash: ", print);
+
+	return;
+}
+
+void OBJPRINT_signerIdentity(KSI_Signature *sig, int (*print)(const char *format, ... )){
 	int res = KSI_UNKNOWN_ERROR;
 	char *signerIdentity = NULL;
 
 	if(sig == NULL) goto cleanup;
 
-	print_info("Signer identity: ");
+	print("Signer identity: ");
 	res = KSI_Signature_getSignerIdentity(sig, &signerIdentity);
 	if(res != KSI_OK){
-		print_info("Unable to get signer identity.\n");
+		print("Unable to get signer identity.\n");
 		goto cleanup;
 	}
 
-	print_info("'%s'\n", signerIdentity == NULL || strlen(signerIdentity) == 0 ? "Unknown" : signerIdentity);
-	print_info("\n");
+	print("'%s'.\n", signerIdentity == NULL || strlen(signerIdentity) == 0 ? "Unknown" : signerIdentity);
 cleanup:
 
 	KSI_free(signerIdentity);
 	return;
 }
 
-void OBJPRINT_signatureVerificationInfo(KSI_Signature *sig){
-	int res = KSI_UNKNOWN_ERROR;
-	const KSI_VerificationResult *sigVerification = NULL;
-	const KSI_VerificationStepResult *result = NULL;
-	const char *desc;
-	unsigned int i = 0;
-
-	if(sig == NULL){
-		return;
-	}
-
-	print_info("Verification steps:\n");
-	res = KSI_Signature_getVerificationResult(sig, &sigVerification);
-	if(res != KSI_OK){
-		print_info("Unable to get verification steps.\n\n");
-		return;
-	}
-
-	if(sigVerification != NULL){
-		for(i=0; i< KSI_VerificationResult_getStepResultCount(sigVerification); i++){
-			res = KSI_VerificationResult_getStepResult(sigVerification, i, &result);
-			if(res != KSI_OK){
-				return;
-			}
-			print_info("  0x%03x:\t%s", KSI_VerificationStepResult_getStep(result), KSI_VerificationStepResult_isSuccess(result) ? "OK" : "FAIL");
-			desc = KSI_VerificationStepResult_getDescription(result);
-			if (desc && *desc) {
-				print_info(" (%s)", desc);
-			}
-			print_info("\n");
-		}
-	}
-	print_info("\n");
-	return;
-}
-
-void OBJPRINT_signatureSigningTime(const KSI_Signature *sig) {
+void OBJPRINT_signatureSigningTime(const KSI_Signature *sig, int (*print)(const char *format, ... )) {
 	int res;
 	KSI_Integer *sigTime = NULL;
 	unsigned long signingTime = 0;
@@ -184,21 +212,31 @@ void OBJPRINT_signatureSigningTime(const KSI_Signature *sig) {
 		return;
 	}
 
-	if (KSI_Integer_toDateString(sigTime, date, sizeof(date)) != date) {
-		return;
+	if (sigTime != NULL) {
+		if (KSI_Integer_toDateString(sigTime, date, sizeof(date)) != date) {
+			return;
+		}
+
+		signingTime = (unsigned long)KSI_Integer_getUInt64(sigTime);
+
+		print("Signing time: (%i) %s+00:00\n",
+			  signingTime, date);
+	} else {
+		print("Signing time: N/A\n");
 	}
 
-	signingTime = (unsigned long)KSI_Integer_getUInt64(sigTime);
-
-	print_info("Signing time:\n"
-			"UTC seconds:%i\n"
-			"Date %s\n", signingTime, date);
-
-	print_info("\n");
 	return;
 }
 
-void OBJPRINT_signatureCertificate(const KSI_Signature *sig) {
+static const char *get_signature_type_from_oid(const char *oid) {
+	if (strcmp(oid, "1.2.840.113549.1.1.11") == 0) {
+		return "PKI";
+	} else {
+		return "(unknown)";
+	}
+}
+
+void OBJPRINT_signatureCertificate(const KSI_Signature *sig, int (*print)(const char *format, ... )) {
 	int res;
 	KSI_CalendarAuthRec *calAuthRec = NULL;
 	KSI_PKISignedData *pki_data = NULL;
@@ -226,10 +264,9 @@ void OBJPRINT_signatureCertificate(const KSI_Signature *sig) {
 	ret = KSI_OctetString_toString(ID, ':', str_id, sizeof(str_id));
 	if (ret != str_id) goto cleanup;
 
-	print_info("KSI SIgnatures Calendar authentication record PKI signature:\n");
-	print_info("Signing certificate ID: %s\n", str_id);
-	print_info("Signature type: %s\n", KSI_Utf8String_cstr(sig_type));
-	print_info("\n");
+	print("Calendar Authentication Record %s signature:\n", get_signature_type_from_oid(KSI_Utf8String_cstr(sig_type)));
+	print("  Signing certificate ID: %s\n", str_id);
+	print("  Signature type: %s\n", KSI_Utf8String_cstr(sig_type));
 
 cleanup:
 
@@ -237,7 +274,7 @@ cleanup:
 	return;
 }
 
-void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile){
+void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile, int (*print)(const char *format, ... )){
 	KSI_CertificateRecordList *certReclist = NULL;
 	KSI_CertificateRecord *certRec = NULL;
 	KSI_PKICertificate *cert = NULL;
@@ -246,12 +283,12 @@ void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile){
 	int res = 0;
 
 	if(pubfile == NULL) goto cleanup;
-	print_info("Publications file certificates::\n");
+	print("Certificates for key-based signature verification:\n");
 
 	res = KSI_PublicationsFile_getCertificates(pubfile, &certReclist);
 	if(res != KSI_OK || certReclist == NULL) goto cleanup;
 
-	for(i=0; i<KSI_CertificateRecordList_length(certReclist); i++){
+	for (i = 0; i < KSI_CertificateRecordList_length(certReclist); i++){
 		res = KSI_CertificateRecordList_elementAt(certReclist, i, &certRec);
 		if(res != KSI_OK || certRec == NULL) goto cleanup;
 
@@ -259,7 +296,7 @@ void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile){
 		if(res != KSI_OK || cert == NULL) goto cleanup;
 
 		if(KSI_PKICertificate_toString(cert, buf, sizeof(buf)) != NULL)
-			print_info("%s\n", buf);
+			print("%s\n", buf);
 	}
 
 cleanup:
@@ -267,7 +304,7 @@ cleanup:
 	return;
 }
 
-void OBJPRINT_publicationsFileSigningCert(KSI_PublicationsFile *pubfile) {
+void OBJPRINT_publicationsFileSigningCert(KSI_PublicationsFile *pubfile, int (*print)(const char *format, ... )) {
 	int res;
 	KSI_PKISignature *sig = NULL;
 	KSI_PKICertificate *cert = NULL;
@@ -283,8 +320,8 @@ void OBJPRINT_publicationsFileSigningCert(KSI_PublicationsFile *pubfile) {
 	tmp = KSI_PKICertificate_toString(cert, buf, sizeof(buf));
 	if (tmp != buf) goto cleanup;
 
-	print_info("Publications file signing %s", buf);
-	print_info("\n", buf);
+	print("Publications file signing %s", buf);
+	print("\n", buf);
 
 cleanup:
 
@@ -292,3 +329,166 @@ cleanup:
 
 	return;
 }
+
+void OBJPRINT_signatureDump(KSI_Signature *sig, int (*print)(const char *format, ... )) {
+
+	print("KSI Signature dump:\n");
+
+	if (sig == NULL) {
+		print("(null)\n");
+		return;
+	}
+
+	print("  ");
+	OBJPRINT_signatureInputHash(sig, print);
+	print("  ");
+	OBJPRINT_signatureSigningTime(sig, print);
+	print("  ");
+	OBJPRINT_signerIdentity(sig, print);
+	print("  Trust anchor: ");
+
+	if (KSITOOL_Signature_isCalendarAuthRecPresent(sig)) {
+		print("Calendar Authentication Record.\n\n");
+		OBJPRINT_signatureCertificate(sig, print);
+	} else if (KSITOOL_Signature_isPublicationRecordPresent(sig)) {
+		print("Publication Record.\n\n");
+		OBJPRINT_signaturePublicationReference(sig, print);
+	} else {
+		print("Calendar Blockchain.\n\n");
+	}
+
+	return;
+}
+
+void OBJPRINT_publicationsFileDump(KSI_PublicationsFile *pubfile, int (*print)(const char *format, ... )) {
+
+	print("KSI Publications file dump:\n");
+
+	if (pubfile == NULL) {
+		print("(null)\n");
+		return;
+	}
+
+	OBJPRINT_publicationsFileReferences(pubfile, print);
+	OBJPRINT_publicationsFileCertificates(pubfile, print);
+	OBJPRINT_publicationsFileSigningCert(pubfile, print);
+
+	return;
+}
+
+
+static const char *getVerificationResultCode(KSI_VerificationResultCode code) {
+	switch (code) {
+		case KSI_VER_RES_OK:	return "OK";
+		case KSI_VER_RES_NA:	return "NA";
+		case KSI_VER_RES_FAIL:	return "FAIL";
+		default:			return "UNKNOWN";
+	}
+}
+
+static const verificationErrorDetail_st *getVerificationErrorDetails(KSI_VerificationErrorCode code) {
+	size_t i;
+	size_t size = sizeof(verification_error) / sizeof(verificationErrorDetail_st);
+
+	for (i = 0; i < size; i++) {
+		if (verification_error[i].errorCode == code) return &verification_error[i];
+	}
+	return NULL;
+}
+
+const char *OBJPRINT_getVerificationErrorCode(KSI_VerificationErrorCode code) {
+	const verificationErrorDetail_st *details = getVerificationErrorDetails(code);
+
+	return (details != NULL ? details->code : "Unknown");
+}
+
+const char *OBJPRINT_getVerificationErrorDescription(KSI_VerificationErrorCode code) {
+	const verificationErrorDetail_st *details = getVerificationErrorDetails(code);
+
+	return (details != NULL ? details->description : "Unknown");
+}
+
+static const char *getVerificationStepDescription(size_t step) {
+	switch (step) {
+		case KSI_VERIFY_DOCUMENT: return "Verifying document hash.";
+		case KSI_VERIFY_AGGRCHAIN_INTERNALLY: return "Verifying aggregation hash chain internal consistency.";
+		case KSI_VERIFY_AGGRCHAIN_WITH_CALENDAR_CHAIN: return "Verifying aggregation hash chain root.";
+		case KSI_VERIFY_CALCHAIN_INTERNALLY: return "Verifying calendar hash chain internally.";
+		case KSI_VERIFY_CALCHAIN_WITH_CALAUTHREC: return "Verifying calendar hash chain authentication record.";
+		case KSI_VERIFY_CALCHAIN_WITH_PUBLICATION: return "Verifying calendar chain with publication.";
+		case KSI_VERIFY_CALCHAIN_ONLINE: return "Verifying signature online.";
+		case KSI_VERIFY_CALAUTHREC_WITH_SIGNATURE: return "Verifying calendar authentication record.";
+		case KSI_VERIFY_PUBFILE_SIGNATURE: return "Verifying publications file.";
+		case KSI_VERIFY_PUBLICATION_WITH_PUBFILE: return "Verifying publication.";
+		case KSI_VERIFY_PUBLICATION_WITH_PUBSTRING: return "Verifying publication with publication string.";
+		default: return "Unknown step";
+	}
+}
+
+static int getVerificationStepResult(size_t step, KSI_PolicyVerificationResult *result) {
+	return !!(result->finalResult.stepsPerformed & result->finalResult.stepsSuccessful & step);
+}
+
+static const char *getPrintableRuleName(const char *rule) {
+	static const char *rulePrefix = "KSI_VerificationRule_";
+	/* Do not print the prefix of the API rule name. Full rule name is, eg: KSI_VerificationRule_DocumentHashDoesNotExist. */
+	return (rule + (strstr(rule, rulePrefix) == NULL ? 0 : strlen(rulePrefix)));
+}
+
+static void printRuleVerificationResult(int (*print)(const char *format, ... ), KSI_RuleVerificationResult *result, int printRuleWhenOk) {
+	print("    %s:", getVerificationResultCode(result->resultCode));
+	if (result->errorCode != KSI_VER_ERR_NONE) {
+		print("\t[%s]", OBJPRINT_getVerificationErrorCode(result->errorCode));
+	}
+	print(" %s.", OBJPRINT_getVerificationErrorDescription(result->errorCode));
+	if ((result->resultCode != KSI_VER_RES_OK) ||
+			(printRuleWhenOk && result->resultCode == KSI_VER_RES_OK)) {
+		print("\tIn rule:");
+		print("\t%s", getPrintableRuleName(result->ruleName));
+	}
+	print("\n");
+}
+
+void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *result, int (*print)(const char *format, ... )) {
+	int res;
+	unsigned int i = 0;
+	size_t step;
+	size_t stepsLeft;
+
+	if (result == NULL){
+		return;
+	}
+
+	print("KSI Verification result dump:\n");
+	print("  Verification abstract:\n");
+	step = 1;
+	stepsLeft = result->finalResult.stepsPerformed;
+	do {
+		if (result->finalResult.stepsPerformed & step) {
+			print("    %s.. %s", getVerificationStepDescription(step),
+					(getVerificationStepResult(step, result) ? "ok" : "failed"));
+			print("\n");
+		}
+		step <<= 1;
+		stepsLeft >>= 1;
+	} while (stepsLeft);
+
+	print("  Verification details:\n");
+	for (i = 0; i < KSI_RuleVerificationResultList_length(result->ruleResults); i++) {
+		KSI_RuleVerificationResult *tmp = NULL;
+
+		res = KSI_RuleVerificationResultList_elementAt(result->ruleResults, i, &tmp);
+		if (res != KSI_OK || tmp == NULL) {
+			return;
+		}
+		printRuleVerificationResult(print, tmp, 1);
+	}
+
+	print("  Final result:\n");
+	/* Print also rule name in case of an error. */
+	printRuleVerificationResult(print, &result->finalResult, 0);
+
+	print("\n");
+	return;
+}
+
