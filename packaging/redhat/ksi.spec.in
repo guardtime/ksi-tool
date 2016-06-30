@@ -26,7 +26,7 @@
 Summary: Command-line access to Guardtime Keyless Signature services
 Name: %{name}
 Version: %(cat VERSION)
-Release: 1
+Release: 1%{?dist}
 License: Apache 2.0
 Group: Applications/Security
 Source:  http://download.guardtime.com/%{name}-%{version}.tar.gz
