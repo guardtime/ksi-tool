@@ -35,7 +35,7 @@
 #include "printer.h"
 #include "debug_print.h"
 #include "obj_printer.h"
-#include "conf.h"
+#include "conf_file.h"
 #include "tool.h"
 
 enum {

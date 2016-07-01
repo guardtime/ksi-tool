@@ -62,24 +62,25 @@ PARAMSET_OBJ = \
 CMDTOOL_OBJ = \
 	$(OBJ_DIR)\main.obj \
 	$(OBJ_DIR)\printer.obj \
-	$(OBJ_DIR)\conf.obj \
+	$(OBJ_DIR)\conf_file.obj \
 	$(OBJ_DIR)\ksitool_err.obj \
 	$(OBJ_DIR)\api_wrapper.obj \
 	$(OBJ_DIR)\obj_printer.obj \
 	$(OBJ_DIR)\debug_print.obj
 	
 TOOL_BOX_OBJ = \
-    $(TOOL_BOX_OBJ_DIR)\component.obj \
-    $(TOOL_BOX_OBJ_DIR)\tool_box.obj \
-    $(TOOL_BOX_OBJ_DIR)\ksi_init.obj \
-    $(TOOL_BOX_OBJ_DIR)\pubfile.obj \
-    $(TOOL_BOX_OBJ_DIR)\extend.obj \
-    $(TOOL_BOX_OBJ_DIR)\sign.obj \
-    $(TOOL_BOX_OBJ_DIR)\verify.obj \
-    $(TOOL_BOX_OBJ_DIR)\task_initializer.obj \
-    $(TOOL_BOX_OBJ_DIR)\smart_file.obj \
-    $(TOOL_BOX_OBJ_DIR)\err_trckr.obj \
-    $(TOOL_BOX_OBJ_DIR)\param_control.obj
+	$(TOOL_BOX_OBJ_DIR)\component.obj \
+	$(TOOL_BOX_OBJ_DIR)\tool_box.obj \
+	$(TOOL_BOX_OBJ_DIR)\ksi_init.obj \
+	$(TOOL_BOX_OBJ_DIR)\pubfile.obj \
+	$(TOOL_BOX_OBJ_DIR)\extend.obj \
+	$(TOOL_BOX_OBJ_DIR)\sign.obj \
+	$(TOOL_BOX_OBJ_DIR)\verify.obj \
+	$(TOOL_BOX_OBJ_DIR)\task_initializer.obj \
+	$(TOOL_BOX_OBJ_DIR)\conf.obj \
+	$(TOOL_BOX_OBJ_DIR)\smart_file.obj \
+	$(TOOL_BOX_OBJ_DIR)\err_trckr.obj \
+	$(TOOL_BOX_OBJ_DIR)\param_control.obj
 
 
 #Compiler and linker configuration
@@ -89,7 +90,7 @@ EXT_LIB = libksiapi$(RTL).lib \
 	user32.lib gdi32.lib advapi32.lib Ws2_32.lib
 	  
 	
-CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE  /I$(SRC_DIR) /I$(PARAMSET_SRC_DIR) /I$(TOOL_BOX_SRC_DIR) /I$(KSI_DIR)\include /DTOOL_NAME=\"$(TOOL_NAME)\"
+CCFLAGS = /nologo /W4 /D_CRT_SECURE_NO_DEPRECATE  /I$(SRC_DIR) /I$(PARAMSET_SRC_DIR) /I$(TOOL_BOX_SRC_DIR) /I$(KSI_DIR)\include /DTOOL_NAME=\"$(TOOL_NAME)\"
 LDFLAGS = /NOLOGO /LIBPATH:"$(KSI_DIR)\$(KSI_LIB)"
 
 !IF "$(KSI_LIB)" == "dll"

@@ -37,7 +37,7 @@
 #include "printer.h"
 #include "debug_print.h"
 #include "obj_printer.h"
-#include "conf.h"
+#include "conf_file.h"
 #include "tool.h"
 
 static int pubfile_task(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int id, KSI_PublicationsFile **pubfile);

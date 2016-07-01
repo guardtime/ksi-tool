@@ -28,7 +28,7 @@
 #include "tool_box/param_control.h"
 #include "tool_box/tool_box.h"
 #include "printer.h"
-#include "conf.h"
+#include "conf_file.h"
 
 enum service_info_priorities {
 	PRIORITY_KSI_CONF,

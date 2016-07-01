@@ -45,6 +45,7 @@ ksi_SOURCES = \
 	tool_box/sign.c \
 	tool_box/verify.c \
 	tool_box/extend.c \
+	tool_box/conf.c \
 	tool_box/default_tasks.h \
 	tool_box/component.c \
 	tool_box/component.h \
@@ -63,8 +64,8 @@ ksi_SOURCES = \
 	param_set/strn.h \
 	tool.h \
 	common.h \
-	conf.c \
-	conf.h \
+	conf_file.c \
+	conf_file.h \
 	printer.c \
 	printer.h \
 	ksitool_err.c \

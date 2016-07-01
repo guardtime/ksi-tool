@@ -34,7 +34,7 @@
 #include "tool_box/err_trckr.h"
 #include "printer.h"
 #include "obj_printer.h"
-#include "conf.h"
+#include "conf_file.h"
 #include "tool.h"
 
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);

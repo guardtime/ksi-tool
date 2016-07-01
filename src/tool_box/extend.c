@@ -36,7 +36,7 @@
 #include "printer.h"
 #include "obj_printer.h"
 #include "debug_print.h"
-#include "conf.h"
+#include "conf_file.h"
 #include "tool.h"
 
 static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext);
