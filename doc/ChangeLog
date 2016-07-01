@@ -1,3 +1,4 @@
+* BUGFIX: Exit status for faulty PKI fixed. (TOOL-122)
 * IMPROVEMENT: When signing imprint without the specified output file name hash algorithm is used as file name instead of the entire imprint. (TOOL-120)
 
 Version 2.0
