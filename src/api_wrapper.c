@@ -138,7 +138,7 @@ static void appendPubFileErros(ERR_TRCKR *err, int res) {
 static int verify_signature(KSI_Signature *sig, KSI_CTX *ctx,
 							KSI_DataHash *hsh, KSI_uint64_t rootLevel,
 							int extAllowed, KSI_PublicationsFile *pubFile, KSI_PublicationData *pubData,
-							const KSI_Policy *policy, 
+							const KSI_Policy *policy,
 							KSI_PolicyVerificationResult **result) {
 
 	int res = KSI_UNKNOWN_ERROR;
@@ -618,14 +618,14 @@ int KSITOOL_KSI_ERR_toExitCode(int error_code) {
 		case KSI_UNAVAILABLE_HASH_ALGORITHM:
 		case KSI_PUBLICATIONS_FILE_NOT_SIGNED_WITH_PKI:
 		case KSI_CRYPTO_FAILURE:
+		case KSI_INVALID_PKI_SIGNATURE:
+		case KSI_PKI_CERTIFICATE_NOT_TRUSTED:
 			return EXIT_CRYPTO_ERROR;
 
 		/**
 		 * Verification errors.
 		 */
 		case KSI_VERIFICATION_FAILURE:
-		case KSI_INVALID_PKI_SIGNATURE:
-		case KSI_PKI_CERTIFICATE_NOT_TRUSTED:
 			return EXIT_VERIFY_ERROR;
 
 		/**

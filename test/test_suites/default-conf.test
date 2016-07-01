@@ -20,7 +20,7 @@
 
 # KSI_CONF test.
 # To run this test file successfully it is important that it is run by corresponding
-# test script that configures temporary KSI_CONF environment variable.  
+# test script that configures temporary KSI_CONF environment variable.
 
 # Check if KSI_CONF is set.
 EXECUTABLE conf -d
@@ -53,7 +53,7 @@ EXECUTABLE sign -d -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c65934
 # Try to verify default publications file. It should fail as certificate and constraints are not set correctly.
 EXECUTABLE pubfile -v
 >>>2 /(The PKI certificate is not trusted)/
->>>= 6
+>>>= 10
 
 # Verify default publications file with correct verification info from external configurations file.
 EXECUTABLE pubfile -d -v --conf test/resource/conf/ok-verification-info.cfg
@@ -66,12 +66,12 @@ EXECUTABLE pubfile -d -v -V test/resource/certificates/ok-test.crt --cnstr E=tes
 >>>= 0
 
 # Verify default publications file with correct certificate and constraints from command-line.
-# Override default verification info with invalid configurations file from command-line. 
+# Override default verification info with invalid configurations file from command-line.
 EXECUTABLE pubfile -d -v -V test/resource/certificates/ok-test.crt --cnstr E=test@test.com --conf test/resource/conf/nok-verification-info.cfg
 >>>2 /(Verifying publications file)(.*ok.*)/
 >>>= 0
 
-# Override default configurations file. Perform publications file verification. 
+# Override default configurations file. Perform publications file verification.
 EXECUTABLE pubfile -v -d --conf test/resource/conf/ok-conf-1.cfg
 >>>2 /(Verifying publications file)(.*ok.*)/
 >>>= 0
