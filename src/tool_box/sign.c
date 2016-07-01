@@ -299,6 +299,8 @@ static char* get_output_file_name_if_not_defined(PARAM_SET *set, ERR_TRCKR *err,
 	char *ret = NULL;
 	int res;
 	char *in_file_name = NULL;
+	char hash_algo[1024];
+	char *colon = NULL;
 
 	if (set == NULL || err == NULL || buf == NULL || buf_len == 0) goto cleanup;
 
@@ -307,6 +309,18 @@ static char* get_output_file_name_if_not_defined(PARAM_SET *set, ERR_TRCKR *err,
 
 	if (strcmp(in_file_name, "-") == 0) {
 		KSI_snprintf(buf, buf_len, "stdin.ksig");
+	} else if (is_imprint(in_file_name)) {
+		/* Search for the algorithm name. */
+		KSI_strncpy(hash_algo, in_file_name, sizeof(hash_algo));
+		colon = strchr(hash_algo, ':');
+
+		/* Create the file name from hash algorithm. */
+		if (colon != NULL) {
+			*colon = '\0';
+			KSI_snprintf(buf, buf_len, "%s.ksig", hash_algo);
+		} else {
+			KSI_snprintf(buf, buf_len, "hash_imprint.ksig");
+		}
 	} else {
 		KSI_snprintf(buf, buf_len, "%s.ksig", in_file_name);
 	}
