@@ -24,7 +24,7 @@
 #include <ksi/ksi.h>
 #include "ksitool_err.h"
 #include "param_set/param_set.h"
-#include "tool_box/smart_file.h"
+#include "smart_file.h"
 #include "api_wrapper.h"
 
 static int ksitool_ErrToExitcode(int error_code) {

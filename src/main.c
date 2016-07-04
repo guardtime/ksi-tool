@@ -21,12 +21,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ksi/ksi.h>
 #include <ksi/compatibility.h>
 #include "param_set/param_set.h"
 #include "param_set/task_def.h"
 #include "tool_box/default_tasks.h"
-#include "tool_box/tool_box.h"
-#include "tool_box/component.h"
+#include "tool_box.h"
+#include "component.h"
 #include "ksitool_err.h"
 #include "printer.h"
 #include "conf_file.h"

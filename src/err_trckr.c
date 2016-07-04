@@ -22,7 +22,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include "tool_box/err_trckr.h"
+#include "err_trckr.h"
+#include "common.h"
 #include <ksi/compatibility.h>
 
 typedef struct ERR_ENTRY_st {
@@ -40,6 +41,7 @@ struct ERR_TRCKR_st {
 };
 
 static const char *dummy_errocode_to_string(int a) {
+	VARIABLE_IS_NOT_USED(a);
 	return "-";
 }
 

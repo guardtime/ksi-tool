@@ -61,26 +61,26 @@ PARAMSET_OBJ = \
 
 CMDTOOL_OBJ = \
 	$(OBJ_DIR)\main.obj \
-	$(OBJ_DIR)\printer.obj \
 	$(OBJ_DIR)\conf_file.obj \
 	$(OBJ_DIR)\ksitool_err.obj \
 	$(OBJ_DIR)\api_wrapper.obj \
+	$(OBJ_DIR)\printer.obj \
 	$(OBJ_DIR)\obj_printer.obj \
-	$(OBJ_DIR)\debug_print.obj
+	$(OBJ_DIR)\debug_print.obj \
+	$(OBJ_DIR)\component.obj \
+	$(OBJ_DIR)\tool_box.obj \
+	$(OBJ_DIR)\smart_file.obj \
+	$(OBJ_DIR)\err_trckr.obj
 	
 TOOL_BOX_OBJ = \
-	$(TOOL_BOX_OBJ_DIR)\component.obj \
-	$(TOOL_BOX_OBJ_DIR)\tool_box.obj \
 	$(TOOL_BOX_OBJ_DIR)\ksi_init.obj \
+	$(TOOL_BOX_OBJ_DIR)\task_initializer.obj \
+	$(TOOL_BOX_OBJ_DIR)\param_control.obj \
 	$(TOOL_BOX_OBJ_DIR)\pubfile.obj \
 	$(TOOL_BOX_OBJ_DIR)\extend.obj \
 	$(TOOL_BOX_OBJ_DIR)\sign.obj \
 	$(TOOL_BOX_OBJ_DIR)\verify.obj \
-	$(TOOL_BOX_OBJ_DIR)\task_initializer.obj \
-	$(TOOL_BOX_OBJ_DIR)\conf.obj \
-	$(TOOL_BOX_OBJ_DIR)\smart_file.obj \
-	$(TOOL_BOX_OBJ_DIR)\err_trckr.obj \
-	$(TOOL_BOX_OBJ_DIR)\param_control.obj
+	$(TOOL_BOX_OBJ_DIR)\conf.obj
 
 
 #Compiler and linker configuration
