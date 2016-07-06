@@ -70,21 +70,20 @@ See LICENSE file.
 
 ## DEPENDENCIES
 
+```
 Library   Version    License type  Source
 
-libksi    3.9        Apache 2.0    [https://github.com/GuardTime/libksi](https://github.com/GuardTime/libksi)
-
+libksi    3.9>       Apache 2.0    https://github.com/GuardTime/libksi
+```
 
 ## COMPATIBILITY
 
+```
 OS / PLatform                       Compatibility
 
-RHEL 6 and 7, x86_64 architecture   Fully compatible and tested
-
-CentOS, x86_64 architecture         Fully Compatible and tested
-
-Debian                              Compatible but not tested on regular basis
-
-OS X                                Compatible but not tested on regular basis
-
-Windows 7, 8, 10                    Compatible but not tested on regular basis
+RHEL 6 and 7, x86_64 architecture   Fully compatible and tested.
+CentOS, x86_64 architecture         Fully Compatible and tested.
+Debian                              Compatible but not tested on regular basis.
+OS X                                Compatible but not tested on regular basis.
+Windows 7, 8, 10                    Compatible but not tested on regular basis.
+```
