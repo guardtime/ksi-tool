@@ -19,7 +19,7 @@ trust anchors.
 
 ## INSTALLION
 
-### From rpm package public repository
+### Latest release from Guardtime repository
 In order to install the ksi CentOS / RHEL packages directly from the Guardtime
 public repository, download and save the repository configuration to the
 /etc/yum.repos.d/ folder:
@@ -39,10 +39,12 @@ yum install ksi
 ### From source code
 
 If the latest version is needed or the package is not available for the
-platform download the source code and build it using gcc or VS. To build
-ksi tool libksi and libksi-devel packages are needed. Use rebuild.sh script
-to build ksi tool on CentOS /RHEL. See WinBuild.txt to read how to build ksi
-tool on Windows.
+platform check out source code from Github and build it using gcc or VS.
+To build KSI tool libksi and libksi-devel (KSI C SDK) packages are needed.
+Libksi is available in Guardtime repository or as source code in GitHub:
+[https://github.com/GuardTime/libksi](https://github.com/GuardTime/libksi).
+Use rebuild.sh script to build KSI tool on CentOS /RHEL. See WinBuild.txt
+to read how to build KSI tool on Windows.
 
   
 ## USAGE
@@ -59,7 +61,7 @@ a data file 'data':
   ksi sign -i data -S http://example.gateway.com:3333/gt-signingservice
 ```
 
-See ksi man page to read about usage in detail.
+See man ksi for detailed usage instructions.
 
 
 ## LICENSE
@@ -81,7 +83,7 @@ libksi    3.9>       Apache 2.0    https://github.com/GuardTime/libksi
 OS / PLatform                       Compatibility
 
 RHEL 6 and 7, x86_64 architecture   Fully compatible and tested.
-CentOS, x86_64 architecture         Fully Compatible and tested.
+CentOS 6 and 7, x86_64 architecture Fully Compatible and tested.
 Debian                              Compatible but not tested on regular basis.
 OS X                                Compatible but not tested on regular basis.
 Windows 7, 8, 10                    Compatible but not tested on regular basis.
