@@ -26,7 +26,7 @@ man_MANS = \
 	../doc/ksi-pubfile.1 \
 	../doc/ksi-verify.1
 
-dist_doc_DATA = ../license.txt ../doc/ChangeLog
+dist_doc_DATA = ../LICENSE ../doc/ChangeLog
 
 EXTRA_DIST = ../VERSION $(man_MANS) $(dist_doc_DATA)
 ksi_SOURCES = \
