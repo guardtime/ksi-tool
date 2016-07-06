@@ -19,25 +19,24 @@ trust anchors.
 
 ## INSTALLION
 
-In order to install the packages from the Guardtime repository under CentOS /
-RHEL, add the repository by creating a file /etc/yum.repos.d/ksi.repo with
-the following contents:
+### From rpm package public repository
+In order to install the ksi CentOS / RHEL packages directly from the Guardtime
+public repository, download and save the repository configuration to the
+/etc/yum.repos.d/ folder:
 
 ```
-  [ksi]
-  name=KSI
-  baseurl=https://download.guardtime.com/ksi/rhel/6/x86_64/
-  enabled=1
-  gpgcheck=1
+cd /etc/yum.repos.d
+
+# In case of RHEL / CentOS 6
+sudo curl -O http://download.guardtime.com/ksi/configuration/guardtime.el6.repo
+
+# In case of RHEL / CentOS 7
+sudo curl -O http://download.guardtime.com/ksi/configuration/guardtime.el7.repo
+
+yum install ksi
 ```
 
-Import the GPG key for verification of the packages and install packages as
-usual:
-
-```
-  rpm --import https://verify.guardtime.com/GUARDTIME-GPG-KEY
-  yum install ksi
-```
+### From source code
 
 If the latest version is needed or the package is not available for the
 platform download the source code and build it using gcc or VS. To build
