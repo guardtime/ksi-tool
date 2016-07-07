@@ -24,8 +24,8 @@
 #include <errno.h>
 #include <limits.h>
 #include <ksi/compatibility.h>
-#include "tool_box/smart_file.h"
-#include "tool_box/tool_box.h"
+#include "smart_file.h"
+#include "tool_box.h"
 
 #ifdef _WIN32
 #	include <windows.h>

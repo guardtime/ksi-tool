@@ -24,9 +24,9 @@
 #include <ksi/compatibility.h>
 #include <ksi/policy.h>
 #include "ksi/net.h"
-#include "tool_box/tool_box.h"
-#include "tool_box/smart_file.h"
-#include "tool_box/err_trckr.h"
+#include "tool_box.h"
+#include "smart_file.h"
+#include "err_trckr.h"
 
 #define ERR_APPEND_KSI_ERR_EXT_MSG(err, res, ref_err, msg) \
 		if (res == ref_err) { \
@@ -543,6 +543,184 @@ int KSITOOL_LOG_SmartFile(void *logCtx, int logLevel, const char *message) {
 	}
 
 	return KSI_OK;
+}
+
+static int KSI_Signature_serialize_wrapper(KSI_CTX *ksi, KSI_Signature *sig, unsigned char **raw, size_t *raw_len) {
+	if (ksi);
+	return KSI_Signature_serialize(sig, raw, raw_len);
+}
+
+static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **obj,	int (*parse)(KSI_CTX *ksi, unsigned char *raw, unsigned raw_len, void **obj), void (*obj_free)(void*), const char *name) {
+	int res;
+	SMART_FILE *file = NULL;
+	unsigned char buf[0xffff + 4];
+	unsigned char dummy[1];
+	void *tmp = NULL;
+	size_t data_len = 0;
+	size_t dummy_len = 0;
+
+
+	if (err == NULL || ksi == NULL || path == NULL || obj == NULL || parse == NULL || obj_free == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	res = SMART_FILE_open(path, "rb", &file);
+	if (res != KT_OK) {
+		ERR_TRCKR_ADD(err, res, "Error: %s", KSITOOL_errToString(res));
+		goto cleanup;
+	}
+
+	res = SMART_FILE_read(file, (char *)buf, sizeof(buf), &data_len);
+	if(res != SMART_FILE_OK) {
+		ERR_TRCKR_ADD(err, res, "Error: Unable to read %s from file.", name);
+		goto cleanup;
+	}
+
+	res = SMART_FILE_read(file, (char *)dummy, sizeof(dummy), &dummy_len);
+	if(res != SMART_FILE_OK) {
+		ERR_TRCKR_ADD(err, res, "Error: Unable to read data from file.");
+		goto cleanup;
+	}
+
+	if (dummy_len != 0 || !SMART_FILE_isEof(file)) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_INPUT_FORMAT, "Error: Input file too long for a valid %s file.", name);
+		goto cleanup;
+	}
+
+	if (data_len == 0) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_INPUT_FORMAT, "Error: Input file is empty.", name);
+		goto cleanup;
+	}
+
+	res = parse(ksi, buf, (unsigned)data_len, &tmp);
+	if (res != KSI_OK) {
+		ERR_TRCKR_ADD(err, res, "Error: Unable to parse %s.", name);
+		goto cleanup;
+	}
+
+	*obj = tmp;
+	tmp = NULL;
+	res = KT_OK;
+
+
+cleanup:
+
+	SMART_FILE_close(file);
+	obj_free(tmp);
+
+	return res;
+}
+
+static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, const char *mode, void *obj, int (*serialize)(KSI_CTX *ksi, void *obj, unsigned char **raw, size_t *raw_len), const char *path, char *f, size_t f_len) {
+	int res;
+	SMART_FILE *file = NULL;
+	unsigned char *raw = NULL;
+	size_t raw_len = 0;
+	size_t count = 0;
+	char mode_sum[32];
+
+	if (err == NULL || ksi == NULL || obj == NULL || serialize == NULL || path == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	KSI_snprintf(mode_sum, sizeof(mode_sum), "wb%s", (mode == NULL) ? "" : mode);
+
+	res = serialize(ksi, obj, &raw, &raw_len);
+	if (res != KSI_OK) {
+		ERR_TRCKR_ADD(err, res, "Error: Unable to serialize.");
+		goto cleanup;
+	}
+
+	res = SMART_FILE_open(path, mode_sum, &file);
+	if (res != KT_OK) {
+		ERR_TRCKR_ADD(err, res, "Error: %s", KSITOOL_errToString(res));
+		goto cleanup;
+	}
+
+	if (f != NULL && f_len != 0) {
+		KSI_strncpy(f, SMART_FILE_getFname(file), f_len);
+	}
+
+	res = SMART_FILE_write(file, (char *)raw, raw_len, &count);
+	if(res != SMART_FILE_OK || count != raw_len) {
+		ERR_TRCKR_ADD(err, res, "Error: Unable to write to file.");
+		goto cleanup;
+	}
+
+	res = KT_OK;
+
+cleanup:
+
+	KSI_free(raw);
+	SMART_FILE_close(file);
+
+	return res;
+}
+
+int KSI_OBJ_saveSignature(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *mode, const char *fname, char *f, size_t f_len) {
+	int res;
+
+	if (ksi == NULL || fname == NULL || sign == NULL) {
+		return KT_INVALID_ARGUMENT;
+	}
+
+	res = saveKsiObj(err, ksi, mode, sign,
+				(int (*)(KSI_CTX *, void *, unsigned char **, size_t *))KSI_Signature_serialize_wrapper,
+				fname, f, f_len);
+
+	if (res) {
+		ERR_TRCKR_ADD(err, res, "Error: Unable to save signature file to '%s'.", fname);
+	}
+
+	return res;
+}
+
+int KSI_OBJ_savePublicationsFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *mode, const char *fname) {
+	int res;
+
+	if (ksi == NULL || fname == NULL || pubfile == NULL) {
+		return KT_INVALID_ARGUMENT;
+	}
+
+	res = saveKsiObj(err, ksi, mode, pubfile,
+				(int (*)(KSI_CTX *, void *, unsigned char **, size_t *))KSI_PublicationsFile_serialize,
+				fname, NULL, 0);
+
+	if (res) {
+		ERR_TRCKR_ADD(err, res, "Error: Unable to save publications file to '%s'.", fname);
+	}
+
+	return res;
+}
+
+int KSI_OBJ_loadSignature(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signature **sig) {
+	int res;
+
+	if (ksi == NULL || fname == NULL || sig == NULL) {
+		return KT_INVALID_ARGUMENT;
+	}
+
+	res = load_ksi_obj(err, ksi, fname,
+				(void**)sig,
+				(int (*)(KSI_CTX *, unsigned char*, unsigned, void**))KSI_Signature_parse,
+				(void (*)(void *))KSI_Signature_free,
+				"KSI Signature");
+
+	if (res) {
+		ERR_TRCKR_ADD(err, res, "Error: Unable to load signature file from '%s'.", fname);
+	}
+	return res;
+}
+
+int KSI_OBJ_isSignatureExtended(const KSI_Signature *sig) {
+	KSI_PublicationRecord *pubRec = NULL;
+
+	if (sig == NULL) return 0;
+	KSI_Signature_getPublicationRecord(sig, &pubRec);
+
+	return pubRec == NULL ? 0 : 1;
 }
 
 int KSITOOL_KSI_ERR_toExitCode(int error_code) {

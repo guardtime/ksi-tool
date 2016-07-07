@@ -24,8 +24,8 @@
 #include <string.h>
 #include "param_set/param_set.h"
 #include "tool_box/ksi_init.h"
-#include "tool_box/smart_file.h"
-#include "tool_box/err_trckr.h"
+#include "smart_file.h"
+#include "err_trckr.h"
 #include "ksitool_err.h"
 #include "printer.h"
 #include "api_wrapper.h"

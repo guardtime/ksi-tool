@@ -18,8 +18,8 @@
  * Guardtime Inc.
  */
 
-#ifndef CONF_H
-#define	CONF_H
+#ifndef CONF_FILE_H
+#define	CONF_FILE_H
 
 #include "param_set/param_set.h"
 
@@ -84,15 +84,9 @@ int CONF_isInvalid(PARAM_SET *set);
 
 char *CONF_errorsToString(PARAM_SET *set, const char *prefix, char *buf, size_t buf_len);
 
-int conf_run(int argc, char** argv, char **envp);
-
-char *conf_help_toString(char *buf, size_t len);
-
-const char *conf_get_desc(void);
-
 #ifdef	__cplusplus
 }
 #endif
 
-#endif	/* CONF_H */
+#endif	/* CONF_FILE_H */
 

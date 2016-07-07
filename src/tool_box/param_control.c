@@ -26,15 +26,14 @@
 #include <string.h>
 #include <ksi/ksi.h>
 #include <ksi/compatibility.h>
-#include "tool_box/tool_box.h"
-#include "tool_box/err_trckr.h"
+#include "tool_box.h"
+#include "err_trckr.h"
 #include "tool_box/param_control.h"
 #include "param_set/param_value.h"
 #include "param_set/param_set.h"
 #include "param_set/task_def.h"
-#include "tool_box/smart_file.h"
+#include "smart_file.h"
 #include "obj_printer.h"
-#include "ksi_init.h"
 #include "api_wrapper.h"
 #include "common.h"
 

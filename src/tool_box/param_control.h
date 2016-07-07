@@ -21,7 +21,7 @@
 #ifndef PARAM_CONTROL_H
 #define	PARAM_CONTROL_H
 
-#include "tool_box/err_trckr.h"
+#include "err_trckr.h"
 #include "param_set/param_set.h"
 
 #ifdef	__cplusplus

@@ -21,9 +21,6 @@
 #ifndef TOOL_BOX_H
 #define	TOOL_BOX_H
 
-#include <ksi/ksi.h>
-#include "ksitool_err.h"
-#include "tool_box/err_trckr.h"
 #include "param_set/param_set.h"
 
 #ifdef	__cplusplus
@@ -31,16 +28,8 @@ extern "C" {
 #endif
 
 	
-int KSI_OBJ_saveSignature(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *mode, const char *fname, char *f, size_t f_len);
-int KSI_OBJ_savePublicationsFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *mode, const char *fname) ;
-int KSI_OBJ_loadSignature(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signature **sig);
-int KSI_OBJ_isSignatureExtended(const KSI_Signature *sig);
-
 const char *OID_getShortDescriptionString(const char *OID);
 const char *OID_getFromString(const char *str);
-
-void print_progressDesc(int showTiming, const char *msg, ...);
-void print_progressResult(int res);
 
 const char *getPublicationsFileRetrieveDescriptionString(PARAM_SET *set);
 

@@ -24,7 +24,7 @@
 #include "ksitool_err.h"
 #include <ksi/ksi.h>
 #include <ksi/policy.h>
-#include "tool_box/err_trckr.h"
+#include "err_trckr.h"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -66,6 +66,11 @@ int KSITOOL_SignatureVerify_userProvidedPublicationBased(ERR_TRCKR *err, KSI_Sig
 char *KSITOOL_DataHash_toString(KSI_DataHash *hsh, char *buf, size_t buf_len);
 char *KSITOOL_PublicationData_toString(KSI_PublicationData *data, char *buf, size_t buf_len);
 char *KSITOOL_PublicationRecord_toString(KSI_PublicationRecord *rec, char *buf, size_t buf_len);
+
+int KSI_OBJ_saveSignature(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *mode, const char *fname, char *f, size_t f_len);
+int KSI_OBJ_savePublicationsFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *mode, const char *fname) ;
+int KSI_OBJ_loadSignature(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signature **sig);
+int KSI_OBJ_isSignatureExtended(const KSI_Signature *sig);
 
 int KSITOOL_LOG_SmartFile(void *logCtx, int logLevel, const char *message);
 
