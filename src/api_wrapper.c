@@ -560,7 +560,7 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **o
 	size_t dummy_len = 0;
 
 
-	if (ksi == NULL || path == NULL || obj == NULL || parse == NULL || obj_free == NULL) {
+	if (err == NULL || ksi == NULL || path == NULL || obj == NULL || parse == NULL || obj_free == NULL) {
 		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
 	}

@@ -139,14 +139,14 @@ installer: error_handling_installer $(BIN_DIR)\$(TOOL_NAME).exe
 error_handling_build_tool:
 	@echo ""
 !IFNDEF KSI_DIR
-	@echo "ERROR: KSI_DIR is not specidef! Specify KSI_DIR as path to directory"
-	@echo "       containing libks sub directories lib and include."
+	@echo "ERROR: KSI_DIR is not specified! Specify KSI_DIR as path to directory"
+	@echo "       containing libksi (KSI C SDK) sub directories lib and include."
 	@echo "       See README for more information."
 	@exit 1
 !ENDIF
 !IF "$(LNK_WININET)" != "yes" && "$(LNK_WINHTTP)" != "yes" && "$(LNK_CURL)" != "yes"
 	@echo "ERROR: Network provider library not spcified!"
-	@echo "       Specify one of the following that matches with the ksi library:"
+	@echo "       Specify one of the following that matches with the libksi (KSI C SDK):"
 	@echo "       LNK_WININET=yes, LNK_WINHTTP=yes or LNK_CURL=yes."
 	@echo "       See README for more information."
 	@exit 1
@@ -161,7 +161,7 @@ error_handling_build_tool:
 !ENDIF
 !IF "$(LNK_CRYPTOAPI)" != "yes" && "$(LNK_OPENSSL)" != "yes"
 	@echo "ERROR: Cryptographic provider library not spcified!"
-	@echo "       Specify one of the following that matches with the ksi library:"
+	@echo "       Specify one of the following that matches with the libksi (KSI C SDK):"
 	@echo "       LNK_OPENSSL=yes or LNK_CRYPTOAPI=yes."
 	@echo "       See README for more information."
 	@exit 1
