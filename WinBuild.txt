@@ -1,22 +1,3 @@
-
- GUARDTIME CONFIDENTIAL
-
- Copyright (C) [2015] Guardtime, Inc
- All Rights Reserved
-
- NOTICE:  All information contained herein is, and remains, the
- property of Guardtime Inc and its suppliers, if any.
- The intellectual and technical concepts contained herein are
- proprietary to Guardtime Inc and its suppliers and may be
- covered by U.S. and Foreign Patents and patents in process,
- and are protected by trade secret or copyright law.
- Dissemination of this information or reproduction of this
- material is strictly forbidden unless prior written permission
- is obtained from Guardtime Inc.
- "Guardtime" and "KSI" are trademarks or registered trademarks of
- Guardtime Inc.
-
-
 Building with Microsoft Visual Studio
 =====================================
 
@@ -30,8 +11,8 @@ Prerequisites
 	To be able to build ksi one must have the following software pieces:
 
 		1) Microsoft Visual Studio 10 or Windows SDK 7.1 for building tools.
-		2) Guardtime KSI API
-		3) Cryptography provider (must have one)
+		2) Guardtime KSI C SDK (libksi).
+		3) Cryptography provider (must have one).
 			3.1) OpenSSL 0.9.8g (recommended).
 			3.2) Windows native CryptoAPI.
 		4) Network provider (must have one)
@@ -41,13 +22,13 @@ Prerequisites
 		5) WiX Toolset 3.9 for installer build. 
 	
 	Given versions are the same used in testing. It is strongly	recommended
-	to use exactly the same versions. 
+	to use exactly the same versions.
 	
-	When KSI API uses OpenSSl or Curl the location of libraries must be
-	specified containing KSI API itself. See make file options CURL_DIR,
-	OPENSSL_DIR and KSI_DIR.  The structure of the directories must be
-	as follows: Windows native libraries are already installed with
-	Windows.
+	Windows native libraries are already installed with	Windows but
+	when libksi uses OpenSSl or Curl the location of libraries must be
+	specified containing libksi itself. See make file options CURL_DIR,
+	OPENSSL_DIR and KSI_DIR. The structure of the directories must be
+	as follows:
 	
 	For CURL
 	
@@ -63,7 +44,7 @@ Prerequisites
       |openssl
     lib
 
-	For KSI API
+	For libksi
 
     dll
     include
@@ -71,31 +52,43 @@ Prerequisites
     lib
 	
 	
-	
-	
 Build process
 =====================================
 	
 	Below is the abstract structure of the project that describes the location
-	of the source code, make files and output. Root directory contains top-level
-	build scripts that are used to build ksi tool. After successful build obj and
-	out directory is created. Obj directory contains compiled obj files. Out 
-	directory contains executable.
+	of the documentation, source code, make files and output. Root directory
+	contains top-level build scripts that are used to build ksi tool. After
+	successful build obj and bin directory is created. Obj directory contains
+	compiled obj files. Out directory contains executable and if built the msi
+	installer file.
 	
-	//Top level build scripts
+	// Top level build scripts.
     WinBuild.bat
     makefile
     
-	//Source code for ksi tool
-	src
-      | *.c
-      | *.h
-      
-   //Folders and files generated during build
+    //Documentation and source code for ksi tool.
+   doc
+     | *.pdf
+   src
+     | *.c
+     | *.h
+     | param_set
+        | *.c
+        | *.h
+     | tool_box
+        | *.c
+        | *.h
+   // Folders and files generated during build.
    obj
      |*.obj
-   out
+     |*.wxsobj
+     | param_set
+        |*.obj
+     | tool_box
+        |*.obj
+   bin
      |*.exe
+     |*.msi
 
 
 Configuring build scripts
@@ -110,42 +103,56 @@ Configuring build scripts
 	
 	Make file has following tasks:
 	
-		1)default	- build ksi tool executable.
-		2)installer - build ksi tool Windows installer (KSI_LIB must be lib).
-		3)clean 	- clean build.
+      1)default       - build ksi tool executable.
+      2)installer     - build ksi tool Windows installer (KSI_LIB must be lib).
+      3)clean         - clean build.
 	
 		
 	Make file has following options:
 	
-		1) KSI_LIB		- select KSI API library format (lib, dll).
-						Default is lib. 	
-		2) RTL			- select C run-time library (RTL) (MT, MTd, MD, MDd).
-						Default is MT.
-		3) INSTALL_MACHINE - values 32 and 64 for configuring installer task.
-						to configure build environment for 32 on 64 bit build
-						setenv /x64 or /x86 must be called.
-		4) CURL_DIR 	- directory containing Curl library and include files.
-		5) OPENSSL_DIR 	- directory containing OpenSLL library and include files.
-		6) KSI_DIR 		- directory containing KSI API library and include files.
-		7) LNK_CURL		- link against CURL library (yes/no).
-		8) LNK_OPENSSL	- link against OpenSLL library (yes/no).
-		9) LNK_WININET	- link against WinINet library (yes/no).
-		10) LNK_WINHTTP - link against WinHTTP library (yes/no).
-		11) LNK_CRYPTOAPI - link against CryptoAPI library (yes/no).
-		12) LDEXTRA 		- extra flags for linker.
-		13) CCEXTRA 		- extra flags for compiler.
+      1) KSI_LIB      - select libksi library format (lib, dll).
+                        Default is lib.
+      2) RTL          - select C run-time library (RTL) (MT, MTd, MD, MDd).
+                        Default is MT.
+      3) INSTALL_MACHINE
+                      - values 32 and 64 for configuring installer task.
+                        to configure build environment for 32 on 64 bit build
+                        setenv /x64 or /x86 must be called.
+      4) CURL_DIR     - directory containing Curl library and include files.
+      5) OPENSSL_DIR  - directory containing OpenSLL library and include files.
+      6) KSI_DIR      - directory containing libksi library and include files.
+      7) LNK_CURL     - link against CURL library (yes/no).
+      8) LNK_OPENSSL  - link against OpenSLL library (yes/no).
+      9) LNK_WININET  - link against WinINet library (yes/no).
+      10) LNK_WINHTTP - link against WinHTTP library (yes/no).
+      11) LNK_CRYPTOAPI
+                      - link against CryptoAPI library (yes/no).
+      12) LDEXTRA     - extra flags for linker.
+      13) CCEXTRA     - extra flags for compiler.
 		
-	When compiling one must know how the KSI API was linked - DLL and RTL must
+	When compiling one must know how the libksi was linked - DLL and RTL must
 	be configured accordingly and LNK_<lib_name> must be defined for libraries
-	necessary for the build. The location of KSI_API must be specified by
-	defining KSI_DIR. If KSI API uses Curl or OpenSSL CURL_DIR and OPENSSL_DIR
+	necessary for the build. The location of libksi must be specified by
+	defining KSI_DIR. If libksi uses Curl or OpenSSL CURL_DIR and OPENSSL_DIR
 	must be specified. 
 
-	Examples
 	
-	KSI API is built as lib using MT RTL and windows native libraries:
-		nmake RTL=MT DLL=lib KSI_DIR="C:\KSI" LNK_WININET=yes LNK_CRYPTOAPI=yes
-	KSI API is built as lib using MTd RTL and OpenSLL
-		nmake RTL=MTd DLL=lib KSI_DIR="C:\KSI" OPENSSL_DIR="C:\OPENSSL" LNK_WININET=yes LNK_OPENSSL=yes
-	KSI API is built as dll using MD RTL and windows native libraries:
-	nmake RTL=MD DLL=dll KSI_DIR="C:\KSI" OPENSSL_DIR="C:\OPENSSL" LNK_WINHTTP=yes LNK_CRYPTOAPI=yes
+Examples
+=====================================
+	
+	1) libksi is built as lib using MT RTL and windows native libraries:
+		nmake RTL=MT KSI_LIB=lib KSI_DIR="C:\KSI" LNK_WININET=yes
+		LNK_CRYPTOAPI=yes
+		
+	2) libksi is built as lib using MTd RTL and OpenSLL
+		nmake RTL=MTd KSI_LIB=lib KSI_DIR="C:\KSI" OPENSSL_DIR="C:\OPENSSL"
+		LNK_WININET=yes LNK_OPENSSL=yes
+		
+	3) libksi is built as dll using MD RTL and windows native libraries:
+		nmake RTL=MD KSI_LIB=dll KSI_DIR="C:\KSI" OPENSSL_DIR="C:\OPENSSL"
+		LNK_WINHTTP=yes LNK_CRYPTOAPI=yes
+		
+	4) libksi is build as lib, using MTd and windows native libraries to build
+	   installer for 64bit OS:
+		nmake RTL=MTd KSI_LIB=lib KSI_DIR="C:\KSI" LNK_WININET=yes
+		LNK_CRYPTOAPI=yes INSTALL_MACHINE=64 installer

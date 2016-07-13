@@ -26,28 +26,29 @@ man_MANS = \
 	../doc/ksi-pubfile.1 \
 	../doc/ksi-verify.1
 
-dist_doc_DATA = ../license.txt ../doc/ChangeLog
+dist_doc_DATA = ../LICENSE ../doc/ChangeLog
 
 EXTRA_DIST = ../VERSION $(man_MANS) $(dist_doc_DATA)
 ksi_SOURCES = \
 	main.c	\
-	tool_box/smart_file.c \
-	tool_box/smart_file.h \
+	smart_file.c \
+	smart_file.h \
 	tool_box/param_control.c \
 	tool_box/param_control.h \
 	tool_box/ksi_init.c \
 	tool_box/ksi_init.h \
-	tool_box/err_trckr.c \
-	tool_box/err_trckr.h \
-	tool_box/tool_box.c \
-	tool_box/tool_box.h \
+	err_trckr.c \
+	err_trckr.h \
+	tool_box.c \
+	tool_box.h \
 	tool_box/pubfile.c \
 	tool_box/sign.c \
 	tool_box/verify.c \
 	tool_box/extend.c \
+	tool_box/conf.c \
 	tool_box/default_tasks.h \
-	tool_box/component.c \
-	tool_box/component.h \
+	component.c \
+	component.h \
 	tool_box/task_initializer.c \
 	tool_box/task_initializer.h \
 	param_set/param_set_obj_impl.h \
@@ -63,8 +64,8 @@ ksi_SOURCES = \
 	param_set/strn.h \
 	tool.h \
 	common.h \
-	conf.c \
-	conf.h \
+	conf_file.c \
+	conf_file.h \
 	printer.c \
 	printer.h \
 	ksitool_err.c \

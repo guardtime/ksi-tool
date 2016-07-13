@@ -29,8 +29,8 @@ extern "C" {
 #include <stdio.h>	
 #include <ksi/ksi.h>
 #include "ksitool_err.h"	
-#include "tool_box/smart_file.h"
-#include "tool_box/err_trckr.h"
+#include "smart_file.h"
+#include "err_trckr.h"
 
 /**
  * This function takes PARAM_SET as input and configures KSI_CTX and ERR_TRCKR.

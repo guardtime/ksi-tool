@@ -26,9 +26,10 @@
 #include "param_set/param_set.h"
 #include "param_set/task_def.h"
 #include "tool_box/param_control.h"
-#include "tool_box/tool_box.h"
+#include "tool_box.h"
 #include "printer.h"
-#include "conf.h"
+#include "conf_file.h"
+#include "ksitool_err.h"
 
 enum service_info_priorities {
 	PRIORITY_KSI_CONF,

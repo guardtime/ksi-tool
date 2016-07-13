@@ -1,4 +1,6 @@
 * IMPROVEMENT: Distribution tag (e.g. el6, el7, fc19) added to the rpm package name.
+* BUGFIX: Exit status for faulty PKI fixed. (TOOL-122)
+* IMPROVEMENT: When signing imprint without the specified output file name hash algorithm is used as file name instead of the entire imprint. (TOOL-120)
 
 Version 2.0
 
@@ -30,6 +32,15 @@ Version 2.0
 * IMPROVEMENT: Task conf has flags -d and --dump for dumping configurations files path and its content. (TOOL-139)
 * IMPROVEMENT: Parameters V, W a P (with file:// scheme) defined in configurations file support file names relative to the configurations file. (TOOL-110)
 * FEATURE: libksi can be linked statically with ksi tool. (TOOL-137)
+
+Version 1.10
+
+2016-18-04 1.10.0
+
+* IMPROVEMENT: Enabled autotools option subdir-objects to remove build errors (on Mac OS and Ubuntu). (TOOL-97)
+* IMPROVEMENT: Added option to build static ksitool. (TOOL-103)
+* IMPROVEMENT: Possibility to create installer package for Mac OS with static ksitool. (KCT-77, TOOL-25).
+* IMPROVEMENT: Hash imprints are printed in more human-readable way as the hash algorithm ID in hex string is replaced with the algorithms name. (TOOL-115)
 
 Version 1.9
 
