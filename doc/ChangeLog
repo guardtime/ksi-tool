@@ -1,3 +1,5 @@
+* IMPROVEMENT: Distribution tag (e.g. el6, el7, fc19) added to the rpm package name.
+
 Version 2.0
 
 2016-06-01 2.0.0
