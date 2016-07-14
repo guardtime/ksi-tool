@@ -39,7 +39,7 @@
 
 ## CONFIGURING TESTS
 
- To configure tests a configurations file must be specified with valid
+ To configure tests a configuration file must be specified with valid
  publications file, aggregator and extender URL's with corresponding access
  credentials. See `test.cfg.sample` and read `ksi conf -h` or `man conf`
  to learn how to write the KSI configurations file. The file must be located
@@ -55,7 +55,7 @@
  
  To run tests on windows call:
 ```
-    test\windows-test.bat`
+    test\windows-test.bat
 ```
  To run tests on centos:
 ```
