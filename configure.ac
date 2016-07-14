@@ -81,6 +81,7 @@ AC_SUBST(KSI_RPM_DEPENDECY)
 AC_SUBST(KSI_BUILD_DEPENDECY)
 AC_SUBST(KSI_RPM_BUILD_FLAGS)
 
+AC_CHECK_HEADER([ksi/ksi.h], [], [AC_MSG_FAILURE([Could not find include files (libksi-devel) of libksi (KSI C SDK). Install libksi-devel or specify the headers manually.])])
 AC_CHECK_LIB([crypto], [SHA256_Init], [], [AC_MSG_FAILURE([Could not find OpenSSL 0.9.8+ libraries.])])
 AC_CHECK_LIB([curl], [curl_easy_init], [], [AC_MSG_FAILURE([Could nod find Curl libraries.])])
 
