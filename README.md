@@ -43,8 +43,9 @@ platform check out source code from Github and build it using gcc or VS.
 To build KSI tool libksi and libksi-devel (KSI C SDK) packages are needed.
 Libksi is available in Guardtime repository or as source code in GitHub:
 [https://github.com/GuardTime/libksi](https://github.com/GuardTime/libksi).
-Use rebuild.sh script to build KSI tool on CentOS /RHEL. See WinBuild.txt
-to read how to build KSI tool on Windows.
+Use rebuild.sh script to build KSI tool on CentOS /RHEL. See `WinBuild.txt`
+to read how to build KSI tool on Windows. See `test/TEST-README.md` to
+learn how to run KSI command-line tool tests on Windows and linux.
 
   
 ## USAGE
