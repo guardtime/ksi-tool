@@ -65,7 +65,7 @@ if test "$enable_static_build" = "yes" ; then
 	fi
 
 	AC_MSG_NOTICE([KSI library will be linked statically.])
-	AC_CHECK_LIB([ksi], [KSI_CTX_new], [LIBS="-Wl,-static -lksi -Wl,$dy_link_flag $LIBS"], [AC_MSG_FAILURE([Could not find KSI libraries.])])
+	AC_CHECK_LIB([ksi], [KSI_CTX_new], [LIBS="-Wl,-static -lksi -Wl,$dy_link_flag $LIBS"], [AC_MSG_FAILURE([Could not find libksi (KSI C SDK). Install libksi or specify the library path manually.])])
 	KSI_RPM_BUILD_FLAGS="--enable-static-build"
 	
 	if test "$enable_use_installed_libksi" = "yes" ; then
@@ -73,7 +73,7 @@ if test "$enable_static_build" = "yes" ; then
 	fi
 else
 	AC_MSG_NOTICE([KSI library will be linked dynamically.])
-	AC_CHECK_LIB([ksi], [KSI_CTX_new], [], [AC_MSG_FAILURE([Could not find KSI libraries.])])
+	AC_CHECK_LIB([ksi], [KSI_CTX_new], [], [AC_MSG_FAILURE([Could not find libksi (KSI C SDK). Install libksi or specify the library path manually.])])
 	KSI_BUILD_DEPENDECY="BuildRequires: libksi-devel >= $libksi_ver"
 fi
 
@@ -86,6 +86,7 @@ AC_CHECK_LIB([curl], [curl_easy_init], [], [AC_MSG_FAILURE([Could nod find Curl 
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h])
+AC_CHECK_HEADER([ksi/ksi.h], [], [AC_MSG_FAILURE([Could not find include files (libksi-devel) of libksi (KSI C SDK). Install libksi-devel or specify the headers manually.])])
 
 # Checks for typedefs, structures, and compiler characteristics.
 # AC_CHECK_HEADER_STDBOOL
