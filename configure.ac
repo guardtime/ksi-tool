@@ -87,7 +87,6 @@ AC_CHECK_LIB([curl], [curl_easy_init], [], [AC_MSG_FAILURE([Could nod find Curl 
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h])
-AC_CHECK_HEADER([ksi/ksi.h], [], [AC_MSG_FAILURE([Could not find include files (libksi-devel) of libksi (KSI C SDK). Install libksi-devel or specify the headers manually.])])
 
 # Checks for typedefs, structures, and compiler characteristics.
 # AC_CHECK_HEADER_STDBOOL
