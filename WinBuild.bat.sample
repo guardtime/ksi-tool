@@ -44,8 +44,8 @@ rem more about libksi and it dependencies read WinBuild.txt
 set LNK_CRYPTOAPI=yes
 set LNK_WININET=yes
 
-rem As the libksi is built as static library To build libksi with debug info specify RTL=MTd. It must be noted that
-rem in this cases also libksi linked against RTL as MTd is needed.
+
+rem Rebuild the KSI tool.
 
 nmake clean
 nmake /S KSI_DIR=%KSI_DIR% RTL=%RTL% KSI_LIB=%KSI_LIB% LNK_CRYPTOAPI=%LNK_CRYPTOAPI% LNK_WININET=%LNK_WININET%
