@@ -21,7 +21,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.59])
-AC_INIT([ksi], m4_esyscmd([tr -d [:space:] < VERSION]), [support@guardtime.com])
+AC_INIT([ksi-tools], m4_esyscmd([tr -d [:space:] < VERSION]), [support@guardtime.com])
+TOOL_NAME=ksi
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign -Wall -Werror foreign subdir-objects])
@@ -42,8 +43,8 @@ else
 	AC_MSG_RESULT([no])
 fi
 
-AC_DEFINE_UNQUOTED(TOOL_NAME, "AC_PACKAGE_NAME", [Commit id])
-
+AC_DEFINE_UNQUOTED(TOOL_NAME, "$TOOL_NAME", [Commit id])
+AC_SUBST(TOOL_NAME)
 # Checks for programs.
 AC_PROG_CC
 AM_PROG_CC_C_O

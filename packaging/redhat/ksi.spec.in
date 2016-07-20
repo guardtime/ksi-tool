@@ -22,33 +22,36 @@
   # CentOS 7 would force ".el7.centos", we want to avoid that.
 %endif
 
-%define	name	@PACKAGE@
-
+%define	name_package	@PACKAGE@
+%define name_tool	@TOOL_NAME@
 %define upstream_release 0
 
 
 Summary: Command-line access to Guardtime Keyless Signature services
-Name: %{name}
+Name: %{name_package}
 Version: %(cat VERSION)
 Release: 1%{?dist}
 License: Apache 2.0
 Group: Applications/Security
-Source:  http://download.guardtime.com/%{name}-%{version}.tar.gz
+Source:  http://download.guardtime.com/%{name_package}-%{version}.tar.gz
 URL: http://www.guardtime.com/
 Vendor: Guardtime AS
 Packager: Guardtime AS <info@guardtime.com>
 Distribution: Guardtime utilities
-BuildRoot: %{_tmppath}/%{name}-%{version}-build
+BuildRoot: %{_tmppath}/%{name_package}-%{version}-build
+
+Obsoletes: ksitool <= 1.10.0-2
+Obsoletes: ksi <= 2.0.744-2
 
 # Dependencies are set in config.ac
 @KSI_BUILD_DEPENDECY@
 
 %description
 Guardtime signing and verification tool. Execute
-%{name} -h to view brief usage instructions.
+%{name_tool} -h to view brief usage instructions.
 
 %prep
-%setup -q -n %{name}-%{version}
+%setup -q -n %{name_package}-%{version}
 
 %build
 %configure @KSI_RPM_BUILD_FLAGS@
@@ -62,14 +65,14 @@ make install DESTDIR=%{buildroot}
 %files
 %defattr (-,root,root)
 
-%{_bindir}/%{name}*
+%{_bindir}/%{name_tool}*
 %{_mandir}/man1/ksi.1*
 %{_mandir}/man1/ksi-sign.1*
 %{_mandir}/man1/ksi-extend.1*
 %{_mandir}/man1/ksi-pubfile.1*
 %{_mandir}/man1/ksi-verify.1*
 %{_mandir}/man5/ksi-conf.5*
-%{_docdir}/%{name}/LICENSE
-%{_docdir}/%{name}/ChangeLog
+%{_docdir}/%{name_package}/LICENSE
+%{_docdir}/%{name_package}/ChangeLog
 
 %changelog
