@@ -1,0 +1,62 @@
+GOTO copyrightend
+
+    GUARDTIME CONFIDENTIAL
+
+    Copyright (C) [2015] Guardtime, Inc
+    All Rights Reserved
+
+    NOTICE:  All information contained herein is, and remains, the
+    property of Guardtime Inc and its suppliers, if any.
+    The intellectual and technical concepts contained herein are
+    proprietary to Guardtime Inc and its suppliers and may be
+    covered by U.S. and Foreign Patents and patents in process,
+    and are protected by trade secret or copyright law.
+    Dissemination of this information or reproduction of this
+    material is strictly forbidden unless prior written permission
+    is obtained from Guardtime Inc.
+    "Guardtime" and "KSI" are trademarks or registered trademarks of
+    Guardtime Inc.
+
+:copyrightend
+
+@ECHO OFF
+
+rem To configure the build environment for 64-bit build setenv with /x64 is
+rem called. See WinBuild.txt for more information how to choose the right
+rem build environment.
+
+call "%ProgramW6432%\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64
+
+rem This files shows how to link KSI tool with static libksi and its
+rem dependencies to produce KSI tool binary and its debug info.
+
+rem Specify the libksi location - folder that contains subdirectories for
+rem library and include files. See WinBuild.txt for more details to see
+rem how the dependencies must be located on disk.
+
+rem To avoid the variables to leak out of the script setlocal is called.
+setlocal
+
+set ksi_dir=C:\path_to\libksi\out
+
+rem Specify how the libksi was linked.
+
+set ksi_lib=lib
+set rtl=MTd
+
+rem In this example it is assumed that libksi is built using windows native
+rem libraries CryptoAPI and WinINet. To be able to link KSI tool successfully
+rem with libksi all dependencies of the libksi must be satisfied. To learn
+rem more about libksi and it dependencies read WinBuild.txt
+
+set lnk_cryptoapi=yes
+set lnk_wininet=yes
+
+
+rem Rebuild the KSI tool.
+
+nmake clean
+nmake /S KSI_DIR=%ksi_dir% RTL=%rtl% KSI_LIB=%ksi_lib% LNK_CRYPTOAPI=%lnk_cryptoapi% LNK_WININET=%lnk_wininet%
+
+endlocal
+pause

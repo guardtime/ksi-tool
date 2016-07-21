@@ -26,7 +26,7 @@ Prerequisites
 	
 	Windows native libraries are already installed with	Windows but
 	when libksi uses OpenSSl or Curl the location of libraries must be
-	specified containing libksi itself. See make file options CURL_DIR,
+	specified containing libksi itself. See makefile options CURL_DIR,
 	OPENSSL_DIR and KSI_DIR. The structure of the directories must be
 	as follows:
 	
@@ -56,14 +56,17 @@ Build process
 =====================================
 	
 	Below is the abstract structure of the project that describes the location
-	of the documentation, source code, make files and output. Root directory
+	of the documentation, source code, makefiles and output. Root directory
 	contains top-level build scripts that are used to build ksi tool. After
 	successful build obj and bin directory is created. Obj directory contains
 	compiled obj files. Out directory contains executable and if built the msi
 	installer file.
 	
+	WinBuild.bat.sample is a sample build script. It must be modified to get the
+	build working.
+	
 	// Top level build scripts.
-    WinBuild.bat
+    WinBuild.bat.sample
     makefile
     
     //Documentation and source code for ksi tool.
@@ -94,21 +97,31 @@ Build process
 Configuring build scripts
 =====================================	
 	
-	For building process, above described top-level make file or WinBuild.bat
-	must be called. WinBuild32 contain the call	to the make file.
+	For building process, above described top-level makefile or modified
+	versions of WinBuild.bat.sample must be called. WinBuild.bat.sample
+	contain the call to the makefile that must be modified. See sample build
+	scripts, the options of makefile and examples in the end of this document
+	to learn how to get the build to work properly.
 	
-	Make file can be executed via CMD shell or Visual Studio command prompt
+	Makefile can be executed via CMD shell or Visual Studio command prompt
 	shell. When using CMD shell environment must be configured using setenv
-	command. For example setenv /x64.
+	command. For example setenv /x64 configures the build environment for
+	64-bit build. It must be noted that both libksi and KSI tool must be built
+	for the same architecture. Makefile option INSTALL_MACHINE does not change
+	the build environment and is only used to configure the installer build.
 	
-	Make file has following tasks:
+	It must be noted that when an environment variable is defined with the same
+	name as one of the makefile options and the option is not set during nmake
+	call, the environment variable is used in the build.
+	
+	Makefile has following tasks:
 	
       1)default       - build ksi tool executable.
       2)installer     - build ksi tool Windows installer (KSI_LIB must be lib).
       3)clean         - clean build.
 	
 		
-	Make file has following options:
+	Makefile has following options:
 	
       1) KSI_LIB      - select libksi library format (lib, dll).
                         Default is lib.
