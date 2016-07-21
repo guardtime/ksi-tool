@@ -20,12 +20,17 @@ GOTO copyrightend
 :copyrightend
 
 @ECHO OFF
-CALL "%ProgramW6432%\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64
+
+rem To configure the build environment for 64-bit build setenv with /x64 is
+rem called. See WinBuild.txt for more information how to choose the right
+rem build environment.
+
+call "%ProgramW6432%\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64
 
 rem This files shows how to link KSI tool with static libksi and its
 rem dependencies to produce KSI tool binary and its debug info.
 
-rem specify the libksi location - folder that contains subdirectories for
+rem Specify the libksi location - folder that contains subdirectories for
 rem library and include files. See WinBuild.txt for more details to see
 rem how the dependencies must be located on disk.
 
@@ -34,12 +39,12 @@ setlocal
 
 set ksi_dir=C:\path_to\libksi\out
 
-rem specify how the libksi was linked.
+rem Specify how the libksi was linked.
 
 set ksi_lib=lib
 set rtl=MTd
 
-rem in this example it is assumed that libksi is built using windows native
+rem In this example it is assumed that libksi is built using windows native
 rem libraries CryptoAPI and WinINet. To be able to link KSI tool successfully
 rem with libksi all dependencies of the libksi must be satisfied. To learn
 rem more about libksi and it dependencies read WinBuild.txt
