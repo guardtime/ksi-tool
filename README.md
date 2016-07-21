@@ -76,7 +76,18 @@ See LICENSE file.
 Library   Version    License type  Source
 
 libksi    3.9>       Apache 2.0    https://github.com/GuardTime/libksi
+OpenSSL   0.9.8>     BSD           https://github.com/openssl/
+Curl      7.37.0>    MIT           https://github.com/curl/curl.git
 ```
+
+Note 1: OpenSSL is libksi dependency. On Windows platform it's optional.
+This product includes software developed by the OpenSSL Project for use
+in the OpenSSL Toolkit (http://www.openssl.org/). This product includes
+cryptographic software written by Eric Young (eay@cryptsoft.com). This
+product includes software written by Tim Hudson (tjh@cryptsoft.com).
+
+Note 2: Curl is libksi dependency. On Windows platform it's optional.
+
 
 ## COMPATIBILITY
 
