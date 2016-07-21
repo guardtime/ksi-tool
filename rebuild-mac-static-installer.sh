@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# Copyright 2013-2015 Guardtime, Inc.
+# Copyright 2013-2016 Guardtime, Inc.
 #
 # This file is part of the Guardtime client SDK.
 #
@@ -17,7 +17,6 @@
 # "Guardtime" and "KSI" are trademarks or registered trademarks of
 # Guardtime, Inc., and no license to trademarks is granted; Guardtime
 # reserves and retains all trademark rights.
-#
 
 KSITOOL_VER=$(<VERSION)
 
