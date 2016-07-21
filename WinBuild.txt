@@ -107,6 +107,10 @@ Configuring build scripts
 	shell. When using CMD shell environment must be configured using setenv
 	command. For example setenv /x64.
 	
+	It must be noted that when an environment variable is defined with the same
+	name as one of the makefile options and the option is not set during nmake
+	call, the environment variable is used in the build.
+	
 	Makefile has following tasks:
 	
       1)default       - build ksi tool executable.

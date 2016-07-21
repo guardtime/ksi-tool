@@ -29,25 +29,29 @@ rem specify the libksi location - folder that contains subdirectories for
 rem library and include files. See WinBuild.txt for more details to see
 rem how the dependencies must be located on disk.
 
-set KSI_DIR=C:\Users\Test\LIBS\libksi
+rem To avoid the variables to leak out of the script setlocal is called.
+setlocal
+
+set ksi_dir=C:\path_to\libksi\out
 
 rem specify how the libksi was linked.
 
-set KSI_LIB=lib
-set RTL=MTd
+set ksi_lib=lib
+set rtl=MTd
 
-rem in this example it is assumed that libksi is build using windows native
+rem in this example it is assumed that libksi is built using windows native
 rem libraries CryptoAPI and WinINet. To be able to link KSI tool successfully
 rem with libksi all dependencies of the libksi must be satisfied. To learn
 rem more about libksi and it dependencies read WinBuild.txt
 
-set LNK_CRYPTOAPI=yes
-set LNK_WININET=yes
+set lnk_cryptoapi=yes
+set lnk_wininet=yes
 
 
 rem Rebuild the KSI tool.
 
 nmake clean
-nmake /S KSI_DIR=%KSI_DIR% RTL=%RTL% KSI_LIB=%KSI_LIB% LNK_CRYPTOAPI=%LNK_CRYPTOAPI% LNK_WININET=%LNK_WININET%
+nmake /S KSI_DIR=%ksi_dir% RTL=%rtl% KSI_LIB=%ksi_lib% LNK_CRYPTOAPI=%lnk_cryptoapi% LNK_WININET=%lnk_wininet%
 
+endlocal
 pause
