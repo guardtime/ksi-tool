@@ -62,13 +62,17 @@ a data file 'data':
   ksi sign -i data -S http://example.gateway.com:3333/gt-signingservice
 ```
 
-See man ksi for detailed usage instructions.
+See `man ksi` for detailed usage instructions or read documentation formatted
+as pdf from `doc/` directory.
 
 
 ## LICENSE
 
-See LICENSE file.
+See `LICENSE` file.
 
+## CONTRIBUTING
+
+See `CONTRIBUTING.md` file.
 
 ## DEPENDENCIES
 
