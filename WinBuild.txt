@@ -105,7 +105,10 @@ Configuring build scripts
 	
 	Makefile can be executed via CMD shell or Visual Studio command prompt
 	shell. When using CMD shell environment must be configured using setenv
-	command. For example setenv /x64.
+	command. For example setenv /x64 configures the build environment for
+	64-bit build. It must be noted that both libksi and KSI tool must be built
+	for the same architecture. Makefile option INSTALL_MACHINE does not change
+	the build environment and is only used to configure the installer build.
 	
 	It must be noted that when an environment variable is defined with the same
 	name as one of the makefile options and the option is not set during nmake
