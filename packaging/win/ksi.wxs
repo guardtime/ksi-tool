@@ -27,7 +27,7 @@
                         <Component Id="ApplicationFiles" Guid="0492920C-5D5E-42B4-AA82-38F60BC9AB52" Win64="$(var.isWin64)">
                             <File 
                                 Id="ApplicationFile1"
-                                Source="..\..\$(var.tool_file)"
+                                Source="$(var.tool_file)"
                                 ProcessorArchitecture="$(var.platform)">
                             </File>
 

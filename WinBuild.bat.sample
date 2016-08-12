@@ -1,0 +1,62 @@
+GOTO copyrightend
+
+    Copyright 2013-2016 Guardtime, Inc.
+
+    This file is part of the Guardtime client SDK.
+
+    Licensed under the Apache License, Version 2.0 (the "License").
+    You may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+        http://www.apache.org/licenses/LICENSE-2.0
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES, CONDITIONS, OR OTHER LICENSES OF ANY KIND, either
+    express or implied. See the License for the specific language governing
+    permissions and limitations under the License.
+    "Guardtime" and "KSI" are trademarks or registered trademarks of
+    Guardtime, Inc., and no license to trademarks is granted; Guardtime
+    reserves and retains all trademark rights.
+
+:copyrightend
+
+@ECHO OFF
+
+rem To configure the build environment for 64-bit build setenv with /x64 is
+rem called. See WinBuild.txt for more information how to choose the right
+rem build environment.
+
+call "%ProgramW6432%\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64
+
+rem This files shows how to link KSI tool with static libksi and its
+rem dependencies to produce KSI tool binary and its debug info.
+
+rem Specify the libksi location - folder that contains subdirectories for
+rem library and include files. See WinBuild.txt for more details to see
+rem how the dependencies must be located on disk.
+
+rem To avoid the variables to leak out of the script setlocal is called.
+setlocal
+
+set ksi_dir=C:\path_to\libksi\out
+
+rem Specify how the libksi was linked.
+
+set ksi_lib=lib
+set rtl=MTd
+
+rem In this example it is assumed that libksi is built using windows native
+rem libraries CryptoAPI and WinINet. To be able to link KSI tool successfully
+rem with libksi all dependencies of the libksi must be satisfied. To learn
+rem more about libksi and it dependencies read WinBuild.txt
+
+set lnk_cryptoapi=yes
+set lnk_wininet=yes
+
+
+rem Rebuild the KSI tool.
+
+nmake clean
+nmake /S KSI_DIR=%ksi_dir% RTL=%rtl% KSI_LIB=%ksi_lib% LNK_CRYPTOAPI=%lnk_cryptoapi% LNK_WININET=%lnk_wininet%
+
+endlocal
+pause

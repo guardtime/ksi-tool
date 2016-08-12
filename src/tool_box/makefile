@@ -18,23 +18,28 @@
 
 # Check if C Run-Time library and output format is specified.
 !IF "$(RTL)" != "MT" && "$(RTL)" != "MTd" && "$(RTL)" != "MD" && "$(RTL)" != "MDd"
-!ERROR "src/param_set/makefile: You Must specify RTL as MT, MTd, MD or MDd"
+!ERROR "src/tool_box/makefile: You Must specify RTL as MT, MTd, MD or MDd"
 !ENDIF
 
 
 SRC_DIR = .
-OBJ_DIR = ..\..\obj\param_set
+OBJ_DIR = ..\..\obj\tool_box
+
+PARAM_SET_DIR = ..\param_set
+MAIN_DIR = ..\
 
 LIB_OBJ = \
-	$(OBJ_DIR)\param_value.obj \
-	$(OBJ_DIR)\param_set.obj \
-	$(OBJ_DIR)\parameter.obj \
-	$(OBJ_DIR)\task_def.obj \
-	$(OBJ_DIR)\strn.obj
+	$(OBJ_DIR)\ksi_init.obj \
+	$(OBJ_DIR)\pubfile.obj \
+	$(OBJ_DIR)\extend.obj \
+	$(OBJ_DIR)\sign.obj \
+	$(OBJ_DIR)\verify.obj \
+	$(OBJ_DIR)\task_initializer.obj \
+	$(OBJ_DIR)\param_control.obj \
+	$(OBJ_DIR)\conf.obj
 
-CCFLAGS = /I$(SRC_DIR)
+CCFLAGS = /I$(SRC_DIR) /I$(PARAM_SET_DIR) /I$(MAIN_DIR)
 CCFLAGS = $(CCFLAGS) $(CCEXTRA)
-#Making
 
 default: $(OBJ_DIR) $(LIB_OBJ)
 

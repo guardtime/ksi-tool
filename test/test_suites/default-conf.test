@@ -1,26 +1,25 @@
 #
-# GUARDTIME CONFIDENTIAL
+# Copyright 2013-2016 Guardtime, Inc.
 #
-# Copyright (C) [2016] Guardtime, Inc
-# All Rights Reserved
+# This file is part of the Guardtime client SDK.
 #
-# NOTICE:  All information contained herein is, and remains, the
-# property of Guardtime Inc and its suppliers, if any.
-# The intellectual and technical concepts contained herein are
-# proprietary to Guardtime Inc and its suppliers and may be
-# covered by U.S. and Foreign Patents and patents in process,
-# and are protected by trade secret or copyright law.
-# Dissemination of this information or reproduction of this
-# material is strictly forbidden unless prior written permission
-# is obtained from Guardtime Inc.
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES, CONDITIONS, OR OTHER LICENSES OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
 # "Guardtime" and "KSI" are trademarks or registered trademarks of
-# Guardtime Inc.
-#
+# Guardtime, Inc., and no license to trademarks is granted; Guardtime
+# reserves and retains all trademark rights.
 
 
 # KSI_CONF test.
 # To run this test file successfully it is important that it is run by corresponding
-# test script that configures temporary KSI_CONF environment variable.  
+# test script that configures temporary KSI_CONF environment variable.
 
 # Check if KSI_CONF is set.
 EXECUTABLE conf -d
@@ -53,7 +52,7 @@ EXECUTABLE sign -d -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c65934
 # Try to verify default publications file. It should fail as certificate and constraints are not set correctly.
 EXECUTABLE pubfile -v
 >>>2 /(The PKI certificate is not trusted)/
->>>= 6
+>>>= 10
 
 # Verify default publications file with correct verification info from external configurations file.
 EXECUTABLE pubfile -d -v --conf test/resource/conf/ok-verification-info.cfg
@@ -66,12 +65,12 @@ EXECUTABLE pubfile -d -v -V test/resource/certificates/ok-test.crt --cnstr E=tes
 >>>= 0
 
 # Verify default publications file with correct certificate and constraints from command-line.
-# Override default verification info with invalid configurations file from command-line. 
+# Override default verification info with invalid configurations file from command-line.
 EXECUTABLE pubfile -d -v -V test/resource/certificates/ok-test.crt --cnstr E=test@test.com --conf test/resource/conf/nok-verification-info.cfg
 >>>2 /(Verifying publications file)(.*ok.*)/
 >>>= 0
 
-# Override default configurations file. Perform publications file verification. 
+# Override default configurations file. Perform publications file verification.
 EXECUTABLE pubfile -v -d --conf test/resource/conf/ok-conf-1.cfg
 >>>2 /(Verifying publications file)(.*ok.*)/
 >>>= 0

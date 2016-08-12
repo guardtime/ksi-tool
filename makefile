@@ -1,21 +1,20 @@
 #
-# GUARDTIME CONFIDENTIAL
+# Copyright 2013-2016 Guardtime, Inc.
 #
-# Copyright (C) [2015] Guardtime, Inc
-# All Rights Reserved
+# This file is part of the Guardtime client SDK.
 #
-# NOTICE:  All information contained herein is, and remains, the
-# property of Guardtime Inc and its suppliers, if any.
-# The intellectual and technical concepts contained herein are
-# proprietary to Guardtime Inc and its suppliers and may be
-# covered by U.S. and Foreign Patents and patents in process,
-# and are protected by trade secret or copyright law.
-# Dissemination of this information or reproduction of this
-# material is strictly forbidden unless prior written permission
-# is obtained from Guardtime Inc.
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES, CONDITIONS, OR OTHER LICENSES OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
 # "Guardtime" and "KSI" are trademarks or registered trademarks of
-# Guardtime Inc.
-#
+# Guardtime, Inc., and no license to trademarks is granted; Guardtime
+# reserves and retains all trademark rights.
 
 !IF "$(KSI_LIB)" != "lib" && "$(KSI_LIB)" != "dll"
 KSI_LIB = lib
@@ -27,69 +26,32 @@ RTL = MT
 RTL = MD
 !ENDIF
 !ENDIF
-!IF "$(INSTALL_MACHINE)" != "32" && "$(INSTALL_MACHINE)" != "64"
+
 !IF "$(INSTALL_MACHINE)" == "x64"
-INSTALL_MACHINE = 64
+INSTM = 64
+!ELSE IF "$(INSTALL_MACHINE)" == "x86"
+INSTM = 32
 !ELSE
-INSTALL_MACHINE = 32
+INSTM = $(INSTALL_MACHINE)
 !ENDIF
-!ENDIF
+
 
 SRC_DIR = src
 OBJ_DIR = obj
 BIN_DIR = bin
 
-PARAMSET_SRC_DIR = $(SRC_DIR)\param_set
 PARAMSET_OBJ_DIR = $(OBJ_DIR)\param_set
-TOOL_BOX_SRC_DIR = $(SRC_DIR)\tool_box
 TOOL_BOX_OBJ_DIR = $(OBJ_DIR)\tool_box
 
 VERSION_FILE = VERSION
 COMM_ID_FILE = COMMIT_ID
-
-
 TOOL_NAME = ksi
-
-#Objects for making command-line tool
-
-PARAMSET_OBJ = \
-	$(PARAMSET_OBJ_DIR)\param_value.obj \
-	$(PARAMSET_OBJ_DIR)\parameter.obj \
-	$(PARAMSET_OBJ_DIR)\param_set.obj \
-	$(PARAMSET_OBJ_DIR)\task_def.obj \
-	$(PARAMSET_OBJ_DIR)\strn.obj
-
-CMDTOOL_OBJ = \
-	$(OBJ_DIR)\main.obj \
-	$(OBJ_DIR)\printer.obj \
-	$(OBJ_DIR)\conf.obj \
-	$(OBJ_DIR)\ksitool_err.obj \
-	$(OBJ_DIR)\api_wrapper.obj \
-	$(OBJ_DIR)\obj_printer.obj \
-	$(OBJ_DIR)\debug_print.obj
-	
-TOOL_BOX_OBJ = \
-    $(TOOL_BOX_OBJ_DIR)\component.obj \
-    $(TOOL_BOX_OBJ_DIR)\tool_box.obj \
-    $(TOOL_BOX_OBJ_DIR)\ksi_init.obj \
-    $(TOOL_BOX_OBJ_DIR)\pubfile.obj \
-    $(TOOL_BOX_OBJ_DIR)\extend.obj \
-    $(TOOL_BOX_OBJ_DIR)\sign.obj \
-    $(TOOL_BOX_OBJ_DIR)\verify.obj \
-    $(TOOL_BOX_OBJ_DIR)\task_initializer.obj \
-    $(TOOL_BOX_OBJ_DIR)\smart_file.obj \
-    $(TOOL_BOX_OBJ_DIR)\err_trckr.obj \
-    $(TOOL_BOX_OBJ_DIR)\param_control.obj
-
-
-#Compiler and linker configuration
-
 
 EXT_LIB = libksiapi$(RTL).lib \
 	user32.lib gdi32.lib advapi32.lib Ws2_32.lib
-	  
 	
-CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE  /I$(SRC_DIR) /I$(PARAMSET_SRC_DIR) /I$(TOOL_BOX_SRC_DIR) /I$(KSI_DIR)\include /DTOOL_NAME=\"$(TOOL_NAME)\"
+	
+CCFLAGS = /nologo /W4 /D_CRT_SECURE_NO_DEPRECATE  /I$(KSI_DIR)\include
 LDFLAGS = /NOLOGO /LIBPATH:"$(KSI_DIR)\$(KSI_LIB)"
 
 !IF "$(KSI_LIB)" == "dll"
@@ -149,55 +111,93 @@ COM_ID = \
 !MESSAGE Git is not installed. 
 !ENDIF 
 
-!IF "$(COM_ID)" != ""
-CCFLAGS = $(CCFLAGS) /DCOMMIT_ID=\"$(COM_ID)\"
-!ENDIF
-!IF "$(VER)" != ""
-CCFLAGS = $(CCFLAGS) /DVERSION=\"$(VER)\"
-!ENDIF
-
-
-#Making
 
 default: $(BIN_DIR)\$(TOOL_NAME).exe 
 
-#Linking 
-$(BIN_DIR)\$(TOOL_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(PARAMSET_OBJ_DIR) $(TOOL_BOX_OBJ_DIR) $(CMDTOOL_OBJ) $(PARAMSET_OBJ) $(TOOL_BOX_OBJ)
-	link $(LDFLAGS) /OUT:$@ $(CMDTOOL_OBJ) $(PARAMSET_OBJ) $(TOOL_BOX_OBJ) $(EXT_LIB)
+build_objects:
+	cd $(SRC_DIR)
+	nmake /S RTL=$(RTL) VERSION=$(VER) TOOL_NAME=$(TOOL_NAME) COM_ID=$(COM_ID) CCEXTRA="$(CCFLAGS)" LDEXTRA="$(LDFLAGS)"
+	cd ..
+
+$(BIN_DIR)\$(TOOL_NAME).exe: error_handling_build_tool $(BIN_DIR) build_objects
+	link $(LDFLAGS) /OUT:$@ $(PARAMSET_OBJ_DIR)\*.obj $(TOOL_BOX_OBJ_DIR)\*.obj $(OBJ_DIR)\*.obj $(EXT_LIB)
 !IF "$(KSI_LIB)" == "dll"
 	xcopy "$(KSI_DIR)\$(KSI_LIB)\libksiapi$(RTL).dll" "$(BIN_DIR)\" /Y
 !ENDIF
-	
-#C file compilation  	
-{$(SRC_DIR)\}.c{$(OBJ_DIR)\}.obj:
-	cl /c /$(RTL) $(CCFLAGS) /Fo$@ $<
 
-{$(PARAMSET_SRC_DIR)\}.c{$(PARAMSET_OBJ_DIR)\}.obj:
-	cl /c /$(RTL) $(CCFLAGS) /Fo$@ $<
-
-{$(TOOL_BOX_SRC_DIR)\}.c{$(TOOL_BOX_OBJ_DIR)\}.obj:
-	cl /c /$(RTL) $(CCFLAGS) /Fo$@ $<
-	
-
-#Folder factory	
-	
-$(OBJ_DIR) $(PARAMSET_OBJ_DIR) $(TOOL_BOX_OBJ_DIR) $(BIN_DIR):
+$(BIN_DIR):
 	@if not exist $@ mkdir $@
 
-!IF "$(KSI_LIB)" == "lib"
 
-installer:$(BIN_DIR) $(OBJ_DIR) $(BIN_DIR)\$(TOOL_NAME).exe
-!IF [candle.exe > nul] != 0
-!MESSAGE Please install WiX to build installer.
-!ELSE
+installer: error_handling_installer $(BIN_DIR)\$(TOOL_NAME).exe
 	cd packaging\win
-	candle.exe ksi.wxs -o ..\..\obj\ksi.wixobj -dVersion=$(VER) -dName=$(TOOL_NAME) -dtool_file=$(BIN_DIR)\$(TOOL_NAME).exe -darch=$(INSTALL_MACHINE)
-	light.exe ..\..\obj\ksi.wixobj -o ..\..\bin\ksi -pdbout ..\..\bin\ksi.wixpdb -cultures:en-us -ext WixUIExtension
+	nmake VERSION=$(VER) TOOL_NAME=$(TOOL_NAME) INSTALL_MACHINE=$(INSTM) KSI_LIB=$(KSI_LIB)
 	cd ..\..
+
+
+error_handling_build_tool:
+	@echo ""
+!IFNDEF KSI_DIR
+	@echo "ERROR: KSI_DIR is not specified! Specify KSI_DIR as path to directory"
+	@echo "       containing libksi (KSI C SDK) sub directories lib and include."
+	@echo "       See README for more information."
+	@exit 1
+!ENDIF
+!IF "$(LNK_WININET)" != "yes" && "$(LNK_WINHTTP)" != "yes" && "$(LNK_CURL)" != "yes"
+	@echo "ERROR: Network provider library not spcified!"
+	@echo "       Specify one of the following that matches with the libksi (KSI C SDK):"
+	@echo "       LNK_WININET=yes, LNK_WINHTTP=yes or LNK_CURL=yes."
+	@echo "       See README for more information."
+	@exit 1
+!ENDIF
+!IF "$(LNK_CURL)" == "yes"
+!IFNDEF CURL_DIR
+	@echo "ERROR: LNK_CURL is specified but CURL_DIR is not! Specify CURL_DIR as"
+	@echo "       path to directory containing curl sub directories lib and include."
+	@echo "       See README for more information."
+	@exit 1
+!ENDIF
+!ENDIF
+!IF "$(LNK_CRYPTOAPI)" != "yes" && "$(LNK_OPENSSL)" != "yes"
+	@echo "ERROR: Cryptographic provider library not spcified!"
+	@echo "       Specify one of the following that matches with the libksi (KSI C SDK):"
+	@echo "       LNK_OPENSSL=yes or LNK_CRYPTOAPI=yes."
+	@echo "       See README for more information."
+	@exit 1
+!ENDIF
+!IF "$(LNK_OPENSSL)" == "yes"
+!IFNDEF OPENSSL_DIR
+	@echo "ERROR: LNK_OPENSSL is specified but OPENSSL_DIR is not! Specify OPENSSL_DIR as"
+	@echo "       path to directory containing OpenSSL sub directories lib and include."
+	@echo "       See README for more information."
+	@exit 1
+!ENDIF
 !ENDIF
 
+error_handling_installer:
+	@echo ""
+!IF "$(INSTM)" != "32" && "$(INSTM)" != "64"
+	@echo "ERROR: When building KSI tool Windows installer INSTALL_MACHINE"
+	@echo "       must be specfied as INSTALL_MACHINE=32 or INSTALL_MACHINE=64."
+	@exit 1
 !ENDIF
-	
+!IF [candle.exe > nul] != 0
+	@echo "ERROR: Program candle.exe is missing. Please install WiX to build installer."
+	@exit 1
+!ENDIF
+!IF [light.exe > nul] != 0
+	@echo "Program light.exe is missing. Please install WiX to build installer."
+	@exit 1
+!ENDIF
+
+
 clean:
+	cd $(SRC_DIR)
+	nmake RTL=$(RTL) VERSION=$(VER) TOOL_NAME=$(TOOL_NAME) COM_ID=$(COM_ID) clean
+	cd ..
+	
+	cd packaging\win
+	nmake VERSION=$(VER) TOOL_NAME=$(TOOL_NAME) INSTALL_MACHINE=$(INSTM) KSI_LIB=$(KSI_LIB) clean
+	cd ..
+	
 	@for %i in ($(OBJ_DIR) $(BIN_DIR)) do @if exist .\%i rmdir /s /q .\%i
-

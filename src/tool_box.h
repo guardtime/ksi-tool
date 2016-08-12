@@ -1,29 +1,25 @@
-/**************************************************************************
+/*
+ * Copyright 2013-2016 Guardtime, Inc.
  *
- * GUARDTIME CONFIDENTIAL
+ * This file is part of the Guardtime client SDK.
  *
- * Copyright (C) [2016] Guardtime, Inc
- * All Rights Reserved
- *
- * NOTICE:  All information contained herein is, and remains, the
- * property of Guardtime Inc and its suppliers, if any.
- * The intellectual and technical concepts contained herein are
- * proprietary to Guardtime Inc and its suppliers and may be
- * covered by U.S. and Foreign Patents and patents in process,
- * and are protected by trade secret or copyright law.
- * Dissemination of this information or reproduction of this
- * material is strictly forbidden unless prior written permission
- * is obtained from Guardtime Inc.
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES, CONDITIONS, OR OTHER LICENSES OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
  * "Guardtime" and "KSI" are trademarks or registered trademarks of
- * Guardtime Inc.
+ * Guardtime, Inc., and no license to trademarks is granted; Guardtime
+ * reserves and retains all trademark rights.
  */
 
 #ifndef TOOL_BOX_H
 #define	TOOL_BOX_H
 
-#include <ksi/ksi.h>
-#include "ksitool_err.h"
-#include "tool_box/err_trckr.h"
 #include "param_set/param_set.h"
 
 #ifdef	__cplusplus
@@ -31,16 +27,8 @@ extern "C" {
 #endif
 
 	
-int KSI_OBJ_saveSignature(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *mode, const char *fname, char *f, size_t f_len);
-int KSI_OBJ_savePublicationsFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *mode, const char *fname) ;
-int KSI_OBJ_loadSignature(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signature **sig);
-int KSI_OBJ_isSignatureExtended(const KSI_Signature *sig);
-
 const char *OID_getShortDescriptionString(const char *OID);
 const char *OID_getFromString(const char *str);
-
-void print_progressDesc(int showTiming, const char *msg, ...);
-void print_progressResult(int res);
 
 const char *getPublicationsFileRetrieveDescriptionString(PARAM_SET *set);
 

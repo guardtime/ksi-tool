@@ -1,27 +1,27 @@
 #
-# GUARDTIME CONFIDENTIAL
+# Copyright 2013-2016 Guardtime, Inc.
 #
-# Copyright (C) [2015 - 2016] Guardtime, Inc
-# All Rights Reserved
+# This file is part of the Guardtime client SDK.
 #
-# NOTICE:  All information contained herein is, and remains, the
-# property of Guardtime Inc and its suppliers, if any.
-# The intellectual and technical concepts contained herein are
-# proprietary to Guardtime Inc and its suppliers and may be
-# covered by U.S. and Foreign Patents and patents in process,
-# and are protected by trade secret or copyright law.
-# Dissemination of this information or reproduction of this
-# material is strictly forbidden unless prior written permission
-# is obtained from Guardtime Inc.
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES, CONDITIONS, OR OTHER LICENSES OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
 # "Guardtime" and "KSI" are trademarks or registered trademarks of
-# Guardtime Inc.
-#
+# Guardtime, Inc., and no license to trademarks is granted; Guardtime
+# reserves and retains all trademark rights.
 
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.59])
-AC_INIT([ksi], m4_esyscmd([tr -d [:space:] < VERSION]), [support@guardtime.com])
+AC_INIT([ksi-tools], m4_esyscmd([tr -d [:space:] < VERSION]), [support@guardtime.com])
+TOOL_NAME=ksi
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign -Wall -Werror foreign subdir-objects])
@@ -42,8 +42,8 @@ else
 	AC_MSG_RESULT([no])
 fi
 
-AC_DEFINE_UNQUOTED(TOOL_NAME, "AC_PACKAGE_NAME", [Commit id])
-
+AC_DEFINE_UNQUOTED(TOOL_NAME, "$TOOL_NAME", [Commit id])
+AC_SUBST(TOOL_NAME)
 # Checks for programs.
 AC_PROG_CC
 AM_PROG_CC_C_O
@@ -65,7 +65,7 @@ if test "$enable_static_build" = "yes" ; then
 	fi
 
 	AC_MSG_NOTICE([KSI library will be linked statically.])
-	AC_CHECK_LIB([ksi], [KSI_CTX_new], [LIBS="-Wl,-static -lksi -Wl,$dy_link_flag $LIBS"], [AC_MSG_FAILURE([Could not find KSI libraries.])])
+	AC_CHECK_LIB([ksi], [KSI_CTX_new], [LIBS="-Wl,-static -lksi -Wl,$dy_link_flag $LIBS"], [AC_MSG_FAILURE([Could not find libksi (KSI C SDK). Install libksi or specify the library path manually.])])
 	KSI_RPM_BUILD_FLAGS="--enable-static-build"
 	
 	if test "$enable_use_installed_libksi" = "yes" ; then
@@ -73,7 +73,7 @@ if test "$enable_static_build" = "yes" ; then
 	fi
 else
 	AC_MSG_NOTICE([KSI library will be linked dynamically.])
-	AC_CHECK_LIB([ksi], [KSI_CTX_new], [], [AC_MSG_FAILURE([Could not find KSI libraries.])])
+	AC_CHECK_LIB([ksi], [KSI_CTX_new], [], [AC_MSG_FAILURE([Could not find libksi (KSI C SDK). Install libksi or specify the library path manually.])])
 	KSI_BUILD_DEPENDECY="BuildRequires: libksi-devel >= $libksi_ver"
 fi
 
@@ -81,6 +81,7 @@ AC_SUBST(KSI_RPM_DEPENDECY)
 AC_SUBST(KSI_BUILD_DEPENDECY)
 AC_SUBST(KSI_RPM_BUILD_FLAGS)
 
+AC_CHECK_HEADER([ksi/ksi.h], [], [AC_MSG_FAILURE([Could not find include files (libksi-devel) of libksi (KSI C SDK). Install libksi-devel or specify the headers manually.])])
 AC_CHECK_LIB([crypto], [SHA256_Init], [], [AC_MSG_FAILURE([Could not find OpenSSL 0.9.8+ libraries.])])
 AC_CHECK_LIB([curl], [curl_easy_init], [], [AC_MSG_FAILURE([Could nod find Curl libraries.])])
 

@@ -1,6 +1,16 @@
+Version 2.1
+
+2016-08-11 2.1.838
+
+* IMPROVEMENT: RPM package name changed to ksi-tools. Packages ksitool and ksi are obsoleted by package ksi-tools. Binary name is still ksi.
+* IMPROVEMENT: Distribution tag (e.g. el6, el7, fc19) added to the rpm package name.
+* IMPROVEMENT: When signing imprint without the specified output file name hash algorithm is used as file name instead of the entire imprint.
+* BUGFIX: WinBuild.bat renamed and changed to WinBuild.bat.sample.
+* BUGFIX: Exit status for faulty PKI fixed.
+
 Version 2.0
 
-2016-06-01 2.0.0
+2016-06-01 2.0.744
 
 * IMPROVEMENT: Signature over maximum tlv size is not loaded. (BUG-198)
 * IMPROVEMENT: ksitool renamed to ksi and major version increased to 2. (KCT-52)
@@ -28,6 +38,15 @@ Version 2.0
 * IMPROVEMENT: Task conf has flags -d and --dump for dumping configurations files path and its content. (TOOL-139)
 * IMPROVEMENT: Parameters V, W a P (with file:// scheme) defined in configurations file support file names relative to the configurations file. (TOOL-110)
 * FEATURE: libksi can be linked statically with ksi tool. (TOOL-137)
+
+Version 1.10
+
+2016-18-04 1.10.0
+
+* IMPROVEMENT: Enabled autotools option subdir-objects to remove build errors (on Mac OS and Ubuntu). (TOOL-97)
+* IMPROVEMENT: Added option to build static ksitool. (TOOL-103)
+* IMPROVEMENT: Possibility to create installer package for Mac OS with static ksitool. (KCT-77, TOOL-25).
+* IMPROVEMENT: Hash imprints are printed in more human-readable way as the hash algorithm ID in hex string is replaced with the algorithms name. (TOOL-115)
 
 Version 1.9
 
