@@ -27,33 +27,32 @@
 typedef struct {
 	KSI_VerificationErrorCode errorCode;
 	const char *code;
-	const char *description;
 } verificationErrorDetail_st;
 
 static const verificationErrorDetail_st verification_error[] = {
-	{ KSI_VER_ERR_GEN_1,	"GEN-1",	"Wrong document" },
-	{ KSI_VER_ERR_GEN_2,	"GEN-2",	"Verification inconclusive" },
-	{ KSI_VER_ERR_INT_1,	"INT-1",	"Inconsistent aggregation hash chains" },
-	{ KSI_VER_ERR_INT_2,	"INT-2",	"Inconsistent aggregation hash chain aggregation times" },
-	{ KSI_VER_ERR_INT_3,	"INT-3",	"Calendar hash chain input hash mismatch" },
-	{ KSI_VER_ERR_INT_4,	"INT-4",	"Calendar hash chain aggregation time mismatch" },
-	{ KSI_VER_ERR_INT_5,	"INT-5",	"Calendar hash chain shape inconsistent with aggregation time" },
-	{ KSI_VER_ERR_INT_6,	"INT-6",	"Calendar hash chain time inconsistent with calendar auth record time" },
-	{ KSI_VER_ERR_INT_7,	"INT-7",	"Calendar hash chain time inconsistent with publication time" },
-	{ KSI_VER_ERR_INT_8,	"INT-8",	"Calendar hash chain root hash is inconsistent with calendar auth record input hash" },
-	{ KSI_VER_ERR_INT_9,	"INT-9",	"Calendar hash chain root hash is inconsistent with published hash value" },
-	{ KSI_VER_ERR_INT_10,	"INT-10",	"Aggregation hash chain chain index mismatch" },
-	{ KSI_VER_ERR_INT_11,	"INT-11",	"The meta-data record in the aggregation hash chain may not be trusted" },
-	{ KSI_VER_ERR_PUB_1,	"PUB-1",	"Extender response calendar root hash mismatch" },
-	{ KSI_VER_ERR_PUB_2,	"PUB-2",	"Extender response inconsistent" },
-	{ KSI_VER_ERR_PUB_3,	"PUB-3",	"Extender response input hash mismatch" },
-	{ KSI_VER_ERR_KEY_1,	"KEY-1",	"Certificate not found" },
-	{ KSI_VER_ERR_KEY_2,	"KEY-2",	"PKI signature not verified with certificate" },
-	{ KSI_VER_ERR_CAL_1,	"CAL-1",	"Calendar root hash mismatch" },
-	{ KSI_VER_ERR_CAL_2,	"CAL-2",	"Aggregation hash chain root hash and calendar hash chain input hash mismatch" },
-	{ KSI_VER_ERR_CAL_3,	"CAL-3",	"Aggregation time mismatch" },
-	{ KSI_VER_ERR_CAL_4,	"CAL-4",	"Aggregation hash chain right links are inconsistent" },
-	{ KSI_VER_ERR_NONE,	"",	"No error" }
+	{ KSI_VER_ERR_GEN_1,	"GEN-1"},
+	{ KSI_VER_ERR_GEN_2,	"GEN-2"},
+	{ KSI_VER_ERR_INT_1,	"INT-1"},
+	{ KSI_VER_ERR_INT_2,	"INT-2"},
+	{ KSI_VER_ERR_INT_3,	"INT-3"},
+	{ KSI_VER_ERR_INT_4,	"INT-4"},
+	{ KSI_VER_ERR_INT_5,	"INT-5"},
+	{ KSI_VER_ERR_INT_6,	"INT-6"},
+	{ KSI_VER_ERR_INT_7,	"INT-7"},
+	{ KSI_VER_ERR_INT_8,	"INT-8"},
+	{ KSI_VER_ERR_INT_9,	"INT-9"},
+	{ KSI_VER_ERR_INT_10,	"INT-10"},
+	{ KSI_VER_ERR_INT_11,	"INT-11"},
+	{ KSI_VER_ERR_PUB_1,	"PUB-1"},
+	{ KSI_VER_ERR_PUB_2,	"PUB-2"},
+	{ KSI_VER_ERR_PUB_3,	"PUB-3"},
+	{ KSI_VER_ERR_KEY_1,	"KEY-1"},
+	{ KSI_VER_ERR_KEY_2,	"KEY-2"},
+	{ KSI_VER_ERR_CAL_1,	"CAL-1"},
+	{ KSI_VER_ERR_CAL_2,	"CAL-2"},
+	{ KSI_VER_ERR_CAL_3,	"CAL-3"},
+	{ KSI_VER_ERR_CAL_4,	"CAL-4"},
+	{ KSI_VER_ERR_NONE,		""}
 };
 
 void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile, int (*print)(const char *format, ... )){
@@ -402,9 +401,7 @@ const char *OBJPRINT_getVerificationErrorCode(KSI_VerificationErrorCode code) {
 }
 
 const char *OBJPRINT_getVerificationErrorDescription(KSI_VerificationErrorCode code) {
-	const verificationErrorDetail_st *details = getVerificationErrorDetails(code);
-
-	return (details != NULL ? details->description : "Unknown");
+	return KSI_Policy_getErrorString(code);
 }
 
 static const char *getVerificationStepDescription(size_t step) {
