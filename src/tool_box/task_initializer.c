@@ -21,6 +21,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ksi/compatibility.h>
+#include <ksi/ksi.h>
+#include <ksi/net.h>
 
 #include "param_set/param_set.h"
 #include "param_set/task_def.h"
@@ -37,7 +39,7 @@ enum service_info_priorities {
 	PRIORITY_CMD,
 };
 
-static int isUserInfoInsideUrl(const char *url, char *buf_u, char *buf_k, size_t buf_len);
+static int isKSIUserInfoInsideUrl(const char *url, char *buf_u, char *buf_k, size_t buf_len);
 static int extract_user_info_from_url_if_needed(PARAM_SET *set, const char *flag_name, const char *usr_name, const char *key_name);
 
 int TASK_INITIALIZER_check_analyze_report(PARAM_SET *set, TASK_SET *task_set, double task_set_sens, double task_dif, TASK **task) {
@@ -192,23 +194,43 @@ cleanup:
 	return res;
 }
 
-static int isUserInfoInsideUrl(const char *url, char *buf_u, char *buf_k, size_t buf_len) {
+static int isKSIUserInfoInsideUrl(const char *url, char *buf_u, char *buf_k, size_t buf_len) {
+	int res = KT_UNKNOWN_ERROR;
 	char *ret = NULL;
 	char buf[1024];
+	char *scheme = NULL;
+	int result = 0;
 
-	if (url == NULL || *url == '\0' || buf_u == NULL || buf_k == NULL || buf_len == 0) return 0;
+	if (url == NULL || *url == '\0' || buf_u == NULL || buf_k == NULL || buf_len == 0) goto cleanup;;
+
+	res = KSI_UriSplitBasic(url, &scheme, NULL, NULL, NULL);
+	if (res != KSI_OK) goto cleanup;
+
+	/**
+	 * The user info embedded in the url is extracted ONLY when the url scheme
+	 * contains prefix ksi+. In the other cases the user info is interpreted as
+	 * specified by the given protocol.
+     */
+	if (scheme == NULL || strstr(scheme, "ksi+") == NULL) goto cleanup;
+
 	ret = STRING_extractAbstract(url, "://", "@", buf, sizeof(buf), find_charAfterStrn, find_charBeforeStrn, NULL);
-	if (ret != buf) return 0;
+	if (ret != buf) goto cleanup;;
 
 	ret = STRING_extract(buf, NULL, ":", buf_u, buf_len);
-	if (ret != buf_u) return 0;
+	if (ret != buf_u) goto cleanup;;
 
 	if (buf_u[0] == ':') buf_u[0] = '\0';
 
 	ret = STRING_extract(buf, ":", NULL, buf_k, buf_len);
-	if (ret != buf_k) return 0;
+	if (ret != buf_k) goto cleanup;;
 
-	return 1;
+	result = 1;
+
+cleanup:
+
+	KSI_free(scheme);
+
+	return result;
 }
 
 static int extract_user_info_from_url_if_needed(PARAM_SET *set, const char *flag_name, const char *usr_name, const char *key_name) {
@@ -239,7 +261,7 @@ static int extract_user_info_from_url_if_needed(PARAM_SET *set, const char *flag
 	 * If there is a user info embedded into url, check if there is a need to
 	 * extract the values and append to the set.
      */
-	if (isUserInfoInsideUrl(url, usr, key, sizeof(usr))) {
+	if (isKSIUserInfoInsideUrl(url, usr, key, sizeof(usr))) {
 		res = PARAM_SET_getAtr(set, flag_name, NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &atr);
 		if (res != PST_OK) goto cleanup;
 
