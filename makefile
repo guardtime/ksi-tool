@@ -123,6 +123,13 @@ $(BIN_DIR)\$(TOOL_NAME).exe: error_handling_build_tool $(BIN_DIR) build_objects
 	link $(LDFLAGS) /OUT:$@ $(PARAMSET_OBJ_DIR)\*.obj $(TOOL_BOX_OBJ_DIR)\*.obj $(OBJ_DIR)\*.obj $(EXT_LIB)
 !IF "$(KSI_LIB)" == "dll"
 	xcopy "$(KSI_DIR)\$(KSI_LIB)\libksiapi$(RTL).dll" "$(BIN_DIR)\" /Y
+!IF "$(LNK_CURL)" == "yes" || "$(LNK_CURL)" == "YES"
+!IF "$(RTL)" == "MT" || "$(RTL)" == "MD"
+	copy "$(CURL_DIR)\$(KSI_LIB)\libcurl$(RTL).dll" "$(BIN_DIR)\libcurl.dll" /Y
+!ELSE
+	copy "$(CURL_DIR)\$(KSI_LIB)\libcurl$(RTL).dll" "$(BIN_DIR)\libcurl_debug.dll" /Y
+!ENDIF
+!ENDIF
 !ENDIF
 
 $(BIN_DIR):
