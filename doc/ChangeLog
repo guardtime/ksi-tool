@@ -1,3 +1,5 @@
+* BUGFIX: User info embedded in the uri is interpreted as KSI user info only when the known uri scheme has prefix 'ksi+' (e.g. ksi+http).
+
 * IMPROVEMENT: RPM package name changed to ksi-tools. Packages ksitool and ksi are obsoleted by package ksi-tools. Binary name is still ksi.
 * IMPROVEMENT: Distribution tag (e.g. el6, el7, fc19) added to the rpm package name.
 * BUGFIX: WinBuild.bat renamed and changed to WinBuild.bat.sample.
