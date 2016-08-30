@@ -1,14 +1,18 @@
 * BUGFIX: User info embedded in the uri is interpreted as KSI user info only when the known uri scheme has prefix 'ksi+' (e.g. ksi+http).
 
-* IMPROVEMENT: RPM package name changed to ksi-tools. Packages ksitool and ksi are obsoleted by package ksi-tools. Binary name is still ksi.
+Version 2.1
+
+2016-08-11 2.1.838
+
+* IMPROVEMENT: RPM package name changed to ksi-tools. Packages ksi is obsoleted by package ksi-tools. Binary name is still ksi.
 * IMPROVEMENT: Distribution tag (e.g. el6, el7, fc19) added to the rpm package name.
+* IMPROVEMENT: When signing imprint without the specified output file name hash algorithm is used as file name instead of the entire imprint.
 * BUGFIX: WinBuild.bat renamed and changed to WinBuild.bat.sample.
-* BUGFIX: Exit status for faulty PKI fixed. (TOOL-122)
-* IMPROVEMENT: When signing imprint without the specified output file name hash algorithm is used as file name instead of the entire imprint. (TOOL-120)
+* BUGFIX: Exit status for faulty PKI fixed.
 
 Version 2.0
 
-2016-06-01 2.0.0
+2016-06-01 2.0.744
 
 * IMPROVEMENT: Signature over maximum tlv size is not loaded. (BUG-198)
 * IMPROVEMENT: ksitool renamed to ksi and major version increased to 2. (KCT-52)
