@@ -1,20 +1,21 @@
-/*
- * Copyright 2013-2016 Guardtime, Inc.
+/**************************************************************************
  *
- * This file is part of the Guardtime client SDK.
+ * GUARDTIME CONFIDENTIAL
  *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *     http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES, CONDITIONS, OR OTHER LICENSES OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright (C) [2015] Guardtime, Inc
+ * All Rights Reserved
+ *
+ * NOTICE:  All information contained herein is, and remains, the
+ * property of Guardtime Inc and its suppliers, if any.
+ * The intellectual and technical concepts contained herein are
+ * proprietary to Guardtime Inc and its suppliers and may be
+ * covered by U.S. and Foreign Patents and patents in process,
+ * and are protected by trade secret or copyright law.
+ * Dissemination of this information or reproduction of this
+ * material is strictly forbidden unless prior written permission
+ * is obtained from Guardtime Inc.
  * "Guardtime" and "KSI" are trademarks or registered trademarks of
- * Guardtime, Inc., and no license to trademarks is granted; Guardtime
- * reserves and retains all trademark rights.
+ * Guardtime Inc.
  */
 
 #ifndef PARAM_SET_H
@@ -35,6 +36,7 @@ enum param_set_err {
 	PST_OK = 0,
 	PST_INVALID_ARGUMENT = PARAM_SET_ERROR_BASE,
 	PST_INVALID_FORMAT,
+	/* Currently used only if TASK_DEFINITION_MAX_COUNT exceeded. */
 	PST_INDEX_OVF,
 	/** Parameter with the given name does not exist it the given set. */
 	PST_PARAMETER_NOT_FOUND,
@@ -58,6 +60,8 @@ enum param_set_err {
 	PST_TASK_SET_NOT_ANALYZED,
 	PST_TASK_UNABLE_TO_ANALYZE_PARAM_SET_CHANGED,
 	PST_UNDEFINED_BEHAVIOUR,
+	/* Unable to set the combination of command-line parser options. */
+	PST_PRSCMD_INVALID_COMBINATION,
 	PST_UNKNOWN_ERROR,
 };
 
@@ -329,14 +333,26 @@ int PARAM_SET_clearValue(PARAM_SET *set, const char *names, const char *source, 
 int PARAM_SET_getValueCount(PARAM_SET *set, const char *names, const char *source, int priority, int *count);
 
 /**
- * Searches for a parameter by name and checks if its value is present. Even if
- * the values format or content is invalid, true is returned.
+ * Searches for a parameter defined in the list by name and checks if all the
+ * parameters have values set. Parameter list is defined as "p1,p2,p3 ...".
+ * Even if the values format or content is invalid, true is returned.
  *
  * \param	set		PARAM_SET object.
- * \param	name	parameter name.
- * \return PST_OK if successful, error code otherwise.
+ * \param	names	parameter name list.
+ * \return 1 if yes, 0 otherwise.
  */
-int PARAM_SET_isSetByName(const PARAM_SET *set, const char *name);
+int PARAM_SET_isSetByName(const PARAM_SET *set, const char *names);
+
+/**
+ * Searches for a parameter defined in the list by name and checks if one of the
+ * parameters have values set. Parameter list is defined as "p1,p2,p3 ...".
+ * Even if the values format or content is invalid, true is returned.
+ *
+ * \param	set		PARAM_SET object.
+ * \param	names	parameter name list.
+ * \return 1 if yes, 0 otherwise.
+ */
+int PARAM_SET_isOneOfSetByName(const PARAM_SET *set, const char *names);
 
 /**
  * Controls if the format and content of the parameters is OK.
@@ -345,6 +361,12 @@ int PARAM_SET_isSetByName(const PARAM_SET *set, const char *name);
  */
 int PARAM_SET_isFormatOK(const PARAM_SET *set);
 
+/**
+ * Controls if the the constraints are violated.
+ * \param	set		PARAM_SET object.
+ * \return 0 if constraints are OK, 1 otherwise. -1 if an error occurred.
+ */
+int PARAM_SET_isConstraintViolation(const PARAM_SET *set);
 /**
  * Controls if there are some undefined parameters red from command-line or
  * file, similar to the defined ones.
@@ -394,6 +416,11 @@ int PARAM_SET_readFromFile(PARAM_SET *set, const char *fname, const char* source
  * \return PST_OK if successful, error code otherwise.
  */
 int PARAM_SET_readFromCMD(PARAM_SET *set, int argc, char **argv, const char *source, int priority);
+
+
+int PARAM_SET_setParseOptions(PARAM_SET *set, const char *names, int options);
+
+int PARAM_SET_parseCMD(PARAM_SET *set, int argc, char **argv, const char *source, int priority);
 
 /**
  * Extracts all parameters from \c src known to \c target and appends all the
@@ -445,6 +472,8 @@ char* PARAM_SET_unknownsToString(const PARAM_SET *set, const char *prefix, char 
  * \return buf if successful, NULL otherwise.
  */
 char* PARAM_SET_invalidParametersToString(const PARAM_SET *set, const char *prefix, const char* (*getErrString)(int), char *buf, size_t buf_len);
+
+char* PARAM_SET_constraintErrorToString(const PARAM_SET *set, const char *prefix, char *buf, size_t buf_len);
 
 /**
  * Converts PST_ Error codes to string.
