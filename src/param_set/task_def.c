@@ -167,7 +167,7 @@ int TASK_DEFINITION_new(int id, const char *name, const char *man, const char *a
 
 	/**
 	 * Construct new and empty task definition data structure.
-     */
+	 */
 	tmp = (TASK_DEFINITION*)malloc(sizeof(TASK_DEFINITION));
 	if(tmp == NULL) {
 		res = PST_OUT_OF_MEMORY;
@@ -184,7 +184,7 @@ int TASK_DEFINITION_new(int id, const char *name, const char *man, const char *a
 
 	/**
 	 * Initialize data structure.
-     */
+	 */
 	res = new_string(name, &tmp->name);
 	if (res != PST_OK) goto cleanup;
 
@@ -207,7 +207,7 @@ int TASK_DEFINITION_new(int id, const char *name, const char *man, const char *a
 	/**
 	 * TODO: check if make sens.
 	 * Create a string representation of the task.
-     */
+	 */
 	if (TASK_DEFINITION_toString(tmp, buf, sizeof(buf)) != NULL){
 		res = new_string(buf, &tmp->toString);
 		if (res != PST_OK) goto cleanup;
@@ -322,7 +322,7 @@ int TASK_DEFINITION_getMoreConsistent(TASK_DEFINITION *A, TASK_DEFINITION *B, PA
 
 	/**
 	 * Analyse consistency of task definition A and B.
-     */
+	 */
 	res = TASK_DEFINITION_analyzeConsistency(A, set, &consisteny_A);
 	if (res != PST_OK) goto cleanup;
 
@@ -333,7 +333,7 @@ int TASK_DEFINITION_getMoreConsistent(TASK_DEFINITION *A, TASK_DEFINITION *B, PA
 	/**
 	 * If two tasks have very similar consistency, examine two tasks and select
 	 * the task that is more consistent.
-     */
+	 */
 	if (fabs(consisteny_A - consisteny_B) <= sensitivity) {
 		/**
 		 * Get the count of parameters that are set and do NOT exist under both
@@ -449,7 +449,7 @@ char *TASK_DEFINITION_howToRepiar_toString(TASK_DEFINITION *def, PARAM_SET *set,
 
 	/**
 	 * Error about MANDATORY flags.
-     */
+	 */
 	pName = def->mandatory;
 	while((pName = category_extract_name(pName, name_buffer, sizeof(name_buffer), NULL)) != NULL) {
 		if (strlen(name_buffer) == 0) continue;
@@ -469,7 +469,7 @@ char *TASK_DEFINITION_howToRepiar_toString(TASK_DEFINITION *def, PARAM_SET *set,
 	if(err_printed) count += PST_snprintf(buf + count, buf_len - count, ".\n");
 	/**
 	 * Error about AT LEAST ONE OF flags.
-     */
+	 */
 	if ((category_get_parameter_count(def->atleast_one) - category_get_missing_flag_count(def->atleast_one, set)) == 0) {
 		err_printed = 0;
 		pName = def->atleast_one;
@@ -490,7 +490,7 @@ char *TASK_DEFINITION_howToRepiar_toString(TASK_DEFINITION *def, PARAM_SET *set,
 
 	/**
 	 * Error about FORBITTEN flags.
-     */
+	 */
 	pName = def->forbitten;
 	err_printed = 0;
 	while((pName = category_extract_name(pName, name_buffer, sizeof(name_buffer), NULL)) != NULL){
@@ -559,7 +559,7 @@ int TASK_SET_new(TASK_SET **new) {
 
 	/**
 	 * Construct new and empty task definition data structure.
-     */
+	 */
 	tmp = (TASK_SET*)malloc(sizeof(TASK_SET));
 	if(tmp == NULL) {
 		res = PST_OUT_OF_MEMORY;
@@ -666,7 +666,7 @@ int TASK_SET_analyzeConsistency(TASK_SET *task_set, PARAM_SET *set, double sensi
 
 	/**
 	 * Analyze consistency.
-     */
+	 */
 	for (i = 0; i < task_set->count; i++) {
 		res = TASK_DEFINITION_analyzeConsistency(task_set->array[i], set, &cons);
 		if (res != PST_OK) goto cleanup;
@@ -683,7 +683,7 @@ int TASK_SET_analyzeConsistency(TASK_SET *task_set, PARAM_SET *set, double sensi
 	 * Sort tasks consistency. Starting from more consistent (index == 0) and end
 	 * with less consistent. If consistency is very similar analyze the order
 	 * in more precise way.
-     */
+	 */
 //	debug_array_printf
 	for (i = 0; i < task_set->count; i++) {
 		for (j = i + 1; j < task_set->count; j++) {
@@ -766,7 +766,7 @@ int TASK_SET_getConsistentTask(TASK_SET *task_set, TASK **task) {
 
 	/**
 	 * If there is not exactly one consistent task there must be a error.
-     */
+	 */
 	if (task_set->consistent_count != 1) {
 		res = task_set->consistent_count == 0 ? PST_TASK_ZERO_CONSISTENT_TASKS : PST_TASK_MULTIPLE_CONSISTENT_TASKS;
 		goto cleanup;
@@ -775,7 +775,7 @@ int TASK_SET_getConsistentTask(TASK_SET *task_set, TASK **task) {
 	/**
 	 * Check for the single consistent value (as in some cases its not the first
 	 * in the list, but is only consistent one) Create new task;
-     */
+	 */
 
 	for (i = 0; i < task_set->count; i++) {
 		consistent = task_set->array[task_set->index[i]];

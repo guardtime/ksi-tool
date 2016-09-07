@@ -86,7 +86,7 @@ int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL
 	/**
 	 * If receiving pointer is NULL, initialize it. If receiving pointer is not
 	 * NULL iterate through linked list and append the value to the end.
-     */
+	 */
 	if (*newObj == NULL) {
 		tmp->previous = *newObj;
 		*newObj = tmp;
@@ -241,7 +241,7 @@ int PARAM_VAL_popElement(PARAM_VAL **rootValue, const char* source, int priority
 
 	/**
 	 * Extract a value from the chain.
-     */
+	 */
 	res = param_val_get_element(*rootValue, source, priority, at, 0, &tmp);
 	if (res != PST_OK) goto cleanup;
 
@@ -250,7 +250,7 @@ int PARAM_VAL_popElement(PARAM_VAL **rootValue, const char* source, int priority
 
 	/**
 	 * Repair the chain and root value.
-     */
+	 */
 	if (previous != NULL) {
 		previous->next = next;
 		newRoot = previous;
@@ -337,7 +337,7 @@ int PARAM_VAL_extract(PARAM_VAL *rootValue, const char **value, const char **sou
 
 	/**
 	 * Extract parameters;
-     */
+	 */
 	if (value != NULL) {
 		*value = rootValue->cstr_value;
 	}
@@ -367,7 +367,7 @@ int PARAM_VAL_getErrors(PARAM_VAL *rootValue, int *format, int* content) {
 
 	/**
 	 * Extract error values;
-     */
+	 */
 	if (format != NULL) {
 		*format = rootValue->formatStatus;
 	}
@@ -396,7 +396,7 @@ int PARAM_VAL_getPriority(PARAM_VAL *rootValue, int current, int *nextPrio) {
 
 	/**
 	 * If highest or lowest priority is asked.
-     */
+	 */
 	if (current == PST_PRIORITY_LOWEST || current == PST_PRIORITY_HIGHEST) {
 		res = param_val_getPriority(rootValue, current, &tmp);
 		if (res != PST_OK) goto cleanup;
@@ -409,7 +409,7 @@ int PARAM_VAL_getPriority(PARAM_VAL *rootValue, int current, int *nextPrio) {
 
 	/**
 	 * If the next priority is asked, extract it.
-     */
+	 */
 	nxt = rootValue;
 
 	res = param_val_getPriority(rootValue, PST_PRIORITY_HIGHEST, &tmp);

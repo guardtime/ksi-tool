@@ -58,7 +58,7 @@ const char* extract_next_name(const char* name_string, int (*isValidNameChar)(in
 
 		/**
 		 * Extract the name and extra flags.
-         */
+		 */
 		if (buf_i == 0 && !isNameOpen && !isFlagsOpen && isValidNameChar(name_string[cat_i])) {
 			isNameOpen = 1;
 		} else if (isNameOpen && buf_i > 0 && !isValidNameChar(name_string[cat_i]) && name_string[cat_i] != '-') {
@@ -74,7 +74,7 @@ const char* extract_next_name(const char* name_string, int (*isValidNameChar)(in
 
 		/**
 		 * Extract the data fields.
-         */
+		 */
 		if (isNameOpen) {
 			buf[buf_i++] = name_string[cat_i];
 		} else if (isFlagsOpen) {
@@ -174,7 +174,7 @@ int parse_key_value_pair(const char *line, char *key, char *value, size_t buf_le
 	/**
 	 * Search for the first character that is valid for a KEY string. Everything else
 	 * than space
-     */
+	 */
 	while ((C = 0xff & line[i]) != '\0') {
 		if (!isspace(C) && C != '-' && !isalpha(C)) {
 			res = PST_INVALID_FORMAT;
@@ -193,7 +193,7 @@ int parse_key_value_pair(const char *line, char *key, char *value, size_t buf_le
 
 	/**
 	 * The first key character must be available.
-     */
+	 */
 	key_opend = 1;
 	while ((C = 0xff & line[i]) != '\0') {
 		if (!is_ecape_opend && C == '\\') {
@@ -453,7 +453,7 @@ static int param_set_analyze_similarity(PARAM_SET *set, const char *str, int sen
 		 * Examine both the name and its alias and calculate how big is the difference
 		 * compared with input string. If alias exists select the one that is more
 		 * similar.
-         */
+		 */
 		name_edit_distance = editDistance_levenshtein(array[i]->flagName, str);
 		name_len = (unsigned)strlen(array[i]->flagName);
 		name_difference = (name_edit_distance * 100) / name_len;
@@ -488,7 +488,7 @@ static int param_set_analyze_similarity(PARAM_SET *set, const char *str, int sen
 
 		/**
 		 * Register the smallest difference value.
-         */
+		 */
 		if (typo_index[i].difference < smallest_difference) {
 			smallest_difference = typo_index[i].difference;
 		}
@@ -627,7 +627,7 @@ static int param_set_addRawParameter(const char *param, const char *arg, const c
 		/**
 		 * When it is long or short parameters, append it to the list and include
 		 * the argument. Otherwise it must be bunch of flags.
-         */
+		 */
 		if ((strncmp("--", param, 2) == 0 && len >= 3) || (param[0] == '-' && len == 2)) {
 			res = PARAM_SET_add(set, flag, arg, source, priority);
 			if (res != PST_OK && res != PST_PARAMETER_IS_UNKNOWN && res != PST_PARAMETER_IS_TYPO) {
@@ -641,7 +641,7 @@ static int param_set_addRawParameter(const char *param, const char *arg, const c
 
 			/**
 			 * If bunch of flags have an argument it must be a typo or unknown parameter.
-             */
+			 */
 			res = param_set_add_typo_or_unknown(set, typo_list, source, NULL, arg);
 			if (res != PST_OK) goto cleanup;
 
@@ -649,7 +649,7 @@ static int param_set_addRawParameter(const char *param, const char *arg, const c
 			 * Check how many flags from the group are unknown. If less than 25%
 			 * are unknown treat them as regular flags. If more than 25% are
 			 * unknown, set the whole string to typo or unknown list.
-             */
+			 */
 			unknown_count = bunch_of_flags_get_unknown_count(set, flag);
 
 			if (unknown_count < 3) {
@@ -892,7 +892,7 @@ int PARAM_SET_add(PARAM_SET *set, const char *name, const char *value, const cha
 		 * If the parameters name is not found, check if it is a typo? If typo
 		 * is found push it to the typo list. If not a typo, push it to the unknown
 		 * list and if unknown flag has argument, push it too.
-         */
+		 */
 
 		/* Analyze similarity and */
 		if (param_set_analyze_similarity(set, name, TYPO_SENSITIVITY, TYPO_MAX_COUNT, typo_list)) {
@@ -1545,7 +1545,7 @@ int PARAM_SET_parseCMD(PARAM_SET *set, int argc, char **argv, const char *source
 
 		/**
 		 * Analyze the tokens.
-         */
+		*/
 		if (!isParsingClosed) {
 			last_token_type = token_type;
 			res = get_parameter_from_token(set, token, &token_type, &tmp_parameter);
@@ -1588,7 +1588,7 @@ int PARAM_SET_parseCMD(PARAM_SET *set, int argc, char **argv, const char *source
 				 *    with the token match brake. Maybe a last parameter must be opened!
 				 * 2) Don't exit the loop if the last token brake occurred simultaneously
 				 *    with the token_no_param_break. The last value must be parsed.
-                 */
+				 */
 				if ((!token_pot_param_break) && (!token_match_break) && (!token_no_param_break) && last_token_brake) continue;
 			}
 
@@ -1626,7 +1626,7 @@ int PARAM_SET_parseCMD(PARAM_SET *set, int argc, char **argv, const char *source
 			 * If the token is long or short parameter add it as a typo or unknown.
 			 * If the token is value, check if the loose parameter collector exists.
 			 * If it does, break. If it does not add typo or unknown.
-             */
+			 */
 			if (TOKEN_IS_BUNCH_OF_FLAGS_PARAM(token_type)) {
 				dpgprint("------------BUNCH OF FLAGS-----------------\n");
 				res = param_set_addRawParameter(token, NULL, source, set, priority);
@@ -1685,17 +1685,17 @@ int PARAM_SET_IncludeSet(PARAM_SET *target, PARAM_SET *src) {
 	/**
 	 * Scan the source set for parameters. If there is a parameter with the same
 	 * name and it has values, add those values to the target set.
-     */
+	 */
 	for (i = 0; i < src->count; i++) {
 		/**
 		 * If the count is zero, skip that round.
-         */
+		*/
 		if (src->parameter[i]->argCount == 0) continue;
 
 		/**
 		 * If parameter in src has values, check if it exists in target. If it does
 		 * not skip the round.
-         */
+		 */
 		res = param_set_getParameterByName(target, src->parameter[i]->flagName, &target_param);
 		if (res != PST_OK && res != PST_PARAMETER_NOT_FOUND) {
 			goto cleanup;
@@ -1706,7 +1706,7 @@ int PARAM_SET_IncludeSet(PARAM_SET *target, PARAM_SET *src) {
 
 		/**
 		 * The target has the parameter with the same name. Include all values.
-         */
+		 */
 		n = 0;
 		while (PARAM_getValue(src->parameter[i], NULL, PST_PRIORITY_NONE, n, &param_value) == PST_OK) {
 			res = PARAM_SET_add(target, src->parameter[i]->flagName, param_value->cstr_value, param_value->source, param_value->priority);

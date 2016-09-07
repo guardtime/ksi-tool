@@ -367,7 +367,7 @@ int PARAM_checkConstraints(const PARAM *param, int constraints) {
 	 * PARAM_SINGLE_VALUE_FOR_PRIORITY_LEVEL
 	 * Check if there are some cases where a single priority level
 	 * contains multiple values.
-     */
+	 */
 	if (constraints & PARAM_SINGLE_VALUE_FOR_PRIORITY_LEVEL) {
 		if (param_constraint_isFlagSet(param, PARAM_SINGLE_VALUE_FOR_PRIORITY_LEVEL)) {
 			/* Extract the first priority. */
