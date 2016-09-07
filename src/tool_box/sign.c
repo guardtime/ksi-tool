@@ -59,7 +59,7 @@ int sign_run(int argc, char** argv, char **envp) {
 	 * Extract command line parameters.
 	 */
 	res = PARAM_SET_new(
-			CONF_generate_param_set_desc("{sign}{i}{o}{H}{data-out}{d}{dump}{log}{conf}{h|help}", "S", buf, sizeof(buf)),
+			CONF_generate_param_set_desc("{sign}{i}{o}{H}{data-out}{d}{dump}{log}{conf}{h|help}{dump-last-leaf}{prev-leaf}{no-masking}{masking-iv}{no-mdata}", "S", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -137,11 +137,11 @@ char *sign_help_toString(char*buf, size_t len) {
 		"             already. Use '-' as file name to read data to be hashed from stdin.\n"
 		"             Hash imprint format: <alg>:<hash in hex>.\n"
 		" -o <out.ksig>\n"
-		"           - Output file path for the signature. Use '-' as file name to redirect\n"
-		"             signature binary stream to stdout. If not specified, the signature is\n"
-		"             saved to <input file>.ksig (or <input file>_<nr>.ksig, where <nr> is\n"
-		"             auto-incremented counter if the output file already exists). If specified,\n"
-		"             will always overwrite the existing file.\n"
+		"           - Output file path for the signature. Use '-' as file name to\n"
+		"             redirect signature binary stream to stdout. If not specified, the\n"
+		"             signature is saved to <input file>.ksig (or <input file>_<nr>.ksig,\n"
+		"             where <nr> is auto-incremented counter if the output file already\n"
+		"             exists will always overwrite the existing file.\n"
 		" -H <alg> \n"
 		"           - Use the given hash algorithm to hash the file to be signed.\n"
 		"             Use ksi -h to get the list of supported hash algorithms.\n"
@@ -153,6 +153,41 @@ char *sign_help_toString(char*buf, size_t len) {
 		" --data-out <file>\n"
 		"           - Save signed data to file. Use when signing an incoming stream.\n"
 		"             Use '-' as file name to redirect data being hashed to stdout.\n"
+
+		" --max-in-count <int>\n"
+		"           - Set the maximum count of input files permitted (default 1024).\n"
+		" --max-lvl <int>\n"
+		"           - Set the maximum depth of the local aggregation tree (default 0).\n"
+		" --sequential\n"
+		"           - Enable signing of multiple files in sequence to avoid the local\n"
+		" --max-aggr-rounds <int>\n"
+		"           - Set the maximum count of local aggregation rounds (default 1).\n"
+		" --dump-last-leaf\n"
+		"           - Dump the last leaf of the local aggregation tree.\n"
+		" --prev-leaf <hash>\n"
+		"           - Specify the last hash value of the last local aggregation trees\n"
+		"             leaf to link it with the first local aggregation tree (default \n"
+		"             zero hash).\n"
+		" --no-masking\n"
+		"           - Disable masking of aggregations tree input leafs.\n"
+		" --masking-iv <hex>\n"
+		"           - Specify a hex string to initialize the masking process.\n"
+		" --no-mdata\n"
+		"           - No metadat will be embedded into the signature even if the metadata\n"
+		"             is configured.\n"
+		" --mdata-cli-id <str>\n"
+		"           - Specify client id as a string that will be embedded into the\n"
+		"             signature as metadata. It is mandatory for the metadata.\n"
+		" --mdata-mac-id <str>\n"
+		"           - Optional machine id as a string that will be embedded into the\n"
+		"             signature as metadata.\n"
+		" --mdata-sqn-nr <int>\n"
+		"           - Optional sequence number of the request as integer that will be"
+		"             embedded into the signature as metadata.\n"
+		" --mdata-req-tm <int>\n"
+		"           - Optional request time extracted from the machine clock that will be\n"
+		"             embedded into signature as metadata.\n"
+
 		" -d        - Print detailed information about processes and errors to stderr.\n"
 		" --dump    - Dump signature created in human-readable format to stdout.\n"
 		" --conf <file>\n"
@@ -161,8 +196,10 @@ char *sign_help_toString(char*buf, size_t len) {
 		"             override the ones in the configuration file.\n"
 		" --log <file>\n"
 		"           - Write libksi log to given file. Use '-' as file name to redirect\n"
-		"             log to stdout.\n",
-		TOOL_getName()
+		"             log to stdout.\n"
+		" --        - Disable command-line parameter parsing. After the parameter parsing\n"
+		"             is disabled all tokens are interpreted as inputs.\n"
+		, TOOL_getName()
 	);
 
 	return buf;
@@ -281,7 +318,9 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{o}{data-out}{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputHash, isContentOk_inputHash, NULL, extract_inputHash);
 	PARAM_SET_addControl(set, "{H}", isFormatOk_hashAlg, isContentOk_hashAlg, NULL, extract_hashAlg);
-	PARAM_SET_addControl(set, "{d}{dump}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{prev-leaf}", isFormatOk_imprint, isContentOk_imprint, NULL, extract_imprint);
+	PARAM_SET_addControl(set, "{masking-iv}", isFormatOk_hex, NULL, NULL, extract_OctetString);
+	PARAM_SET_addControl(set, "{d}{dump}{dump-last-leaf}{no-masking}{no-mdata}", isFormatOk_flag, NULL, NULL, NULL);
 
 	/*					  ID	DESC										MAN			 ATL	FORBIDDEN	IGN	*/
 	TASK_SET_add(task_set, 0,	"Sign data.",								"S,i",	 NULL,	"H,data-out",		NULL);
