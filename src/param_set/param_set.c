@@ -719,7 +719,7 @@ int PARAM_SET_new(const char *names, PARAM_SET **set){
 
 	/**
 	 * Calculate the parameters count.
-     */
+	 */
 	while(names[i]){
 		if(names[i] == '{') mem = names[i];
 		else if(mem == '{' && names[i] == '}'){
@@ -731,7 +731,7 @@ int PARAM_SET_new(const char *names, PARAM_SET **set){
 
 	/**
 	 * Create empty objects.
-     */
+	 */
 	tmp = (PARAM_SET*)malloc(sizeof(PARAM_SET));
 	if(tmp == NULL) {
 		res = PST_OUT_OF_MEMORY;
@@ -751,7 +751,7 @@ int PARAM_SET_new(const char *names, PARAM_SET **set){
 
 	/**
 	 * Initialize two special parameters to hold and extract unknown parameters.
-     */
+	 */
 	res = PARAM_new("unknown", NULL, 0, PST_PRSCMD_NONE, &tmp_unknwon);
 	if(res != PST_OK) goto cleanup;
 
@@ -779,7 +779,7 @@ int PARAM_SET_new(const char *names, PARAM_SET **set){
 
 	/**
 	 * Add parameters to the list.
-     */
+	 */
 	i = 0;
 	pName = names;
 	while((pName = getParametersName(pName, buf, alias, sizeof(buf), &flags)) != NULL){
@@ -948,7 +948,7 @@ int PARAM_SET_getObjExtended(PARAM_SET *set, const char *name, const char *sourc
 	/**
 	 * Obj must be feed directly to the getter function, asi it enables to manipulate
 	 * the data pointed by obj.
-     */
+	 */
 	res = PARAM_getObject(param, source, priority, at, extras, obj);
 	if (res != PST_OK) goto cleanup;
 
@@ -1038,7 +1038,7 @@ int PARAM_SET_clearParameter(PARAM_SET *set, const char *names){
 
 	/**
 	 * If there is no '{', assume that there is a single value.
-     */
+	 */
 	if (strchr(names, '{') == NULL) {
 		res = param_set_getParameterByName(set, names, &tmp);
 		if (res != PST_OK) return res;
@@ -1737,7 +1737,7 @@ static size_t param_value_add_errorstring_to_buf(PARAM *parameter, PARAM_VAL *in
 	if (parameter == NULL || invalid == NULL || buf == NULL || buf_len == 0) return 0;
 	/**
 	 * Extract error codes, if not set exit the function.
-     */
+	 */
 	res = PARAM_VAL_getErrors(invalid, &formatStatus, &contentStatus);
 	if (res != PST_OK) return 0;
 
