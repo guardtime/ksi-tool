@@ -36,8 +36,6 @@
 #include "api_wrapper.h"
 #include "common.h"
 
-static int isContentOk_imprint(const char *imprint);
-
 static int analyze_hexstring_format(const char *hex, double *cor) {
 	int i = 0;
 	int C;
@@ -212,6 +210,60 @@ static int hex_string_to_bin(const char *hexin, unsigned char *buf, size_t buf_l
 	res = KT_OK;
 
 cleanup:
+
+	return res;
+}
+
+int isFormatOk_hex(const char *hexin){
+	size_t len;
+	size_t arraySize;
+	unsigned int i, j;
+	int tmp;
+
+	if (hexin == NULL) return FORMAT_NULLPTR;
+	if (*hexin == '\0') return FORMAT_NOCONTENT;
+
+	len = strlen(hexin);
+	arraySize = len / 2;
+
+	if (len%2 != 0) return FORMAT_ODD_NUMBER_OF_HEX_CHARACTERS;
+
+	for (i = 0, j = 0; i < arraySize; i++, j += 2){
+		tmp = xx(hexin[j], hexin[j+1]);
+
+		if (tmp == -1) return FORMAT_INVALID_HEX_CHAR;
+	}
+
+	return FORMAT_OK;
+}
+
+int extract_OctetString(void *extra, const char* str, void** obj) {
+	int res;
+	void **extra_array = (void**)extra;
+	COMPOSITE *comp = NULL;
+	KSI_CTX *ctx = NULL;
+	ERR_TRCKR *err = NULL;
+	KSI_OctetString *tmp = NULL;
+	unsigned char binary[0xffff];
+	size_t binary_len = 0;
+
+	comp = (COMPOSITE*)extra_array[1];
+	ctx = comp->ctx;
+	err = comp->err;
+
+	res = hex_string_to_bin(str, binary, sizeof(binary), &binary_len);
+	if (res != KT_OK && res != KT_INDEX_OVF) goto cleanup;
+
+	res = KSI_OctetString_new(ctx, binary, binary_len, &tmp);
+	if (res != KT_OK) goto cleanup;
+
+	*obj = (void*)tmp;
+	tmp = NULL;
+	res = KT_OK;
+
+cleanup:
+
+	KSI_OctetString_free(tmp);
 
 	return res;
 }
@@ -519,42 +571,60 @@ int isFormatOk_int(const char *integer) {
 	if(strlen(integer) == 0) return FORMAT_NOCONTENT;
 
 	while ((C = integer[i++]) != '\0') {
-		if (isdigit(C) == 0) {
+		if (isdigit(C) == 0 && (i - 1 != 0 && C == '-') ) {
 			return FORMAT_NOT_INTEGER;
 		}
 	}
 	return FORMAT_OK;
 }
 
+int isContentOk_uint(const char* integer) {
+	long tmp;
+
+	if (integer == NULL) return FORMAT_NULLPTR;
+	if (integer[0] == '\0') return FORMAT_NOCONTENT;
+
+	tmp = strtol(integer, NULL, 10);
+	if (tmp < 0) return INTEGER_UNSIGNED;
+	if (tmp > INT_MAX) return INTEGER_TOO_LARGE;
+
+	return PARAM_OK;
+}
+
 int isContentOk_int(const char* integer) {
-	unsigned int i;
-	size_t len;
-	size_t int_max_len;
-	char tmp[32];
+	long tmp;
 
-	sprintf(tmp, "%d", INT_MAX);
-	len  = strlen(integer);
-	int_max_len = strlen(tmp);
+	if (integer == NULL) return FORMAT_NULLPTR;
+	if (integer[0] == '\0') return FORMAT_NOCONTENT;
 
-	if (len > int_max_len) {
-		return INTEGER_TOO_LARGE;
-	} else if (len == int_max_len) {
+	tmp = strtol(integer, NULL, 10);
+	if (tmp < INT_MIN) return INTEGER_TOO_SMALL;
+	if (tmp > INT_MAX) return INTEGER_TOO_LARGE;
 
-		for (i = 0; i < int_max_len; i++) {
-			if (tmp[i] < integer[i])
-				return INTEGER_TOO_LARGE;
-			else if (tmp[i] > integer[i])
-				break;
-		}
-	}
 	return PARAM_OK;
 }
 
 int extract_int(void *extra, const char* str,  void** obj){
+	long tmp;
 	int *pI = (int*)obj;
-	if (extra);
-	*pI = atoi(str);
+	VARIABLE_IS_NOT_USED(extra);
+	tmp = strtol(str, NULL, 10);
+	if (tmp < INT_MIN || tmp > INT_MAX) return KT_INVALID_CMD_PARAM;
+	*pI = (int)tmp;
 	return PST_OK;
+}
+
+
+int isContentOk_tree_level(const char* integer) {
+	long lvl = 0;
+
+	if (integer == NULL) return FORMAT_NULLPTR;
+
+	lvl = strtol(integer, NULL, 10);
+
+	if (lvl < 0 || lvl > 255) return TREE_DEPTH_OUT_OF_RANGE;
+
+	return PARAM_OK;
 }
 
 
@@ -583,6 +653,7 @@ int isContentOk_inputFileRestrictPipe(const char* path){
 
 	return PARAM_OK;
 }
+
 int isContentOk_inputFile(const char* path){
 	if (path == NULL) return FORMAT_NULLPTR;
 	if (strcmp(path, "-") == 0)	return PARAM_OK;
@@ -675,7 +746,7 @@ int isFormatOk_imprint(const char *imprint){
 	return analyze_hexstring_format(colon + 1, NULL);
 }
 
-static int isContentOk_imprint(const char *imprint) {
+int isContentOk_imprint(const char *imprint) {
 	int res = PARAM_INVALID;
 	char hash[1024];
 	KSI_HashAlgorithm alg_id = KSI_HASHALG_INVALID;
@@ -875,7 +946,7 @@ int isFormatOk_utcTime(const char *time) {
 
 int isContentOk_utcTime(const char *time) {
 	if (isInteger(time)) {
-		return isContentOk_int(time);
+		return isContentOk_uint(time);
 	} else {
 		return PARAM_OK;
 	}
@@ -946,6 +1017,12 @@ int isFormatOk_userPass(const char *uss_pass) {
 	return FORMAT_OK;
 }
 
+int isFormatOk_string(const char *str) {
+	if(str == NULL) return FORMAT_NULLPTR;
+	if(strlen(str) == 0) return FORMAT_NOCONTENT;
+	return FORMAT_OK;
+}
+
 
 int isFormatOk_constraint(const char *constraint) {
 	char *at = NULL;
@@ -1003,6 +1080,7 @@ const char *getParameterErrorString(int res) {
 		case HASH_ALG_INVALID_NAME: return "Algorithm name is incorrect";
 		case HASH_IMPRINT_INVALID_LEN: return "Hash length is incorrect";
 		case FORMAT_INVALID_HEX_CHAR: return "Invalid hex character";
+		case FORMAT_ODD_NUMBER_OF_HEX_CHARACTERS: return "There must be even number of hex characters";
 		case FORMAT_INVALID_BASE32_CHAR: return "Invalid base32 character";
 		case FORMAT_IMPRINT_NO_COLON: return "Imprint format must be <alg>:<hash>. ':' missing";
 		case FORMAT_IMPRINT_NO_HASH_ALG: return "Imprint format must be <alg>:<hash>. <alg> missing";
@@ -1011,7 +1089,10 @@ const char *getParameterErrorString(int res) {
 		case FILE_DOES_NOT_EXIST: return "File does not exist";
 		case FILE_INVALID_PATH: return "Invalid path";
 		case INTEGER_TOO_LARGE: return "Integer value is too large";
+		case INTEGER_TOO_SMALL: return "Integer value is too small";
+		case INTEGER_UNSIGNED: return "Integer must be unsigned";
 		case ONLY_REGULAR_FILES: return "Data from stdin not supported";
+		case TREE_DEPTH_OUT_OF_RANGE: return "Tree depth out of range [0 - 255]";
 		default: return "Unknown error";
 	}
 }

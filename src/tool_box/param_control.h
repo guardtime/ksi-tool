@@ -54,6 +54,9 @@ enum contentStatus {
 	HASH_ALG_INVALID_NAME,
 	HASH_IMPRINT_INVALID_LEN,
 	INTEGER_TOO_LARGE,
+	INTEGER_TOO_SMALL,
+	INTEGER_UNSIGNED,
+	TREE_DEPTH_OUT_OF_RANGE,
 	ONLY_REGULAR_FILES,
 	FILE_ACCESS_DENIED,
 	FILE_DOES_NOT_EXIST,
@@ -71,6 +74,7 @@ enum formatStatus_enum{
 	FORMAT_IMPRINT_NO_HASH_ALG,
 	FORMAT_IMPRINT_NO_HASH,
 	FORMAT_INVALID_HEX_CHAR,
+	FORMAT_ODD_NUMBER_OF_HEX_CHARACTERS,
 	FORMAT_NOT_INTEGER,
 	FORMAT_INVALID_BASE32_CHAR,
 	FORMAT_INVALID_OID,
@@ -82,6 +86,10 @@ enum formatStatus_enum{
 };
 
 const char *getParameterErrorString(int res);
+
+int isFormatOk_string(const char *str);
+int isFormatOk_hex(const char *hexin);
+int extract_OctetString(void *extra, const char* str, void** obj);
 
 int isFormatOk_hashAlg(const char *hashAlg);
 int isContentOk_hashAlg(const char *alg);
@@ -99,6 +107,10 @@ int convertRepair_path(const char* arg, char* buf, unsigned len);
 int isFormatOk_inputHash(const char *str);
 int isContentOk_inputHash(const char *str);
 
+int isContentOk_imprint(const char *imprint);
+int isFormatOk_imprint(const char *imprint);
+int extract_imprint(void *extra, const char* str, void** obj);
+
 /**
  * Requires \c COMPOSITE as extra. \c ctx, and \c err must not be NULL. \c h_alg
  * can be omitted if extracting imprint. \c fname_out must be NULL if input data
@@ -107,8 +119,11 @@ int isContentOk_inputHash(const char *str);
 int extract_inputHash(void *extra, const char* str, void** obj);
 
 int isFormatOk_int(const char *integer);
+int isContentOk_uint(const char* integer);
 int isContentOk_int(const char* integer);
 int extract_int(void *extra, const char* str,  void** obj);
+
+int isContentOk_tree_level(const char *integer);
 
 int isFormatOk_url(const char *url);
 int convertRepair_url(const char* arg, char* buf, unsigned len);
