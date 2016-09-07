@@ -47,8 +47,15 @@ char* CONF_generate_param_set_desc(char *description, const char *flags, char *b
 	extra_desc = (description == NULL) ? "" : description;
 	count += KSI_snprintf(buf + count, buf_len - count, "{C}{c}%s", extra_desc);
 
+	/**
+	 * Add configuration descriptions as specified by the flags. For example to
+	 * add configuration parameters related to the signer add S to flags.
+	 */
+
 	if (is_S) {
-		count += KSI_snprintf(buf + count, buf_len - count, "{S}{aggr-user}{aggr-key}");
+		count += KSI_snprintf(buf + count, buf_len - count,
+				"{S}{aggr-user}{aggr-key}"
+				"{max-in-count}{max-lvl}{sequential}{max-aggr-rounds}{mdata-cli-id}{mdata-mac-id}{mdata-sqn-nr}{mdata-req-tm}");
 	}
 
 	if (is_X) {
@@ -105,6 +112,10 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 	is_X = strchr(flags, 'X') != NULL ? 1 : 0;
 	is_P = strchr(flags, 'P') != NULL ? 1 : 0;
 
+	/**
+	 * Configure parameter set parameters as specified by the flags.
+	 */
+
 	if (is_P) {
 		res = PARAM_SET_addControl(conf, "{V}{W}", isFormatOk_inputFile, isContentOk_inputFileRestrictPipe, convertRepair_path, NULL);
 		if (res != PST_OK) goto cleanup;
@@ -128,6 +139,24 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 
 		res = PARAM_SET_addControl(conf, "{aggr-user}{aggr-key}", isFormatOk_userPass, NULL, NULL, NULL);
 		if (res != PST_OK) goto cleanup;
+
+		/**
+		 * Configure parameters related to the local aggregation (block signer).
+		 */
+		res = PARAM_SET_addControl(conf, "{max-in-count}{max-aggr-rounds}{mdata-sqn-nr}", isFormatOk_int, isContentOk_uint, NULL, extract_int);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_addControl(conf, "{max-lvl}", isFormatOk_int, isContentOk_tree_level, NULL, extract_int);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_setParseOptions(conf, "{max-lvl}{max-in-count}{max-aggr-rounds}{mdata-sqn-nr}", PST_PRSCMD_HAS_VALUE);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_addControl(conf, "{sequential}{mdata-req-tm}", isFormatOk_flag, NULL, NULL, NULL);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_addControl(conf, "{mdata-cli-id}{mdata-mac-id}", isFormatOk_string, NULL, NULL, NULL);
+		if (res != PST_OK) goto cleanup;
 	}
 
 	if (is_X) {
@@ -138,7 +167,7 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 		if (res != PST_OK) goto cleanup;
 	}
 
-	res = PARAM_SET_addControl(conf, "{c}{C}", isFormatOk_int, isContentOk_int, NULL, extract_int);
+	res = PARAM_SET_addControl(conf, "{c}{C}", isFormatOk_int, isContentOk_uint, NULL, extract_int);
 	if (res != PST_OK) goto cleanup;
 
 
