@@ -1,4 +1,5 @@
 * BUGFIX: User info embedded in the uri is interpreted as KSI user info only when the known uri scheme has prefix 'ksi+' (e.g. ksi+http).
+* IMPROVEMENT: Command-line parameter parser updated.
 
 Version 2.1
 
