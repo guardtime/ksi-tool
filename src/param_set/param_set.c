@@ -1556,7 +1556,9 @@ int PARAM_SET_parseCMD(PARAM_SET *set, int argc, char **argv, const char *source
 
 			if (is_parameter_opend) {
 				token_match_break = (TOKEN_IS_MATCH(token_type) && PARAM_isParsOptionSet(opend_parameter, PST_PRSCMD_BREAK_VALUE_WITH_EXISTING_PARAMETER_MATCH)) ? 1 : 0;
-				token_pot_param_break = (TOKE_IS_VALID_POT_PARAM_BREAKER(token_type) && PARAM_isParsOptionSet(opend_parameter, PST_PRSCMD_BREAK_WITH_POTENTIAL_PARAMETER)) ? 2 : 0;
+				token_pot_param_break = ((TOKE_IS_VALID_POT_PARAM_BREAKER(token_type)
+						|| (TOKEN_IS_NULL_HAS_DOUBLE_DASH(token_type) && loose_parameters))
+						&& PARAM_isParsOptionSet(opend_parameter, PST_PRSCMD_BREAK_WITH_POTENTIAL_PARAMETER)) ? 2 : 0;
 				token_no_param_break = PARAM_isParsOptionSet(opend_parameter, PST_PRSCMD_HAS_NO_VALUE) ? 4 : 0;
 
 				if (!token_no_param_break && !token_pot_param_break && !token_match_break) {

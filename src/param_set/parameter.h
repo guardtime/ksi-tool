@@ -83,7 +83,7 @@ enum PARAM_PARS_OPTIONS_enum {
 	 * If Used with \ref PST_PRSCMD_HAS_MULTIPLE_INSTANCES and some values are
 	 * found parameter is closed, if not NULL is set.
 	 * If PST_PRSCMD_COLLECT_LOOSE_PERMIT_END_OF_COMMANDS is set -- will end the
-	 * parsing.
+	 * parsing as is potential parameter.
 	 */
 	PST_PRSCMD_BREAK_WITH_POTENTIAL_PARAMETER = 0x0010,
 
@@ -109,7 +109,8 @@ enum PARAM_PARS_OPTIONS_enum {
 	PST_PRSCMD_DEFAULT = 0x0001 | PST_PRSCMD_BREAK_WITH_POTENTIAL_PARAMETER,
 	
 	/**
-	 * Collect all elements that has no dash prefix.
+	 * Collect all elements that are not bind with another flag and that do not
+	 * look like potential parameters.
 	 */
 	PST_PRSCMD_COLLECT_LOOSE_VALUES = 0x0040,
 	
