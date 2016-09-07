@@ -35,6 +35,7 @@
 #include "obj_printer.h"
 #include "conf_file.h"
 #include "tool.h"
+#include "param_set/parameter.h"
 
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 static int sign_save_to_file(PARAM_SET *set, KSI_CTX *ksi, ERR_TRCKR *err, KSI_Signature **sig);
@@ -321,6 +322,14 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{prev-leaf}", isFormatOk_imprint, isContentOk_imprint, NULL, extract_imprint);
 	PARAM_SET_addControl(set, "{masking-iv}", isFormatOk_hex, NULL, NULL, extract_OctetString);
 	PARAM_SET_addControl(set, "{d}{dump}{dump-last-leaf}{no-masking}{no-mdata}", isFormatOk_flag, NULL, NULL, NULL);
+
+	/**
+	 * Make the parameter -i collect:
+	 * 1) All values that are exactly after -i (both a and -i are collected -i a, -i -i)
+	 * 2) all values that are not potential parameters (unknown / typo) parameters (will ignore -q, --test)
+	 * 3) All values that are specified after --.
+	 */
+	PARAM_SET_setParseOptions(set, "i", PST_PRSCMD_HAS_VALUE | PST_PRSCMD_COLLECT_LOOSE_VALUES | PST_PRSCMD_COLLECT_LOOSE_PERMIT_END_OF_COMMANDS);
 
 	/*					  ID	DESC										MAN			 ATL	FORBIDDEN	IGN	*/
 	TASK_SET_add(task_set, 0,	"Sign data.",								"S,i",	 NULL,	"H,data-out",		NULL);
