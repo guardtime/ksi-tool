@@ -23,6 +23,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <ksi/compatibility.h>
+#include "param_set/parameter.h"
 #include "tool_box/param_control.h"
 #include "tool_box.h"
 #include "ksitool_err.h"
@@ -112,6 +113,9 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 		if (res != PST_OK) goto cleanup;
 
 		res = PARAM_SET_addControl(conf, "{publications-file-no-verify}", isFormatOk_flag, NULL, NULL, NULL);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_setParseOptions(conf, "publications-file-no-verify", PST_PRSCMD_DEFAULT | PST_PRSCMD_NO_TYPOS);
 		if (res != PST_OK) goto cleanup;
 
 		res = PARAM_SET_addControl(conf, "{cnstr}", isFormatOk_constraint, NULL, convertRepair_constraint, NULL);
