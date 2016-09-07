@@ -136,7 +136,11 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 	/**
 	 * Read conf from command line.
      */
-	PARAM_SET_readFromCMD(set, argc, argv, "CMD", PRIORITY_CMD);
+	res = PARAM_SET_parseCMD(set, argc, argv, "CMD", PRIORITY_CMD);
+	if (res != KT_OK) {
+		print_errors("Error: Unable to parse command-line.\n");
+		goto cleanup;
+	}
 
 	/**
 	 * Include configurations file.

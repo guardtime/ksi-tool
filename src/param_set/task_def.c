@@ -139,6 +139,11 @@ int TASK_getID(TASK *task){
 	else return task->id;
 }
 
+const char* TASK_getName(TASK *task){
+	if(task == NULL) return NULL;
+	else return task->def->name;
+}
+
 PARAM_SET *TASK_getSet(TASK *task) {
 	if(task == NULL) return NULL;
 	else return task->set;

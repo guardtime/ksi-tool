@@ -137,8 +137,10 @@ static char *getParametersName(const char* list_of_names, char *name, char *alia
 			tmp_flags |= PARAM_SINGLE_VALUE;
 	}
 	if(pName[i] == '}'){
-		if(pName[i+1] == '>')
+		if(pName[i+1] == '>') {
 			tmp_flags |= PARAM_SINGLE_VALUE_FOR_PRIORITY_LEVEL;
+			tmp_flags &= ~(PARAM_SINGLE_VALUE);
+		}
 	}
 
 
@@ -444,6 +446,9 @@ static int param_set_analyze_similarity(PARAM_SET *set, const char *str, int sen
 		int alias_difference = 100;
 		int isSubstring = 0;
 		int isSubstringAtTheBeginning = 0;
+
+		if (PARAM_isParsOptionSet(array[i], PST_PRSCMD_NO_TYPOS)) continue;
+
 		/**
 		 * Examine both the name and its alias and calculate how big is the difference
 		 * compared with input string. If alias exists select the one that is more
@@ -747,13 +752,13 @@ int PARAM_SET_new(const char *names, PARAM_SET **set){
 	/**
 	 * Initialize two special parameters to hold and extract unknown parameters.
 	 */
-	res = PARAM_new("unknown", NULL, 0, &tmp_unknwon);
+	res = PARAM_new("unknown", NULL, 0, PST_PRSCMD_NONE, &tmp_unknwon);
 	if(res != PST_OK) goto cleanup;
 
-	res = PARAM_new("typo", NULL, 0, &tmp_typo);
+	res = PARAM_new("typo", NULL, 0, PST_PRSCMD_NONE, &tmp_typo);
 	if(res != PST_OK) goto cleanup;
 
-	res = PARAM_new("syntax", NULL, 0, &tmp_syntax);
+	res = PARAM_new("syntax", NULL, 0, PST_PRSCMD_NONE, &tmp_syntax);
 	if(res != PST_OK) goto cleanup;
 
 	res = PARAM_setObjectExtractor(tmp_typo, NULL);
@@ -778,7 +783,7 @@ int PARAM_SET_new(const char *names, PARAM_SET **set){
 	i = 0;
 	pName = names;
 	while((pName = getParametersName(pName, buf, alias, sizeof(buf), &flags)) != NULL){
-		res = PARAM_new(buf, alias[0] ? alias : NULL, flags, &tmp->parameter[i]);
+		res = PARAM_new(buf, alias[0] ? alias : NULL, flags, PST_PRSCMD_DEFAULT, &tmp->parameter[i]);
 		if(res != PST_OK) goto cleanup;
 		i++;
 	}
@@ -846,13 +851,33 @@ int PARAM_SET_addControl(PARAM_SET *set, const char *names,
 	return PST_OK;
 }
 
+int PARAM_SET_setParseOptions(PARAM_SET *set, const char *names, int options){
+	int res;
+	PARAM *tmp = NULL;
+	const char *pName = NULL;
+	char buf[1024];
+
+	if (set == NULL || names == NULL) return PST_INVALID_ARGUMENT;
+
+	pName = names;
+	while ((pName = extract_next_name(pName, isValidNameChar, buf, sizeof(buf), NULL)) != NULL) {
+		res = param_set_getParameterByName(set, buf, &tmp);
+		if (res != PST_OK) return res;
+
+		res = PARAM_setParseOption(tmp, options);
+		if (res != PST_OK) return res;
+	}
+
+	return PST_OK;
+}
+
 int PARAM_SET_add(PARAM_SET *set, const char *name, const char *value, const char *source, int priority) {
 	int res;
 	PARAM *param = NULL;
 	TYPO *typo_list = NULL;
 	if (set == NULL || name == NULL) {
 		res = PST_INVALID_ARGUMENT;
-		goto cleanup;;
+		goto cleanup;
 	}
 
 	typo_list = (TYPO*) malloc(set->count * sizeof(TYPO));
@@ -1118,24 +1143,60 @@ cleanup:
 	return res;
 }
 
-int PARAM_SET_isSetByName(const PARAM_SET *set, const char *name){
+static int param_set_count_parameters_set_by_name(const PARAM_SET *set, const char *names, int *set_count, int *unset_count){
 	int res;
 	PARAM *tmp = NULL;
-	int count = 0;
+	const char *pName = NULL;
+	char buf[1024];
+	int set_c = 0;
+	int uset_c = 0;
 
-	if (set == NULL || name == NULL) return PST_INVALID_ARGUMENT;
 
-	res = param_set_getParameterByName(set, name, &tmp);
-	if (res != PST_OK) return 0;
+	if (set == NULL || names == NULL || (set_count == NULL && unset_count == NULL)) return PST_INVALID_ARGUMENT;
 
-	res = PARAM_getValueCount(tmp, NULL, PST_PRIORITY_NONE, &count);
-	if (res != PST_OK) return 0;
+	pName = names;
+	while ((pName = extract_next_name(pName, isValidNameChar, buf, sizeof(buf), NULL)) != NULL) {
+		res = param_set_getParameterByName(set, buf, &tmp);
+		if (res != PST_OK && res != PST_PARAMETER_EMPTY) return res;
 
-	return count == 0 ? 0 : 1;
+		if (tmp->argCount > 0) set_c++;
+		else uset_c++;
+	}
+
+	if (set_count != NULL) {
+		*set_count = set_c;
+	}
+
+	if (unset_count != NULL) {
+		*unset_count = uset_c;
+	}
+
+	return PST_OK;
+}
+
+int PARAM_SET_isSetByName(const PARAM_SET *set, const char *names){
+	int unset_count = 0;
+	int set_count = 0;
+
+	if (set == NULL || names == NULL) return 0;
+
+	if (param_set_count_parameters_set_by_name(set, names, &set_count, &unset_count) != PST_OK) return 0;
+
+	return (set_count > 0 && unset_count == 0) ? 1 : 0;
+}
+
+int PARAM_SET_isOneOfSetByName(const PARAM_SET *set, const char *names){
+	int set_count = 0;
+
+	if (set == NULL || names == NULL) return 0;
+
+	if (param_set_count_parameters_set_by_name(set, names, &set_count, NULL) != PST_OK) return 0;
+
+	return (set_count > 0) ? 1 : 0;
 }
 
 int PARAM_SET_isFormatOK(const PARAM_SET *set){
-int res;
+	int res;
 	int i = 0;
 	PARAM *parameter = NULL;
 	PARAM_VAL *invalid = NULL;
@@ -1145,21 +1206,52 @@ int res;
 	}
 
 	/**
-	 * Scan all parameter values from errors.
+	 * Extract all invalid values from parameter. If flag
+	 * PST_PRSCMD_FORMAT_CONTROL_ONLY_FOR_LAST_HIGHST_PRIORITY_VALUE is set
+	 * check only the last highest priority value.
 	 */
 	for (i = 0; i < set->count; i++) {
 		parameter = set->parameter[i];
 		invalid = NULL;
-		/**
-		 * Extract all invalid values from parameter.
-		 */
-		res = PARAM_getInvalid(parameter, NULL, PST_PRIORITY_NONE, 0, &invalid);
-		if (res == PST_PARAMETER_VALUE_NOT_FOUND || res == PST_PARAMETER_EMPTY) continue;
-		else if (res == PST_OK && invalid != NULL) return 0;
-		else return 0;
+		if (PARAM_isParsOptionSet(parameter, PST_PRSCMD_FORMAT_CONTROL_ONLY_FOR_LAST_HIGHST_PRIORITY_VALUE)) {
+			res = PARAM_getValue(parameter, NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &invalid);
+			if (res == PST_PARAMETER_VALUE_NOT_FOUND || res == PST_PARAMETER_EMPTY) continue;
+
+			if (invalid->contentStatus != 0 || invalid->formatStatus != 0) return 0;
+		} else {
+			res = PARAM_getInvalid(parameter, NULL, PST_PRIORITY_NONE, 0, &invalid);
+			if (res == PST_PARAMETER_VALUE_NOT_FOUND || res == PST_PARAMETER_EMPTY) continue;
+			else if (res == PST_OK && invalid != NULL) return 0;
+			else return 0;
+		}
+
 	}
 
 	return 1;
+}
+
+int PARAM_SET_isConstraintViolation(const PARAM_SET *set){
+	int i = 0;
+	PARAM *parameter = NULL;
+
+	if (set == NULL) {
+		return -1;
+	}
+
+	/**
+	 * Extract all invalid values from parameter. If flag
+	 * PST_PRSCMD_FORMAT_CONTROL_ONLY_FOR_LAST_HIGHST_PRIORITY_VALUE is set
+	 * check only the last highest priority value.
+	 */
+	for (i = 0; i < set->count; i++) {
+		parameter = set->parameter[i];
+
+		if (PARAM_checkConstraints(parameter, PARAM_SINGLE_VALUE | PARAM_SINGLE_VALUE_FOR_PRIORITY_LEVEL) != 0) {
+			return 1;
+		}
+	}
+
+	return 0;
 }
 
 int PARAM_SET_isTypoFailure(const PARAM_SET *set){
@@ -1276,6 +1368,308 @@ cleanup:
 	return res;
 }
 
+static const char *remove_dashes(const char *str) {
+	int i = 0;
+	if (str == NULL)  return NULL;
+	while (str[i] == '-' && i < 2) i++;
+	return &str[i];
+}
+
+enum {
+	TOKEN_IS_VALUE = 0x01,
+	TOKEN_HAS_DASH = 0x02,
+	TOKEN_HAS_DOUBLE_DASH = 0x04,
+	TOKEN_MATCHES_PARAMETER = 0x08,
+	TOKEN_FLAG_LEN_0 = 0x10,
+	TOKEN_FLAG_LEN_1 = 0x20,
+	TOKEN_FLAG_LEN_N = 0x40,
+	TOKEN_UNKNOW = 0x80000000
+};
+
+static int is_flag_set(int field, int flag) {
+	if (((field & flag) == flag) ||
+			(field == flag)) return 1;
+	return 0;
+}
+
+#define TOKEN_IS_VALUE_PARAM(type) is_flag_set(type, TOKEN_IS_VALUE)
+#define TOKEN_IS_SHORT_PARAM(type) is_flag_set(type, TOKEN_FLAG_LEN_1 | TOKEN_HAS_DASH)
+#define TOKEN_IS_LONG_PARAM(type) is_flag_set(type, TOKEN_FLAG_LEN_N | TOKEN_HAS_DOUBLE_DASH)
+#define TOKEN_IS_BUNCH_OF_FLAGS_PARAM(type) is_flag_set(type, TOKEN_FLAG_LEN_N | TOKEN_HAS_DASH)
+#define TOKEN_IS_MATCH(type) is_flag_set(type, TOKEN_MATCHES_PARAMETER)
+
+#define TOKEN_IS_SHORT_PARAM_LONG_DASH(type) is_flag_set(type, TOKEN_FLAG_LEN_1 | TOKEN_HAS_DOUBLE_DASH)
+#define TOKEN_IS_NULL_HAS_DOUBLE_DASH(type) is_flag_set(type, TOKEN_FLAG_LEN_0 | TOKEN_HAS_DOUBLE_DASH)
+#define TOKEN_IS_NULL_HAS_DASH(type) is_flag_set(type, TOKEN_FLAG_LEN_0 | TOKEN_HAS_DASH)
+#define TOKEN_IS_PARAM(type) (TOKEN_IS_SHORT_PARAM(type) || TOKEN_IS_LONG_PARAM(type) || TOKEN_IS_BUNCH_OF_FLAGS_PARAM(type))
+
+#define TOKEN_IS_VALID_FOR_OPEN(type) (TOKEN_IS_MATCH(type) && (TOKEN_IS_LONG_PARAM(type) || TOKEN_IS_SHORT_PARAM(type) || TOKEN_IS_SHORT_PARAM_LONG_DASH(type)))
+#define TOKE_IS_VALID_POT_PARAM_BREAKER(type) (TOKEN_IS_SHORT_PARAM(type) || TOKEN_IS_LONG_PARAM(type) || TOKEN_IS_BUNCH_OF_FLAGS_PARAM(type) || TOKEN_IS_SHORT_PARAM_LONG_DASH(type))
+static int get_parameter_from_token(PARAM_SET *set, const char *token, int *token_type, PARAM **param) {
+	PARAM *tmp = NULL;
+	int type = TOKEN_UNKNOW;
+	int res = 0;
+	size_t len = 0;
+
+	if (set == NULL || token == NULL || param == NULL) return PST_INVALID_ARGUMENT;
+
+	if (token[0] != '-') {
+		type = TOKEN_IS_VALUE;
+	} else {
+		res = param_set_getParameterByName(set, remove_dashes(token), &tmp);
+		if (res != PST_OK && res != PST_PARAMETER_NOT_FOUND) return res;
+
+		type = 0;
+
+		if (res == PST_OK && !PARAM_isParsOptionSet(tmp, PST_PRSCMD_HAS_NO_FLAG)) {
+			type |= TOKEN_MATCHES_PARAMETER;
+		}
+
+		type |= (token[0] == '-' && token[1] == '-') ? TOKEN_HAS_DOUBLE_DASH : TOKEN_HAS_DASH;
+
+		len = strlen(token) - (type & TOKEN_HAS_DASH ? 1 : 2);
+		if (len == 0) type |= TOKEN_FLAG_LEN_0;
+		else if (len == 1) type |= TOKEN_FLAG_LEN_1;
+		else if (len > 1) type |= TOKEN_FLAG_LEN_N;
+		else return PST_INVALID_FORMAT;
+	}
+
+	*param = tmp;
+	*token_type = type;
+
+	return PST_OK;
+}
+
+static char* token_type_to_string(int type, char *buf, size_t len) {
+	PST_snprintf(buf, len, "[%s%s%s%s%s%s%s%s]",
+			(type & TOKEN_IS_VALUE) ? "V:" : "",
+			(type & TOKEN_HAS_DASH) ? "D:" : "",
+			(type & TOKEN_HAS_DOUBLE_DASH) ? "DD:" : "",
+			(type & TOKEN_MATCHES_PARAMETER) ? "M:" : "",
+			(type & TOKEN_FLAG_LEN_0) ? "L0:" : "",
+			(type & TOKEN_FLAG_LEN_1) ? "L1:" : "",
+			(type & TOKEN_FLAG_LEN_N) ? "LN:" : "",
+			(type & TOKEN_UNKNOW) ? "?:" : "");
+	return buf;
+}
+
+static char* pars_flags_to_string(int type, char *buf, size_t len) {
+	PST_snprintf(buf, len, "$[%s%s%s%s%s%s%s]",
+			(type == PST_PRSCMD_NONE) ? "-" : "",
+			((type & PST_PRSCMD_DEFAULT) == PST_PRSCMD_DEFAULT) ? "D:" : "",
+			(type & PST_PRSCMD_HAS_NO_VALUE) ? "NV:" : "",
+			(type & PST_PRSCMD_HAS_VALUE) ? "V:" : "",
+			(type & PST_PRSCMD_HAS_MULTIPLE_INSTANCES) ? "M:" : "",
+			(type & PST_PRSCMD_BREAK_WITH_POTENTIAL_PARAMETER) ? "PPBR:" : "",
+			(type & PST_PRSCMD_BREAK_VALUE_WITH_EXISTING_PARAMETER_MATCH) ? "MBR:" : "");
+	return buf;
+}
+
+static char* break_type_to_string(int type, char *buf, size_t len) {
+	PST_snprintf(buf, len, "[%s%s%s%s]",
+			(type & 1) ? "MATCH_BREAK  " : "",
+			(type & 2) ? "POT_PARAM_BREAK   " : "",
+			(type & 4) ? "NO_PARA_BREAK" : "",
+			(type & 8) ? "VAL_SAT_BREAK" : "");
+	return buf;
+}
+
+
+
+static void print_nothing(const char* format, ...) {(void)(format);}
+//#define dpgprint printf
+#define dpgprint print_nothing
+
+int PARAM_SET_parseCMD(PARAM_SET *set, int argc, char **argv, const char *source, int priority) {
+	int res;
+	TYPO *typo_helper = NULL;
+	int i = 0;
+	char *token = NULL;
+	int token_type = 0;
+	PARAM *tmp_parameter = NULL;
+	char buf[1024];
+	char buf2[1024];
+	int is_parameter_opend = 0;
+	int token_match_break = 0;
+	int token_pot_param_break = 0;
+	int token_no_param_break = 0;
+	int value_saturation_break = 0;
+	int last_token_brake = 0;
+	int permit_parse_break = 0;
+	int permit_dash_collect = 0;
+	int permit_flag_collect = 0;
+	int collect_limiter_on = 0;
+	int collect_prio = priority;
+	int isParsingClosed = 0;
+	int last_token_type = 0;
+	PARAM *opend_parameter = NULL;
+	size_t value_counter = 0;
+	size_t max_loose_count = 0;
+	size_t loose_count = 0;
+	PARAM *loose_parameters = NULL;
+
+	if(set == NULL || argc == 0 || argv == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	typo_helper = (TYPO*) malloc(set->count * sizeof(TYPO));
+	if (typo_helper == NULL) {
+		res = PST_OUT_OF_MEMORY;
+		goto cleanup;
+	}
+
+	for (i = 0; i < set->count; i++) {
+		if (PARAM_isParsOptionSet(set->parameter[i], PST_PRSCMD_COLLECT_LOOSE_VALUES)) {
+			loose_parameters = set->parameter[i];
+			permit_parse_break = PARAM_isParsOptionSet(set->parameter[i], PST_PRSCMD_COLLECT_LOOSE_PERMIT_END_OF_COMMANDS);
+			permit_dash_collect = PARAM_isParsOptionSet(set->parameter[i], PST_PRSCMD_COLLECT_LOOSE_DASHES);
+			permit_flag_collect = PARAM_isParsOptionSet(set->parameter[i], PST_PRSCMD_COLLECT_LOOSE_FLAGS);
+			collect_limiter_on = PARAM_isParsOptionSet(set->parameter[i], PST_PRSCMD_COLLECT_LIMITER_ON);
+
+			if (PARAM_isParsOptionSet(set->parameter[i], PST_PRSCMD_COLLECT_HAS_LOWER_PRIORITY)) {
+				collect_prio = (priority - 1) < 0 ? 0 : (priority - 1);
+			}
+
+			if (collect_limiter_on) {
+				max_loose_count = (set->parameter[i]->parsing_options & PST_PRSCMD_COLLECT_LIMITER_MAX_MASK) / PST_PRSCMD_COLLECT_LIMITER_1X;
+			}
+
+			break;
+		}
+	}
+
+	for (i = 1; i < argc; i++) {
+		last_token_brake = (i + 1 == argc) ? 1 : 0;
+		token = argv[i];
+
+		/**
+		 * Analyze the tokens.
+		*/
+		if (!isParsingClosed) {
+			last_token_type = token_type;
+			res = get_parameter_from_token(set, token, &token_type, &tmp_parameter);
+			if (res != PST_OK) goto cleanup;
+
+			dpgprint("Token '%10s' %8s %10s\n", token, token_type_to_string(token_type, buf, sizeof(buf)), pars_flags_to_string(tmp_parameter != NULL ? tmp_parameter->parsing_options : 0, buf2, sizeof(buf2)));
+
+
+			if (is_parameter_opend) {
+				token_match_break = (TOKEN_IS_MATCH(token_type) && PARAM_isParsOptionSet(opend_parameter, PST_PRSCMD_BREAK_VALUE_WITH_EXISTING_PARAMETER_MATCH)) ? 1 : 0;
+				token_pot_param_break = (TOKE_IS_VALID_POT_PARAM_BREAKER(token_type) && PARAM_isParsOptionSet(opend_parameter, PST_PRSCMD_BREAK_WITH_POTENTIAL_PARAMETER)) ? 2 : 0;
+				token_no_param_break = PARAM_isParsOptionSet(opend_parameter, PST_PRSCMD_HAS_NO_VALUE) ? 4 : 0;
+
+				if (!token_no_param_break && !token_pot_param_break && !token_match_break) {
+						res = PARAM_addValue(opend_parameter, token, source, priority);
+						if (res != PST_OK) goto cleanup;
+						dpgprint("P:VALUE++ (%s = %s)\n", opend_parameter->flagName, token);
+						value_counter++;
+				}
+
+				value_saturation_break = (value_counter && (PARAM_isParsOptionSet(opend_parameter, PST_PRSCMD_DEFAULT) || PARAM_isParsOptionSet(opend_parameter, PST_PRSCMD_HAS_VALUE))) ? 8 : 0;
+
+				if (token_match_break || token_pot_param_break || token_no_param_break || value_saturation_break || last_token_brake) {
+					dpgprint("----------------------------------\n");
+					if (value_counter == 0) {
+						res = PARAM_SET_add(set, opend_parameter->flagName, NULL, source, priority);
+						dpgprint("P:CLOSE (%s = NULL)%s\n", opend_parameter->flagName, break_type_to_string(token_match_break + token_pot_param_break + token_no_param_break + value_saturation_break, buf, sizeof(buf)));
+					} else {
+						dpgprint("P:CLOSE (%s ---)%s\n", opend_parameter->flagName, break_type_to_string(token_match_break + token_pot_param_break + token_no_param_break + value_saturation_break, buf, sizeof(buf)));
+					}
+
+					is_parameter_opend = 0;
+					value_counter = 0;
+					opend_parameter = NULL;
+				}
+
+				if (value_saturation_break) continue;
+				/**
+				 * 1) Don't exit the loop if the last token brake occurred simultaneously
+				 *    with the token match brake. Maybe a last parameter must be opened!
+				 * 2) Don't exit the loop if the last token brake occurred simultaneously
+				 *    with the token_no_param_break. The last value must be parsed.
+				 */
+				if ((!token_pot_param_break) && (!token_match_break) && (!token_no_param_break) && last_token_brake) continue;
+			}
+
+			/** Value saturation occurs when a single vale parameter is willed with current token, continue to the next token. */
+
+			/* If parameter is not opened and the match is found, set is_parameter_opend flag and initialize opend_parameter.*/
+			if (!is_parameter_opend && TOKEN_IS_VALID_FOR_OPEN(token_type)) {
+				dpgprint("----------------------------------\n");
+				dpgprint("P:OPEN %s\n", token);
+				is_parameter_opend = 1;
+				value_counter = 0;
+				opend_parameter = tmp_parameter;
+
+				if (last_token_brake && value_counter == 0) {
+					res = PARAM_SET_add(set, opend_parameter->flagName, NULL, source, priority);
+				}
+
+				continue;
+			}
+		}
+
+		/**
+		 * If parameter is not opened and the next value is not a command line option, it must be a typo or unknown.
+		 */
+		if (!is_parameter_opend) {
+			if (!isParsingClosed && permit_parse_break && TOKEN_IS_NULL_HAS_DOUBLE_DASH(token_type)) {
+				dpgprint("--------------PARSING CLOSED %X\n", token_type );
+				isParsingClosed = 1;
+				token_type = 0;
+				last_token_type = 0;
+				continue;
+			}
+
+			/**
+			 * If the token is long or short parameter add it as a typo or unknown.
+			 * If the token is value, check if the loose parameter collector exists.
+			 * If it does, break. If it does not add typo or unknown.
+			 */
+			if (TOKEN_IS_BUNCH_OF_FLAGS_PARAM(token_type)) {
+				dpgprint("------------BUNCH OF FLAGS-----------------\n");
+				res = param_set_addRawParameter(token, NULL, source, set, priority);
+				if (res != PST_OK) goto cleanup;
+				dpgprint("------------------  DONE   -----------------\n");
+				continue;
+			} else if (loose_parameters != NULL && (isParsingClosed || TOKEN_IS_VALUE_PARAM(token_type)
+					|| (permit_dash_collect && (TOKEN_IS_NULL_HAS_DASH(token_type) || TOKEN_IS_NULL_HAS_DOUBLE_DASH(token_type)))
+					|| (permit_flag_collect && (TOKEN_IS_PARAM(token_type) || TOKEN_IS_SHORT_PARAM_LONG_DASH(token_type)))
+					)) {
+				res = PARAM_addValue(loose_parameters, token, source, collect_prio);
+				if (res != PST_OK) goto cleanup;
+				loose_count++;
+				if (collect_limiter_on && loose_count == max_loose_count) {
+					loose_parameters = NULL;
+					dpgprint("$$ End of loose parameters '%s'\n", token);
+
+				}
+				dpgprint("$$ Lose param added '%s'\n", token);
+			} else {
+				if (TOKEN_IS_NULL_HAS_DOUBLE_DASH(token_type) || TOKEN_IS_NULL_HAS_DASH(token_type)) {
+					res = param_set_add_typo_or_unknown(set, typo_helper, source, token, NULL);
+				} else {
+					res = param_set_add_typo_or_unknown(set, typo_helper, source, remove_dashes(token), NULL);
+				}
+				if (res != PST_OK) goto cleanup;
+				dpgprint("Typo added '%s'\n", token);
+				continue;
+			}
+
+		}
+	}
+
+	res = PST_OK;
+
+cleanup:
+
+	if (typo_helper != NULL) free(typo_helper);
+
+	return res;
+}
+#undef dpgprint
+
 int PARAM_SET_IncludeSet(PARAM_SET *target, PARAM_SET *src) {
 	int res;
 	int i;
@@ -1295,7 +1689,7 @@ int PARAM_SET_IncludeSet(PARAM_SET *target, PARAM_SET *src) {
 	for (i = 0; i < src->count; i++) {
 		/**
 		 * If the count is zero, skip that round.
-		 */
+		*/
 		if (src->parameter[i]->argCount == 0) continue;
 
 		/**
@@ -1329,83 +1723,108 @@ cleanup:
 	return res;
 }
 
-char* PARAM_SET_invalidParametersToString(const PARAM_SET *set, const char *prefix, const char* (*getErrString)(int), char *buf, size_t buf_len) {
+static size_t param_value_add_errorstring_to_buf(PARAM *parameter, PARAM_VAL *invalid, const char *prefix, const char* (*getErrString)(int), char *buf, size_t buf_len) {
 	int res;
-	const char *use_prefix = NULL;
-	int i = 0;
-	int n = 0;
-	PARAM *parameter = NULL;
-	PARAM_VAL *invalid = NULL;
+	size_t count = 0;
 	const char *value = NULL;
 	const char *source = NULL;
 	int formatStatus = 0;
 	int contentStatus = 0;
+	const char *use_prefix = NULL;
+
+	use_prefix = prefix == NULL ? "" : prefix;
+
+	if (parameter == NULL || invalid == NULL || buf == NULL || buf_len == 0) return 0;
+	/**
+	 * Extract error codes, if not set exit the function.
+	 */
+	res = PARAM_VAL_getErrors(invalid, &formatStatus, &contentStatus);
+	if (res != PST_OK) return 0;
+
+	if (formatStatus == 0 && contentStatus == 0) return 0;
+
+	res = PARAM_VAL_extract(invalid, &value, &source, NULL);
+	if (res != PST_OK) return 0;
+
+
+	count += PST_snprintf(buf + count, buf_len - count, "%s", use_prefix);
+	/**
+	 * Add Error string or error code.
+	 */
+	if (getErrString != NULL) {
+		if (formatStatus != 0) {
+			count += PST_snprintf(buf + count, buf_len - count, "%s.", getErrString(formatStatus));
+		} else {
+			count += PST_snprintf(buf + count, buf_len - count, "%s.", getErrString(contentStatus));
+		}
+	} else {
+		if (formatStatus != 0) {
+			count += PST_snprintf(buf + count, buf_len - count, "Error: 0x%0x.", formatStatus);
+		} else {
+			count += PST_snprintf(buf + count, buf_len - count, "Error: 0x%0x.", contentStatus);
+		}
+	}
+
+	/**
+	 * Add the source, if NULL not included.
+	 */
+	if(source != NULL) {
+		count += PST_snprintf(buf + count, buf_len - count, " Parameter (from '%s') ", source);
+	} else {
+		count += PST_snprintf(buf + count, buf_len - count, " Parameter ");
+	}
+
+	/**
+	 * Add the parameter and its value.
+	 */
+	count += PST_snprintf(buf + count, buf_len - count, "%s%s '%s'.",
+							strlen(parameter->flagName) > 1 ? "--" : "-",
+							parameter->flagName,
+							value != NULL ? value : ""
+							);
+
+
+
+	count += PST_snprintf(buf + count, buf_len - count, "\n");
+
+	return count;
+}
+
+char* PARAM_SET_invalidParametersToString(const PARAM_SET *set, const char *prefix, const char* (*getErrString)(int), char *buf, size_t buf_len) {
+	int res;
+	int i = 0;
+	int n = 0;
+	PARAM *parameter = NULL;
+	PARAM_VAL *invalid = NULL;
 	size_t count = 0;
 
 	if (set == NULL || buf == NULL || buf_len == 0) {
 		return NULL;
 	}
 
-
-	use_prefix = prefix == NULL ? "" : prefix;
-
 	/**
-	 * Scan all parameter values from errors.
+	 * Scan all parameter values for errors.
 	 */
 	for (i = 0; i < set->count; i++) {
 		parameter = set->parameter[i];
 		n = 0;
 
 		/**
-		 * Extract all invalid values from parameter.
+		 * Extract all invalid values from parameter. If flag
+		 * PST_PRSCMD_FORMAT_CONTROL_ONLY_FOR_LAST_HIGHST_PRIORITY_VALUE is set
+		 * check only the last highest priority value.
 		 */
-		while (PARAM_getInvalid(parameter, NULL, PST_PRIORITY_NONE, n++, &invalid) == PST_OK) {
-			res = PARAM_VAL_extract(invalid, &value, &source, NULL);
-			if (res != PST_OK) return NULL;
+		if (PARAM_isParsOptionSet(parameter, PST_PRSCMD_FORMAT_CONTROL_ONLY_FOR_LAST_HIGHST_PRIORITY_VALUE)) {
+			res = PARAM_getValue(parameter, NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &invalid);
 
-			res = PARAM_VAL_getErrors(invalid, &formatStatus, &contentStatus);
-			if (res != PST_OK) return NULL;
+			if (res != PST_OK && res != PST_PARAMETER_EMPTY && res != PST_PARAMETER_VALUE_NOT_FOUND) return NULL;
+			count += param_value_add_errorstring_to_buf(parameter, invalid, prefix, getErrString, buf + count, buf_len - count);
+		} else {
+			while (PARAM_getInvalid(parameter, NULL, PST_PRIORITY_NONE, n++, &invalid) == PST_OK) {
+				count += param_value_add_errorstring_to_buf(parameter, invalid, prefix, getErrString, buf + count, buf_len - count);
 
-			count += PST_snprintf(buf + count, buf_len - count, "%s", use_prefix);
-			/**
-			 * Add Error string or error code.
-			 */
-			if (getErrString != NULL) {
-				if (formatStatus != 0) {
-					count += PST_snprintf(buf + count, buf_len - count, "%s.", getErrString(formatStatus));
-				} else {
-					count += PST_snprintf(buf + count, buf_len - count, "%s.", getErrString(contentStatus));
-				}
-			} else {
-				if (formatStatus != 0) {
-					count += PST_snprintf(buf + count, buf_len - count, "Error: 0x%0x.", formatStatus);
-				} else {
-					count += PST_snprintf(buf + count, buf_len - count, "Error: 0x%0x.", contentStatus);
-				}
+				if (count >= buf_len - 1) return buf;
 			}
-
-			/**
-			 * Add the source, if NULL not included.
-			 */
-			if(source != NULL) {
-				count += PST_snprintf(buf + count, buf_len - count, " Parameter (from '%s') ", source);
-			} else {
-				count += PST_snprintf(buf + count, buf_len - count, " Parameter ");
-			}
-
-			/**
-			 * Add the parameter and its value.
-			 */
-			count += PST_snprintf(buf + count, buf_len - count, "%s%s '%s'.",
-									strlen(parameter->flagName) > 1 ? "--" : "-",
-									parameter->flagName,
-									value != NULL ? value : ""
-									);
-
-
-
-			count += PST_snprintf(buf + count, buf_len - count, "\n");
-			if (count >= buf_len - 1) return buf;
 		}
 	}
 
@@ -1583,6 +2002,32 @@ char* PARAM_SET_toString(PARAM_SET *set, char *buf, size_t buf_len) {
 		}
 	}
 	count += PST_snprintf(buf + count, buf_len - count, "\n");
+
+	buf[buf_len - 1] = '\0';
+	return buf;
+}
+
+char* PARAM_SET_constraintErrorToString(const PARAM_SET *set, const char *prefix, char *buf, size_t buf_len) {
+	int i;
+	size_t count = 0;
+	PARAM *parameter = NULL;
+	char tmp[1024];
+	char *p = NULL;
+
+	if (set == NULL || buf == NULL || buf_len == 0) {
+		return NULL;
+	}
+
+	for (i = 0; i < set->count; i++) {
+		tmp[0] = '\0';
+		parameter = set->parameter[i];
+		p = PARAM_constraintErrorToString(parameter, prefix, tmp, sizeof(tmp));
+
+		if (p != NULL && p[0] != '\0') {
+			count += PST_snprintf(buf + count, buf_len - count, "%s", p);
+			if (count >= buf_len - 1) return buf;
+		}
+	}
 
 	buf[buf_len - 1] = '\0';
 	return buf;

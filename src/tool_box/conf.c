@@ -40,7 +40,11 @@ int conf_run(int argc, char** argv, char **envp) {
 	if (res != PST_OK) goto cleanup;
 
 
-	PARAM_SET_readFromCMD(set, argc, argv, "CMD", 3);
+	res = PARAM_SET_parseCMD(set, argc, argv, "CMD", 3);
+	if (res != PST_OK) {
+		print_errors("Error: Unable to parse command-line.\n");
+		goto cleanup;
+	}
 
 	/**
 	 * Check for typos and unknown parameters.

@@ -24,6 +24,7 @@
 #include "param_set_obj_impl.h"
 #include "param_value.h"
 #include "parameter.h"
+#include "strn.h"
 
 
 #define FORMAT_OK 0
@@ -36,14 +37,14 @@ static char *new_string(const char *str) {
 	return strcpy(tmp, str);
 }
 
-static int param_isFlagSet(PARAM *obj, int state) {
+static int param_constraint_isFlagSet(const PARAM *obj, int state) {
 	if (obj == NULL) return 0;
 	if ((obj->constraints & state) ||
 			(obj->constraints == 0 && state == 0)) return 1;
 	return 0;
 }
 
-static int param_get_value(PARAM *param, const char *source, int prio, unsigned at,
+static int param_get_value(PARAM *param, const char *source, int prio, int at,
 		int (*value_getter)(PARAM_VAL *, const char*, int, int, PARAM_VAL**),
 		PARAM_VAL **value) {
 	int res;
@@ -103,7 +104,7 @@ static int wrapper_returnStr(void *extra, const char* str, void** obj){
 	return PST_OK;
 }
 
-int PARAM_new(const char *flagName,const char *flagAlias, int constraints, PARAM **newObj){
+int PARAM_new(const char *flagName, const char *flagAlias, int constraints, int pars_opt, PARAM **newObj){
 	int res;
 	PARAM *tmp = NULL;
 	char *tmpFlagName = NULL;
@@ -125,6 +126,7 @@ int PARAM_new(const char *flagName,const char *flagAlias, int constraints, PARAM
 	tmp->arg = NULL;
 	tmp->highestPriority = 0;
 	tmp->constraints = constraints;
+	tmp->parsing_options = pars_opt;
 	tmp->argCount = 0;
 	tmp->controlFormat = NULL;
 	tmp->controlContent = NULL;
@@ -181,6 +183,35 @@ int PARAM_addControl(PARAM *obj,
 	obj->controlFormat = controlFormat;
 	obj->controlContent = controlContent;
 	obj->convert = convert;
+	return PST_OK;
+}
+
+static int is_flag_set(int field, int flag) {
+	if (((field & flag) == flag) ||
+			(field == PST_PRSCMD_NONE && flag == PST_PRSCMD_NONE)) return 1;
+	return 0;
+}
+
+int PARAM_isParsOptionSet(PARAM *param, int state) {
+	if (param == NULL) return 0;
+	return is_flag_set(param->parsing_options, state);
+}
+
+int PARAM_setParseOption(PARAM *obj, int option) {
+	if (obj == NULL) return PST_INVALID_ARGUMENT;
+
+	/**
+	 * Give an error on some invalid configurations.
+	 */
+	if ((is_flag_set(option, PST_PRSCMD_HAS_NO_VALUE) || is_flag_set(option, PST_PRSCMD_DEFAULT))
+		&& (is_flag_set(option, PST_PRSCMD_HAS_MULTIPLE_INSTANCES) || is_flag_set(option, PST_PRSCMD_HAS_VALUE) ||
+			(is_flag_set(option, PST_PRSCMD_HAS_NO_VALUE) && is_flag_set(option, PST_PRSCMD_DEFAULT))))
+		{
+		return PST_PRSCMD_INVALID_COMBINATION;
+	}
+
+
+	obj->parsing_options = option;
 	return PST_OK;
 }
 
@@ -247,7 +278,7 @@ cleanup:
 	return res;
 }
 
-int PARAM_getValue(PARAM *param, const char *source, int prio, unsigned at, PARAM_VAL **value) {
+int PARAM_getValue(PARAM *param, const char *source, int prio, int at, PARAM_VAL **value) {
 	return param_get_value(param, source, prio, at, PARAM_VAL_getElement, value);
 }
 
@@ -266,6 +297,7 @@ int PARAM_clearAll(PARAM *param) {
 
 	PARAM_VAL_free(param->arg);
 	param->arg = NULL;
+	param->argCount = 0;
 	res = PST_OK;
 
 cleanup:
@@ -298,7 +330,7 @@ cleanup:
 	return res;
 }
 
-int PARAM_getInvalid(PARAM *param, const char *source, int prio, unsigned at, PARAM_VAL **value) {
+int PARAM_getInvalid(PARAM *param, const char *source, int prio, int at, PARAM_VAL **value) {
 	return param_get_value(param, source, prio, at, PARAM_VAL_getInvalid, value);
 }
 
@@ -310,18 +342,23 @@ int PARAM_getInvalidCount(PARAM *param, const char *source, int prio, int *count
 	return param_get_value_count(param, source, prio, PARAM_VAL_getInvalidCount, count);
 }
 
-int PARAM_checkConstraints(PARAM *param, int constraints) {
+int PARAM_checkConstraints(const PARAM *param, int constraints) {
 	int priority = 0;
 	int count = 0;
 	int res;
 	int ret = 0;
 
-	if (param->arg == NULL || param == NULL) {
+	if (param == NULL) {
 		return PARAM_INVALID_CONSTRAINT;
 	}
+
+	if (param->arg == NULL) {
+		return 0;
+	}
+
 	/** PARAM_SINGLE_VALUE.*/
 	if (constraints & PARAM_SINGLE_VALUE) {
-		if (param_isFlagSet(param, PARAM_SINGLE_VALUE) && param->argCount > 1) {
+		if (param_constraint_isFlagSet(param, PARAM_SINGLE_VALUE) && param->argCount > 1) {
 			ret |= PARAM_SINGLE_VALUE;
 		}
 	}
@@ -332,7 +369,7 @@ int PARAM_checkConstraints(PARAM *param, int constraints) {
 	 * contains multiple values.
 	 */
 	if (constraints & PARAM_SINGLE_VALUE_FOR_PRIORITY_LEVEL) {
-		if (param_isFlagSet(param, PARAM_SINGLE_VALUE_FOR_PRIORITY_LEVEL)) {
+		if (param_constraint_isFlagSet(param, PARAM_SINGLE_VALUE_FOR_PRIORITY_LEVEL)) {
 			/* Extract the first priority. */
 			res = PARAM_VAL_getPriority(param->arg, PST_PRIORITY_LOWEST, &priority);
 			if (res != PST_OK) return PARAM_INVALID_CONSTRAINT;
@@ -351,7 +388,50 @@ int PARAM_checkConstraints(PARAM *param, int constraints) {
 	return ret;
 }
 
-int PARAM_getObject(PARAM *param, const char *source, int prio, unsigned at, void *extra, void **obj) {
+static size_t param_add_constraint_error_to_buf(const PARAM *param, const char *message, const char *prefix, char *buf, size_t buf_len) {
+	const char *use_prefix = NULL;
+	size_t count = 0;
+
+	if (param == NULL || message == NULL || buf == NULL || buf_len == 0) return 0;
+
+	use_prefix = prefix == NULL ? "" : prefix;
+
+	count += PST_snprintf(buf + count, buf_len - count, "%s", use_prefix);
+
+	count += PST_snprintf(buf + count, buf_len - count, "%s", message);
+
+	/**
+	 * Add the parameter and its value.
+	 */
+	count += PST_snprintf(buf + count, buf_len - count, "%s%s",
+							strlen(param->flagName) > 1 ? "--" : "-",
+							param->flagName
+							);
+
+	count += PST_snprintf(buf + count, buf_len - count, ".\n");
+	return count;
+}
+
+char* PARAM_constraintErrorToString(const PARAM *param, const char *prefix, char *buf, size_t buf_len) {
+	int constraints = 0;
+	size_t count = 0;
+
+	if (param == NULL || buf == NULL || buf_len == 0) return NULL;
+
+	constraints = PARAM_checkConstraints(param, PARAM_SINGLE_VALUE | PARAM_SINGLE_VALUE_FOR_PRIORITY_LEVEL);
+
+	if (constraints & PARAM_SINGLE_VALUE) {
+		count += param_add_constraint_error_to_buf(param, "Duplicated parameters ", prefix, buf + count, buf_len - count);
+	}
+
+	if (constraints & PARAM_SINGLE_VALUE_FOR_PRIORITY_LEVEL) {
+		count += param_add_constraint_error_to_buf(param, "Duplicate parameters in priority levels ", prefix, buf + count, buf_len - count);
+	}
+
+	return buf;
+}
+
+int PARAM_getObject(PARAM *param, const char *source, int prio, int at, void *extra, void **obj) {
 	int res;
 	PARAM_VAL *value = NULL;
 

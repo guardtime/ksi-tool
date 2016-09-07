@@ -53,6 +53,7 @@ struct PARAM_st{
 	char *flagAlias;				/* The alias for the parameter. */
 	int constraints;			/* Constraint If there is more than 1 parameters allowed. For validity check. */
 	int highestPriority;			/* Highest priority of inserted values. */
+	int parsing_options;			/* Some options used when parsing variables. */
 	int argCount;					/* Count of all arguments in chain. */
 
 	PARAM_VAL *arg;		/* Linked list of parameter values. */
