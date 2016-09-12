@@ -356,6 +356,26 @@ cleanup:
 
 	return res;
 }
+
+static int file_get_type(const char *path, int *type) {
+	int res = 0;
+	struct _stat status;
+	int tmp = SMART_FILE_TYPE_UNKNOWN;
+
+	if (path == NULL || type == NULL) return SMART_FILE_INVALID_ARG;
+
+	res = _stat(path, &status);
+	if (res != 0) return SMART_FILE_UNABLE_TO_GET_STATUS;
+
+	if (status.st_mode & _S_IFDIR) tmp = SMART_FILE_TYPE_DIR;
+	else if (status.st_mode & _S_IFREG) tmp = SMART_FILE_TYPE_REGULAR;
+	else tmp = SMART_FILE_TYPE_UNKNOWN;
+
+	*type = tmp;
+
+	return SMART_FILE_OK;
+}
+
 #else
 static int smart_file_init_unix(SMART_FILE *file) {
 	int res;
@@ -542,6 +562,25 @@ static int smart_file_get_error_unix(void) {
 	}
 
 	return smart_file_error_code;
+}
+
+static int file_get_type(const char *path, int *type) {
+	int res = 0;
+	struct stat status;
+	int tmp = SMART_FILE_TYPE_UNKNOWN;
+
+	if (path == NULL || type == NULL) return SMART_FILE_INVALID_ARG;
+
+	res = stat(path, &status);
+	if (res != 0) return SMART_FILE_UNABLE_TO_GET_STATUS;
+
+	if (S_ISDIR(status.st_mode)) tmp = SMART_FILE_TYPE_DIR;
+	else if (S_ISREG(status.st_mode)) tmp = SMART_FILE_TYPE_REGULAR;
+	else tmp = SMART_FILE_TYPE_UNKNOWN;
+
+	*type = tmp;
+
+	return SMART_FILE_OK;
 }
 
 #endif
@@ -833,6 +872,20 @@ int SMART_FILE_isReadAccess(const char *path) {
 	return res;
 }
 
+int SMART_FILE_isFileType(const char *path, int ftype) {
+	int res;
+	int type = SMART_FILE_TYPE_UNKNOWN;
+
+	if (path == NULL) return SMART_FILE_INVALID_ARG;
+
+	res = file_get_type(path, &type);
+	if (res != SMART_FILE_OK) return 0;
+
+	if (type == ftype) return 1;
+
+	return 0;
+}
+
 int SMART_FILE_hasFileExtension(const char *path, const char *ext) {
 	size_t path_len = 0;
 	size_t ext_len = 0;
@@ -884,6 +937,8 @@ const char* SMART_FILE_errorToString(int error_code) {
 			return "Pipe error.";
 		case SMART_FILE_INVALID_PATH:
 			return "Invalid path.";
+		case SMART_FILE_UNABLE_TO_GET_STATUS:
+			return "Unable to get file status.";
 		case SMART_FILE_UNKNOWN_ERROR:
 		default:
 			return "Unknown error.";

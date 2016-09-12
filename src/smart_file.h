@@ -37,7 +37,14 @@ enum smart_file_enum {
 	SMART_FILE_OVERWRITE_RESTRICTED,
 	SMART_FILE_ACCESS_DENIED,
 	SMART_FILE_PIPE_ERROR,
+	SMART_FILE_UNABLE_TO_GET_STATUS,
 	SMART_FILE_UNKNOWN_ERROR
+};
+
+enum {
+	SMART_FILE_TYPE_REGULAR = 0x01,
+	SMART_FILE_TYPE_DIR,
+	SMART_FILE_TYPE_UNKNOWN,
 };
 
 #ifdef	__cplusplus
@@ -80,6 +87,7 @@ int SMART_FILE_doFileExist(const char *path);
 int SMART_FILE_isWriteAccess(const char *path);
 int SMART_FILE_isReadAccess(const char *path);
 int SMART_FILE_hasFileExtension(const char *path, const char *ext);
+int SMART_FILE_isFileType(const char *path, int ftype);
 
 const char* SMART_FILE_errorToString(int error_code);
 
