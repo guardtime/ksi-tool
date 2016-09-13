@@ -24,6 +24,7 @@
 #include "param_set_obj_impl.h"
 #include "param_value.h"
 #include "param_set.h"
+#include "strn.h"
 
 static char *new_string(const char *str) {
 	char *tmp = NULL;
@@ -31,6 +32,40 @@ static char *new_string(const char *str) {
 	tmp = (char*)malloc(strlen(str)*sizeof(char)+1);
 	if(tmp == NULL) return NULL;
 	return strcpy(tmp, str);
+}
+
+int PARAM_VAL_insert(PARAM_VAL *target, const char* source, int priority, int at, PARAM_VAL *obj) {
+	int res;
+	PARAM_VAL *insert_to = NULL;
+
+	if (target == NULL || obj == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	res = PARAM_VAL_getElement(target, source, priority, at, &insert_to);
+	if (res != PST_OK) goto cleanup;
+
+	/**
+	 * If a value is found, new obj is appended to the list after the value found.
+	 */
+
+	/* Initialize the new value. */
+	obj->previous = insert_to;
+	obj->next = insert_to->next;
+
+	/* Fix the old previous value. */
+	if (insert_to->next != NULL) {
+		insert_to->next->previous = obj;
+	}
+
+	/* Fix the insert_to value. */
+	insert_to->next = obj;
+
+
+
+cleanup:
+	return res;
 }
 
 int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL **newObj) {
@@ -93,12 +128,8 @@ int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL
 	} else {
 		PARAM_VAL *current = *newObj;
 
-		while (current->next != NULL) {
-			current = current->next;
-		}
-
-		tmp->previous = current;
-		current->next = tmp;
+		res = PARAM_VAL_insert(current, NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, tmp);
+		if (res != PST_OK) goto cleanup;
 	}
 
 	tmp = NULL;
@@ -249,13 +280,18 @@ int PARAM_VAL_popElement(PARAM_VAL **rootValue, const char* source, int priority
 	next = tmp->next;
 
 	/**
-	 * Repair the chain and root value.
+	 * If the previous element existed, repair its next value, as it is removed
+	 * from the list. Set the new root as previous.
 	 */
 	if (previous != NULL) {
 		previous->next = next;
 		newRoot = previous;
 	}
 
+	/**
+	* If the next element existed, fix its previous link as it is removed from
+	* the list.
+	*/
 	if (next != NULL) {
 		newRoot = (newRoot != NULL) ? newRoot : next;
 		next->previous = previous;
@@ -436,4 +472,22 @@ int PARAM_VAL_getPriority(PARAM_VAL *rootValue, int current, int *nextPrio) {
 cleanup:
 
 	return res;
+}
+
+char* PARAM_VAL_toString(const PARAM_VAL *value, char *buf, size_t buf_len) {
+	PARAM_VAL *root = value;
+	size_t count = 0;
+
+	if (value == NULL || buf == NULL || buf_len == 0) return NULL;
+
+	while (root->previous != NULL) {
+		root = root->previous;
+	}
+
+	while (root != NULL) {
+		count += PST_snprintf(buf + count, buf_len - count, "%s ->", root->cstr_value);
+		root = root->next;
+	}
+
+	return buf;
 }

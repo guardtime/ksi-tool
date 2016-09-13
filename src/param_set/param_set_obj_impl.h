@@ -62,6 +62,29 @@ struct PARAM_st{
 	int (*convert)(const char*, char*, unsigned);	/* Function pointer to convert or repair the value before format and content check. */
 	int (*controlFormat)(const char*);				/* Function pointer for format control. */
 	int (*controlContent)(const char*);				/* Function pointer for content control. */
+	
+	/**
+	 * A function to expand tokens that contain wildcard character (WC) to array of
+	 * new values. Characters '?' and '*' are WC. The first argument is the param_value
+	 * that contains the WC. Argument ctx is for additional data structure used and
+	 * value_shift is a return parameter that must contain how many values were extracted.
+	 *
+	 * expand_wildcard function must not remove param_value from the linked list
+	 * as it is done by higher level functions. New values must be appended right
+	 * after the param_value.
+	 *
+	 * Function must return PST_OK
+	 *
+	 * The function can be activated by manual call to PARAM_expandWildcard or by
+	 * setting PST_PRSCMD_EXPAND_WILDCARD for the parameter and calling
+	 * PARAM_SET_parseCMD.
+	 */
+	int (*expand_wildcard)(PARAM_VAL *param_value, void *ctx, int *value_shift);
+	
+	/**
+	 * Additional context for expand_wildcard.
+	 */
+	void *expand_wildcard_ctx;
 };
 
 

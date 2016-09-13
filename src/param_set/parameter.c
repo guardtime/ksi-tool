@@ -132,6 +132,7 @@ int PARAM_new(const char *flagName, const char *flagAlias, int constraints, int 
 	tmp->controlContent = NULL;
 	tmp->convert = NULL;
 	tmp->extractObject = wrapper_returnStr;
+	tmp->expand_wildcard = NULL;
 
 
 	tmpFlagName = new_string(flagName);
@@ -461,4 +462,81 @@ int PARAM_getObject(PARAM *param, const char *source, int prio, int at, void *ex
 cleanup:
 
 	return res;
+}
+
+int PARAM_setWildcardExpander(PARAM *obj, void *ctx, int (*expand_wildcard)(PARAM_VAL *param_value, void *ctx, int *value_shift)) {
+	if (obj == NULL || expand_wildcard == NULL) return PST_INVALID_ARGUMENT;
+	obj->expand_wildcard = expand_wildcard;
+	obj->expand_wildcard_ctx = ctx;
+	return PST_OK;
+}
+
+int PARAM_expandWildcard(PARAM *param, int *count) {
+	int res;
+	int initial_count = 0;
+	int i = 0;
+	int parameter_shif_correction = 0;
+	int expanded_count = 0;
+	int counter = 0;
+	PARAM_VAL *value = NULL;
+	PARAM_VAL *pop = NULL;
+
+
+	if (param == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	if (param->expand_wildcard == NULL) {
+		res = PST_PARAMETER_UNIMPLEMENTED_WILDCARD;
+		goto cleanup;
+	}
+
+	if (1 || PARAM_isParsOptionSet(param, PST_PRSCMD_EXPAND_WILDCARD)) {
+		res = PARAM_getValueCount(param, NULL, PST_PRIORITY_NONE, &initial_count);
+		if (res != PST_OK) goto cleanup;
+
+		for (i = 0; i < initial_count; i++) {
+			res = PARAM_getValue(param, NULL, PST_PRIORITY_NONE, i + parameter_shif_correction, &value);
+			if (res != PST_OK) goto cleanup;
+
+			/* Check if there are wildcard characters. If not goto next value. */
+			if (strchr(value->cstr_value, '*') == NULL && strchr(value->cstr_value, '?') == NULL) continue;
+
+			expanded_count = 0;
+			res = param->expand_wildcard(value, param->expand_wildcard_ctx, &expanded_count);
+			if (res != PST_OK) goto cleanup;
+
+			res = PARAM_VAL_popElement(&value, NULL, PST_PRIORITY_NONE, 0, &pop);
+			if (res != PST_OK) goto cleanup;
+
+			param->argCount += expanded_count - 1;
+			param->arg = value;
+
+			PARAM_VAL_free(pop);
+			parameter_shif_correction += -1 + expanded_count;
+			counter += expanded_count;
+		}
+
+	}
+
+	if (count != NULL) *count = counter;
+	res = PST_OK;
+
+cleanup:
+
+	return res;
+}
+
+char* PARAM_toString(const PARAM *param, char *buf, size_t buf_len)  {
+	char sub_buf[2048];
+	size_t count = 0;
+
+	if (param == NULL || buf == NULL || buf_len == 0) return 0;
+
+
+	count += PST_snprintf(buf + count, buf_len - count, "%s(%i)->%s", param->flagName, param->argCount,
+			PARAM_VAL_toString(param->arg, sub_buf, sizeof(sub_buf)));
+
+	return buf;
 }

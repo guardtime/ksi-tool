@@ -49,6 +49,8 @@ enum param_set_err {
 	PST_PARAMETER_IS_UNKNOWN,
 	/** Object extractor function is not implemented. */
 	PST_PARAMETER_UNIMPLEMENTED_OBJ,
+	/* The function for extracting wildcard is not implemented. */
+	PST_PARAMETER_UNIMPLEMENTED_WILDCARD,
 	PST_OUT_OF_MEMORY,
 	PST_IO_ERROR,
 	PST_NEGATIVE_PRIORITY,
@@ -58,6 +60,7 @@ enum param_set_err {
 	PST_TASK_SET_HAS_NO_DEFINITIONS,
 	PST_TASK_SET_NOT_ANALYZED,
 	PST_TASK_UNABLE_TO_ANALYZE_PARAM_SET_CHANGED,
+	PST_WILDCARD_ERROR,
 	PST_UNDEFINED_BEHAVIOUR,
 	/* Unable to set the combination of command-line parser options. */
 	PST_PRSCMD_INVALID_COMBINATION,
@@ -536,6 +539,17 @@ int parse_key_value_pair(const char *line, char *key, char *value, size_t buf_le
  * \return Return 0 if successful, EOF if end of file.
  */
 int read_line(FILE *file, char *buf, size_t len, size_t *row_pointer, size_t *read_count);
+
+/**
+ * Süecify a function to expand tokens that contain wildcard character (WC) to array of
+ * new values. Characters '?' and '*' are WC. Values containing WC are removed and
+ * replaced with the expanded values. See \ref PARAM_expandWildcard,
+ * \ref PARAM_setWildcardExpander, \ref PARAM_SET_wildcardExpander and \ref
+ * PST_PRSCMD_EXPAND_WILDCARD for more details.
+ */
+int PARAM_SET_wildcardExpander(PARAM_SET *set, const char *names,
+		void *ctx,
+		int (*expand_wildcard)(PARAM_VAL *param_value, void *ctx, int *value_shift));
 
 #ifdef	__cplusplus
 }
