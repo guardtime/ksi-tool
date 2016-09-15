@@ -549,7 +549,7 @@ static int KSI_Signature_serialize_wrapper(KSI_CTX *ksi, KSI_Signature *sig, uns
 	return KSI_Signature_serialize(sig, raw, raw_len);
 }
 
-static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **obj,	int (*parse)(KSI_CTX *ksi, unsigned char *raw, unsigned raw_len, void **obj), void (*obj_free)(void*), const char *name) {
+static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, const char* mode, void **obj,	int (*parse)(KSI_CTX *ksi, unsigned char *raw, unsigned raw_len, void **obj), void (*obj_free)(void*), const char *name) {
 	int res;
 	SMART_FILE *file = NULL;
 	unsigned char buf[0xffff + 4];
@@ -564,7 +564,7 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **o
 		goto cleanup;
 	}
 
-	res = SMART_FILE_open(path, "rb", &file);
+	res = SMART_FILE_open(path, mode, &file);
 	if (res != KT_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: %s", KSITOOL_errToString(res));
 		goto cleanup;
@@ -694,14 +694,14 @@ int KSI_OBJ_savePublicationsFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsF
 	return res;
 }
 
-int KSI_OBJ_loadSignature(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signature **sig) {
+int KSI_OBJ_loadSignature(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, const char* mode, KSI_Signature **sig) {
 	int res;
 
 	if (ksi == NULL || fname == NULL || sig == NULL) {
 		return KT_INVALID_ARGUMENT;
 	}
 
-	res = load_ksi_obj(err, ksi, fname,
+	res = load_ksi_obj(err, ksi, fname, mode,
 				(void**)sig,
 				(int (*)(KSI_CTX *, unsigned char*, unsigned, void**))KSI_Signature_parse,
 				(void (*)(void *))KSI_Signature_free,

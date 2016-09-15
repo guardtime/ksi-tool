@@ -683,7 +683,7 @@ int SMART_FILE_open(const char *fname, const char *mode, SMART_FILE **file) {
 	}
 
 
-	isStream = (strcmp(fname, "-") == 0 && strchr(mode, 's') != NULL) == 0 ? 1 : 0,
+	isStream = (strcmp(fname, "-") == 0 && strchr(mode, 's') != NULL) ? 1 : 0;
 	is_w = strchr(mode, 'w') == NULL ? 0 : 1;
 	is_f = strchr(mode, 'f') == NULL ? 0 : 1;
 	is_i = strchr(mode, 'i') == NULL ? 0 : 1;

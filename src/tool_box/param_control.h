@@ -99,7 +99,6 @@ int extract_hashAlg(void *extra, const char* str, void** obj);
 int isFormatOk_inputFile(const char *path);
 int isContentOk_inputFile(const char* path);
 int isContentOk_inputFileRestrictPipe(const char* path);
-int extract_inputFile(void *extra, const char* str, void** obj);
 
 int isFormatOk_path(const char *path);
 int convertRepair_path(const char* arg, char* buf, unsigned len);

@@ -311,7 +311,7 @@ cleanup:
 	return res;
 }
 
-static int file_get_hash(ERR_TRCKR *err, KSI_CTX *ctx, const char *fname_in, const char *fname_out, KSI_HashAlgorithm *algo, KSI_DataHash **hash){
+static int file_get_hash(ERR_TRCKR *err, KSI_CTX *ctx, const char *open_mode, const char *fname_in, const char *fname_out, KSI_HashAlgorithm *algo, KSI_DataHash **hash){
 	int res;
 	KSI_DataHasher *hasher = NULL;
 	SMART_FILE *in = NULL;
@@ -341,14 +341,14 @@ static int file_get_hash(ERR_TRCKR *err, KSI_CTX *ctx, const char *fname_in, con
 	/**
 	 * Open the file, read and hash.
 	 */
-	res = SMART_FILE_open(fname_in, "rb", &in);
+	res = SMART_FILE_open(fname_in, open_mode, &in);
 	if (res != KT_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to open file for reading. %s", KSITOOL_errToString(res));
 		goto cleanup;
 	}
 
 	if (fname_out != NULL) {
-		res = SMART_FILE_open(fname_out, "wb", &out);
+		res = SMART_FILE_open(fname_out, "wbs", &out);
 		if (res != KT_OK) {
 			ERR_TRCKR_ADD(err, res, "Error: Unable to open file for writing. %s", KSITOOL_errToString(res));
 			goto cleanup;
@@ -682,30 +682,6 @@ int isFormatOk_path(const char *path) {
 	return FORMAT_OK;
 }
 
-int extract_inputFile(void *extra, const char* str, void** obj) {
-	int res;
-	SMART_FILE *tmp = NULL;
-
-	if (extra);
-	if (str == NULL) {
-		res = KT_INVALID_ARGUMENT;
-		goto cleanup;
-	}
-
-	/*TODO: Check if mode must be changed. */
-	res = SMART_FILE_open(str, "rb", &tmp);
-	if (res != KT_OK) goto cleanup;
-
-	*obj = (void*)tmp;
-
-cleanup:
-
-	SMART_FILE_close(tmp);
-
-	return res;
-}
-
-
 int isFormatOk_hashAlg(const char *hashAlg){
 	if(hashAlg == NULL) return FORMAT_NULLPTR;
 	if(strlen(hashAlg) == 0) return FORMAT_NOCONTENT;
@@ -833,12 +809,14 @@ int isContentOk_inputHash(const char *str) {
 int extract_inputHash(void *extra, const char* str, void** obj) {
 	int res;
 	void **extra_array = extra;
+	PARAM_SET *set = (PARAM_SET*)(extra_array[0]);
 	COMPOSITE *comp = (COMPOSITE*)(extra_array[1]);
 	KSI_CTX *ctx = comp->ctx;
 	ERR_TRCKR *err = comp->err;
 	KSI_HashAlgorithm *algo = comp->h_alg;
 	char *fname_out = comp->fname_out;
 	KSI_DataHash *tmp = NULL;
+	int in_count = 0;
 
 	if (obj == NULL) {
 		res = KT_INVALID_ARGUMENT;
@@ -850,7 +828,13 @@ int extract_inputHash(void *extra, const char* str, void** obj) {
 		res = extract_imprint(extra, str, (void**)&tmp);
 		if (res != KT_OK) goto cleanup;
 	} else {
-		res = file_get_hash(err, ctx, str, fname_out, algo, &tmp);
+		res = PARAM_SET_getValueCount(set, "i", NULL, PST_PRIORITY_NONE, &in_count);
+		if (res != KT_OK) goto cleanup;
+
+		/**
+		 * Reading from stdin is enabled ONLY when input count is 1.
+		 */
+		res = file_get_hash(err, ctx, in_count == 1 ? "rbs" : "rb", str, fname_out, algo, &tmp);
 		if (res != KT_OK) goto cleanup;
 	}
 
@@ -878,7 +862,7 @@ int extract_inputSignature(void *extra, const char* str, void** obj) {
 		goto cleanup;
 	}
 
-	res = KSI_OBJ_loadSignature(err, ctx, str, (KSI_Signature**)obj);
+	res = KSI_OBJ_loadSignature(err, ctx, str, "rbs", (KSI_Signature**)obj);
 	if (res != KT_OK) goto cleanup;
 
 cleanup:
