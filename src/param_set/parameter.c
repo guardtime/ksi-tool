@@ -336,6 +336,12 @@ int PARAM_getInvalid(PARAM *param, const char *source, int prio, int at, PARAM_V
 }
 
 int PARAM_getValueCount(PARAM *param, const char *source, int prio, int *count) {
+
+	if (source == NULL && prio == PST_PRIORITY_NONE) {
+		*count = param->argCount;
+		return PST_OK;
+	}
+
 	return param_get_value_count(param, source, prio, PARAM_VAL_getElementCount, count);
 }
 
