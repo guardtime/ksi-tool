@@ -17,6 +17,7 @@
  * reserves and retains all trademark rights.
  */
 
+#include "task_initializer.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,13 +32,6 @@
 #include "printer.h"
 #include "conf_file.h"
 #include "ksitool_err.h"
-
-enum service_info_priorities {
-	PRIORITY_KSI_CONF,
-	PRIORITY_KSI_CONF_USER,
-	PRIORITY_KSI_CONF_FILE,
-	PRIORITY_CMD,
-};
 
 static int isKSIUserInfoInsideUrl(const char *url, char *buf_u, char *buf_k, size_t buf_len);
 static int extract_user_info_from_url_if_needed(PARAM_SET *set, const char *flag_name, const char *usr_name, const char *key_name);
