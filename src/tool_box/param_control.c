@@ -578,6 +578,11 @@ int isFormatOk_int(const char *integer) {
 	return FORMAT_OK;
 }
 
+int isFormatOk_int_can_be_null(const char *integer) {
+	if (integer == NULL) return FORMAT_OK;
+	else return isFormatOk_int(integer);
+}
+
 int isContentOk_uint(const char* integer) {
 	long tmp;
 
@@ -589,6 +594,11 @@ int isContentOk_uint(const char* integer) {
 	if (tmp > INT_MAX) return INTEGER_TOO_LARGE;
 
 	return PARAM_OK;
+}
+
+int isContentOk_uint_can_be_null(const char *integer) {
+	if (integer == NULL) return FORMAT_OK;
+	else return isContentOk_uint(integer);
 }
 
 int isContentOk_int(const char* integer) {

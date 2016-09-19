@@ -143,7 +143,10 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 		/**
 		 * Configure parameters related to the local aggregation (block signer).
 		 */
-		res = PARAM_SET_addControl(conf, "{max-in-count}{max-aggr-rounds}{mdata-sqn-nr}", isFormatOk_int, isContentOk_uint, NULL, extract_int);
+		res = PARAM_SET_addControl(conf, "{max-in-count}{max-aggr-rounds}", isFormatOk_int, isContentOk_uint, NULL, extract_int);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_addControl(conf, "{mdata-sqn-nr}", isFormatOk_int_can_be_null, isContentOk_uint_can_be_null, NULL, extract_int);
 		if (res != PST_OK) goto cleanup;
 
 		res = PARAM_SET_addControl(conf, "{max-lvl}", isFormatOk_int, isContentOk_tree_level, NULL, extract_int);
