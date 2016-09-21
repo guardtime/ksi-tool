@@ -110,7 +110,9 @@ enum PARAM_PARS_OPTIONS_enum {
 	
 	/**
 	 * Collect all elements that are not bind with another flag and that do not
-	 * look like potential parameters.
+	 * look like potential parameters. It must be noted that - and -- are still
+	 * interpreted as values. To collect everything that do not match with existing
+	 * parameter use it together with PST_PRSCMD_COLLECT_LOOSE_FLAGS;
 	 */
 	PST_PRSCMD_COLLECT_LOOSE_VALUES = 0x0040,
 	
@@ -120,17 +122,18 @@ enum PARAM_PARS_OPTIONS_enum {
 	PST_PRSCMD_COLLECT_LOOSE_FLAGS = 0x0080,
 	
 	/**
-	 * Collect all loose dashes.
+	 * Collect everything after the parsing is closed. See \c PST_PRSCMD_CLOSE_PARSING
+	 * to see how to enable the closing of command line parsing. 
 	 */
-	PST_PRSCMD_COLLECT_LOOSE_DASHES = 0x0100,
+	PST_PRSCMD_COLLECT_WHEN_PARSING_IS_CLOSED = 0x0100,
 	
 	
 	/**
 	 * Enable loose element collector to stop command line parsing and redirect
 	 * all tokens to parameter pointed with loose element flag. Parameter -- is used
-	 * to mark the end of commands.
+	 * to mark the end of commands. It must be used with PST_PRSCMD_COLLECT_WHEN_PARSING_IS_CLOSED.
 	 */
-	PST_PRSCMD_COLLECT_LOOSE_PERMIT_END_OF_COMMANDS = 0x0200,
+	PST_PRSCMD_CLOSE_PARSING = 0x0200,
 	
 	/**
 	 * Collect has lower priority.

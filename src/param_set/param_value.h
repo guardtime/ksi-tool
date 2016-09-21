@@ -67,7 +67,9 @@ void PARAM_VAL_free(PARAM_VAL *rootValue);
  * 2 lower priority values followed by higher priority value at position 3 and at
  * is 0, function returns the last value (but the  first value matching the priority).
  * Priority \PST_PRIORITY_LOWEST and \PST_PRIORITY_HIGHEST are used to extract only
- * the lowest and the highest priority values.
+ * the lowest and the highest priority values. Use \PST_PRIORITY_HIGHER_THAN + <prio>
+ * or \PST_PRIORITY_LOWER_THAN + <prio> to extract values with higher or lower
+ * priority accordingly.
  * 
  * \param	rootValue	The first PARAM_VAL link in the linked list.
  * \param	source		Constraint for the source.

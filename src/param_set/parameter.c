@@ -498,7 +498,7 @@ int PARAM_expandWildcard(PARAM *param, int *count) {
 		goto cleanup;
 	}
 
-	if (1 || PARAM_isParsOptionSet(param, PST_PRSCMD_EXPAND_WILDCARD)) {
+	if (PARAM_isParsOptionSet(param, PST_PRSCMD_EXPAND_WILDCARD)) {
 		res = PARAM_getValueCount(param, NULL, PST_PRIORITY_NONE, &initial_count);
 		if (res != PST_OK) goto cleanup;
 
