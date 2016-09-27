@@ -556,7 +556,7 @@ cleanup:
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err) {
 	int res;
 
-	res = get_pipe_in_error(set, err, "i,f", NULL);
+	res = get_pipe_in_error(set, err, NULL, "i,f", NULL);
 	if (res != KT_OK) goto cleanup;
 
 cleanup:

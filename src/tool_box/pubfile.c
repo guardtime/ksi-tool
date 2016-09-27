@@ -405,7 +405,7 @@ cleanup:
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err) {
 	int res;
 
-	res = get_pipe_out_error(set, err, "o,log", NULL);
+	res = get_pipe_out_error(set, err, NULL, "o,log", NULL);
 	if (res != KT_OK) goto cleanup;
 
 cleanup:

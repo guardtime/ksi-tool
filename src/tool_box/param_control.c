@@ -35,6 +35,13 @@
 #include "obj_printer.h"
 #include "api_wrapper.h"
 #include "common.h"
+#include "param_set/strn.h"
+#include "debug_print.h"
+#include "param_set/parameter.h"
+
+#ifdef _WIN32
+	#include <windows.h>
+#endif
 
 static int analyze_hexstring_format(const char *hex, double *cor) {
 	int i = 0;
@@ -316,7 +323,7 @@ static int file_get_hash(ERR_TRCKR *err, KSI_CTX *ctx, const char *open_mode, co
 	KSI_DataHasher *hasher = NULL;
 	SMART_FILE *in = NULL;
 	SMART_FILE *out = NULL;
-	char buf[1024];
+	char buf[0xffff];
 	size_t read_count = 0;
 	size_t write_count = 0;
 	KSI_DataHash *tmp = NULL;
@@ -362,7 +369,7 @@ static int file_get_hash(ERR_TRCKR *err, KSI_CTX *ctx, const char *open_mode, co
 
 		res = SMART_FILE_read(in, buf, sizeof(buf), &read_count);
 		if (res != SMART_FILE_OK) {
-			ERR_TRCKR_ADD(err, res, "Error: Unable to read data from file.");
+			ERR_TRCKR_ADD(err, res, "Error: Unable to read data from file '%s'.", fname_in);
 			goto cleanup;
 		}
 
@@ -571,7 +578,8 @@ int isFormatOk_int(const char *integer) {
 	if(strlen(integer) == 0) return FORMAT_NOCONTENT;
 
 	while ((C = integer[i++]) != '\0') {
-		if (isdigit(C) == 0 && (i - 1 != 0 && C == '-') ) {
+		if ((i - 1 == 0 && C != '-' && !isdigit(C)) ||
+			(i - 1 > 0 && !isdigit(C))) {
 			return FORMAT_NOT_INTEGER;
 		}
 	}
@@ -644,13 +652,9 @@ int isFormatOk_inputFile(const char *path){
 	return FORMAT_OK;
 }
 
-int isContentOk_inputFileRestrictPipe(const char* path){
+int isContentOk_inputFile(const char* path){
 	if (isFormatOk_inputFile(path) != FORMAT_OK) {
 		return FILE_INVALID_PATH;
-	}
-
-	if (strcmp(path, "-") == 0) {
-		return ONLY_REGULAR_FILES;
 	}
 
 	if (!SMART_FILE_doFileExist(path)) {
@@ -664,10 +668,16 @@ int isContentOk_inputFileRestrictPipe(const char* path){
 	return PARAM_OK;
 }
 
-int isContentOk_inputFile(const char* path){
+int isContentOk_inputFileWithPipe(const char* path){
 	if (path == NULL) return FORMAT_NULLPTR;
 	if (strcmp(path, "-") == 0)	return PARAM_OK;
-	return isContentOk_inputFileRestrictPipe(path);
+	return isContentOk_inputFile(path);
+}
+
+int isContentOk_inputFileRestrictPipe(const char* path){
+	if (path == NULL) return FORMAT_NULLPTR;
+	if (strcmp(path, "-") == 0)	return ONLY_REGULAR_FILES;
+	return isContentOk_inputFile(path);
 }
 
 int convertRepair_path(const char* arg, char* buf, unsigned len){
@@ -812,11 +822,11 @@ int isContentOk_inputHash(const char *str) {
 	if (is_imprint(str)) {
 		return isContentOk_imprint(str);
 	} else {
-		return isContentOk_inputFile(str);
+		return isContentOk_inputFileWithPipe(str);
 	}
 }
 
-int extract_inputHash(void *extra, const char* str, void** obj) {
+static int extract_input_hash(void *extra, const char* str, void** obj, int no_imprint, int no_stream) {
 	int res;
 	void **extra_array = extra;
 	PARAM_SET *set = (PARAM_SET*)(extra_array[0]);
@@ -834,7 +844,7 @@ int extract_inputHash(void *extra, const char* str, void** obj) {
 	}
 
 
-	if (is_imprint(str)) {
+	if (!no_imprint && is_imprint(str)) {
 		res = extract_imprint(extra, str, (void**)&tmp);
 		if (res != KT_OK) goto cleanup;
 	} else {
@@ -844,7 +854,7 @@ int extract_inputHash(void *extra, const char* str, void** obj) {
 		/**
 		 * Reading from stdin is enabled ONLY when input count is 1.
 		 */
-		res = file_get_hash(err, ctx, in_count == 1 ? "rbs" : "rb", str, fname_out, algo, &tmp);
+		res = file_get_hash(err, ctx, (in_count == 1 && !no_stream) ? "rbs" : "rb", str, fname_out, algo, &tmp);
 		if (res != KT_OK) goto cleanup;
 	}
 
@@ -858,6 +868,14 @@ cleanup:
 	KSI_DataHash_free(tmp);
 
 	return res;
+}
+
+int extract_inputHash(void *extra, const char* str, void** obj) {
+	return extract_input_hash(extra, str, obj, 0, 0);
+}
+
+int extract_inputHashFromFile(void *extra, const char* str, void** obj) {
+	return extract_input_hash(extra, str, obj, 1, 1);
 }
 
 int extract_inputSignature(void *extra, const char* str, void** obj) {
@@ -1087,6 +1105,10 @@ const char *getParameterErrorString(int res) {
 		case INTEGER_UNSIGNED: return "Integer must be unsigned";
 		case ONLY_REGULAR_FILES: return "Data from stdin not supported";
 		case TREE_DEPTH_OUT_OF_RANGE: return "Tree depth out of range [0 - 255]";
+		case UNKNOWN_FUNCTION: return "Unknown function";
+		case FUNCTION_INVALID_ARG_COUNT: return "Invalid function argument count";
+		case FUNCTION_INVALID_ARG_1: return "Argument 1 is invalid";
+		case FUNCTION_INVALID_ARG_2: return "Argument 2 is invalid";
 		default: return "Unknown error";
 	}
 }
@@ -1097,7 +1119,7 @@ static int isValidNameChar(int c) {
 }
 
 
-static int get_io_pipe_error(PARAM_SET *set, ERR_TRCKR *err, int isStdin, const char *io_file_names, const char *io_flag_names) {
+static int get_io_pipe_error(PARAM_SET *set, ERR_TRCKR *err, int isStdin, const char *check_all_files, const char *io_file_names, const char *io_flag_names) {
 	int res;
 	char buf[1024];
 	const char *pName = io_file_names;
@@ -1106,14 +1128,44 @@ static int get_io_pipe_error(PARAM_SET *set, ERR_TRCKR *err, int isStdin, const 
 	size_t c = 0;
 	char err_msg[1024];
 
-	if (err == NULL || set == NULL || io_file_names == NULL) {
+
+	if (err == NULL || set == NULL || (io_file_names == NULL && check_all_files == NULL && io_flag_names == NULL)) {
 		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
+	pName = check_all_files;
+	while (pName != NULL && pName[0] != '\0') {
+		int i = 0;
+		int value_count = 0;
+
+		pValue = NULL;
+		pName = extract_next_name(pName, isValidNameChar, buf, sizeof(buf), NULL);
+
+		res = PARAM_SET_getValueCount(set, buf, NULL, PST_PRIORITY_NONE, &value_count);
+		if (res != PST_OK) goto cleanup;
+
+		for (i = 0; i < value_count; i++) {
+			res = PARAM_SET_getStr(set, buf, NULL, PST_PRIORITY_NONE, i, &pValue);
+			if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
+
+			if (pValue == NULL) continue;
+
+			if (strcmp(pValue, "-") == 0) {
+				c += KSI_snprintf(err_msg + c, sizeof(err_msg) - c, "%s%s%s -",
+						count > 0 ? ", " : "",
+						strlen(buf) > 1 ? "--" : "-",
+						buf);
+				count++;
+			}
+		}
+	}
+
+	pName = io_file_names;
 	while (pName != NULL && pName[0] != '\0') {
 		pValue = NULL;
 		pName = extract_next_name(pName, isValidNameChar, buf, sizeof(buf), NULL);
+
 		res = PARAM_SET_getStr(set, buf, NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &pValue);
 		if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 
@@ -1154,11 +1206,260 @@ cleanup:
 	return res;
 }
 
+enum MASK_FUNCTION_e {
+	MASK_F_CRAND_DEFAULT,
+	MASK_F_CRAND_INT_INT,
+	MASK_F_CRAND_TIME_INT,
+	MASK_F_INVALID
+};
 
-int get_pipe_out_error(PARAM_SET *set, ERR_TRCKR *err, const char *out_file_names, const char *print_out_names) {
-	return get_io_pipe_error(set, err, 0, out_file_names, print_out_names);
+static int decode_mask(const char* mask, int *func, char *arg1, char *arg2, size_t arg_buf_size) {
+	char function[32];
+	char *ret = NULL;
+	const char *next = NULL;
+	int use_time = 0;
+
+	if (mask == NULL || func == NULL || arg1 == NULL || arg2 == NULL || arg_buf_size == 0) {
+		return -1;
+	}
+
+	ret = STRING_extractAbstract(mask, NULL, ":", function, sizeof(function), find_charAfterStrn, find_charBeforeStrn, &next);
+	if (ret == NULL) return PARAM_UNKNOWN_ERROR;
+
+	if (strcmp(function, "crand") == 0) {
+		if (next != NULL && next[0] == ':' && next[1] == '\0') {
+			*func = MASK_F_CRAND_DEFAULT;
+			return PARAM_OK;
+		}
+
+		ret = STRING_extractAbstract(next, ":", ",", arg1, arg_buf_size, find_charAfterStrn, find_charBeforeStrn, &next);
+		if (ret == NULL) return FUNCTION_INVALID_ARG_COUNT;
+
+		ret = STRING_extractAbstract(next, ",", NULL, arg2, arg_buf_size, find_charAfterStrn, find_charBeforeStrn, NULL);
+		if (ret == NULL) return FUNCTION_INVALID_ARG_COUNT;
+
+		if (strchr(arg1, ',') != NULL || strchr(arg2, ',') != NULL) return FUNCTION_INVALID_ARG_COUNT;
+
+		use_time = strcmp(arg1, "time") == 0;
+
+		if (!use_time) {
+			if (isFormatOk_int(arg1) != FORMAT_OK || isContentOk_uint(arg1) != PARAM_OK) {
+				return FUNCTION_INVALID_ARG_1;
+			}
+
+			if (strtol(arg1, NULL, 10) > INT_MAX) {
+				return INTEGER_TOO_LARGE;
+			}
+		}
+
+		if (isFormatOk_int(arg2) != FORMAT_OK || isContentOk_uint(arg2) != PARAM_OK) {
+			return FUNCTION_INVALID_ARG_2;
+		}
+
+		*func = use_time ? MASK_F_CRAND_TIME_INT : MASK_F_CRAND_INT_INT;
+		return PST_OK;
+	}
+
+	return UNKNOWN_FUNCTION;
 }
 
-int get_pipe_in_error(PARAM_SET *set, ERR_TRCKR *err, const char *in_file_names, const char *read_in_flags) {
-	return get_io_pipe_error(set, err, 1, in_file_names, read_in_flags);
+int isFormatOk_mask(const char* mask) {
+	if (mask == NULL) return FORMAT_OK;
+	if (mask == '\0') return FORMAT_NOCONTENT;
+
+	if (strchr(mask, ':') != NULL) {
+		return FORMAT_OK;
+	} else {
+		return isFormatOk_hex(mask);
+	}
 }
+
+int isContentOk_mask(const char* mask) {
+	char arg1[32];
+	char arg2[32];
+	int res = 0;
+	int function = MASK_F_INVALID;
+
+	if (mask == NULL) return PARAM_OK;
+	if (mask == '\0') return FORMAT_NOCONTENT;
+
+	if (strchr(mask, ':') != NULL) {
+		res = decode_mask(mask, &function, arg1, arg2, sizeof(arg1));
+		if (res == -1) return FORMAT_UNKNOWN_ERROR;
+		else return res;
+	} else {
+		return UNKNOWN_FUNCTION;
+	}
+}
+
+int convertRepair_mask(const char* arg, char* buf, unsigned len) {
+	if (buf == NULL || len == 0) return 0;
+	if (arg == NULL) PST_strncpy(buf, "crand:", len);
+	else PST_strncpy(buf, arg, len);
+	return 1;
+}
+
+int extract_mask(void *extra, const char* str, void** obj) {
+	int res;
+	void **extra_array = extra;
+	COMPOSITE *comp = (COMPOSITE*)(extra_array[1]);
+	KSI_CTX *ctx = comp->ctx;
+	ERR_TRCKR *err = comp->err;
+	char arg1[32];
+	char arg2[sizeof(arg1)];
+	int mask_function = MASK_F_INVALID;
+	unsigned char *tmp_buf = NULL;
+	KSI_OctetString *tmp = NULL;
+
+	if (obj == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+
+	if (strchr(str, ':') != NULL) {
+		unsigned seed = 0;
+		unsigned size = 0;
+		unsigned i = 0;
+
+		res = decode_mask(str, &mask_function, arg1, arg2, sizeof(arg1));
+		if (res != PARAM_OK && mask_function != MASK_F_INVALID) {
+			ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Unable to extract masking info.");
+			goto cleanup;
+		}
+
+		switch(mask_function) {
+			case MASK_F_CRAND_TIME_INT:
+				seed = (unsigned)time(NULL);
+				size = (unsigned)strtol(arg2, NULL, 10);
+			break;
+
+			case MASK_F_CRAND_INT_INT:
+				seed = (unsigned)strtol(arg1, NULL, 10);
+				size = (unsigned)strtol(arg2, NULL, 10);
+			break;
+
+			case MASK_F_CRAND_DEFAULT:
+				seed = (unsigned)time(NULL);
+				size = 32;
+			break;
+
+			default: return KT_UNKNOWN_ERROR;
+		}
+
+		srand(seed);
+
+		tmp_buf = (unsigned char*)malloc(sizeof(unsigned char) * size);
+		if (tmp_buf == NULL) {
+			res = KSI_OUT_OF_MEMORY;
+			goto cleanup;
+		}
+
+		for (i = 0; i < size; i++) {
+			tmp_buf[i] = rand() % 255;
+		}
+
+		res = KSI_OctetString_new(ctx, tmp_buf, i, &tmp);
+		ERR_CATCH_MSG(err, res, "Error: Unable to create KSI_OctetString for masking initial value.");
+
+	} else {
+		return extract_OctetString(extra, str, obj);
+	}
+
+
+	*obj = (void*)tmp;
+	tmp = NULL;
+	res = KT_OK;
+
+cleanup:
+
+	KSI_OctetString_free(tmp);
+	free(tmp_buf);
+
+	return res;
+}
+
+
+int get_pipe_out_error(PARAM_SET *set, ERR_TRCKR *err, const char *check_all_files, const char *out_file_names, const char *print_out_names) {
+	return get_io_pipe_error(set, err, 0, check_all_files, out_file_names, print_out_names);
+}
+
+int get_pipe_in_error(PARAM_SET *set, ERR_TRCKR *err, const char *check_all_files, const char *in_file_names, const char *read_in_flags) {
+	return get_io_pipe_error(set, err, 1, check_all_files, in_file_names, read_in_flags);
+}
+
+#ifdef _WIN32
+/**
+ * This Wildcard expander enables wildcard usage on Windows platform. It takes
+ * a PARAM_VAL as input, examines if there are some files or directories matching
+ * the value string and appends new values after the specified PARAM_VAL obj.
+ *
+ * @param param_value
+ * @param ctx
+ * @param value_shift
+ * @return
+ */
+int Win32FileWildcard(PARAM_VAL *param_value, void *ctx, int *value_shift) {
+	int res;
+	HANDLE hfile = INVALID_HANDLE_VALUE;
+	WIN32_FIND_DATA found;
+	const char *value;
+	const char *source;
+	int prio = 0;
+	PARAM_VAL *tmp = NULL;
+	int count = 0;
+	char buf[1024] = "";
+	char path[1024] = "";
+
+
+	if (param_value == NULL || ctx != NULL || value_shift == NULL) {
+		return PST_INVALID_ARGUMENT;
+	}
+
+	res = PARAM_VAL_extract(param_value, &value, &source, &prio);
+	if (res != PST_OK) goto cleanup;
+
+	/**
+	 * Search for a files and directories matching the wildcard.
+	 * Ignore "." and "..". If the current value is t and a, b and c are expaned
+	 * value, the resulting array is [... t, a, b, c ...].
+	 */
+
+	convertRepair_path(value, buf, sizeof(buf));
+
+	STRING_extractAbstract(buf, NULL, "/", path, sizeof(path), NULL, find_charBeforeLastStrn, NULL);
+
+	hfile = FindFirstFile(value, &found);
+	if (hfile == INVALID_HANDLE_VALUE) {
+		res = PST_WILDCARD_ERROR;
+		goto cleanup;
+	}
+
+	do {
+		if (strcmp(found.cFileName, ".") == 0 || strcmp(found.cFileName, "..") == 0) continue;
+
+		PST_snprintf(buf, sizeof(buf), "%s%s%s",
+				path[0] == '\0' ? "" : path,
+				path[0] == '\0' ? "" : "/",
+				found.cFileName);
+
+		res = PARAM_VAL_new(buf, source, prio, &tmp);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_VAL_insert(param_value, NULL, PST_PRIORITY_NONE, count, tmp);
+		if (res != PST_OK) goto cleanup;
+
+		tmp = NULL;
+		count++;
+	} while (FindNextFile(hfile, &found) != 0);
+
+	*value_shift = count;
+	res = PST_OK;
+
+cleanup:
+
+	if (hfile != INVALID_HANDLE_VALUE) FindClose(hfile);
+	PARAM_VAL_free(tmp);
+	return res;
+}
+#endif
