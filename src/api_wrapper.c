@@ -340,9 +340,9 @@ int KSITOOL_SignatureVerify_userProvidedPublicationBased(ERR_TRCKR *err, KSI_Sig
 	return res;
 }
 
-int KSITOOL_createSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_DataHash *dataHash, KSI_Signature **sig) {
+int KSITOOL_BlockSigner_close(ERR_TRCKR *err, KSI_CTX *ctx, KSI_BlockSigner *signer, KSI_MultiSignature **ms) {
 	int res;
-	res = KSI_createSignature(ctx, dataHash, sig);
+	res = KSI_BlockSigner_close(signer, ms);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -352,7 +352,7 @@ int KSITOOL_createSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_DataHash *dataHash
 	return res;
 }
 
-int KSITOOL_receivePublicationsFile(ERR_TRCKR *err ,KSI_CTX *ctx, KSI_PublicationsFile **pubFile) {
+int KSITOOL_receivePublicationsFile(ERR_TRCKR *err, KSI_CTX *ctx, KSI_PublicationsFile **pubFile) {
 	int res;
 	res = KSI_receivePublicationsFile(ctx, pubFile);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
