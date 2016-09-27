@@ -55,7 +55,7 @@ char* CONF_generate_param_set_desc(char *description, const char *flags, char *b
 	if (is_S) {
 		count += KSI_snprintf(buf + count, buf_len - count,
 				"{S}{aggr-user}{aggr-key}"
-				"{max-in-count}{max-lvl}{sequential}{max-aggr-rounds}{mdata-cli-id}{mdata-mac-id}{mdata-sqn-nr}{mdata-req-tm}");
+				"{max-in-count}{max-lvl}{sequential}{max-aggr-rounds}{mdata-cli-id}{mdata-mac-id}{mdata-sqn-nr}{mdata-req-tm}{mask}");
 	}
 
 	if (is_X) {
@@ -159,6 +159,12 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 		if (res != PST_OK) goto cleanup;
 
 		res = PARAM_SET_addControl(conf, "{mdata-cli-id}{mdata-mac-id}", isFormatOk_string, NULL, NULL, NULL);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_addControl(conf, "{mask}", isFormatOk_mask, isContentOk_mask, convertRepair_mask, extract_mask);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_setParseOptions(conf, "{sequential}{mdata-req-tm}", PST_PRSCMD_HAS_NO_VALUE);
 		if (res != PST_OK) goto cleanup;
 	}
 
