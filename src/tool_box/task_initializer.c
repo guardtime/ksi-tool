@@ -47,19 +47,10 @@ int TASK_INITIALIZER_check_analyze_report(PARAM_SET *set, TASK_SET *task_set, do
 		goto cleanup;
 	}
 
-	/**
-	 * Check for invalid values.
-     */
-	if (!PARAM_SET_isFormatOK(set)) {
-		PARAM_SET_invalidParametersToString(set, NULL, getParameterErrorString, buf, sizeof(buf));
-		print_errors("%s", buf);
-		res = KT_INVALID_CMD_PARAM;
-		goto cleanup;
-	}
 
 	/**
 	 * Check for typos and unknown parameters.
-     */
+	 */
 	if (PARAM_SET_isTypoFailure(set)) {
 			print_errors("%s\n", PARAM_SET_typosToString(set, PST_TOSTR_DOUBLE_HYPHEN, NULL, buf, sizeof(buf)));
 			res = KT_INVALID_CMD_PARAM;
@@ -71,9 +62,19 @@ int TASK_INITIALIZER_check_analyze_report(PARAM_SET *set, TASK_SET *task_set, do
 	}
 
 	/**
+	 * Check for invalid values.
+	 */
+	if (!PARAM_SET_isFormatOK(set)) {
+		PARAM_SET_invalidParametersToString(set, NULL, getParameterErrorString, buf, sizeof(buf));
+		print_errors("%s", buf);
+		res = KT_INVALID_CMD_PARAM;
+		goto cleanup;
+	}
+
+	/**
 	 * Analyze task set and Extract the task if consistent one exists, print help
 	 * messaged otherwise.
-     */
+	 */
 	res = TASK_SET_analyzeConsistency(task_set, set, task_set_sens);
 	if (res != PST_OK) goto cleanup;
 
@@ -84,7 +85,7 @@ int TASK_INITIALIZER_check_analyze_report(PARAM_SET *set, TASK_SET *task_set, do
 
 	/**
 	 * If task is not present report errors.
-     */
+	 */
 	if (pTask == NULL) {
 		int ID;
 		if (TASK_SET_isOneFromSetTheTarget(task_set, task_dif, &ID)) {
