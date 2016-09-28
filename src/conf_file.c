@@ -152,7 +152,7 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 		res = PARAM_SET_addControl(conf, "{max-lvl}", isFormatOk_int, isContentOk_tree_level, NULL, extract_int);
 		if (res != PST_OK) goto cleanup;
 
-		res = PARAM_SET_setParseOptions(conf, "{max-lvl}{max-aggr-rounds}{mdata-sqn-nr}", PST_PRSCMD_HAS_VALUE);
+		res = PARAM_SET_setParseOptions(conf, "{max-lvl}{max-aggr-rounds}", PST_PRSCMD_HAS_VALUE);
 		if (res != PST_OK) goto cleanup;
 
 		res = PARAM_SET_addControl(conf, "{mdata-req-tm}", isFormatOk_flag, NULL, NULL, NULL);

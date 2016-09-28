@@ -1194,7 +1194,7 @@ int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int seq_of
 
 		/**
 		 * Get the mandatory client ID and if set optional machine ID.
-         */
+		 */
 		res = PARAM_SET_getStr(set, "mdata-cli-id", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &cli_id);
 		if (res != PST_OK) goto cleanup;
 

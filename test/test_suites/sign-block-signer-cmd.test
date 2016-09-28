@@ -29,12 +29,12 @@ EXECUTABLE sign --max-lvl -1
 >>>2 /.*Tree depth out of range.*/
 >>>= 3
 
-# Test unsigned integer inputs:
+# Test negative integer inputs:
 EXECUTABLE sign --max-aggr-rounds -1
 >>>2 /(.*Integer must be unsigned.*)(.*max-aggr-rounds.*)/
 >>>= 3
 
-# Test unsigned integer inputs:
+# Test max-aggr-rounds as 0:
 EXECUTABLE sign --max-aggr-rounds 0
 >>>2 /(.*Integer value is too small.*)(.*max-aggr-rounds.*)/
 >>>= 3
@@ -147,4 +147,9 @@ EXECUTABLE sign --max-lvl 0 --mask --prev-leaf SHA-256:76b127cddb918c3be744980c0
 EXECUTABLE sign --max-lvl 1 --mask --prev-leaf SHA-256:76b127cddb918c3be744980c094c6c9c0d6c0a8d54b8d971b67886772fbe47c6 --mdata --mdata-cli-id "My Naem" -d -i test/resource/file/abcd -o test/out/sign 
 >>>2 /(.*Error: Unable to embed metadata and link the local aggregation tree with the last leaf of the previous local aggregation tree with masking.*)(.*as the local aggregation tree's maximum depth is too small.*)(.*--max-lvl.*)/
 >>>= 8
+
+# Test metadata without client id:
+EXECUTABLE sign --max-lvl 1 --mdata --mdata-sqn-nr -d --mdata-mac-id "My Comuter" --mdata-req-tm -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*Error: Client ID is missing but is mandatory part of metadata.*)/
+>>>= 3
 
