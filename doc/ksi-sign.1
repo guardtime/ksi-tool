@@ -8,7 +8,7 @@
 .\"
 .SH SYNOPSIS
 .HP 4
-\fBksi sign -i \fIinput \fR[\fB-o \fIout.ksig\fR] \fB-S \fIURL \fR[\fB--aggr-user \fIuser \fB--aggr-key \fIkey\fR] \fR[\fB-H \fIalg\fR] [\fB--data-out \fIfile\fR] [\fB--dump\fR] [\fImore options\fR]
+\fBksi sign \fR[\fB-o \fIout.ksig\fR]... \fB-S \fIURL \fR[\fB--aggr-user \fIuser \fB--aggr-key \fIkey\fR] \fR[\fB-H \fIalg\fR] [\fB--data-out \fIfile\fR] [\fB--dump\fR] [\fImore options\fR] [\fB-i \fIinput\fR]... [\fIinput\fR]... [\fB-- \fIonly_file_input\fR...]
 .br
 .\"
 .\"
@@ -21,11 +21,13 @@ Signs the given input such as content of a given file or a pre-computed hash val
 .\"
 .TP
 \fB-i \fIinput\fR
-The input is either the path to the file to be hashed and signed or a hash imprint in case the data to be signed has been hashed already. Use '-' as file name to read data to be hashed from \fIstdin\fR. Hash imprint format: <\fIalg\fR>:<\fIhash in hex\fR>. Use \fB-h\fR to get the list of supported hash algorithms. Note that only the main data stream of the file is hashed, any extensions of specific file systems are ignored (e.g. the alternate data streams of NTFS are not signed).
+The input is either the path to the file to be hashed and signed or a hash imprint in the case the data to be signed has been hashed already. Use '-' as file name to read data to be hashed from \fIstdin\fR. Hash imprint format: <\fIalg\fR>:<\fIhash in hex\fR>. Use \fB-h\fR to get the list of supported hash algorithms. Note that only the main data stream of the file is hashed, any extensions of specific file systems are ignored (e.g. the alternate data streams of NTFS are not signed).
+
+Flag \fB-i\fR can be omitted when specifying the input. Without \fB-i\fR it is not possible to sign files that look like command-line parameters (e.g. -a, --option). To interpret all inputs as regular files no matter what the file's name is see parameter \fB--\fR.
 .\"
 .TP
 \fB-o \fIout.ksig\fR
-Output file path for the signature. Use '-' as file name to redirect signature binary stream to \fIstdout\fR. If not specified, the signature is saved to <input file>.ksig (or <input file>_<nr>.ksig, where <nr> is auto-incremented counter if the output file already exists). If specified, will always overwrite the existing file.
+Output file's path for the signature. Use '-' as file name to redirect signature binary stream to \fIstdout\fR. If not specified the output is saved to the same directory where the input file is located. When specified as directory all the signatures are saved there. When signature's output file name is not explicitly specified the signature is saved to <input file>.ksig (or <input file>_<nr>.ksig, where <nr> is auto-incremented counter if the output file already exists). When there are N x input and explicitly specified N x output every signature is saved to the corresponding path. If output file name is explicitly specified, will always overwrite the existing file.
 .\"
 .TP
 \fB-H \fIalg\fR
@@ -46,6 +48,52 @@ HMAC Key for signing service.
 .TP
 \fB--data-out \fIfile\fR
 Save signed data to file. Use when signing a stream. Use '-' as file name to redirect data being hashed to \fIstdout\fR.
+.\"
+.TP
+\fB--max-lvl \fIint\fR
+Set the maximum depth of the local aggregation tree (default 0). It must be noted that when using masking (\fB--mask\fR) or embedding the metadata (\fB--mdata\fR) both will reduce the maximum count of document hash values that could be singed during a single local aggregation round. To enable signing in multiple local aggregation rounds see \fB--max-aggr-rounds\fR.
+.\"
+.TP
+\fB--max-aggr-rounds \fIint\fR
+Set the upper limit of local aggregation rounds that may be performed (default 1).
+.\"
+.TP
+\fB--mask \fR[\fIiv\fR]
+Specify a hex string to initialize and apply the masking process or algorithm to generate the initial value instead. See \fB--prev-leaf\fR to see how to link another aggregation tree to current aggregation process. Supported algorithms:
+.RS
+.IP \(bu 4
+\fBcrand\fR:\fIseed\fR,\fIlen\fR - Use standard C rand() function to generate array of random numbers with the given seed and length. The seed value is unsigned 32bit integer or 'time' to use the system time value instead. If function is specified without the arguments (crand:) 'time' is used to generate random arry with size of 32 baits.
+.LP
+When mask is specified without the argument the default mask 'crand:' is used.
+.RE
+.\"
+.TP
+\fB--prev-leaf \fIhash\fR
+Specify the hash value of the last leaf from another local aggregation tree to link it with the current first local aggregation round. Is valid only with option \fB--mask\fR.
+.\"
+.TP
+\fB--mdata\fR
+Embed metadata to the KSI signature. To configure metadata at lest \fB--mdata-cli-id\fR must be specified. See also other options \fB--mdata-*\fR.
+.\"
+.TP
+\fB--mdata-cli-id \fIstr\fR
+Specify client id as a string that will be embedded into the signature as metadata. It is mandatory part of the metadata.
+.\"
+.TP
+\fB--mdata-mac-id \fIstr\fR
+Specify machine id as a string that will be embedded into the signature as metadata. It is optional part of metadata.
+.\"
+.TP
+\fB--mdata-sqn-nr \fR[\fIint\fR]
+Specify incremental (sequence number is incremented in every aggregation round) sequence number of the request as integer that will be embedded into the signature as metadata. If the parameter is given without the argument 0 is used. It is optional part of metadata.
+.\"
+.TP
+\fB--mdata-req-tm\fR
+Embed request time extracted from the machine clock into the signature as metadata. It is optional part of metadata.
+.\"
+.TP
+\fB--\fR
+If used \fBeverything\fR specified after the token is interpreted as \fBinput file\fR (command-line parameters (e.g. --conf, -d), \fIstdin\fR (-) and pre-calculated hash imprints (SHA-256:7647c6...) are all interpreted as regular files).
 .\"
 .TP
 \fB-d\fR

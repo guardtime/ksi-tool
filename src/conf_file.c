@@ -55,7 +55,7 @@ char* CONF_generate_param_set_desc(char *description, const char *flags, char *b
 	if (is_S) {
 		count += KSI_snprintf(buf + count, buf_len - count,
 				"{S}{aggr-user}{aggr-key}"
-				"{max-in-count}{max-lvl}{sequential}{max-aggr-rounds}{mdata-cli-id}{mdata-mac-id}{mdata-sqn-nr}{mdata-req-tm}{mask}");
+				"{max-lvl}{max-aggr-rounds}{mdata-cli-id}{mdata-mac-id}{mdata-sqn-nr}{mdata-req-tm}");
 	}
 
 	if (is_X) {
@@ -126,7 +126,7 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 		res = PARAM_SET_addControl(conf, "{publications-file-no-verify}", isFormatOk_flag, NULL, NULL, NULL);
 		if (res != PST_OK) goto cleanup;
 
-		res = PARAM_SET_setParseOptions(conf, "publications-file-no-verify", PST_PRSCMD_DEFAULT | PST_PRSCMD_NO_TYPOS);
+		res = PARAM_SET_setParseOptions(conf, "publications-file-no-verify", PST_PRSCMD_HAS_NO_VALUE | PST_PRSCMD_NO_TYPOS);
 		if (res != PST_OK) goto cleanup;
 
 		res = PARAM_SET_addControl(conf, "{cnstr}", isFormatOk_constraint, NULL, convertRepair_constraint, NULL);
@@ -143,7 +143,7 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 		/**
 		 * Configure parameters related to the local aggregation (block signer).
 		 */
-		res = PARAM_SET_addControl(conf, "{max-in-count}{max-aggr-rounds}", isFormatOk_int, isContentOk_uint, NULL, extract_int);
+		res = PARAM_SET_addControl(conf, "{max-aggr-rounds}", isFormatOk_int, isContentOk_uint_not_zero, NULL, extract_int);
 		if (res != PST_OK) goto cleanup;
 
 		res = PARAM_SET_addControl(conf, "{mdata-sqn-nr}", isFormatOk_int_can_be_null, isContentOk_uint_can_be_null, NULL, extract_int);
@@ -152,19 +152,16 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 		res = PARAM_SET_addControl(conf, "{max-lvl}", isFormatOk_int, isContentOk_tree_level, NULL, extract_int);
 		if (res != PST_OK) goto cleanup;
 
-		res = PARAM_SET_setParseOptions(conf, "{max-lvl}{max-in-count}{max-aggr-rounds}{mdata-sqn-nr}", PST_PRSCMD_HAS_VALUE);
+		res = PARAM_SET_setParseOptions(conf, "{max-lvl}{max-aggr-rounds}{mdata-sqn-nr}", PST_PRSCMD_HAS_VALUE);
 		if (res != PST_OK) goto cleanup;
 
-		res = PARAM_SET_addControl(conf, "{sequential}{mdata-req-tm}", isFormatOk_flag, NULL, NULL, NULL);
+		res = PARAM_SET_addControl(conf, "{mdata-req-tm}", isFormatOk_flag, NULL, NULL, NULL);
 		if (res != PST_OK) goto cleanup;
 
 		res = PARAM_SET_addControl(conf, "{mdata-cli-id}{mdata-mac-id}", isFormatOk_string, NULL, NULL, NULL);
 		if (res != PST_OK) goto cleanup;
 
-		res = PARAM_SET_addControl(conf, "{mask}", isFormatOk_mask, isContentOk_mask, convertRepair_mask, extract_mask);
-		if (res != PST_OK) goto cleanup;
-
-		res = PARAM_SET_setParseOptions(conf, "{sequential}{mdata-req-tm}", PST_PRSCMD_HAS_NO_VALUE);
+		res = PARAM_SET_setParseOptions(conf, "{mdata-req-tm}", PST_PRSCMD_HAS_NO_VALUE);
 		if (res != PST_OK) goto cleanup;
 	}
 

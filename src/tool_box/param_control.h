@@ -127,6 +127,7 @@ int isFormatOk_int(const char *integer);
 int isFormatOk_int_can_be_null(const char *integer);
 int isContentOk_uint_can_be_null(const char* integer);
 int isContentOk_uint(const char* integer);
+int isContentOk_uint_not_zero(const char* integer);
 int isContentOk_int(const char* integer);
 int extract_int(void *extra, const char* str,  void** obj);
 

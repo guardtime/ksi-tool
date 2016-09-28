@@ -94,7 +94,7 @@ int sign_run(int argc, char** argv, char **envp) {
 	 * Extract command line parameters.
 	 */
 	res = PARAM_SET_new(
-			CONF_generate_param_set_desc("{sign}{i}{input}{o}{H}{data-out}{d}{dump}{log}{conf}{h|help}{dump-last-leaf}{prev-leaf}{no-masking}{mdata}{show-progress}", "S", buf, sizeof(buf)),
+			CONF_generate_param_set_desc("{sign}{i}{input}{o}{H}{data-out}{d}{dump}{log}{conf}{h|help}{dump-last-leaf}{prev-leaf}{mdata}{mask}{show-progress}", "S", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -187,21 +187,31 @@ char *sign_help_toString(char*buf, size_t len) {
 
 	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
-		" %s sign -i <input> [-o <out.ksig>] -S <URL>\n"
-		"         [--aggr-user <user> --aggr-key <key>] [-H <alg>] [--data-out <file>] [more_options]\n"
+		" %s sign -S <URL> [--aggr-user <user> --aggr-key <key>] [-H <alg>]\n"
+		"          [--data-out <file>] [more_options] [-i <input>]... [<input>]...\n"
+		"          [-- [<only file input>]...] [-o <out.ksig>]...\n"
 		"\n"
 		"\n"
 		" -i <input>\n"
-		"           - The data is either the path to the file to be hashed and signed or\n"
-		"             a hash imprint in case  the  data  to be signed has been hashed\n"
+		"           - The input is either the path to the file to be hashed and signed\n"
+		"             or a hash imprint in the case the data to be signed has been hashed\n"
 		"             already. Use '-' as file name to read data to be hashed from stdin.\n"
-		"             Hash imprint format: <alg>:<hash in hex>.\n"
+		"             Hash imprint format: <alg>:<hash in hex>.\n\n"
+		"             Flag -i can be omitted when specifying the input. To interpret all\n"
+		"             inputs as regular files no matter what the file's name is see\n"
+		"             parameter --.\n"
 		" -o <out.ksig>\n"
 		"           - Output file path for the signature. Use '-' as file name to\n"
-		"             redirect signature binary stream to stdout. If not specified, the\n"
-		"             signature is saved to <input file>.ksig (or <input file>_<nr>.ksig,\n"
-		"             where <nr> is auto-incremented counter if the output file already\n"
-		"             exists will always overwrite the existing file.\n"
+		"             redirect signature binary stream to stdout. If not specified the\n"
+		"             output is saved to the same directory where the input file is\n"
+		"             located. When specified as directory all the signatures are saved\n"
+		"             there. When signature's output file name is not explicitly\n"
+		"             specified the signature is saved to <input file>.ksig\n"
+		"             (or <input file>_<nr>.ksig, where <nr> is auto-incremented counter\n"
+		"             if the output file already exists). When there are N x input and\n"
+		"             explicitly specified N x output every signature is saved to the\n"
+		"             corresponding path. If output file name is explicitly specified,\n"
+		"             will always overwrite the existing file.\n"
 		" -H <alg> \n"
 		"           - Use the given hash algorithm to hash the file to be signed.\n"
 		"             Use ksi -h to get the list of supported hash algorithms.\n"
@@ -214,40 +224,43 @@ char *sign_help_toString(char*buf, size_t len) {
 		"           - Save signed data to file. Use when signing an incoming stream.\n"
 		"             Use '-' as file name to redirect data being hashed to stdout.\n"
 
-		" --max-in-count <int>\n"
-		"           - Set the maximum count of input files permitted (default 1024).\n"
 		" --max-lvl <int>\n"
 		"           - Set the maximum depth of the local aggregation tree (default 0).\n"
-		" --sequential\n"
-		"           - Enable signing of multiple files in sequence to avoid the local\n"
 		" --max-aggr-rounds <int>\n"
-		"           - Set the maximum count of local aggregation rounds (default 1).\n"
-		" --dump-last-leaf\n"
-		"           - Dump the last leaf of the local aggregation tree.\n"
-		" --prev-leaf <hash>\n"
-		"           - Specify the last hash value of the last local aggregation trees\n"
-		"             leaf to link it with the first local aggregation tree (default \n"
-		"             zero hash).\n"
-		" --no-masking\n"
-		"           - Disable masking of aggregations tree input leafs.\n"
+		"           - Set the upper limit of local aggregation rounds that may be\n"
+		"             performed (default 1).\n"
 		" --mask <mask>\n"
-		"           - Specify a hex string to initialize the masking process.\n"
-		" --mdata\n"
-		"           - Embed configured metadata to the signature.\n"
-		"             is configured.\n"
+		"           - Specify a hex string to initialize and apply the masking process\n"
+		"             or algorithm to generate the initial value instead.\n"
+		"             Supported algorithms:\n\n"
+		"               * crand:seed,len - Use standard C rand() function to generate\n"
+		"                 array of random numbers with the given seed and length. The\n"
+		"                 seed value is unsigned 32bit integer or 'time' to use the\n"
+		"                 system time value instead.\n"
+		" --prev-leaf <hash>\n"
+		"           - Specify the hash value of the last leaf from another local\n"
+		"             aggregation tree to link it with the current first local\n"
+		"             aggregation round. Is valid only with option --mask.\n"
+		" --mdata   - Embed metadata to the KSI signature. To configure metadata at lest\n"
+		"             --mdata-cli-id must be specified.\n"
 		" --mdata-cli-id <str>\n"
 		"           - Specify client id as a string that will be embedded into the\n"
-		"             signature as metadata. It is mandatory for the metadata.\n"
+		"             signature as metadata. It is mandatory part of the metadata.\n"
 		" --mdata-mac-id <str>\n"
-		"           - Optional machine id as a string that will be embedded into the\n"
-		"             signature as metadata.\n"
+		"           - Specify machine id as a string that will be embedded into the\n"
+		"             signature as metadata. It is optional part of metadata.\n"
 		" --mdata-sqn-nr <int>\n"
-		"           - Optional sequence number of the request as integer that will be"
-		"             embedded into the signature as metadata.\n"
+		"           - Specify incremental (sequence number is incremented in every\n"
+		"             aggregation round) sequence number of the request as integer\n"
+		"             that will be embedded into the signature as metadata. It is\n"
+		"             optional part of metadata.\n"
 		" --mdata-req-tm <int>\n"
-		"           - Optional request time extracted from the machine clock that will be\n"
-		"             embedded into signature as metadata.\n"
-
+		"           - Embed request time extracted from the machine clock into the\n"
+		"             signature as metadata. It is optional part of metadata.\n"
+		" --        - If used everything specified after the token is interpreted as\n"
+		"             input file (command-line parameters (e.g. --conf, -d), stdin (-)\n"
+		"             and pre-calculated hash imprints (SHA-256:7647c6...) are all\n"
+		"             interpreted as regular files).\n"
 		" -d        - Print detailed information about processes and errors to stderr.\n"
 		" --dump    - Dump signature created in human-readable format to stdout.\n"
 		" --conf <file>\n"
@@ -256,9 +269,7 @@ char *sign_help_toString(char*buf, size_t len) {
 		"             override the ones in the configuration file.\n"
 		" --log <file>\n"
 		"           - Write libksi log to given file. Use '-' as file name to redirect\n"
-		"             log to stdout.\n"
-		" --        - Disable command-line parameter parsing. After the parameter parsing\n"
-		"             is disabled all tokens are interpreted as inputs.\n"
+		"             log to stdout.\n\n"
 		, TOOL_getName()
 	);
 
@@ -291,9 +302,9 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{input}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputHashFromFile);
 	PARAM_SET_addControl(set, "{H}", isFormatOk_hashAlg, isContentOk_hashAlg, NULL, extract_hashAlg);
 	PARAM_SET_addControl(set, "{prev-leaf}", isFormatOk_imprint, isContentOk_imprint, NULL, extract_imprint);
-	PARAM_SET_addControl(set, "{d}{dump}{dump-last-leaf}{no-masking}{mdata}{show-progress}", isFormatOk_flag, NULL, NULL, NULL);
-
-	PARAM_SET_setParseOptions(set, "{d}{dump}{dump-last-leaf}{no-masking}{mdata}{show-progress}", PST_PRSCMD_HAS_NO_VALUE);
+	PARAM_SET_addControl(set, "{d}{dump}{dump-last-leaf}{mdata}{show-progress}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{mask}", isFormatOk_mask, isContentOk_mask, convertRepair_mask, extract_mask);
+	PARAM_SET_setParseOptions(set, "{d}{dump}{dump-last-leaf}{mdata}{show-progress}", PST_PRSCMD_HAS_NO_VALUE);
 
 	/**
 	 * To enable wildcard characters (WC) to work on Windows, configure the WC
@@ -321,7 +332,6 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 
 	res = PARAM_SET_add(set, "max-aggr-rounds", "1", "default", PRIORITY_KSI_DEFAULT);
 	res = PARAM_SET_add(set, "max-lvl", "0", "default", PRIORITY_KSI_DEFAULT);
-	res = PARAM_SET_add(set, "mask", "crand:", "default", PRIORITY_KSI_DEFAULT);
 
 	/*					  ID	DESC										MAN				ATL			FORBIDDEN	IGN	*/
 	TASK_SET_add(task_set, 0,	"Sign data.",								"S",			"i,input",	"H,data-out",		NULL);
@@ -553,22 +563,32 @@ int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size_t *inp
 	/**
 	 * Check if masking is done and / or metadata is appended to the tree.
 	 */
-	has_prev_leaf = PARAM_SET_isSetByName(set, "prev-leaf");
-	is_masking = !PARAM_SET_isSetByName(set, "no-masking");
+	is_masking = PARAM_SET_isSetByName(set, "mask");
 	is_metadata = PARAM_SET_isSetByName(set, "mdata,mdata-cli-id");
+	has_prev_leaf = PARAM_SET_isSetByName(set, "prev-leaf");
 
-	if (max_lvl == 0 && has_prev_leaf) {
-		ERR_TRCKR_ADD(err, KT_AGGR_LVL_TOO_SMALL, "Error: Unable to link the local aggregation tree with the last leaf of the previous local aggregation tree as the local aggregation tree is too small.\n");
+	if (!is_masking && has_prev_leaf) {
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_TOO_SMALL, "Error: Unable to link the local aggregation tree with the last leaf of the previous local aggregation tree as masking is not enabled (see --mask).\n");
 		goto cleanup;
 	}
 
-	if (max_lvl == 1 && has_prev_leaf && is_metadata) {
-		ERR_TRCKR_ADD(err, KT_AGGR_LVL_TOO_SMALL, "Error: Unable to link the local aggregation tree with the last leaf of the previous local aggregation tree with masking as the local aggregation tree is too small.\n");
+	if (max_lvl < 2 && has_prev_leaf && is_metadata) {
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_TOO_SMALL, "Error: Unable to embed metadata and link the local aggregation tree with the last leaf of the previous local aggregation tree with masking as the local aggregation tree's maximum depth is too small (see --max-lvl).\n");
 		goto cleanup;
 	}
 
-	if (max_lvl == 1 && is_masking && is_metadata) {
-		ERR_TRCKR_ADD(err, KT_AGGR_LVL_TOO_SMALL, "Error: Unable to add metadata with masking as the local aggregation tree is too small.\n");
+	if (max_lvl < 2 && is_masking && is_metadata) {
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_TOO_SMALL, "Error: Unable to add metadata with masking as the local aggregation tree's maximum depth is too small (see --max-lvl).\n");
+		goto cleanup;
+	}
+
+	if (max_lvl == 0 && is_metadata) {
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_TOO_SMALL, "Error: Unable to embed metadata as the local aggregation tree's maximum depth is too small (see --max-lvl).\n");
+		goto cleanup;
+	}
+
+	if (max_lvl == 0 && is_masking) {
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_TOO_SMALL, "Error: Unable to use masking as the local aggregation tree's maximum depth is too small (see --max-lvl).\n");
 		goto cleanup;
 	}
 
@@ -583,7 +603,7 @@ int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size_t *inp
 
 
 	if (sizeof(size_t) * 8 < max_lvl_virtual) {
-		ERR_TRCKR_ADD(err, KT_INDEX_OVF, "Error: The maximum local aggregation tree to be generated may contain more leafs than size_t max value.\n");
+		ERR_TRCKR_ADD(err, res = KT_INDEX_OVF, "Error: The maximum local aggregation tree to be generated may contain more leafs than size_t max value.\n");
 		goto cleanup;
 	}
 
@@ -602,7 +622,6 @@ cleanup:
 int KT_SIGN_getAggregationRoundsNeeded(PARAM_SET *set, ERR_TRCKR *err, size_t max_tree_inputs, size_t *rounds) {
 	int res = KT_UNKNOWN_ERROR;
 	int input_file_count = 0;
-	int max_input_file_count = 1;
 	int max_local_aggr_rounds = 0;
 	int is_sequential = 0;
 	size_t round_count = 0;
@@ -616,21 +635,12 @@ int KT_SIGN_getAggregationRoundsNeeded(PARAM_SET *set, ERR_TRCKR *err, size_t ma
 	res = PARAM_SET_getValueCount(set, "i,input", NULL, PST_PRIORITY_NONE, &input_file_count);
 	if (res != PST_OK) goto cleanup;
 
-	res = PARAM_SET_getObj(set, "max-in-count", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void*)&max_input_file_count);
-	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
-
 	res = PARAM_SET_getObj(set, "max-aggr-rounds", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void*)&max_local_aggr_rounds);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 
-	is_sequential = PARAM_SET_isSetByName(set, "sequential");
+	is_sequential = max_local_aggr_rounds > 1;
 
 	round_count = (size_t)ceil((double)input_file_count / (double)max_tree_inputs);
-
-
-	if (input_file_count > max_input_file_count) {
-		ERR_TRCKR_ADD(err, KT_AGGR_LVL_TOO_SMALL, "Error: Too much inputs! Count of input files permitted/needed %u/%u.", max_input_file_count, input_file_count);
-		goto cleanup;
-	}
 
 	if (round_count > 1 && !is_sequential) {
 		ERR_TRCKR_ADD(err, KT_AGGR_LVL_TOO_SMALL, "Error: Too much inputs for a single aggregation round.");
@@ -800,13 +810,6 @@ int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int max
 	else if (in_count >= 1000) divider = 10;
 	else divider = 1;
 
-	/**
-	 * If only 1 input is specified then remove the default value of mask.
-	 */
-	if (in_count == 1) {
-		res = PARAM_SET_clearValue(set, "mask", "default", PRIORITY_KSI_DEFAULT, 0);
-	}
-
 	res = PARAM_SET_getStr(set, "data-out", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &signed_data_out);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 
@@ -819,7 +822,7 @@ int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int max
 	extra.fname_out = signed_data_out;
 
 	/**
-	 * Extract mask.
+	 * Extract initial value for masking mask.
 	 */
 	res = PARAM_SET_getObjExtended(set, "mask", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void*)&extra, (void**)&mask_iv);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) {
@@ -840,22 +843,25 @@ int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int max
 	}
 
 	/**
-	 * Extract previous leaf hash value.
-	 */
-	if (PARAM_SET_isSetByName(set, "prev-leaf")) {
-		res = PARAM_SET_getObjExtended(set, "prev-leaf", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void*)&extra, (void**)&prev_leaf);
-		if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
-	} else {
-		res = KSI_DataHash_createZero(ctx, algo, &prev_leaf);
-		ERR_CATCH_MSG(err, res, "Error: Unable to create zero hash.");
-	}
-
-	/**
 	 * Analyze parameter to determin if masking is going to be performed and
 	 * if metadata is embedded to the signature.
 	 */
 	isMetadata = PARAM_SET_isSetByName(set, "mdata,mdata-cli-id");
-	isMasking = !PARAM_SET_isSetByName(set, "no-masking") && PARAM_SET_isSetByName(set, "mask");
+	isMasking = PARAM_SET_isSetByName(set, "mask");
+
+	/**
+	 * Extract previous leaf hash value.
+	 */
+	if (isMasking) {
+		if (PARAM_SET_isSetByName(set, "prev-leaf")) {
+			res = PARAM_SET_getObjExtended(set, "prev-leaf", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void*)&extra, (void**)&prev_leaf);
+			if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
+		} else {
+			res = KSI_DataHash_createZero(ctx, algo, &prev_leaf);
+			ERR_CATCH_MSG(err, res, "Error: Unable to create zero hash.");
+		}
+	}
+
 
 	/**
 	 * Create records for each aggregation round + 1 extra for indicating the end
@@ -932,7 +938,7 @@ int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int max
 
 
 		if (tree_size_1) print_progressDesc(d, "Creating signature from hash... ");
-		print_progressDesc(d, "\nSigning the local aggregation tree %d/%d ... ", r + 1, rounds);
+		print_progressDesc(d, "\nSigning the local aggregation tree %d/%d... ", r + 1, rounds);
 
 		res = KSITOOL_BlockSigner_close(err, ctx, bs, &(aggr_round[r]->signatures));
 		if (tree_size_1) {ERR_CATCH_MSG(err, res, "Error: Unable to create signature.");}

@@ -591,17 +591,26 @@ int isFormatOk_int_can_be_null(const char *integer) {
 	else return isFormatOk_int(integer);
 }
 
-int isContentOk_uint(const char* integer) {
+static int isContentOk_int_limits(const char* integer, int no_zero, int not_negative) {
 	long tmp;
 
 	if (integer == NULL) return FORMAT_NULLPTR;
 	if (integer[0] == '\0') return FORMAT_NOCONTENT;
 
 	tmp = strtol(integer, NULL, 10);
-	if (tmp < 0) return INTEGER_UNSIGNED;
+	if (no_zero && tmp == 0) return INTEGER_TOO_SMALL;
+	if (not_negative && tmp < 0) return INTEGER_UNSIGNED;
 	if (tmp > INT_MAX) return INTEGER_TOO_LARGE;
 
 	return PARAM_OK;
+}
+
+int isContentOk_uint(const char* integer) {
+	return isContentOk_int_limits(integer, 0,1);
+}
+
+int isContentOk_uint_not_zero(const char* integer) {
+	return isContentOk_int_limits(integer, 1,1);
 }
 
 int isContentOk_uint_can_be_null(const char *integer) {
@@ -851,10 +860,7 @@ static int extract_input_hash(void *extra, const char* str, void** obj, int no_i
 		res = PARAM_SET_getValueCount(set, "i", NULL, PST_PRIORITY_NONE, &in_count);
 		if (res != KT_OK) goto cleanup;
 
-		/**
-		 * Reading from stdin is enabled ONLY when input count is 1.
-		 */
-		res = file_get_hash(err, ctx, (in_count == 1 && !no_stream) ? "rbs" : "rb", str, fname_out, algo, &tmp);
+		res = file_get_hash(err, ctx, no_stream ? "rb" : "rbs", str, fname_out, algo, &tmp);
 		if (res != KT_OK) goto cleanup;
 	}
 
