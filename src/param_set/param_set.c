@@ -1754,7 +1754,6 @@ int PARAM_SET_parseCMD(PARAM_SET *set, int argc, char **argv, const char *source
 	int token_no_param_break = 0;
 	int value_saturation_break = 0;
 	int last_token_brake = 0;
-	int last_token_type = 0;
 	PARAM *opend_parameter = NULL;
 	size_t value_counter = 0;
 	COLLECTORS *collector = NULL;
@@ -1782,7 +1781,6 @@ int PARAM_SET_parseCMD(PARAM_SET *set, int argc, char **argv, const char *source
 		 * Analyze the tokens.
 		*/
 		if (!COLLECTORS_isParsingClosed(collector)) {
-			last_token_type = token_type;
 			res = get_parameter_from_token(set, token, &token_type, &tmp_parameter);
 			if (res != PST_OK) goto cleanup;
 
@@ -1854,7 +1852,6 @@ int PARAM_SET_parseCMD(PARAM_SET *set, int argc, char **argv, const char *source
 			if (COLLECTORS_disableParsing(collector, token_type)) {
 				dpgprint("--------------PARSING CLOSED %X\n", token_type );
 				token_type = 0;
-				last_token_type = 0;
 				continue;
 			}
 

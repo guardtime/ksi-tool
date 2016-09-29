@@ -88,7 +88,6 @@ int sign_run(int argc, char** argv, char **envp) {
 	SMART_FILE *logfile = NULL;
 	SIGNING_AGGR_ROUND **aggr_rounds = NULL;
 	int d = 0;
-	int dump = 0;
 	size_t max_tree_input = 0;
 	size_t rounds = 0;
 
@@ -116,7 +115,6 @@ int sign_run(int argc, char** argv, char **envp) {
 	if (res != KT_OK) goto cleanup;
 
 	d = PARAM_SET_isSetByName(set, "d");
-	dump = PARAM_SET_isSetByName(set, "dump");
 
 	res = check_pipe_errors(set, err);
 	if (res != KT_OK) goto cleanup;
@@ -1121,11 +1119,9 @@ int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_A
 			char real_output_name[1024] = "";
 			size_t real_out_name_size = 0;
 			KSI_DataHash *hsh = NULL;
-			char *original_file_name = NULL;
 			const char *mode = NULL;
 
 			hsh = aggr_round[i]->hash_values[n];
-			original_file_name = aggr_round[i]->fname[n];
 
 			res = KSI_MultiSignature_get(aggr_round[i]->signatures, hsh, &sig);
 			if (res != KSI_OK) goto cleanup;

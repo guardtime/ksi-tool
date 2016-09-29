@@ -249,14 +249,12 @@ int extract_OctetString(void *extra, const char* str, void** obj) {
 	void **extra_array = (void**)extra;
 	COMPOSITE *comp = NULL;
 	KSI_CTX *ctx = NULL;
-	ERR_TRCKR *err = NULL;
 	KSI_OctetString *tmp = NULL;
 	unsigned char binary[0xffff];
 	size_t binary_len = 0;
 
 	comp = (COMPOSITE*)extra_array[1];
 	ctx = comp->ctx;
-	err = comp->err;
 
 	res = hex_string_to_bin(str, binary, sizeof(binary), &binary_len);
 	if (res != KT_OK && res != KT_INDEX_OVF) goto cleanup;
