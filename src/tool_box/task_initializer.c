@@ -112,7 +112,7 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 	int res;
 	PARAM_SET *conf_env = NULL;
 	PARAM_SET *conf_file = NULL;
-	char buf[1024];
+	char buf[0xffff];
 	char *conf_file_name = NULL;
 
 	res = CONF_createSet(&conf_env);

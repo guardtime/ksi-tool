@@ -276,7 +276,7 @@ cleanup:
 }
 
 char *CONF_errorsToString(PARAM_SET *set, const char *prefix, char *buf, size_t buf_len) {
-	char tmp[4096];
+	char tmp[0xffff];
 	size_t count = 0;
 
 	if (set == NULL || buf == NULL || buf_len == 0) return NULL;

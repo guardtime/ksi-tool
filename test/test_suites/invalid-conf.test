@@ -45,3 +45,64 @@ EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-syntax-error.cfg
 (.*Syntax error at line.*)(.*10.*)(.*plah 2.*)
 (.*Syntax error at line.*)(.*11.*)(.*plah 3.*)/
 >>>= 16
+
+# Conf with flags valid on command-line but do not belong to conf 1.
+EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-flags-valid-on-cmd-inside-conf-1.cfg
+>>>2 /(.*d of.*)(.*sign.*)
+(.*d of.*)(.*sign.*)
+(.*d of.*)(.*sign.*)
+(.*d of.*)(.*sign.*)
+(.*d of.*)(.*i.*)
+(.*d of.*)(.*i.*)
+(.*d of.*)(.*input.*)
+(.*d of.*)(.*input.*)
+(.*d of.*)(.*input.*)
+(.*d of.*)(.*o.*)
+(.*d of.*)(.*data-out.*)
+.*/
+>>>= 16
+EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-flags-valid-on-cmd-inside-conf-1.cfg
+>>>2 /(d of.*)(.*d.*)
+(.*d of.*)(.*d.*)
+(.*d of.*)(.*d.*)
+(.*d of.*)(.*d.*)
+(.*d of.*)(.*d.*)
+(.*d of.*)(.*dump.*)
+(.*d of.*)(.*dump.*)
+(.*d of.*)(.*dump.*)
+(.*d of.*)(.*log.*)
+(.*d of.*)(.*log.*)
+(.*d of.*)(.*log.*)
+(.*d of.*)(.*conf.*)
+(.*d of.*)(.*conf.*)
+(.*d of.*)(.*help.*)
+(.*d of.*)(.*prev-leaf.*)/
+>>>= 16
+
+EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-flags-valid-on-cmd-inside-conf-2.cfg
+>>>2 /(d of.*)(.*mdata.*)
+(.*d of.*)(.*mask.*)
+.*
+.*
+(.*d of.*)(.*show-progress.*)
+(.*d of.*)(.*x.*)
+.*
+.*
+.*
+(.*d of.*)(.*pub-str.*)
+.*
+(.*d of.*)(.*ver-cal.*)
+.*
+.*
+(.*d of.*)(.*ver-key.*)
+.*
+(.*d of.*)(.*ver-pub.*)/
+>>>= 16
+
+EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-flags-valid-on-cmd-inside-conf-3.cfg
+>>>2 /(Unknown.*)(.*H.*)
+(.*Unknown.*)(.*h.*)
+(.*Unknown.*)(.*dump-last-leaf.*)
+(.*Unknown.*)(.*T.*)
+(.*Unknown.*)(.*ver-int.*)/
+>>>= 16
