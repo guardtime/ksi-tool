@@ -61,6 +61,7 @@ typedef struct SIGNING_AGGR_ROUND_st {
 
 	 /* A list of file names to be used to save the signature file. */
 	char **fname;
+	char **fname_out;
 
 	 /* Count of hash values used in aggreation round. */
 	int hash_count_max;
@@ -74,6 +75,7 @@ int KT_SIGN_getAggregationRoundsNeeded(PARAM_SET *set, ERR_TRCKR *err, size_t ma
 int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int max_tree_inputs, int rounds, SIGNING_AGGR_ROUND ***aggr_rounds_record);
 int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_AGGR_ROUND **aggr_round);
 int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int seq_offset, KSI_MetaData **mdata);
+int KT_SIGN_dump(PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND **aggr_round);
 
 int sign_run(int argc, char** argv, char **envp) {
 	int res;
@@ -84,7 +86,6 @@ int sign_run(int argc, char** argv, char **envp) {
 	KSI_CTX *ksi = NULL;
 	ERR_TRCKR *err = NULL;
 	SMART_FILE *logfile = NULL;
-	KSI_Signature *sig = NULL;
 	SIGNING_AGGR_ROUND **aggr_rounds = NULL;
 	int d = 0;
 	int dump = 0;
@@ -126,10 +127,6 @@ int sign_run(int argc, char** argv, char **envp) {
 	res = check_io_naming_and_type_errors(set, err);
 	if (res != KT_OK) goto cleanup;
 
-	if (PARAM_SET_isSetByName(set, "show-progress")) {
-		print_enable(PRINT_DEBUG);
-	}
-
 	/**
 	 * If everything OK, run the task.
 	 */
@@ -148,14 +145,8 @@ int sign_run(int argc, char** argv, char **envp) {
 	/**
 	 * If signature was created without errors print some info on demand.
 	 */
-	if (dump) {
-		print_result("\n");
-
-		res = KSI_MultiSignature_get(aggr_rounds[0]->signatures, aggr_rounds[0]->hash_values[0], &sig);
-		ERR_CATCH_MSG(err, res, "Error: Unable to get signature to dump its content.");
-
-		OBJPRINT_signatureDump(sig, print_result);
-	}
+	res = KT_SIGN_dump(set, err, aggr_rounds);
+	if (res != KT_OK) goto cleanup;
 
 cleanup:
 	print_progressResult(res);
@@ -175,7 +166,6 @@ cleanup:
 	SIGNING_AGGR_ROUND_ARRAY_free(aggr_rounds);
 
 	SMART_FILE_close(logfile);
-	KSI_Signature_free(sig);
 	TASK_SET_free(task_set);
 	PARAM_SET_free(set);
 	ERR_TRCKR_free(err);
@@ -670,6 +660,14 @@ void SIGNING_AGGR_ROUND_free(SIGNING_AGGR_ROUND *obj) {
 	KSI_MultiSignature_free(obj->signatures);
 	KSI_free(obj->fname);
 
+	if (obj->fname_out != NULL) {
+		i = 0;
+		while (i < obj->hash_count && obj->fname_out[i] != NULL) {
+			KSI_free(obj->fname_out[i++]);
+		}
+		KSI_free(obj->fname_out);
+	}
+
 	if (obj->hash_values != NULL) {
 		i = 0;
 		while (i < obj->hash_count && obj->hash_values[i] != NULL) {
@@ -699,6 +697,7 @@ int SIGNING_AGGR_ROUND_new(int max_leaves, SIGNING_AGGR_ROUND **new) {
 	SIGNING_AGGR_ROUND *tmp = NULL;
 	KSI_DataHash **tmp_hash = NULL;
 	char **tmp_fname = NULL;
+	char **tmp_fname_out = NULL;
 
 	if (new == NULL || max_leaves < 1) {
 		res = KT_INVALID_ARGUMENT;
@@ -716,6 +715,7 @@ int SIGNING_AGGR_ROUND_new(int max_leaves, SIGNING_AGGR_ROUND **new) {
 	tmp->hash_values = NULL;
 	tmp->fname = NULL;
 	tmp->signatures = NULL;
+	tmp->fname_out = NULL;
 
 	tmp_hash = (KSI_DataHash**)KSI_calloc(max_leaves, sizeof(KSI_DataHash*));
 	if (tmp_hash == NULL) {
@@ -729,11 +729,19 @@ int SIGNING_AGGR_ROUND_new(int max_leaves, SIGNING_AGGR_ROUND **new) {
 		goto cleanup;
 	}
 
+	tmp_fname_out = (char**)KSI_calloc(max_leaves, sizeof(char*));
+	if (tmp_fname == NULL) {
+		res = KT_OUT_OF_MEMORY;
+		goto cleanup;
+	}
+
 	tmp->hash_values = tmp_hash;
 	tmp->fname = tmp_fname;
+	tmp->fname_out = tmp_fname_out;
 	*new = tmp;
 
 	tmp = NULL;
+	tmp_fname_out = NULL;
 	tmp_fname = NULL;
 	tmp_hash = NULL;
 	res = KT_OK;
@@ -741,6 +749,7 @@ int SIGNING_AGGR_ROUND_new(int max_leaves, SIGNING_AGGR_ROUND **new) {
 cleanup:
 
 	SIGNING_AGGR_ROUND_free(tmp);
+	KSI_free(tmp_fname_out);
 	KSI_free(tmp_fname);
 	KSI_free(tmp_hash);
 
@@ -877,8 +886,6 @@ int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int max
 	aggr_round[rounds] = NULL;
 
 	if (rounds == 1 && in_count == 1 && !isMasking && !isMetadata) tree_size_1 = 1;
-
-//	printf("IV: %s", KSI_OctetString_toString(mask_iv, ':', buf, sizeof(buf)));
 
 	/**
 	 * Perform local aggregation.
@@ -1082,6 +1089,7 @@ int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_A
 	int prgrs = 0;
 	int divider = 0;
 	KSI_Signature *sig = NULL;
+	char *real_output_name_copy = NULL;
 
 	if (set == NULL || err == NULL || aggr_round == NULL) {
 		res = KT_INVALID_ARGUMENT;
@@ -1132,16 +1140,74 @@ int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_A
 
 			res = KSI_OBJ_saveSignature(err, ksi, sig, mode, save_to_file, real_output_name, sizeof(real_output_name));
 			ERR_CATCH_MSG(err, res, "Error: Unable to save signature.");
+
+			real_out_name_size = sizeof(char) * (strlen(real_output_name) + 1);
+
+			real_output_name_copy = (char*)KSI_malloc(real_out_name_size);
+			if (real_output_name_copy == NULL) {
+				res = KT_OUT_OF_MEMORY;
+				goto cleanup;
+			}
+
+			PST_strncpy(real_output_name_copy, real_output_name, real_out_name_size);
+			aggr_round[i]->fname_out[n] = real_output_name_copy;
 			if (!prgrs) print_debug("Signature saved to '%s'.\n", real_output_name);
 
 			KSI_Signature_free(sig);
 			sig = NULL;
+			real_output_name_copy = NULL;
 
 			count++;
 			if (prgrs && (count % divider == 0 || count + 1 >= in_count)) {
 				PROGRESS_BAR_display((count + 1) * 100 / in_count);
 			}
 
+		}
+		i++;
+	}
+	if (i > 0) print_debug("\n");
+
+	res = KT_OK;
+
+cleanup:
+
+	KSI_free(real_output_name_copy);
+	KSI_Signature_free(sig);
+
+	return res;
+}
+
+int KT_SIGN_dump(PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND **aggr_round) {
+	int res = PST_UNKNOWN_ERROR;
+	int i = 0;
+	int n = 0;
+	int in_count = 0;
+	int dump = 0;
+	KSI_Signature *sig = NULL;
+
+	if (set == NULL || err == NULL || aggr_round == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	res = PARAM_SET_getValueCount(set, "i,input", NULL, PST_PRIORITY_NONE, &in_count);
+	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
+
+	dump = PARAM_SET_isSetByName(set, "dump");
+
+	while (dump && aggr_round[i] != NULL) {
+		if (in_count > 1) print_result("Signatures from aggregation round: %i\n\n", i);
+
+		for (n = 0; n < aggr_round[i]->hash_count; n++) {
+			res = KSI_MultiSignature_get(aggr_round[i]->signatures, aggr_round[i]->hash_values[n], &sig);
+			ERR_CATCH_MSG(err, res, "Error: Unable to get signature to dump its content.");
+
+			print_result("Document : '%s'\n", aggr_round[i]->fname[n]);
+			print_result("Signature: '%s'\n", aggr_round[i]->fname_out[n]);
+			OBJPRINT_signatureDump(sig, print_result);
+			KSI_Signature_free(sig);
+			sig = NULL;
+			print_result("\n\n");
 		}
 		i++;
 	}

@@ -16,6 +16,7 @@
 # Guardtime, Inc., and no license to trademarks is granted; Guardtime
 # reserves and retains all trademark rights.
 
+
 # Add just a single file without the metadata and masking and save the output to directory.
 EXECUTABLE sign --conf test/test.cfg -d -i test/resource/file/ebcd -o test/out/sign
 >>>2 /(.*test\/out\/sign\/ebcd.ksig.*)/
