@@ -145,10 +145,10 @@ EXECUTABLE sign --conf test/test.cfg --max-lvl 3 --max-aggr-rounds 3 test/resour
 (.*[#*].*)
 (.*Signing the local aggregation tree 1\/2.*)(.*ok.*)
 .*
-(.*Signing 2 files in round 2\/2.*)
+(.*Signing 1 files in round 2\/2.*)
 (.*[#*].*)
 (.*Signing the local aggregation tree 2\/2.*)(.*ok.*)
 .*
-(.*Saving 10 files.*)
+(.*Saving 9 files.*)
 (.*[#*].*)/
 >>>= 0
