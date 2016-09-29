@@ -1047,7 +1047,7 @@ int PARAM_SET_getObjExtended(PARAM_SET *set, const char *name, const char *sourc
 	 * Obj must be feed directly to the getter function, asi it enables to manipulate
 	 * the data pointed by obj.
 	 */
-	res = PARAM_getObject(param, source, priority, at, extras, obj);
+	res = PARAM_getObject(param, source, priority, virtual_at, extras, obj);
 	if (res != PST_OK) goto cleanup;
 
 	res = PST_OK;
