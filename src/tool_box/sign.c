@@ -41,6 +41,7 @@
 #include "param_set/parameter.h"
 #include "../tool_box.h"
 #include "param_set/param_set_obj_impl.h"
+#include "param_set/strn.h"
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 //static char* get_output_file_name_if_not_defined(PARAM_SET *set, ERR_TRCKR *err, int i, char *buf, size_t buf_len);
 static char* get_output_file_name(PARAM_SET *set, ERR_TRCKR *err, int how_is_saved, int i, char *buf, size_t buf_len);
@@ -1104,10 +1105,10 @@ int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_A
 		for (n = 0; n < aggr_round[i]->hash_count; n++) {
 			char save_to_file[1024] = "";
 			char real_output_name[1024] = "";
+			size_t real_out_name_size = 0;
 			KSI_DataHash *hsh = NULL;
 			char *original_file_name = NULL;
 			const char *mode = NULL;
-
 
 			hsh = aggr_round[i]->hash_values[n];
 			original_file_name = aggr_round[i]->fname[n];
@@ -1115,7 +1116,7 @@ int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_A
 			res = KSI_MultiSignature_get(aggr_round[i]->signatures, hsh, &sig);
 			if (res != KSI_OK) goto cleanup;
 
-			if (get_output_file_name(set, err, how_to_save, n, save_to_file, sizeof(save_to_file)) == NULL) {
+			if (get_output_file_name(set, err, how_to_save, count, save_to_file, sizeof(save_to_file)) == NULL) {
 				ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Unexpected error. Unable to get the file name to save the signature to.");
 				goto cleanup;
 			}

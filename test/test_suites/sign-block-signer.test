@@ -130,3 +130,10 @@ EXECUTABLE verify --conf test/test.cfg --ver-int -f test/resource/file/- -i test
 EXECUTABLE verify --conf test/test.cfg --ver-int -f test/resource/file/--odd-file -i test/out/sign/--odd-file.ksig
 >>>= 0
 
+# Sign files in multiple rounds, no masking, no metadata.
+EXECUTABLE sign --conf test/test.cfg -d --max-lvl 1 --max-aggr-rounds 5 -i test/resource/file/a* -i test/resource/file/f* -o test/out/sign
+>>>2 /(.*saved to.*)(.*sign\/abcd_1.ksig.*)
+(.*saved to.*)(.*sign\/abcx_1.ksig.*)
+(.*saved to.*)(.*sign\/file_max_tlv_size.ksig.*)
+(.*saved to.*)(.*sign\/file_max_tlv_size_p1.ksig.*)/
+>>>= 0
