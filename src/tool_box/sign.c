@@ -216,7 +216,8 @@ char *sign_help_toString(char*buf, size_t len) {
 		"             Use '-' as file name to redirect data being hashed to stdout.\n"
 
 		" --max-lvl <int>\n"
-		"           - Set the maximum depth of the local aggregation tree (default 0).\n"
+		"           - Set the maximum depth (0 - 255) of the local aggregation tree\n"
+		"             (default 0).\n"
 		" --max-aggr-rounds <int>\n"
 		"           - Set the upper limit of local aggregation rounds that may be\n"
 		"             performed (default 1).\n"
@@ -253,7 +254,7 @@ char *sign_help_toString(char*buf, size_t len) {
 		"             and pre-calculated hash imprints (SHA-256:7647c6...) are all\n"
 		"             interpreted as regular files).\n"
 		" -d        - Print detailed information about processes and errors to stderr.\n"
-		" --dump    - Dump signature created in human-readable format to stdout.\n"
+		" --dump    - Dump signature(s) created in human-readable format to stdout.\n"
 		" --show-progress\n"
 		"           - Show progress bar. Is only valid with -d.\n"
 		" --conf <file>\n"

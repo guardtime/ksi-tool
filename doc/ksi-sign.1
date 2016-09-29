@@ -51,7 +51,7 @@ Save signed data to file. Use when signing a stream. Use '-' as file name to red
 .\"
 .TP
 \fB--max-lvl \fIint\fR
-Set the maximum depth of the local aggregation tree (default 0). It must be noted that when using masking (\fB--mask\fR) or embedding the metadata (\fB--mdata\fR) both will reduce the maximum count of document hash values that could be singed during a single local aggregation round. To enable signing in multiple local aggregation rounds see \fB--max-aggr-rounds\fR.
+Set the maximum depth (0 - 255) of the local aggregation tree (default 0). It must be noted that when using masking (\fB--mask\fR) or embedding the metadata (\fB--mdata\fR) both will reduce the maximum count of document hash values that could be singed during a single local aggregation round. To enable signing in multiple local aggregation rounds see \fB--max-aggr-rounds\fR.
 .\"
 .TP
 \fB--max-aggr-rounds \fIint\fR
@@ -101,7 +101,7 @@ Print detailed information about processes and errors to \fIstderr\fR.
 .\"
 .TP
 \fB--dump\fR
-Dump signature created in human-readable format to \fIstdout\fR.
+Dump signature(s) created in human-readable format to \fIstdout\fR.
 .\"
 .TP
 \fB--show-progress\fR

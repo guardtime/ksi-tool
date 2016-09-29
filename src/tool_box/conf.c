@@ -112,7 +112,7 @@ char *conf_help_toString(char *buf, size_t len) {
 		"  long parameters have prefix --. If some parameter values contain whitespace\n"
 		"  characters double quote marks (\") must be used to wrap the entire value. If double\n"
 		"  quote mark or backslash have to be used inside the value part an escape character\n"
-		"  (\\) must be typed before the charcater(\\\" or \\\\). If configuration option with\n"
+		"  (\\) must be typed before the character(\\\" or \\\\). If configuration option with\n"
 		"  unknown or invalid key-value pairs is used, an error is generated.\n\n"
 
 		"  In configuration file each key-value pair must be placed on a single line. Start\n"
@@ -142,7 +142,8 @@ char *conf_help_toString(char *buf, size_t len) {
 		" -W <dir>  - specify an OpenSSL-style trust store directory for publications file verification.\n"
 
 		" --max-lvl <int>\n"
-		"           - Set the maximum depth of the local aggregation tree (default 0).\n"
+		"           - Set the maximum depth (0 - 255) of the local aggregation tree\n"
+		"             (default 0).\n"
 		" --max-aggr-rounds <int>\n"
 		"           - Set the upper limit of local aggregation rounds that may be\n"
 		"             performed (default 1).\n"

@@ -49,6 +49,30 @@ Username for extending service.
 HMAC key for extending service.
 .\"
 .TP
+\fB--max-lvl \fIint\fR
+Set the maximum depth (0 - 255) of the local aggregation tree (default 0). It must be noted that when using masking (\fB--mask\fR) or embedding the metadata (\fB--mdata\fR) both will reduce the maximum count of document hash values that could be singed during a single local aggregation round. To enable signing in multiple local aggregation rounds see \fB--max-aggr-rounds\fR.
+.\"
+.TP
+\fB--max-aggr-rounds \fIint\fR
+Set the upper limit of local aggregation rounds that may be performed (default 1).
+.\"
+.TP
+\fB--mdata-cli-id \fIstr\fR
+Specify client id as a string that will be embedded into the signature as metadata. It is mandatory part of the metadata.
+.\"
+.TP
+\fB--mdata-mac-id \fIstr\fR
+Specify machine id as a string that will be embedded into the signature as metadata. It is optional part of metadata.
+.\"
+.TP
+\fB--mdata-sqn-nr \fR[\fIint\fR]
+Specify incremental (sequence number is incremented in every aggregation round) sequence number of the request as integer that will be embedded into the signature as metadata. If the parameter is given without the argument 0 is used. It is optional part of metadata.
+.\"
+.TP
+\fB--mdata-req-tm\fR
+Embed request time extracted from the machine clock into the signature as metadata. It is optional part of metadata.
+.\"
+.TP
 \fB-P \fIURL\fR
 Publications file URL  (or file with URI scheme 'file://').
 .\"
