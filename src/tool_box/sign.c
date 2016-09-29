@@ -254,6 +254,8 @@ char *sign_help_toString(char*buf, size_t len) {
 		"             interpreted as regular files).\n"
 		" -d        - Print detailed information about processes and errors to stderr.\n"
 		" --dump    - Dump signature created in human-readable format to stdout.\n"
+		" --show-progress\n"
+		"           - Show progress bar. Is only valid with -d.\n"
 		" --conf <file>\n"
 		"           - Read configuration options from given file. It must be noted\n"
 		"             that configuration options given explicitly on command line will\n"
@@ -945,24 +947,27 @@ int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int max
 		}
 
 
+		if (prgrs) print_debug("\n");
+
 		if (tree_size_1) print_progressDesc(d, "Creating signature from hash... ");
-		print_progressDesc(d, "\nSigning the local aggregation tree %d/%d... ", r + 1, rounds);
+		else print_progressDesc(d, "Signing the local aggregation tree %d/%d... ", r + 1, rounds);
 
 		res = KSITOOL_BlockSigner_close(err, ctx, bs, &(aggr_round[r]->signatures));
 		if (tree_size_1) {ERR_CATCH_MSG(err, res, "Error: Unable to create signature.");}
 		else {ERR_CATCH_MSG(err, res, "Error: Unable to complete and sign the local aggregation tree.");}
 
-
 		print_progressResult(res);
+
+		if (!tree_size_1 || (tree_size_1 && prgrs)) print_debug("\n");
 		KSI_BlockSigner_free(bs);
 		bs = NULL;
 		KSI_MetaData_free(mdata);
 		mdata = NULL;
 	}
 
-	if (prgrs) {
-		print_debug("\n", in_count);
-	}
+//	if (prgrs) {
+//		print_debug("\n", in_count);
+//	}
 
 	*aggr_rounds_record = aggr_round;
 	aggr_round = NULL;

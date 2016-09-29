@@ -60,10 +60,10 @@ EXECUTABLE sign --conf test/test.cfg -d --max-lvl 3 --mdata-cli-id "My Name" --m
 >>>2 /(.*Add document hash 1\/2 and metadata with enabled masking to the local aggregation tree.*)(.*ok.*)
 .*
 (.*Add document hash 2\/2 and metadata with enabled masking to the local aggregation tree.*)(.*ok.*)
-.*
 (.*Signing the local aggregation tree 1\/1.*)
-(.*saved to.*)(.*abcd.*)
-(.*saved to.*)(.*abcx.*)/
+.*
+(.*saved t.*)(.*abcd.*)
+(.*saved t.*)(.*abcx.*)/
 >>>= 0
 
 # Verify if metadata exists.
@@ -131,10 +131,24 @@ EXECUTABLE verify --conf test/test.cfg --ver-int -f test/resource/file/- -i test
 EXECUTABLE verify --conf test/test.cfg --ver-int -f test/resource/file/--odd-file -i test/out/sign/--odd-file.ksig
 >>>= 0
 
-# Sign files in multiple rounds, no masking, no metadata.
+# Sign files in multiple rounds, no masking, no metadata. Check if file names are correct.
 EXECUTABLE sign --conf test/test.cfg -d --max-lvl 1 --max-aggr-rounds 5 -i test/resource/file/a* -i test/resource/file/f* -o test/out/sign
 >>>2 /(.*saved to.*)(.*sign\/abcd_1.ksig.*)
 (.*saved to.*)(.*sign\/abcx_1.ksig.*)
 (.*saved to.*)(.*sign\/file_max_tlv_size.ksig.*)
 (.*saved to.*)(.*sign\/file_max_tlv_size_p1.ksig.*)/
+>>>= 0
+
+# Sign files in multiple rounds, no masking, no metadata. Check if file names are correct.
+EXECUTABLE sign --conf test/test.cfg --max-lvl 3 --max-aggr-rounds 3 test/resource/file/* -o test/out/sign -d --show-progress
+>>>2 /(.*Signing 8 files in round 1\/2.*)
+(.*[#*].*)
+(.*Signing the local aggregation tree 1\/2.*)(.*ok.*)
+.*
+(.*Signing 2 files in round 2\/2.*)
+(.*[#*].*)
+(.*Signing the local aggregation tree 2\/2.*)(.*ok.*)
+.*
+(.*Saving 10 files.*)
+(.*[#*].*)/
 >>>= 0
