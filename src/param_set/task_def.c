@@ -475,7 +475,7 @@ char *TASK_DEFINITION_howToRepiar_toString(TASK_DEFINITION *def, PARAM_SET *set,
 		pName = def->atleast_one;
 		while((pName = category_extract_name(pName, name_buffer, sizeof(name_buffer), NULL)) != NULL){
 			if(!err_printed){
-				count += PST_snprintf(buf + count, buf_len - count, "%sYou have to define at least one the flag(s) '%s%s'",
+				count += PST_snprintf(buf + count, buf_len - count, "%sYou have to define at least one of the flag(s) '%s%s'",
 						pref,
 						strlen(name_buffer)>1 ? "--" : "-",
 						name_buffer);
