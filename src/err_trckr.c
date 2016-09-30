@@ -122,3 +122,8 @@ void ERR_TRCKR_printExtendedErrors(ERR_TRCKR *err) {
 
 	return;
 }
+
+int ERR_TRCKR_getErrCount(ERR_TRCKR *err) {
+	if (err == NULL) return 0;
+	else return err->count;
+}
