@@ -55,7 +55,7 @@ typedef struct SMART_FILE_st SMART_FILE;
 
 /**
  * Smart file object that is used to open read and write files and streams. If user
- * wants to read from stdin or write to stdout file name '-' must be used with mode
+ * wants to read from stdin or write to stdout, file name '-' must be used with mode
  * r or w accordingly together with s.
  *
  * Possible file open modes:

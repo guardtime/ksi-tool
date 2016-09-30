@@ -81,7 +81,7 @@ void PARAM_VAL_free(PARAM_VAL *rootValue);
 int PARAM_VAL_getElement(PARAM_VAL *rootValue, const char* source, int priority, int at, PARAM_VAL** val);
 
 /**
- * This function pops a element out of the PARAM_VAL linked list. After successful
+ * This function pops an element out of the PARAM_VAL linked list. After successful
  * poping rootValue is changed to the first element in the linked list.
  * THIS IS SOMEHOW ODD BEHAVIOUR. TODO FIX.
  * \param	rootValue	The pointer to pointer of the first PARAM_VAL link in the linked list.

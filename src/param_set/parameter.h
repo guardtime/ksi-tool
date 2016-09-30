@@ -160,7 +160,7 @@ enum PARAM_PARS_OPTIONS_enum {
 	PST_PRSCMD_FORMAT_CONTROL_ONLY_FOR_LAST_HIGHST_PRIORITY_VALUE = 0x2000,
 
 	/**
-	 * If set, searches for the wildcard characters (WC) * and ?. If found the
+	 * If set, searches for the wildcard characters (WC) * and ?. If found, the
 	 * token containing the WC is removed and replaced with the matching tokens.
 	 * The WC expanding is performed by WC expander function that MUST BE configured.
 	 * See \ref PARAM_expandWildcard, \ref PARAM_setWildcardExpander and \ref
@@ -395,7 +395,7 @@ char* PARAM_constraintErrorToString(const PARAM *param, const char *prefix, char
  * setting PST_PRSCMD_EXPAND_WILDCARD for the parameter and calling
  * PARAM_SET_parseCMD.
  *
- * \param obj - Parameter OBJ where all values as examined for WC and if found replaced with expanded values.
+ * \param obj - Parameter OBJ where all values are examined for WC and if found replaced with expanded values.
  * \param ctx - Additional context for expanding the WC.
  * \param expand_wildcard - A function that expands the strings containing WC.
  * \return PST_OK if successful, error code otherwise.
@@ -405,7 +405,7 @@ int PARAM_setWildcardExpander(PARAM *obj, void *ctx, int (*expand_wildcard)(PARA
 /**
  * Expand the values containing wildcard characters (WC). Before using WC expander
  * function must be configured. See \ref PARAM_setWildcardExpander.
- * \param obj - Parameter OBJ where all values as examined for WC and if found replaced with expanded values.
+ * \param obj - Parameter OBJ where all values are examined for WC and if found replaced with expanded values.
  * \param The count of new values inserted.
  * \return PST_OK if successful, error code otherwise.
  */

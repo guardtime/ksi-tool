@@ -57,11 +57,41 @@ struct PARAM_st{
 	int argCount;					/* Count of all arguments in chain. */
 
 	PARAM_VAL *arg;		/* Linked list of parameter values. */
-
-	int (*extractObject)(void *extra, const char*, void**);		/* Function pointer to convert or repair the value before format and content check. */
-	int (*convert)(const char*, char*, unsigned);	/* Function pointer to convert or repair the value before format and content check. */
-	int (*controlFormat)(const char*);				/* Function pointer for format control. */
-	int (*controlContent)(const char*);				/* Function pointer for content control. */
+	
+	/**
+	 * A function to extract object from the parameter.
+	 * int extractObject(void *extra, const char *str, void **obj)
+	 * extra - optional pointer to data structure.
+	 * str - c-string value that belongs to PARAM_VAL object.
+	 * obj - pointer to receiving pointer to desired object.
+	 * Returns PST_OK if successful, error code otherwise. 
+	 */
+	int (*extractObject)(void *extra, const char *str, void **obj);
+	
+	/**
+	 * Function convert takes input as raw parameter, followed by a buffer and its size.
+	 * str - c-string value that belongs to PARAM_VAL object.
+	 * buf - a buffer that will contain value after conversion.
+	 * buf_len - the size of the buffer.
+	 * Returns 1 if conversion successful, 0 otherwise.
+	 */
+	int (*convert)(const char *str, char *buf, unsigned buf_len);
+	
+	/**
+	 * Function \c controlFormat takes input as raw parameter and performs format
+	 * check.
+	 * str - c-string value that belongs to PARAM_VAL object.
+	 * Returns 0 if format ok, error code otherwise.
+	 */
+	int (*controlFormat)(const char *str);
+	
+	/**
+	 * Function \c controlContent takes input as raw parameter and performs content
+	 * check.
+	 * str - c-string value that belongs to PARAM_VAL object.
+	 * Returns 0 if content ok, error code otherwise.
+	 */
+	int (*controlContent)(const char *str);
 	
 	/**
 	 * A function to expand tokens that contain wildcard character (WC) to array of
