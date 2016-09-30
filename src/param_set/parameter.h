@@ -83,7 +83,7 @@ enum PARAM_PARS_OPTIONS_enum {
 	 * If Used with \ref PST_PRSCMD_HAS_MULTIPLE_INSTANCES and some values are
 	 * found parameter is closed, if not NULL is set.
 	 * If PST_PRSCMD_COLLECT_LOOSE_PERMIT_END_OF_COMMANDS is set -- will end the
-	 * parsing.
+	 * parsing as is potential parameter.
 	 */
 	PST_PRSCMD_BREAK_WITH_POTENTIAL_PARAMETER = 0x0010,
 
@@ -109,7 +109,10 @@ enum PARAM_PARS_OPTIONS_enum {
 	PST_PRSCMD_DEFAULT = 0x0001 | PST_PRSCMD_BREAK_WITH_POTENTIAL_PARAMETER,
 	
 	/**
-	 * Collect all elements that has no dash prefix.
+	 * Collect all elements that are not bind with another flag and that do not
+	 * look like potential parameters. It must be noted that - and -- are still
+	 * interpreted as values. To collect everything that do not match with existing
+	 * parameter use it together with PST_PRSCMD_COLLECT_LOOSE_FLAGS;
 	 */
 	PST_PRSCMD_COLLECT_LOOSE_VALUES = 0x0040,
 	
@@ -119,17 +122,18 @@ enum PARAM_PARS_OPTIONS_enum {
 	PST_PRSCMD_COLLECT_LOOSE_FLAGS = 0x0080,
 	
 	/**
-	 * Collect all loose dashes.
+	 * Collect everything after the parsing is closed. See \c PST_PRSCMD_CLOSE_PARSING
+	 * to see how to enable the closing of command line parsing. 
 	 */
-	PST_PRSCMD_COLLECT_LOOSE_DASHES = 0x0100,
+	PST_PRSCMD_COLLECT_WHEN_PARSING_IS_CLOSED = 0x0100,
 	
 	
 	/**
 	 * Enable loose element collector to stop command line parsing and redirect
 	 * all tokens to parameter pointed with loose element flag. Parameter -- is used
-	 * to mark the end of commands.
+	 * to mark the end of commands. It must be used with PST_PRSCMD_COLLECT_WHEN_PARSING_IS_CLOSED.
 	 */
-	PST_PRSCMD_COLLECT_LOOSE_PERMIT_END_OF_COMMANDS = 0x0200,
+	PST_PRSCMD_CLOSE_PARSING = 0x0200,
 	
 	/**
 	 * Collect has lower priority.
@@ -154,6 +158,16 @@ enum PARAM_PARS_OPTIONS_enum {
 	 * of the given flag flag.
 	 */
 	PST_PRSCMD_FORMAT_CONTROL_ONLY_FOR_LAST_HIGHST_PRIORITY_VALUE = 0x2000,
+
+	/**
+	 * If set, searches for the wildcard characters (WC) * and ?. If found, the
+	 * token containing the WC is removed and replaced with the matching tokens.
+	 * The WC expanding is performed by WC expander function that MUST BE configured.
+	 * See \ref PARAM_expandWildcard, \ref PARAM_setWildcardExpander and \ref
+	 * PARAM_SET_wildcardExpander for more details how to specify the implementation.
+	 * If not implemented parsing fails.
+	 */
+	PST_PRSCMD_EXPAND_WILDCARD = 0x4000,
 	
 	PST_PRSCMD_COLLECT_LIMITER_ON       = 0x00008000,
 	PST_PRSCMD_COLLECT_LIMITER_1X       = 0x00010000,
@@ -234,13 +248,13 @@ int PARAM_setParseOption(PARAM *obj, int option);
  * extractor allocates memory it must be freed by the user. As PARAM_getObject value
  * pointer is given directly to the extractor it is possible to initialize existing
  * objects or create a new ones. It all depends how the extractor method is implemented.
- * 
+ *
  * int extractObject(void *extra, const char *str, void **obj)
  * extra - optional pointer to data structure.
  * str - c-string value that belongs to PARAM_VAL object.
  * obj - pointer to receiving pointer to desired object.
  * Returns PST_OK if successful, error code otherwise.
- * 
+ *
  * \param	obj				Parameter object.
  * \param	extractObject	Object extractor.
  * \return \c PST_OK when successful, error code otherwise.
@@ -361,6 +375,43 @@ int PARAM_clearValue(PARAM *param, const char *source, int priority, int at);
 int PARAM_SET_clearValue(PARAM_SET *set, const char *names, const char *source, int priority, int at);
 
 char* PARAM_constraintErrorToString(const PARAM *param, const char *prefix, char *buf, size_t buf_len);
+
+/**
+ * A function to expand tokens that contain wildcard character (WC) to array of
+ * new values. Characters '?' and '*' are WC. Values containing WC are removed and
+ * replaced with the expanded values.
+ *
+ *
+ * int expand_wildcard(PARAM_VAL *param_value, void *ctx, int *value_shift)
+ *   param-value - Parameter that contains value string with WC in it.
+ *   ctx - additional context for the function (e.g. some string massive or database)
+ *   value_shift - exact count of values extracted.
+ *   returns: PST_OK if successful, error code otherwise.
+ *   expand_wildcard function must not remove param_value from the linked list
+ *   as it is done by higher level functions. New values must be appended right
+ *   after the param_value.
+ *
+ * The function can be activated by manual call to PARAM_expandWildcard or by
+ * setting PST_PRSCMD_EXPAND_WILDCARD for the parameter and calling
+ * PARAM_SET_parseCMD.
+ *
+ * \param obj - Parameter OBJ where all values are examined for WC and if found replaced with expanded values.
+ * \param ctx - Additional context for expanding the WC.
+ * \param expand_wildcard - A function that expands the strings containing WC.
+ * \return PST_OK if successful, error code otherwise.
+ */
+int PARAM_setWildcardExpander(PARAM *obj, void *ctx, int (*expand_wildcard)(PARAM_VAL *param_value, void *ctx, int *value_shift));
+
+/**
+ * Expand the values containing wildcard characters (WC). Before using WC expander
+ * function must be configured. See \ref PARAM_setWildcardExpander.
+ * \param obj - Parameter OBJ where all values are examined for WC and if found replaced with expanded values.
+ * \param The count of new values inserted.
+ * \return PST_OK if successful, error code otherwise.
+ */
+int PARAM_expandWildcard(PARAM *param, int *count);
+
+char* PARAM_toString(const PARAM *param, char *buf, size_t buf_len);
 
 #ifdef	__cplusplus
 }

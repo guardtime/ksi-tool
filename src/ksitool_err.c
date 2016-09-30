@@ -33,13 +33,13 @@ static int ksitool_ErrToExitcode(int error_code) {
 		case KT_OUT_OF_MEMORY:
 			return EXIT_OUT_OF_MEMORY;
 		case KT_INVALID_ARGUMENT:
+		case KT_COMPONENT_HAS_NO_IMPLEMENTATION:
+		case KT_INDEX_OVF:
+		case KT_UNKNOWN_ERROR:
 			return EXIT_FAILURE;
 		case KT_UNABLE_TO_SET_STREAM_MODE:
-			return EXIT_IO_ERROR;
 		case KT_IO_ERROR:
 			return EXIT_IO_ERROR;
-		case KT_INDEX_OVF:
-			return EXIT_FAILURE;
 		case KT_INVALID_INPUT_FORMAT:
 			return EXIT_INVALID_FORMAT;
 		case KT_UNKNOWN_HASH_ALG:
@@ -50,12 +50,12 @@ static int ksitool_ErrToExitcode(int error_code) {
 			return EXIT_NO_PRIVILEGES;
 		case KT_INVALID_CONF:
 			return EXIT_INVALID_CONF;
-		case KT_UNKNOWN_ERROR:
-			return EXIT_FAILURE;
 		case KT_KSI_SIG_VER_IMPOSSIBLE:
 			return EXIT_VERIFY_ERROR;
 		case KT_PUBFILE_HAS_NO_PUBREC_TO_EXTEND_TO:
 			return EXIT_EXTEND_ERROR;
+		case KT_AGGR_LVL_TOO_SMALL:
+			return EXIT_AGGRE_ERROR;
 		default:
 			return EXIT_FAILURE;
 	}
@@ -129,6 +129,8 @@ static const char* ksitoolErrToString(int error_code) {
 			return "Verification can't be performed.";
 		case KT_PUBFILE_HAS_NO_PUBREC_TO_EXTEND_TO:
 			return "No publication record found to extend to.";
+		case KT_AGGR_LVL_TOO_SMALL:
+			return "Local aggregation tree is too small.";
 		case KT_UNKNOWN_ERROR:
 			return "Unknown error.";
 		default:

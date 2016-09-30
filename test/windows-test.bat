@@ -74,6 +74,8 @@ test\test_suites\verify-cmd.test ^
 test\test_suites\default-conf.test ^
 test\test_suites\invalid-conf.test ^
 test\test_suites\file-name-gen.test ^
+test\test_suites\sign-block-signer.test ^
+test\test_suites\sign-block-signer-cmd.test ^
 --with=%tool% -- -j1
 set exit_code=%errorlevel%
 

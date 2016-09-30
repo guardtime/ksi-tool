@@ -17,6 +17,7 @@
  * reserves and retains all trademark rights.
  */
 
+#include "task_initializer.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,13 +33,6 @@
 #include "conf_file.h"
 #include "ksitool_err.h"
 
-enum service_info_priorities {
-	PRIORITY_KSI_CONF,
-	PRIORITY_KSI_CONF_USER,
-	PRIORITY_KSI_CONF_FILE,
-	PRIORITY_CMD,
-};
-
 static int isKSIUserInfoInsideUrl(const char *url, char *buf_u, char *buf_k, size_t buf_len);
 static int extract_user_info_from_url_if_needed(PARAM_SET *set, const char *flag_name, const char *usr_name, const char *key_name);
 
@@ -53,19 +47,10 @@ int TASK_INITIALIZER_check_analyze_report(PARAM_SET *set, TASK_SET *task_set, do
 		goto cleanup;
 	}
 
-	/**
-	 * Check for invalid values.
-     */
-	if (!PARAM_SET_isFormatOK(set)) {
-		PARAM_SET_invalidParametersToString(set, NULL, getParameterErrorString, buf, sizeof(buf));
-		print_errors("%s", buf);
-		res = KT_INVALID_CMD_PARAM;
-		goto cleanup;
-	}
 
 	/**
 	 * Check for typos and unknown parameters.
-     */
+	 */
 	if (PARAM_SET_isTypoFailure(set)) {
 			print_errors("%s\n", PARAM_SET_typosToString(set, PST_TOSTR_DOUBLE_HYPHEN, NULL, buf, sizeof(buf)));
 			res = KT_INVALID_CMD_PARAM;
@@ -77,9 +62,19 @@ int TASK_INITIALIZER_check_analyze_report(PARAM_SET *set, TASK_SET *task_set, do
 	}
 
 	/**
+	 * Check for invalid values.
+	 */
+	if (!PARAM_SET_isFormatOK(set)) {
+		PARAM_SET_invalidParametersToString(set, NULL, getParameterErrorString, buf, sizeof(buf));
+		print_errors("%s", buf);
+		res = KT_INVALID_CMD_PARAM;
+		goto cleanup;
+	}
+
+	/**
 	 * Analyze task set and Extract the task if consistent one exists, print help
 	 * messaged otherwise.
-     */
+	 */
 	res = TASK_SET_analyzeConsistency(task_set, set, task_set_sens);
 	if (res != PST_OK) goto cleanup;
 
@@ -90,7 +85,7 @@ int TASK_INITIALIZER_check_analyze_report(PARAM_SET *set, TASK_SET *task_set, do
 
 	/**
 	 * If task is not present report errors.
-     */
+	 */
 	if (pTask == NULL) {
 		int ID;
 		if (TASK_SET_isOneFromSetTheTarget(task_set, task_dif, &ID)) {
@@ -117,7 +112,7 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 	int res;
 	PARAM_SET *conf_env = NULL;
 	PARAM_SET *conf_file = NULL;
-	char buf[1024];
+	char buf[0xffff];
 	char *conf_file_name = NULL;
 
 	res = CONF_createSet(&conf_env);

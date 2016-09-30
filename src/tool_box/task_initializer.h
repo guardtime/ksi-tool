@@ -28,6 +28,23 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
+
+enum service_info_priorities {
+	/* Priority level for default values. */
+	PRIORITY_KSI_DEFAULT,
+	
+	/* Priority of KSI configuration file read from KSI_CONF environment variable. */
+	PRIORITY_KSI_CONF,
+	
+	/* Priority of the specific USER configuration file. Not implemented yet.*/
+	PRIORITY_KSI_CONF_USER,
+	
+	/* Priority of KSI configuration file given with --conf option. */
+	PRIORITY_KSI_CONF_FILE,
+	
+	/* Priority of values defined on command-line. */
+	PRIORITY_CMD,
+};
 	
 /**
  * 1) Check if parameter set contains invalid values (format / content).

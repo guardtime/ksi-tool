@@ -1,5 +1,13 @@
 * BUGFIX: User info embedded in the uri is interpreted as KSI user info only when the known uri scheme has prefix 'ksi+' (e.g. ksi+http).
 * IMPROVEMENT: Command-line parameter parser updated.
+* IMPROVEMENT: Command-line typo errors are printed before invalid value or format errors.
+* FEATURE: Local aggregation implemented. See new options for more details --max-lvl, --max-aggr-rounds --mask and --mdata*.
+* FEATURE: It is possible to specify output (-o) as directory when signing.
+* FEATURE: It is possible to specify multiple inputs (-i) when signing.
+* FEATURE: New option -- under sign after what everything is interpreted as regular input file.
+* FEATURE: New options --mask and --prev-leaf to enable and configure input masking.
+* FEATURE: Wildcard support when signing multiple files (works also on windows).
+
 
 Version 2.1
 

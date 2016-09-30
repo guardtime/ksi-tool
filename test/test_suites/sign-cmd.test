@@ -73,7 +73,7 @@ EXECUTABLE sign --conf test/test.cfg -i test/resource/file/testFile -o test/out/
 
 # Use input as imprint and -H together.
 EXECUTABLE sign --conf test/test.cfg -i SHA1:a7d2c6238a92878b2a578c2477e8a33f9d8591ab -H SHA1 -o test/out/sign/should_not_be.11.ksig -d
->>>2 /Error: Unable to use -H and -i together as input is hash imprint/
+>>>2 /Error: Unable to use -H as all inputs are pre-calculated hash imprints/
 >>>= 3
 
 # Use not existing file name that is similar to imprint 1.

@@ -62,7 +62,7 @@ int extend_run(int argc, char** argv, char **envp) {
 	KSI_PolicyVerificationResult *result_ext = NULL;
 	COMPOSITE extra;
 	char fnmae[2048];
-	char mode[2];
+	char mode[3] = "s";
 	char buf[2048];
 	int d = 0;
 
@@ -108,7 +108,7 @@ int extend_run(int argc, char** argv, char **envp) {
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify signature.");
 	print_progressResult(res);
 
-	if (get_output_name(set, err, fnmae, sizeof(fnmae), mode) == NULL) goto cleanup;
+	if (get_output_name(set, err, fnmae, sizeof(fnmae), mode + 1) == NULL) goto cleanup;
 
 	switch(TASK_getID(task)) {
 		case 0:
@@ -510,10 +510,10 @@ cleanup:
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err) {
 	int res;
 
-	res = get_pipe_out_error(set, err, "o", "dump");
+	res = get_pipe_out_error(set, err, NULL, "o", "dump");
 	if (res != KT_OK) goto cleanup;
 
-	res = get_pipe_out_error(set, err, "o,log", NULL);
+	res = get_pipe_out_error(set, err, NULL, "o,log", NULL);
 	if (res != KT_OK) goto cleanup;
 
 cleanup:
