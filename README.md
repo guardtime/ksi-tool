@@ -50,7 +50,7 @@ learn how to run KSI command-line tool tests on Windows and linux.
 
 ### Upgrade
 
-The older package of ksitool is deprecated but can be concurrently exist
+The older package of ksitool is deprecated but can concurrently exist
 with ksi-tools (KSI). After some time it will be obsolated by ksi-tools thus it is
 strongly recommended to upgrade. To upgrade from ksitool one must install
 package ksi-tools. To perform upgrade of older package of ksi or ksi-tools
