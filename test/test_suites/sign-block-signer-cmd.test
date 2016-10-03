@@ -153,3 +153,8 @@ EXECUTABLE sign --max-lvl 1 --mdata --mdata-sqn-nr -d --mdata-mac-id "My Comuter
 >>>2 /(.*Error: Client ID is missing but is mandatory part of metadata.*)/
 >>>= 3
 
+# Test wildcard when there is no match:
+EXECUTABLE sign --max-lvl 10 -o test/out/sign -- test/resource/file/this_file_set_does_not_exist*
+>>>2 /((.*You have to define at least one of the flag.*)(.*-i.*)(.*--input.*))|(.*File does not exist.*)(.*this_file_set_does_not_exist[*].*)/
+>>>= 3
+

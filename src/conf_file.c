@@ -258,15 +258,15 @@ int CONF_isInvalid(PARAM_SET *set) {
 int conf_report_errors(PARAM_SET *set, const char *fname, int res) {
 	char buf[0xffff];
 	if (res == KT_IO_ERROR) {
-		print_errors("Error: Configurations file '%s' pointed by KSI_CONF does not exist.\n", fname);
+		print_errors("Error: configuration file '%s' pointed by KSI_CONF does not exist.\n", fname);
 		res = KT_INVALID_CONF;
 		goto cleanup;
 	} else if (res == KT_NO_PRIVILEGES) {
-		print_errors("Error: User has no privileges to access configurations file '%s' pointed by KSI_CONF.\n", fname);
+		print_errors("Error: User has no privileges to access configuration file '%s' pointed by KSI_CONF.\n", fname);
 		res = KT_INVALID_CONF;
 		goto cleanup;
 	} else if (CONF_isInvalid(set)) {
-		print_errors("Error: Configurations file '%s' pointed by KSI_CONF is invalid:\n", fname);
+		print_errors("Error: configuration file '%s' pointed by KSI_CONF is invalid:\n", fname);
 		print_errors("%s\n", CONF_errorsToString(set, "  ", buf, sizeof(buf)));
 		res = KT_INVALID_CONF;
 		goto cleanup;
@@ -303,7 +303,7 @@ char *CONF_errorsToString(PARAM_SET *set, const char *prefix, char *buf, size_t 
 	}
 
 	if (PARAM_SET_isSetByName(set, "publications-file-no-verify")) {
-		count += KSI_snprintf(buf + count, buf_len - count, "%sConfigurations flag 'publications-file-no-verify' can only be defined on command-line.\n",
+		count += KSI_snprintf(buf + count, buf_len - count, "%sconfiguration flag 'publications-file-no-verify' can only be defined on command-line.\n",
 				prefix == NULL ? "" : prefix);
 
 	}

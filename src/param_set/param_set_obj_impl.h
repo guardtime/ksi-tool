@@ -64,7 +64,7 @@ struct PARAM_st{
 	 * extra - optional pointer to data structure.
 	 * str - c-string value that belongs to PARAM_VAL object.
 	 * obj - pointer to receiving pointer to desired object.
-	 * Returns PST_OK if successful, error code otherwise. 
+	 * Returns PST_OK if successful, error code otherwise.
 	 */
 	int (*extractObject)(void *extra, const char *str, void **obj);
 	

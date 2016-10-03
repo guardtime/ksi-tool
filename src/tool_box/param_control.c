@@ -1433,9 +1433,12 @@ int Win32FileWildcard(PARAM_VAL *param_value, void *ctx, int *value_shift) {
 
 	STRING_extractAbstract(buf, NULL, "/", path, sizeof(path), NULL, find_charBeforeLastStrn, NULL);
 
+	/**
+	 * In the case nothing was found, return as OK.
+	 */
 	hfile = FindFirstFile(value, &found);
 	if (hfile == INVALID_HANDLE_VALUE) {
-		res = PST_WILDCARD_ERROR;
+		res = PST_OK;
 		goto cleanup;
 	}
 

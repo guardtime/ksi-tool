@@ -43,7 +43,7 @@ char* CONF_generate_param_set_desc(char *description, const char *flags, char *b
 
 /**
  * Creates a PARAM_SET object that is fully configured to support all paraeters
- * defined for ksi configurations file.
+ * defined for ksi configuration file.
  * \param conf	-	Output parameter for PARAM_SET object.
  * \return KT_OK if successful, error code otherwise.
  */
@@ -64,14 +64,14 @@ int CONF_createSet(PARAM_SET **conf);
 int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags);
 
 /**
- * Loads configurations file from environment variable \c env_name that points to the path
- * to ksi configurations file.
- * \param set		- PARAM_SET object to fill with parameters from the configurations file.
+ * Loads configuration file from environment variable \c env_name that points to the path
+ * to ksi configuration file.
+ * \param set		- PARAM_SET object to fill with parameters from the configuration file.
  * \param env_name	- The name of the environment variable.
  * \param env		- Pointer to the pointer to c-string values representing environment variables.
  * \param priority	- The priority of the parameters.
- * \convertPaths    - If this flag is set all paths in configurations file that are not full
- *						paths are interpreted as paths relative to the configurations file. 
+ * \convertPaths    - If this flag is set all paths in configuration file that are not full
+ *						paths are interpreted as paths relative to the configuration file. 
  * \return KT_OK if successful, error code otherwise. KT_IO_ERROR if file do not exist or
  * KT_NO_PRIVILEGES if access is not permitted.
  */

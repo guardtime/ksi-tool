@@ -90,13 +90,13 @@ char *conf_help_toString(char *buf, size_t len) {
 		"Usage:\n"
 		" %s conf -h | -d | --dump \n"
 		" -d        - print KSI_CONF value to stderr if is configured.\n"
-		" --dump    - dump configurations file pointed by KSI_CONF to stdout.\n"
+		" --dump    - dump configuration file pointed by KSI_CONF to stdout.\n"
 		" -h        - print the current help message.\n\n"
 			, TOOL_getName()
 			);
 
 	count += KSI_snprintf(buf + count, len - count,
-		"KSI Configurations file help:\n\n"
+		"KSI configuration file help:\n\n"
 		"  The KSI command-line tool has several configuration options, most of them are\n"
 		"  related to the KSI service configuration (e.g. KSI signing service URL and access\n"
 		"  credentials). The configuration options are described below. There are following\n"
@@ -117,7 +117,7 @@ char *conf_help_toString(char *buf, size_t len) {
 
 		"  In configuration file each key-value pair must be placed on a single line. Start\n"
 		"  the line with # to write a comment. Not full paths (V, W and P with URI scheme\n"
-		"  file://) are interpreted as relative to the configurations file.\n\n"
+		"  file://) are interpreted as relative to the configuration file.\n\n"
 
 		"All known parameters:\n"
 		);
@@ -166,14 +166,14 @@ char *conf_help_toString(char *buf, size_t len) {
 		" --publications-file-no-verify\n"
 		"           - a flag to force the tool to trust the publications file without\n"
 		"             verifying it. The flag can only be defined on command-line to avoid\n"
-		"             the usage of insecure configurations files. It must be noted that the\n"
+		"             the usage of insecure configuration files. It must be noted that the\n"
 		"             option is insecure and may only be used for testing.\n"
 		"\n"
 		"\n"
 		);
 
 	count += KSI_snprintf(buf + count, len - count,
-		"An example configurations file:\n\n"
+		"An example configuration file:\n\n"
 		" # --- BEGINNING ---\n"
 		" # KSI Signing service parameters:\n"
 		" -S http://example.gateway.com:3333/gt-signingservice\n"

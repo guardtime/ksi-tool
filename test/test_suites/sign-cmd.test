@@ -46,7 +46,7 @@ Data From Stdin
 >>>2 /Error: Multiple different simultaneous outputs to stdout/
 >>>= 3
 
-# Use Configurations file that does not exist.
+# Use configuration file that does not exist.
 EXECUTABLE sign --conf missing_file -i test/resource/file/testFile -o test/out/sign/should_not_be.5.ksig
 >>>2 /(File does not exist)(.*CMD.*)(.*--conf.*)(.*missing_file.*)/
 >>>= 3
