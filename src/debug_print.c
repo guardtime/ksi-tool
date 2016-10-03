@@ -169,3 +169,13 @@ void print_progressResult(int res) {
 		timerOn = 0;
 	}
 }
+
+int PROGRESS_BAR_display(int progress) {
+	char buf[65] = "################################################################";
+	int count = progress * 64 / 100;
+
+	print_debug("\r");
+	print_debug("[%-*.*s]", 64, count, buf);
+
+	return 0;
+}

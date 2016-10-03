@@ -42,15 +42,6 @@
 #include "../tool_box.h"
 #include "param_set/param_set_obj_impl.h"
 #include "param_set/strn.h"
-static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
-//static char* get_output_file_name_if_not_defined(PARAM_SET *set, ERR_TRCKR *err, int i, char *buf, size_t buf_len);
-static char* get_output_file_name(PARAM_SET *set, ERR_TRCKR *err, int how_is_saved, int i, char *buf, size_t buf_len);
-static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
-static int check_hash_algo_errors(PARAM_SET *set, ERR_TRCKR *err);
-static int check_io_naming_and_type_errors(PARAM_SET *set, ERR_TRCKR *err);
-int PROGRESS_BAR_display(int progress);
-static int how_is_output_saved_to(PARAM_SET *set);
-
 
 typedef struct SIGNING_AGGR_ROUND_st {
 	 /* Multi-signature container for aggregation round. */
@@ -68,14 +59,20 @@ typedef struct SIGNING_AGGR_ROUND_st {
 	int hash_count;
 } SIGNING_AGGR_ROUND;
 
-void SIGNING_AGGR_ROUND_free(SIGNING_AGGR_ROUND *obj);
-void SIGNING_AGGR_ROUND_ARRAY_free(SIGNING_AGGR_ROUND **array);
-int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size_t *inputs);
-int KT_SIGN_getAggregationRoundsNeeded(PARAM_SET *set, ERR_TRCKR *err, size_t max_tree_inputs, size_t *rounds);
-int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int max_tree_inputs, int rounds, SIGNING_AGGR_ROUND ***aggr_rounds_record);
-int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_AGGR_ROUND **aggr_round);
-int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int seq_offset, KSI_MetaData **mdata);
-int KT_SIGN_dump(PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND **aggr_round);
+static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
+static char* get_output_file_name(PARAM_SET *set, ERR_TRCKR *err, int how_is_saved, int i, char *buf, size_t buf_len);
+static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
+static int check_hash_algo_errors(PARAM_SET *set, ERR_TRCKR *err);
+static int check_io_naming_and_type_errors(PARAM_SET *set, ERR_TRCKR *err);
+static int how_is_output_saved_to(PARAM_SET *set);
+static void SIGNING_AGGR_ROUND_free(SIGNING_AGGR_ROUND *obj);
+static void SIGNING_AGGR_ROUND_ARRAY_free(SIGNING_AGGR_ROUND **array);
+static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size_t *inputs);
+static int KT_SIGN_getAggregationRoundsNeeded(PARAM_SET *set, ERR_TRCKR *err, size_t max_tree_inputs, size_t *rounds);
+static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int max_tree_inputs, int rounds, SIGNING_AGGR_ROUND ***aggr_rounds_record);
+static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_AGGR_ROUND **aggr_round);
+static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int seq_offset, KSI_MetaData **mdata);
+static int KT_SIGN_dump(PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND **aggr_round);
 
 int sign_run(int argc, char** argv, char **envp) {
 	int res;
@@ -172,6 +169,7 @@ cleanup:
 
 	return KSITOOL_errToExitCode(res);
 }
+
 char *sign_help_toString(char*buf, size_t len) {
 	size_t count = 0;
 
@@ -272,7 +270,6 @@ char *sign_help_toString(char*buf, size_t len) {
 const char *sign_get_desc(void) {
 	return "Signs the given input with KSI.";
 }
-
 
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	int res;
@@ -535,7 +532,7 @@ cleanup:
 	return res;
 }
 
-int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size_t *inputs) {
+static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size_t *inputs) {
 	int res = KT_UNKNOWN_ERROR;
 	int max_lvl_virtual = 0;
 	int max_lvl = 0;
@@ -612,7 +609,7 @@ cleanup:
 	return res;
 }
 
-int KT_SIGN_getAggregationRoundsNeeded(PARAM_SET *set, ERR_TRCKR *err, size_t max_tree_inputs, size_t *rounds) {
+static int KT_SIGN_getAggregationRoundsNeeded(PARAM_SET *set, ERR_TRCKR *err, size_t max_tree_inputs, size_t *rounds) {
 	int res = KT_UNKNOWN_ERROR;
 	int input_file_count = 0;
 	int max_local_aggr_rounds = 0;
@@ -654,7 +651,7 @@ cleanup:
 	return res;
 }
 
-void SIGNING_AGGR_ROUND_free(SIGNING_AGGR_ROUND *obj) {
+static void SIGNING_AGGR_ROUND_free(SIGNING_AGGR_ROUND *obj) {
 	int i = 0;
 
 	if (obj == NULL) return;
@@ -681,7 +678,7 @@ void SIGNING_AGGR_ROUND_free(SIGNING_AGGR_ROUND *obj) {
 	KSI_free(obj);
 }
 
-void SIGNING_AGGR_ROUND_ARRAY_free(SIGNING_AGGR_ROUND **array) {
+static void SIGNING_AGGR_ROUND_ARRAY_free(SIGNING_AGGR_ROUND **array) {
 		if (array != NULL) {
 		int i = 0;
 
@@ -694,7 +691,7 @@ void SIGNING_AGGR_ROUND_ARRAY_free(SIGNING_AGGR_ROUND **array) {
 	}
 }
 
-int SIGNING_AGGR_ROUND_new(int max_leaves, SIGNING_AGGR_ROUND **new) {
+static int SIGNING_AGGR_ROUND_new(int max_leaves, SIGNING_AGGR_ROUND **new) {
 	int res;
 	SIGNING_AGGR_ROUND *tmp = NULL;
 	KSI_DataHash **tmp_hash = NULL;
@@ -758,7 +755,7 @@ cleanup:
 	return res;
 }
 
-int SIGNING_AGGR_ROUND_append(SIGNING_AGGR_ROUND *round, KSI_DataHash *hsh, char *fname) {
+static int SIGNING_AGGR_ROUND_append(SIGNING_AGGR_ROUND *round, KSI_DataHash *hsh, char *fname) {
 	int res;
 
 	if (round == NULL || hsh == NULL || fname == NULL) {
@@ -781,7 +778,7 @@ cleanup:
 	return res;
 }
 
-int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int max_tree_inputs, int rounds, SIGNING_AGGR_ROUND ***aggr_rounds_record) {
+static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int max_tree_inputs, int rounds, SIGNING_AGGR_ROUND ***aggr_rounds_record) {
 	int res = KT_UNKNOWN_ERROR;
 	size_t i = 0;
 	size_t r = 0;
@@ -1084,7 +1081,7 @@ cleanup:
 	return ret;
 }
 
-int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_AGGR_ROUND **aggr_round) {
+static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_AGGR_ROUND **aggr_round) {
 	int res = PST_UNKNOWN_ERROR;
 	int how_to_save = OUTPUT_UNKNOWN;
 	int i = 0;
@@ -1180,7 +1177,7 @@ cleanup:
 	return res;
 }
 
-int KT_SIGN_dump(PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND **aggr_round) {
+static int KT_SIGN_dump(PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND **aggr_round) {
 	int res = PST_UNKNOWN_ERROR;
 	int i = 0;
 	int n = 0;
@@ -1224,17 +1221,7 @@ cleanup:
 	return res;
 }
 
-int PROGRESS_BAR_display(int progress) {
-	char buf[65] = "################################################################";
-	int count = progress * 64 / 100;
-
-	print_debug("\r");
-	print_debug("[%-*.*s]", 64, count, buf);
-
-	return 0;
-}
-
-int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int seq_offset, KSI_MetaData **mdata) {
+static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int seq_offset, KSI_MetaData **mdata) {
 	int res;
 	char *cli_id = NULL;
 	char *mac_id = NULL;
