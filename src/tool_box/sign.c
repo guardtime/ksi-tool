@@ -156,11 +156,7 @@ cleanup:
 		else 	ERR_TRCKR_printErrors(err);
 	}
 
-	/**
-	 * Free the local aggregation record;
-	 */
 	SIGNING_AGGR_ROUND_ARRAY_free(aggr_rounds);
-
 	SMART_FILE_close(logfile);
 	TASK_SET_free(task_set);
 	PARAM_SET_free(set);
@@ -311,7 +307,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	 * 1) All values that are exactly after -i (both a and -i are collected -i a, -i -i)
 	 * 2) all values that are not potential parameters (unknown / typo) parameters (will ignore -q, --test)
 	 * Make the parameter input collect all values after the parsing is closed.
-	 * 3) All values that are specified after --.
+	 * 1) All values that are specified after --.
 	 */
 	PARAM_SET_setParseOptions(set, "i", PST_PRSCMD_HAS_VALUE | PST_PRSCMD_COLLECT_LOOSE_VALUES | extra_parse_flags);
 	PARAM_SET_setParseOptions(set, "input", PST_PRSCMD_CLOSE_PARSING | PST_PRSCMD_COLLECT_WHEN_PARSING_IS_CLOSED | PST_PRSCMD_HAS_NO_FLAG | PST_PRSCMD_NO_TYPOS | extra_parse_flags);
@@ -780,26 +776,24 @@ cleanup:
 
 static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int max_tree_inputs, int rounds, SIGNING_AGGR_ROUND ***aggr_rounds_record) {
 	int res = KT_UNKNOWN_ERROR;
-	size_t i = 0;
-	size_t r = 0;
-	size_t tree_input = 0;
-	KSI_BlockSigner *bs = NULL;
-	SIGNING_AGGR_ROUND **aggr_round = NULL;
-	COMPOSITE extra;
-	KSI_DataHash *hash = NULL;
-	KSI_MetaData *mdata = NULL;
-	int in_count = 0;
-	KSI_HashAlgorithm algo = KSI_UNAVAILABLE_HASH_ALGORITHM;
-	char *fname = NULL;
-	char *signed_data_out = NULL;
 	int d = 0;
 	int prgrs = 0;
+	int in_count = 0;
+	int divider = 0;
+	char *signed_data_out = NULL;
+	KSI_HashAlgorithm algo = KSI_UNAVAILABLE_HASH_ALGORITHM;
+	COMPOSITE extra;
+	KSI_OctetString *mask_iv = NULL;
 	int isMetadata = 0;
 	int isMasking = 0;
-	int tree_size_1 = 0;
-	int divider = 0;
 	KSI_DataHash *prev_leaf = NULL;
-	KSI_OctetString *mask_iv = NULL;
+	SIGNING_AGGR_ROUND **aggr_round = NULL;
+	int tree_size_1 = 0;
+	KSI_BlockSigner *bs = NULL;
+	KSI_MetaData *mdata = NULL;
+	size_t i = 0;
+	size_t r = 0;
+	KSI_DataHash *hash = NULL;
 
 	if (set == NULL || err == NULL || max_tree_inputs == 0 || rounds == 0) {
 		res = KT_INVALID_ARGUMENT;
@@ -823,6 +817,18 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 
 	/**
+	 * Extract the hash algorithm. If not specified, set algorithm as default.
+	 * It must be noted that if hash is extracted from imprint, has algorithm has
+	 * no effect.
+	 */
+	if (PARAM_SET_isSetByName(set, "H")) {
+		res = PARAM_SET_getObjExtended(set, "H", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, NULL, (void**)&algo);
+		if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
+	} else {
+		algo = KSI_getHashAlgorithmByName("default");
+	}
+
+	/**
 	 * Configure extra parameter for OBJ extractor.
 	 */
 	extra.ctx = ctx;
@@ -840,19 +846,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 	}
 
 	/**
-	 * Extract the hash algorithm. If not specified, set algorithm as default.
-	 * It must be noted that if hash is extracted from imprint, has algorithm has
-	 * no effect.
-	 */
-	if (PARAM_SET_isSetByName(set, "H")) {
-		res = PARAM_SET_getObjExtended(set, "H", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, NULL, (void**)&algo);
-		if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
-	} else {
-		algo = KSI_getHashAlgorithmByName("default");
-	}
-
-	/**
-	 * Analyze parameter to determin if masking is going to be performed and
+	 * Analyze parameter to determine if masking is going to be performed and
 	 * if metadata is embedded to the signature.
 	 */
 	isMetadata = PARAM_SET_isSetByName(set, "mdata,mdata-cli-id");
@@ -890,6 +884,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 	 * Perform local aggregation.
 	 */
 	for (r = 0; r < rounds; r++) {
+		size_t tree_input = 0;
 		int to_be_signed_in_round = ((((int)r + 1) * max_tree_inputs - in_count) < 0) ? max_tree_inputs : in_count - (int)r * max_tree_inputs;
 
 		res = SIGNING_AGGR_ROUND_new(max_tree_inputs, &aggr_round[r]);
@@ -911,6 +906,8 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 		}
 
 		for (tree_input = 0; tree_input < max_tree_inputs && i < in_count; tree_input++, i++) {
+			char *fname = NULL;
+
 			if (!prgrs) print_progressDesc(d, "Extracting hash from input... ");
 
 			res = PARAM_SET_getObjExtended(set, "i,input", NULL, PST_PRIORITY_NONE, (int)i, &extra, (void**)&hash);
@@ -957,14 +954,11 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 
 		if (!tree_size_1 || (tree_size_1 && prgrs)) print_debug("\n");
 		KSI_BlockSigner_free(bs);
-		bs = NULL;
 		KSI_MetaData_free(mdata);
+		bs = NULL;
 		mdata = NULL;
 	}
 
-//	if (prgrs) {
-//		print_debug("\n", in_count);
-//	}
 
 	*aggr_rounds_record = aggr_round;
 	aggr_round = NULL;
@@ -972,11 +966,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 
 cleanup:
 
-	/**
-	 * Free the local aggregation record;
-	 */
 	SIGNING_AGGR_ROUND_ARRAY_free(aggr_round);
-
 	KSI_DataHash_free(hash);
 	KSI_DataHash_free(prev_leaf);
 	KSI_BlockSigner_free(bs);
@@ -1009,7 +999,7 @@ static char* get_output_file_name(PARAM_SET *set, ERR_TRCKR *err, int how_is_sav
 	}
 
 	/**
-	 * If output file name hast to be generated,
+	 * Output file name hast to be generated.
 	 */
 	if (how_is_saved == OUTPUT_NEXT_TO_INPUT || how_is_saved == OUTPUT_TO_DIR) {
 		if (strcmp(in_file_name, "-") == 0 && in_count == 1) {
@@ -1083,13 +1073,13 @@ cleanup:
 
 static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_AGGR_ROUND **aggr_round) {
 	int res = PST_UNKNOWN_ERROR;
+	int in_count = 0;
+	int divider = 0;
+	int prgrs = 0;
 	int how_to_save = OUTPUT_UNKNOWN;
 	int i = 0;
 	int n = 0;
 	int count = 0;
-	int in_count = 0;
-	int prgrs = 0;
-	int divider = 0;
 	KSI_Signature *sig = NULL;
 	char *real_output_name_copy = NULL;
 
@@ -1250,7 +1240,7 @@ static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int
 		}
 
 		/**
-		 * Get the mandatory client ID and if set optional machine ID.
+		 * Get the mandatory client ID, and if set, optional machine ID.
 		 */
 		res = PARAM_SET_getStr(set, "mdata-cli-id", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &cli_id);
 		if (res != PST_OK) goto cleanup;
