@@ -138,7 +138,7 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 	}
 
 	/**
-	 * Include configurations file.
+	 * Include configuration file.
      */
 	if (PARAM_SET_isSetByName(set, "conf")) {
 		res = PARAM_SET_getStr(set, "conf", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &conf_file_name);
@@ -153,7 +153,7 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 		}
 
 		if (CONF_isInvalid(conf_file)) {
-			print_errors("Configurations file '%s' is invalid:\n", conf_file_name);
+			print_errors("configuration file '%s' is invalid:\n", conf_file_name);
 			print_errors("%s\n", CONF_errorsToString(conf_file, "  ", buf, sizeof(buf)));
 			res = KT_INVALID_CONF;
 			goto cleanup;
