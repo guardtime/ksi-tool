@@ -281,8 +281,8 @@ static int imprint_get_hash_obj(const char *imprint, KSI_CTX *ksi, ERR_TRCKR *er
 	KSI_HashAlgorithm alg_id = KSI_HASHALG_INVALID;
 	KSI_DataHash *tmp = NULL;
 
-	if (imprint == NULL || ksi == NULL || hash == NULL) {
-		res = KT_INVALID_ARGUMENT;
+	if (imprint == NULL || ksi == NULL || err == NULL || hash == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -327,7 +327,7 @@ static int file_get_hash(ERR_TRCKR *err, KSI_CTX *ctx, const char *open_mode, co
 	KSI_DataHash *tmp = NULL;
 
 	if(err == NULL || fname_in == NULL || hash == NULL) {
-		res = KT_INVALID_ARGUMENT;
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -1134,7 +1134,7 @@ static int get_io_pipe_error(PARAM_SET *set, ERR_TRCKR *err, int isStdin, const 
 
 
 	if (err == NULL || set == NULL || (io_file_names == NULL && check_all_files == NULL && io_flag_names == NULL)) {
-		res = KT_INVALID_ARGUMENT;
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 

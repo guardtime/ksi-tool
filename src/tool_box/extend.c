@@ -275,6 +275,12 @@ static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Sig
 	char real_output_name[1024];
 	int d;
 
+	if (set == NULL || err == NULL || ksi == NULL || ext == NULL || fname == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		goto cleanup;
+	}
+
+
 	d = PARAM_SET_isSetByName(set, "d");
 
 	print_progressDesc(d, "Verifying extended signature... ");
@@ -304,7 +310,7 @@ static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX
 	KSI_PublicationsFile *pubFile = NULL;
 
 	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || ext == NULL) {
-		res = KT_INVALID_ARGUMENT;
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -350,7 +356,7 @@ static int extend_to_specified_time(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi
 
 
 	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || extra == NULL) {
-		res = KT_INVALID_ARGUMENT;
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -394,7 +400,7 @@ static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_C
 	char *pubs_str = NULL;
 
 	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || ext == NULL) {
-		res = KT_INVALID_ARGUMENT;
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
