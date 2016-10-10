@@ -26,42 +26,13 @@
 	exit
  fi
 
-# Delete a text between two markers. First marker is deleted
-# the second one is not.
-# arg1		- first marker.
-# arg2		- last marker.
-# arg3		- file to modify.
-function delete_from_to_1() {
-	sed -i '/.*'$1'.*/{
-	:loop
-N
-s/.*\n//g
-/.*'$2'.*/!{
-b loop
-}
-}' $3
-}
-
-
-# Replace the stderr regex in test file. Avoid replacment
-# If there is a comment mark at the beginning of the line.
-# arg1		- regex for memory test.
-# arg2		- file to modify.
-function insert_memory_control() {
-sed -i '/>>>=/{
-/#.*>>>=/!{
-	/>>>=/i >>>2 '"$1"'
-}
-}' $2
-}
 
 echo Generating memory test from $test_file_in
 
 cp  $test_file_in $memory_test_out 
-delete_from_to_1 '>>>2' '>>>=' $memory_test_out
-insert_memory_control "\/((LEAK SUMMARY.*)\n(.*definitely lost.*)(.* 0 .*)(.* 0 .*)\n(.*indirectly lost.*)(.* 0 .*)(.* 0 .*)\n(.*possibly lost.*)(.* 0 .*)(.* 0 .*))|(.*All heap blocks were freed.*no leaks are possible.*)\/" $memory_test_out
-sed -i 's/test\/out\/[^\/]*/test\/out\/memory/g' $memory_test_out 
-
+sed -i -f test/delete-stderr-check.sed $memory_test_out
+sed -i -f test/replace-with-valgrind.sed $memory_test_out
+sed -i -f test/rename-output.sed $memory_test_out
 
 
 exit $?
