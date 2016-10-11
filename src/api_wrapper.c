@@ -231,7 +231,7 @@ int KSITOOL_extendSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Signature *sig, KS
 int KSITOOL_Signature_extendTo(ERR_TRCKR *err, const KSI_Signature *signature, KSI_CTX *ctx, KSI_Integer *to, KSI_Signature **extended) {
 	int res;
 
-	if (err == NULL || ctx == NULL || signature == NULL || extended == NULL) {
+	if (err == NULL || ctx == NULL || signature == NULL || to == NULL || extended == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		return res;
 	}
@@ -249,7 +249,7 @@ int KSITOOL_Signature_extendTo(ERR_TRCKR *err, const KSI_Signature *signature, K
 int KSITOOL_Signature_extend(ERR_TRCKR *err, const KSI_Signature *signature, KSI_CTX *ctx, const KSI_PublicationRecord *pubRec, KSI_Signature **extended) {
 	int res;
 
-	if (err == NULL || ctx == NULL || signature == NULL || extended == NULL) {
+	if (err == NULL || ctx == NULL || signature == NULL || pubRec == NULL || extended == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		return res;
 	}
@@ -643,7 +643,7 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, const ch
 	size_t dummy_len = 0;
 
 
-	if (err == NULL || ksi == NULL || path == NULL || obj == NULL || parse == NULL || obj_free == NULL) {
+	if (err == NULL || ksi == NULL || path == NULL || mode == NULL || obj == NULL || parse == NULL || obj_free == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
@@ -783,7 +783,7 @@ int KSI_OBJ_savePublicationsFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsF
 int KSI_OBJ_loadSignature(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, const char* mode, KSI_Signature **sig) {
 	int res;
 
-	if (ksi == NULL || fname == NULL || sig == NULL) {
+	if (err == NULL || ksi == NULL || fname == NULL || mode == NULL || sig == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		return res;
 	}
