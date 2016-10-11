@@ -76,7 +76,7 @@ void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile, in
 		res = KSI_PublicationRecordList_elementAt(list_publicationRecord, i, &publicationRecord);
 		if (res != KSI_OK) return;
 
-		if (KSITOOL_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
+		if (KSITOOL_PublicationRecord_toString(publicationRecord, buf, sizeof(buf)) == NULL) return;
 
 		pStart = buf;
 		j=1;
@@ -119,7 +119,7 @@ void OBJPRINT_signaturePublicationReference(KSI_Signature *sig, int (*print)(con
 		return;
 	}
 
-	if (KSITOOL_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
+	if (KSITOOL_PublicationRecord_toString(publicationRecord, buf, sizeof(buf)) == NULL) return;
 	pStart = buf;
 
 	while ((pLineBreak = strchr(pStart, '\n')) != NULL){
@@ -133,7 +133,7 @@ void OBJPRINT_signaturePublicationReference(KSI_Signature *sig, int (*print)(con
 		pStart = pLineBreak+1;
 	}
 
-	if (h<3)
+	if (h < 3)
 		print("%s %s\n", "  ", pStart);
 	else
 		print("%s %2i) %s\n", "    ", i++, pStart);

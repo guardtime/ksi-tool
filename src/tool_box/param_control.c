@@ -326,7 +326,7 @@ static int file_get_hash(ERR_TRCKR *err, KSI_CTX *ctx, const char *open_mode, co
 	size_t write_count = 0;
 	KSI_DataHash *tmp = NULL;
 
-	if (err == NULL || fname_in == NULL || hash == NULL) {
+	if (err == NULL || ctx == NULL || open_mode == NULL || fname_in == NULL || hash == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
@@ -1048,9 +1048,9 @@ int isFormatOk_constraint(const char *constraint) {
 	if (strlen(constraint) == 0) return FORMAT_NOCONTENT;
 
 	if ((at = strchr(constraint,'=')) == NULL) return FORMAT_INVALID;
-	if (at == constraint || *(at+1)==0) return FORMAT_INVALID;
+	if (at == constraint || *(at + 1) == 0) return FORMAT_INVALID;
 
-	while (constraint[i] != 0 &&  constraint[i] != '=') {
+	while (constraint[i] != 0 && constraint[i] != '=') {
 		if (!isdigit(constraint[i]) && constraint[i] != '.')
 			return FORMAT_INVALID_OID;
 		i++;

@@ -108,7 +108,7 @@ int extend_run(int argc, char** argv, char **envp) {
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify signature.");
 	print_progressResult(res);
 
-	if (get_output_name(set, err, fnmae, sizeof(fnmae), mode + 3) == NULL) goto cleanup;
+	if (get_output_name(set, err, fnmae, sizeof(fnmae), mode + strlen(mode)) == NULL) goto cleanup;
 
 	switch(TASK_getID(task)) {
 		case 0:
@@ -275,7 +275,7 @@ static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Sig
 	char real_output_name[1024];
 	int d;
 
-	if (set == NULL || err == NULL || ksi == NULL || ext == NULL || fname == NULL) {
+	if (set == NULL || err == NULL || ksi == NULL || ext == NULL || fname == NULL || mode == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}

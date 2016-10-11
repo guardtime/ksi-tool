@@ -702,7 +702,7 @@ static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, const char *mode, void *obj,
 	size_t raw_len = 0;
 	size_t count = 0;
 
-	if (err == NULL || ksi == NULL || obj == NULL || serialize == NULL || path == NULL) {
+	if (err == NULL || ksi == NULL || mode == NULL || obj == NULL || serialize == NULL || path == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
@@ -743,7 +743,7 @@ cleanup:
 int KSI_OBJ_saveSignature(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *mode, const char *fname, char *f, size_t f_len) {
 	int res;
 
-	if (err == NULL || ksi == NULL || fname == NULL || sign == NULL) {
+	if (err == NULL || ksi == NULL || fname == NULL || sign == NULL || mode == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		return res;
 	}
@@ -762,7 +762,7 @@ int KSI_OBJ_saveSignature(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, con
 int KSI_OBJ_savePublicationsFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *mode, const char *fname) {
 	int res;
 
-	if (err == NULL || ksi == NULL || fname == NULL || pubfile == NULL) {
+	if (err == NULL || ksi == NULL || fname == NULL || pubfile == NULL || mode == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		return res;
 	}
