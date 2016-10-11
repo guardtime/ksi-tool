@@ -795,7 +795,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 	size_t r = 0;
 	KSI_DataHash *hash = NULL;
 
-	if (set == NULL || err == NULL || max_tree_inputs == 0 || rounds == 0) {
+	if (set == NULL || err == NULL || max_tree_inputs == 0 || rounds == 0 || aggr_rounds_record == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
@@ -1083,7 +1083,7 @@ static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SI
 	KSI_Signature *sig = NULL;
 	char *real_output_name_copy = NULL;
 
-	if (set == NULL || err == NULL || aggr_round == NULL) {
+	if (set == NULL || err == NULL || ksi == NULL || aggr_round == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
