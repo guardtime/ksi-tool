@@ -62,7 +62,7 @@ int extend_run(int argc, char** argv, char **envp) {
 	KSI_PolicyVerificationResult *result_ext = NULL;
 	COMPOSITE extra;
 	char fnmae[2048];
-	char mode[2];
+	char mode[5] = "wbs";
 	char buf[2048];
 	int d = 0;
 
@@ -108,7 +108,7 @@ int extend_run(int argc, char** argv, char **envp) {
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify signature.");
 	print_progressResult(res);
 
-	if (get_output_name(set, err, fnmae, sizeof(fnmae), mode) == NULL) goto cleanup;
+	if (get_output_name(set, err, fnmae, sizeof(fnmae), mode + strlen(mode)) == NULL) goto cleanup;
 
 	switch(TASK_getID(task)) {
 		case 0:
@@ -152,6 +152,7 @@ cleanup:
 	KSITOOL_KSI_ERRTrace_save(ksi);
 
 	if (res != KT_OK) {
+		if (ERR_TRCKR_getErrCount(err) == 0) {ERR_TRCKR_ADD(err, res, NULL);}
 		KSITOOL_KSI_ERRTrace_LOG(ksi);
 		print_debug("\n");
 		if (ext == NULL) {
@@ -274,6 +275,12 @@ static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Sig
 	char real_output_name[1024];
 	int d;
 
+	if (set == NULL || err == NULL || ksi == NULL || ext == NULL || fname == NULL || mode == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		goto cleanup;
+	}
+
+
 	d = PARAM_SET_isSetByName(set, "d");
 
 	print_progressDesc(d, "Verifying extended signature... ");
@@ -303,7 +310,7 @@ static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX
 	KSI_PublicationsFile *pubFile = NULL;
 
 	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || ext == NULL) {
-		res = KT_INVALID_ARGUMENT;
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -348,8 +355,8 @@ static int extend_to_specified_time(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi
 	char buf[256];
 
 
-	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || extra == NULL) {
-		res = KT_INVALID_ARGUMENT;
+	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || extra == NULL || ext == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -393,7 +400,7 @@ static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_C
 	char *pubs_str = NULL;
 
 	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || ext == NULL) {
-		res = KT_INVALID_ARGUMENT;
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -510,10 +517,10 @@ cleanup:
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err) {
 	int res;
 
-	res = get_pipe_out_error(set, err, "o", "dump");
+	res = get_pipe_out_error(set, err, NULL, "o", "dump");
 	if (res != KT_OK) goto cleanup;
 
-	res = get_pipe_out_error(set, err, "o,log", NULL);
+	res = get_pipe_out_error(set, err, NULL, "o,log", NULL);
 	if (res != KT_OK) goto cleanup;
 
 cleanup:

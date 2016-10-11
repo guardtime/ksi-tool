@@ -67,7 +67,7 @@ void ERR_TRCKR_free(ERR_TRCKR *obj) {
 void ERR_TRCKR_add(ERR_TRCKR *err, int code, const char *fname, int lineN, const char *msg, ...) {
 	va_list va;
 	if (err == NULL || fname == NULL) return;
-	if(err->count >= MAX_ERROR_COUNT ) return;
+	if (err->count >= MAX_ERROR_COUNT ) return;
 
 	va_start(va, msg);
 	KSI_vsnprintf(err->err[err->count].message, MAX_MESSAGE_LEN, msg == NULL ? "" : msg, va);
@@ -121,4 +121,9 @@ void ERR_TRCKR_printExtendedErrors(ERR_TRCKR *err) {
 	}
 
 	return;
+}
+
+int ERR_TRCKR_getErrCount(ERR_TRCKR *err) {
+	if (err == NULL) return 0;
+	else return err->count;
 }

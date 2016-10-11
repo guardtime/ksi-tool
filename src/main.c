@@ -170,7 +170,7 @@ int main(int argc, char** argv, char **envp) {
 	if (res != PST_OK) goto cleanup;
 
 	/**
-	 * Load the configurations file from environment.
+	 * Load the configuration file from environment.
 	 */
 	res = CONF_fromEnvironment(configuration, "KSI_CONF", envp, 0, 1);
 	res = conf_report_errors(configuration, CONF_getEnvNameContent(), res);
@@ -237,7 +237,7 @@ int main(int argc, char** argv, char **envp) {
 	}
 
 	if (CONF_isInvalid(configuration)) {
-		print_errors("KSI configurations file from KSI_CONF is invalid:\n");
+		print_errors("KSI configuration file from KSI_CONF is invalid:\n");
 		print_errors("%s\n", CONF_errorsToString(configuration, "  ", buf, sizeof(buf)));
 		res = KT_INVALID_CONF;
 		goto cleanup;

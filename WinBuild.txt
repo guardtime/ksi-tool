@@ -116,9 +116,9 @@ Configuring build scripts
 	
 	Makefile has following tasks:
 	
-      1)default       - build ksi tool executable.
-      2)installer     - build ksi tool Windows installer (KSI_LIB must be lib).
-      3)clean         - clean build.
+      1) default       - build ksi tool executable.
+      2) installer     - build ksi tool Windows installer (KSI_LIB must be lib).
+      3) clean         - clean build.
 	
 		
 	Makefile has following options:

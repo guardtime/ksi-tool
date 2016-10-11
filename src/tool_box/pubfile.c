@@ -109,6 +109,7 @@ cleanup:
 	KSITOOL_KSI_ERRTrace_save(ksi);
 
 	if (res != KT_OK) {
+		if (ERR_TRCKR_getErrCount(err) == 0) {ERR_TRCKR_ADD(err, res, NULL);}
 		KSITOOL_KSI_ERRTrace_LOG(ksi);
 		print_debug("\n");
 		DEBUG_verifyPubfile(ksi, set, res, pubfile);
@@ -239,7 +240,7 @@ static int pubfile_task(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int id, KS
 
 	if (id == 2 && save_to != NULL) {
 		print_progressDesc(d, "Saving publications file... ");
-		res = KSI_OBJ_savePublicationsFile(err, ksi, tmp, NULL, save_to);
+		res = KSI_OBJ_savePublicationsFile(err, ksi, tmp, "wb", save_to);
 		ERR_CATCH_MSG(err, res, "Error: Unable to save publications file.");
 		print_progressResult(res);
 		print_debug("Publications file saved to '%s'.\n", save_to);
@@ -405,7 +406,7 @@ cleanup:
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err) {
 	int res;
 
-	res = get_pipe_out_error(set, err, "o,log", NULL);
+	res = get_pipe_out_error(set, err, NULL, "o,log", NULL);
 	if (res != KT_OK) goto cleanup;
 
 cleanup:

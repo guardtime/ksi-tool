@@ -50,6 +50,7 @@ char* TASK_SET_suggestions_toString(TASK_SET *task_set, int depth, char *buf, si
 char* TASK_SET_howToRepair_toString(TASK_SET *task_set, PARAM_SET *set, int ID, const char *prefix, char *buf, size_t buf_len);
 
 int TASK_getID(TASK *task);
+const char* TASK_getName(TASK *task);
 PARAM_SET *TASK_getSet(TASK *task);
 TASK_DEFINITION *TASK_getDef(TASK *task);
 

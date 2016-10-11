@@ -38,6 +38,7 @@ void ERR_TRCKR_add(ERR_TRCKR *err, int code, const char *fname, int lineN, const
 void ERR_TRCKR_reset(ERR_TRCKR *err);
 void ERR_TRCKR_printErrors(ERR_TRCKR *err);
 void ERR_TRCKR_printExtendedErrors(ERR_TRCKR *err);
+int ERR_TRCKR_getErrCount(ERR_TRCKR *err);
 
 #define ERR_TRCKR_ADD(err, code, msg, ...) ERR_TRCKR_add(err, code, __FILE__, __LINE__, msg, ##__VA_ARGS__)
 

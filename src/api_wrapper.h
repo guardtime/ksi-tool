@@ -22,6 +22,8 @@
 
 #include "ksitool_err.h"
 #include <ksi/ksi.h>
+#include <ksi/multi_signature.h>
+#include <ksi/blocksigner.h>
 #include <ksi/policy.h>
 #include "err_trckr.h"
 
@@ -48,7 +50,7 @@ int KSITOOL_Signature_extend(ERR_TRCKR *err, const KSI_Signature *signature, KSI
 int KSITOOL_RequestHandle_getExtendResponse(ERR_TRCKR *err, KSI_CTX *ctx, KSI_RequestHandle *handle, KSI_ExtendResp **resp);
 int KSITOOL_Signature_isCalendarAuthRecPresent(const KSI_Signature *sig);
 int KSITOOL_Signature_isPublicationRecordPresent(const KSI_Signature *sig);
-int KSITOOL_createSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_DataHash *dataHash, KSI_Signature **sig);
+int KSITOOL_BlockSigner_close(ERR_TRCKR *err, KSI_CTX *ctx, KSI_BlockSigner *signer, KSI_MultiSignature **ms);
 int KSITOOL_receivePublicationsFile(ERR_TRCKR *err ,KSI_CTX *ctx, KSI_PublicationsFile **pubFile);
 int KSITOOL_verifyPublicationsFile(ERR_TRCKR *err, KSI_CTX *ctx, KSI_PublicationsFile *pubfile);
 void KSITOOL_KSI_ERRTrace_save(KSI_CTX *ctx);
@@ -68,7 +70,7 @@ char *KSITOOL_PublicationRecord_toString(KSI_PublicationRecord *rec, char *buf, 
 
 int KSI_OBJ_saveSignature(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *mode, const char *fname, char *f, size_t f_len);
 int KSI_OBJ_savePublicationsFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *mode, const char *fname) ;
-int KSI_OBJ_loadSignature(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signature **sig);
+int KSI_OBJ_loadSignature(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, const char* mode, KSI_Signature **sig);
 int KSI_OBJ_isSignatureExtended(const KSI_Signature *sig);
 
 int KSITOOL_LOG_SmartFile(void *logCtx, int logLevel, const char *message);

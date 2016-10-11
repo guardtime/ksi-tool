@@ -35,6 +35,7 @@ enum param_set_err {
 	PST_OK = 0,
 	PST_INVALID_ARGUMENT = PARAM_SET_ERROR_BASE,
 	PST_INVALID_FORMAT,
+	/* Currently used only if TASK_DEFINITION_MAX_COUNT exceeded. */
 	PST_INDEX_OVF,
 	/** Parameter with the given name does not exist it the given set. */
 	PST_PARAMETER_NOT_FOUND,
@@ -48,25 +49,54 @@ enum param_set_err {
 	PST_PARAMETER_IS_UNKNOWN,
 	/** Object extractor function is not implemented. */
 	PST_PARAMETER_UNIMPLEMENTED_OBJ,
+	/* The function for extracting wildcard is not implemented. */
+	PST_PARAMETER_UNIMPLEMENTED_WILDCARD,
 	PST_OUT_OF_MEMORY,
 	PST_IO_ERROR,
-	PST_NEGATIVE_PRIORITY,
+	PST_PRIORITY_NEGATIVE,
+	PST_PRIORITY_TOO_LARGE,
 	PST_PARAMETER_INVALID_FORMAT,
 	PST_TASK_ZERO_CONSISTENT_TASKS,
 	PST_TASK_MULTIPLE_CONSISTENT_TASKS,
 	PST_TASK_SET_HAS_NO_DEFINITIONS,
 	PST_TASK_SET_NOT_ANALYZED,
 	PST_TASK_UNABLE_TO_ANALYZE_PARAM_SET_CHANGED,
+	PST_WILDCARD_ERROR,
 	PST_UNDEFINED_BEHAVIOUR,
+	/* Unable to set the combination of command-line parser options. */
+	PST_PRSCMD_INVALID_COMBINATION,
 	PST_UNKNOWN_ERROR,
 };
 
 enum enum_priority {
 	PST_PRIORITY_NOTDEFINED = -4,
+	
+	/* Priority for the most significant priority level. */
 	PST_PRIORITY_HIGHEST = -3,
+	
+	/* Priority for the least significant priority level. */
 	PST_PRIORITY_LOWEST = -2,
+	
+	/* Priority level is not used when filtering elements. */
 	PST_PRIORITY_NONE = -1,
-	PST_PRIORITY_VALID_BASE = 0
+	
+	/* Count of possible priority values beginning from PST_PRIORITY_VALID_BASE. */
+	PST_PRIORITY_COUNT = 0xffff,
+	
+	/* The valid base for priority level. */
+	PST_PRIORITY_VALID_BASE = 0,
+		
+	/* The valid highest priority level.*/
+	PST_PRIORITY_VALID_ROOF = PST_PRIORITY_VALID_BASE + PST_PRIORITY_COUNT - 1 ,
+	
+	/* To extract values higher than A, use priority A + PST_PRIORITY_HIGHER_THAN*/
+	PST_PRIORITY_HIGHER_THAN = PST_PRIORITY_VALID_ROOF + 1,
+	
+	/* To extract values lower than A, use priority A + PST_PRIORITY_LOWER_THAN*/
+	PST_PRIORITY_LOWER_THAN = PST_PRIORITY_HIGHER_THAN + PST_PRIORITY_COUNT,
+	
+	 /* Priorities greater than that are all invalid. */
+	PST_PRIORITY_FIELD_OUT_OF_RANGE = PST_PRIORITY_LOWER_THAN + PST_PRIORITY_COUNT
 };
 
 enum enum_status {
@@ -223,9 +253,15 @@ int PARAM_SET_addControl(PARAM_SET *set, const char *names,
 int PARAM_SET_add(PARAM_SET *set, const char *name, const char *value, const char *source, int priority);
 
 /**
- * Extracts string from the \c PARAM_SET (see \ref PARAM_SET_add). If object
- * extractor is set, a string value is is always extracted. The user MUST not free
+ * Extracts strings from the \c PARAM_SET (see \ref PARAM_SET_add). If object
+ * extractor is set, a string value is always extracted. The user MUST not free
  * the returned string.
+ *
+ * Values are filtered by constraints. If multiple names are
+ * specified (e.g. name1,name2,name3) all the parameters are examined. If all the
+ * parameters do not contain any values \c PST_PARAMETER_EMPTY is returned, if some
+ * values are found and the end of the list is reached \c PST_PARAMETER_VALUE_NOT_FOUND
+ * is returned.
  *
  * \param	set			PARAM_SET object.
  * \param	name		parameters name.
@@ -245,6 +281,12 @@ int PARAM_SET_getStr(PARAM_SET *set, const char *name, const char *source, int p
  * returned. By default the user MUST not free the returned object. If a custom
  * object extractor function is used, object must be freed if implementation
  * requires it.
+ *
+ * Values are filtered by constraints. If multiple names are
+ * specified (e.g. name1,name2,name3) all the parameters are examined. If all the
+ * parameters do not contain any values \c PST_PARAMETER_EMPTY is returned, if some
+ * values are found and the end of the list is reached \c PST_PARAMETER_VALUE_NOT_FOUND
+ * is returned.
  *
  * \param	set			PARAM_SET object.
  * \param	name		parameters name.
@@ -329,14 +371,26 @@ int PARAM_SET_clearValue(PARAM_SET *set, const char *names, const char *source, 
 int PARAM_SET_getValueCount(PARAM_SET *set, const char *names, const char *source, int priority, int *count);
 
 /**
- * Searches for a parameter by name and checks if its value is present. Even if
- * the values format or content is invalid, true is returned.
+ * Searches for a parameter defined in the list by name and checks if all the
+ * parameters have values set. Parameter list is defined as "p1,p2,p3 ...".
+ * Even if the values format or content is invalid, true is returned.
  *
  * \param	set		PARAM_SET object.
- * \param	name	parameter name.
- * \return PST_OK if successful, error code otherwise.
+ * \param	names	parameter name list.
+ * \return 1 if yes, 0 otherwise.
  */
-int PARAM_SET_isSetByName(const PARAM_SET *set, const char *name);
+int PARAM_SET_isSetByName(const PARAM_SET *set, const char *names);
+
+/**
+ * Searches for a parameter defined in the list by name and checks if one of the
+ * parameters have values set. Parameter list is defined as "p1,p2,p3 ...".
+ * Even if the values format or content is invalid, true is returned.
+ *
+ * \param	set		PARAM_SET object.
+ * \param	names	parameter name list.
+ * \return 1 if yes, 0 otherwise.
+ */
+int PARAM_SET_isOneOfSetByName(const PARAM_SET *set, const char *names);
 
 /**
  * Controls if the format and content of the parameters is OK.
@@ -345,6 +399,12 @@ int PARAM_SET_isSetByName(const PARAM_SET *set, const char *name);
  */
 int PARAM_SET_isFormatOK(const PARAM_SET *set);
 
+/**
+ * Controls if the the constraints are violated.
+ * \param	set		PARAM_SET object.
+ * \return 0 if constraints are OK, 1 otherwise. -1 if an error occurred.
+ */
+int PARAM_SET_isConstraintViolation(const PARAM_SET *set);
 /**
  * Controls if there are some undefined parameters red from command-line or
  * file, similar to the defined ones.
@@ -394,6 +454,11 @@ int PARAM_SET_readFromFile(PARAM_SET *set, const char *fname, const char* source
  * \return PST_OK if successful, error code otherwise.
  */
 int PARAM_SET_readFromCMD(PARAM_SET *set, int argc, char **argv, const char *source, int priority);
+
+
+int PARAM_SET_setParseOptions(PARAM_SET *set, const char *names, int options);
+
+int PARAM_SET_parseCMD(PARAM_SET *set, int argc, char **argv, const char *source, int priority);
 
 /**
  * Extracts all parameters from \c src known to \c target and appends all the
@@ -445,6 +510,8 @@ char* PARAM_SET_unknownsToString(const PARAM_SET *set, const char *prefix, char 
  * \return buf if successful, NULL otherwise.
  */
 char* PARAM_SET_invalidParametersToString(const PARAM_SET *set, const char *prefix, const char* (*getErrString)(int), char *buf, size_t buf_len);
+
+char* PARAM_SET_constraintErrorToString(const PARAM_SET *set, const char *prefix, char *buf, size_t buf_len);
 
 /**
  * Converts PST_ Error codes to string.
@@ -508,6 +575,17 @@ int parse_key_value_pair(const char *line, char *key, char *value, size_t buf_le
  * \return Return 0 if successful, EOF if end of file.
  */
 int read_line(FILE *file, char *buf, size_t len, size_t *row_pointer, size_t *read_count);
+
+/**
+ * Specify a function to expand tokens that contain wildcard character (WC) to array of
+ * new values. Characters '?' and '*' are WC. Values containing WC are removed and
+ * replaced with the expanded values. See \ref PARAM_expandWildcard,
+ * \ref PARAM_setWildcardExpander, \ref PARAM_SET_wildcardExpander and \ref
+ * PST_PRSCMD_EXPAND_WILDCARD for more details.
+ */
+int PARAM_SET_wildcardExpander(PARAM_SET *set, const char *names,
+		void *ctx,
+		int (*expand_wildcard)(PARAM_VAL *param_value, void *ctx, int *value_shift));
 
 #ifdef	__cplusplus
 }

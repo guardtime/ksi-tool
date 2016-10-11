@@ -28,12 +28,12 @@
 #include "param_set_obj_impl.h"
 #include "strn.h"
 
-#define debug_array_printf 	{int n; for(n = 0; n < task_set->count; n++) {printf("[%2.2f:%2i]", task_set->cons[n], task_set->index[n]);}printf("\n");}
+#define debug_array_printf 	{int n; for (n = 0; n < task_set->count; n++) {printf("[%2.2f:%2i]", task_set->cons[n], task_set->index[n]);}printf("\n");}
 
 
 static int new_string(const char *str, char **out) {
 	char *tmp = NULL;
-	if(out == NULL) return PST_INVALID_ARGUMENT;
+	if (out == NULL) return PST_INVALID_ARGUMENT;
 
 	if (str == NULL) {
 		*out = NULL;
@@ -41,7 +41,7 @@ static int new_string(const char *str, char **out) {
 	}
 
 	tmp = (char*)malloc(strlen(str)*sizeof(char) + 1);
-	if(tmp == NULL) return PST_OUT_OF_MEMORY;
+	if (tmp == NULL) return PST_OUT_OF_MEMORY;
 
 	strcpy(tmp, str);
 	*out = tmp;
@@ -63,7 +63,7 @@ static int category_get_parameter_count(const char* categhory){
 	int count = 0;
 	if (categhory == NULL) return 0;
 
-	while((name = category_extract_name(name ,buf, sizeof(buf), NULL)) != NULL)
+	while ((name = category_extract_name(name ,buf, sizeof(buf), NULL)) != NULL)
 		count++;
 
 	return count;
@@ -74,11 +74,11 @@ static int category_get_missing_flag_count(const char* category, PARAM_SET *set)
 	const char *pName = NULL;
 	char buf[256];
 
-	if(set == NULL) return -1;
+	if (set == NULL) return -1;
 
 	pName = category;
-	while((pName = category_extract_name(pName, buf, sizeof(buf), NULL)) != NULL){
-		if(!PARAM_SET_isSetByName(set, buf)){
+	while ((pName = category_extract_name(pName, buf, sizeof(buf), NULL)) != NULL){
+		if (!PARAM_SET_isSetByName(set, buf)){
 			missedFlags++;
 		}
 	}
@@ -116,10 +116,10 @@ static int task_definition_getAtLeastOneSetMetrica(TASK_DEFINITION *def, PARAM_S
 static int TASK_new(TASK_DEFINITION *pDef, PARAM_SET *pSet, TASK **new){
 	TASK *tmp = NULL;
 
-	if(new == NULL) return PST_INVALID_ARGUMENT;
+	if (new == NULL) return PST_INVALID_ARGUMENT;
 
 	tmp = (TASK*)malloc(sizeof(TASK));
-	if(tmp == NULL) return PST_OUT_OF_MEMORY;
+	if (tmp == NULL) return PST_OUT_OF_MEMORY;
 
 	tmp->def = pDef;
 	tmp->id = pDef->id;
@@ -130,22 +130,27 @@ static int TASK_new(TASK_DEFINITION *pDef, PARAM_SET *pSet, TASK **new){
 }
 
 static void TASK_free(TASK *obj){
-	if(obj == NULL) return;
+	if (obj == NULL) return;
 	free(obj);
 }
 
 int TASK_getID(TASK *task){
-	if(task == NULL) return -1;
+	if (task == NULL) return -1;
 	else return task->id;
 }
 
+const char* TASK_getName(TASK *task){
+	if (task == NULL) return NULL;
+	else return task->def->name;
+}
+
 PARAM_SET *TASK_getSet(TASK *task) {
-	if(task == NULL) return NULL;
+	if (task == NULL) return NULL;
 	else return task->set;
 }
 
 TASK_DEFINITION *TASK_getDef(TASK *task) {
-	if(task == NULL) return NULL;
+	if (task == NULL) return NULL;
 	else return task->def;
 }
 
@@ -164,7 +169,7 @@ int TASK_DEFINITION_new(int id, const char *name, const char *man, const char *a
 	 * Construct new and empty task definition data structure.
 	 */
 	tmp = (TASK_DEFINITION*)malloc(sizeof(TASK_DEFINITION));
-	if(tmp == NULL) {
+	if (tmp == NULL) {
 		res = PST_OUT_OF_MEMORY;
 		goto cleanup;
 	}
@@ -220,7 +225,7 @@ cleanup:
 }
 
 void TASK_DEFINITION_free(TASK_DEFINITION *obj){
-	if(obj == NULL) return;
+	if (obj == NULL) return;
 
 	if (obj->ignore != NULL) free(obj->ignore);
 	if (obj->forbitten != NULL) free(obj->forbitten);
@@ -345,9 +350,9 @@ int TASK_DEFINITION_getMoreConsistent(TASK_DEFINITION *A, TASK_DEFINITION *B, PA
 				- category_get_missing_flag_count(B->mandatory, set) - atlmissing;
 
 		pNameA = A->mandatory;
-		while((pNameA = category_extract_name(pNameA, bufA, sizeof(bufA), NULL)) != NULL){
+		while ((pNameA = category_extract_name(pNameA, bufA, sizeof(bufA), NULL)) != NULL){
 			pNameB = B->mandatory;
-			while((pNameB = category_extract_name(pNameB, bufB, sizeof(bufB), NULL)) != NULL){
+			while ((pNameB = category_extract_name(pNameB, bufB, sizeof(bufB), NULL)) != NULL){
 				/* If flags are bot set and exist in A and B, decrement the count*/
 				if (strcmp(bufA, bufB) == 0 && PARAM_SET_isSetByName(set, bufA) && PARAM_SET_isSetByName(set, bufB)) {
 						A_different_set_flag_count--;
@@ -358,9 +363,9 @@ int TASK_DEFINITION_getMoreConsistent(TASK_DEFINITION *A, TASK_DEFINITION *B, PA
 		}
 
 		pNameA = A->atleast_one;
-		while((pNameA = category_extract_name(pNameA, bufA, sizeof(bufA), NULL)) != NULL){
+		while ((pNameA = category_extract_name(pNameA, bufA, sizeof(bufA), NULL)) != NULL){
 			pNameB = B->atleast_one;
-			while((pNameB = category_extract_name(pNameB, bufB, sizeof(bufB), NULL)) != NULL){
+			while ((pNameB = category_extract_name(pNameB, bufB, sizeof(bufB), NULL)) != NULL){
 				/* If flags are bot set and exist in A and B, decrement the count*/
 				if (strcmp(bufA, bufB) == 0 && PARAM_SET_isSetByName(set, bufA) && PARAM_SET_isSetByName(set, bufB)) {
 						A_different_set_flag_count--;
@@ -436,7 +441,7 @@ char *TASK_DEFINITION_howToRepiar_toString(TASK_DEFINITION *def, PARAM_SET *set,
 	const char *pref = NULL;
 
 
-	if(def == NULL || set == NULL || buf == NULL || buf_len == 0){
+	if (def == NULL || set == NULL || buf == NULL || buf_len == 0){
 		return NULL;
 	}
 
@@ -446,10 +451,10 @@ char *TASK_DEFINITION_howToRepiar_toString(TASK_DEFINITION *def, PARAM_SET *set,
 	 * Error about MANDATORY flags.
 	 */
 	pName = def->mandatory;
-	while((pName = category_extract_name(pName, name_buffer, sizeof(name_buffer), NULL)) != NULL) {
+	while ((pName = category_extract_name(pName, name_buffer, sizeof(name_buffer), NULL)) != NULL) {
 		if (strlen(name_buffer) == 0) continue;
 		if (!PARAM_SET_isSetByName(set, name_buffer)) {
-			if(!err_printed){
+			if (!err_printed){
 				count += PST_snprintf(buf + count, buf_len - count, "%sYou have to define flag(s) '%s%s'",
 						pref,
 						strlen(name_buffer)>1 ? "--" : "-",
@@ -461,16 +466,16 @@ char *TASK_DEFINITION_howToRepiar_toString(TASK_DEFINITION *def, PARAM_SET *set,
 			}
 		}
 	}
-	if(err_printed) count += PST_snprintf(buf + count, buf_len - count, ".\n");
+	if (err_printed) count += PST_snprintf(buf + count, buf_len - count, ".\n");
 	/**
 	 * Error about AT LEAST ONE OF flags.
 	 */
 	if ((category_get_parameter_count(def->atleast_one) - category_get_missing_flag_count(def->atleast_one, set)) == 0) {
 		err_printed = 0;
 		pName = def->atleast_one;
-		while((pName = category_extract_name(pName, name_buffer, sizeof(name_buffer), NULL)) != NULL){
-			if(!err_printed){
-				count += PST_snprintf(buf + count, buf_len - count, "%sYou have to define at least one the flag(s) '%s%s'",
+		while ((pName = category_extract_name(pName, name_buffer, sizeof(name_buffer), NULL)) != NULL){
+			if (!err_printed){
+				count += PST_snprintf(buf + count, buf_len - count, "%sYou have to define at least one of the flag(s) '%s%s'",
 						pref,
 						strlen(name_buffer)>1 ? "--" : "-",
 						name_buffer);
@@ -480,7 +485,7 @@ char *TASK_DEFINITION_howToRepiar_toString(TASK_DEFINITION *def, PARAM_SET *set,
 				count += PST_snprintf(buf + count, buf_len - count, ", '%s%s'", strlen(name_buffer)>1 ? "--" : "-", name_buffer);
 			}
 		}
-		if(err_printed) count += PST_snprintf(buf + count, buf_len - count, ".\n");
+		if (err_printed) count += PST_snprintf(buf + count, buf_len - count, ".\n");
 	}
 
 	/**
@@ -488,9 +493,9 @@ char *TASK_DEFINITION_howToRepiar_toString(TASK_DEFINITION *def, PARAM_SET *set,
 	 */
 	pName = def->forbitten;
 	err_printed = 0;
-	while((pName = category_extract_name(pName, name_buffer, sizeof(name_buffer), NULL)) != NULL){
+	while ((pName = category_extract_name(pName, name_buffer, sizeof(name_buffer), NULL)) != NULL){
 		if (PARAM_SET_isSetByName(set, name_buffer)) {
-			if(!err_printed){
+			if (!err_printed){
 				count += PST_snprintf(buf + count, buf_len - count, "%sYou must not use flag(s) '%s%s'",
 						pref,
 						strlen(name_buffer)>1 ? "--" : "-",
@@ -502,7 +507,7 @@ char *TASK_DEFINITION_howToRepiar_toString(TASK_DEFINITION *def, PARAM_SET *set,
 			}
 		}
 	}
-	if(err_printed) count += PST_snprintf(buf + count, buf_len - count, ".\n");
+	if (err_printed) count += PST_snprintf(buf + count, buf_len - count, ".\n");
 
 	return buf;
 }
@@ -515,15 +520,15 @@ char* TASK_DEFINITION_ignoredParametersToString(TASK_DEFINITION *def, PARAM_SET 
 	int err_printed = 0;
 
 
-	if(def == NULL || set == NULL || buf == NULL || buf_len == 0) return NULL;
+	if (def == NULL || set == NULL || buf == NULL || buf_len == 0) return NULL;
 
 	pref = (prefix == NULL) ? "" : prefix;
 
 	pName = def->ignore;
 	err_printed = 0;
-	while((pName = category_extract_name(pName, name_buffer, sizeof(name_buffer), NULL)) != NULL){
+	while ((pName = category_extract_name(pName, name_buffer, sizeof(name_buffer), NULL)) != NULL){
 		if (PARAM_SET_isSetByName(set, name_buffer)) {
-			if(!err_printed){
+			if (!err_printed){
 				count += PST_snprintf(buf + count, buf_len - count, "%sIgnoring following flag(s) '%s%s'",
 						pref,
 						strlen(name_buffer)>1 ? "--" : "-",
@@ -536,7 +541,7 @@ char* TASK_DEFINITION_ignoredParametersToString(TASK_DEFINITION *def, PARAM_SET 
 		}
 	}
 
-	if(err_printed) count += PST_snprintf(buf + count, buf_len - count, ".\n");
+	if (err_printed) count += PST_snprintf(buf + count, buf_len - count, ".\n");
 
 	return buf;
 }
@@ -556,7 +561,7 @@ int TASK_SET_new(TASK_SET **new) {
 	 * Construct new and empty task definition data structure.
 	 */
 	tmp = (TASK_SET*)malloc(sizeof(TASK_SET));
-	if(tmp == NULL) {
+	if (tmp == NULL) {
 		res = PST_OUT_OF_MEMORY;
 		goto cleanup;
 	}
@@ -739,7 +744,7 @@ int TASK_SET_getConsistentTask(TASK_SET *task_set, TASK **task) {
 	TASK *tmp = NULL;
 	int i;
 
-	if(task_set == NULL || task == NULL) {
+	if (task_set == NULL || task == NULL) {
 		res = PST_INVALID_ARGUMENT;
 		goto cleanup;
 	}
@@ -823,8 +828,8 @@ int TASK_SET_cleanIgnored(TASK_SET *task_set, TASK *task, int *removed) {
 	PARAM_SET_clearParameter(task->set, task->def->ignore);
 
 	pName = task->def->ignore;
-	while((pName = category_extract_name(pName, buf, sizeof(buf), NULL)) != NULL) {
-		if(PARAM_SET_isSetByName(task->set, buf)){
+	while ((pName = category_extract_name(pName, buf, sizeof(buf), NULL)) != NULL) {
+		if (PARAM_SET_isSetByName(task->set, buf)){
 			res = PARAM_SET_clearParameter(task->set, buf);
 			if (res != PST_OK) goto cleanup;
 

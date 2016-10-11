@@ -1,0 +1,160 @@
+#
+# Copyright 2013-2016 Guardtime, Inc.
+#
+# This file is part of the Guardtime client SDK.
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES, CONDITIONS, OR OTHER LICENSES OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
+# "Guardtime" and "KSI" are trademarks or registered trademarks of
+# Guardtime, Inc., and no license to trademarks is granted; Guardtime
+# reserves and retains all trademark rights.
+
+# Misuse of signing command-line.
+
+# Invalid usage of pipe.
+
+# Test --max-lvl range [0 - 255].
+EXECUTABLE sign --max-lvl 256
+>>>2 /.*Tree depth out of range.*/
+>>>= 3
+
+EXECUTABLE sign --max-lvl -1
+>>>2 /.*Tree depth out of range.*/
+>>>= 3
+
+# Test negative integer inputs:
+EXECUTABLE sign --max-aggr-rounds -1
+>>>2 /(.*Integer must be unsigned.*)(.*max-aggr-rounds.*)/
+>>>= 3
+
+# Test max-aggr-rounds as 0:
+EXECUTABLE sign --max-aggr-rounds 0
+>>>2 /(.*Integer value is too small.*)(.*max-aggr-rounds.*)/
+>>>= 3
+
+# Test flags with arguments. As flags do not bind any arguments, lots of missing file error messages should be displayed:
+EXECUTABLE sign --dump-last-leaf b c --mdata d --mdata-req-tm e
+>>>2 /(.*File does not exist.*)(.*b.*)
+(.*File does not exist.*)(.*c.*)
+(.*File does not exist.*)(.*d.*)
+(.*File does not exist.*)(.*e.*)/
+>>>= 3
+
+# Test mask with invalid or unkown function 1:
+EXECUTABLE sign --mask func:x,x --mask crand:x --mask crand:x,x --mask crand:1,x -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*Unknown function.*)(.*func:x,x.*)
+(.*Invalid function argument count.*)(.*crand:x.*)
+(.*Argument 1 is invalid.*)(.*crand:x,x.*)
+(.*Argument 2 is invalid.*)(.*crand:1,x.*)/
+>>>= 3
+
+# Test mask with invalid function 2:
+EXECUTABLE sign --mask crand:time,x --mask crand:,x --mask crand:,x,x --mask crand:, --mask crand:,, -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*Argument 2 is invalid.*)(.*crand:time,x.*)
+(.*Invalid function argument count.*)(.*crand:,x.*)
+(.*Invalid function argument count.*)(.*crand:,x,x.*)
+(.*Invalid function argument count.*)(.*crand:,.*)
+(.*Invalid function argument count.*)(.*crand:,,.*)/
+>>>= 3
+
+# Test mask with invalid input:
+EXECUTABLE sign --mask invalid_hex -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*There must be even number of hex characters.*)(.*invalid_hex.*)/
+>>>= 3
+
+# Test -i parsing with not existing files:
+EXECUTABLE sign not-existing -i -i -d -- -- -C 5
+>>>2 /(.*File does not exist.*)(.*not-existing.*)
+(.*File does not exist.*)(.*-i.*)
+(.*File does not exist.*)(.*--.*)
+(.*File does not exist.*)(.*-C.*)
+(.*File does not exist.*)(.*5.*)/
+>>>= 3
+
+# Test invalid IO combinations 1. --data-out with multiple inputs:
+EXECUTABLE sign --max-lvl 10 --data-out - -o test/out/sign -- test/resource/file/ab*
+>>>2 /(.*Error: It is not possible redirect multiple inputs.*)(.*to stdout.*)/
+>>>= 3
+
+# Test invalid IO combinations 2. Two outputs are directories:
+EXECUTABLE sign --max-lvl 10 -o test/out/sign -o test/out/sign -- test/resource/file/ab*
+>>>2 /(.*Error: There are multiple outputs specified and one output is directory.*)(.*test\/out\/sign.*)/
+>>>= 3
+
+# Test invalid IO combinations 3. Two outputs where one is directory:
+EXECUTABLE sign --max-lvl 10 -o test/out/sign -o test/out/sign/dummy.signature.ksig -- test/resource/file/ab*
+>>>2 /(.*Error: There are multiple outputs specified and one output is directory.*)(.*test\/out\/sign.*)/
+>>>= 3
+
+# Test invalid IO combinations 4. Two outputs to file in case where there is only a single input:
+EXECUTABLE sign --max-lvl 10 -o test/out/sign/sig_1.ksig -o test/out/sign/sig_2.ksig -- test/resource/file/abcd
+>>>2 /(.*Error: More output parameters specified than the count of input parameters.*)/
+>>>= 3
+
+# Test invalid IO combinations 5. A single output file for multiple signatures.:
+EXECUTABLE sign --max-lvl 10 -o test/out/sign/sig_1.ksig -- test/resource/file/abc*
+>>>2 /(.*Error: Only one output parameter specified, that is not directory, for multiple signatures.*)/
+>>>= 3
+
+# Test invalid IO combinations 6. A two output files for more than two input files.:
+EXECUTABLE sign --max-lvl 10 -o test/out/sign/sig_1.ksig -o test/out/sign/sig_2.ksig -- test/resource/file/*
+>>>2 /(.*Error: Not enough output parameters specified to store all signatures to corresponding file.*)/
+>>>= 3
+
+# Test invalid IO combinations 7. Try to read 2x from stdin:
+EXECUTABLE sign --max-lvl 10 -i - -i - -o test/out/sign 
+>>>2 /(.*Error: Multiple different simultaneous inputs from stdin.*)(.*-i -.*)/
+>>>= 3
+
+# Test invalid IO combinations 8. Try to sign single file with masking when tree's size is too small:
+EXECUTABLE sign --max-lvl 0 --mask -d -i test/resource/file/abcd -o test/out/sign 
+>>>2 /(.*Error: Unable to use masking.*)(.*as the local aggregation tree's maximum depth is too small.*)(.*--max-lvl.*)/
+>>>= 8
+
+# Test invalid IO combinations 9. Try to sign single file with metadata when tree's size is too small:
+EXECUTABLE sign --max-lvl 0 --mdata --mdata-cli-id "My Name" -d -i test/resource/file/abcd -o test/out/sign 
+>>>2 /(.*Error: Unable to embed metadata.*)(.*as the local aggregation tree's maximum depth is too small.*)(.*--max-lvl.*)/
+>>>= 8
+
+# Test invalid IO combinations 10. Try to link another tree's leaf to the local aggregation when masking is disabled:
+EXECUTABLE sign --max-lvl 0 --prev-leaf SHA-256:76b127cddb918c3be744980c094c6c9c0d6c0a8d54b8d971b67886772fbe47c6 -d -i test/resource/file/abcd -o test/out/sign 
+>>>2 /(.*Error: Unable to link the local aggregation tree with the last leaf of the previous local aggregation tree as masking is not enabled.*)(.*--mask.*)/
+>>>= 8
+
+# Test invalid IO combinations 11. Try to masking and metadata with too small tree 1:
+EXECUTABLE sign --max-lvl 0 --mask --mdata --mdata-cli-id "My Naem" -d -i test/resource/file/abcd -o test/out/sign 
+>>>2 /(.*Error: Unable to add metadata with masking.*)(.*as the local aggregation tree's maximum depth is too small.*)(.*--max-lvl.*)/
+>>>= 8
+
+# Test invalid IO combinations 12. Try to masking and metadata with too small tree 2:
+EXECUTABLE sign --max-lvl 1 --mask --mdata --mdata-cli-id "My Naem" -d -i test/resource/file/abcd -o test/out/sign 
+>>>2 /(.*Error: Unable to add metadata with masking.*)(.*as the local aggregation tree's maximum depth is too small.*)(.*--max-lvl.*)/
+>>>= 8
+
+# Test invalid IO combinations 13. Try to link another tree's leaf with the local aggregation, masking and metadata enabled 1:
+EXECUTABLE sign --max-lvl 0 --mask --prev-leaf SHA-256:76b127cddb918c3be744980c094c6c9c0d6c0a8d54b8d971b67886772fbe47c6 --mdata --mdata-cli-id "My Naem" -d -i test/resource/file/abcd -o test/out/sign 
+>>>2 /(.*Error: Unable to embed metadata and link the local aggregation tree with the last leaf of the previous local aggregation tree with masking.*)(.*as the local aggregation tree's maximum depth is too small.*)(.*--max-lvl.*)/
+>>>= 8
+
+# Test invalid IO combinations 14. Try to link another tree's leaf with the local aggregation, masking and metadata enabled 2:
+EXECUTABLE sign --max-lvl 1 --mask --prev-leaf SHA-256:76b127cddb918c3be744980c094c6c9c0d6c0a8d54b8d971b67886772fbe47c6 --mdata --mdata-cli-id "My Naem" -d -i test/resource/file/abcd -o test/out/sign 
+>>>2 /(.*Error: Unable to embed metadata and link the local aggregation tree with the last leaf of the previous local aggregation tree with masking.*)(.*as the local aggregation tree's maximum depth is too small.*)(.*--max-lvl.*)/
+>>>= 8
+
+# Test metadata without client id:
+EXECUTABLE sign --max-lvl 1 --mdata --mdata-sqn-nr -d --mdata-mac-id "My Comuter" --mdata-req-tm -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*Error: Client ID is missing but is mandatory part of metadata.*)/
+>>>= 3
+
+# Test wildcard when there is no match:
+EXECUTABLE sign --max-lvl 10 -o test/out/sign -- test/resource/file/this_file_set_does_not_exist*
+>>>2 /((.*You have to define at least one of the flag.*)(.*-i.*)(.*--input.*))|(.*File does not exist.*)(.*this_file_set_does_not_exist[*].*)/
+>>>= 3
+

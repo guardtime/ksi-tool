@@ -17,6 +17,7 @@
  * reserves and retains all trademark rights.
  */
 
+#include "task_initializer.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,13 +33,6 @@
 #include "conf_file.h"
 #include "ksitool_err.h"
 
-enum service_info_priorities {
-	PRIORITY_KSI_CONF,
-	PRIORITY_KSI_CONF_USER,
-	PRIORITY_KSI_CONF_FILE,
-	PRIORITY_CMD,
-};
-
 static int isKSIUserInfoInsideUrl(const char *url, char *buf_u, char *buf_k, size_t buf_len);
 static int extract_user_info_from_url_if_needed(PARAM_SET *set, const char *flag_name, const char *usr_name, const char *key_name);
 
@@ -53,19 +47,10 @@ int TASK_INITIALIZER_check_analyze_report(PARAM_SET *set, TASK_SET *task_set, do
 		goto cleanup;
 	}
 
-	/**
-	 * Check for invalid values.
-     */
-	if (!PARAM_SET_isFormatOK(set)) {
-		PARAM_SET_invalidParametersToString(set, NULL, getParameterErrorString, buf, sizeof(buf));
-		print_errors("%s", buf);
-		res = KT_INVALID_CMD_PARAM;
-		goto cleanup;
-	}
 
 	/**
 	 * Check for typos and unknown parameters.
-     */
+	 */
 	if (PARAM_SET_isTypoFailure(set)) {
 			print_errors("%s\n", PARAM_SET_typosToString(set, PST_TOSTR_DOUBLE_HYPHEN, NULL, buf, sizeof(buf)));
 			res = KT_INVALID_CMD_PARAM;
@@ -77,9 +62,19 @@ int TASK_INITIALIZER_check_analyze_report(PARAM_SET *set, TASK_SET *task_set, do
 	}
 
 	/**
+	 * Check for invalid values.
+	 */
+	if (!PARAM_SET_isFormatOK(set)) {
+		PARAM_SET_invalidParametersToString(set, NULL, getParameterErrorString, buf, sizeof(buf));
+		print_errors("%s", buf);
+		res = KT_INVALID_CMD_PARAM;
+		goto cleanup;
+	}
+
+	/**
 	 * Analyze task set and Extract the task if consistent one exists, print help
 	 * messaged otherwise.
-     */
+	 */
 	res = TASK_SET_analyzeConsistency(task_set, set, task_set_sens);
 	if (res != PST_OK) goto cleanup;
 
@@ -90,7 +85,7 @@ int TASK_INITIALIZER_check_analyze_report(PARAM_SET *set, TASK_SET *task_set, do
 
 	/**
 	 * If task is not present report errors.
-     */
+	 */
 	if (pTask == NULL) {
 		int ID;
 		if (TASK_SET_isOneFromSetTheTarget(task_set, task_dif, &ID)) {
@@ -117,7 +112,7 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 	int res;
 	PARAM_SET *conf_env = NULL;
 	PARAM_SET *conf_file = NULL;
-	char buf[1024];
+	char buf[0xffff];
 	char *conf_file_name = NULL;
 
 	res = CONF_createSet(&conf_env);
@@ -136,10 +131,14 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 	/**
 	 * Read conf from command line.
      */
-	PARAM_SET_readFromCMD(set, argc, argv, "CMD", PRIORITY_CMD);
+	res = PARAM_SET_parseCMD(set, argc, argv, "CMD", PRIORITY_CMD);
+	if (res != KT_OK) {
+		print_errors("Error: Unable to parse command-line.\n");
+		goto cleanup;
+	}
 
 	/**
-	 * Include configurations file.
+	 * Include configuration file.
      */
 	if (PARAM_SET_isSetByName(set, "conf")) {
 		res = PARAM_SET_getStr(set, "conf", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &conf_file_name);
@@ -154,7 +153,7 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 		}
 
 		if (CONF_isInvalid(conf_file)) {
-			print_errors("Configurations file '%s' is invalid:\n", conf_file_name);
+			print_errors("configuration file '%s' is invalid:\n", conf_file_name);
 			print_errors("%s\n", CONF_errorsToString(conf_file, "  ", buf, sizeof(buf)));
 			res = KT_INVALID_CONF;
 			goto cleanup;
@@ -248,7 +247,7 @@ static int extract_user_info_from_url_if_needed(PARAM_SET *set, const char *flag
 	}
 	/**
 	 * Extract the url withe the greatest priority for further examination.
-     */
+	 */
 	res = PARAM_SET_getStr(set, flag_name, NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &url);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY && res != PST_PARAMETER_INVALID_FORMAT && res != PST_PARAMETER_NOT_FOUND) {
 		goto cleanup;
