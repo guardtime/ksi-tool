@@ -701,14 +701,12 @@ static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, const char *mode, void *obj,
 	unsigned char *raw = NULL;
 	size_t raw_len = 0;
 	size_t count = 0;
-	char mode_sum[32];
 
 	if (err == NULL || ksi == NULL || obj == NULL || serialize == NULL || path == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
-	KSI_snprintf(mode_sum, sizeof(mode_sum), "wb%s", (mode == NULL) ? "" : mode);
 
 	res = serialize(ksi, obj, &raw, &raw_len);
 	if (res != KSI_OK) {
@@ -716,7 +714,7 @@ static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, const char *mode, void *obj,
 		goto cleanup;
 	}
 
-	res = SMART_FILE_open(path, mode_sum, &file);
+	res = SMART_FILE_open(path, mode, &file);
 	if (res != KT_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: %s", KSITOOL_errToString(res));
 		goto cleanup;
