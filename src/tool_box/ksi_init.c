@@ -280,13 +280,13 @@ static int tool_init_ksi_trust_store(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *se
 		tmp = NULL;
 
 		i = 0;
-		while(PARAM_SET_getStr(set, "V", NULL, PST_PRIORITY_HIGHEST, i++, &lookupFile) == PST_OK) {
+		while (PARAM_SET_getStr(set, "V", NULL, PST_PRIORITY_HIGHEST, i++, &lookupFile) == PST_OK) {
 			res = KSI_PKITruststore_addLookupFile(refTrustStore, lookupFile);
 			ERR_CATCH_MSG(err, res, "Error: Unable to add cert to PKI trust store.");
 		}
 
 		i = 0;
-		while(PARAM_SET_getStr(set, "W", NULL, PST_PRIORITY_HIGHEST, i++, &lookupDir) == PST_OK) {
+		while (PARAM_SET_getStr(set, "W", NULL, PST_PRIORITY_HIGHEST, i++, &lookupDir) == PST_OK) {
 			res = KSI_PKITruststore_addLookupDir(refTrustStore, lookupDir);
 			ERR_CATCH_MSG(err, res, "Error: Unable to add lookup dir to PKI trust store.");
 		}

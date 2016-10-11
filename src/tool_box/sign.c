@@ -584,8 +584,8 @@ static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size
 	 */
 	max_lvl_virtual = max_lvl;
 
-	if (is_masking) if(max_lvl_virtual > 0) max_lvl_virtual--;
-	if (is_metadata) if(max_lvl_virtual > 0) max_lvl_virtual--;
+	if (is_masking) if (max_lvl_virtual > 0) max_lvl_virtual--;
+	if (is_metadata) if (max_lvl_virtual > 0) max_lvl_virtual--;
 
 
 	if (sizeof(size_t) * 8 < max_lvl_virtual) {

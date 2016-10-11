@@ -50,7 +50,7 @@ static int analyze_hexstring_format(const char *hex, double *cor) {
 	size_t valid_count = 0;
 	double tmp = 0;
 
-	if(hex == NULL) {
+	if (hex == NULL) {
 		return FORMAT_NULLPTR;
 	}
 
@@ -60,7 +60,7 @@ static int analyze_hexstring_format(const char *hex, double *cor) {
 			valid_count++;
 		}
 	}
-	if(count > 0) {
+	if (count > 0) {
 		tmp = (double)valid_count / (double)count;
 	}
 
@@ -173,7 +173,7 @@ static int x(char c){
 }
 
 static int xx(char c1, char c2){
-	if(!isxdigit(c1) || !isxdigit(c2))
+	if (!isxdigit(c1) || !isxdigit(c2))
 		return -1;
 	return x(c1) * 16 + x(c2);
 }
@@ -326,7 +326,7 @@ static int file_get_hash(ERR_TRCKR *err, KSI_CTX *ctx, const char *open_mode, co
 	size_t write_count = 0;
 	KSI_DataHash *tmp = NULL;
 
-	if(err == NULL || fname_in == NULL || hash == NULL) {
+	if (err == NULL || fname_in == NULL || hash == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
@@ -478,7 +478,7 @@ static int convert_UTC_to_UNIX2(const char* arg, time_t *time) {
 	struct tm time_st;
 	time_t t;
 
-	if(arg == NULL || time == NULL) {
+	if (arg == NULL || time == NULL) {
 		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
@@ -515,18 +515,18 @@ int isInteger(const char *str) {
 }
 
 int isFormatOk_url(const char *url) {
-	if(url == NULL) return FORMAT_NULLPTR;
-	if(strlen(url) == 0) return FORMAT_NOCONTENT;
+	if (url == NULL) return FORMAT_NULLPTR;
+	if (strlen(url) == 0) return FORMAT_NOCONTENT;
 
-	if(strstr(url, "ksi://") == url)
+	if (strstr(url, "ksi://") == url)
 		return FORMAT_OK;
-	else if(strstr(url, "http://") == url || strstr(url, "ksi+http://") == url)
+	else if (strstr(url, "http://") == url || strstr(url, "ksi+http://") == url)
 		return FORMAT_OK;
-	else if(strstr(url, "https://") == url || strstr(url, "ksi+https://") == url)
+	else if (strstr(url, "https://") == url || strstr(url, "ksi+https://") == url)
 		return FORMAT_OK;
-	else if(strstr(url, "ksi+tcp://") == url)
+	else if (strstr(url, "ksi+tcp://") == url)
 		return FORMAT_OK;
-	else if(strstr(url, "file://") == url)
+	else if (strstr(url, "file://") == url)
 		return FORMAT_OK;
 	else
 		return FORMAT_URL_UNKNOWN_SCHEME;
@@ -537,7 +537,7 @@ int convertRepair_url(const char* arg, char* buf, unsigned len) {
 	unsigned i = 0;
 	int isFile;
 
-	if(arg == NULL || buf == NULL) return 0;
+	if (arg == NULL || buf == NULL) return 0;
 	scheme = strstr(arg, "://");
 	isFile = (strstr(arg, "file://") == arg);
 
@@ -572,8 +572,8 @@ int convertRepair_url(const char* arg, char* buf, unsigned len) {
 int isFormatOk_int(const char *integer) {
 	int i = 0;
 	int C;
-	if(integer == NULL) return FORMAT_NULLPTR;
-	if(strlen(integer) == 0) return FORMAT_NOCONTENT;
+	if (integer == NULL) return FORMAT_NULLPTR;
+	if (strlen(integer) == 0) return FORMAT_NOCONTENT;
 
 	while ((C = integer[i++]) != '\0') {
 		if ((i - 1 == 0 && C != '-' && !isdigit(C)) ||
@@ -654,8 +654,8 @@ int isContentOk_tree_level(const char* integer) {
 
 
 int isFormatOk_inputFile(const char *path){
-	if(path == NULL) return FORMAT_NULLPTR;
-	if(strlen(path) == 0) return FORMAT_NOCONTENT;
+	if (path == NULL) return FORMAT_NULLPTR;
+	if (strlen(path) == 0) return FORMAT_NOCONTENT;
 	return FORMAT_OK;
 }
 
@@ -690,12 +690,12 @@ int isContentOk_inputFileRestrictPipe(const char* path){
 int convertRepair_path(const char* arg, char* buf, unsigned len){
 	char *toBeReplaced = NULL;
 
-	if(arg == NULL || buf == NULL) return 0;
+	if (arg == NULL || buf == NULL) return 0;
 	KSI_strncpy(buf, arg, len - 1);
 
 
 	toBeReplaced = buf;
-	while((toBeReplaced = strchr(toBeReplaced, '\\')) != NULL){
+	while ((toBeReplaced = strchr(toBeReplaced, '\\')) != NULL){
 		*toBeReplaced = '/';
 		toBeReplaced++;
 	}
@@ -704,19 +704,19 @@ int convertRepair_path(const char* arg, char* buf, unsigned len){
 }
 
 int isFormatOk_path(const char *path) {
-	if(path == NULL) return FORMAT_NULLPTR;
-	if(path[0] == '\0') return FORMAT_NOCONTENT;
+	if (path == NULL) return FORMAT_NULLPTR;
+	if (path[0] == '\0') return FORMAT_NOCONTENT;
 	return FORMAT_OK;
 }
 
 int isFormatOk_hashAlg(const char *hashAlg){
-	if(hashAlg == NULL) return FORMAT_NULLPTR;
-	if(strlen(hashAlg) == 0) return FORMAT_NOCONTENT;
+	if (hashAlg == NULL) return FORMAT_NULLPTR;
+	if (strlen(hashAlg) == 0) return FORMAT_NOCONTENT;
 	return FORMAT_OK;
 }
 
 int isContentOk_hashAlg(const char *alg){
-	if(KSI_getHashAlgorithmByName(alg) != KSI_HASHALG_INVALID) return PARAM_OK;
+	if (KSI_getHashAlgorithmByName(alg) != KSI_HASHALG_INVALID) return PARAM_OK;
 	else return HASH_ALG_INVALID_NAME;
 }
 
@@ -737,14 +737,14 @@ int extract_hashAlg(void *extra, const char* str, void** obj) {
 int isFormatOk_imprint(const char *imprint){
 	char *colon;
 
-	if(imprint == NULL) return FORMAT_NULLPTR;
-	if(strlen(imprint) == 0) return FORMAT_NOCONTENT;
+	if (imprint == NULL) return FORMAT_NULLPTR;
+	if (strlen(imprint) == 0) return FORMAT_NOCONTENT;
 
 	colon = strchr(imprint, ':');
 
-	if(colon == NULL) return FORMAT_IMPRINT_NO_COLON;
-	if(colon != NULL && colon == imprint) return FORMAT_IMPRINT_NO_HASH_ALG;
-	if(*(colon + 1) == '\0') return FORMAT_IMPRINT_NO_HASH;
+	if (colon == NULL) return FORMAT_IMPRINT_NO_COLON;
+	if (colon != NULL && colon == imprint) return FORMAT_IMPRINT_NO_HASH_ALG;
+	if (*(colon + 1) == '\0') return FORMAT_IMPRINT_NO_HASH;
 
 	return analyze_hexstring_format(colon + 1, NULL);
 }
@@ -756,7 +756,7 @@ int isContentOk_imprint(const char *imprint) {
 	unsigned len = 0;
 	unsigned expected_len = 0;
 
-	if(imprint == NULL) return PARAM_INVALID;
+	if (imprint == NULL) return PARAM_INVALID;
 
 	res = imprint_extract_fields(imprint, &alg_id, NULL, hash, sizeof(hash));
 	if (res != KT_OK) {
@@ -813,7 +813,7 @@ cleanup:
 
 int isFormatOk_inputHash(const char *str) {
 	if (str == NULL) return FORMAT_NULLPTR;
-	if(strlen(str) == 0) return FORMAT_NOCONTENT;
+	if (strlen(str) == 0) return FORMAT_NOCONTENT;
 
 	if (is_imprint(str)) {
 		return isFormatOk_imprint(str);
@@ -1023,19 +1023,19 @@ cleanup:
 
 
 int isFormatOk_flag(const char *flag) {
-	if(flag == NULL) return FORMAT_OK;
+	if (flag == NULL) return FORMAT_OK;
 	else return FORMAT_FLAG_HAS_ARGUMENT;
 }
 
 int isFormatOk_userPass(const char *uss_pass) {
-	if(uss_pass == NULL) return FORMAT_NULLPTR;
-	if(strlen(uss_pass) == 0) return FORMAT_NOCONTENT;
+	if (uss_pass == NULL) return FORMAT_NULLPTR;
+	if (strlen(uss_pass) == 0) return FORMAT_NOCONTENT;
 	return FORMAT_OK;
 }
 
 int isFormatOk_string(const char *str) {
-	if(str == NULL) return FORMAT_NULLPTR;
-	if(strlen(str) == 0) return FORMAT_NOCONTENT;
+	if (str == NULL) return FORMAT_NULLPTR;
+	if (strlen(str) == 0) return FORMAT_NOCONTENT;
 	return FORMAT_OK;
 }
 
@@ -1044,11 +1044,11 @@ int isFormatOk_constraint(const char *constraint) {
 	char *at = NULL;
 	unsigned i = 0;
 
-	if(constraint == NULL) return FORMAT_NULLPTR;
-	if(strlen(constraint) == 0) return FORMAT_NOCONTENT;
+	if (constraint == NULL) return FORMAT_NULLPTR;
+	if (strlen(constraint) == 0) return FORMAT_NOCONTENT;
 
-	if((at = strchr(constraint,'=')) == NULL) return FORMAT_INVALID;
-	if(at == constraint || *(at+1)==0) return FORMAT_INVALID;
+	if ((at = strchr(constraint,'=')) == NULL) return FORMAT_INVALID;
+	if (at == constraint || *(at+1)==0) return FORMAT_INVALID;
 
 	while (constraint[i] != 0 &&  constraint[i] != '=') {
 		if (!isdigit(constraint[i]) && constraint[i] != '.')
@@ -1063,7 +1063,7 @@ int convertRepair_constraint(const char* arg, char* buf, unsigned len) {
 	char *value = NULL;
 	const char *oid = NULL;
 
-	if(arg == NULL || buf == NULL) return 0;
+	if (arg == NULL || buf == NULL) return 0;
 	KSI_strncpy(buf, arg, len-1);
 
 	value = strchr(arg, '=');

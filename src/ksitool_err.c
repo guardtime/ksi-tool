@@ -142,7 +142,7 @@ static const char* ksitoolErrToString(int error_code) {
 int KSITOOL_errToExitCode(int error) {
 	int exit;
 
-	if(error < KSITOOL_ERR_BASE)
+	if (error < KSITOOL_ERR_BASE)
 		exit = KSITOOL_KSI_ERR_toExitCode(error);
 	else if (error >= KSITOOL_ERR_BASE && error < PARAM_SET_ERROR_BASE)
 		exit = ksitool_ErrToExitcode(error);
@@ -157,7 +157,7 @@ int KSITOOL_errToExitCode(int error) {
 const char* KSITOOL_errToString(int error) {
 	const char* str;
 
-	if(error < KSITOOL_ERR_BASE)
+	if (error < KSITOOL_ERR_BASE)
 		str = KSI_getErrorString(error);
 	else if (error >= KSITOOL_ERR_BASE && error < PARAM_SET_ERROR_BASE)
 		str = ksitoolErrToString(error);

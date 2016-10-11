@@ -64,34 +64,34 @@ void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile, in
 	char *pLineBreak = NULL;
 	char *pStart = NULL;
 
-	if(pubFile == NULL) return;
+	if (pubFile == NULL) return;
 
 	print("Publication Records:\n");
 
 	res = KSI_PublicationsFile_getPublications(pubFile, &list_publicationRecord);
-	if(res != KSI_OK) return;
+	if (res != KSI_OK) return;
 
 	for (i = 0; i < KSI_PublicationRecordList_length(list_publicationRecord); i++) {
 		int h=0;
 		res = KSI_PublicationRecordList_elementAt(list_publicationRecord, i, &publicationRecord);
-		if(res != KSI_OK) return;
+		if (res != KSI_OK) return;
 
-		if(KSITOOL_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
+		if (KSITOOL_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
 
 		pStart = buf;
 		j=1;
 		h=0;
-		if(i) print("\n");
-		while((pLineBreak = strchr(pStart, '\n')) != NULL){
+		if (i) print("\n");
+		while ((pLineBreak = strchr(pStart, '\n')) != NULL){
 			*pLineBreak = 0;
-			if(h++ < 3)
+			if (h++ < 3)
 				print("%s %s\n", "  ", pStart);
 			else
 				print("%s %2i) %s\n", "    ", j++, pStart);
 			pStart = pLineBreak+1;
 		}
 
-		if(h < 3)
+		if (h < 3)
 			print("%s %s\n", "  ", pStart);
 		else
 			print("%s %2i) %s\n", "    ", j++, pStart);
@@ -108,24 +108,24 @@ void OBJPRINT_signaturePublicationReference(KSI_Signature *sig, int (*print)(con
 	char *pStart = buf;
 	int i=1;
 	int h=0;
-	if(sig == NULL) return;
+	if (sig == NULL) return;
 
 	print("Publication Record:\n");
 	res = KSI_Signature_getPublicationRecord(sig, &publicationRecord);
-	if(res != KSI_OK)return ;
+	if (res != KSI_OK)return ;
 
-	if(publicationRecord == NULL) {
+	if (publicationRecord == NULL) {
 		print("  (No publication records available)\n\n");
 		return;
 	}
 
-	if(KSITOOL_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
+	if (KSITOOL_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
 	pStart = buf;
 
-	while((pLineBreak = strchr(pStart, '\n')) != NULL){
+	while ((pLineBreak = strchr(pStart, '\n')) != NULL){
 		*pLineBreak = 0;
 
-		if(h < 3)
+		if (h < 3)
 			print("%s %s\n", "  ", pStart);
 		else
 			print("%s %2i) %s\n", "    ", i++, pStart);
@@ -133,7 +133,7 @@ void OBJPRINT_signaturePublicationReference(KSI_Signature *sig, int (*print)(con
 		pStart = pLineBreak+1;
 	}
 
-	if(h<3)
+	if (h<3)
 		print("%s %s\n", "  ", pStart);
 	else
 		print("%s %2i) %s\n", "    ", i++, pStart);
@@ -177,11 +177,11 @@ void OBJPRINT_signerIdentity(KSI_Signature *sig, int (*print)(const char *format
 	int res = KSI_UNKNOWN_ERROR;
 	char *signerIdentity = NULL;
 
-	if(sig == NULL) goto cleanup;
+	if (sig == NULL) goto cleanup;
 
 	print("Signer identity: ");
 	res = KSI_Signature_getSignerIdentity(sig, &signerIdentity);
-	if(res != KSI_OK){
+	if (res != KSI_OK){
 		print("Unable to get signer identity.\n");
 		goto cleanup;
 	}
@@ -280,20 +280,20 @@ void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile, 
 	unsigned int i=0;
 	int res = 0;
 
-	if(pubfile == NULL) goto cleanup;
+	if (pubfile == NULL) goto cleanup;
 	print("Certificates for key-based signature verification:\n");
 
 	res = KSI_PublicationsFile_getCertificates(pubfile, &certReclist);
-	if(res != KSI_OK || certReclist == NULL) goto cleanup;
+	if (res != KSI_OK || certReclist == NULL) goto cleanup;
 
 	for (i = 0; i < KSI_CertificateRecordList_length(certReclist); i++){
 		res = KSI_CertificateRecordList_elementAt(certReclist, i, &certRec);
-		if(res != KSI_OK || certRec == NULL) goto cleanup;
+		if (res != KSI_OK || certRec == NULL) goto cleanup;
 
 		res = KSI_CertificateRecord_getCert(certRec, &cert);
-		if(res != KSI_OK || cert == NULL) goto cleanup;
+		if (res != KSI_OK || cert == NULL) goto cleanup;
 
-		if(KSI_PKICertificate_toString(cert, buf, sizeof(buf)) != NULL)
+		if (KSI_PKICertificate_toString(cert, buf, sizeof(buf)) != NULL)
 			print("%s\n", buf);
 	}
 
