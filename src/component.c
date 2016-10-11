@@ -153,7 +153,7 @@ int TOOL_COMPONENT_LIST_new(size_t max_size, TOOL_COMPONENT_LIST **new) {
 		goto cleanup;
 	}
 
-	for(i = 0; i< max_size; i++) {
+	for (i = 0; i< max_size; i++) {
 		tmp->component[i] = NULL;
 	}
 

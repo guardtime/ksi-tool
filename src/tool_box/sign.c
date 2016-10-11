@@ -443,7 +443,7 @@ static int check_io_naming_and_type_errors(PARAM_SET *set, ERR_TRCKR *err) {
 
 
 	if (set == NULL || err == NULL) {
-		res = KT_INVALID_ARGUMENT;
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -539,7 +539,7 @@ static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size
 
 
 	if (set == NULL || err == NULL || inputs == NULL) {
-		res = KT_INVALID_ARGUMENT;
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -584,8 +584,8 @@ static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size
 	 */
 	max_lvl_virtual = max_lvl;
 
-	if (is_masking) if(max_lvl_virtual > 0) max_lvl_virtual--;
-	if (is_metadata) if(max_lvl_virtual > 0) max_lvl_virtual--;
+	if (is_masking) if (max_lvl_virtual > 0) max_lvl_virtual--;
+	if (is_metadata) if (max_lvl_virtual > 0) max_lvl_virtual--;
 
 
 	if (sizeof(size_t) * 8 < max_lvl_virtual) {
@@ -614,7 +614,7 @@ static int KT_SIGN_getAggregationRoundsNeeded(PARAM_SET *set, ERR_TRCKR *err, si
 
 
 	if (set == NULL || err == NULL || rounds == NULL || max_tree_inputs == 0) {
-		res = KT_INVALID_ARGUMENT;
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -795,8 +795,8 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 	size_t r = 0;
 	KSI_DataHash *hash = NULL;
 
-	if (set == NULL || err == NULL || max_tree_inputs == 0 || rounds == 0) {
-		res = KT_INVALID_ARGUMENT;
+	if (set == NULL || err == NULL || max_tree_inputs == 0 || rounds == 0 || aggr_rounds_record == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -1083,8 +1083,8 @@ static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SI
 	KSI_Signature *sig = NULL;
 	char *real_output_name_copy = NULL;
 
-	if (set == NULL || err == NULL || aggr_round == NULL) {
-		res = KT_INVALID_ARGUMENT;
+	if (set == NULL || err == NULL || ksi == NULL || aggr_round == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -1176,7 +1176,7 @@ static int KT_SIGN_dump(PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND **agg
 	KSI_Signature *sig = NULL;
 
 	if (set == NULL || err == NULL || aggr_round == NULL) {
-		res = KT_INVALID_ARGUMENT;
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -1223,7 +1223,7 @@ static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int
 	KSI_MetaData *tmp = NULL;
 
 	if (set == NULL || err == NULL || ksi == NULL || mdata == NULL) {
-		res = KT_INVALID_ARGUMENT;
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 

@@ -44,7 +44,7 @@ static int tool_init_ksi_logger(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set, SM
 	char *outLogfile = NULL;
 
 	if (ksi == NULL || err == NULL || set == NULL || log == NULL) {
-		res = KT_INVALID_ARGUMENT;
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -90,7 +90,7 @@ static int tool_init_ksi_network_provider(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SE
 
 
 	if (ksi == NULL || err == NULL || set == NULL) {
-		res = KT_INVALID_ARGUMENT;
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -161,7 +161,7 @@ static int tool_init_ksi_pub_cert_constraints(KSI_CTX *ksi, ERR_TRCKR *err, PARA
 	KSI_CertConstraint *constraintArray = NULL;
 
 	if (ksi == NULL || err == NULL || set == NULL) {
-		res = KT_INVALID_ARGUMENT;
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -254,7 +254,7 @@ static int tool_init_ksi_trust_store(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *se
 	char *lookupDir = NULL;
 
 	if (ksi == NULL || err == NULL || set == NULL) {
-		res = KT_INVALID_ARGUMENT;
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -280,13 +280,13 @@ static int tool_init_ksi_trust_store(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *se
 		tmp = NULL;
 
 		i = 0;
-		while(PARAM_SET_getStr(set, "V", NULL, PST_PRIORITY_HIGHEST, i++, &lookupFile) == PST_OK) {
+		while (PARAM_SET_getStr(set, "V", NULL, PST_PRIORITY_HIGHEST, i++, &lookupFile) == PST_OK) {
 			res = KSI_PKITruststore_addLookupFile(refTrustStore, lookupFile);
 			ERR_CATCH_MSG(err, res, "Error: Unable to add cert to PKI trust store.");
 		}
 
 		i = 0;
-		while(PARAM_SET_getStr(set, "W", NULL, PST_PRIORITY_HIGHEST, i++, &lookupDir) == PST_OK) {
+		while (PARAM_SET_getStr(set, "W", NULL, PST_PRIORITY_HIGHEST, i++, &lookupDir) == PST_OK) {
 			res = KSI_PKITruststore_addLookupDir(refTrustStore, lookupDir);
 			ERR_CATCH_MSG(err, res, "Error: Unable to add lookup dir to PKI trust store.");
 		}
@@ -306,7 +306,7 @@ static int tool_init_ksi_publications_file(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_S
 	KSI_PublicationsFile *tmp = NULL;
 
 	if (ksi == NULL || err == NULL || set == NULL) {
-		res = KT_INVALID_ARGUMENT;
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 

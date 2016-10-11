@@ -110,8 +110,8 @@ char *STRING_getBetweenWhitespace(const char *strn, char *buf, size_t buf_len) {
 	end = strn + strn_len; //End should be at terminating NUL
 
 
-	while(beginning != end && isspace(*beginning)) beginning++;
-	while(end != beginning && (isspace(*end) || *end == '\0')) end--;
+	while (beginning != end && isspace(*beginning)) beginning++;
+	while (end != beginning && (isspace(*end) || *end == '\0')) end--;
 
 
 	new_len = end + 1 - beginning;
@@ -126,7 +126,7 @@ const char * STRING_locateLastOccurance(const char *str, const char *findIt) {
 	const char *searchFrom = NULL;
 
 	if (str == NULL || findIt == NULL) return NULL;
-	if(*str == '\0' && *findIt == '\0') return str;
+	if (*str == '\0' && *findIt == '\0') return str;
 
 
 	searchFrom = str;
@@ -287,7 +287,7 @@ static void string_removeChars(char *str, char rem) {
 
 	if (itr == NULL) return;
 
-	while(itr[i]) {
+	while (itr[i]) {
 		if (itr[i] != rem) {
 			str[str_index] = itr[i];
 			str_index++;

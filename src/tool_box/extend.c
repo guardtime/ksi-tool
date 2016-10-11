@@ -62,7 +62,7 @@ int extend_run(int argc, char** argv, char **envp) {
 	KSI_PolicyVerificationResult *result_ext = NULL;
 	COMPOSITE extra;
 	char fnmae[2048];
-	char mode[3] = "s";
+	char mode[5] = "wbs";
 	char buf[2048];
 	int d = 0;
 
@@ -108,7 +108,7 @@ int extend_run(int argc, char** argv, char **envp) {
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify signature.");
 	print_progressResult(res);
 
-	if (get_output_name(set, err, fnmae, sizeof(fnmae), mode + 1) == NULL) goto cleanup;
+	if (get_output_name(set, err, fnmae, sizeof(fnmae), mode + strlen(mode)) == NULL) goto cleanup;
 
 	switch(TASK_getID(task)) {
 		case 0:
@@ -275,6 +275,12 @@ static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Sig
 	char real_output_name[1024];
 	int d;
 
+	if (set == NULL || err == NULL || ksi == NULL || ext == NULL || fname == NULL || mode == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		goto cleanup;
+	}
+
+
 	d = PARAM_SET_isSetByName(set, "d");
 
 	print_progressDesc(d, "Verifying extended signature... ");
@@ -304,7 +310,7 @@ static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX
 	KSI_PublicationsFile *pubFile = NULL;
 
 	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || ext == NULL) {
-		res = KT_INVALID_ARGUMENT;
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -349,8 +355,8 @@ static int extend_to_specified_time(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi
 	char buf[256];
 
 
-	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || extra == NULL) {
-		res = KT_INVALID_ARGUMENT;
+	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || extra == NULL || ext == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -394,7 +400,7 @@ static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_C
 	char *pubs_str = NULL;
 
 	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || ext == NULL) {
-		res = KT_INVALID_ARGUMENT;
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 

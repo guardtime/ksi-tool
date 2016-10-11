@@ -31,9 +31,9 @@
 
 static char *new_string(const char *str) {
 	char *tmp = NULL;
-	if(str == NULL) return NULL;
+	if (str == NULL) return NULL;
 	tmp = (char*)malloc(strlen(str)*sizeof(char)+1);
-	if(tmp == NULL) return NULL;
+	if (tmp == NULL) return NULL;
 	return strcpy(tmp, str);
 }
 
@@ -143,7 +143,7 @@ int PARAM_new(const char *flagName, const char *flagAlias, int constraints, int 
 
 	if (flagAlias) {
 		tmpAlias = new_string(flagAlias);
-		if(tmpAlias == NULL) {
+		if (tmpAlias == NULL) {
 			res = PST_OUT_OF_MEMORY;
 			goto cleanup;
 		}
@@ -168,10 +168,10 @@ cleanup:
 }
 
 void PARAM_free(PARAM *obj) {
-	if(obj == NULL) return;
+	if (obj == NULL) return;
 	free(obj->flagName);
 	free(obj->flagAlias);
-	if(obj->arg) PARAM_VAL_free(obj->arg);
+	if (obj->arg) PARAM_VAL_free(obj->arg);
 	free(obj);
 }
 
@@ -230,20 +230,20 @@ int PARAM_addValue(PARAM *param, const char *argument, const char* source, int p
 	const char *arg = NULL;
 	char buf[1024];
 
-	if(param == NULL) {
+	if (param == NULL) {
 		res = PST_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
 	/*If conversion function exists convert the argument*/
-	if(param->convert)
+	if (param->convert)
 		arg = param->convert(argument, buf, sizeof(buf)) ? buf : argument;
 	else
 		arg = argument;
 
 	/*Create new object and control the format*/
 	res = PARAM_VAL_new(arg, source, priority, &newValue);
-	if(res != PST_OK) goto cleanup;
+	if (res != PST_OK) goto cleanup;
 
 	if (param->controlFormat)
 		newValue->formatStatus = param->controlFormat(arg);
@@ -254,10 +254,10 @@ int PARAM_addValue(PARAM *param, const char *argument, const char* source, int p
 		param->arg = newValue;
 	} else{
 		res = PARAM_VAL_getElement(param->arg, NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, &pLastValue);
-		if(res != PST_OK) goto cleanup;
+		if (res != PST_OK) goto cleanup;
 
 		/* The last element must exists and its next value must be NULL. */
-		if(pLastValue == NULL || pLastValue->next != NULL) {
+		if (pLastValue == NULL || pLastValue->next != NULL) {
 			res = PST_UNDEFINED_BEHAVIOUR;
 			goto cleanup;
 		}
@@ -266,7 +266,7 @@ int PARAM_addValue(PARAM *param, const char *argument, const char* source, int p
 	}
 	param->argCount++;
 
-	if(param->highestPriority < priority)
+	if (param->highestPriority < priority)
 		param->highestPriority = priority;
 
 	newValue = NULL;
@@ -444,7 +444,7 @@ int PARAM_getObject(PARAM *param, const char *source, int prio, int at, void *ex
 	int res;
 	PARAM_VAL *value = NULL;
 
-	if(param == NULL || obj == NULL) {
+	if (param == NULL || obj == NULL) {
 		res = PST_INVALID_ARGUMENT;
 		goto cleanup;
 	}
