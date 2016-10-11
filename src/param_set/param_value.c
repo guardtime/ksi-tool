@@ -28,9 +28,9 @@
 
 static char *new_string(const char *str) {
 	char *tmp = NULL;
-	if(str == NULL) return NULL;
+	if (str == NULL) return NULL;
 	tmp = (char*)malloc(strlen(str)*sizeof(char)+1);
-	if(tmp == NULL) return NULL;
+	if (tmp == NULL) return NULL;
 	return strcpy(tmp, str);
 }
 
@@ -74,7 +74,7 @@ int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL
 	char *tmp_value = NULL;
 	char *tmp_source = NULL;
 
-	if(newObj == NULL) {
+	if (newObj == NULL) {
 		res = PST_INVALID_ARGUMENT;
 		goto cleanup;
 	}
@@ -91,7 +91,7 @@ int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL
 
 	/*Create obj itself*/
 	tmp = (PARAM_VAL*)malloc(sizeof(PARAM_VAL));
-	if(tmp == NULL) {
+	if (tmp == NULL) {
 		res = PST_OUT_OF_MEMORY;
 		goto cleanup;
 	}
@@ -104,17 +104,17 @@ int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL
 	tmp->previous = NULL;
 	tmp->priority = priority;
 
-	if(value != NULL){
+	if (value != NULL){
 		tmp_value = new_string(value);
-		if(tmp_value == NULL) {
+		if (tmp_value == NULL) {
 			res = PST_OUT_OF_MEMORY;
 			goto cleanup;
 		}
 	}
 
-	if(source != NULL){
+	if (source != NULL){
 		tmp_source = new_string(source);
-		if(tmp_source == NULL) {
+		if (tmp_source == NULL) {
 			res = PST_OUT_OF_MEMORY;
 			goto cleanup;
 		}
@@ -155,7 +155,7 @@ void PARAM_VAL_free(PARAM_VAL *rootValue) {
 	PARAM_VAL *next = NULL;
 	PARAM_VAL *to_be_freed = NULL;
 
-	if(rootValue == NULL) return;
+	if (rootValue == NULL) return;
 
 	to_be_freed = rootValue;
 	next = rootValue;

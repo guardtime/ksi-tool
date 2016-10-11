@@ -108,23 +108,23 @@ static char *getParametersName(const char* list_of_names, char *name, char *alia
 	short i_alias = 0;
 	int tmp_flags = 0;
 
-	if(list_of_names == NULL || name == NULL) return NULL;
-	if(list_of_names[0] == 0) return NULL;
+	if (list_of_names == NULL || name == NULL) return NULL;
+	if (list_of_names[0] == 0) return NULL;
 
 	pName=strchr(list_of_names, '{');
-	if(pName == NULL) return NULL;
+	if (pName == NULL) return NULL;
 	pName++;
-	while(pName[i] != '}' && pName[i] != 0){
-		if(len-1 <= i_name || len-1 <= i_alias){
+	while (pName[i] != '}' && pName[i] != 0){
+		if (len-1 <= i_name || len-1 <= i_alias){
 			return NULL;
 		}
 
-		if(pName[i] == '|'){
+		if (pName[i] == '|'){
 			isAlias = 1;
 			i++;
 		}
 
-		if(isAlias && alias){
+		if (isAlias && alias){
 			alias[i_alias++] = pName[i];
 		}else{
 			name[i_name++] = pName[i];
@@ -132,13 +132,13 @@ static char *getParametersName(const char* list_of_names, char *name, char *alia
 		i++;
 	}
 	if (pName[i] == '}') {
-		if(pName[i+1] == '*')
+		if (pName[i+1] == '*')
 			tmp_flags |= 0;
 		else
 			tmp_flags |= PARAM_SINGLE_VALUE;
 	}
-	if(pName[i] == '}'){
-		if(pName[i+1] == '>') {
+	if (pName[i] == '}'){
+		if (pName[i+1] == '>') {
 			tmp_flags |= PARAM_SINGLE_VALUE_FOR_PRIORITY_LEVEL;
 			tmp_flags &= ~(PARAM_SINGLE_VALUE);
 		}
@@ -146,7 +146,7 @@ static char *getParametersName(const char* list_of_names, char *name, char *alia
 
 
 	name[i_name] = 0;
-	if(alias)
+	if (alias)
 		alias[i_alias] = 0;
 
 	if (flags != NULL) *flags = tmp_flags;
@@ -316,20 +316,20 @@ static int editDistance_levenshtein(const char *A, const char *B){
 
 	/*Creating of initial matrix*/
 	m=(char**)malloc(M_H*sizeof(char*));
-	if(m == NULL) goto cleanup;
+	if (m == NULL) goto cleanup;
 
-	for(i=0; i<M_H; i++){
+	for (i=0; i<M_H; i++){
 		m[i]=(char*)malloc(M_W*sizeof(char));
-		if(m[i] == NULL) goto cleanup;
+		if (m[i] == NULL) goto cleanup;
 		m[i][0] = 0xff & i;
 		rows_created++;
 	}
 
-	for(j=0; j<M_W; j++) m[0][j] = 0xff & j;
+	for (j=0; j<M_W; j++) m[0][j] = 0xff & j;
 
-	for(j=1; j<M_W; j++){
-		for(i=1; i<M_H; i++){
-			if(A[i-1] == B[j-1]) m[i][j] = DIAG(m,i,j);
+	for (j=1; j<M_W; j++){
+		for (i=1; i<M_H; i++){
+			if (A[i-1] == B[j-1]) m[i][j] = DIAG(m,i,j);
 			else m[i][j] = (0xff & min_of_3(UP(m,i,j), LEFT(m,i,j), DIAG(m,i,j))) + 1;
 		}
 	}
@@ -337,8 +337,8 @@ static int editDistance_levenshtein(const char *A, const char *B){
 
 
 cleanup:
-	if(m)
-		for(i=0; i<rows_created; i++) free(m[i]);
+	if (m)
+		for (i=0; i<rows_created; i++) free(m[i]);
 	free(m);
 
 	return edit_distance;
@@ -356,10 +356,10 @@ static int param_set_getParameterByName(const PARAM_SET *set, const char *name, 
 	}
 
 
-	for(i = 0; i < set->count; i++) {
+	for (i = 0; i < set->count; i++) {
 		parameter = set->parameter[i];
-		if(parameter != NULL){
-			if(strcmp(parameter->flagName, name) == 0 || (parameter->flagAlias && strcmp(parameter->flagAlias, name) == 0)) {
+		if (parameter != NULL){
+			if (strcmp(parameter->flagName, name) == 0 || (parameter->flagAlias && strcmp(parameter->flagAlias, name) == 0)) {
 				tmp = parameter;
 				break;
 			}
@@ -420,7 +420,7 @@ static int param_set_analyze_similarity(PARAM_SET *set, const char *str, int sen
 	int typo_count = 0;
 	int i = 0;
 
-	if(set == NULL || str == NULL || max_count == 0 || typo_index == NULL) return 0;
+	if (set == NULL || str == NULL || max_count == 0 || typo_index == NULL) return 0;
 
 	numOfElements = set->count;
 	array = set->parameter;
@@ -622,7 +622,7 @@ static int param_set_addRawParameter(const char *param, const char *arg, const c
 	}
 
 
-	if(param[0] == '-' && param[1] != 0) {
+	if (param[0] == '-' && param[1] != 0) {
 		flag = param + (param[1] == '-' ? 2 : 1);
 
 		/**
@@ -691,7 +691,7 @@ static int isComment(const char *line) {
 	if (line[0] == '\0') return 0;
 
 	while ((C = 0xff & line[i]) != '\0') {
-		if(C == '#') return 1;
+		if (C == '#') return 1;
 		else if (!isspace(C)) return 0;
 		i++;
 	}
@@ -786,9 +786,9 @@ int PARAM_SET_new(const char *names, PARAM_SET **set){
 	/**
 	 * Calculate the parameters count.
 	 */
-	while(names[i]){
-		if(names[i] == '{') mem = names[i];
-		else if(mem == '{' && names[i] == '}'){
+	while (names[i]){
+		if (names[i] == '{') mem = names[i];
+		else if (mem == '{' && names[i] == '}'){
 			paramCount++;
 			mem = 0;
 		}
@@ -799,7 +799,7 @@ int PARAM_SET_new(const char *names, PARAM_SET **set){
 	 * Create empty objects.
 	 */
 	tmp = (PARAM_SET*)malloc(sizeof(PARAM_SET));
-	if(tmp == NULL) {
+	if (tmp == NULL) {
 		res = PST_OUT_OF_MEMORY;
 		goto cleanup;
 	}
@@ -810,7 +810,7 @@ int PARAM_SET_new(const char *names, PARAM_SET **set){
 	tmp->syntax = NULL;
 
 	tmp_param = (PARAM**)calloc(paramCount, sizeof(PARAM*));
-	if(tmp == NULL) {
+	if (tmp == NULL) {
 		res = PST_OUT_OF_MEMORY;
 		goto cleanup;
 	}
@@ -819,19 +819,19 @@ int PARAM_SET_new(const char *names, PARAM_SET **set){
 	 * Initialize two special parameters to hold and extract unknown parameters.
 	 */
 	res = PARAM_new("unknown", NULL, 0, PST_PRSCMD_NONE, &tmp_unknwon);
-	if(res != PST_OK) goto cleanup;
+	if (res != PST_OK) goto cleanup;
 
 	res = PARAM_new("typo", NULL, 0, PST_PRSCMD_NONE, &tmp_typo);
-	if(res != PST_OK) goto cleanup;
+	if (res != PST_OK) goto cleanup;
 
 	res = PARAM_new("syntax", NULL, 0, PST_PRSCMD_NONE, &tmp_syntax);
-	if(res != PST_OK) goto cleanup;
+	if (res != PST_OK) goto cleanup;
 
 	res = PARAM_setObjectExtractor(tmp_typo, NULL);
-	if(res != PST_OK) goto cleanup;
+	if (res != PST_OK) goto cleanup;
 
 	res = PARAM_setObjectExtractor(tmp_unknwon, NULL);
-	if(res != PST_OK) goto cleanup;
+	if (res != PST_OK) goto cleanup;
 
 	tmp->count = paramCount;
 	tmp->parameter = tmp_param;
@@ -848,9 +848,9 @@ int PARAM_SET_new(const char *names, PARAM_SET **set){
 	 */
 	i = 0;
 	pName = names;
-	while((pName = getParametersName(pName, buf, alias, sizeof(buf), &flags)) != NULL){
+	while ((pName = getParametersName(pName, buf, alias, sizeof(buf), &flags)) != NULL){
 		res = PARAM_new(buf, alias[0] ? alias : NULL, flags, PST_PRSCMD_DEFAULT, &tmp->parameter[i]);
-		if(res != PST_OK) goto cleanup;
+		if (res != PST_OK) goto cleanup;
 		i++;
 	}
 
@@ -874,11 +874,11 @@ void PARAM_SET_free(PARAM_SET *set){
 	PARAM **array = NULL;
 	int i =0;
 
-	if(set == NULL) return;
+	if (set == NULL) return;
 	numOfElements = set->count;
 	array = set->parameter;
 
-	for(i=0; i<numOfElements;i++)
+	for (i=0; i<numOfElements;i++)
 		PARAM_free(array[i]);
 	free(set->parameter);
 
@@ -991,11 +991,11 @@ int PARAM_SET_add(PARAM_SET *set, const char *name, const char *value, const cha
 			goto cleanup;
 		} else {
 			res = PARAM_addValue(set->unknown, name, source, PST_PRIORITY_VALID_BASE);
-			if(res != PST_OK) goto cleanup;
+			if (res != PST_OK) goto cleanup;
 
 			if (value != NULL) {
 				res = PARAM_addValue(set->unknown, value, source, PST_PRIORITY_VALID_BASE);
-				if(res != PST_OK) goto cleanup;
+				if (res != PST_OK) goto cleanup;
 			}
 
 			res = PST_PARAMETER_IS_UNKNOWN;
@@ -1006,7 +1006,7 @@ int PARAM_SET_add(PARAM_SET *set, const char *name, const char *value, const cha
 	}
 
 	res = PARAM_addValue(param, value, source, priority);
-	if(res != PST_OK) goto cleanup;
+	if (res != PST_OK) goto cleanup;
 
 	res = PST_OK;
 
@@ -1156,7 +1156,7 @@ int PARAM_SET_clearParameter(PARAM_SET *set, const char *names){
 		if (res != PST_OK) return res;
 	} else {
 		pName = names;
-		while((pName = extract_next_name(pName, isValidNameChar, buf, sizeof(buf), NULL)) != NULL) {
+		while ((pName = extract_next_name(pName, isValidNameChar, buf, sizeof(buf), NULL)) != NULL) {
 			res = param_set_getParameterByName(set, buf, &tmp);
 			if (res != PST_OK) return res;
 
@@ -1185,7 +1185,7 @@ int PARAM_SET_clearValue(PARAM_SET *set, const char *names, const char *source, 
 	}
 
 	pName = names;
-	while((pName = extract_next_name(pName, isValidNameChar, buf, sizeof(buf), NULL)) != NULL) {
+	while ((pName = extract_next_name(pName, isValidNameChar, buf, sizeof(buf), NULL)) != NULL) {
 		res = param_set_getParameterByName(set, buf, &tmp);
 		if (res != PST_OK) return res;
 
@@ -1236,7 +1236,7 @@ int PARAM_SET_getValueCount(PARAM_SET *set, const char *names, const char *sourc
 		/**
 		 * If parameters name list is NOT specified, count all parameters.
 		 */
-		for(i = 0; i < set->count; i++) {
+		for (i = 0; i < set->count; i++) {
 			res = PARAM_getValueCount(set->parameter[i], source, priority, &sub_count);
 			if (res != PST_OK) goto cleanup;
 
@@ -1392,13 +1392,13 @@ int PARAM_SET_readFromFile(PARAM_SET *set, const char *fname, const char* source
 	size_t error_count = 0;
 	size_t read_count = 0;
 
-	if(fname == NULL || set == NULL) {
+	if (fname == NULL || set == NULL) {
 		res = PST_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
 	file = fopen(fname, "r");
-	if(file == NULL) {
+	if (file == NULL) {
 		res = PST_IO_ERROR;
 		goto cleanup;
 	}
@@ -1428,7 +1428,7 @@ int PARAM_SET_readFromFile(PARAM_SET *set, const char *fname, const char* source
 
 		if (flag[0] == '\0' && arg[0] == '\0') continue;
 
-		if(flag[0] != '\0' && arg[0] != '\0') {
+		if (flag[0] != '\0' && arg[0] != '\0') {
 			res = param_set_addRawParameter(flag, arg, source, set, priority);
 			if (res != PST_OK) goto cleanup;
 		} else {
@@ -1442,7 +1442,7 @@ int PARAM_SET_readFromFile(PARAM_SET *set, const char *fname, const char* source
 
 cleanup:
 
-	if(file) fclose(file);
+	if (file) fclose(file);
 	return res;
 }
 
@@ -1452,7 +1452,7 @@ int PARAM_SET_readFromCMD(PARAM_SET *set, int argc, char **argv, const char *sou
 	char *tmp = NULL;
 	char *arg = NULL;
 
-	if(set == NULL || argc == 0 || argv == NULL) {
+	if (set == NULL || argc == 0 || argv == NULL) {
 		res = PST_INVALID_ARGUMENT;
 		goto cleanup;
 	}
@@ -1462,7 +1462,7 @@ int PARAM_SET_readFromCMD(PARAM_SET *set, int argc, char **argv, const char *sou
 		arg = NULL;
 
 		if (i + 1 < argc) {
-			if(argv[i + 1][0] != '-' || (argv[i + 1][0] == '-' && argv[i + 1][1] == 0))
+			if (argv[i + 1][0] != '-' || (argv[i + 1][0] == '-' && argv[i + 1][1] == 0))
 				arg = argv[++i];
 		}
 
@@ -1759,7 +1759,7 @@ int PARAM_SET_parseCMD(PARAM_SET *set, int argc, char **argv, const char *source
 	COLLECTORS *collector = NULL;
 
 
-	if(set == NULL || argc == 0 || argv == NULL) {
+	if (set == NULL || argc == 0 || argv == NULL) {
 		res = PST_INVALID_ARGUMENT;
 		goto cleanup;
 	}
@@ -2002,7 +2002,7 @@ static size_t param_value_add_errorstring_to_buf(PARAM *parameter, PARAM_VAL *in
 	/**
 	 * Add the source, if NULL not included.
 	 */
-	if(source != NULL) {
+	if (source != NULL) {
 		count += PST_snprintf(buf + count, buf_len - count, " Parameter (from '%s') ", source);
 	} else {
 		count += PST_snprintf(buf + count, buf_len - count, " Parameter ");
@@ -2095,7 +2095,7 @@ char* PARAM_SET_unknownsToString(const PARAM_SET *set, const char *prefix, char 
 		if (res != PST_OK) return NULL;
 
 		count += PST_snprintf(buf + count, buf_len - count, "%sUnknown parameter '%s'", use_prefix, name);
-		if(source != NULL) count += PST_snprintf(buf + count, buf_len - count, " from '%s'", source);
+		if (source != NULL) count += PST_snprintf(buf + count, buf_len - count, " from '%s'", source);
 		count += PST_snprintf(buf + count, buf_len - count, ".\n");
 		if (count >= buf_len - 1) return buf;
 	}
