@@ -1,7 +1,7 @@
 .TH KSI-SIGN 1
 .\"
 .SH NAME
-\fBksi sign \fR- Sign data with KSI command line tool.
+\fBksi sign \fR- Sign data with KSI command-line tool.
 .\"
 .SH SYNOPSIS
 \fBksi sign \fR[\fB-o \fIout.ksig\fR]... \fB-S \fIURL \fR[\fB--aggr-user \fIuser \fB--aggr-key \fIkey\fR] \fR[\fB-H \fIalg\fR] [\fB--data-out \fIfile\fR] [\fB--dump\fR] [\fImore options\fR] [\fB-i \fIinput\fR]... [\fIinput\fR]... [\fB-- \fIonly_file_input\fR...]
@@ -87,7 +87,7 @@ Embed request time extracted from the machine clock into the signature as metada
 .\"
 .TP
 \fB--\fR
-If used, \fBeverything\fR specified after the token is interpreted as \fBinput file\fR (command-line parameters (e.g. --conf, -d), \fIstdin\fR (-) and pre-calculated hash imprints (SHA-256:7647c6...) are all interpreted as regular files).
+If used, \fBeverything\fR specified after the token is interpreted as \fBinput file\fR (command-line parameters (e.g. --conf, -d), \fIstdin\fR (-) and precomputed hash imprints (SHA-256:7647c6...) are all interpreted as regular files).
 .\"
 .TP
 \fB-d\fR
@@ -103,7 +103,7 @@ Show progress bar and print it to \fIstderr\fR. Is only valid with \fB-d\fR. It 
 .\"
 .TP
 \fB--conf \fIfile\fR
-Read configuration options from given file. It must be noted that configuration options given explicitly on command line will override the ones in the configurations file. See \fBksi-conf\fR(5) for more information.
+Read configuration options from given file. It must be noted that configuration options given explicitly on command line will override the ones in the configuration file. See \fBksi-conf\fR(5) for more information.
 .\"
 .TP
 \fB--log \fIfile\fR

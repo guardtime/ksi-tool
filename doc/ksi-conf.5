@@ -1,25 +1,25 @@
 .TH KSI-CONF 5
 .\"
 .SH NAME
-\fBksi.conf\fR - Keyless Signature Infrastructure (KSI) command line tool configuration file.
+\fBksi.conf\fR - Keyless Signature Infrastructure (KSI) command-line tool configuration file.
 .\"
 .SH DESCRIPTION
-The KSI command line tool has several configuration options, most of them are related to the KSI service configuration (e.g. KSI signing service URL and access credentials). The configuration options are described in the \fBOPTIONS\fR section below. Ways to define the options are:
+The KSI command-line tool has several configuration options, most of them are related to the KSI service configuration (e.g. KSI signing service URL and access credentials). The configuration options are described in the \fBOPTIONS\fR section below. Ways to define the options are:
 .LP
 .IP \(bu 4
 directly on command line (highest priority)
 .IP \(bu 4
-in a file specified by the \fB--conf\fR command line argument
+in a file specified by the \fB--conf\fR command-line argument
 .IP \(bu 4
 in a file specified by the \fBKSI_CONF\fR (lowest priority)
 .LP
-If a configuration option is specified in more than one source, the source with the highest priority will be used (i.e. command line argument will override file specified by \fB--conf\fR or \fBKSI_CONF\fR).
+If a configuration option is specified in more than one source, the source with the highest priority will be used (i.e. command-line argument will override file specified by \fB--conf\fR or \fBKSI_CONF\fR).
 .LP
 While defining options, a short parameter or multiple flags must have prefix '\fB-\fR' and long parameters have prefix '\fB--\fR'. If some parameter values contain whitespace characters, double quote marks (\fB"\fR) must be used to wrap the entire value. If double quote mark or backslash have to be used inside the value part, an escape character (\fB\\\fR) must be typed before the charcater(\fB\\"\fR or \fB\\\\\fR). If configuration option with unknown or invalid key-value pairs is used, an error is generated.
 .LP
-In configurations file each key-value pair must be placed on a single line. For commenting, start the line with \fB#\fR. 
+In configuration file each key-value pair must be placed on a single line. For commenting, start the line with \fB#\fR. 
 .br
-In case of \fB-V\fR, \fB-W\fR and \fB-P\fR options file location is interpreted as relative to the configurations file, if full path is not defined.
+In case of \fB-V\fR, \fB-W\fR and \fB-P\fR options file location is interpreted as relative to the configuration file, if full path is not defined.
 .br
 See \fBEXAMPLES\fR for more information.
 .\"
@@ -78,7 +78,7 @@ Specify the publications file URL (or file with URI scheme 'file://').
 .\"
 .TP
 \fB--cnstr \fIoid\fR=\fIvalue\fR
-Specify the OID of the PKI certificate field (e.g. e-mail address) and the expected value to qualify the certificate for verification of publications file PKI signature. At least one constraint must be defined.
+Specify the OID of the PKI certificate field (e.g. e-mail address) and the expected value to qualify the certificate for verification of publications file's PKI signature. At least one constraint must be defined.
 .RS
 .HP 0
 For more common OID's there are convenience names defined:
@@ -115,10 +115,10 @@ Force the KSI tool to trust the publications file without verifying it.
 This option can only be defined on command line to avoid the usage of insecure configuration files. It must be noted that the \fBoption is insecure\fR and may only be used for testing.
 .\"
 .SH ENVIRONMENT
-Program \fBksi\fR(1) uses environment variable \fBKSI_CONF \fRto point to the default configurations file.
+Program \fBksi\fR(1) uses environment variable \fBKSI_CONF \fRto point to the default configuration file.
 .\"
 .SH EXAMPLES
-An example of configurations file:
+An example of configuration file:
 .LP
 .RS
 \fR# --- BEGINNING ---

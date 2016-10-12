@@ -1,7 +1,7 @@
 .TH KSI-VERIFY 1
 .\"
 .SH NAME
-\fBksi verify \fR- Verify KSI signature with KSI command line tool.
+\fBksi verify \fR- Verify KSI signature with KSI command-line tool.
 .\"
 .SH SYNOPSIS
 \fBksi verify -i \fIin.ksig \fR[\fB-f \fIdata\fR] [\fImore_options\fR]
@@ -17,7 +17,7 @@
 \fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIURL \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... \fR[\fB-x -X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore_options\fR]
 .\"
 .SH DESCRIPTION
-Verifies the given KSI signature and, if given, the file or its pre-computed hash value. There are four main verification policies:
+Verifies the given KSI signature and, if given, the file or its precomputed hash value. There are four main verification policies:
 .LP
 .IP \(bu 4
 Internal verification (\fB--ver-int\fR). Only internal consistency of the signature is checked and no trust anchor is used and no external resources are needed. This check is also performed as the first step in all other policies.
@@ -113,7 +113,7 @@ Dump signature and document hash being verified in human-readable format to \fIs
 .\"
 .TP
 \fB--conf \fIfile\fR
-Read configuration options from given file. It must be noted that configuration options given explicitly on command line will override the ones in the configurations file (see \fBksi-conf\fR(5) for more information).
+Read configuration options from given file. It must be noted that configuration options given explicitly on command line will override the ones in the configuration file (see \fBksi-conf\fR(5) for more information).
 .\"
 .TP
 \fB--log \fIfile\fR
