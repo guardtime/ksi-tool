@@ -1,38 +1,29 @@
 .TH KSI-PUBFILE 1
 .\"
-.\"
-.\"
 .SH NAME
-\fBksi pubfile \fR- Verify and dump KSI publications file with KSI command-line tool.
-.\"
+\fBksi pubfile \fR- Verify and dump KSI publications file with KSI command line tool.
 .\"
 .SH SYNOPSIS
-.\"
-.HP 4
 \fBksi pubfile -P \fIURL \fB--dump\fR
-.HP 4
+.LP
 \fBksi pubfile -P \fIURL \fB-v \fB--cnstr \fIoid\fR=\fIvalue \fR... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fImore_options\fR]
-.HP 4
+.LP
 \fBksi pubfile -P \fIURL \fB-o \fIpubfile.bin \fB--cnstr \fIoid\fR=\fIvalue \fR... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fImore_options\fR]
-.HP 4
+.LP
 \fBksi pubfile \fB-T \fItime\fR \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] [\fImore_options\fR]
 .br
 .\"
-.\"
 .SH DESCRIPTION
-.\"
 Verifies and dumps the content of KSI publications file. The KSI publications file contains information on all the existing publications records and the PKI certificates that are used to verify the calendar authentication records of KSI signatures.
 .\"
-.\"
 .SH OPTIONS
-.\"
 .TP
 \fB-P \fIURL\fR
-Publications file URL (or file with URI scheme 'file://').
+Specify publications file URL (or file with URI scheme 'file://').
 .\"
 .TP
 \fB--cnstr \fIoid\fR=\fIvalue\fR
-OID of the PKI certificate field (e.g. e-mail address) and the expected value to qualify the certificate for verification of publications file PKI signature. At least one constraint must be defined. All values from lower priority source are ignored.
+Specify the OID of the PKI certificate field (e.g. e-mail address) and the expected value to qualify the certificate for verification of publications file's PKI signature. At least one constraint must be defined. All values from lower priority source are ignored (see \fBksi-conf\fR(5) for more information).
 .RS
 .HP 0
 For more common OID's there are convenience names defined:
@@ -52,31 +43,31 @@ Perform publications file verification. Note that when \fB-o \fRis used to save 
 .\"
 .TP
 \fB-V \fIfile\fR
-Certificate file in PEM format for publications file verification. All values from lower priority source are ignored.
+Specify the certificate file in PEM format for publications file verification. All values from lower priority source are ignored (see \fBksi-conf\fR(5)).
 .\"
 .TP
 \fB-W \fIdir\fR
-OpenSSL-style trust store directory for publications file PKI signature verification. All values from lower priority source are ignored.
+Specify the OpenSSL-style trust store directory for publications file's PKI signature verification. All values from lower priority source are ignored (see \fBksi-conf\fR(5)).
 .\"
 .TP
 \fB-o \fIfile\fR
-Output file path to store publications file. Use '-' as file name to redirect publications file binary stream to \fIstdout\fR. Publications file is always verified before saving.
+Specify the output file path to store publications file. Use '-' as file name to redirect publications file binary stream to \fIstdout\fR. Publications file is always verified before saving.
 .\"
 .TP
 \fB-X \fIURL\fR
-Extending service (KSI Extender) URL.
+Specify the extending service (KSI Extender) URL.
 .\"
 .TP
 \fB--ext-user \fIstr\fR
-Username for extending service.
+Specify the username for extending service.
 .\"
 .TP
 \fB--ext-key \fIstr\fR
-HMAC Key for extending service.
+Specify the HMAC key for extending service.
 .\"
 .TP
 \fB-T \fItime\fR
-Time to create a publication string for as the number of seconds since 1970-01-01 00:00:00 UTC or time string formatted as "YYYY-MM-DD hh:mm:ss".
+Define the time to create a publication string for as the number of seconds since 1970-01-01 00:00:00 UTC or time string formatted as "YYYY-MM-DD hh:mm:ss".
 .\"
 .TP
 \fB-d\fR
@@ -88,66 +79,67 @@ Dump publications file in human-readable format to \fIstdout\fR. Without any ext
 .\"
 .TP
 \fB--conf \fIfile\fR
-Read configuration options from given file. It must be noted that configuration options given explicitly on command line will override the ones in the configuration file. See \fBksi-conf\fR(5) for more information.
+Read configuration options from given file. It must be noted that configuration options given explicitly on command line will override the ones in the configurations file (see \fBksi-conf\fR(5) for more information).
 .\"
 .TP
 \fB--log \fIfile\fR
 Write libksi log to given file. Use '-' as file name to redirect log to \fIstdout\fR.
 .br
 .\"
-.\"
-.\"
 .SH EXIT STATUS
 See \fBksi\fR(1) for more information.
 .\"
-.\"
-.\"
 .SH EXAMPLES
-.\"
 In the following examples it is assumed that KSI service configuration options (URLs, access credentials) are defined. See \fBksi-conf\fR(5) for more information.
-
-
-\fB1\fR To dump the publications file from default URL call:
-.RS
+.LP
+.TP 2
+\fB1\fR To dump the publications file from default URL:
+.LP
+.RS 4
 \fBksi pubfile --dump
 .RE
-
+.LP
+.\"
 \fB2\fR To dump the publications file \fIpubfile.bin\fR on local file system (verification is not performed):
-.RS
+.LP
+.RS 4
 \fBksi pubfile --dump -P \fIfile://pubfile.bin\fR
 .RE
-
-\fB3\fR To verify a publications file \fIpubfile.bin\fR from local disk call:
-.RS
+.LP
+.\"
+\fB3\fR To verify a publications file \fIpubfile.bin\fR from local disk:
+.LP
+.RS 4
 \fBksi pubfile -v -P \fIfile:///home/user/publications/pubfile.bin\fR
 .RE
-
-\fB4\fR To download, verify and save the publications file to \fIpubfile.bin\fR from default URL (verification is performed automatically when saving) call:
-.RS
+.LP
+.\"
+\fB4\fR To download, verify and save the publications file to \fIpubfile.bin\fR from default URL (verification is performed automatically when saving):
+.LP
+.RS 4
 \fBksi pubfile -o \fIpubfile.bin\fR \fB--cnstr \fIemail=publications@guardtime.com
 .RE
-
-\fB5\fR To verify the publications file with only certificates defined on command-line call:
-.RS
+.LP
+.\"
+\fB5\fR To verify the publications file with only certificates defined on command-line:
+.LP
+.RS 4
 \fBksi pubfile -v -V \fIcertificate_1.bin \fB-V \fIcertificate_2.bin \fB--cnstr \fIemail=publications@guardtime.com
 .RE
-
-\fB6\fR To create a publication string call:
-.RS
+.LP
+.\"
+\fB6\fR To create a publication string:
+.LP
+.RS 4
 \fBksi pubfile -T \fR"\fI2015-10-15 00:00:00\fR" 
 .RE
-
-
-
-.\"
-.\"
+.LP
 .\"
 .SH ENVIRONMENT
-Use the environment variable \fBKSI_CONF\fR to define the default configuration file. See \fBksi-conf\fR(5) for more information.
-
+Use the environment variable \fBKSI_CONF\fR to define the default configurations file. See \fBksi-conf\fR(5) for more information.
+.\"
 .SH AUTHOR
-
 Guardtime AS, http://www.guardtime.com/
-
+.\"
 .SH SEE ALSO	
 \fBksi\fR(1), \fBksi-sign\fR(1), \fBksi-verify\fR(1), \fBksi-extend\fR(1), \fBksi-conf\fR(5) 
