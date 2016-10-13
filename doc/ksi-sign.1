@@ -4,8 +4,8 @@
 \fBksi sign \fR- Sign data with KSI command-line tool.
 .\"
 .SH SYNOPSIS
+.HP 4
 \fBksi sign \fR[\fB-o \fIout.ksig\fR]... \fB-S \fIURL \fR[\fB--aggr-user \fIuser \fB--aggr-key \fIkey\fR] \fR[\fB-H \fIalg\fR] [\fB--data-out \fIfile\fR] [\fB--dump\fR] [\fImore options\fR] [\fB-i \fIinput\fR]... [\fIinput\fR]... [\fB-- \fIonly_file_input\fR...]
-.br
 .\"
 .SH DESCRIPTION
 Signs the given input such as content of a given file or a precomputed hash value with KSI. User must have access to KSI signing service (KSI Aggregator) for signing. Note that until not extended, the signatures can be verified using the copy of calendar blockchain at KSI Extender (calendar-based verification) or using the PKI signature in the calendar authentication record (key-based verification, temporary only). See \fBksi-verify\fR(1) for details.
@@ -129,7 +129,7 @@ To sign a file \fIfile\fR and save signature to \fIsig.ksig\fR:
 To sign a data hash (hashed with SHA256) and save the resulting signature to file \fIsig.ksig\fR:
 .LP
 .RS 4
-\fBksi sign -i\fI SHA-256:c8ef6d57ac28d1b4e95a513959\\f5fcdd0688380a43d601a5ace1d2e96884690a\fB -o \fIsig.ksig\fR
+\fBksi sign -i \fISHA-256:c8ef6d57ac28d1b4e95a513959\\f5fcdd0688380a43d601a5ace1d2e96884690a\fB -o \fIsig.ksig\fR
 .RE
 .\"
 .TP 2

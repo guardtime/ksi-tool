@@ -4,16 +4,17 @@
 \fBksi verify \fR- Verify KSI signature with KSI command-line tool.
 .\"
 .SH SYNOPSIS
+.HP 4
 \fBksi verify -i \fIin.ksig \fR[\fB-f \fIdata\fR] [\fImore_options\fR]
-.LP
+.HP 4
 \fBksi verify --ver-int -i \fIin.ksig \fR[\fB-f \fIdata\fR] [\fImore_options\fR]
-.LP
+.HP 4
 \fBksi verify --ver-cal -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] [\fImore_options\fR]
-.LP
+.HP 4
 \fBksi verify --ver-key -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIURL \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... [\fImore_options\fR]
-.LP
+.HP 4
 \fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB--pub-str \fIpubstr \fR[\fB-x -X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore_options\fR]
-.LP
+.HP 4
 \fBksi verify --ver-pub -i \fIin.ksig \fR[\fB-f \fIdata\fR] \fB-P \fIURL \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fR[\fB-V \fIcert.pem\fR]... \fR[\fB-W \fIdir\fR]... \fR[\fB-x -X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR]] [\fImore_options\fR]
 .\"
 .SH DESCRIPTION
@@ -136,7 +137,7 @@ In the following examples it is assumed that KSI service configuration options (
 .\"
 .TP 2
 \fB2
-\fRTo perform key based verification of the KSI signature \fItest.ksig \fRand given document hash:
+\fRTo perform key-based verification of the KSI signature \fItest.ksig \fRand given document hash:
 .LP
 .RS 4
 \fBksi verify --ver-key -i \fItest.ksig\fR \fB-f \fISHA-256:c8ef6d57ac28d1b4e95a513959f5fcdd0688380a43d601a5ace1d2e96884690a\fR
