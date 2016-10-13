@@ -1,4 +1,4 @@
-* IMPROVEMENT: Empty policy is used by default for background verification when reading signatures from a file.
+* IMPROVEMENT: Refactoring due to background verification.
 * BUGFIX: User info embedded in the uri is interpreted as KSI user info only when the known uri scheme has prefix 'ksi+' (e.g. ksi+http).
 * IMPROVEMENT: Command-line parameter parser updated.
 * IMPROVEMENT: Command-line typo errors are printed before invalid value or format errors.
