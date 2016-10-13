@@ -67,7 +67,7 @@ Specify the HMAC key for extending service.
 .\"
 .TP
 \fB-T \fItime\fR
-Define the time to create a publication string for as the number of seconds since 1970-01-01 00:00:00 UTC or time string formatted as "YYYY-MM-DD hh:mm:ss".
+Specify the time to create a publication string for as the number of seconds since 1970-01-01 00:00:00 UTC or time string formatted as "YYYY-MM-DD hh:mm:ss".
 .\"
 .TP
 \fB-d\fR
@@ -91,49 +91,54 @@ See \fBksi\fR(1) for more information.
 .\"
 .SH EXAMPLES
 In the following examples it is assumed that KSI service configuration options (URLs, access credentials) are defined. See \fBksi-conf\fR(5) for more information.
-.LP
+.\"
 .TP 2
-\fB1\fR To dump the publications file from default URL:
+\fB1
+To dump the publications file from default URL:
 .LP
 .RS 4
 \fBksi pubfile --dump
 .RE
-.LP
 .\"
-\fB2\fR To dump the publications file \fIpubfile.bin\fR on local file system (verification is not performed):
+.TP 2
+\fB2
+To dump the publications file \fIpubfile.bin\fR on local file system (verification is not performed):
 .LP
 .RS 4
 \fBksi pubfile --dump -P \fIfile://pubfile.bin\fR
 .RE
-.LP
 .\"
-\fB3\fR To verify a publications file \fIpubfile.bin\fR from local disk:
+.TP 2
+\fB3
+To verify a publications file \fIpubfile.bin\fR from local disk:
 .LP
 .RS 4
 \fBksi pubfile -v -P \fIfile:///home/user/publications/pubfile.bin\fR
 .RE
-.LP
 .\"
-\fB4\fR To download, verify and save the publications file to \fIpubfile.bin\fR from default URL (verification is performed automatically when saving):
+.TP 2
+\fB4
+To download, verify and save the publications file to \fIpubfile.bin\fR from default URL (verification is performed automatically when saving):
 .LP
 .RS 4
 \fBksi pubfile -o \fIpubfile.bin\fR \fB--cnstr \fIemail=publications@guardtime.com
 .RE
-.LP
 .\"
-\fB5\fR To verify the publications file with only certificates defined on command-line:
+.TP 2
+\fB5
+To verify the publications file with only certificates defined on command line:
 .LP
 .RS 4
 \fBksi pubfile -v -V \fIcertificate_1.bin \fB-V \fIcertificate_2.bin \fB--cnstr \fIemail=publications@guardtime.com
 .RE
-.LP
 .\"
-\fB6\fR To create a publication string:
+.TP 2
+\fB6
+To create a publication string:
 .LP
 .RS 4
 \fBksi pubfile -T \fR"\fI2015-10-15 00:00:00\fR" 
 .RE
-.LP
 .\"
 .SH ENVIRONMENT
 Use the environment variable \fBKSI_CONF\fR to define the default configuration file. See \fBksi-conf\fR(5) for more information.

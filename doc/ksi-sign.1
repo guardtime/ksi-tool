@@ -114,12 +114,11 @@ Write libksi log to given file. Use '-' as file name to redirect log to \fIstdou
 See \fBksi\fR(1) for more information.
 .\"
 .SH EXAMPLES
-.LP
 In the following examples it is assumed that KSI service configuration options (URLs, access credentials) are defined. See \fBksi-conf\fR(5) for more information.
-.LP
+.\"
 .TP 2
 \fB1
-\fRTo sign a file \fIfile\fR and save signature to \fIsig.ksig\fR:
+To sign a file \fIfile\fR and save signature to \fIsig.ksig\fR:
 .LP
 .RS 4
 \fBksi sign -i \fIfile\fR \fB-o \fIsig.ksig\fR
@@ -127,25 +126,23 @@ In the following examples it is assumed that KSI service configuration options (
 .\"
 .TP 2
 \fB2
-\fRTo sign a data hash (hashed with SHA256) and save the resulting signature to file \fIsig.ksig\fR:
+To sign a data hash (hashed with SHA256) and save the resulting signature to file \fIsig.ksig\fR:
 .LP
 .RS 4
 \fBksi sign -i\fI SHA-256:c8ef6d57ac28d1b4e95a513959\\f5fcdd0688380a43d601a5ace1d2e96884690a\fB -o \fIsig.ksig\fR
 .RE
-.LP
 .\"
 .TP 2
 \fB3
-\fRTo sign a data file \fIfile\fR with non-default algorithm \fI SHA1\fR:
+To sign a data file \fIfile\fR with non-default algorithm \fI SHA1\fR:
 .LP
 .RS 4
 \fBksi sign -i \fIfile\fB -H\fI SHA1\fB -o\fI sig.ksig\fR 
 .RE
-.LP
 .\"
 .TP 2
 \fB4
-\fRTo sign a stream (\fIstdin\fR), save data from stream to \fIfile\fR and save signature to \fIsig.ksig\fR:
+To sign a stream (\fIstdin\fR), save data from stream to \fIfile\fR and save signature to \fIsig.ksig\fR:
 .LP
 .RS 4
 \fBksi sign -i --data-out \fIfile\fB -o\fI sig.ksig\fR
@@ -153,7 +150,7 @@ In the following examples it is assumed that KSI service configuration options (
 .\"
 .TP 2
 \fB5
-\fRTo perform local aggregation on files \fI*.doc\fR and save all the signatures to directory \fIdoc/sig\fR:
+To perform local aggregation on files \fI*.doc\fR and save all the signatures to directory \fIdoc/sig\fR:
 .LP
 .RS 4
 \fBksi sign -o \fIdoc/sig\fR \fB--max-lvl \fI5\fB -- \fI*.doc\fR
@@ -161,7 +158,7 @@ In the following examples it is assumed that KSI service configuration options (
 .\"
 .TP 2
 \fB6
-\fRTo embed user ID "\fIMy Name\fR" as metadata to the signature of document \fIfile\fR:
+To embed user ID "\fIMy Name\fR" as metadata to the signature of document \fIfile\fR:
 .LP
 .RS 4
 \fBksi sign \fIfile\fR \fB--max-lvl \fI2\fB \fB--mdata --mdata-cl-id \fR"\fIMy Name\fR"
@@ -169,7 +166,7 @@ In the following examples it is assumed that KSI service configuration options (
 .\"
 .TP 2
 \fB7
-\fRTo sign more files than the user is permitted to sign during a single aggregation request:
+To sign more files than the user is permitted to sign during a single aggregation request:
 .LP
 .RS 4
 \fBksi sign -o \fIdoc/sig\fR \fB--max-lvl \fI5\fB --max-aggr-rounds 10 -- \fI*.doc\fR
@@ -177,7 +174,7 @@ In the following examples it is assumed that KSI service configuration options (
 .\"
 .TP 2
 \fB7
-\fRTo sign multiple files and enable masking with default configuration:
+To sign multiple files and enable masking with default configuration:
 .LP
 .RS 4
 \fBksi sign -o \fIdoc/sig\fR \fB--max-lvl \fI5\fB --mask -- \fI*.doc\fR

@@ -1,3 +1,4 @@
+
 .TH KSI-CONF 5
 .\"
 .SH NAME
@@ -102,17 +103,15 @@ Specify an OpenSSL-style trust store directory for publications file verificatio
 .\"
 .TP
 \fB-C \fIint\fR
-Define allowed connect timeout in seconds. This is not supported with TCP client.
+Specify allowed connect timeout in seconds. This is not supported with TCP client.
 .\"
 .TP
 \fB-c \fIint\fR
-Define allowed network transfer timeout, after successful connect, in seconds.
+Specify allowed network transfer timeout, after successful connect, in seconds.
 .\"
 .TP
 \fB--publications-file-no-verify\fR
-Force the KSI tool to trust the publications file without verifying it. 
-.br
-This option can only be defined on command line to avoid the usage of insecure configuration files. It must be noted that the \fBoption is insecure\fR and may only be used for testing.
+Force the KSI tool to trust the publications file without verifying it. This option can only be defined on command line to avoid the usage of insecure configuration files. It must be noted that the \fBoption is insecure\fR and may only be used for testing.
 .\"
 .SH ENVIRONMENT
 Program \fBksi\fR(1) uses environment variable \fBKSI_CONF \fRto point to the default configuration file.
