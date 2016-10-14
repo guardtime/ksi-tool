@@ -633,7 +633,9 @@ static int KSI_Signature_serialize_wrapper(KSI_CTX *ksi, KSI_Signature *sig, uns
 	return KSI_Signature_serialize(sig, raw, raw_len);
 }
 
-static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, const char* mode, void **obj,	int (*parse)(KSI_CTX *ksi, unsigned char *raw, unsigned raw_len, void **obj), void (*obj_free)(void*), const char *name) {
+static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, const char* mode, void **obj,
+						int (*parse)(KSI_CTX *ksi, unsigned char *raw, unsigned raw_len, const KSI_Policy *policy, KSI_VerificationContext *context, void **obj),
+						void (*obj_free)(void*), const char *name) {
 	int res;
 	SMART_FILE *file = NULL;
 	unsigned char buf[0xffff + 4];
@@ -641,7 +643,6 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, const ch
 	void *tmp = NULL;
 	size_t data_len = 0;
 	size_t dummy_len = 0;
-
 
 	if (err == NULL || ksi == NULL || path == NULL || mode == NULL || obj == NULL || parse == NULL || obj_free == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
@@ -676,7 +677,7 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, const ch
 		goto cleanup;
 	}
 
-	res = parse(ksi, buf, (unsigned)data_len, &tmp);
+	res = parse(ksi, buf, (unsigned)data_len, KSI_VERIFICATION_POLICY_EMPTY, NULL, &tmp);
 	if (res != KSI_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to parse %s.", name);
 		goto cleanup;
@@ -788,7 +789,7 @@ int KSI_OBJ_loadSignature(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, const
 
 	res = load_ksi_obj(err, ksi, fname, mode,
 				(void**)sig,
-				(int (*)(KSI_CTX *, unsigned char*, unsigned, void**))KSI_Signature_parse,
+				(int (*)(KSI_CTX *, unsigned char*, unsigned, const KSI_Policy *, KSI_VerificationContext *, void**))KSI_Signature_parseWithPolicy,
 				(void (*)(void *))KSI_Signature_free,
 				"KSI Signature");
 
