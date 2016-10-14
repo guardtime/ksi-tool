@@ -64,6 +64,13 @@ EXECUTABLE sign --mask crand:time,x --mask crand:,x --mask crand:,x,x --mask cra
 (.*Invalid function argument count.*)(.*crand:,,.*)/
 >>>= 3
 
+# Test mask with invalid hex string:
+EXECUTABLE sign --mask a --mask AB --mask abmm --mask abn -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*There must be even number of hex characters.*)(.*a.*)
+(.*Invalid hex character.*)(.*abmm.*)
+(.*There must be even number of hex characters.*)(.*abn.*)/
+>>>= 3
+
 # Test mask with invalid input:
 EXECUTABLE sign --mask invalid_hex -i test/resource/file/abcd -o test/out/sign
 >>>2 /(.*There must be even number of hex characters.*)(.*invalid_hex.*)/
