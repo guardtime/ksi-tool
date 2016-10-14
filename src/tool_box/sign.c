@@ -634,7 +634,7 @@ static int KT_SIGN_getAggregationRoundsNeeded(PARAM_SET *set, ERR_TRCKR *err, si
 	}
 
 	if (is_sequential && round_count > max_local_aggr_rounds ) {
-		ERR_TRCKR_ADD(err, KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Too much inputs! Rounds permitted/needed %u/%u.", max_local_aggr_rounds, round_count);
+		ERR_TRCKR_ADD(err, KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Too much inputs! Permitted rounds is %u but %u is needed.", max_local_aggr_rounds, round_count);
 		goto cleanup;
 	}
 
