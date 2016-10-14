@@ -554,27 +554,27 @@ static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size
 	has_prev_leaf = PARAM_SET_isSetByName(set, "prev-leaf");
 
 	if (!is_masking && has_prev_leaf) {
-		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_TOO_SMALL, "Error: Unable to link the local aggregation tree with the last leaf of the previous local aggregation tree as masking is not enabled (see --mask).\n");
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to link the local aggregation tree with the last leaf of the previous local aggregation tree as masking is not enabled (see --mask).\n");
 		goto cleanup;
 	}
 
 	if (max_lvl < 2 && has_prev_leaf && is_metadata) {
-		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_TOO_SMALL, "Error: Unable to embed metadata and link the local aggregation tree with the last leaf of the previous local aggregation tree with masking as the local aggregation tree's maximum depth is too small (see --max-lvl).\n");
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to embed metadata and link the local aggregation tree with the last leaf of the previous local aggregation tree with masking as the local aggregation tree's maximum allowed depth is too small (see --max-lvl).\n");
 		goto cleanup;
 	}
 
 	if (max_lvl < 2 && is_masking && is_metadata) {
-		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_TOO_SMALL, "Error: Unable to add metadata with masking as the local aggregation tree's maximum depth is too small (see --max-lvl).\n");
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to add metadata with masking as the local aggregation tree's maximum allowed depth is too small (see --max-lvl).\n");
 		goto cleanup;
 	}
 
 	if (max_lvl == 0 && is_metadata) {
-		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_TOO_SMALL, "Error: Unable to embed metadata as the local aggregation tree's maximum depth is too small (see --max-lvl).\n");
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to embed metadata as the local aggregation tree's maximum allowed depth is too small (see --max-lvl).\n");
 		goto cleanup;
 	}
 
 	if (max_lvl == 0 && is_masking) {
-		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_TOO_SMALL, "Error: Unable to use masking as the local aggregation tree's maximum depth is too small (see --max-lvl).\n");
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to use masking as the local aggregation tree's maximum allowed depth is too small (see --max-lvl).\n");
 		goto cleanup;
 	}
 
@@ -629,12 +629,12 @@ static int KT_SIGN_getAggregationRoundsNeeded(PARAM_SET *set, ERR_TRCKR *err, si
 	round_count = (size_t)ceil((double)input_file_count / (double)max_tree_inputs);
 
 	if (round_count > 1 && !is_sequential) {
-		ERR_TRCKR_ADD(err, KT_AGGR_LVL_TOO_SMALL, "Error: Too much inputs for a single aggregation round.");
+		ERR_TRCKR_ADD(err, KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Too much inputs for a single aggregation round.");
 		goto cleanup;
 	}
 
 	if (is_sequential && round_count > max_local_aggr_rounds ) {
-		ERR_TRCKR_ADD(err, KT_AGGR_LVL_TOO_SMALL, "Error: Too much inputs! Rounds permitted/needed %u/%u.", max_local_aggr_rounds, round_count);
+		ERR_TRCKR_ADD(err, KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Too much inputs! Rounds permitted/needed %u/%u.", max_local_aggr_rounds, round_count);
 		goto cleanup;
 	}
 
