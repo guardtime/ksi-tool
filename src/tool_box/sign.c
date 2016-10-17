@@ -1301,6 +1301,9 @@ static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int
 		res = KSI_MetaData_setRequestTimeInMicros(tmp, aggr_time);
 		if (res != KSI_OK) goto cleanup;
 
+		res = KSI_MetaData_setSequenceNr(tmp, sequence_nr);
+		if (res != KSI_OK) goto cleanup;
+
 	}
 
 	*mdata = tmp,
