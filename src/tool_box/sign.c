@@ -1230,11 +1230,12 @@ static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int
 	/**
 	 * If metadata is not used, exit with success and return NULL.
 	 */
-	if (!PARAM_SET_isSetByName(set, "no-mdata") && PARAM_SET_isSetByName(set, "mdata")) {
+	if (PARAM_SET_isSetByName(set, "mdata")) {
 		/**
 		 * Check if metadata record is consistent.
 		 */
-		if (!PARAM_SET_isSetByName(set, "mdata-cli-id") && PARAM_SET_isSetByName(set, "mdata-mac-id,mdata-sqn-nr,mdata-mac-id")) {
+
+		if (!PARAM_SET_isSetByName(set, "mdata-cli-id") && PARAM_SET_isOneOfSetByName(set, "mdata-mac-id,mdata-sqn-nr,mdata-req-tm")) {
 			ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: Client ID is missing but is mandatory part of metadata.");
 			goto cleanup;
 		}

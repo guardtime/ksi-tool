@@ -155,8 +155,23 @@ EXECUTABLE sign --max-lvl 1 --mask --prev-leaf SHA-256:76b127cddb918c3be744980c0
 >>>2 /(.*Error: Unable to embed metadata and link the local aggregation tree with the last leaf of the previous local aggregation tree with masking.*)(.*as the local aggregation tree's maximum allowed depth is too small.*)(.*--max-lvl.*)/
 >>>= 8
 
-# Test metadata without client id:
-EXECUTABLE sign --max-lvl 1 --mdata --mdata-sqn-nr -d --mdata-mac-id "My Comuter" --mdata-req-tm -i test/resource/file/abcd -o test/out/sign
+# Test metadata without client id. Use metadata with only Machine Id:
+EXECUTABLE sign --max-lvl 1 --mdata --mdata-mac-id "My Comuter" -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*Error: Client ID is missing but is mandatory part of metadata.*)/
+>>>= 3
+
+# Test metadata without client id. Use metadata with only Sequence Number:
+EXECUTABLE sign --max-lvl 1 --mdata --mdata-sqn-nr -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*Error: Client ID is missing but is mandatory part of metadata.*)/
+>>>= 3
+
+# Test metadata without client id. Use metadata with only Request Time:
+EXECUTABLE sign --max-lvl 1 --mdata --mdata-req-tm -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*Error: Client ID is missing but is mandatory part of metadata.*)/
+>>>= 3
+
+# Test metadata without client id. Use full metadata structure:
+EXECUTABLE sign --max-lvl 1 --mdata --mdata-sqn-nr -d --mdata-mac-id "My Comuter" --mdata-req-tm --mdata-sqn-nr -i test/resource/file/abcd -o test/out/sign
 >>>2 /(.*Error: Client ID is missing but is mandatory part of metadata.*)/
 >>>= 3
 
