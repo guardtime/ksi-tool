@@ -37,7 +37,14 @@ enum smart_file_enum {
 	SMART_FILE_OVERWRITE_RESTRICTED,
 	SMART_FILE_ACCESS_DENIED,
 	SMART_FILE_PIPE_ERROR,
+	SMART_FILE_UNABLE_TO_GET_STATUS,
 	SMART_FILE_UNKNOWN_ERROR
+};
+
+enum {
+	SMART_FILE_TYPE_REGULAR = 0x01,
+	SMART_FILE_TYPE_DIR,
+	SMART_FILE_TYPE_UNKNOWN,
 };
 
 #ifdef	__cplusplus
@@ -48,14 +55,16 @@ typedef struct SMART_FILE_st SMART_FILE;
 
 /**
  * Smart file object that is used to open read and write files and streams. If user
- * wants to read from stdin or write to stdout file name - must be used with mode
- * r or w accordingly.
+ * wants to read from stdin or write to stdout, file name '-' must be used with mode
+ * r or w accordingly together with s.
  *
  * Possible file open modes:
  * r - for reading.
  * w - for writing.
  * wf - fail if exists.
  * wi - generate new file name as name[num++].ext
+ * rs - enable operations on stdin.
+ * ws - enable operations on stdout.
  *
  * \param fname file name to be used.
  * \param mode	file open mode.
@@ -80,6 +89,7 @@ int SMART_FILE_doFileExist(const char *path);
 int SMART_FILE_isWriteAccess(const char *path);
 int SMART_FILE_isReadAccess(const char *path);
 int SMART_FILE_hasFileExtension(const char *path, const char *ext);
+int SMART_FILE_isFileType(const char *path, int ftype);
 
 const char* SMART_FILE_errorToString(int error_code);
 

@@ -50,7 +50,7 @@ AM_PROG_CC_C_O
 
 AC_PROG_LN_S
 # Checks for libraries.
-libksi_ver="3.8"
+libksi_ver="3.10"
 AC_ARG_ENABLE(static-build,         
 [  --enable-static-build              enable static linking of ksi library)],:,:)
 AC_ARG_ENABLE(use-installed-libksi, 

@@ -40,6 +40,19 @@ extern "C" {
 int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL **newObj);
 
 /**
+ * Extracts element from PARAM_VAL linked list (see \c PARAM_VAL_getElement) and
+ * appends a value right after the value found.
+ *
+ * \param	target		The first PARAM_VAL link in the linked list.
+ * \param	source		Constraint for the source.
+ * \param	priority	Constraint for the priority.
+ * \param	at			Parameter index in the matching set composed with the constraints.
+ * \param	obj			New obj to be inserted.
+ * \return \c PST_OK when successful, error code otherwise..
+ */
+int PARAM_VAL_insert(PARAM_VAL *target, const char* source, int priority, int at, PARAM_VAL *obj);
+
+/**
  * Free parameter value object.
  * \param rootValue	Object to be freed.
  */
@@ -54,7 +67,9 @@ void PARAM_VAL_free(PARAM_VAL *rootValue);
  * 2 lower priority values followed by higher priority value at position 3 and at
  * is 0, function returns the last value (but the  first value matching the priority).
  * Priority \PST_PRIORITY_LOWEST and \PST_PRIORITY_HIGHEST are used to extract only
- * the lowest and the highest priority values.
+ * the lowest and the highest priority values. Use \PST_PRIORITY_HIGHER_THAN + <prio>
+ * or \PST_PRIORITY_LOWER_THAN + <prio> to extract values with higher or lower
+ * priority accordingly.
  * 
  * \param	rootValue	The first PARAM_VAL link in the linked list.
  * \param	source		Constraint for the source.
@@ -65,6 +80,17 @@ void PARAM_VAL_free(PARAM_VAL *rootValue);
  */
 int PARAM_VAL_getElement(PARAM_VAL *rootValue, const char* source, int priority, int at, PARAM_VAL** val);
 
+/**
+ * This function pops an element out of the PARAM_VAL linked list. After successful
+ * poping rootValue is changed to the first element in the linked list.
+ * THIS IS SOMEHOW ODD BEHAVIOUR. TODO FIX.
+ * \param	rootValue	The pointer to pointer of the first PARAM_VAL link in the linked list.
+ * \param	source		Constraint for the source.
+ * \param	priority	Constraint for the priority.
+ * \param	at			Parameter index in the matching set composed with the constraints.
+ * \param	val			Pointer to receiving pointer of poped element.
+ * \return \c PST_OK when successful, error code otherwise..
+ */
 int PARAM_VAL_popElement(PARAM_VAL **rootValue, const char* source, int priority, int at, PARAM_VAL** val);
 
 int PARAM_VAL_extract(PARAM_VAL *rootValue, const char **value, const char **source, int *priority);
@@ -110,6 +136,8 @@ int PARAM_VAL_getPriority(PARAM_VAL *rootValue, int current, int *nextPrio);
 int PARAM_VAL_getErrors(PARAM_VAL *rootValue, int *format, int* content);
 
 int PARAM_VAL_getInvalid(PARAM_VAL *rootValue, const char* source, int priority, int at, PARAM_VAL** val);
+
+char* PARAM_VAL_toString(const PARAM_VAL *value, char *buf, size_t buf_len);
 #ifdef	__cplusplus
 }
 #endif

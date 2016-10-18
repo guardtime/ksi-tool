@@ -40,7 +40,11 @@ int conf_run(int argc, char** argv, char **envp) {
 	if (res != PST_OK) goto cleanup;
 
 
-	PARAM_SET_readFromCMD(set, argc, argv, "CMD", 3);
+	res = PARAM_SET_parseCMD(set, argc, argv, "CMD", 3);
+	if (res != PST_OK) {
+		print_errors("Error: Unable to parse command-line.\n");
+		goto cleanup;
+	}
 
 	/**
 	 * Check for typos and unknown parameters.
@@ -86,21 +90,21 @@ char *conf_help_toString(char *buf, size_t len) {
 		"Usage:\n"
 		" %s conf -h | -d | --dump \n"
 		" -d        - print KSI_CONF value to stderr if is configured.\n"
-		" --dump    - dump configurations file pointed by KSI_CONF to stdout.\n"
+		" --dump    - dump configuration file pointed by KSI_CONF to stdout.\n"
 		" -h        - print the current help message.\n\n"
 			, TOOL_getName()
 			);
 
 	count += KSI_snprintf(buf + count, len - count,
-		"KSI Configurations file help:\n\n"
+		"KSI configuration file help:\n\n"
 		"  The KSI command-line tool has several configuration options, most of them are\n"
 		"  related to the KSI service configuration (e.g. KSI signing service URL and access\n"
 		"  credentials). The configuration options are described below. There are following\n"
 		"  ways to specify these configuration options:\n\n"
 
-		"   * directly on command line (highest priority)\n"
-		"   * in a file specified by the --conf command-line argument\n"
-		"   * in a file specified by the KSI_CONF (lowest priority)\n\n"
+		"   * directly on command line (highest priority);\n"
+		"   * in a file specified by the --conf command-line argument;\n"
+		"   * in a file specified by the KSI_CONF environment variable (lowest priority).\n\n"
 
 		"  If a configuration option is specified in more than one source (e.g. both directly\n"
 		"  on command-line argument and in a configuration file) the source with the highest\n"
@@ -108,12 +112,12 @@ char *conf_help_toString(char *buf, size_t len) {
 		"  long parameters have prefix --. If some parameter values contain whitespace\n"
 		"  characters double quote marks (\") must be used to wrap the entire value. If double\n"
 		"  quote mark or backslash have to be used inside the value part an escape character\n"
-		"  (\\) must be typed before the charcater(\\\" or \\\\). If configuration option with\n"
+		"  (\\) must be typed before the character(\\\" or \\\\). If configuration option with\n"
 		"  unknown or invalid key-value pairs is used, an error is generated.\n\n"
 
 		"  In configuration file each key-value pair must be placed on a single line. Start\n"
 		"  the line with # to write a comment. Not full paths (V, W and P with URI scheme\n"
-		"  file://) are interpreted as relative to the configurations file.\n\n"
+		"  file://) are interpreted as relative to the configuration file.\n\n"
 
 		"All known parameters:\n"
 		);
@@ -136,19 +140,40 @@ char *conf_help_toString(char *buf, size_t len) {
 		"             PKI signature. At least one constraint must be defined.\n"
 		" -V        - Certificate file in PEM format for publications file verification.\n"
 		" -W <dir>  - specify an OpenSSL-style trust store directory for publications file verification.\n"
-		" -c <num>  - set network transfer timeout, after successful connect, in seconds.\n"
-		" -C <num>  - set network connect timeout in seconds (is not supported with TCP client).\n"
+
+		" --max-lvl <int>\n"
+		"           - Set the maximum depth (0 - 255) of the local aggregation tree\n"
+		"             (default 0).\n"
+		" --max-aggr-rounds <int>\n"
+		"           - Set the upper limit of local aggregation rounds that may be\n"
+		"             performed (default 1).\n"
+		" --mdata-cli-id <str>\n"
+		"           - Specify client id as a string that will be embedded into the\n"
+		"             signature as metadata. It is mandatory part of the metadata.\n"
+		" --mdata-mac-id <str>\n"
+		"           - Specify machine id as a string that will be embedded into the\n"
+		"             signature as metadata. It is optional part of metadata.\n"
+		" --mdata-sqn-nr <int>\n"
+		"           - Specify incremental (sequence number is incremented in every\n"
+		"             aggregation round) sequence number of the request as integer\n"
+		"             that will be embedded into the signature as metadata. It is\n"
+		"             optional part of metadata.\n"
+		" --mdata-req-tm <int>\n"
+		"           - Embed request time extracted from the machine clock into the\n"
+		"             signature as metadata. It is optional part of metadata.\n"
+		" -c <int>  - set network transfer timeout, after successful connect, in seconds.\n"
+		" -C <int>  - set network connect timeout in seconds (is not supported with TCP client).\n"
 		" --publications-file-no-verify\n"
 		"           - a flag to force the tool to trust the publications file without\n"
 		"             verifying it. The flag can only be defined on command-line to avoid\n"
-		"             the usage of insecure configurations files. It must be noted that the\n"
+		"             the usage of insecure configuration files. It must be noted that the\n"
 		"             option is insecure and may only be used for testing.\n"
 		"\n"
 		"\n"
 		);
 
 	count += KSI_snprintf(buf + count, len - count,
-		"An example configurations file:\n\n"
+		"An example configuration file:\n\n"
 		" # --- BEGINNING ---\n"
 		" # KSI Signing service parameters:\n"
 		" -S http://example.gateway.com:3333/gt-signingservice\n"

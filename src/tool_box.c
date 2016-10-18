@@ -110,8 +110,8 @@ char *STRING_getBetweenWhitespace(const char *strn, char *buf, size_t buf_len) {
 	end = strn + strn_len; //End should be at terminating NUL
 
 
-	while(beginning != end && isspace(*beginning)) beginning++;
-	while(end != beginning && (isspace(*end) || *end == '\0')) end--;
+	while (beginning != end && isspace(*beginning)) beginning++;
+	while (end != beginning && (isspace(*end) || *end == '\0')) end--;
 
 
 	new_len = end + 1 - beginning;
@@ -126,7 +126,7 @@ const char * STRING_locateLastOccurance(const char *str, const char *findIt) {
 	const char *searchFrom = NULL;
 
 	if (str == NULL || findIt == NULL) return NULL;
-	if(*str == '\0' && *findIt == '\0') return str;
+	if (*str == '\0' && *findIt == '\0') return str;
 
 
 	searchFrom = str;
@@ -164,7 +164,8 @@ const char* find_charAfterLastStrn(const char* str, const char* findIt) {
 static const char* find_charBefore_abstract(const char *str, const char *findIt, const char* (*find)(const char *str, const char *findIt)) {
 	const char *right = NULL;
 	right = find(str, findIt);
-	right = (right == str || right == NULL) ? right : right - 1;
+	if (right == NULL) return NULL;
+	right = right -1;
 	return right;
 }
 
@@ -195,8 +196,20 @@ char *STRING_extractAbstract(const char *strn, const char *from, const char *to,
 
 	if (beginning == NULL || end == NULL) return NULL;
 
-	if ((end + 1) < beginning) new_len = 0;
-	else new_len = end + 1 - beginning;
+	/**
+	 * If the beginning or end is "out of the string" there might be
+	 * a case where empty string is extracted.
+	 */
+	if (beginning == strn -1 || end == strn -1) {
+		if (beginning == strn && end == strn -1) new_len = 0;
+		else if (beginning == strn - 1 && end == strn) new_len = 0;
+		else if (beginning == strn - 1 && end == strn - 1) new_len = 0;
+		else return NULL;
+	} else {
+		if (end < beginning) return NULL;
+		if ((end + 1) < beginning) new_len = 0;
+		else new_len = end + 1 - beginning;
+	}
 
 	new_len = (new_len + 1 > buf_len) ? buf_len - 1 : new_len;
 	if (KSI_strncpy(buf, beginning, new_len + 1) == NULL) return NULL;
@@ -274,7 +287,7 @@ static void string_removeChars(char *str, char rem) {
 
 	if (itr == NULL) return;
 
-	while(itr[i]) {
+	while (itr[i]) {
 		if (itr[i] != rem) {
 			str[str_index] = itr[i];
 			str_index++;

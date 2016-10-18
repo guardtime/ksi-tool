@@ -34,6 +34,11 @@
 static int appendInvalidPubfileUrlOrFileError(ERR_TRCKR *err, int res, KSI_CTX *ksi, long line) {
 	char buf[2048];
 
+	if (err == NULL || ksi == NULL) {
+		ERR_TRCKR_ADD(err, KT_INVALID_ARGUMENT, NULL);
+		return 1;
+	}
+
 	if (res == KSI_OK) return 0;
 
 	KSI_ERR_getBaseErrorMessage(ksi, buf, sizeof(buf), NULL, NULL);
@@ -51,6 +56,12 @@ static int appendInvalidServiceUrlError(ERR_TRCKR *err, int res, KSI_CTX *ksi, l
 	char errTrcae[8192];
 	char serviceName[2048];
 	char *ret = NULL;
+
+	if (err == NULL || ksi == NULL) {
+		ERR_TRCKR_ADD(err, KT_INVALID_ARGUMENT, NULL);
+		return 1;
+	}
+
 	if (res == KSI_OK) return 0;
 
 	/* If is HTTP error with code 4 */
@@ -79,6 +90,12 @@ static int appendBaseErrorIfPresent(ERR_TRCKR *err, int res, KSI_CTX *ksi, long 
 	char buf[2048];
 	int ext = 0;
 	int tmp;
+
+	if (err == NULL || ksi == NULL) {
+		ERR_TRCKR_ADD(err, KT_INVALID_ARGUMENT, NULL);
+		return 1;
+	}
+
 	if (res != KSI_OK) {
 		KSI_ERR_getBaseErrorMessage(ksi, buf, sizeof(buf), &tmp, &ext);
 		if (buf[0] != 0 && tmp != KSI_OK) {
@@ -194,6 +211,11 @@ cleanup:
 int KSITOOL_extendSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Signature *sig, KSI_Signature **ext) {
 	int res;
 
+	if (err == NULL || ctx == NULL || sig == NULL || ext == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
 	res = KSI_extendSignature(ctx, sig, ext);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
@@ -209,6 +231,11 @@ int KSITOOL_extendSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Signature *sig, KS
 int KSITOOL_Signature_extendTo(ERR_TRCKR *err, const KSI_Signature *signature, KSI_CTX *ctx, KSI_Integer *to, KSI_Signature **extended) {
 	int res;
 
+	if (err == NULL || ctx == NULL || signature == NULL || to == NULL || extended == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
 	res = KSI_Signature_extendTo(signature, ctx, to, extended);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
@@ -221,6 +248,11 @@ int KSITOOL_Signature_extendTo(ERR_TRCKR *err, const KSI_Signature *signature, K
 
 int KSITOOL_Signature_extend(ERR_TRCKR *err, const KSI_Signature *signature, KSI_CTX *ctx, const KSI_PublicationRecord *pubRec, KSI_Signature **extended) {
 	int res;
+
+	if (err == NULL || ctx == NULL || signature == NULL || pubRec == NULL || extended == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
 
 	res = KSI_Signature_extend(signature, ctx, pubRec, extended);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
@@ -235,6 +267,11 @@ int KSITOOL_Signature_extend(ERR_TRCKR *err, const KSI_Signature *signature, KSI
 
 int KSITOOL_RequestHandle_getExtendResponse(ERR_TRCKR *err, KSI_CTX *ctx, KSI_RequestHandle *handle, KSI_ExtendResp **resp) {
 	int res;
+
+	if (err == NULL || ctx == NULL || handle == NULL || resp == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
 
 	res = KSI_RequestHandle_getExtendResponse(handle, resp);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
@@ -251,6 +288,11 @@ int KSITOOL_SignatureVerify_general(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX 
 									KSI_PublicationData *pubdata, int extperm,
 									KSI_PolicyVerificationResult **result) {
 	int res;
+
+	if (err == NULL || sig == NULL || ctx == NULL || result == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
 
 	/* First check if user has provided publications */
 	if (pubdata != NULL) {
@@ -273,6 +315,11 @@ int KSITOOL_SignatureVerify_internally(ERR_TRCKR *err, KSI_Signature *sig, KSI_C
 									   KSI_PolicyVerificationResult **result) {
 	int res;
 
+	if (err == NULL || sig == NULL || ctx == NULL || result == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
 	res = verify_signature(sig, ctx, hsh, 0, 0, NULL, NULL, KSI_VERIFICATION_POLICY_INTERNAL, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 	appendBaseErrorIfPresent(err, res, ctx, __LINE__);
@@ -283,6 +330,11 @@ int KSITOOL_SignatureVerify_internally(ERR_TRCKR *err, KSI_Signature *sig, KSI_C
 int KSITOOL_SignatureVerify_calendarBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
 										  KSI_PolicyVerificationResult **result) {
 	int res;
+
+	if (err == NULL || sig == NULL || ctx == NULL || result == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
 
 	res = verify_signature(sig, ctx, hsh, 0, 1, NULL, NULL, KSI_VERIFICATION_POLICY_CALENDAR_BASED, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
@@ -298,6 +350,11 @@ int KSITOOL_SignatureVerify_keyBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX
 									 KSI_PolicyVerificationResult **result){
 	int res;
 
+	if (err == NULL || sig == NULL || ctx == NULL || result == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
 	res = verify_signature(sig, ctx, hsh, 0, 0, NULL, NULL, KSI_VERIFICATION_POLICY_KEY_BASED, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
@@ -311,6 +368,11 @@ int KSITOOL_SignatureVerify_publicationsFileBased(ERR_TRCKR *err, KSI_Signature 
 												  int extperm,
 												  KSI_PolicyVerificationResult **result){
 	int res;
+
+	if (err == NULL || sig == NULL || ctx == NULL || result == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
 
 	res = verify_signature(sig, ctx, hsh, 0, extperm, NULL, NULL, KSI_VERIFICATION_POLICY_PUBLICATIONS_FILE_BASED, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
@@ -328,6 +390,11 @@ int KSITOOL_SignatureVerify_userProvidedPublicationBased(ERR_TRCKR *err, KSI_Sig
 														 KSI_PolicyVerificationResult **result){
 	int res;
 
+	if (err == NULL || sig == NULL || ctx == NULL || result == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
 	if (pubdata == NULL) return KSI_INVALID_FORMAT;
 
 	res = verify_signature(sig, ctx, hsh, 0, extperm, NULL, pubdata, KSI_VERIFICATION_POLICY_USER_PUBLICATION_BASED, result);
@@ -340,9 +407,15 @@ int KSITOOL_SignatureVerify_userProvidedPublicationBased(ERR_TRCKR *err, KSI_Sig
 	return res;
 }
 
-int KSITOOL_createSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_DataHash *dataHash, KSI_Signature **sig) {
+int KSITOOL_BlockSigner_close(ERR_TRCKR *err, KSI_CTX *ctx, KSI_BlockSigner *signer, KSI_MultiSignature **ms) {
 	int res;
-	res = KSI_createSignature(ctx, dataHash, sig);
+
+	if (err == NULL || ctx == NULL || signer == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
+	res = KSI_BlockSigner_close(signer, ms);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -352,8 +425,14 @@ int KSITOOL_createSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_DataHash *dataHash
 	return res;
 }
 
-int KSITOOL_receivePublicationsFile(ERR_TRCKR *err ,KSI_CTX *ctx, KSI_PublicationsFile **pubFile) {
+int KSITOOL_receivePublicationsFile(ERR_TRCKR *err, KSI_CTX *ctx, KSI_PublicationsFile **pubFile) {
 	int res;
+
+	if (err == NULL || ctx == NULL || pubFile == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
 	res = KSI_receivePublicationsFile(ctx, pubFile);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
@@ -366,6 +445,11 @@ int KSITOOL_receivePublicationsFile(ERR_TRCKR *err ,KSI_CTX *ctx, KSI_Publicatio
 
 int KSITOOL_verifyPublicationsFile(ERR_TRCKR *err, KSI_CTX *ctx, KSI_PublicationsFile *pubfile) {
 	int res;
+
+	if (err == NULL || ctx == NULL || pubfile == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
 
 	res = KSI_verifyPublicationsFile(ctx, pubfile);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
@@ -549,7 +633,9 @@ static int KSI_Signature_serialize_wrapper(KSI_CTX *ksi, KSI_Signature *sig, uns
 	return KSI_Signature_serialize(sig, raw, raw_len);
 }
 
-static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **obj,	int (*parse)(KSI_CTX *ksi, unsigned char *raw, unsigned raw_len, void **obj), void (*obj_free)(void*), const char *name) {
+static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, const char* mode, void **obj,
+						int (*parse)(KSI_CTX *ksi, unsigned char *raw, unsigned raw_len, const KSI_Policy *policy, KSI_VerificationContext *context, void **obj),
+						void (*obj_free)(void*), const char *name) {
 	int res;
 	SMART_FILE *file = NULL;
 	unsigned char buf[0xffff + 4];
@@ -558,26 +644,25 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **o
 	size_t data_len = 0;
 	size_t dummy_len = 0;
 
-
-	if (err == NULL || ksi == NULL || path == NULL || obj == NULL || parse == NULL || obj_free == NULL) {
-		res = KT_INVALID_ARGUMENT;
+	if (err == NULL || ksi == NULL || path == NULL || mode == NULL || obj == NULL || parse == NULL || obj_free == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
-	res = SMART_FILE_open(path, "rb", &file);
+	res = SMART_FILE_open(path, mode, &file);
 	if (res != KT_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: %s", KSITOOL_errToString(res));
 		goto cleanup;
 	}
 
 	res = SMART_FILE_read(file, (char *)buf, sizeof(buf), &data_len);
-	if(res != SMART_FILE_OK) {
+	if (res != SMART_FILE_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to read %s from file.", name);
 		goto cleanup;
 	}
 
 	res = SMART_FILE_read(file, (char *)dummy, sizeof(dummy), &dummy_len);
-	if(res != SMART_FILE_OK) {
+	if (res != SMART_FILE_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to read data from file.");
 		goto cleanup;
 	}
@@ -592,7 +677,7 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, void **o
 		goto cleanup;
 	}
 
-	res = parse(ksi, buf, (unsigned)data_len, &tmp);
+	res = parse(ksi, buf, (unsigned)data_len, KSI_VERIFICATION_POLICY_EMPTY, NULL, &tmp);
 	if (res != KSI_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to parse %s.", name);
 		goto cleanup;
@@ -617,14 +702,12 @@ static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, const char *mode, void *obj,
 	unsigned char *raw = NULL;
 	size_t raw_len = 0;
 	size_t count = 0;
-	char mode_sum[32];
 
-	if (err == NULL || ksi == NULL || obj == NULL || serialize == NULL || path == NULL) {
-		res = KT_INVALID_ARGUMENT;
+	if (err == NULL || ksi == NULL || mode == NULL || obj == NULL || serialize == NULL || path == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
-	KSI_snprintf(mode_sum, sizeof(mode_sum), "wb%s", (mode == NULL) ? "" : mode);
 
 	res = serialize(ksi, obj, &raw, &raw_len);
 	if (res != KSI_OK) {
@@ -632,7 +715,7 @@ static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, const char *mode, void *obj,
 		goto cleanup;
 	}
 
-	res = SMART_FILE_open(path, mode_sum, &file);
+	res = SMART_FILE_open(path, mode, &file);
 	if (res != KT_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: %s", KSITOOL_errToString(res));
 		goto cleanup;
@@ -643,7 +726,7 @@ static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, const char *mode, void *obj,
 	}
 
 	res = SMART_FILE_write(file, (char *)raw, raw_len, &count);
-	if(res != SMART_FILE_OK || count != raw_len) {
+	if (res != SMART_FILE_OK || count != raw_len) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to write to file.");
 		goto cleanup;
 	}
@@ -661,8 +744,9 @@ cleanup:
 int KSI_OBJ_saveSignature(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *mode, const char *fname, char *f, size_t f_len) {
 	int res;
 
-	if (ksi == NULL || fname == NULL || sign == NULL) {
-		return KT_INVALID_ARGUMENT;
+	if (err == NULL || ksi == NULL || fname == NULL || sign == NULL || mode == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
 	}
 
 	res = saveKsiObj(err, ksi, mode, sign,
@@ -679,8 +763,9 @@ int KSI_OBJ_saveSignature(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, con
 int KSI_OBJ_savePublicationsFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *mode, const char *fname) {
 	int res;
 
-	if (ksi == NULL || fname == NULL || pubfile == NULL) {
-		return KT_INVALID_ARGUMENT;
+	if (err == NULL || ksi == NULL || fname == NULL || pubfile == NULL || mode == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
 	}
 
 	res = saveKsiObj(err, ksi, mode, pubfile,
@@ -694,16 +779,17 @@ int KSI_OBJ_savePublicationsFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsF
 	return res;
 }
 
-int KSI_OBJ_loadSignature(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, KSI_Signature **sig) {
+int KSI_OBJ_loadSignature(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, const char* mode, KSI_Signature **sig) {
 	int res;
 
-	if (ksi == NULL || fname == NULL || sig == NULL) {
-		return KT_INVALID_ARGUMENT;
+	if (err == NULL || ksi == NULL || fname == NULL || mode == NULL || sig == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
 	}
 
-	res = load_ksi_obj(err, ksi, fname,
+	res = load_ksi_obj(err, ksi, fname, mode,
 				(void**)sig,
-				(int (*)(KSI_CTX *, unsigned char*, unsigned, void**))KSI_Signature_parse,
+				(int (*)(KSI_CTX *, unsigned char*, unsigned, const KSI_Policy *, KSI_VerificationContext *, void**))KSI_Signature_parseWithPolicy,
 				(void (*)(void *))KSI_Signature_free,
 				"KSI Signature");
 

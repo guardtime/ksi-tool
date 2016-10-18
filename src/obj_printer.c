@@ -27,33 +27,32 @@
 typedef struct {
 	KSI_VerificationErrorCode errorCode;
 	const char *code;
-	const char *description;
 } verificationErrorDetail_st;
 
 static const verificationErrorDetail_st verification_error[] = {
-	{ KSI_VER_ERR_GEN_1,	"GEN-1",	"Wrong document" },
-	{ KSI_VER_ERR_GEN_2,	"GEN-2",	"Verification inconclusive" },
-	{ KSI_VER_ERR_INT_1,	"INT-1",	"Inconsistent aggregation hash chains" },
-	{ KSI_VER_ERR_INT_2,	"INT-2",	"Inconsistent aggregation hash chain aggregation times" },
-	{ KSI_VER_ERR_INT_3,	"INT-3",	"Calendar hash chain input hash mismatch" },
-	{ KSI_VER_ERR_INT_4,	"INT-4",	"Calendar hash chain aggregation time mismatch" },
-	{ KSI_VER_ERR_INT_5,	"INT-5",	"Calendar hash chain shape inconsistent with aggregation time" },
-	{ KSI_VER_ERR_INT_6,	"INT-6",	"Calendar hash chain time inconsistent with calendar auth record time" },
-	{ KSI_VER_ERR_INT_7,	"INT-7",	"Calendar hash chain time inconsistent with publication time" },
-	{ KSI_VER_ERR_INT_8,	"INT-8",	"Calendar hash chain root hash is inconsistent with calendar auth record input hash" },
-	{ KSI_VER_ERR_INT_9,	"INT-9",	"Calendar hash chain root hash is inconsistent with published hash value" },
-	{ KSI_VER_ERR_INT_10,	"INT-10",	"Aggregation hash chain chain index mismatch" },
-	{ KSI_VER_ERR_INT_11,	"INT-11",	"The meta-data record in the aggregation hash chain may not be trusted" },
-	{ KSI_VER_ERR_PUB_1,	"PUB-1",	"Extender response calendar root hash mismatch" },
-	{ KSI_VER_ERR_PUB_2,	"PUB-2",	"Extender response inconsistent" },
-	{ KSI_VER_ERR_PUB_3,	"PUB-3",	"Extender response input hash mismatch" },
-	{ KSI_VER_ERR_KEY_1,	"KEY-1",	"Certificate not found" },
-	{ KSI_VER_ERR_KEY_2,	"KEY-2",	"PKI signature not verified with certificate" },
-	{ KSI_VER_ERR_CAL_1,	"CAL-1",	"Calendar root hash mismatch" },
-	{ KSI_VER_ERR_CAL_2,	"CAL-2",	"Aggregation hash chain root hash and calendar hash chain input hash mismatch" },
-	{ KSI_VER_ERR_CAL_3,	"CAL-3",	"Aggregation time mismatch" },
-	{ KSI_VER_ERR_CAL_4,	"CAL-4",	"Aggregation hash chain right links are inconsistent" },
-	{ KSI_VER_ERR_NONE,	"",	"No error" }
+	{ KSI_VER_ERR_GEN_1,	"GEN-1"},
+	{ KSI_VER_ERR_GEN_2,	"GEN-2"},
+	{ KSI_VER_ERR_INT_1,	"INT-1"},
+	{ KSI_VER_ERR_INT_2,	"INT-2"},
+	{ KSI_VER_ERR_INT_3,	"INT-3"},
+	{ KSI_VER_ERR_INT_4,	"INT-4"},
+	{ KSI_VER_ERR_INT_5,	"INT-5"},
+	{ KSI_VER_ERR_INT_6,	"INT-6"},
+	{ KSI_VER_ERR_INT_7,	"INT-7"},
+	{ KSI_VER_ERR_INT_8,	"INT-8"},
+	{ KSI_VER_ERR_INT_9,	"INT-9"},
+	{ KSI_VER_ERR_INT_10,	"INT-10"},
+	{ KSI_VER_ERR_INT_11,	"INT-11"},
+	{ KSI_VER_ERR_PUB_1,	"PUB-1"},
+	{ KSI_VER_ERR_PUB_2,	"PUB-2"},
+	{ KSI_VER_ERR_PUB_3,	"PUB-3"},
+	{ KSI_VER_ERR_KEY_1,	"KEY-1"},
+	{ KSI_VER_ERR_KEY_2,	"KEY-2"},
+	{ KSI_VER_ERR_CAL_1,	"CAL-1"},
+	{ KSI_VER_ERR_CAL_2,	"CAL-2"},
+	{ KSI_VER_ERR_CAL_3,	"CAL-3"},
+	{ KSI_VER_ERR_CAL_4,	"CAL-4"},
+	{ KSI_VER_ERR_NONE,		""}
 };
 
 void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile, int (*print)(const char *format, ... )){
@@ -65,34 +64,34 @@ void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile, in
 	char *pLineBreak = NULL;
 	char *pStart = NULL;
 
-	if(pubFile == NULL) return;
+	if (pubFile == NULL) return;
 
 	print("Publication Records:\n");
 
 	res = KSI_PublicationsFile_getPublications(pubFile, &list_publicationRecord);
-	if(res != KSI_OK) return;
+	if (res != KSI_OK) return;
 
 	for (i = 0; i < KSI_PublicationRecordList_length(list_publicationRecord); i++) {
 		int h=0;
 		res = KSI_PublicationRecordList_elementAt(list_publicationRecord, i, &publicationRecord);
-		if(res != KSI_OK) return;
+		if (res != KSI_OK) return;
 
-		if(KSITOOL_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
+		if (KSITOOL_PublicationRecord_toString(publicationRecord, buf, sizeof(buf)) == NULL) return;
 
 		pStart = buf;
 		j=1;
 		h=0;
-		if(i) print("\n");
-		while((pLineBreak = strchr(pStart, '\n')) != NULL){
+		if (i) print("\n");
+		while ((pLineBreak = strchr(pStart, '\n')) != NULL){
 			*pLineBreak = 0;
-			if(h++ < 3)
+			if (h++ < 3)
 				print("%s %s\n", "  ", pStart);
 			else
 				print("%s %2i) %s\n", "    ", j++, pStart);
 			pStart = pLineBreak+1;
 		}
 
-		if(h < 3)
+		if (h < 3)
 			print("%s %s\n", "  ", pStart);
 		else
 			print("%s %2i) %s\n", "    ", j++, pStart);
@@ -109,24 +108,24 @@ void OBJPRINT_signaturePublicationReference(KSI_Signature *sig, int (*print)(con
 	char *pStart = buf;
 	int i=1;
 	int h=0;
-	if(sig == NULL) return;
+	if (sig == NULL) return;
 
 	print("Publication Record:\n");
 	res = KSI_Signature_getPublicationRecord(sig, &publicationRecord);
-	if(res != KSI_OK)return ;
+	if (res != KSI_OK)return ;
 
-	if(publicationRecord == NULL) {
+	if (publicationRecord == NULL) {
 		print("  (No publication records available)\n\n");
 		return;
 	}
 
-	if(KSITOOL_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
+	if (KSITOOL_PublicationRecord_toString(publicationRecord, buf, sizeof(buf)) == NULL) return;
 	pStart = buf;
 
-	while((pLineBreak = strchr(pStart, '\n')) != NULL){
+	while ((pLineBreak = strchr(pStart, '\n')) != NULL){
 		*pLineBreak = 0;
 
-		if(h < 3)
+		if (h < 3)
 			print("%s %s\n", "  ", pStart);
 		else
 			print("%s %2i) %s\n", "    ", i++, pStart);
@@ -134,7 +133,7 @@ void OBJPRINT_signaturePublicationReference(KSI_Signature *sig, int (*print)(con
 		pStart = pLineBreak+1;
 	}
 
-	if(h<3)
+	if (h < 3)
 		print("%s %s\n", "  ", pStart);
 	else
 		print("%s %2i) %s\n", "    ", i++, pStart);
@@ -178,11 +177,11 @@ void OBJPRINT_signerIdentity(KSI_Signature *sig, int (*print)(const char *format
 	int res = KSI_UNKNOWN_ERROR;
 	char *signerIdentity = NULL;
 
-	if(sig == NULL) goto cleanup;
+	if (sig == NULL) goto cleanup;
 
 	print("Signer identity: ");
 	res = KSI_Signature_getSignerIdentity(sig, &signerIdentity);
-	if(res != KSI_OK){
+	if (res != KSI_OK){
 		print("Unable to get signer identity.\n");
 		goto cleanup;
 	}
@@ -281,20 +280,20 @@ void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile, 
 	unsigned int i=0;
 	int res = 0;
 
-	if(pubfile == NULL) goto cleanup;
+	if (pubfile == NULL) goto cleanup;
 	print("Certificates for key-based signature verification:\n");
 
 	res = KSI_PublicationsFile_getCertificates(pubfile, &certReclist);
-	if(res != KSI_OK || certReclist == NULL) goto cleanup;
+	if (res != KSI_OK || certReclist == NULL) goto cleanup;
 
 	for (i = 0; i < KSI_CertificateRecordList_length(certReclist); i++){
 		res = KSI_CertificateRecordList_elementAt(certReclist, i, &certRec);
-		if(res != KSI_OK || certRec == NULL) goto cleanup;
+		if (res != KSI_OK || certRec == NULL) goto cleanup;
 
 		res = KSI_CertificateRecord_getCert(certRec, &cert);
-		if(res != KSI_OK || cert == NULL) goto cleanup;
+		if (res != KSI_OK || cert == NULL) goto cleanup;
 
-		if(KSI_PKICertificate_toString(cert, buf, sizeof(buf)) != NULL)
+		if (KSI_PKICertificate_toString(cert, buf, sizeof(buf)) != NULL)
 			print("%s\n", buf);
 	}
 
@@ -402,9 +401,7 @@ const char *OBJPRINT_getVerificationErrorCode(KSI_VerificationErrorCode code) {
 }
 
 const char *OBJPRINT_getVerificationErrorDescription(KSI_VerificationErrorCode code) {
-	const verificationErrorDetail_st *details = getVerificationErrorDetails(code);
-
-	return (details != NULL ? details->description : "Unknown");
+	return KSI_Policy_getErrorString(code);
 }
 
 static const char *getVerificationStepDescription(size_t step) {

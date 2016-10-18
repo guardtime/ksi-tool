@@ -1,14 +1,11 @@
+
 .TH KSI-CONF 5
 .\"
-.\"
-.\"
 .SH NAME
-\fBksi.conf \fR- Keyless Signature Infrastructure (KSI) command-line tool configuration file.
-.\"
+\fBksi.conf\fR - Keyless Signature Infrastructure (KSI) command-line tool configuration file.
 .\"
 .SH DESCRIPTION
-.LP
-The KSI command-line tool has several configuration options, most of them are related to the KSI service configuration (e.g. KSI signing service URL and access credentials). The configuration options are described in the \fBOPTIONS\fR section below. There are following ways to specify these configuration options:
+The KSI command-line tool has several configuration options, most of them are related to the KSI service configuration (e.g. KSI signing service URL and access credentials). The configuration options are described in the \fBOPTIONS\fR section below. Ways to define the options are:
 .LP
 .IP \(bu 4
 directly on command line (highest priority)
@@ -17,47 +14,75 @@ in a file specified by the \fB--conf\fR command-line argument
 .IP \(bu 4
 in a file specified by the \fBKSI_CONF\fR (lowest priority)
 .LP
-If a configuration option is specified in more than one source (e.g. both directly on command-line argument and in a configuration file) the source with the highest priority will be used. A short parameter or multiple flags must have prefix \fB-\fR and long parameters have prefix \fB--\fR. If some parameter values contain whitespace characters double quote marks (\fB"\fR) must be used to wrap the entire value. If double quote mark or backslash have to be used inside the value part an escape character (\fB\\\fR) must be typed before the charcater(\fB\\"\fR or \fB\\\\\fR). If configuration option with unknown or invalid key-value pairs is used, an error is generated.
+If a configuration option is specified in more than one source, the source with the highest priority will be used (i.e. command-line argument will override file specified by \fB--conf\fR or \fBKSI_CONF\fR).
 .LP
-In configuration file each key-value pair must be placed on a single line. Start the line with \fB#\fR to write a comment. Not full paths (V, W and P with URI scheme file://) are interpreted as relative to the configurations file.
+While defining options, a short parameter or multiple flags must have prefix '\fB-\fR' and long parameters have prefix '\fB--\fR'. If some parameter values contain whitespace characters, double quote marks (\fB"\fR) must be used to wrap the entire value. If double quote mark or backslash have to be used inside the value part, an escape character (\fB\\\fR) must be typed before the charcater(\fB\\"\fR or \fB\\\\\fR). If configuration option with unknown or invalid key-value pairs is used, an error is generated.
 .LP
-.SH OPTIONS
+In configuration file each key-value pair must be placed on a single line. For commenting, start the line with \fB#\fR. 
 .br
+In case of \fB-V\fR, \fB-W\fR and \fB-P\fR options file location is interpreted as relative to the configuration file, if full path is not defined.
+.br
+See \fBEXAMPLES\fR for more information.
 .\"
+.SH OPTIONS
 .TP
 \fB-S \fIURL\fR
-Signing service (KSI Aggregator) URL.
+Specify the signing service (KSI Aggregator) URL.
 .\"
 .TP
 \fB--aggr-user \fIstr\fR
-Username for signing service.
+Specify the username for signing service.
 .\"
 .TP
 \fB--aggr-key \fIstr\fR
-HMAC key for signing service.
+Specify the HMAC key for signing service.
 .\"
 .TP
 \fB-X \fIURL\fR
-Extending service (KSI Extender) URL.
+Specify the extending service (KSI Extender) URL.
 .\"
 .TP
 \fB--ext-user \fIstr\fR
-Username for extending service.
+Specify the username for extending service.
 .\"
 .TP
 \fB--ext-key \fIstr\fR
-HMAC key for extending service.
+Specify the HMAC key for extending service.
+.\"
+.TP
+\fB--max-lvl \fIint\fR
+Set the maximum depth (0 - 255) of the local aggregation tree (default: 0). It must be noted that when using masking (\fB--mask\fR) or embedding of the metadata (\fB--mdata\fR), the maximum count of document hash values that could be signed during a single local aggregation round will be reduced. To enable signing in multiple local aggregation rounds see \fB--max-aggr-rounds\fR.
+.\"
+.TP
+\fB--max-aggr-rounds \fIint\fR
+Set the upper limit of local aggregation rounds that may be performed (default: 1).
+.\"
+.TP
+\fB--mdata-cli-id \fIstr\fR
+Specify the client ID as a string which will be embedded into the signature as metadata. It is mandatory part of the metadata.
+.\"
+.TP
+\fB--mdata-mac-id \fIstr\fR
+Specify the machine ID as a string which will be embedded into the signature as metadata. It is optional part of the metadata.
+.\"
+.TP
+\fB--mdata-sqn-nr \fR[\fIint\fR]
+Specify the incremental (sequence number is incremented in every aggregation round) sequence number of the request as integer which will be embedded into the signature as metadata. If the parameter is given without the argument, 0 is used. It is optional part of metadata.
+.\"
+.TP
+\fB--mdata-req-tm\fR
+Embed the request time extracted from the machine clock into the signature as metadata. It is optional part of metadata.
 .\"
 .TP
 \fB-P \fIURL\fR
-Publications file URL  (or file with URI scheme 'file://').
+Specify the publications file URL (or file with URI scheme 'file://').
 .\"
 .TP
 \fB--cnstr \fIoid\fR=\fIvalue\fR
-OID of the PKI certificate field (e.g. e-mail address) and the expected value to qualify the certificate for verification of publications file PKI signature. At least one constraint must be defined.
+Specify the OID of the PKI certificate field (e.g. e-mail address) and the expected value to qualify the certificate for verification of publications file's PKI signature. At least one constraint must be defined.
 .RS
 .HP 0
-For more common OID's there are convenience names defined:
+For more common OIDs there are convenience names defined:
 .IP \(bu 4
 \fBE\fR or \fBemail\fR for OID 1.2.840.113549.1.9.1
 .IP \(bu 4
@@ -70,7 +95,7 @@ For more common OID's there are convenience names defined:
 .\"
 .TP
 \fB-V \fIfile\fR
-Certificate file in PEM format for publications file verification.
+Specify the certificate file in PEM format for publications file verification.
 .\"
 .TP
 \fB-W \fIdir\fR
@@ -78,22 +103,21 @@ Specify an OpenSSL-style trust store directory for publications file verificatio
 .\"
 .TP
 \fB-C \fIint\fR
-Network connect timeout in seconds  (is not supported with TCP client).
+Specify allowed connect timeout in seconds. This is not supported with TCP client.
 .\"
 .TP
 \fB-c \fIint\fR
-Network transfer timeout, after successful connect, in seconds.
+Specify allowed network transfer timeout, after successful connect, in seconds.
 .\"
 .TP
 \fB--publications-file-no-verify\fR
-A flag to force the tool to trust the publications file without verifying it. The flag can only be defined on command-line to avoid the usage of insecure configurations files. It must be noted that the \fBoption is insecure \fRand may only be used for testing.
-.\"
+Force the KSI tool to trust the publications file without verifying it. This option can only be defined on command line to avoid the usage of insecure configuration files. It must be noted that the \fBoption is insecure\fR and may only be used for testing.
 .\"
 .SH ENVIRONMENT
-Program \fBksi\fR(1) uses environment variable \fBKSI_CONF \fRto point to the default configurations file.
+Program \fBksi\fR(1) uses environment variable \fBKSI_CONF \fRto point to the default configuration file.
 .\"
 .SH EXAMPLES
-An example of configurations file:
+An example of configuration file:
 .LP
 .RS
 \fR# --- BEGINNING ---
@@ -109,7 +133,7 @@ An example of configurations file:
 \fB--aggr-key \fIanon
 .br
 .LP
-\fR# KSI Extending service:
+\fR# KSI Extending service parameters:
 .br
 \fR# Note that ext-key real value is &h/J"kv\\G##
 .br
@@ -135,10 +159,8 @@ An example of configurations file:
 .br
 .RE
 .\"
-.\"
 .SH AUTHOR
 Guardtime AS, http://www.guardtime.com/
-.\"
 .\"
 .SH SEE ALSO
 \fBksi-sign\fR(1), \fBksi-verify\fR(1), \fBksi-extend\fR(1), \fBksi-pubfile\fR(1)

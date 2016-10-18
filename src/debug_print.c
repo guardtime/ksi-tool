@@ -86,10 +86,10 @@ void DEBUG_verifyPubfile(KSI_CTX *ksi, PARAM_SET *set, int res, KSI_Publications
 			char *ret = NULL;
 
 			ret = STRING_extractRmWhite(constraint, NULL, "=", OID, sizeof(OID));
-			if(ret != OID) continue;
+			if (ret != OID) continue;
 
 			ret = STRING_extractRmWhite(constraint, "=", NULL, value, sizeof(value));
-			if(ret != value) continue;
+			if (ret != value) continue;
 
 			print_debug("  * %s = '%s'\n", OID_getShortDescriptionString(OID), value);
 		}
@@ -168,4 +168,14 @@ void print_progressResult(int res) {
 
 		timerOn = 0;
 	}
+}
+
+int PROGRESS_BAR_display(int progress) {
+	char buf[65] = "################################################################";
+	int count = progress * 64 / 100;
+
+	print_debug("\r");
+	print_debug("[%-*.*s]", 64, count, buf);
+
+	return 0;
 }

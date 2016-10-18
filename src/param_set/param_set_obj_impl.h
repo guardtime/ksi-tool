@@ -53,14 +53,68 @@ struct PARAM_st{
 	char *flagAlias;				/* The alias for the parameter. */
 	int constraints;			/* Constraint If there is more than 1 parameters allowed. For validity check. */
 	int highestPriority;			/* Highest priority of inserted values. */
+	int parsing_options;			/* Some options used when parsing variables. */
 	int argCount;					/* Count of all arguments in chain. */
 
 	PARAM_VAL *arg;		/* Linked list of parameter values. */
-
-	int (*extractObject)(void *extra, const char*, void**);		/* Function pointer to convert or repair the value before format and content check. */
-	int (*convert)(const char*, char*, unsigned);	/* Function pointer to convert or repair the value before format and content check. */
-	int (*controlFormat)(const char*);				/* Function pointer for format control. */
-	int (*controlContent)(const char*);				/* Function pointer for content control. */
+	
+	/**
+	 * A function to extract object from the parameter.
+	 * int extractObject(void *extra, const char *str, void **obj)
+	 * extra - optional pointer to data structure.
+	 * str - c-string value that belongs to PARAM_VAL object.
+	 * obj - pointer to receiving pointer to desired object.
+	 * Returns PST_OK if successful, error code otherwise.
+	 */
+	int (*extractObject)(void *extra, const char *str, void **obj);
+	
+	/**
+	 * Function convert takes input as raw parameter, followed by a buffer and its size.
+	 * str - c-string value that belongs to PARAM_VAL object.
+	 * buf - a buffer that will contain value after conversion.
+	 * buf_len - the size of the buffer.
+	 * Returns 1 if conversion successful, 0 otherwise.
+	 */
+	int (*convert)(const char *str, char *buf, unsigned buf_len);
+	
+	/**
+	 * Function \c controlFormat takes input as raw parameter and performs format
+	 * check.
+	 * str - c-string value that belongs to PARAM_VAL object.
+	 * Returns 0 if format ok, error code otherwise.
+	 */
+	int (*controlFormat)(const char *str);
+	
+	/**
+	 * Function \c controlContent takes input as raw parameter and performs content
+	 * check.
+	 * str - c-string value that belongs to PARAM_VAL object.
+	 * Returns 0 if content ok, error code otherwise.
+	 */
+	int (*controlContent)(const char *str);
+	
+	/**
+	 * A function to expand tokens that contain wildcard character (WC) to array of
+	 * new values. Characters '?' and '*' are WC. The first argument is the param_value
+	 * that contains the WC. Argument ctx is for additional data structure used and
+	 * value_shift is a return parameter that must contain how many values were extracted.
+	 *
+	 * expand_wildcard function must not remove param_value from the linked list
+	 * as it is done by higher level functions. New values must be appended right
+	 * after the param_value.
+	 *
+	 * Function must return PST_OK
+	 *
+	 * The function can be activated by manual call to PARAM_expandWildcard or by
+	 * setting PST_PRSCMD_EXPAND_WILDCARD for the parameter and calling
+	 * PARAM_SET_parseCMD.
+	 */
+	int (*expand_wildcard)(PARAM_VAL *param_value, void *ctx, int *value_shift);
+	
+	/**
+	 * Additional context for expand_wildcard.
+	 */
+	void *expand_wildcard_ctx;
 };
 
 

@@ -32,6 +32,7 @@ void DEBUG_verifySignature(KSI_CTX *ksi, int res, KSI_Signature *sig, KSI_Policy
 void DEBUG_verifyPubfile(KSI_CTX *ksi, PARAM_SET *set, int res, KSI_PublicationsFile *pub);
 void print_progressDesc(int showTiming, const char *msg, ...);
 void print_progressResult(int res);
+int PROGRESS_BAR_display(int progress);
 
 #ifdef	__cplusplus
 }

@@ -1,0 +1,154 @@
+#
+# Copyright 2013-2016 Guardtime, Inc.
+#
+# This file is part of the Guardtime client SDK.
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES, CONDITIONS, OR OTHER LICENSES OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
+# "Guardtime" and "KSI" are trademarks or registered trademarks of
+# Guardtime, Inc., and no license to trademarks is granted; Guardtime
+# reserves and retains all trademark rights.
+
+
+# Add just a single file without the metadata and masking and save the output to directory.
+EXECUTABLE sign --conf test/test.cfg -d -i test/resource/file/ebcd -o test/out/sign
+>>>2 /(.*test\/out\/sign\/ebcd.ksig.*)/
+>>>= 0
+EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/ebcd -i test/out/sign/ebcd.ksig
+>>>= 0
+
+# Sign 1 files with maximum tree level 1 (tree with max 2 leaves), use default masking options.
+EXECUTABLE sign --conf test/test.cfg -d --mask --max-lvl 1  -i test/resource/file/abcd -o test/out/sign/abcd-single-file-masking.ksig
+>>>2 /(.*Add document hash 1\/1 with enabled masking to the local aggregation tree.*)(.*ok.*)/
+>>>= 0
+EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/abcd -i test/out/sign/abcd-single-file-masking.ksig
+>>>= 0
+
+# Sign 2 files with maximum tree level 1 (tree with max 2 leaves), no masking, no metadata.
+EXECUTABLE sign --conf test/test.cfg -d --max-lvl 1 -i test/resource/file/abcd -i test/resource/file/abcx -o test/out/sign/abcd-file-0.ksig -o test/out/sign/abcx-file-1.ksig
+>>>2 /(.*Signature saved to 'test\/out\/sign\/abcd-file-0.ksig'.*)
+(.*Signature saved to 'test\/out\/sign\/abcx-file-1.ksig'.*)/
+>>>= 0
+EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/abcd -i test/out/sign/abcd-file-0.ksig
+>>>= 0
+EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/abcx -i test/out/sign/abcx-file-1.ksig
+>>>= 0
+
+
+# Sign 1 files with metadata where maximum tree level is 1 (tree with max 2 leaves), no masking.
+EXECUTABLE sign --conf test/test.cfg -d --max-lvl 1 --mdata-cli-id "My Name" --mdata -i test/resource/file/abcd -o test/out/sign/abcx-mdata.ksig
+>>>2 /.*Add document hash 1\/1 with metadata to the local aggregation tree.*
+.*
+.*
+.*Signature saved to.*/
+>>>= 0
+
+# Verify if metadata exists.
+EXECUTABLE verify --ver-int --conf test/test.cfg -d --dump -i test/out/sign/abcx-mdata.ksig
+>>> /(.*:: My Name.*)/
+>>>= 0
+
+# Sign 2 files with metadata and masking where maximum tree level is 3 (tree with max 8 leaves). Output to directory.
+EXECUTABLE sign --conf test/test.cfg -d --max-lvl 3 --mdata-cli-id "My Name" --mdata --mask -i test/resource/file/abcd -i test/resource/file/abcx -o test/out/sign
+>>>2 /(.*Add document hash 1\/2 and metadata with enabled masking to the local aggregation tree.*)(.*ok.*)
+.*
+(.*Add document hash 2\/2 and metadata with enabled masking to the local aggregation tree.*)(.*ok.*)
+(.*Signing the local aggregation tree 1\/1.*)
+.*
+(.*saved t.*)(.*abcd.*)
+(.*saved t.*)(.*abcx.*)/
+>>>= 0
+
+# Verify if metadata exists.
+EXECUTABLE verify --ver-int --conf test/test.cfg -d --dump -i test/out/sign/abcd.ksig
+>>> /(.*:: My Name.*)/
+>>>= 0
+EXECUTABLE verify --ver-int --conf test/test.cfg -d --dump -i test/out/sign/abcx.ksig
+>>> /(.*:: My Name.*)/
+>>>= 0
+
+# Sign multiple hash imprints with enabled masking, no metadata.
+EXECUTABLE sign --conf test/test.cfg -d --max-lvl 3 --mask -i SHA-256:6d9c3ee5013363641b4d3dd2d0c7aa65fcdc972d64d946508d046dc120fcb9a6 SHA-256:76b127cddb918c3be744980c094c6c9c0d6c0a8d54b8d971b67886772fbe47c6 SHA-256:dd11d432ad546dfe149eba788c072746efc7bff0165b440e9eb45b464e008f74 -o test/out/sign
+>>>2 /(.*saved to.*)(.*SHA-256.ksig.*)
+(.*saved to.*)(.*SHA-256_1.ksig.*)
+(.*saved to.*)(.*SHA-256_2.ksig.*)/
+>>>= 0
+
+# Verify
+EXECUTABLE verify --conf test/test.cfg --ver-int -f SHA-256:6d9c3ee5013363641b4d3dd2d0c7aa65fcdc972d64d946508d046dc120fcb9a6  -i test/out/sign/SHA-256.ksig
+>>>= 0
+EXECUTABLE verify --conf test/test.cfg --ver-int -f SHA-256:76b127cddb918c3be744980c094c6c9c0d6c0a8d54b8d971b67886772fbe47c6 -i test/out/sign/SHA-256_1.ksig
+>>>= 0
+EXECUTABLE verify --conf test/test.cfg --ver-int -f SHA-256:dd11d432ad546dfe149eba788c072746efc7bff0165b440e9eb45b464e008f74 -i test/out/sign/SHA-256_2.ksig
+>>>= 0
+
+# Sign multiple hash imprints to specified files, enable masking, no metadata.
+EXECUTABLE sign --conf test/test.cfg -d --max-lvl 3 --mask -i SHA-256:6d9c3ee5013363641b4d3dd2d0c7aa65fcdc972d64d946508d046dc120fcb9a6 SHA-256:76b127cddb918c3be744980c094c6c9c0d6c0a8d54b8d971b67886772fbe47c6 SHA-256:dd11d432ad546dfe149eba788c072746efc7bff0165b440e9eb45b464e008f74 -o test/out/sign/doc_1.ksig -o test/out/sign/doc_2.ksig -o test/out/sign/doc_3.ksig
+>>>2 /(.*saved to.*)(.*doc_1.ksig.*)
+(.*saved to.*)(.*doc_2.*)
+(.*saved to.*)(.*doc_3.*)/
+>>>= 0
+
+# Verify
+EXECUTABLE verify --conf test/test.cfg --ver-int -f SHA-256:6d9c3ee5013363641b4d3dd2d0c7aa65fcdc972d64d946508d046dc120fcb9a6  -i test/out/sign/doc_1.ksig
+>>>= 0
+EXECUTABLE verify --conf test/test.cfg --ver-int -f SHA-256:76b127cddb918c3be744980c094c6c9c0d6c0a8d54b8d971b67886772fbe47c6 -i test/out/sign/doc_2.ksig
+>>>= 0
+EXECUTABLE verify --conf test/test.cfg --ver-int -f SHA-256:dd11d432ad546dfe149eba788c072746efc7bff0165b440e9eb45b464e008f74 -i test/out/sign/doc_3.ksig
+>>>= 0
+
+# Sign both imprints and files, no metadata, no masking.
+EXECUTABLE sign --conf test/test.cfg -d --max-lvl 3 -i test/resource/file/abcx SHA-256:76b127cddb918c3be744980c094c6c9c0d6c0a8d54b8d971b67886772fbe47c6 SHA-256:dd11d432ad546dfe149eba788c072746efc7bff0165b440e9eb45b464e008f74 -o test/out/sign/doc_2.1.ksig -o test/out/sign/doc_2.2.ksig -o test/out/sign/doc_2.3.ksig
+>>>2 /(.*saved to.*)(.*doc_2.1.ksig.*)
+(.*saved to.*)(.*doc_2.2.*)
+(.*saved to.*)(.*doc_2.3.*)/
+>>>= 0
+
+# Verify
+EXECUTABLE verify --conf test/test.cfg --ver-int -f test/resource/file/abcx  -i test/out/sign/doc_2.1.ksig
+>>>= 0
+EXECUTABLE verify --conf test/test.cfg --ver-int -f SHA-256:76b127cddb918c3be744980c094c6c9c0d6c0a8d54b8d971b67886772fbe47c6 -i test/out/sign/doc_2.2.ksig
+>>>= 0
+EXECUTABLE verify --conf test/test.cfg --ver-int -f SHA-256:dd11d432ad546dfe149eba788c072746efc7bff0165b440e9eb45b464e008f74 -i test/out/sign/doc_2.3.ksig
+>>>= 0
+
+# Sign files with odd names, no metadata, no masking.
+EXECUTABLE sign --conf test/test.cfg -d --max-lvl 2 -i test/resource/file/- -i test/resource/file/--odd-file -o test/out/sign
+>>>2 /(.*saved to.*)(.*-.ksig.*)
+(.*saved to.*)(.*--odd-file.ksig.*)/
+>>>= 0
+
+# Verify
+EXECUTABLE verify --conf test/test.cfg --ver-int -f test/resource/file/- -i test/out/sign/-.ksig
+>>>= 0
+EXECUTABLE verify --conf test/test.cfg --ver-int -f test/resource/file/--odd-file -i test/out/sign/--odd-file.ksig
+>>>= 0
+
+# Sign files in multiple rounds, no masking, no metadata. Check if file names are correct.
+EXECUTABLE sign --conf test/test.cfg -d --max-lvl 1 --max-aggr-rounds 5 -i test/resource/file/a* -i test/resource/file/f* -o test/out/sign
+>>>2 /(.*saved to.*)(.*sign\/abcd_1.ksig.*)
+(.*saved to.*)(.*sign\/abcx_1.ksig.*)
+(.*saved to.*)(.*sign\/file_max_tlv_size.ksig.*)
+(.*saved to.*)(.*sign\/file_max_tlv_size_p1.ksig.*)/
+>>>= 0
+
+# Sign files in multiple rounds, no masking, no metadata. Check if file names are correct.
+EXECUTABLE sign --conf test/test.cfg --max-lvl 3 --max-aggr-rounds 3 test/resource/file/* -o test/out/sign -d --show-progress
+>>>2 /(.*Signing 8 files in round 1\/2.*)
+(.*[#*].*)
+(.*Signing the local aggregation tree 1\/2.*)(.*ok.*)
+.*
+(.*Signing 1 files in round 2\/2.*)
+(.*[#*].*)
+(.*Signing the local aggregation tree 2\/2.*)(.*ok.*)
+.*
+(.*Saving 9 files.*)
+(.*[#*].*)/
+>>>= 0

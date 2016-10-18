@@ -24,13 +24,48 @@
 #include "param_set_obj_impl.h"
 #include "param_value.h"
 #include "param_set.h"
+#include "strn.h"
 
 static char *new_string(const char *str) {
 	char *tmp = NULL;
-	if(str == NULL) return NULL;
+	if (str == NULL) return NULL;
 	tmp = (char*)malloc(strlen(str)*sizeof(char)+1);
-	if(tmp == NULL) return NULL;
+	if (tmp == NULL) return NULL;
 	return strcpy(tmp, str);
+}
+
+int PARAM_VAL_insert(PARAM_VAL *target, const char* source, int priority, int at, PARAM_VAL *obj) {
+	int res;
+	PARAM_VAL *insert_to = NULL;
+
+	if (target == NULL || obj == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	res = PARAM_VAL_getElement(target, source, priority, at, &insert_to);
+	if (res != PST_OK) goto cleanup;
+
+	/**
+	 * If a value is found, new obj is appended to the list after the value found.
+	 */
+
+	/* Initialize the new value. */
+	obj->previous = insert_to;
+	obj->next = insert_to->next;
+
+	/* Fix the old previous value. */
+	if (insert_to->next != NULL) {
+		insert_to->next->previous = obj;
+	}
+
+	/* Fix the insert_to value. */
+	insert_to->next = obj;
+
+
+
+cleanup:
+	return res;
 }
 
 int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL **newObj) {
@@ -39,19 +74,24 @@ int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL
 	char *tmp_value = NULL;
 	char *tmp_source = NULL;
 
-	if(newObj == NULL) {
+	if (newObj == NULL) {
 		res = PST_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
 	if (priority < PST_PRIORITY_VALID_BASE) {
-		res = PST_NEGATIVE_PRIORITY;
+		res = PST_PRIORITY_NEGATIVE;
+		goto cleanup;
+	}
+
+	if (priority > PST_PRIORITY_VALID_ROOF) {
+		res = PST_PRIORITY_TOO_LARGE;
 		goto cleanup;
 	}
 
 	/*Create obj itself*/
 	tmp = (PARAM_VAL*)malloc(sizeof(PARAM_VAL));
-	if(tmp == NULL) {
+	if (tmp == NULL) {
 		res = PST_OUT_OF_MEMORY;
 		goto cleanup;
 	}
@@ -64,17 +104,17 @@ int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL
 	tmp->previous = NULL;
 	tmp->priority = priority;
 
-	if(value != NULL){
+	if (value != NULL){
 		tmp_value = new_string(value);
-		if(tmp_value == NULL) {
+		if (tmp_value == NULL) {
 			res = PST_OUT_OF_MEMORY;
 			goto cleanup;
 		}
 	}
 
-	if(source != NULL){
+	if (source != NULL){
 		tmp_source = new_string(source);
-		if(tmp_source == NULL) {
+		if (tmp_source == NULL) {
 			res = PST_OUT_OF_MEMORY;
 			goto cleanup;
 		}
@@ -93,12 +133,8 @@ int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL
 	} else {
 		PARAM_VAL *current = *newObj;
 
-		while (current->next != NULL) {
-			current = current->next;
-		}
-
-		tmp->previous = current;
-		current->next = tmp;
+		res = PARAM_VAL_insert(current, NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, tmp);
+		if (res != PST_OK) goto cleanup;
 	}
 
 	tmp = NULL;
@@ -119,7 +155,7 @@ void PARAM_VAL_free(PARAM_VAL *rootValue) {
 	PARAM_VAL *next = NULL;
 	PARAM_VAL *to_be_freed = NULL;
 
-	if(rootValue == NULL) return;
+	if (rootValue == NULL) return;
 
 	to_be_freed = rootValue;
 	next = rootValue;
@@ -140,7 +176,8 @@ static int param_val_getPriority(PARAM_VAL *rootValue, int type, int *prio) {
 	PARAM_VAL *nxt = NULL;
 	int tmp = 0;
 
-	if (rootValue == NULL || prio == NULL || type <= PST_PRIORITY_NOTDEFINED) {
+	if (rootValue == NULL || prio == NULL || type <= PST_PRIORITY_NOTDEFINED
+			|| type >= PST_PRIORITY_FIELD_OUT_OF_RANGE) {
 		res = PST_INVALID_ARGUMENT;
 		goto cleanup;
 	}
@@ -174,6 +211,22 @@ cleanup:
 	return res;
 }
 
+static int prio_compare_if_match(int prio, int current) {
+	int virtual_prio = PST_PRIORITY_NOTDEFINED;
+
+	if (prio <= PST_PRIORITY_VALID_ROOF) {
+		return prio == current;
+	} else if (prio >= PST_PRIORITY_HIGHER_THAN && prio < PST_PRIORITY_LOWER_THAN) {
+		virtual_prio = prio - PST_PRIORITY_HIGHER_THAN;
+		return current > virtual_prio;
+	} else if (prio >= PST_PRIORITY_LOWER_THAN && prio < PST_PRIORITY_FIELD_OUT_OF_RANGE) {
+		virtual_prio = prio - PST_PRIORITY_LOWER_THAN;
+		return current < virtual_prio;
+	}
+
+	return 0;
+}
+
 static int param_val_get_element(PARAM_VAL *rootValue, const char* source, int priority, int at, int onlyInvalid, PARAM_VAL** val) {
 	int res;
 	PARAM_VAL *current = NULL;
@@ -198,7 +251,7 @@ static int param_val_get_element(PARAM_VAL *rootValue, const char* source, int p
 	current = rootValue;
 	while (current != NULL) {
 		/* Increase count if (priority matches AND source matches). */
-		if ((prio == PST_PRIORITY_NONE || prio == current->priority)
+		if ((prio == PST_PRIORITY_NONE || (prio_compare_if_match(prio, current->priority)))
 				&& (source == NULL || (source != NULL && current->source != NULL && strcmp(source, current->source) == 0))
 				&& (onlyInvalid == 0 || (onlyInvalid && (current->contentStatus != 0 || current->formatStatus != 0)))) {
 
@@ -249,13 +302,18 @@ int PARAM_VAL_popElement(PARAM_VAL **rootValue, const char* source, int priority
 	next = tmp->next;
 
 	/**
-	 * Repair the chain and root value.
+	 * If the previous element existed, repair its next value, as it is removed
+	 * from the list. Set the new root as previous.
 	 */
 	if (previous != NULL) {
 		previous->next = next;
 		newRoot = previous;
 	}
 
+	/**
+	* If the next element existed, fix its previous link as it is removed from
+	* the list.
+	*/
 	if (next != NULL) {
 		newRoot = (newRoot != NULL) ? newRoot : next;
 		next->previous = previous;
@@ -297,7 +355,7 @@ static int param_val_get_element_count(PARAM_VAL *rootValue, const char *source,
 		goto cleanup;
 	}
 
-	while (1) {
+	for (;;) {
 		res = value_getter(rootValue, source, prio, i, &tmp);
 		if (res != PST_OK && res != PST_PARAMETER_VALUE_NOT_FOUND) {
 			goto cleanup;
@@ -436,4 +494,22 @@ int PARAM_VAL_getPriority(PARAM_VAL *rootValue, int current, int *nextPrio) {
 cleanup:
 
 	return res;
+}
+
+char* PARAM_VAL_toString(const PARAM_VAL *value, char *buf, size_t buf_len) {
+	const PARAM_VAL *root = value;
+	size_t count = 0;
+
+	if (value == NULL || buf == NULL || buf_len == 0) return NULL;
+
+	while (root->previous != NULL) {
+		root = root->previous;
+	}
+
+	while (root != NULL) {
+		count += PST_snprintf(buf + count, buf_len - count, "%s ->", root->cstr_value);
+		root = root->next;
+	}
+
+	return buf;
 }

@@ -23,6 +23,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <ksi/compatibility.h>
+#include "param_set/parameter.h"
 #include "tool_box/param_control.h"
 #include "tool_box.h"
 #include "ksitool_err.h"
@@ -46,8 +47,15 @@ char* CONF_generate_param_set_desc(char *description, const char *flags, char *b
 	extra_desc = (description == NULL) ? "" : description;
 	count += KSI_snprintf(buf + count, buf_len - count, "{C}{c}%s", extra_desc);
 
+	/**
+	 * Add configuration descriptions as specified by the flags. For example to
+	 * add configuration parameters related to the signer add S to flags.
+	 */
+
 	if (is_S) {
-		count += KSI_snprintf(buf + count, buf_len - count, "{S}{aggr-user}{aggr-key}");
+		count += KSI_snprintf(buf + count, buf_len - count,
+				"{S}{aggr-user}{aggr-key}"
+				"{max-lvl}{max-aggr-rounds}{mdata-cli-id}{mdata-mac-id}{mdata-sqn-nr}{mdata-req-tm}");
 	}
 
 	if (is_X) {
@@ -104,6 +112,10 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 	is_X = strchr(flags, 'X') != NULL ? 1 : 0;
 	is_P = strchr(flags, 'P') != NULL ? 1 : 0;
 
+	/**
+	 * Configure parameter set parameters as specified by the flags.
+	 */
+
 	if (is_P) {
 		res = PARAM_SET_addControl(conf, "{V}{W}", isFormatOk_inputFile, isContentOk_inputFileRestrictPipe, convertRepair_path, NULL);
 		if (res != PST_OK) goto cleanup;
@@ -112,6 +124,9 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 		if (res != PST_OK) goto cleanup;
 
 		res = PARAM_SET_addControl(conf, "{publications-file-no-verify}", isFormatOk_flag, NULL, NULL, NULL);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_setParseOptions(conf, "publications-file-no-verify", PST_PRSCMD_HAS_NO_VALUE | PST_PRSCMD_NO_TYPOS);
 		if (res != PST_OK) goto cleanup;
 
 		res = PARAM_SET_addControl(conf, "{cnstr}", isFormatOk_constraint, NULL, convertRepair_constraint, NULL);
@@ -124,6 +139,30 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 
 		res = PARAM_SET_addControl(conf, "{aggr-user}{aggr-key}", isFormatOk_userPass, NULL, NULL, NULL);
 		if (res != PST_OK) goto cleanup;
+
+		/**
+		 * Configure parameters related to the local aggregation (block signer).
+		 */
+		res = PARAM_SET_addControl(conf, "{max-aggr-rounds}", isFormatOk_int, isContentOk_uint_not_zero, NULL, extract_int);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_addControl(conf, "{mdata-sqn-nr}", isFormatOk_int_can_be_null, isContentOk_uint_can_be_null, NULL, extract_int);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_addControl(conf, "{max-lvl}", isFormatOk_int, isContentOk_tree_level, NULL, extract_int);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_setParseOptions(conf, "{max-lvl}{max-aggr-rounds}", PST_PRSCMD_HAS_VALUE);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_addControl(conf, "{mdata-req-tm}", isFormatOk_flag, NULL, NULL, NULL);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_addControl(conf, "{mdata-cli-id}{mdata-mac-id}", isFormatOk_string, NULL, NULL, NULL);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_setParseOptions(conf, "{mdata-req-tm}", PST_PRSCMD_HAS_NO_VALUE);
+		if (res != PST_OK) goto cleanup;
 	}
 
 	if (is_X) {
@@ -134,7 +173,7 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 		if (res != PST_OK) goto cleanup;
 	}
 
-	res = PARAM_SET_addControl(conf, "{c}{C}", isFormatOk_int, isContentOk_int, NULL, extract_int);
+	res = PARAM_SET_addControl(conf, "{c}{C}", isFormatOk_int, isContentOk_uint, NULL, extract_int);
 	if (res != PST_OK) goto cleanup;
 
 
@@ -219,15 +258,15 @@ int CONF_isInvalid(PARAM_SET *set) {
 int conf_report_errors(PARAM_SET *set, const char *fname, int res) {
 	char buf[0xffff];
 	if (res == KT_IO_ERROR) {
-		print_errors("Error: Configurations file '%s' pointed by KSI_CONF does not exist.\n", fname);
+		print_errors("Error: configuration file '%s' pointed by KSI_CONF does not exist.\n", fname);
 		res = KT_INVALID_CONF;
 		goto cleanup;
 	} else if (res == KT_NO_PRIVILEGES) {
-		print_errors("Error: User has no privileges to access configurations file '%s' pointed by KSI_CONF.\n", fname);
+		print_errors("Error: User has no privileges to access configuration file '%s' pointed by KSI_CONF.\n", fname);
 		res = KT_INVALID_CONF;
 		goto cleanup;
 	} else if (CONF_isInvalid(set)) {
-		print_errors("Error: Configurations file '%s' pointed by KSI_CONF is invalid:\n", fname);
+		print_errors("Error: configuration file '%s' pointed by KSI_CONF is invalid:\n", fname);
 		print_errors("%s\n", CONF_errorsToString(set, "  ", buf, sizeof(buf)));
 		res = KT_INVALID_CONF;
 		goto cleanup;
@@ -237,7 +276,7 @@ cleanup:
 }
 
 char *CONF_errorsToString(PARAM_SET *set, const char *prefix, char *buf, size_t buf_len) {
-	char tmp[4096];
+	char tmp[0xffff];
 	size_t count = 0;
 
 	if (set == NULL || buf == NULL || buf_len == 0) return NULL;
@@ -264,7 +303,7 @@ char *CONF_errorsToString(PARAM_SET *set, const char *prefix, char *buf, size_t 
 	}
 
 	if (PARAM_SET_isSetByName(set, "publications-file-no-verify")) {
-		count += KSI_snprintf(buf + count, buf_len - count, "%sConfigurations flag 'publications-file-no-verify' can only be defined on command-line.\n",
+		count += KSI_snprintf(buf + count, buf_len - count, "%sconfiguration flag 'publications-file-no-verify' can only be defined on command-line.\n",
 				prefix == NULL ? "" : prefix);
 
 	}

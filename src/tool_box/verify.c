@@ -167,6 +167,7 @@ cleanup:
 	KSITOOL_KSI_ERRTrace_save(ksi);
 
 	if (res != KT_OK) {
+		if (ERR_TRCKR_getErrCount(err) == 0) {ERR_TRCKR_ADD(err, res, NULL);}
 		KSITOOL_KSI_ERRTrace_LOG(ksi);
 		print_debug("\n");
 		DEBUG_verifySignature(ksi, res, sig, result, hsh);
@@ -269,7 +270,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 
 	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFileRestrictPipe, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
-	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignature);
+	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFileWithPipe, convertRepair_path, extract_inputSignature);
 	PARAM_SET_addControl(set, "{f}", isFormatOk_inputHash, isContentOk_inputHash, convertRepair_path, extract_inputHash);
 	PARAM_SET_addControl(set, "{d}{x}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{pub-str}", isFormatOk_pubString, NULL, NULL, extract_pubString);
@@ -319,7 +320,7 @@ static int signature_verify(int id, PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 	int res;
 
 	if (set == NULL || err == NULL || ksi == NULL || sig == NULL || out == NULL) {
-		res = KT_INVALID_ARGUMENT;
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -556,7 +557,7 @@ cleanup:
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err) {
 	int res;
 
-	res = get_pipe_in_error(set, err, "i,f", NULL);
+	res = get_pipe_in_error(set, err, NULL, "i,f", NULL);
 	if (res != KT_OK) goto cleanup;
 
 cleanup:
