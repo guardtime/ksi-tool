@@ -6,6 +6,7 @@ Version 2.2
 * IMPROVEMENT: Command-line parameter parser updated.
 * IMPROVEMENT: Command-line typo errors are printed before invalid value or format errors.
 * IMPROVEMENT: Error handling for detecting unexpected internal errors improved.
+* IMPROVEMENT: Masking and metadata tests implemented. If gttlvutil is not available extra tests are ignored.
 * FEATURE: Local aggregation implemented. See new options for more details --max-lvl, --max-aggr-rounds --mask and --mdata*.
 * FEATURE: It is possible to specify output (-o) as directory when signing.
 * FEATURE: It is possible to specify multiple inputs (-i) when signing.
