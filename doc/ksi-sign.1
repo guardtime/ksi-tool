@@ -52,8 +52,8 @@ Set the maximum depth (0 - 255) of the local aggregation tree (default: 0). It m
 Set the upper limit of local aggregation rounds that may be performed (default: 1).
 .\"
 .TP
-\fB--mask \fR[\fIiv\fR]
-Specify a hex string to initialize and apply the masking process, or algorithm to generate the initial value instead. See \fB--prev-leaf\fR to see how to link another aggregation tree to current aggregation process. Supported algorithms:
+\fB--mask \fR[<\fIhex | alg:[arg...]\fR>]
+Specify a hex string to initialize and apply the masking process, or specify an algorithm to generate the initial value instead. See \fB--prev-leaf\fR to see how to link another aggregation tree to current aggregation process. Supported algorithms:
 .RS
 .IP \(bu 4
 \fBcrand\fR:\fIseed\fR,\fIlen\fR - Use standard C rand() function to generate array of random numbers with the given seed and length. The seed value is unsigned 32bit integer or 'time' to use the system time value instead. If function is specified without the arguments (crand:) 'time' is used to generate random array with size of 32 bytes.
@@ -63,7 +63,7 @@ When mask is specified without the argument the default mask 'crand:' is used.
 .\"
 .TP
 \fB--prev-leaf \fIhash\fR
-Specify the hash value of the last leaf from another local aggregation tree to link it with the current first local aggregation round. Is valid only with option \fB--mask\fR.
+Specify the hash imprint of the last leaf from another local aggregation tree to link it with the current first local aggregation round. Hash imprint format: <\fIalg\fR>:<\fIhash in hex\fR>, where <\fIalg\fR> marks the hash algorithm and <\fIhash in hex\fR> is hash value in hex format. Use \fB-h \fRto get the list of supported hash algorithms. Is valid only with option \fB--mask\fR.
 .\"
 .TP
 \fB--mdata\fR
@@ -145,7 +145,7 @@ To sign a data file \fIfile\fR with non-default algorithm \fI SHA1\fR:
 To sign a stream (\fIstdin\fR), save data from stream to \fIfile\fR and save signature to \fIsig.ksig\fR:
 .LP
 .RS 4
-\fBksi sign -i --data-out \fIfile\fB -o\fI sig.ksig\fR
+\fBksi sign -i \fI-\fR \fB--data-out \fIfile\fB -o\fI sig.ksig\fR
 .RE
 .\"
 .TP 2
@@ -161,7 +161,7 @@ To perform local aggregation on files \fI*.doc\fR and save all the signatures to
 To embed user ID "\fIMy Name\fR" as metadata to the signature of document \fIfile\fR:
 .LP
 .RS 4
-\fBksi sign \fIfile\fR \fB--max-lvl \fI2\fB \fB--mdata --mdata-cl-id \fR"\fIMy Name\fR"
+\fBksi sign \fIfile\fR \fB--max-lvl \fI2\fB \fB--mdata --mdata-cli-id \fR"\fIMy Name\fR"
 .RE
 .\"
 .TP 2

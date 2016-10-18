@@ -1292,7 +1292,7 @@ int isContentOk_mask(const char* mask) {
 		if (res == -1) return FORMAT_UNKNOWN_ERROR;
 		else return res;
 	} else {
-		return UNKNOWN_FUNCTION;
+		return PARAM_OK;
 	}
 }
 

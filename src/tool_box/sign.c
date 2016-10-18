@@ -55,8 +55,8 @@ typedef struct SIGNING_AGGR_ROUND_st {
 	char **fname_out;
 
 	 /* Count of hash values used in aggreation round. */
-	int hash_count_max;
-	int hash_count;
+	size_t hash_count_max;
+	size_t hash_count;
 } SIGNING_AGGR_ROUND;
 
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
@@ -69,9 +69,9 @@ static void SIGNING_AGGR_ROUND_free(SIGNING_AGGR_ROUND *obj);
 static void SIGNING_AGGR_ROUND_ARRAY_free(SIGNING_AGGR_ROUND **array);
 static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size_t *inputs);
 static int KT_SIGN_getAggregationRoundsNeeded(PARAM_SET *set, ERR_TRCKR *err, size_t max_tree_inputs, size_t *rounds);
-static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int max_tree_inputs, int rounds, SIGNING_AGGR_ROUND ***aggr_rounds_record);
+static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size_t max_tree_inputs, size_t rounds, SIGNING_AGGR_ROUND ***aggr_rounds_record);
 static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_AGGR_ROUND **aggr_round);
-static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int seq_offset, KSI_MetaData **mdata);
+static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, size_t seq_offset, KSI_MetaData **mdata);
 static int KT_SIGN_dump(PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND **aggr_round);
 
 int sign_run(int argc, char** argv, char **envp) {
@@ -131,7 +131,7 @@ int sign_run(int argc, char** argv, char **envp) {
 	res = KT_SIGN_getAggregationRoundsNeeded(set, err, max_tree_input, &rounds);
 	if (res != KT_OK) goto cleanup;
 
-	res = KT_SIGN_performSigning(set, err, ksi, (int)max_tree_input, (int)rounds, &aggr_rounds);
+	res = KT_SIGN_performSigning(set, err, ksi, max_tree_input, rounds, &aggr_rounds);
 	if (res != KT_OK) goto cleanup;
 
 	res = KT_SIGN_saveToOutput(set, err, ksi, aggr_rounds);
@@ -214,16 +214,20 @@ char *sign_help_toString(char*buf, size_t len) {
 		" --max-aggr-rounds <int>\n"
 		"           - Set the upper limit of local aggregation rounds that may be\n"
 		"             performed (default 1).\n"
-		" --mask <mask>\n"
-		"           - Specify a hex string to initialize and apply the masking process\n"
+		" --mask [<hex | alg:[arg...]>]\n"
+		"           - Specify a hex string to initialize and apply the masking process,\n"
 		"             or algorithm to generate the initial value instead.\n"
 		"             Supported algorithms:\n\n"
 		"               * crand:seed,len - Use standard C rand() function to generate\n"
 		"                 array of random numbers with the given seed and length. The\n"
 		"                 seed value is unsigned 32bit integer or 'time' to use the\n"
-		"                 system time value instead.\n"
-		" --prev-leaf <hash>\n"
-		"           - Specify the hash value of the last leaf from another local\n"
+		"                 system time value instead. If function is specified without the\n"
+		"                 arguments (crand:) 'time' is used to generate random array with\n"
+		"                 size of 32 bytes.\n\n"
+		"             When mask is specified without the argument (--mask) 'crand:' is\n"
+		"             used as default.\n"
+		" --prev-leaf <alg>:<hash>\n"
+		"           - Specify the hash imprint of the last leaf from another local\n"
 		"             aggregation tree to link it with the current first local\n"
 		"             aggregation round. Is valid only with option --mask.\n"
 		" --mdata   - Embed metadata to the KSI signature. To configure metadata at lest\n"
@@ -554,32 +558,32 @@ static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size
 	has_prev_leaf = PARAM_SET_isSetByName(set, "prev-leaf");
 
 	if (!is_masking && has_prev_leaf) {
-		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_TOO_SMALL, "Error: Unable to link the local aggregation tree with the last leaf of the previous local aggregation tree as masking is not enabled (see --mask).\n");
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to link the local aggregation tree with the last leaf of the previous local aggregation tree as masking is not enabled (see --mask).\n");
 		goto cleanup;
 	}
 
 	if (max_lvl < 2 && has_prev_leaf && is_metadata) {
-		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_TOO_SMALL, "Error: Unable to embed metadata and link the local aggregation tree with the last leaf of the previous local aggregation tree with masking as the local aggregation tree's maximum depth is too small (see --max-lvl).\n");
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to embed metadata and link the local aggregation tree with the last leaf of the previous local aggregation tree with masking as the local aggregation tree's maximum allowed depth is too small (see --max-lvl).\n");
 		goto cleanup;
 	}
 
 	if (max_lvl < 2 && is_masking && is_metadata) {
-		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_TOO_SMALL, "Error: Unable to add metadata with masking as the local aggregation tree's maximum depth is too small (see --max-lvl).\n");
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to add metadata with masking as the local aggregation tree's maximum allowed depth is too small (see --max-lvl).\n");
 		goto cleanup;
 	}
 
 	if (max_lvl == 0 && is_metadata) {
-		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_TOO_SMALL, "Error: Unable to embed metadata as the local aggregation tree's maximum depth is too small (see --max-lvl).\n");
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to embed metadata as the local aggregation tree's maximum allowed depth is too small (see --max-lvl).\n");
 		goto cleanup;
 	}
 
 	if (max_lvl == 0 && is_masking) {
-		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_TOO_SMALL, "Error: Unable to use masking as the local aggregation tree's maximum depth is too small (see --max-lvl).\n");
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to use masking as the local aggregation tree's maximum allowed depth is too small (see --max-lvl).\n");
 		goto cleanup;
 	}
 
 	/**
-	 * Create a virtual max level that is divided with 2 if masking is done and
+	 * Create a virtual max level that is decremented if masking is done or
 	 * if metadada is appended.
 	 */
 	max_lvl_virtual = max_lvl;
@@ -587,9 +591,8 @@ static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size
 	if (is_masking) if (max_lvl_virtual > 0) max_lvl_virtual--;
 	if (is_metadata) if (max_lvl_virtual > 0) max_lvl_virtual--;
 
-
-	if (sizeof(size_t) * 8 < max_lvl_virtual) {
-		ERR_TRCKR_ADD(err, res = KT_INDEX_OVF, "Error: The maximum local aggregation tree to be generated may contain more leafs than size_t max value.\n");
+	if (sizeof(size_t) * 8 <= max_lvl_virtual) {
+		ERR_TRCKR_ADD(err, res = KT_INDEX_OVF, "Error: The maximum local aggregation tree to be generated may contain more values than internal iterators can handle (See --max-lvl).");
 		goto cleanup;
 	}
 
@@ -629,12 +632,12 @@ static int KT_SIGN_getAggregationRoundsNeeded(PARAM_SET *set, ERR_TRCKR *err, si
 	round_count = (size_t)ceil((double)input_file_count / (double)max_tree_inputs);
 
 	if (round_count > 1 && !is_sequential) {
-		ERR_TRCKR_ADD(err, KT_AGGR_LVL_TOO_SMALL, "Error: Too much inputs for a single aggregation round.");
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Too much inputs for a single aggregation round.");
 		goto cleanup;
 	}
 
 	if (is_sequential && round_count > max_local_aggr_rounds ) {
-		ERR_TRCKR_ADD(err, KT_AGGR_LVL_TOO_SMALL, "Error: Too much inputs! Rounds permitted/needed %u/%u.", max_local_aggr_rounds, round_count);
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Too much inputs! Permitted rounds is %u but %u is needed.", max_local_aggr_rounds, round_count);
 		goto cleanup;
 	}
 
@@ -687,7 +690,7 @@ static void SIGNING_AGGR_ROUND_ARRAY_free(SIGNING_AGGR_ROUND **array) {
 	}
 }
 
-static int SIGNING_AGGR_ROUND_new(int max_leaves, SIGNING_AGGR_ROUND **new) {
+static int SIGNING_AGGR_ROUND_new(size_t max_leaves, SIGNING_AGGR_ROUND **new) {
 	int res;
 	SIGNING_AGGR_ROUND *tmp = NULL;
 	KSI_DataHash **tmp_hash = NULL;
@@ -774,7 +777,7 @@ cleanup:
 	return res;
 }
 
-static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int max_tree_inputs, int rounds, SIGNING_AGGR_ROUND ***aggr_rounds_record) {
+static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size_t max_tree_inputs, size_t rounds, SIGNING_AGGR_ROUND ***aggr_rounds_record) {
 	int res = KT_UNKNOWN_ERROR;
 	int d = 0;
 	int prgrs = 0;
@@ -885,9 +888,9 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 	 */
 	for (r = 0; r < rounds; r++) {
 		size_t tree_input = 0;
-		int to_be_signed_in_round = ((((int)r + 1) * max_tree_inputs - in_count) < 0) ? max_tree_inputs : in_count - (int)r * max_tree_inputs;
+		size_t to_be_signed_in_round = (((r + 1) * max_tree_inputs) < in_count) ? max_tree_inputs : in_count - (int)r * max_tree_inputs;
 
-		res = SIGNING_AGGR_ROUND_new(max_tree_inputs, &aggr_round[r]);
+		res = SIGNING_AGGR_ROUND_new(to_be_signed_in_round, &aggr_round[r]);
 		ERR_CATCH_MSG(err, res, "Error: Unable to create a record for aggregation round.");
 
 		res = KSI_BlockSigner_new(ctx, algo, isMasking ? prev_leaf : NULL, isMasking ? mask_iv : NULL, &bs);
@@ -923,18 +926,18 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 					);
 
 			res = KSI_BlockSigner_addLeaf(bs, hash, 0, mdata, NULL);
-			ERR_CATCH_MSG(err, res, "Error: Unable to add a hash value to a local aggregation tree.\n");
+			ERR_CATCH_MSG(err, res, "Error: Unable to add a hash value to a local aggregation tree.");
 
 			res = PARAM_SET_getStr(set, "i,input", NULL, PST_PRIORITY_NONE, (int)i, &fname);
-			ERR_CATCH_MSG(err, res, "Error: Unable to get files name.\n");
+			ERR_CATCH_MSG(err, res, "Error: Unable to get files name.");
 
 			res = SIGNING_AGGR_ROUND_append(aggr_round[r], hash, fname);
-			ERR_CATCH_MSG(err, res, "Error: Unable to add hash value and files name to local aggregation record.\n");
+			ERR_CATCH_MSG(err, res, "Error: Unable to add hash value and files name to local aggregation record.");
 
 			if (!prgrs) print_progressResult(res);
 
 			if (prgrs && (i % divider == 0 || i + 1 >= in_count || tree_input + 1 == to_be_signed_in_round)) {
-				PROGRESS_BAR_display((tree_input + 1) * 100 / to_be_signed_in_round);
+				PROGRESS_BAR_display((int)((tree_input + 1) * 100 / to_be_signed_in_round));
 			}
 
 			hash = NULL;
@@ -1211,7 +1214,7 @@ cleanup:
 	return res;
 }
 
-static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int seq_offset, KSI_MetaData **mdata) {
+static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, size_t seq_offset, KSI_MetaData **mdata) {
 	int res;
 	char *cli_id = NULL;
 	char *mac_id = NULL;
@@ -1230,11 +1233,12 @@ static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int
 	/**
 	 * If metadata is not used, exit with success and return NULL.
 	 */
-	if (!PARAM_SET_isSetByName(set, "no-mdata") && PARAM_SET_isSetByName(set, "mdata")) {
+	if (PARAM_SET_isSetByName(set, "mdata")) {
 		/**
 		 * Check if metadata record is consistent.
 		 */
-		if (!PARAM_SET_isSetByName(set, "mdata-cli-id") || PARAM_SET_isSetByName(set, "mdata-mac-id,mdata-sqn-nr,mdata-mac-id")) {
+
+		if (!PARAM_SET_isSetByName(set, "mdata-cli-id") && PARAM_SET_isOneOfSetByName(set, "mdata-mac-id,mdata-sqn-nr,mdata-req-tm")) {
 			ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: Client ID is missing but is mandatory part of metadata.");
 			goto cleanup;
 		}
@@ -1299,6 +1303,9 @@ static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int
 		if (res != KSI_OK) goto cleanup;
 
 		res = KSI_MetaData_setRequestTimeInMicros(tmp, aggr_time);
+		if (res != KSI_OK) goto cleanup;
+
+		res = KSI_MetaData_setSequenceNr(tmp, sequence_nr);
 		if (res != KSI_OK) goto cleanup;
 
 	}
