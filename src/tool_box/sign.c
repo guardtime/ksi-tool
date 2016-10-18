@@ -214,16 +214,20 @@ char *sign_help_toString(char*buf, size_t len) {
 		" --max-aggr-rounds <int>\n"
 		"           - Set the upper limit of local aggregation rounds that may be\n"
 		"             performed (default 1).\n"
-		" --mask <mask>\n"
-		"           - Specify a hex string to initialize and apply the masking process\n"
+		" --mask [<hex | alg:[arg...]>]\n"
+		"           - Specify a hex string to initialize and apply the masking process,\n"
 		"             or algorithm to generate the initial value instead.\n"
 		"             Supported algorithms:\n\n"
 		"               * crand:seed,len - Use standard C rand() function to generate\n"
 		"                 array of random numbers with the given seed and length. The\n"
 		"                 seed value is unsigned 32bit integer or 'time' to use the\n"
-		"                 system time value instead.\n"
-		" --prev-leaf <hash>\n"
-		"           - Specify the hash value of the last leaf from another local\n"
+		"                 system time value instead. If function is specified without the\n"
+		"                 arguments (crand:) 'time' is used to generate random array with\n"
+		"                 size of 32 bytes.\n\n"
+		"             When mask is specified without the argument (--mask) 'crand:' is\n"
+		"             used as default.\n"
+		" --prev-leaf <alg>:<hash>\n"
+		"           - Specify the hash imprint of the last leaf from another local\n"
 		"             aggregation tree to link it with the current first local\n"
 		"             aggregation round. Is valid only with option --mask.\n"
 		" --mdata   - Embed metadata to the KSI signature. To configure metadata at lest\n"
@@ -588,7 +592,7 @@ static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size
 	if (is_metadata) if (max_lvl_virtual > 0) max_lvl_virtual--;
 
 	if (sizeof(size_t) * 8 <= max_lvl_virtual) {
-		ERR_TRCKR_ADD(err, res = KT_INDEX_OVF, "Error: The maximum local aggregation tree to be generated may contain more values than internal iterators can handle.");
+		ERR_TRCKR_ADD(err, res = KT_INDEX_OVF, "Error: The maximum local aggregation tree to be generated may contain more values than internal iterators can handle (See --max-lvl).");
 		goto cleanup;
 	}
 
