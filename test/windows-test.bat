@@ -54,9 +54,9 @@ if exist bin\ksi.exe (
     set tool=ksi
 )
 
-REM If gttlvdump exists include the tests using gttlvdump
+REM If gttlvdump and gttlvgrep exists include the tests using gttlvutil
 
-gttlvdump -h > NUL
+gttlvdump -h > NUL && gttlvgrep -h > NUL
 if not ERRORLEVEL 1 (
 	set TEST_DEPENDING_ON_TLVUTIL=test\test_suites\sign-metadata.test test\test_suites\sign-masking.test
 ) else (
