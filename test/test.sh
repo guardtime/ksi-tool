@@ -52,7 +52,7 @@ else
 	tool=src/ksi
 fi
 
-if gttlvdump -h > /dev/null && gttlvgrep_ -h > /dev/null; then
+if gttlvdump -h > /dev/null && gttlvgrep -h > /dev/null; then
 	TEST_DEPENDING_ON_TLVUTIL="test/test_suites/sign-metadata.test test/test_suites/sign-masking.test"
 	echo Info: Extra tests depending on gttlvutil added.
 else
