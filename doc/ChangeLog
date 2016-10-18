@@ -1,6 +1,6 @@
 Version 2.2
 
-2016-10-14 2.2.942
+2016-10-18 2.2.961
 
 * IMPROVEMENT: Refactoring due to background verification.
 * IMPROVEMENT: Command-line parameter parser updated.
