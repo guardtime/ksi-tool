@@ -12,10 +12,11 @@
 
 ## DEPENDECES
 
- * shelltestrunner - mandatory for every test.
- * valgrind (for memory tests only, unix).
+ * shelltestrunner - Mandatory for every test.
+ * valgrind - For memory tests only, unix.
+ * gttlvutil - When available extra tests for metadata and masking are performed.
 
- 
+
 ## TEST RELATED FILES
 
  All files related to the tests can be found from directory `test` that is

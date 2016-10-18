@@ -54,6 +54,16 @@ if exist bin\ksi.exe (
     set tool=ksi
 )
 
+REM If gttlvdump exists include the tests using gttlvdump
+
+gttlvdump -h > NUL
+if not ERRORLEVEL 1 (
+	set TEST_DEPENDING_ON_TLVUTIL=test\test_suites\sign-metadata.test test\test_suites\sign-masking.test
+) else (
+	set TEST_DEPENDING_ON_TLVUTIL=
+)
+
+
 shelltest ^
 test\test_suites\sign.test ^
 test\test_suites\static-sign.test ^
@@ -76,6 +86,7 @@ test\test_suites\invalid-conf.test ^
 test\test_suites\file-name-gen.test ^
 test\test_suites\sign-block-signer.test ^
 test\test_suites\sign-block-signer-cmd.test ^
+%TEST_DEPENDING_ON_TLVUTIL% ^
 --with=%tool% -- -j1
 set exit_code=%errorlevel%
 

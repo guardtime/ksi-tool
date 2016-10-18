@@ -52,6 +52,12 @@ else
 	tool=src/ksi
 fi
 
+if [ ! -f gttlvdump ]; then
+	TEST_DEPENDING_ON_TLVUTIL="test/test_suites/sign-metadata.test test/test_suites/sign-masking.test"
+else
+	TEST_DEPENDING_ON_TLVUTIL=""
+fi
+
 shelltest \
 test/test_suites/sign.test \
 test/test_suites/static-sign.test \
@@ -74,6 +80,7 @@ test/test_suites/invalid-conf.test \
 test/test_suites/file-name-gen.test \
 test/test_suites/sign-block-signer.test \
 test/test_suites/sign-block-signer-cmd.test \
+$TEST_DEPENDING_ON_TLVUTIL \
 --with=$tool -- -j1
 exit_code=$?
 
