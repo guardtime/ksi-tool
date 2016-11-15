@@ -407,7 +407,7 @@ int KSITOOL_SignatureVerify_userProvidedPublicationBased(ERR_TRCKR *err, KSI_Sig
 	return res;
 }
 
-int KSITOOL_BlockSigner_close(ERR_TRCKR *err, KSI_CTX *ctx, KSI_BlockSigner *signer, KSI_MultiSignature **ms) {
+int KSITOOL_BlockSigner_closeAndSign(ERR_TRCKR *err, KSI_CTX *ctx, KSI_BlockSigner *signer) {
 	int res;
 
 	if (err == NULL || ctx == NULL || signer == NULL) {
@@ -415,7 +415,7 @@ int KSITOOL_BlockSigner_close(ERR_TRCKR *err, KSI_CTX *ctx, KSI_BlockSigner *sig
 		return res;
 	}
 
-	res = KSI_BlockSigner_close(signer, ms);
+	res = KSI_BlockSigner_closeAndSign(signer);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -823,8 +823,6 @@ int KSITOOL_KSI_ERR_toExitCode(int error_code) {
 		case KSI_ASYNC_NOT_FINISHED:
 		case KSI_INVALID_PUBLICATION:
 		case KSI_UNKNOWN_ERROR:
-		case KSI_MULTISIG_NOT_FOUND:
-		case KSI_MULTISIG_INVALID_STATE:
 		case KSI_SERVICE_INVALID_REQUEST:
 		case KSI_SERVICE_INVALID_PAYLOAD:
 		case KSI_SERVICE_INTERNAL_ERROR:

@@ -25,9 +25,11 @@
 ##
 # Nr. 1
 # Add a single file with client id as metadata.
-# Check if metadat record exists and if it matches the expected result.
+# Check if metadata record exists and if it matches the expected result.
+# Note: this test involves static signing setup.
 ##
-EXECUTABLE sign --conf test/test.cfg -d -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-1.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata
+EXECUTABLE sign --conf test/resource/conf/static-sign-metadata-1.cfg -d --dump -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-1.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata
+>>> /(.*Signer identity.*)(\:\: My name'.*)/
 >>>2 /(.*Add document hash.*)(.*with metadata.*)/
 >>>= 0
 
@@ -35,10 +37,21 @@ EXECUTABLE sign --conf test/test.cfg -d -i test/resource/file/ebcd -o test/out/s
 EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/ebcd -i test/out/sign/ebcd-mdata-1.ksig
 >>>= 0
 
-EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/sign/ebcd-mdata-1.ksig | gttlvdump -pPy
+# Verify metadata correctness.
+EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[5] test/out/sign/ebcd-mdata-1.ksig | gttlvdump -pPy
 >>>/(.*TLV.*04.*)(.*L = 14.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)/
+>>>= 0
+
+# Verify chain index correctness.
+EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[5] test/out/sign/ebcd-mdata-1.ksig | gttlvdump -pPy
+>>>/(.*Chain index.*10.*)
+(.*Chain index.*1791.*)
+(.*Chain index.*1007.*)
+(.*Chain index.*5.*)
+(.*Chain index.*3.*)
+(.*Chain index.*3.*)/
 >>>= 0
 
 
@@ -47,7 +60,8 @@ EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/s
 # Add a single file with metadata composed of client and machine id.
 # Check if metadat record exists and if it matches the expected result.
 ##
-EXECUTABLE sign --conf test/test.cfg -d -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-2.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata --mdata-mac-id "My Computer"
+EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-2.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata --mdata-mac-id "My Computer"
+>>> /(.*Signer identity.*)(\:\: My name'.*)/
 >>>2 /(.*Add document hash.*)(.*with metadata.*)/
 >>>= 0
 
@@ -55,7 +69,7 @@ EXECUTABLE sign --conf test/test.cfg -d -i test/resource/file/ebcd -o test/out/s
 EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/ebcd -i test/out/sign/ebcd-mdata-2.ksig
 >>>= 0
 
-EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/sign/ebcd-mdata-2.ksig | gttlvdump -pPy
+EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-mdata-2.ksig
 >>>/(.*TLV.*04.*)(.*L = 28.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
@@ -67,7 +81,8 @@ EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/s
 # Add a single file with metadata composed of client and machine id.
 # Check if metadat record exists and if it matches the expected result.
 ##
-EXECUTABLE sign --conf test/test.cfg -d -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-3.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata-mac-id "My Computer" --mdata
+EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-3.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata-mac-id "My Computer" --mdata
+>>> /(.*Signer identity.*)(\:\: My name'.*)/
 >>>2 /(.*Add document hash.*)(.*with metadata.*)/
 >>>= 0
 
@@ -75,7 +90,7 @@ EXECUTABLE sign --conf test/test.cfg -d -i test/resource/file/ebcd -o test/out/s
 EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/ebcd -i test/out/sign/ebcd-mdata-3.ksig
 >>>= 0
 
-EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/sign/ebcd-mdata-3.ksig | gttlvdump -pPy
+EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-mdata-3.ksig
 >>>/(.*TLV.*04.*)(.*L = 28.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
@@ -87,7 +102,8 @@ EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/s
 # Add a single file with metadata composed of client, machine id and the request
 # time. Check if metadat record exists and if it matches the expected result.
 ##
-EXECUTABLE sign --conf test/test.cfg -d -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-4.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata-mac-id "My Computer" --mdata-req-tm --mdata
+EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-4.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata-mac-id "My Computer" --mdata-req-tm --mdata
+>>> /(.*Signer identity.*)(\:\: My name'.*)/
 >>>2 /(.*Add document hash.*)(.*with metadata.*)/
 >>>= 0
 
@@ -95,7 +111,7 @@ EXECUTABLE sign --conf test/test.cfg -d -i test/resource/file/ebcd -o test/out/s
 EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/ebcd -i test/out/sign/ebcd-mdata-4.ksig
 >>>= 0
 
-EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/sign/ebcd-mdata-4.ksig | gttlvdump -pPy
+EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-mdata-4.ksig
 >>>/(.*TLV.*04.*)(.*L = 36.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
@@ -109,7 +125,8 @@ EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/s
 # time and the sequence nr (default). Check if metadat record exists and if it
 # matches the expected result.
 ##
-EXECUTABLE sign --conf test/test.cfg -d -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-5.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata-mac-id "My Computer" --mdata-req-tm --mdata-sqn-nr --mdata
+EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-5.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata-mac-id "My Computer" --mdata-req-tm --mdata-sqn-nr --mdata
+>>> /(.*Signer identity.*)(\:\: My name'.*)/
 >>>2 /(.*Add document hash.*)(.*with metadata.*)/
 >>>= 0
 
@@ -117,7 +134,7 @@ EXECUTABLE sign --conf test/test.cfg -d -i test/resource/file/ebcd -o test/out/s
 EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/ebcd -i test/out/sign/ebcd-mdata-5.ksig
 >>>= 0
 
-EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/sign/ebcd-mdata-5.ksig | gttlvdump -pPy
+EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-mdata-5.ksig
 >>>/(.*TLV.*04.*)(.*L = 38.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
@@ -133,7 +150,8 @@ EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/s
 # time and the sequence nr. Check if metadat record exists and if it matches the
 # expected result.
 ##
-EXECUTABLE sign --conf test/test.cfg -d -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-6.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata-mac-id "My Computer" --mdata-req-tm --mdata-sqn-nr 5 --mdata
+EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-6.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata-mac-id "My Computer" --mdata-req-tm --mdata-sqn-nr 5 --mdata
+>>> /(.*Signer identity.*)(\:\: My name'.*)/
 >>>2 /(.*Add document hash.*)(.*with metadata.*)/
 >>>= 0
 
@@ -141,7 +159,7 @@ EXECUTABLE sign --conf test/test.cfg -d -i test/resource/file/ebcd -o test/out/s
 EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/ebcd -i test/out/sign/ebcd-mdata-6.ksig
 >>>= 0
 
-EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/sign/ebcd-mdata-6.ksig | gttlvdump -pPy
+EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-mdata-6.ksig
 >>>/(.*TLV.*04.*)(.*L = 40.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
@@ -156,7 +174,8 @@ EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/s
 # sequence number is equal to 0 in both signatures (it must be incremented when
 # aggregation round changes).
 ##
-EXECUTABLE sign --conf test/test.cfg -d -i test/resource/file/ebcd -i test/resource/file/abcd -o test/out/sign/ebcd-sgn-0-0.ksig -o test/out/sign/abcd-sgn-0-0.ksig --max-lvl 2 --mdata-cli-id "My name" --mdata-sqn-nr --mdata
+EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -i test/resource/file/abcd -o test/out/sign/ebcd-sgn-0-0.ksig -o test/out/sign/abcd-sgn-0-0.ksig --max-lvl 2 --mdata-cli-id "My name" --mdata-sqn-nr --mdata
+>>> /(.*Signer identity.*)(\:\: My name'.*)/
 >>>2 /(.*Add document hash.*)(.*2\/2.*)(.*with metadata.*)/
 >>>= 0
 
@@ -167,14 +186,14 @@ EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/ebcd -
 EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/abcd -i test/out/sign/abcd-sgn-0-0.ksig
 >>>= 0
 
-EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/sign/ebcd-sgn-0-0.ksig | gttlvdump -pPy
+EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-sgn-0-0.ksig
 >>>/(.*TLV.*04.*)(.*L = 16.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
 (.*TLV.*03.*)(.*Sequence nr.*)(.*0.*)/
 >>>= 0
 
-EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/sign/abcd-sgn-0-0.ksig | gttlvdump -pPy
+EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/abcd-sgn-0-0.ksig
 >>>/(.*TLV.*04.*)(.*L = 16.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
@@ -186,7 +205,8 @@ EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/s
 # Add 2 files with metadata containing default sequence number. Perform the
 # signing in multiple rounds and check if sequence number is incremented.
 ##
-EXECUTABLE sign --conf test/test.cfg -d -i test/resource/file/ebcd -i test/resource/file/abcd -o test/out/sign/ebcd-sgn-0-1.ksig -o test/out/sign/abcd-sgn-1-1.ksig --max-lvl 1 --max-aggr-rounds 2 --mdata-cli-id "My name" --mdata-sqn-nr --mdata
+EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -i test/resource/file/abcd -o test/out/sign/ebcd-sgn-0-1.ksig -o test/out/sign/abcd-sgn-1-1.ksig --max-lvl 1 --max-aggr-rounds 2 --mdata-cli-id "My name" --mdata-sqn-nr --mdata
+>>> /(.*Signer identity.*)(\:\: My name'.*)/
 >>>2 /(.*Signing the local aggregation tree.*)(.*2\/2.*)/
 >>>= 0
 
@@ -197,14 +217,14 @@ EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/ebcd -
 EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/abcd -i test/out/sign/abcd-sgn-1-1.ksig
 >>>= 0
 
-EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/sign/ebcd-sgn-0-1.ksig | gttlvdump -pPy
+EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-sgn-0-1.ksig
 >>>/(.*TLV.*04.*)(.*L = 16.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
 (.*TLV.*03.*)(.*Sequence nr.*)(.*0.*)/
 >>>= 0
 
-EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/sign/abcd-sgn-1-1.ksig | gttlvdump -pPy
+EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/abcd-sgn-1-1.ksig
 >>>/(.*TLV.*04.*)(.*L = 16.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
@@ -216,7 +236,8 @@ EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/s
 # Add 2 files with metadata containing sequence number 5. Perform the
 # signing in multiple rounds and check if sequence number is incremented.
 ##
-EXECUTABLE sign --conf test/test.cfg -d -i test/resource/file/ebcd -i test/resource/file/abcd -o test/out/sign/ebcd-sgn-5-2.ksig -o test/out/sign/abcd-sgn-6-2.ksig --max-lvl 1 --max-aggr-rounds 2 --mdata-cli-id "My name" --mdata-sqn-nr 5 --mdata
+EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -i test/resource/file/abcd -o test/out/sign/ebcd-sgn-5-2.ksig -o test/out/sign/abcd-sgn-6-2.ksig --max-lvl 1 --max-aggr-rounds 2 --mdata-cli-id "My name" --mdata-sqn-nr 5 --mdata
+>>> /(.*Signer identity.*)(\:\: My name'.*)/
 >>>2 /(.*Signing the local aggregation tree.*)(.*2\/2.*)/
 >>>= 0
 
@@ -227,14 +248,14 @@ EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/ebcd -
 EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/abcd -i test/out/sign/abcd-sgn-6-2.ksig
 >>>= 0
 
-EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/sign/ebcd-sgn-5-2.ksig | gttlvdump -pPy
+EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-sgn-5-2.ksig
 >>>/(.*TLV.*04.*)(.*L = 16.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
 (.*TLV.*03.*)(.*Sequence nr.*)(.*5.*)/
 >>>= 0
 
-EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/sign/abcd-sgn-6-2.ksig | gttlvdump -pPy
+EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/abcd-sgn-6-2.ksig
 >>>/(.*TLV.*04.*)(.*L = 16.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)

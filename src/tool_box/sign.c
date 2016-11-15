@@ -44,8 +44,10 @@
 #include "param_set/strn.h"
 
 typedef struct SIGNING_AGGR_ROUND_st {
-	 /* Multi-signature container for aggregation round. */
-	KSI_MultiSignature *signatures;
+	/* Aggregation round block-signer. */
+	KSI_BlockSigner *block_signer;
+	 /* Block signer handles for aggregation round. */
+	KSI_BlockSignerHandleList *bs_handleList;
 
 	 /* A list of hash values. */
 	KSI_DataHash **hash_values;
@@ -655,7 +657,8 @@ static void SIGNING_AGGR_ROUND_free(SIGNING_AGGR_ROUND *obj) {
 
 	if (obj == NULL) return;
 
-	KSI_MultiSignature_free(obj->signatures);
+	KSI_BlockSigner_free(obj->block_signer);
+	KSI_BlockSignerHandleList_free(obj->bs_handleList);
 	KSI_free(obj->fname);
 
 	if (obj->fname_out != NULL) {
@@ -690,14 +693,14 @@ static void SIGNING_AGGR_ROUND_ARRAY_free(SIGNING_AGGR_ROUND **array) {
 	}
 }
 
-static int SIGNING_AGGR_ROUND_new(size_t max_leaves, SIGNING_AGGR_ROUND **new) {
+static int SIGNING_AGGR_ROUND_new(size_t max_leaves, SIGNING_AGGR_ROUND **round) {
 	int res;
 	SIGNING_AGGR_ROUND *tmp = NULL;
 	KSI_DataHash **tmp_hash = NULL;
 	char **tmp_fname = NULL;
 	char **tmp_fname_out = NULL;
 
-	if (new == NULL || max_leaves < 1) {
+	if (round == NULL || max_leaves < 1) {
 		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
@@ -712,7 +715,8 @@ static int SIGNING_AGGR_ROUND_new(size_t max_leaves, SIGNING_AGGR_ROUND **new) {
 	tmp->hash_count = 0;
 	tmp->hash_values = NULL;
 	tmp->fname = NULL;
-	tmp->signatures = NULL;
+	tmp->block_signer = NULL;
+	tmp->bs_handleList = NULL;
 	tmp->fname_out = NULL;
 
 	tmp_hash = (KSI_DataHash**)KSI_calloc(max_leaves, sizeof(KSI_DataHash*));
@@ -736,7 +740,7 @@ static int SIGNING_AGGR_ROUND_new(size_t max_leaves, SIGNING_AGGR_ROUND **new) {
 	tmp->hash_values = tmp_hash;
 	tmp->fname = tmp_fname;
 	tmp->fname_out = tmp_fname_out;
-	*new = tmp;
+	*round = tmp;
 
 	tmp = NULL;
 	tmp_fname_out = NULL;
@@ -793,6 +797,8 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 	SIGNING_AGGR_ROUND **aggr_round = NULL;
 	int tree_size_1 = 0;
 	KSI_BlockSigner *bs = NULL;
+	KSI_BlockSignerHandle *hndl = NULL;
+	KSI_LIST(KSI_BlockSignerHandle) *hndlList = NULL;
 	KSI_MetaData *mdata = NULL;
 	size_t i = 0;
 	size_t r = 0;
@@ -896,6 +902,10 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 		res = KSI_BlockSigner_new(ctx, algo, isMasking ? prev_leaf : NULL, isMasking ? mask_iv : NULL, &bs);
 		ERR_CATCH_MSG(err, res, "Error: Unable to create KSI Block Signer.");
 
+		/* Initialize a list for keeping hash handles. */
+		res = KSI_BlockSignerHandleList_new(&hndlList);
+		ERR_CATCH_MSG(err, res, "Error: Unable to create KSI Block Signer handle list.");
+
 		/**
 		 * Extract the metadata if requested by the user. If not return NULL and
 		 * metadata is not embedded to the signature.
@@ -925,14 +935,19 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 					(isMetadata && isMasking) ? "and metadata with enabled masking " : ""
 					);
 
-			res = KSI_BlockSigner_addLeaf(bs, hash, 0, mdata, NULL);
+			res = KSI_BlockSigner_addLeaf(bs, hash, 0, mdata, &hndl);
 			ERR_CATCH_MSG(err, res, "Error: Unable to add a hash value to a local aggregation tree.");
+
+			res = KSI_BlockSignerHandleList_append(hndlList, hndl);
+			ERR_CATCH_MSG(err, res, "Error: Unable to append blck-signer handle to the list.");
+			hndl = NULL;
 
 			res = PARAM_SET_getStr(set, "i,input", NULL, PST_PRIORITY_NONE, (int)i, &fname);
 			ERR_CATCH_MSG(err, res, "Error: Unable to get files name.");
 
 			res = SIGNING_AGGR_ROUND_append(aggr_round[r], hash, fname);
 			ERR_CATCH_MSG(err, res, "Error: Unable to add hash value and files name to local aggregation record.");
+			hash = NULL;
 
 			if (!prgrs) print_progressResult(res);
 
@@ -940,7 +955,6 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 				PROGRESS_BAR_display((int)((tree_input + 1) * 100 / to_be_signed_in_round));
 			}
 
-			hash = NULL;
 		}
 
 
@@ -949,16 +963,19 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 		if (tree_size_1) print_progressDesc(d, "Creating signature from hash... ");
 		else print_progressDesc(d, "Signing the local aggregation tree %d/%d... ", r + 1, rounds);
 
-		res = KSITOOL_BlockSigner_close(err, ctx, bs, &(aggr_round[r]->signatures));
+		res = KSITOOL_BlockSigner_closeAndSign(err, ctx, bs);
 		if (tree_size_1) {ERR_CATCH_MSG(err, res, "Error: Unable to create signature.");}
 		else {ERR_CATCH_MSG(err, res, "Error: Unable to complete and sign the local aggregation tree.");}
+
+		aggr_round[r]->block_signer = bs;
+		bs = NULL;
+		aggr_round[r]->bs_handleList = hndlList;
+		hndlList = NULL;
 
 		print_progressResult(res);
 
 		if (!tree_size_1 || (tree_size_1 && prgrs)) print_debug("\n");
-		KSI_BlockSigner_free(bs);
 		KSI_MetaData_free(mdata);
-		bs = NULL;
 		mdata = NULL;
 	}
 
@@ -973,6 +990,8 @@ cleanup:
 	KSI_DataHash_free(hash);
 	KSI_DataHash_free(prev_leaf);
 	KSI_BlockSigner_free(bs);
+	KSI_BlockSignerHandle_free(hndl);
+	KSI_BlockSignerHandleList_free(hndlList);
 	KSI_MetaData_free(mdata);
 	KSI_OctetString_free(mask_iv);
 
@@ -1111,11 +1130,24 @@ static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SI
 			size_t real_out_name_size = 0;
 			KSI_DataHash *hsh = NULL;
 			const char *mode = NULL;
+			KSI_BlockSignerHandle *hndl = NULL;
 
-			hsh = aggr_round[i]->hash_values[n];
+			/* Get the handle from the list. */
+			res = KSI_BlockSignerHandleList_elementAt(aggr_round[i]->bs_handleList, n, &hndl);
+			ERR_CATCH_MSG(err, res, "Error: Unable to extract block signer leaf handle from the list.");
 
-			res = KSI_MultiSignature_get(aggr_round[i]->signatures, hsh, &sig);
-			if (res != KSI_OK) goto cleanup;
+			/* Get KSI signature from block-signer handle. */
+			res = KSI_BlockSignerHandle_getSignature(hndl, &sig);
+			ERR_CATCH_MSG(err, res, "Error: Unable to extract signature.");
+
+			res = KSI_Signature_getDocumentHash(sig, &hsh);
+			ERR_CATCH_MSG(err, res, "Error: Unable to extract signature document hash.");
+
+			/* Verify that is it the correct signature. */
+			if (!KSI_DataHash_equals(aggr_round[i]->hash_values[n], hsh)) {
+				ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Unexpected error. Signature data hash mismatch.");
+				goto cleanup;
+			}
 
 			if (get_output_file_name(set, err, how_to_save, count, save_to_file, sizeof(save_to_file)) == NULL) {
 				ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Unexpected error. Unable to get the file name to save the signature to.");
@@ -1192,7 +1224,13 @@ static int KT_SIGN_dump(PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND **agg
 		if (in_count > 1) print_result("Signatures from aggregation round: %i\n\n", i);
 
 		for (n = 0; n < aggr_round[i]->hash_count; n++) {
-			res = KSI_MultiSignature_get(aggr_round[i]->signatures, aggr_round[i]->hash_values[n], &sig);
+			KSI_BlockSignerHandle *hndl = NULL;
+
+			/* Get the handle from the list. */
+			res = KSI_BlockSignerHandleList_elementAt(aggr_round[i]->bs_handleList, n, &hndl);
+			ERR_CATCH_MSG(err, res, "Error: Unable to extract block signer leaf handle from the list.");
+
+			res = KSI_BlockSignerHandle_getSignature(hndl, &sig);
 			ERR_CATCH_MSG(err, res, "Error: Unable to get signature to dump its content.");
 
 			print_result("Document : '%s'\n", aggr_round[i]->fname[n]);
