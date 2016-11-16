@@ -1,4 +1,5 @@
 * IMPROVEMENT: Refactored block-signer handling.
+* IMPROVEMENT: New parameters --aggr-pdu-v and --ext-pdu-v added.
 
 Version 2.2
 
