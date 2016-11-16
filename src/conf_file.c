@@ -55,11 +55,12 @@ char* CONF_generate_param_set_desc(char *description, const char *flags, char *b
 	if (is_S) {
 		count += KSI_snprintf(buf + count, buf_len - count,
 				"{S}{aggr-user}{aggr-key}"
-				"{max-lvl}{max-aggr-rounds}{mdata-cli-id}{mdata-mac-id}{mdata-sqn-nr}{mdata-req-tm}");
+				"{max-lvl}{max-aggr-rounds}{mdata-cli-id}{mdata-mac-id}{mdata-sqn-nr}{mdata-req-tm}"
+				"{aggr-pdu-v}");
 	}
 
 	if (is_X) {
-		count += KSI_snprintf(buf + count, buf_len - count, "{X}{ext-user}{ext-key}");
+		count += KSI_snprintf(buf + count, buf_len - count, "{X}{ext-user}{ext-key}{ext-pdu-v}");
 	}
 
 	if (is_P) {
@@ -163,6 +164,9 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 
 		res = PARAM_SET_setParseOptions(conf, "{mdata-req-tm}", PST_PRSCMD_HAS_NO_VALUE);
 		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_addControl(conf, "{aggr-pdu-v}", isFormatOk_string, isContentOk_pduVersion, NULL, NULL);
+		if (res != PST_OK) goto cleanup;
 	}
 
 	if (is_X) {
@@ -170,6 +174,9 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 		if (res != PST_OK) goto cleanup;
 
 		res = PARAM_SET_addControl(conf, "{ext-key}{ext-user}", isFormatOk_userPass, NULL, NULL, NULL);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_addControl(conf, "{ext-pdu-v}", isFormatOk_string, isContentOk_pduVersion, NULL, NULL);
 		if (res != PST_OK) goto cleanup;
 	}
 
