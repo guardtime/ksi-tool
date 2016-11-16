@@ -165,7 +165,6 @@ static int tool_init_pdu(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set) {
 	int res;
 	char *aggr_pdu_version = NULL;
 	char *ext_pdu_version = NULL;
-	size_t ext_pdu;
 
 	if (ksi == NULL || err == NULL || set == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);

@@ -653,7 +653,6 @@ int isContentOk_tree_level(const char* integer) {
 }
 
 int isContentOk_pduVersion(const char* version) {
-	long lvl = 0;
 	if (version == NULL) return FORMAT_NULLPTR;
 
 	if (strcmp(version, "v1") == 0) {
