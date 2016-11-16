@@ -173,10 +173,10 @@ static int tool_init_pdu(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set) {
 
 	/* Check if PDU version type is specified. */
 	res = PARAM_SET_getStr(set, "aggr-pdu-v", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &aggr_pdu_version);
-	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
+	if (res != PST_OK && res != PST_PARAMETER_EMPTY && res !=PST_PARAMETER_NOT_FOUND) goto cleanup;
 
 	res = PARAM_SET_getStr(set, "ext-pdu-v", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &ext_pdu_version);
-	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
+	if (res != PST_OK && res != PST_PARAMETER_EMPTY && res !=PST_PARAMETER_NOT_FOUND) goto cleanup;
 
 
 	if (aggr_pdu_version != NULL) {
