@@ -45,7 +45,7 @@ char* CONF_generate_param_set_desc(char *description, const char *flags, char *b
 	is_P = strchr(flags, 'P') != NULL ? 1 : 0;
 
 	extra_desc = (description == NULL) ? "" : description;
-	count += KSI_snprintf(buf + count, buf_len - count, "{C}{c}%s", extra_desc);
+	count += KSI_snprintf(buf + count, buf_len - count, "{aggr-pdu-v}{ext-pdu-v}{C}{c}%s", extra_desc);
 
 	/**
 	 * Add configuration descriptions as specified by the flags. For example to
@@ -176,6 +176,8 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 	res = PARAM_SET_addControl(conf, "{c}{C}", isFormatOk_int, isContentOk_uint, NULL, extract_int);
 	if (res != PST_OK) goto cleanup;
 
+	res = PARAM_SET_addControl(conf, "{aggr-pdu-v}{ext-pdu-v}", isFormatOk_string, isContentOk_pduVersion, NULL, NULL);
+	if (res != PST_OK) goto cleanup;
 
 	res = KT_OK;
 

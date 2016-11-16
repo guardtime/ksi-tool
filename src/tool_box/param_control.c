@@ -652,6 +652,19 @@ int isContentOk_tree_level(const char* integer) {
 	return PARAM_OK;
 }
 
+int isContentOk_pduVersion(const char* version) {
+	long lvl = 0;
+	if (version == NULL) return FORMAT_NULLPTR;
+
+	if (strcmp(version, "v1") == 0) {
+		return PARAM_OK;
+	} else if (strcmp(version, "v2") == 0) {
+		return PARAM_OK;
+	}
+
+	return INVALID_VERSION;
+}
+
 
 int isFormatOk_inputFile(const char *path){
 	if (path == NULL) return FORMAT_NULLPTR;
@@ -1113,6 +1126,7 @@ const char *getParameterErrorString(int res) {
 		case FUNCTION_INVALID_ARG_COUNT: return "Invalid function argument count";
 		case FUNCTION_INVALID_ARG_1: return "Argument 1 is invalid";
 		case FUNCTION_INVALID_ARG_2: return "Argument 2 is invalid";
+		case INVALID_VERSION: return "Invalid version";
 		default: return "Unknown error";
 	}
 }
