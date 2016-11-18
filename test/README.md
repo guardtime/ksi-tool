@@ -12,8 +12,8 @@
 
 ## DEPENDECES
 
- * shelltestrunner - Mandatory for every test.
- * valgrind - For memory tests only, unix.
+ * [shelltestrunner](http://joyful.com/shelltestrunner/) - Mandatory for every test.
+ * [valgrind](http://valgrind.org/) - For memory tests only, unix.
  * gttlvutil - When available extra tests for metadata and masking are performed.
 
 

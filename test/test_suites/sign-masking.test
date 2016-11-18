@@ -46,11 +46,11 @@ EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/ebcd -
 EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/abcd -i test/out/sign/abcd-no-mask-0.ksig
 >>>= 0
 
-EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/sign/ebcd-no-mask-0.ksig | gttlvdump -pPy
+EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-no-mask-0.ksig
 >>>/(.*TLV.*02.*)(.*Sibling hash.*)(.*sha2-256:e12e115acf4552b2568b55e93cbd39394c4ef81c82447fafc997882a02d23677.*)/
 >>>= 0
 
-EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/sign/abcd-no-mask-0.ksig | gttlvdump -pPy
+EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/abcd-no-mask-0.ksig
 >>>/(.*TLV.*02.*)(.*Sibling hash.*)(.*sha2-256:3d04292585ea6208e0ac6e245c51d872b53fd27f6806225610cfa21e9ec42c28.*)/
 >>>= 0
 
@@ -70,11 +70,11 @@ EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/ebcd -
 EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/abcd -i test/out/sign/abcd-mask-0.ksig
 >>>= 0
 
-EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/sign/ebcd-mask-0.ksig | gttlvdump -pPy
+EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-mask-0.ksig
 >>>!/(.*TLV.*02.*)(.*Sibling hash.*)(.*sha2-256:e12e115acf4552b2568b55e93cbd39394c4ef81c82447fafc997882a02d23677.*)/
 >>>= 0
 
-EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/sign/abcd-mask-0.ksig | gttlvdump -pPy
+EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/abcd-mask-0.ksig
 >>>!/(.*TLV.*02.*)(.*Sibling hash.*)(.*sha2-256:3d04292585ea6208e0ac6e245c51d872b53fd27f6806225610cfa21e9ec42c28.*)/
 >>>= 0
 
@@ -100,7 +100,7 @@ EXECUTABLE sign --conf test/test.cfg -d -i test/resource/file/ebcd -o test/out/s
 EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/ebcd -i test/out/sign/ebcd-prev-leaf-0.ksig
 >>>= 0
 
-EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[0] test/out/sign/ebcd-prev-leaf-0.ksig | gttlvdump -pPy
+EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-prev-leaf-0.ksig
 >>>/(.*TLV.*02.*)(.*Sibling hash.*)(.*sha2-256:5771d844ce32ab357d3533a318885972edefacccd713326e2007db19e45b97c9.*)/
 >>>= 0
 

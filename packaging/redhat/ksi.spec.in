@@ -26,14 +26,14 @@
 %define upstream_release 0
 
 
-Summary: Command-line access to Guardtime Keyless Signature services
+Summary: Keyless  Signature Infrastructure (KSI) command-line tool, also called KSI tool.
 Name: %{name_package}
-Version: %(cat VERSION)
+Version: @VERSION@
 Release: 1%{?dist}
 License: Apache 2.0
 Group: Applications/Security
 Source:  http://download.guardtime.com/%{name_package}-%{version}.tar.gz
-URL: http://www.guardtime.com/
+URL: http://www.guardtime.com
 Vendor: Guardtime AS
 Packager: Guardtime AS <info@guardtime.com>
 Distribution: Guardtime utilities
@@ -47,8 +47,7 @@ Obsoletes: ksi <= 2.0.744-2
 @KSI_BUILD_DEPENDECY@
 
 %description
-Guardtime signing and verification tool. Execute
-%{name_tool} -h to view brief usage instructions.
+Guardtime signing and verification tool. Execute %{name_tool} -h to view brief usage instructions.
 
 
 %post

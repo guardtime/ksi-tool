@@ -31,4 +31,5 @@ cp packaging/redhat/ksi.spec $BUILD_DIR/SPECS/ && \
 cp ksi-tools-*$version*.tar.gz $BUILD_DIR/SOURCES/ && \
 rpmbuild -ba $BUILD_DIR/SPECS/ksi.spec && \
 cp $BUILD_DIR/RPMS/*/ksi-tools-*$version*.rpm . && \
-cp $BUILD_DIR/SRPMS/ksi-tools-*$version*.rpm .
+cp $BUILD_DIR/SRPMS/ksi-tools-*$version*.rpm . && \
+chmod -v 644 *.rpm
