@@ -76,8 +76,17 @@
         
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
     <WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
-    <UIRef Id="WixUI_InstallDir" />
-        
+    <WixVariable Id="WixUIBannerBmp" Value="gt-top-banner-img.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="gt-dialog-img.bmp" />
+	
+	<UIRef Id="WixUI_InstallDir" />
+
+	<MajorUpgrade
+		AllowDowngrades="no"
+		DowngradeErrorMessage="A later version of $(var.Name) is already installed. Setup will now exit."
+		AllowSameVersionUpgrades="no"
+    />
+	
     </Product>
 
 </Wix>
