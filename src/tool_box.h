@@ -21,13 +21,35 @@
 #define	TOOL_BOX_H
 
 #include "param_set/param_set.h"
+#include "err_trckr.h"
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
+/**
+ * Enumeration for tools output type. See functions how_is_output_saved_to and
+ * get_output_file_name.
+ */
+enum OUTPUT_TYPE {
+	/* Every input has explicitly specified output file. Existing files are overwritten.*/
+	OUTPUT_SPECIFIED_FILE = 0x01,
+	
+	/* Output is redirected to stdout. */
+	OUTPUT_TO_STDOUT,
+	
+	/* Output is redirected into specified directory with generated names. Existing files are not overwritten. */
+	OUTPUT_TO_DIR,
+	
+	/* Output is saved next to input file with generated name. Existing files are not overwritten. */
+	OUTPUT_NEXT_TO_INPUT,
+
+	/* Something went wrong. */
+	OUTPUT_UNKNOWN
+};
 	
 const char *OID_getShortDescriptionString(const char *OID);
+
 const char *OID_getFromString(const char *str);
 
 const char *getPublicationsFileRetrieveDescriptionString(PARAM_SET *set);
@@ -164,6 +186,32 @@ const char* find_charAfterLastStrn(const char* str, const char* findIt);
 const char *PATH_getPathRelativeToFile(const char *refFilePath, const char *origPath, char *buf, size_t buf_len);
 
 const char *PATH_URI_getPathRelativeToFile(const char *refFilePath, const char *origPath, char *buf, size_t buf_len);
+
+/**
+ * Determines how is the output saved to. Result is evaluated from input and
+ * output count. Output files with name - may be interpreted as stdout.
+ * \param set			Parameter set.
+ * \param in_flags		Input flags e.g. (i,input1,input2).
+ * \param out_flags		Output flags e.g. (o).
+ * \return KT_OK if successful, error code otherwise.
+ */
+int how_is_output_saved_to(PARAM_SET *set, const char *in_flags, const char *out_flags);
+
+/**
+ * Generates output file name. Use how_is_output_saved_to determine the output
+ * type.
+ * \param set			Parameter set.
+ * \param err
+ * \param in_flags		Input flags e.g. (i,input1,input2).
+ * \param out_flags		Output flags e.g. (o). Only a single value makes sense.
+ * \param extension		The file extension used in file name generation.
+ * \param how_is_saved	Use how_is_output_saved_to to determine the output type.
+ * \param i				The index of the file names requested.
+ * \param buf			The buffer to be filled with the file name.
+ * \param buf_len		The size of the buffer.
+ * \return buf if successful, NULL otherwise.
+ */
+char* get_output_file_name(PARAM_SET *set, ERR_TRCKR *err, const char *in_flags, const char *out_flags, const char *extension, int how_is_saved, int i, char *buf, size_t buf_len);
 #ifdef	__cplusplus
 }
 #endif

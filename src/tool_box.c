@@ -26,6 +26,8 @@
 #include <ksi/compatibility.h>
 #include "smart_file.h"
 #include "err_trckr.h"
+#include "ksitool_err.h"
+#include "tool_box/param_control.h"
 #include "param_set/param_set.h"
 #include "printer.h"
 
@@ -394,4 +396,130 @@ const char *PATH_URI_getPathRelativeToFile(const char *refFilePath, const char *
 	pOrigPath = isFileUri ? origPath + 7 : origPath;
 	KSI_snprintf(buf, buf_len, "file://%s", PATH_getPathRelativeToFile(refFilePath, pOrigPath, buf_inner, sizeof(buf_inner)));
 	return buf;
+}
+
+int how_is_output_saved_to(PARAM_SET *set, const char *in_flags, const char *out_flags) {
+	int res;
+	int ret = OUTPUT_UNKNOWN;
+	int in_count = 0;
+	int out_count = 0;
+	char *out_file = NULL;
+
+	if (set == NULL) goto cleanup;
+
+	res = PARAM_SET_getValueCount(set, in_flags, NULL, PST_PRIORITY_NONE, &in_count);
+	if (res != PST_OK) goto cleanup;
+
+	res = PARAM_SET_getValueCount(set, out_flags, NULL, PST_PRIORITY_NONE, &out_count);
+	if (res != PST_OK) goto cleanup;
+
+	res = PARAM_SET_getStr(set, out_flags, NULL, PST_PRIORITY_NONE, 0, &out_file);
+	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
+
+	if (in_count == 1 && out_count == 1 && strcmp(out_file, "-") == 0) return OUTPUT_TO_STDOUT;
+	else if (out_count != 1 && in_count == out_count) return OUTPUT_SPECIFIED_FILE;
+	else if (out_count == 1 && !SMART_FILE_isFileType(out_file, SMART_FILE_TYPE_DIR) && in_count == out_count) return OUTPUT_SPECIFIED_FILE;
+	else if (out_count == 1 && SMART_FILE_isFileType(out_file, SMART_FILE_TYPE_DIR)) return OUTPUT_TO_DIR;
+	else if (out_count == 0) return OUTPUT_NEXT_TO_INPUT;
+
+	res = KT_OK;
+
+cleanup:
+
+	return ret;
+}
+
+char* get_output_file_name(PARAM_SET *set, ERR_TRCKR *err, const char *in_flags, const char *out_flags, const char *extension, int how_is_saved, int i, char *buf, size_t buf_len) {
+	char *ret = NULL;
+	int res;
+	char *in_file_name = NULL;
+	char hash_algo[1024];
+	char generated_name[1024] = "";
+	char *colon = NULL;
+	int in_count = 0;
+
+	if (set == NULL || err == NULL || buf == NULL || buf_len == 0) goto cleanup;
+
+	res = PARAM_SET_getValueCount(set, in_flags, NULL, PST_PRIORITY_NONE, &in_count);
+	if (res != PST_OK) goto cleanup;
+
+	res = PARAM_SET_getStr(set, in_flags, NULL, PST_PRIORITY_NONE, i, &in_file_name);
+	if (res != PST_OK && res != PST_PARAMETER_EMPTY && res != PST_PARAMETER_VALUE_NOT_FOUND) goto cleanup;
+
+	if (res == PST_PARAMETER_EMPTY || res == PST_PARAMETER_VALUE_NOT_FOUND) {
+		ERR_TRCKR_ADD(err, res, "Error: Unable to get path to output file name.");
+		goto cleanup;
+	}
+
+	/**
+	 * Output file name hast to be generated.
+	 */
+	if (how_is_saved == OUTPUT_NEXT_TO_INPUT || how_is_saved == OUTPUT_TO_DIR) {
+		if (strcmp(in_file_name, "-") == 0 && in_count == 1) {
+			KSI_snprintf(generated_name, sizeof(generated_name), "stdin.%s", extension);
+		} else if (is_imprint(in_file_name)) {
+			/* Search for the algorithm name. */
+			KSI_strncpy(hash_algo, in_file_name, sizeof(hash_algo));
+			colon = strchr(hash_algo, ':');
+
+			/* Create the file name from hash algorithm. */
+			if (colon != NULL) {
+				*colon = '\0';
+				KSI_snprintf(generated_name, sizeof(generated_name), "%s.%s", hash_algo, extension);
+			} else {
+				KSI_snprintf(generated_name, sizeof(generated_name), "hash_imprint.%s", extension);
+			}
+		} else {
+			KSI_snprintf(generated_name, sizeof(generated_name), "%s.%s", in_file_name, extension);
+		}
+	}
+
+	/**
+	 * Specify the output name.
+	 */
+	if (how_is_saved == OUTPUT_NEXT_TO_INPUT) {
+		KSI_snprintf(buf, buf_len, "%s", generated_name);
+	} else if (how_is_saved == OUTPUT_SPECIFIED_FILE) {
+		char *out_file_name = NULL;
+
+		res = PARAM_SET_getStr(set, out_flags, NULL, PST_PRIORITY_NONE, i, &out_file_name);
+		if (res != PST_OK) goto cleanup;
+
+		KSI_snprintf(buf, buf_len, "%s", out_file_name);
+	} else if (how_is_saved == OUTPUT_TO_DIR) {
+		char tmp[1024];
+		char *file_name = NULL;
+		int path_len = 0;
+		int is_slash = 0;
+		char *out_dir_name = NULL;
+
+
+		res = PARAM_SET_getStr(set, out_flags, NULL, PST_PRIORITY_NONE, 0, &out_dir_name);
+		if (res != PST_OK) goto cleanup;
+
+
+		file_name = STRING_extractAbstract(generated_name, "/", NULL, tmp, sizeof(tmp), find_charAfterLastStrn, NULL, NULL) == tmp ? tmp : generated_name;
+		path_len = (int)strlen(out_dir_name);
+
+		is_slash =(path_len != 0 && out_dir_name[path_len - 1]) == '/' ? 1 : 0;
+
+		KSI_snprintf(buf, buf_len, "%s%s%s",
+				out_dir_name,
+				is_slash ? "" : "/",
+				file_name);
+	} else if (how_is_saved == OUTPUT_TO_STDOUT) {
+		char *out_dir_name = NULL;
+
+		res = PARAM_SET_getStr(set, out_flags, NULL, PST_PRIORITY_NONE, 0, &out_dir_name);
+		if (res != PST_OK) goto cleanup;
+
+		KSI_snprintf(buf, buf_len, "%s", out_dir_name);
+	}
+
+
+	ret = buf;
+
+cleanup:
+
+	return ret;
 }
