@@ -30,6 +30,7 @@
 #include "tool_box/param_control.h"
 #include "param_set/param_set.h"
 #include "printer.h"
+#include "api_wrapper.h"
 
 
 
@@ -429,13 +430,13 @@ cleanup:
 	return ret;
 }
 
-char* get_output_file_name(PARAM_SET *set, ERR_TRCKR *err, const char *in_flags, const char *out_flags, const char *extension, int how_is_saved, int i, char *buf, size_t buf_len) {
+char* get_output_file_name(PARAM_SET *set, ERR_TRCKR *err,
+		const char *in_flags, const char *out_flags, int how_is_saved, int i, char *buf, size_t buf_len,
+		int (*generate_file_name)(PARAM_SET *set, ERR_TRCKR *err, const char *in_flags, const char *out_flags, int i, char *buf, size_t buf_len)) {
 	char *ret = NULL;
 	int res;
 	char *in_file_name = NULL;
-	char hash_algo[1024];
 	char generated_name[1024] = "";
-	char *colon = NULL;
 	int in_count = 0;
 
 	if (set == NULL || err == NULL || buf == NULL || buf_len == 0) goto cleanup;
@@ -447,31 +448,16 @@ char* get_output_file_name(PARAM_SET *set, ERR_TRCKR *err, const char *in_flags,
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY && res != PST_PARAMETER_VALUE_NOT_FOUND) goto cleanup;
 
 	if (res == PST_PARAMETER_EMPTY || res == PST_PARAMETER_VALUE_NOT_FOUND) {
-		ERR_TRCKR_ADD(err, res, "Error: Unable to get path to output file name.");
-		goto cleanup;
+		ERR_CATCH_MSG(err, res, "Error: Unable to get input file path.");
 	}
+
 
 	/**
 	 * Output file name hast to be generated.
 	 */
 	if (how_is_saved == OUTPUT_NEXT_TO_INPUT || how_is_saved == OUTPUT_TO_DIR) {
-		if (strcmp(in_file_name, "-") == 0 && in_count == 1) {
-			KSI_snprintf(generated_name, sizeof(generated_name), "stdin.%s", extension);
-		} else if (is_imprint(in_file_name)) {
-			/* Search for the algorithm name. */
-			KSI_strncpy(hash_algo, in_file_name, sizeof(hash_algo));
-			colon = strchr(hash_algo, ':');
-
-			/* Create the file name from hash algorithm. */
-			if (colon != NULL) {
-				*colon = '\0';
-				KSI_snprintf(generated_name, sizeof(generated_name), "%s.%s", hash_algo, extension);
-			} else {
-				KSI_snprintf(generated_name, sizeof(generated_name), "hash_imprint.%s", extension);
-			}
-		} else {
-			KSI_snprintf(generated_name, sizeof(generated_name), "%s.%s", in_file_name, extension);
-		}
+		res = generate_file_name(set, err, in_flags, out_flags, i, generated_name, sizeof(generated_name));
+		ERR_CATCH_MSG(err, res, "Error: Unable to generate new file name.");
 	}
 
 	/**

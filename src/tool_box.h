@@ -200,18 +200,20 @@ int how_is_output_saved_to(PARAM_SET *set, const char *in_flags, const char *out
 /**
  * Generates output file name. Use how_is_output_saved_to determine the output
  * type.
- * \param set			Parameter set.
- * \param err
- * \param in_flags		Input flags e.g. (i,input1,input2).
- * \param out_flags		Output flags e.g. (o). Only a single value makes sense.
- * \param extension		The file extension used in file name generation.
- * \param how_is_saved	Use how_is_output_saved_to to determine the output type.
- * \param i				The index of the file names requested.
- * \param buf			The buffer to be filled with the file name.
- * \param buf_len		The size of the buffer.
+ * \param set					Parameter set.
+ * \param err					Error tracker.
+ * \param in_flags				Input flags e.g. (i,input1,input2).
+ * \param out_flags				Output flags e.g. (o). Only a single value makes sense.
+ * \param how_is_saved			Use how_is_output_saved_to to determine the output type.
+ * \param i						The index of the file names requested.
+ * \param buf					The buffer to be filled with the file name.
+ * \param buf_len				The size of the buffer.
+ * \param generate_file_name	A function used to generate the file name.
  * \return buf if successful, NULL otherwise.
  */
-char* get_output_file_name(PARAM_SET *set, ERR_TRCKR *err, const char *in_flags, const char *out_flags, const char *extension, int how_is_saved, int i, char *buf, size_t buf_len);
+char* get_output_file_name(PARAM_SET *set, ERR_TRCKR *err,
+		const char *in_flags, const char *out_flags, int how_is_saved, int i, char *buf, size_t buf_len,
+		int (*generate_file_name)(PARAM_SET *set, ERR_TRCKR *err, const char *in_flags, const char *out_flags, int i, char *buf, size_t buf_len));
 #ifdef	__cplusplus
 }
 #endif
