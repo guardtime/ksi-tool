@@ -82,7 +82,7 @@ EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08
 >>>= 7
 
 # KSI extend invalid signature.
-EXECUTABLE extend --conf test/test.cfg -i test\resource\signature\nok-sig-invalid-calendar-right-link-sig-2014-04-30.1-extended.ksig -o test/out/extend/should-not-be-4.ksig -d
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/nok-sig-invalid-calendar-right-link-sig-2014-04-30.1-extended.ksig -o test/out/extend/should-not-be-4.ksig -d
 >>>2 /(.*Reading signature)(.*ok.*)
 (.*Verifying old signature)(.*failed.*)([^$]|[
 ])*(Error: Unable to verify signature)(.*0x20a.*)

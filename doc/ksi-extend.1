@@ -5,11 +5,11 @@
 .\"
 .SH SYNOPSIS
 .HP 4
-\fBksi extend -i \fIin.ksig \fR[\fB-o \fIout.ksig\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-P \fIURL \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... [\fImore_options\fR]
+\fBksi extend \fR[\fB-i \fIin.ksig\fR] [\fB-o \fIout.ksig\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-P \fIURL \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... [\fImore_options\fR] [\fB--\fR] \fIinput\fR...
 .HP 4
-\fBksi extend -i \fIin.ksig \fR[\fB-o \fIout.ksig\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-P \fIURL \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fB--pub-str \fIstr \fR[\fImore_options\fR]
+\fBksi extend \fR[\fB-i \fIin.ksig\fR] [\fB-o \fIout.ksig\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-P \fIURL \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fB--pub-str \fIstr \fR[\fImore_options\fR] [\fB--\fR] \fIinput\fR...
 .HP 4
-\fBksi extend -i \fIin.ksig \fR[\fB-o \fIout.ksig\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-T \fItime \fR[\fImore_options\fR]
+\fBksi extend \fR[\fB-i \fIin.ksig\fR] [\fB-o \fIout.ksig\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-T \fItime \fR[\fImore_options\fR] [\fB--\fR] \fIinput\fR...
 .\"
 .SH DESCRIPTION
 Extends the given KSI signature to the time of given publication. After signature is extended and the corresponding publication record is attached, the signature can be verified by publication-based verification where only trusted publications file or a publication string in printed media is needed to perform the verification. See \fBksi-verify\fR(1) for details.
@@ -21,9 +21,11 @@ User must have access to KSI extending service and trusted KSI publications file
 \fB-i \fIin.ksig\fR
 Specify the file path to the KSI signature file to be extended. Use '-' as the path to read the signature from \fIstdin\fR.
 .\"
+Flag \fB-i\fR can be omitted when specifying the input. Without \fB-i\fR it is not possible to sign files that look like command line parameters (e.g. -a, --option). To interpret all inputs as regular files no matter what the file's name is, see parameter \fB--\fR.
+.\"
 .TP
 \fB-o \fIout.ksig\fR
-Specify the output file path for the extended signature. Use '-' as the path to redirect the signature binary stream to \fIstdout\fR. If not specified, the signature is saved to <in.ksig>.ext.ksig (or <in.ksig>ext_<nr>.ksig where \fInr\fR is auto-incremented counter if the output file already exists). If specified, existing file is always overwritten.
+Specify the output file path for the extended signature. Use '-' as the path to redirect the signature binary stream to \fIstdout\fR. If not specified, the output is saved to the same directory where the input file is located. If specified as directory, all the signatures are saved there. When signature's output file name is not explicitly specified the signature is saved to <input[.E]>.ext.ksig or <input[.E]>.ext_<nr>.ksig where \fIE\fR is input file extension that is NOT equal to \fIksig\fR and \fInr\fR is auto-incremented counter if the output file already exists. If output file name is explicitly specified, will always overwrite the existing file.
 .\"
 .TP
 \fB-X \fIURL\fR
@@ -75,6 +77,10 @@ Specify the certificate file in PEM format for publications file verification. A
 Specify an OpenSSL-style trust store directory for publications file verification. All values from lower priority source are ignored (see \fBksi-conf\fR(5)).
 .\"
 .TP
+\fB--\fR
+If used, \fBeverything\fR specified after the token is interpreted as \fBKSI signature input file\fR (command-line parameters (e.g. --conf, -d) and \fIstdin\fR (-) are all interpreted as regular files).
+.\"
+.TP
 \fB-d\fR
 Print detailed information about processes and errors to \fIstderr\fR.
 .\"
@@ -95,7 +101,7 @@ Write libksi log to given file. Use '-' as file name to redirect log to \fIstdou
 See \fBksi\fR(1) for more information.
 .\"
 .SH EXAMPLES
-In the following examples it is assumed that KSI service configuration options (URLs, access credentials) are defined. See \fBksi-conf\fR(5) for more information.
+In the following examples it is assumed that KSI service configuration (URLs, access credentials) options and trusted publications file are defined. See \fBksi-conf\fR(5) for more information.
 .\"
 .TP 2
 \fB1
@@ -119,6 +125,14 @@ In the following examples it is assumed that KSI service configuration options (
 .LP
 .RS 4
 \fBksi extend -i \fIsig.ksig \fB-o \fIext.ksig \fB-T \fI"2015-05-05 00:00:00"
+.RE
+.\"
+.TP 2
+\fB4
+\fRTo extend all signatures matching the pattern \fI*.ksig\fR to specified publication (see https://twitter.com/Guardtime/status/799214699296346112) \fRand save the output to the same directory where the input file is located (with altered file extension \fIext.ksig\fR):
+.LP
+.RS 4
+\fBksi extend \fI*.ksig \fB--pub-str \fIAAAAAA-CYFJIA-AALGBS-ED4BKO-CMKY7Z-OMMBA5-NT6SJB-ZM677Q-JKCQAW-3OXD3O-OERGEO-DWJRYN\fR
 .RE
 .\"
 .SH ENVIRONMENT
