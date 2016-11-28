@@ -1,4 +1,9 @@
+* IMPROVEMENT: Extending of multiple signatures implemented.
+* FEATURE: It is possible to specify output (-o) as directory when extending.
+* FEATURE: It is possible to specify multiple inputs (-i) when extending.
+* FEATURE: Wildcard support when extending multiple files (works also on windows).
 * BUGFIX: Error message for case where aggregator URL is not configured fixed.
+
 
 Version 2.3
 

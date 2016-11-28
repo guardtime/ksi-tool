@@ -25,6 +25,7 @@
 #include <ksi/policy.h>
 #include "param_set/param_set.h"
 #include "param_set/task_def.h"
+#include "param_set/parameter.h"
 #include "tool_box/ksi_init.h"
 #include "tool_box/param_control.h"
 #include "tool_box/task_initializer.h"
@@ -37,15 +38,15 @@
 #include "debug_print.h"
 #include "conf_file.h"
 #include "tool.h"
+#include "common.h"
 
 static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext);
 static int extend_to_specified_time(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, COMPOSITE *extra, KSI_Signature *sig, KSI_Signature **ext);
 static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext);
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
-static char* get_output_file_name_if_not_defined(PARAM_SET *set, ERR_TRCKR *err, char *buf, size_t buf_len);
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
-static char* get_output_name(PARAM_SET *set, ERR_TRCKR *err, char *buf, size_t buf_len, char *mode);
-static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *ext, const char *fname, char *mode, KSI_PublicationData *pub_data, KSI_PolicyVerificationResult **result);
+
+static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int task_id);
 
 int extend_run(int argc, char** argv, char **envp) {
 	int res;
@@ -55,14 +56,6 @@ int extend_run(int argc, char** argv, char **envp) {
 	KSI_CTX *ksi = NULL;
 	SMART_FILE *logfile = NULL;
 	ERR_TRCKR *err = NULL;
-	KSI_Signature *sig = NULL;
-	KSI_Signature *ext = NULL;
-	KSI_PublicationData *pub_data = NULL;
-	KSI_PolicyVerificationResult *result_sig = NULL;
-	KSI_PolicyVerificationResult *result_ext = NULL;
-	COMPOSITE extra;
-	char fnmae[2048];
-	char mode[5] = "wbs";
 	char buf[2048];
 	int d = 0;
 
@@ -70,7 +63,7 @@ int extend_run(int argc, char** argv, char **envp) {
 	 * Extract command line parameters.
 	 */
 	res = PARAM_SET_new(
-			CONF_generate_param_set_desc("{i}{o}{d}{x}{T}{pub-str}{dump}{conf}{log}{h|help}", "XP", buf, sizeof(buf)),
+			CONF_generate_param_set_desc("{i}{input}{o}{d}{x}{T}{pub-str}{dump}{conf}{log}{h|help}", "XP", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -94,76 +87,18 @@ int extend_run(int argc, char** argv, char **envp) {
 	res = check_pipe_errors(set, err);
 	if (res != KT_OK) goto cleanup;
 
-	extra.ctx = ksi;
-	extra.err = err;
-
-	print_progressDesc(d, "Reading signature... ");
-	res = PARAM_SET_getObjExtended(set, "i", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &extra, (void**)&sig);
+	res = check_general_io_errors(set, err, "i,input", "o");
 	if (res != PST_OK) goto cleanup;
-	print_progressResult(res);
 
-	/* Make sure the signature is ok. */
-	print_progressDesc(d, "Verifying old signature... ");
-	res = KSITOOL_SignatureVerify_internally(err, sig, ksi, NULL, &result_sig);
-	ERR_CATCH_MSG(err, res, "Error: Unable to verify signature.");
-	print_progressResult(res);
-
-	if (get_output_name(set, err, fnmae, sizeof(fnmae), mode + strlen(mode)) == NULL) goto cleanup;
-
-	switch(TASK_getID(task)) {
-		case 0:
-			res = extend_to_nearest_publication(set, err, ksi, sig, &ext);
-		break;
-
-		case 1:
-			res = extend_to_specified_time(set, err, ksi, &extra, sig, &ext);
-		break;
-
-		case 2:
-			res = extend_to_specified_publication(set, err, ksi, sig, &ext);
-		break;
-
-		default:
-			res = KT_UNKNOWN_ERROR;
-			goto cleanup;
-		break;
-	}
-
+	res = perform_extending(set, err, ksi, TASK_getID(task));
 	if (res != KT_OK) goto cleanup;
 
-	res = verify_and_save(set, err, ksi, ext, fnmae, mode, pub_data, &result_ext);
-	if (res != KT_OK) goto cleanup;
-
-
-	if (PARAM_SET_isSetByName(set, "dump")) {
-		print_result("\n");
-		print_result("=== Old signature ===\n");
-		OBJPRINT_signatureDump(sig, print_result);
-		print_result("\n");
-		print_result("=== Extended signature ===\n");
-		OBJPRINT_signatureDump(ext, print_result);
-		print_result("\n");
-		print_result("=== Extended signature verification ===\n");
-		OBJPRINT_signatureVerificationResultDump(result_ext , print_result);
-	}
 
 cleanup:
+	/* Debugging and KSITOOL_KSI_ERRTrace_save is called in perform_extending. */
 	print_progressResult(res);
-	KSITOOL_KSI_ERRTrace_save(ksi);
 
 	if (res != KT_OK) {
-		if (ERR_TRCKR_getErrCount(err) == 0) {ERR_TRCKR_ADD(err, res, NULL);}
-		KSITOOL_KSI_ERRTrace_LOG(ksi);
-		print_debug("\n");
-		if (ext == NULL) {
-			DEBUG_verifySignature(ksi, res, sig, result_sig, NULL);
-		} else {
-			print_debug("=== Old signature ===\n");
-			DEBUG_verifySignature(ksi, res, sig, NULL, NULL);
-			print_debug("=== Extended signature ===\n");
-			DEBUG_verifySignature(ksi, res, ext, result_ext, NULL);
-		}
-
 		print_errors("\n");
 		if (d) ERR_TRCKR_printExtendedErrors(err);
 		else  ERR_TRCKR_printErrors(err);
@@ -172,11 +107,6 @@ cleanup:
 	SMART_FILE_close(logfile);
 	PARAM_SET_free(set);
 	TASK_SET_free(task_set);
-	KSI_Signature_free(sig);
-	KSI_Signature_free(ext);
-	KSI_PublicationData_free(pub_data);
-	KSI_PolicyVerificationResult_free(result_ext);
-	KSI_PolicyVerificationResult_free(result_sig);
 	ERR_TRCKR_free(err);
 	KSI_CTX_free(ksi);
 
@@ -241,36 +171,7 @@ const char *extend_get_desc(void) {
 	return "Extends existing KSI signature to the given publication.";
 }
 
-static char* get_output_name(PARAM_SET *set, ERR_TRCKR *err, char *buf, size_t buf_len, char *mode) {
-	int res;
-	char *outSigFileName = NULL;
-
-	if (set == NULL || err == NULL || buf == NULL || buf_len == 0 || mode == NULL) {
-		return NULL;
-	}
-
-	buf[0] = '\0';
-
-	if (!PARAM_SET_isSetByName(set, "o")) {
-		mode[0] = 'i';
-		mode[1] = '\0';
-
-		outSigFileName = get_output_file_name_if_not_defined(set, err, buf, buf_len);
-		if (outSigFileName == NULL) {
-			ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Unable to generate output file name.");
-			return NULL;
-		}
-	} else {
-		res = PARAM_SET_getStr(set, "o", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &outSigFileName);
-		if (res != PST_OK) return NULL;
-
-		KSI_strncpy(buf, outSigFileName, buf_len);
-	}
-
-	return buf[0] == '\0' ? NULL : buf;
-}
-
-static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *ext, const char *fname, char *mode, KSI_PublicationData *pub_data, KSI_PolicyVerificationResult **result) {
+static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *ext, const char *fname, const char *mode, KSI_PublicationData *pub_data, KSI_PolicyVerificationResult **result) {
 	int res;
 	char real_output_name[1024];
 	int d;
@@ -296,12 +197,13 @@ static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Sig
 
 	print_debug("Signature saved to '%s'.\n", real_output_name);
 
+	res = KT_OK;
+
 cleanup:
 	print_progressResult(res);
 
 	return res;
 }
-
 
 static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext) {
 	int res;
@@ -450,6 +352,7 @@ cleanup:
 
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	int res;
+	int extra_parse_flags = 0;
 
 	if (set == NULL || task_set == NULL) {
 		res = KT_INVALID_ARGUMENT;
@@ -468,50 +371,72 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFileRestrictPipe, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{log}{o}", isFormatOk_path, NULL, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignature);
+	PARAM_SET_addControl(set, "{input}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignatureFromFile);
 	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
 	PARAM_SET_addControl(set, "{d}{dump}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{pub-str}", isFormatOk_pubString, NULL, NULL, extract_pubString);
 
 	/**
+	 * To enable wildcard characters (WC) to work on Windows, configure the WC
+	 * expander function and set parsing flag that enables WC parsing after all
+	 * values from command-line are read.
+	 */
+#ifdef _WIN32
+	res = PARAM_SET_wildcardExpander(set, "i,input", NULL, Win32FileWildcard);
+	extra_parse_flags = PST_PRSCMD_EXPAND_WILDCARD;
+#endif
+
+	/**
+	 * Make the parameter -i collect:
+	 * 1) All values that are exactly after -i (both a and -i are collected -i a, -i -i)
+	 * 2) all values that are not potential parameters (unknown / typo) parameters (will ignore -q, --test)
+	 * Make the parameter input collect all values after the parsing is closed.
+	 * 1) All values that are specified after --.
+	 */
+	PARAM_SET_setParseOptions(set, "i", PST_PRSCMD_HAS_VALUE | PST_PRSCMD_COLLECT_LOOSE_VALUES | extra_parse_flags);
+	PARAM_SET_setParseOptions(set, "input", PST_PRSCMD_CLOSE_PARSING | PST_PRSCMD_COLLECT_WHEN_PARSING_IS_CLOSED | PST_PRSCMD_HAS_NO_FLAG | PST_PRSCMD_NO_TYPOS | extra_parse_flags);
+
+	/**
 	 * Define possible tasks.
 	 */
-	/*					  ID	DESC												MAN					ATL		FORBIDDEN		IGN	*/
-	TASK_SET_add(task_set, 0,	"Extend to the earliest available publication.",	"i,X,P",			NULL,	"T,pub-str",	NULL);
-	TASK_SET_add(task_set, 1,	"Extend to the specified time.",					"i,X,T",			NULL,	"pub-str",		NULL);
-	TASK_SET_add(task_set, 2,	"Extend to time specified in publications string.",	"i,X,P,pub-str",	NULL,	"T",			NULL);
+	/*					  ID	DESC												MAN				ATL			FORBIDDEN		IGN	*/
+	TASK_SET_add(task_set, 0,	"Extend to the earliest available publication.",	"X,P",			"i,input",	"T,pub-str",	NULL);
+	TASK_SET_add(task_set, 1,	"Extend to the specified time.",					"X,T",			"i,input",	"pub-str",		NULL);
+	TASK_SET_add(task_set, 2,	"Extend to time specified in publications string.",	"X,P,pub-str",	"i,input",	"T",			NULL);
 
 cleanup:
 
 	return res;
 }
 
-static char* get_output_file_name_if_not_defined(PARAM_SET *set, ERR_TRCKR *err, char *buf, size_t buf_len) {
-	char *ret = NULL;
-	int res;
+static int generate_file_name(PARAM_SET *set, ERR_TRCKR *err, const char *in_flags, const char *out_flags, int i, char *buf, size_t buf_len) {
+	int res = KT_UNKNOWN_ERROR;
 	char *in_file_name = NULL;
+	int in_count = 0;
 	size_t count = 0;
+	VARIABLE_IS_NOT_USED(out_flags);
+	VARIABLE_IS_NOT_USED(err);
 
-	if (set == NULL || err == NULL || buf == NULL || buf_len == 0) goto cleanup;
-
-	res = PARAM_SET_getStr(set, "i", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &in_file_name);
+	res = PARAM_SET_getValueCount(set, in_flags, NULL, PST_PRIORITY_NONE, &in_count);
 	if (res != PST_OK) goto cleanup;
 
-	if (strcmp(in_file_name, "-") == 0) {
+	res = PARAM_SET_getStr(set, in_flags, NULL, PST_PRIORITY_NONE, i, &in_file_name);
+	if (res != PST_OK) goto cleanup;
+
+	if (strcmp(in_file_name, "-") == 0 && in_count == 1) {
 		KSI_snprintf(buf, buf_len, "stdin.ext.ksig");
+	} else if (SMART_FILE_hasFileExtension(in_file_name, "ksig")) {
+		count += KSI_snprintf(buf + count, buf_len - count , "%s", in_file_name);
+		count += KSI_snprintf(buf + count - 4, buf_len - count, "ext.ksig");
 	} else {
-		if (SMART_FILE_hasFileExtension(in_file_name, "ksig")) {
-			count += KSI_snprintf(buf + count, buf_len - count , "%s", in_file_name);
-			count += KSI_snprintf(buf + count - 4, buf_len - count, "ext.ksig");
-		} else {
-			KSI_snprintf(buf, buf_len, "%s.ext.ksig", in_file_name);
-		}
+		KSI_snprintf(buf, buf_len, "%s.ext.ksig", in_file_name);
 	}
 
-	ret = buf;
+	res = KT_OK;
 
 cleanup:
 
-	return ret;
+	return res;
 }
 
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err) {
@@ -524,5 +449,132 @@ static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err) {
 	if (res != KT_OK) goto cleanup;
 
 cleanup:
+	return res;
+}
+
+static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int task_id) {
+	int res;
+	int i = 0;
+	int in_count = 0;
+	COMPOSITE extra;
+	KSI_Signature *sig = NULL;
+	KSI_Signature *ext = NULL;
+	int d = 0;
+	int dump = 0;
+	int how_to_save = 0;
+	const char *mode = NULL;
+	KSI_PolicyVerificationResult *result_ext = NULL;
+	KSI_PolicyVerificationResult *result_sig = NULL;
+
+	if (set == NULL || err == NULL || ksi == NULL || task_id > 2) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	res = PARAM_SET_getValueCount(set, "i,input", NULL, PST_PRIORITY_NONE, &in_count);
+	if (res != PST_OK) goto cleanup;
+
+	d = PARAM_SET_isSetByName(set, "d");
+	dump = PARAM_SET_isSetByName(set, "dump");
+
+	extra.ctx = ksi;
+	extra.err = err;
+
+	how_to_save = how_is_output_saved_to(set, "i,input", "o");
+
+	res = get_smart_file_mode(err, how_to_save, &mode);
+	if (res != KT_OK) goto cleanup;
+
+	for (i = 0; i < in_count; i++) {
+		const char *save_to = NULL;
+		char buf[1024] = "";
+		if (i > 0 && (d || dump)) print_debug(" ----------------------------\n");
+		print_progressDesc(d, "Reading signature... ");
+
+		res = PARAM_SET_getObjExtended(set, "i,input", NULL, PST_PRIORITY_NONE, (int)i, &extra, (void**)&sig);
+		if (res != PST_OK) goto cleanup;
+		print_progressResult(res);
+
+		/* Make sure the signature is ok. */
+		print_progressDesc(d, "Verifying old signature... ");
+		res = KSITOOL_SignatureVerify_internally(err, sig, ksi, NULL, &result_sig);
+		if (res != KSI_OK) {
+			if (result_sig != NULL) {
+				ERR_TRCKR_ADD(err, res, "Error: [%s] %s", OBJPRINT_getVerificationErrorCode(result_sig->finalResult.errorCode),
+					OBJPRINT_getVerificationErrorDescription(result_sig->finalResult.errorCode));
+			}
+			ERR_TRCKR_ADD(err, res, "Error: Unable to verify signature.");
+			goto cleanup;
+		}
+		print_progressResult(res);
+
+		switch(task_id) {
+			case 0:
+				res = extend_to_nearest_publication(set, err, ksi, sig, &ext);
+			break;
+
+			case 1:
+				res = extend_to_specified_time(set, err, ksi, &extra, sig, &ext);
+			break;
+
+			case 2:
+				res = extend_to_specified_publication(set, err, ksi, sig, &ext);
+			break;
+		}
+		if (res != KT_OK) goto cleanup;
+
+		save_to = get_output_file_name(set, err, "i,input", "o", how_to_save, i, buf, sizeof(buf), generate_file_name);
+
+		res = verify_and_save(set, err, ksi, ext, save_to, mode, NULL, &result_ext);
+		if (res != KT_OK) goto cleanup;
+
+		if (PARAM_SET_isSetByName(set, "dump")) {
+			print_result("\n");
+			print_result("=== Old signature ===\n");
+			OBJPRINT_signatureDump(sig, print_result);
+			print_result("\n");
+			print_result("=== Extended signature ===\n");
+			OBJPRINT_signatureDump(ext, print_result);
+			print_result("\n");
+			print_result("=== Extended signature verification ===\n");
+			OBJPRINT_signatureVerificationResultDump(result_ext , print_result);
+		}
+
+		KSI_Signature_free(sig);
+		KSI_Signature_free(ext);
+		KSI_PolicyVerificationResult_free(result_ext);
+		KSI_PolicyVerificationResult_free(result_sig);
+		result_sig = NULL;
+		result_ext = NULL;
+		ext = NULL;
+		sig = NULL;
+	}
+
+
+	res = KT_OK;
+	goto cleanup;
+
+cleanup:
+	print_progressResult(res);
+	KSITOOL_KSI_ERRTrace_save(ksi);
+
+	if (res != KT_OK) {
+		if (ERR_TRCKR_getErrCount(err) == 0) {ERR_TRCKR_ADD(err, res, NULL);}
+		KSITOOL_KSI_ERRTrace_LOG(ksi);
+		print_debug("\n");
+		if (ext == NULL) {
+			DEBUG_verifySignature(ksi, res, sig, result_sig, NULL);
+		} else {
+			print_debug("=== Old signature ===\n");
+			DEBUG_verifySignature(ksi, res, sig, NULL, NULL);
+			print_debug("=== Extended signature ===\n");
+			DEBUG_verifySignature(ksi, res, ext, result_ext, NULL);
+		}
+	}
+
+	KSI_PolicyVerificationResult_free(result_ext);
+	KSI_PolicyVerificationResult_free(result_sig);
+	KSI_Signature_free(sig);
+	KSI_Signature_free(ext);
 	return res;
 }

@@ -81,11 +81,20 @@ EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08
 >>>2 /(Error: Unable to extend signature as publication record not found from publications file.)(.*0x10014.*)/
 >>>= 7
 
+# KSI extend invalid signature.
+EXECUTABLE extend --conf test/test.cfg -i test\resource\signature\nok-sig-invalid-calendar-right-link-sig-2014-04-30.1-extended.ksig -o test/out/extend/should-not-be-4.ksig -d
+>>>2 /(.*Reading signature)(.*ok.*)
+(.*Verifying old signature)(.*failed.*)([^$]|[
+])*(Error: Unable to verify signature)(.*0x20a.*)
+(.*INT-9)(.*Calendar hash chain root hash is inconsistent with published hash value)/
+>>>= 6
+
 
 # Verify that the signatures that should not have been created do not exist.
 
-EXECUTABLE verify --ver-int -d -i test/out/extend/should-not-be-1.ksig -i test/out/extend/should-not-be-2.ksig -i test/out/extend/should-not-be-3.ksig
+EXECUTABLE verify --ver-int -d -i test/out/extend/should-not-be-1.ksig -i test/out/extend/should-not-be-2.ksig -i test/out/extend/should-not-be-3.ksig -i test/out/extend/should-not-be-4.ksig
 >>>2 /(File does not exist)(.*CMD.*)(.*-i.*)(.*1.*)
 (File does not exist)(.*CMD.*)(.*-i.*)(.*2.*)
-(File does not exist)(.*CMD.*)(.*-i.*)(.*3.*)/
+(File does not exist)(.*CMD.*)(.*-i.*)(.*3.*)
+(File does not exist)(.*CMD.*)(.*-i.*)(.*4.*)/
 >>>= 3
