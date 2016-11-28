@@ -23,12 +23,14 @@ rm -rf test/out/sign 2> /dev/null
 rm -rf test/out/extend 2> /dev/null
 rm -rf test/out/pubfile 2> /dev/null
 rm -rf test/out/fname 2> /dev/null
+rm -rf test/out/mass_extend 2> /dev/null
 
 # Create test output directories.
 mkdir -p test/out/sign
 mkdir -p test/out/extend
 mkdir -p test/out/pubfile
 mkdir -p test/out/fname
+mkdir -p test/out/mass_extend
 
 # Create some test files to output directory.
 cp test/resource/file/testFile	test/out/fname/_
@@ -65,6 +67,7 @@ test/test_suites/sign.test \
 test/test_suites/static-sign.test \
 test/test_suites/sign-verify.test \
 test/test_suites/extend.test \
+test/test_suites/mass-extend.test \
 test/test_suites/extend-verify.test \
 test/test_suites/static-verify.test \
 test/test_suites/static-sign-verify.test \

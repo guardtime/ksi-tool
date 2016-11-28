@@ -51,6 +51,7 @@ generate_test sign.test
 generate_test static-sign.test
 generate_test sign-verify.test
 generate_test extend.test
+generate_test mass-extend.test
 generate_test extend-verify.test
 generate_test static-verify.test
 generate_test static-sign-verify.test
@@ -84,6 +85,7 @@ $mem_test_dir/sign.test \
 $mem_test_dir/static-sign.test \
 $mem_test_dir/sign-verify.test \
 $mem_test_dir/extend.test \
+$mem_test_dir/mass-extend.test \
 $mem_test_dir/extend-verify.test \
 $mem_test_dir/static-verify.test \
 $mem_test_dir/static-sign-verify.test \

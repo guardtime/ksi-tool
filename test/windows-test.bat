@@ -24,12 +24,14 @@ rmdir /S /Q test\out\extend
 rmdir /S /Q test\out\sign
 rmdir /S /Q test\out\pubfile
 rmdir /S /Q test\out\fname
+rmdir /S /Q test\out\mass_extend
 
 REM Create test output directories.
 mkdir test\out\sign
 mkdir test\out\extend
 mkdir test\out\pubfile
 mkdir test\out\fname
+mkdir test\out\mass_extend
 
 REM Create some test files to output directory.
 copy /Y test\resource\file\testFile	test\out\fname\_
@@ -69,6 +71,7 @@ test\test_suites\sign.test ^
 test\test_suites\static-sign.test ^
 test\test_suites\sign-verify.test ^
 test\test_suites\extend.test ^
+test\test_suites\mass-extend.test ^
 test\test_suites\extend-verify.test ^
 test\test_suites\static-verify.test ^
 test\test_suites\static-sign-verify.test ^
