@@ -1,3 +1,5 @@
+* BUGFIX: Error message for case where aggregator URL is not configured fixed.
+
 Version 2.3
 
 2016-11-16 2.3.984
