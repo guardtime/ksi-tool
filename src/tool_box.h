@@ -214,6 +214,30 @@ int how_is_output_saved_to(PARAM_SET *set, const char *in_flags, const char *out
 char* get_output_file_name(PARAM_SET *set, ERR_TRCKR *err,
 		const char *in_flags, const char *out_flags, int how_is_saved, int i, char *buf, size_t buf_len,
 		int (*generate_file_name)(PARAM_SET *set, ERR_TRCKR *err, const char *in_flags, const char *out_flags, int i, char *buf, size_t buf_len));
+
+/**
+ * Get SMART_FILE mode from the output save strategy. See how_is_output_saved_to
+ * and get_output_file_name.
+ */
+int get_smart_file_mode(ERR_TRCKR *err, int how_to_save, const char **mode);
+
+/**
+ * Check general IO related errors, input_flags specifies the count of input and
+ * output_flag specifies the count of output. oc and ic are output and input
+ * count respectively:
+ *   1) oc > 1 && ic > oc - Too much input.
+ *   2) ox > ic - Too much output.
+ *   3) oc == 1 && ic > 1 && o != dir - Single output that is not dir for multiple inputs.
+ *   4) oc > 1 and one of o is directory.
+ *   5) i can not be directory.
+ * \param set			Parameter set.
+ * \param err			Error tracker.
+ * \param in_flags		Input flags e.g. (i,input1,input2).
+ * \param out_flags		Output flags e.g. (o). Only a single value makes sense.
+ * \return KT_OK if successful, error code otherwise.
+ */
+int check_general_io_errors(PARAM_SET *set, ERR_TRCKR *err, const char *input_flags, const char *output_flag);
+
 #ifdef	__cplusplus
 }
 #endif

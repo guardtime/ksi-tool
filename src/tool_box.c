@@ -509,3 +509,91 @@ cleanup:
 
 	return ret;
 }
+
+int get_smart_file_mode(ERR_TRCKR *err, int how_to_save, const char **mode) {
+	if (mode == NULL) return KT_INVALID_ARGUMENT;
+	if (how_to_save == OUTPUT_TO_STDOUT) *mode = "wbs";
+	else if (how_to_save == OUTPUT_NEXT_TO_INPUT) *mode = "wbi";
+	else if (how_to_save == OUTPUT_TO_DIR) *mode = "wbi";
+	else if (how_to_save == OUTPUT_SPECIFIED_FILE) *mode = "wb";
+	else if (how_to_save >= OUTPUT_UNKNOWN) {
+		ERR_TRCKR_ADD(err, KT_UNKNOWN_ERROR, "Error: Unexpected error. Unable to resolve how the output signatures should be stored.");
+		return KT_INVALID_ARGUMENT;
+	}
+
+	return KT_OK;
+}
+
+int check_general_io_errors(PARAM_SET *set, ERR_TRCKR *err, const char *in_flags, const char *out_flags) {
+	int res;
+	int i = 0;
+	char *fname_in = NULL;
+	char *fname_out = NULL;
+	int in_count = 0;
+	int out_count = 0;
+
+	if (set == NULL || err == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		goto cleanup;
+	}
+
+	res = PARAM_SET_getValueCount(set, in_flags, NULL, PST_PRIORITY_NONE, &in_count);
+	if (res != PST_OK) goto cleanup;
+
+	res = PARAM_SET_getValueCount(set, out_flags, NULL, PST_PRIORITY_NONE, &out_count);
+	if (res != PST_OK) goto cleanup;
+
+	res = PARAM_SET_getStr(set, out_flags, NULL, PST_PRIORITY_NONE, 0, &fname_out);
+	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
+
+	/**
+	 * Examine if there is something wrong with the output.
+	 */
+	if (out_count > 1 && in_count > out_count) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: Not enough output parameters specified to store all signatures to corresponding files.");
+		goto cleanup;
+	}
+
+	if (out_count > in_count) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: More output parameters specified than the count of input parameters.");
+		goto cleanup;
+	}
+
+	if (out_count == 1 && in_count > 1) {
+		if (!SMART_FILE_isFileType(fname_out, SMART_FILE_TYPE_DIR)) {
+			ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: Only one output parameter specified, that is not directory, for multiple signatures.");
+			goto cleanup;
+		}
+	}
+
+
+	for (i = 0; out_count > 1 && i < out_count; i++) {
+		res = PARAM_SET_getStr(set, out_flags, NULL, PST_PRIORITY_NONE, i, &fname_out);
+		if (res != PST_OK) goto cleanup;
+
+		if (SMART_FILE_isFileType(fname_out, SMART_FILE_TYPE_DIR)) {
+			ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: There are multiple outputs specified and one output is directory '%s'.", fname_out);
+			goto cleanup;
+		}
+	}
+
+
+	/**
+	 * Check if there is something wrong with the input.
+	 */
+	for (i = 0; i < in_count; i++) {
+		res = PARAM_SET_getStr(set, in_flags, NULL, PST_PRIORITY_NONE, i, &fname_in);
+		if (res != PST_OK) goto cleanup;
+
+		if (SMART_FILE_isFileType(fname_in, SMART_FILE_TYPE_DIR)) {
+			ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: Input can not be directory ('%s').", fname_in);
+			goto cleanup;
+		}
+	}
+
+	res = KT_OK;
+
+cleanup:
+
+	return res;
+}

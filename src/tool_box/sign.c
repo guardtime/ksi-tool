@@ -402,11 +402,6 @@ cleanup:
 static int check_io_naming_and_type_errors(PARAM_SET *set, ERR_TRCKR *err) {
 	int res;
 	int in_count = 0;
-	int in_count_i = 0;
-	int out_count = 0;
-	int i = 0;
-	char *fname_in = NULL;
-	char *fname_out = NULL;
 	char *data_out = NULL;
 
 
@@ -418,18 +413,11 @@ static int check_io_naming_and_type_errors(PARAM_SET *set, ERR_TRCKR *err) {
 	/**
 	 * Get the count of inputs and outputs for error handling.
 	 */
-
 	res = PARAM_SET_getValueCount(set, "i,input", NULL, PST_PRIORITY_NONE, &in_count);
 	if (res != PST_OK) goto cleanup;
 
-	res = PARAM_SET_getValueCount(set, "i", NULL, PST_PRIORITY_NONE, &in_count_i);
+	res = check_general_io_errors(set, err, "i,input", "o");
 	if (res != PST_OK) goto cleanup;
-
-	res = PARAM_SET_getValueCount(set, "o", NULL, PST_PRIORITY_NONE, &out_count);
-	if (res != PST_OK) goto cleanup;
-
-	res = PARAM_SET_getStr(set, "o", NULL, PST_PRIORITY_NONE, 0, &fname_out);
-	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 
 	res = PARAM_SET_getStr(set, "data-out", NULL, PST_PRIORITY_NONE, 0, &data_out);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
@@ -442,51 +430,6 @@ static int check_io_naming_and_type_errors(PARAM_SET *set, ERR_TRCKR *err) {
 				is_data_out_stream ? "" : "'"
 				);
 		goto cleanup;
-	}
-
-	/**
-	 * Examine if there is something wrong with the output.
-	 */
-
-	if (out_count > 1 && in_count > out_count) {
-		ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: Not enough output parameters specified to store all signatures to corresponding file.");
-		goto cleanup;
-	}
-
-	if (out_count > in_count) {
-		ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: More output parameters specified than the count of input parameters.");
-		goto cleanup;
-	}
-
-	if (out_count == 1 && in_count > 1) {
-		if (!SMART_FILE_isFileType(fname_out, SMART_FILE_TYPE_DIR)) {
-			ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: Only one output parameter specified, that is not directory, for multiple signatures.");
-			goto cleanup;
-		}
-	}
-
-	for (i = 0; out_count > 1 && i < out_count; i++) {
-		res = PARAM_SET_getStr(set, "o", NULL, PST_PRIORITY_NONE, i, &fname_out);
-		if (res != PST_OK) goto cleanup;
-
-		if (SMART_FILE_isFileType(fname_out, SMART_FILE_TYPE_DIR)) {
-			ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: There are multiple outputs specified and one output is directory '%s'.", fname_out);
-			goto cleanup;
-		}
-	}
-
-	/**
-	 * Check if there is something wrong with the input.
-	 */
-
-	for (i = 0; i < in_count; i++) {
-		res = PARAM_SET_getStr(set, "i,input", NULL, PST_PRIORITY_NONE, i, &fname_in);
-		if (res != PST_OK) goto cleanup;
-
-		if (SMART_FILE_isFileType(fname_in, SMART_FILE_TYPE_DIR)) {
-			ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: Input can not be directory ('%s').", fname_in);
-			goto cleanup;
-		}
 	}
 
 	res = KT_OK;
@@ -965,6 +908,7 @@ static int generate_file_name(PARAM_SET *set, ERR_TRCKR *err, const char *in_fla
 	char *in_file_name = NULL;
 	int in_count = 0;
 	VARIABLE_IS_NOT_USED(out_flags);
+	VARIABLE_IS_NOT_USED(err);
 
 	res = PARAM_SET_getValueCount(set, in_flags, NULL, PST_PRIORITY_NONE, &in_count);
 	if (res != PST_OK) goto cleanup;
@@ -1029,14 +973,8 @@ static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SI
 
 	how_to_save = how_is_output_saved_to(set, "i,input", "o");
 
-	if (how_to_save == OUTPUT_TO_STDOUT) mode = "wbs";
-	else if (how_to_save == OUTPUT_NEXT_TO_INPUT) mode = "wbi";
-	else if (how_to_save == OUTPUT_TO_DIR) mode = "wbi";
-	else if (how_to_save == OUTPUT_SPECIFIED_FILE) mode = "wb";
-	else if (how_to_save == OUTPUT_UNKNOWN) {
-		ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Unexpected error. Unable to resolve how the output signatures should be stored.");
-		goto cleanup;
-	}
+	res = get_smart_file_mode(err, how_to_save, &mode);
+	if (res != KT_OK) goto cleanup;
 
 	if (prgrs) print_debug("Saving %i files.\n", in_count);
 
