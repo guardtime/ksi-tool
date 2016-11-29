@@ -417,6 +417,7 @@ int how_is_output_saved_to(PARAM_SET *set, const char *in_flags, const char *out
 	res = PARAM_SET_getStr(set, out_flags, NULL, PST_PRIORITY_NONE, 0, &out_file);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 
+	if (PARAM_SET_isSetByName(set, "replace-existing")) return OUTPUT_OVERWRITE_INPUT;
 	if (in_count == 1 && out_count == 1 && strcmp(out_file, "-") == 0) return OUTPUT_TO_STDOUT;
 	else if (out_count != 1 && in_count == out_count) return OUTPUT_SPECIFIED_FILE;
 	else if (out_count == 1 && !SMART_FILE_isFileType(out_file, SMART_FILE_TYPE_DIR) && in_count == out_count) return OUTPUT_SPECIFIED_FILE;
@@ -500,6 +501,8 @@ char* get_output_file_name(PARAM_SET *set, ERR_TRCKR *err,
 		if (res != PST_OK) goto cleanup;
 
 		KSI_snprintf(buf, buf_len, "%s", out_dir_name);
+	} else if (how_is_saved == OUTPUT_OVERWRITE_INPUT) {
+		KSI_strncpy(buf, in_file_name, buf_len);
 	}
 
 
@@ -516,6 +519,7 @@ int get_smart_file_mode(ERR_TRCKR *err, int how_to_save, const char **mode) {
 	else if (how_to_save == OUTPUT_NEXT_TO_INPUT) *mode = "wbi";
 	else if (how_to_save == OUTPUT_TO_DIR) *mode = "wbi";
 	else if (how_to_save == OUTPUT_SPECIFIED_FILE) *mode = "wb";
+	else if (how_to_save == OUTPUT_OVERWRITE_INPUT) *mode = "wbf";
 	else if (how_to_save >= OUTPUT_UNKNOWN) {
 		ERR_TRCKR_ADD(err, KT_UNKNOWN_ERROR, "Error: Unexpected error. Unable to resolve how the output signatures should be stored.");
 		return KT_INVALID_ARGUMENT;

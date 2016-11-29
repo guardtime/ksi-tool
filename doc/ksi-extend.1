@@ -60,9 +60,12 @@ For more common OIDs there are convenience names defined:
 .RE
 .\"
 .TP
-
 \fB--pub-str \fIstr\fR
 Specify the publication record as publication string to extend signature to.
+.\"
+.TP
+\fB--replace-existing \fR
+Replace input KSI signature file with successfully extended version. During the saving process old signature is renamed and is handled as temporary buffer for the original file. If saving of extended signature is successfully performed the old signature is deleted. In cases of failures the old signatures may be left renamed as <original input file>.backup.<20 random decimal digits> and is not deleted.
 .\"
 .TP
 \fB-T \fItime\fR

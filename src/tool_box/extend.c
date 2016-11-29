@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <ksi/ksi.h>
 #include <ksi/compatibility.h>
 #include <ksi/policy.h>
@@ -45,7 +46,7 @@ static int extend_to_specified_time(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi
 static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext);
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
-
+static int check_other_input_param_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int task_id);
 
 int extend_run(int argc, char** argv, char **envp) {
@@ -63,7 +64,7 @@ int extend_run(int argc, char** argv, char **envp) {
 	 * Extract command line parameters.
 	 */
 	res = PARAM_SET_new(
-			CONF_generate_param_set_desc("{i}{input}{o}{d}{x}{T}{pub-str}{dump}{conf}{log}{h|help}", "XP", buf, sizeof(buf)),
+			CONF_generate_param_set_desc("{i}{input}{o}{d}{x}{T}{pub-str}{dump}{conf}{log}{h|help}{replace-existing}", "XP", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -88,6 +89,9 @@ int extend_run(int argc, char** argv, char **envp) {
 	if (res != KT_OK) goto cleanup;
 
 	res = check_general_io_errors(set, err, "i,input", "o");
+	if (res != PST_OK) goto cleanup;
+
+	res = check_other_input_param_errors(set, err);
 	if (res != PST_OK) goto cleanup;
 
 	res = perform_extending(set, err, ksi, TASK_getID(task));
@@ -157,6 +161,8 @@ char *extend_help_toString(char*buf, size_t len) {
 		" --pub-str <str>\n"
 		"           - Publication record as publication string to extend the signature\n"
 		"             to.\n"
+		" --replace-existing\n"
+		"           - Replace input KSI signature with the successfully extended version.\n"
 		" -T <time> - Publication time to extend to as the number of seconds since\n"
 		"             1970-01-01 00:00:00 UTC or time string formatted as\n"
 		"             \"YYYY-MM-DD hh:mm:ss\".\n"
@@ -187,9 +193,75 @@ const char *extend_get_desc(void) {
 	return "Extends existing KSI signature to the given publication.";
 }
 
+static int save_extended(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *ext, const char *fname, const char *mode) {
+	int res = KT_UNKNOWN_ERROR;
+	char real_output_name[1024];
+	char temp_file_name[1024];
+	int d;
+	int is_replace = 0;
+
+	if (set == NULL || err == NULL || ksi == NULL || ext == NULL || fname == NULL || mode == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		goto cleanup;
+	}
+
+	is_replace = PARAM_SET_isSetByName(set, "replace-existing");
+	d = PARAM_SET_isSetByName(set, "d");
+
+	if (is_replace) {
+		/* To be extra sure that overwriting is restricted check the mode. */
+		if (strchr(mode, 'f') == NULL) {
+			ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Write mode specified '%s' do not contain f.", mode);
+			goto cleanup;
+		}
+
+		print_progressDesc(d, "Creating backup... ");
+
+		srand(0xffffffff & time(NULL));
+		KSI_snprintf(temp_file_name, sizeof(temp_file_name), "%s.backup.%010d%010d", fname, rand(),rand());
+
+		res = SMART_FILE_rename(fname, temp_file_name);
+		ERR_CATCH_MSG(err, res, "Error: Unable to create backup file '%s' for '%s'.", temp_file_name, fname)
+		print_progressResult(res);
+	}
+
+	/* Save signature. */
+	print_progressDesc(d, "Saving signature... ");
+	res = KSI_OBJ_saveSignature(err, ksi, ext, mode, fname, real_output_name, sizeof(real_output_name));
+	if (res != KT_OK) goto cleanup;
+	print_progressResult(res);
+
+	if (is_replace) {
+		print_progressDesc(d, "Removing backup... ");
+
+		/* To be extra sure that original file was written as expected run some extra checks. */
+		if (!SMART_FILE_doFileExist(real_output_name)) {
+			ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Unable to verify that extended signature is actually saved. Original is available at %s.", temp_file_name);
+			goto cleanup;
+		}
+
+		if (strcmp(fname, real_output_name) != 0) {
+			ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Signature saved to different file name as expected. Original is not removed and is available at %s.", temp_file_name);
+			ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Expected output '%s' instead of 's'.", fname, real_output_name);
+			goto cleanup;
+		}
+
+		res = SMART_FILE_remove(temp_file_name);
+		ERR_CATCH_MSG(err, res, "Error: Unable to remove backup file '%s'.", temp_file_name, fname)
+		print_progressResult(res);
+	}
+
+	print_debug("Signature saved to '%s'.\n", real_output_name);
+
+	res = KT_OK;
+
+cleanup:
+	print_progressResult(res);
+	return res;
+}
+
 static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *ext, const char *fname, const char *mode, KSI_PublicationData *pub_data, KSI_PolicyVerificationResult **result) {
 	int res;
-	char real_output_name[1024];
 	int d;
 
 	if (set == NULL || err == NULL || ksi == NULL || ext == NULL || fname == NULL || mode == NULL) {
@@ -205,13 +277,8 @@ static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Sig
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify extended signature.");
 	print_progressResult(res);
 
-	/* Save signature. */
-	print_progressDesc(d, "Saving signature... ");
-	res = KSI_OBJ_saveSignature(err, ksi, ext, mode, fname, real_output_name, sizeof(real_output_name));
+	res = save_extended(set, err, ksi, ext, fname, mode);
 	if (res != KT_OK) goto cleanup;
-	print_progressResult(res);
-
-	print_debug("Signature saved to '%s'.\n", real_output_name);
 
 	res = KT_OK;
 
@@ -386,13 +453,13 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	 */
 	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFileRestrictPipe, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{log}{o}", isFormatOk_path, NULL, convertRepair_path, NULL);
-	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignature);
+	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFileWithPipe, convertRepair_path, extract_inputSignature);
 	PARAM_SET_addControl(set, "{input}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignatureFromFile);
 	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
 	PARAM_SET_addControl(set, "{d}{dump}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{pub-str}", isFormatOk_pubString, NULL, NULL, extract_pubString);
-	PARAM_SET_setParseOptions(set, "{d}{dump}", PST_PRSCMD_HAS_NO_VALUE);
-	
+	PARAM_SET_setParseOptions(set, "{d}{dump}{replace-existing}", PST_PRSCMD_HAS_NO_VALUE);
+
 	/**
 	 * To enable wildcard characters (WC) to work on Windows, configure the WC
 	 * expander function and set parsing flag that enables WC parsing after all
@@ -465,6 +532,46 @@ static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err) {
 	res = get_pipe_out_error(set, err, NULL, "o,log", NULL);
 	if (res != KT_OK) goto cleanup;
 
+	res = get_pipe_in_error(set, err, "i", NULL, NULL);
+	if (res != KT_OK) goto cleanup;
+
+cleanup:
+	return res;
+}
+
+static int check_other_input_param_errors(PARAM_SET *set, ERR_TRCKR *err) {
+	int res;
+
+
+	if (PARAM_SET_isSetByName(set, "replace-existing")) {
+		int i_count = 0;
+		int i = 0;
+
+		if (PARAM_SET_isSetByName(set, "o")) {
+			ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: --replace-existing can not be used with -o.");
+			goto cleanup;
+		}
+
+		res = PARAM_SET_getValueCount(set, "i", NULL, PST_PRIORITY_NONE, &i_count);
+		if (res != PST_OK) goto cleanup;
+
+		for (i = 0; i < i_count; i++) {
+			char *value = NULL;
+
+			/* Note that only i is iterated and not input! input interpretes - as regular file. */
+			res = PARAM_SET_getStr(set, "i", NULL, PST_PRIORITY_NONE, i, &value);
+			if (res != PST_OK) goto cleanup;
+
+			if (strcmp(value, "-") == 0) {
+				ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: --replace-existing can not be used when extending the signature from stdin (-i -).");
+				goto cleanup;
+			}
+		}
+	}
+
+
+	res = KT_OK;
+
 cleanup:
 	return res;
 }
@@ -502,10 +609,15 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 	res = get_smart_file_mode(err, how_to_save, &mode);
 	if (res != KT_OK) goto cleanup;
 
+	print_debug("Extending %d signatures.\n", in_count);
 	for (i = 0; i < in_count; i++) {
+		char *in_fname = NULL;
 		const char *save_to = NULL;
 		char buf[1024] = "";
 		if (i > 0 && (d || dump)) print_debug(" ----------------------------\n");
+
+		PARAM_SET_getStr(set, "i,input", NULL, PST_PRIORITY_NONE, i, &in_fname);
+		print_debug("Extending signature '%s'.\n", in_fname);
 		print_progressDesc(d, "Reading signature... ");
 
 		res = PARAM_SET_getObjExtended(set, "i,input", NULL, PST_PRIORITY_NONE, (int)i, &extra, (void**)&sig);

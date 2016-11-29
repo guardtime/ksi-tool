@@ -43,6 +43,9 @@ enum OUTPUT_TYPE {
 	
 	/* Output is saved next to input file with generated name. Existing files are not overwritten. */
 	OUTPUT_NEXT_TO_INPUT,
+	
+	/* Output overwrites the input file. */
+	OUTPUT_OVERWRITE_INPUT,
 
 	/* Something went wrong. */
 	OUTPUT_UNKNOWN
