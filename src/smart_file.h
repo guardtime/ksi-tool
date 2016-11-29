@@ -85,6 +85,9 @@ const char *SMART_FILE_getFname(SMART_FILE *file);
  */
 int SMART_FILE_isEof(SMART_FILE *file);
 
+int SMART_FILE_rename(const char *old_path, const char *new_path);
+int SMART_FILE_remove(const char *fname);
+
 int SMART_FILE_doFileExist(const char *path);
 int SMART_FILE_isWriteAccess(const char *path);
 int SMART_FILE_isReadAccess(const char *path);
