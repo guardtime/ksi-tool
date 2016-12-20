@@ -64,7 +64,30 @@ EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08
 >>>= 0
 
 
-# Unsuccessful extending
+
+## 3
+# 3) Extend 1 file to specified publication. Replace the original file with the
+# extended version.
+#
+EXECUTABLE extend --conf test/test.cfg -i test/out/extend-replace-existing/not-extended-1A.ksig -d --dump --pub-str AAAAAA-CXMCNI-AAJIV3-RB5OEJ-JBK57H-SJ42PI-IB2RE7-2CA2TM-H5W3EF-TF2BX7-HRNRP5-Q2E754 --replace-existing
+>>> /(.*AAAAAA-CXMCNI-AAJIV3-RB5OEJ-JBK57H-SJ42PI-IB2RE7-2CA2TM-H5W3EF-TF2BX7-HRNRP5-Q2E754.*)/
+>>>2 /(Ext.*1.*)
+.*
+(.*R.*ok.*)
+(.*Ve.*old.*ok.*)
+(.*Rec.*pub.*ok.*)
+(.*Se.*rec.*pub.*file.*ok.*)
+(.*Ve.*pub.*ok.*)
+(.*Ex.*.*ok.*)
+(.*Ve.*ext.*ok.*)
+(.*Cre.*back.*ok.*)
+(.*Sa.*sig.*ok.*)
+(.*Rem.*back.*ok.*)
+(.*saved.*not-extended-1A.ksig.*)/
+>>>= 0
+
+
+# Unsuccessful extending.
 
 # KSI extend the fresh signature.
 EXECUTABLE extend --conf test/test.cfg -i test/out/sign/testFile.ksig -o test/out/extend/should-not-be-1.ksig -d

@@ -609,7 +609,7 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 	res = get_smart_file_mode(err, how_to_save, &mode);
 	if (res != KT_OK) goto cleanup;
 
-	print_debug("Extending %d signatures.\n", in_count);
+	print_debug("Extending %d signature%s.\n", in_count, in_count > 1 ? "s" : "");
 	for (i = 0; i < in_count; i++) {
 		char *in_fname = NULL;
 		const char *save_to = NULL;

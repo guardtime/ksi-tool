@@ -42,6 +42,11 @@ EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-sha1-20
 >>>2 /Error: Multiple different simultaneous outputs to stdout/
 >>>= 3
 
+# KSI Sign Multiple different simultaneous inputs from stdin 1.
+EXECUTABLE extend --conf test/test.cfg -i - -i - -o test/out/extend/extend_cmd_should_not_be.3.ksig
+>>>2 /Error: Multiple different simultaneous inputs from stdin/
+>>>= 3
+
 # IO Conflict 1. N x I and 1 x O, where O != DIR.
 EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -o - > test/out/extend/extend_cmd_should_not_be.3.ksig
 >>>2 /Error: Only one output parameter specified, that is not directory, for multiple signatures/
@@ -60,6 +65,16 @@ EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08
 # IO Conflict 4. N x I and M x O, ehere M > N.
 EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -o test/out/extend/dummy-1.ksig -o test/out/extend/dummy-2.ksig -o test/out/extend/dummy-3.ksig -o test/out/extend/dummy-4.ksig
 >>>2 /(.*Error: More output parameters specified than the count of input parameters.*)/
+>>>= 3
+
+# IO Conflict 5. 1 x I, where I :: stdin and --replace-existing.
+EXECUTABLE extend --conf test/test.cfg -i - --replace-existing
+>>>2 /(.*Error: --replace-existing can not be used when extending the signature from stdin.*)/
+>>>= 3
+
+# IO Conflict 6. 1 x O and --replace-existing.
+EXECUTABLE extend --conf test/test.cfg -i test/out/sign/testFile.ksig -o test/out/extend/dummy-1.ksig --replace-existing
+>>>2 /(.*Error: --replace-existing can not be used with -o.*)/
 >>>= 3
 
 # Try to extend to invalid date 1. Year is out of range.
