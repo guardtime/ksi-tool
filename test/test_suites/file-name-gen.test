@@ -144,3 +144,16 @@ EXECUTABLE extend -i test/out/fname/ok-sig -d -X file://test/resource/server/ok-
 EXECUTABLE extend -i test/out/fname/ok-sig -d -X file://test/resource/server/ok-sig-2014-08-01.1-extend_response.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
 >>>2 /(.*Signature saved to.*)(.*ok-sig.ext_5.ksig)/
 >>>= 0
+
+# Extend signature to the nearest publication (double extending) 6.7.
+EXECUTABLE extend -i test/out/fname/ok-sig.ext.ksig -d -X file://test/resource/server/ok-sig-2014-08-01.1-extend_response.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+>>>2 /(.*Signature saved to.*)(.*ok-sig.ext.ext.ksig)/
+>>>= 0
+
+# TODO: enable test if libksi is fixed. Unable to read TLV file in second attempt.
+# Perform signing of multiple files.
+#EXECUTABLE extend -i test/out/fname/mass-extend*.ksig -d -X file://test/resource/server/ok-sig-2014-08-01.1-extend_response.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+#>>>2 /(.*Signature saved to.*)(.*mass-extend-1.ext.ksig)([^$]|[
+#])*(.*Signature saved to.*)(.*mass-extend-2.ext.ksig)([^$]|[
+#])*(.*Signature saved to.*)(.*mass-extend-3.ext.ksig)/
+#>>>= 0

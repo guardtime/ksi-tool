@@ -1,4 +1,11 @@
 * IMPROVEMENT: Windows installer automatically removes the older version.
+* IMPROVEMENT: Extending of multiple signatures implemented.
+* FEATURE: It is possible to specify output (-o) as directory when extending.
+* FEATURE: It is possible to specify multiple inputs (-i) when extending.
+* FEATURE: Wildcard support when extending multiple files (works also on Windows).
+* FEATURE: New flag --replace-existing to replace the input file with successfully extended version.
+* BUGFIX: Error message for case where aggregator URL is not configured fixed.
+* BUGFIX: Description of the output file name generation during extending fixed.
 
 Version 2.3
 
@@ -21,7 +28,7 @@ Version 2.2
 * FEATURE: It is possible to specify multiple inputs (-i) when signing.
 * FEATURE: New option -- under sign after what everything is interpreted as regular input file.
 * FEATURE: New options --mask and --prev-leaf to enable and configure input masking.
-* FEATURE: Wildcard support when signing multiple files (works also on windows).
+* FEATURE: Wildcard support when signing multiple files (works also on Windows).
 * BUGFIX: User info embedded in the URI is interpreted as KSI user info only when the known URI scheme has prefix 'ksi+' (e.g. ksi+http).
 
 Version 2.1

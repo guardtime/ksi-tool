@@ -37,6 +37,12 @@ cp test/resource/file/testFile	$mem_test_dir/a_23_1000.ksig
 cp test/resource/file/testFile	$mem_test_dir/a_23_1000_5.ksig
 cp test/resource/signature/ok-sig-2014-08-01.1.ksig $mem_test_dir/ok-sig.ksig
 cp test/resource/signature/ok-sig-2014-08-01.1.ksig $mem_test_dir/ok-sig
+cp test/resource/signature/ok-sig-2014-08-01.1.ksig $mem_test_dir/mass-extend-1.ksig
+cp test/resource/signature/ok-sig-2014-08-01.1.ksig $mem_test_dir/mass-extend-2.ksig
+cp test/resource/signature/ok-sig-2014-08-01.1.ksig $mem_test_dir/mass-extend-2.ksig
+cp test/resource/signature/ok-sig-2014-08-01.1.ksig $mem_test_dir/not-extended-1A.ksig
+cp test/resource/signature/ok-sig-2014-08-01.1.ksig $mem_test_dir/not-extended-1B.ksig
+cp test/resource/signature/ok-sig-2014-08-01.1.ksig $mem_test_dir/not-extended-2B.ksig
 
 # Configure temporary KSI_CONF.
 export KSI_CONF=test/resource/conf/default-not-working-conf.cfg
@@ -51,6 +57,7 @@ generate_test sign.test
 generate_test static-sign.test
 generate_test sign-verify.test
 generate_test extend.test
+generate_test mass-extend.test
 generate_test extend-verify.test
 generate_test static-verify.test
 generate_test static-sign-verify.test
@@ -84,6 +91,7 @@ $mem_test_dir/sign.test \
 $mem_test_dir/static-sign.test \
 $mem_test_dir/sign-verify.test \
 $mem_test_dir/extend.test \
+$mem_test_dir/mass-extend.test \
 $mem_test_dir/extend-verify.test \
 $mem_test_dir/static-verify.test \
 $mem_test_dir/static-sign-verify.test \

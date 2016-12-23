@@ -112,7 +112,7 @@ EXECUTABLE sign --max-lvl 10 -o test/out/sign/sig_1.ksig -- test/resource/file/a
 
 # Test invalid IO combinations 6. A two output files for more than two input files.:
 EXECUTABLE sign --max-lvl 10 -o test/out/sign/sig_1.ksig -o test/out/sign/sig_2.ksig -- test/resource/file/*
->>>2 /(.*Error: Not enough output parameters specified to store all signatures to corresponding file.*)/
+>>>2 /(.*Error: Not enough output parameters specified to store all signatures to corresponding files.*)/
 >>>= 3
 
 # Test invalid IO combinations 7. Try to read 2x from stdin:

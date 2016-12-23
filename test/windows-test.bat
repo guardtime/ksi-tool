@@ -21,15 +21,19 @@ GOTO copyrightend
 
 REM Remove test output directories.
 rmdir /S /Q test\out\extend
+rmdir /S /Q test\out\extend-replace-existing
 rmdir /S /Q test\out\sign
 rmdir /S /Q test\out\pubfile
 rmdir /S /Q test\out\fname
+rmdir /S /Q test\out\mass_extend
 
 REM Create test output directories.
 mkdir test\out\sign
 mkdir test\out\extend
+mkdir test\out\extend-replace-existing
 mkdir test\out\pubfile
 mkdir test\out\fname
+mkdir test\out\mass_extend
 
 REM Create some test files to output directory.
 copy /Y test\resource\file\testFile	test\out\fname\_
@@ -41,6 +45,13 @@ copy /Y test\resource\file\testFile	test\out\fname\a_23_1000.ksig
 copy /Y test\resource\file\testFile	test\out\fname\a_23_1000_5.ksig
 copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\fname\ok-sig.ksig
 copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\fname\ok-sig
+copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\fname\mass-extend-1.ksig
+copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\fname\mass-extend-2.ksig
+copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\fname\mass-extend-2.ksig
+copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\extend-replace-existing\not-extended-1A.ksig
+copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\extend-replace-existing\not-extended-1B.ksig
+copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\extend-replace-existing\not-extended-2B.ksig
+
 REM Define KSI_CONF for temporary testing.
 setlocal
 
@@ -69,6 +80,7 @@ test\test_suites\sign.test ^
 test\test_suites\static-sign.test ^
 test\test_suites\sign-verify.test ^
 test\test_suites\extend.test ^
+test\test_suites\mass-extend.test ^
 test\test_suites\extend-verify.test ^
 test\test_suites\static-verify.test ^
 test\test_suites\static-sign-verify.test ^

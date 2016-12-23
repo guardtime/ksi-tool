@@ -21,14 +21,18 @@
 # Remove test output directories.  
 rm -rf test/out/sign 2> /dev/null
 rm -rf test/out/extend 2> /dev/null
+rm -rf test/out/extend-replace-existing 2> /dev/null
 rm -rf test/out/pubfile 2> /dev/null
 rm -rf test/out/fname 2> /dev/null
+rm -rf test/out/mass_extend 2> /dev/null
 
 # Create test output directories.
 mkdir -p test/out/sign
 mkdir -p test/out/extend
+mkdir -p test/out/extend-replace-existing/
 mkdir -p test/out/pubfile
 mkdir -p test/out/fname
+mkdir -p test/out/mass_extend
 
 # Create some test files to output directory.
 cp test/resource/file/testFile	test/out/fname/_
@@ -40,6 +44,14 @@ cp test/resource/file/testFile	test/out/fname/a_23_1000.ksig
 cp test/resource/file/testFile	test/out/fname/a_23_1000_5.ksig
 cp test/resource/signature/ok-sig-2014-08-01.1.ksig test/out/fname/ok-sig.ksig
 cp test/resource/signature/ok-sig-2014-08-01.1.ksig test/out/fname/ok-sig
+cp test/resource/signature/ok-sig-2014-08-01.1.ksig test/out/fname/mass-extend-1.ksig
+cp test/resource/signature/ok-sig-2014-08-01.1.ksig test/out/fname/mass-extend-2.ksig
+cp test/resource/signature/ok-sig-2014-08-01.1.ksig test/out/fname/mass-extend-2.ksig
+cp test/resource/signature/ok-sig-2014-08-01.1.ksig test/out/extend-replace-existing/not-extended-1A.ksig
+cp test/resource/signature/ok-sig-2014-08-01.1.ksig test/out/extend-replace-existing/not-extended-1B.ksig
+cp test/resource/signature/ok-sig-2014-08-01.1.ksig test/out/extend-replace-existing/not-extended-2B.ksig
+
+
 
 # Define KSI_CONF for temporary testing.
 export KSI_CONF=test/resource/conf/default-not-working-conf.cfg
@@ -65,6 +77,7 @@ test/test_suites/sign.test \
 test/test_suites/static-sign.test \
 test/test_suites/sign-verify.test \
 test/test_suites/extend.test \
+test/test_suites/mass-extend.test \
 test/test_suites/extend-verify.test \
 test/test_suites/static-verify.test \
 test/test_suites/static-sign-verify.test \
