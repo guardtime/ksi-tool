@@ -173,23 +173,98 @@ void OBJPRINT_signatureInputHash(KSI_Signature *sig, int (*print)(const char *fo
 	return;
 }
 
-void OBJPRINT_signerIdentity(KSI_Signature *sig, int (*print)(const char *format, ... )){
+void OBJPRINT_IdentityMetadata(KSI_Signature *sig, int (*print)(const char *format, ... )){
 	int res = KSI_UNKNOWN_ERROR;
-	char *signerIdentity = NULL;
+	KSI_HashChainLinkIdentityList *identity = NULL;
+	size_t i;
+	const char *offset = "    ";
+	KSI_Integer *tmpInt = NULL;
 
 	if (sig == NULL) goto cleanup;
 
-	print("Signer identity: ");
-	res = KSI_Signature_getSignerIdentity(sig, &signerIdentity);
+	print("Identity Metadata: \n");
+	res = KSI_Signature_getAggregationHashChainIdentity(sig, &identity);
 	if (res != KSI_OK){
 		print("Unable to get signer identity.\n");
 		goto cleanup;
 	}
 
-	print("'%s'.\n", signerIdentity == NULL || strlen(signerIdentity) == 0 ? "Unknown" : signerIdentity);
-cleanup:
+	if (KSI_HashChainLinkIdentityList_length(identity) == 0) {
+		print("%s'Unknown'.\n", offset);
+	} else {
+		for (i = 0; i < KSI_HashChainLinkIdentityList_length(identity); i++) {
+			KSI_HashChainLinkIdentity *id = NULL;
+			KSI_HashChainLinkIdentityType type;
 
-	KSI_free(signerIdentity);
+			res = KSI_HashChainLinkIdentityList_elementAt(identity, i, &id);
+			if (res != KSI_OK){
+				print("Unable to get identity.\n");
+				goto cleanup;
+			}
+
+			res = KSI_HashChainLinkIdentity_getType(id, &type);
+			if (res != KSI_OK){
+				print("Unable to get identity type.\n");
+				goto cleanup;
+			}
+
+			if (type == KSI_IDENTITY_TYPE_LEGACY_ID) {
+				KSI_Utf8String *clientId = NULL;
+
+				res = KSI_HashChainLinkIdentity_getClientId(id, &clientId);
+				if (res != KSI_OK){
+					print("Unable to get client id.\n");
+					goto cleanup;
+				}
+
+				print("%s%d) '%s' (legacy)\n", offset, i + 1, KSI_Utf8String_cstr(clientId));
+
+			} else if (type == KSI_IDENTITY_TYPE_METADATA) {
+				KSI_Utf8String *clientId = NULL;
+				KSI_Utf8String *macId = NULL;
+				KSI_Integer *seqNr = NULL;
+				KSI_Integer *reqTm = NULL;
+
+				/* ClientId is mandatory element. */
+				res = KSI_HashChainLinkIdentity_getClientId(id, &clientId);
+				if (res != KSI_OK || clientId == NULL){
+					print("Unable to get client id.\n");
+					goto cleanup;
+				}
+				print("%s%d) Client ID: '%s'", offset, i + 1, KSI_Utf8String_cstr(clientId));
+
+				/* Read optional elements. */
+				res = KSI_HashChainLinkIdentity_getMachineId(id, &macId);
+				if (res != KSI_OK){
+					print("Unable to get machine id.\n");
+					goto cleanup;
+				}
+				res = KSI_HashChainLinkIdentity_getSequenceNr(id, &seqNr);
+				if (res != KSI_OK){
+					print("Unable to get sequence number.\n");
+					goto cleanup;
+				}
+				res = KSI_HashChainLinkIdentity_getRequestTime(id, &reqTm);
+				if (res != KSI_OK){
+					print("Unable to get sequence number.\n");
+					goto cleanup;
+				}
+
+				/* Print values if available. */
+				if (macId) print(", Machine ID: '%s'", KSI_Utf8String_cstr(macId));
+				if (seqNr) print(", Sequence number: '%i'", (unsigned long)KSI_Integer_getUInt64(seqNr));
+				if (reqTm) print(", Request time: '%llu'", KSI_Integer_getUInt64(reqTm));
+
+				print("\n");
+			} else {
+				print("%s%d) Unknown identity type.\n", offset, i + 1);
+			}
+		}
+	}
+
+cleanup:
+	KSI_Integer_free(tmpInt);
+	KSI_HashChainLinkIdentityList_free(identity);
 	return;
 }
 
@@ -342,7 +417,7 @@ void OBJPRINT_signatureDump(KSI_Signature *sig, int (*print)(const char *format,
 	print("  ");
 	OBJPRINT_signatureSigningTime(sig, print);
 	print("  ");
-	OBJPRINT_signerIdentity(sig, print);
+	OBJPRINT_IdentityMetadata(sig, print);
 	print("  Trust anchor: ");
 
 	if (KSITOOL_Signature_isCalendarAuthRecPresent(sig)) {
