@@ -33,14 +33,14 @@
 ##
 
 # Verify metadata correctness.
-EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[5] test/out/sign/ebcd-mdata-1.ksig | gttlvdump -pPy
+ gttlvgrep -er 800.801[5] test/out/sign/ebcd-mdata-1.ksig | gttlvdump -pPy
 >>>/(.*TLV.*04.*)(.*L = 14.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)/
 >>>= 0
 
 # Verify chain index correctness.
-EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[5] test/out/sign/ebcd-mdata-1.ksig | gttlvdump -pPy
+ gttlvgrep -er 800.801[5] test/out/sign/ebcd-mdata-1.ksig | gttlvdump -pPy
 >>>/(.*Chain index.*10.*)
 (.*Chain index.*1791.*)
 (.*Chain index.*1007.*)
@@ -57,7 +57,7 @@ EXECUTABLE --version > test\out\dummy.txt && gttlvgrep -er 800.801[5] test/out/s
 # Main test case:
 #   EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-2.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata --mdata-mac-id "My Computer"
 ##
-EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-mdata-2.ksig
+ gttlvdump -pPy test/out/sign/ebcd-mdata-2.ksig
 >>>/(.*TLV.*04.*)(.*L = 28.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
@@ -71,7 +71,7 @@ EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-m
 # Main test case:
 #   EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-3.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata-mac-id "My Computer" --mdata
 ##
-EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-mdata-3.ksig
+ gttlvdump -pPy test/out/sign/ebcd-mdata-3.ksig
 >>>/(.*TLV.*04.*)(.*L = 28.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
@@ -85,7 +85,7 @@ EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-m
 # Main test case:
 #   EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-4.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata-mac-id "My Computer" --mdata-req-tm --mdata
 ##
-EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-mdata-4.ksig
+ gttlvdump -pPy test/out/sign/ebcd-mdata-4.ksig
 >>>/(.*TLV.*04.*)(.*L = 36.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
@@ -101,7 +101,7 @@ EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-m
 # Main test case:
 #   EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-5.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata-mac-id "My Computer" --mdata-req-tm --mdata-sqn-nr --mdata
 ##
-EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-mdata-5.ksig
+ gttlvdump -pPy test/out/sign/ebcd-mdata-5.ksig
 >>>/(.*TLV.*04.*)(.*L = 38.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
@@ -119,7 +119,7 @@ EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-m
 # Main test case:
 #   EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-6.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata-mac-id "My Computer" --mdata-req-tm --mdata-sqn-nr 5 --mdata
 ##
-EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-mdata-6.ksig
+ gttlvdump -pPy test/out/sign/ebcd-mdata-6.ksig
 >>>/(.*TLV.*04.*)(.*L = 40.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
@@ -136,14 +136,14 @@ EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-m
 # Main test case:
 #   EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -i test/resource/file/abcd -o test/out/sign/ebcd-sgn-0-0.ksig -o test/out/sign/abcd-sgn-0-0.ksig --max-lvl 2 --mdata-cli-id "My name" --mdata-sqn-nr --mdata
 ##
-EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-sgn-0-0.ksig
+ gttlvdump -pPy test/out/sign/ebcd-sgn-0-0.ksig
 >>>/(.*TLV.*04.*)(.*L = 16.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
 (.*TLV.*03.*)(.*Sequence nr.*)(.*0.*)/
 >>>= 0
 
-EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/abcd-sgn-0-0.ksig
+ gttlvdump -pPy test/out/sign/abcd-sgn-0-0.ksig
 >>>/(.*TLV.*04.*)(.*L = 16.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
@@ -157,14 +157,14 @@ EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/abcd-s
 # Main test case:
 #   EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -i test/resource/file/abcd -o test/out/sign/ebcd-sgn-0-1.ksig -o test/out/sign/abcd-sgn-1-1.ksig --max-lvl 1 --max-aggr-rounds 2 --mdata-cli-id "My name" --mdata-sqn-nr --mdata
 ##
-EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-sgn-0-1.ksig
+ gttlvdump -pPy test/out/sign/ebcd-sgn-0-1.ksig
 >>>/(.*TLV.*04.*)(.*L = 16.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
 (.*TLV.*03.*)(.*Sequence nr.*)(.*0.*)/
 >>>= 0
 
-EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/abcd-sgn-1-1.ksig
+ gttlvdump -pPy test/out/sign/abcd-sgn-1-1.ksig
 >>>/(.*TLV.*04.*)(.*L = 16.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
@@ -178,14 +178,14 @@ EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/abcd-s
 # Main test case:
 #   EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -i test/resource/file/abcd -o test/out/sign/ebcd-sgn-5-2.ksig -o test/out/sign/abcd-sgn-6-2.ksig --max-lvl 1 --max-aggr-rounds 2 --mdata-cli-id "My name" --mdata-sqn-nr 5 --mdata
 ##
-EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/ebcd-sgn-5-2.ksig
+ gttlvdump -pPy test/out/sign/ebcd-sgn-5-2.ksig
 >>>/(.*TLV.*04.*)(.*L = 16.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
 (.*TLV.*03.*)(.*Sequence nr.*)(.*5.*)/
 >>>= 0
 
-EXECUTABLE --version > test\out\dummy.txt && gttlvdump -pPy test/out/sign/abcd-sgn-6-2.ksig
+ gttlvdump -pPy test/out/sign/abcd-sgn-6-2.ksig
 >>>/(.*TLV.*04.*)(.*L = 16.*)(.*Metadata.*)
 .*
 (.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
