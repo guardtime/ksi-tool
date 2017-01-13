@@ -1,5 +1,14 @@
 * IMPROVEMENT: Command-line parameter parser updated and optimized.
 * IMPROVEMENT: Windows Wildcard resolver optimized.
+* IMPROVEMENT: --dump prints identity metadata instead of signer identity (deprecated).
+* IMPROVEMENT: Windows installer automatically removes the older version.
+* IMPROVEMENT: Extending of multiple signatures implemented.
+* FEATURE: It is possible to specify output (-o) as directory when extending.
+* FEATURE: It is possible to specify multiple inputs (-i) when extending.
+* FEATURE: Wildcard support when extending multiple files (works also on Windows).
+* FEATURE: New flag --replace-existing to replace the input file with successfully extended version.
+* BUGFIX: Error message for case where aggregator URL is not configured fixed.
+* BUGFIX: Description of the output file name generation during extending fixed.
 
 Version 2.3
 
@@ -22,7 +31,7 @@ Version 2.2
 * FEATURE: It is possible to specify multiple inputs (-i) when signing.
 * FEATURE: New option -- under sign after what everything is interpreted as regular input file.
 * FEATURE: New options --mask and --prev-leaf to enable and configure input masking.
-* FEATURE: Wildcard support when signing multiple files (works also on windows).
+* FEATURE: Wildcard support when signing multiple files (works also on Windows).
 * BUGFIX: User info embedded in the URI is interpreted as KSI user info only when the known URI scheme has prefix 'ksi+' (e.g. ksi+http).
 
 Version 2.1
@@ -108,7 +117,7 @@ Version 1.8
 * Windows installer build supports INSTALL_MACHINE as x86, x64, 32 or 64.
 * When aggregator url is used for extending or vice versa, helpful error message is printed.
 * Debug messages related to PKI signature are improved (use with -d).
-* ChangeLog added. 
+* ChangeLog added.
 * Bug fix. When defining publications file constraints on command-line (--cnstr) default constraints are ignored.
 * Bug fix. Environment variables with similar prefix to the correct one are ignored.
 
@@ -163,7 +172,7 @@ Version 1.8
 * KSI error trace is logged with parameter --log.
 * Tcp client supported with url scheme tcp://.
 * Url scheme ksi:// is supported.
-* Bug fix. Extended signature is actually verified online when using -vx. 
+* Bug fix. Extended signature is actually verified online when using -vx.
 * Bug fix. Service timing measurement fixed.
 * Bug fix. When downloading publications file (-p -o -P), parameter -X is not required.
 * Bug fix. When extending invalid signature verification result is shown correctly.

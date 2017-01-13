@@ -26,8 +26,11 @@
 #include <ksi/compatibility.h>
 #include "smart_file.h"
 #include "err_trckr.h"
+#include "ksitool_err.h"
+#include "tool_box/param_control.h"
 #include "param_set/param_set.h"
 #include "printer.h"
+#include "api_wrapper.h"
 
 
 
@@ -394,4 +397,207 @@ const char *PATH_URI_getPathRelativeToFile(const char *refFilePath, const char *
 	pOrigPath = isFileUri ? origPath + 7 : origPath;
 	KSI_snprintf(buf, buf_len, "file://%s", PATH_getPathRelativeToFile(refFilePath, pOrigPath, buf_inner, sizeof(buf_inner)));
 	return buf;
+}
+
+int how_is_output_saved_to(PARAM_SET *set, const char *in_flags, const char *out_flags) {
+	int res;
+	int ret = OUTPUT_UNKNOWN;
+	int in_count = 0;
+	int out_count = 0;
+	char *out_file = NULL;
+
+	if (set == NULL) goto cleanup;
+
+	res = PARAM_SET_getValueCount(set, in_flags, NULL, PST_PRIORITY_NONE, &in_count);
+	if (res != PST_OK) goto cleanup;
+
+	res = PARAM_SET_getValueCount(set, out_flags, NULL, PST_PRIORITY_NONE, &out_count);
+	if (res != PST_OK) goto cleanup;
+
+	res = PARAM_SET_getStr(set, out_flags, NULL, PST_PRIORITY_NONE, 0, &out_file);
+	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
+
+	if (PARAM_SET_isSetByName(set, "replace-existing")) return OUTPUT_OVERWRITE_INPUT;
+	if (in_count == 1 && out_count == 1 && strcmp(out_file, "-") == 0) return OUTPUT_TO_STDOUT;
+	else if (out_count != 1 && in_count == out_count) return OUTPUT_SPECIFIED_FILE;
+	else if (out_count == 1 && !SMART_FILE_isFileType(out_file, SMART_FILE_TYPE_DIR) && in_count == out_count) return OUTPUT_SPECIFIED_FILE;
+	else if (out_count == 1 && SMART_FILE_isFileType(out_file, SMART_FILE_TYPE_DIR)) return OUTPUT_TO_DIR;
+	else if (out_count == 0) return OUTPUT_NEXT_TO_INPUT;
+
+	res = KT_OK;
+
+cleanup:
+
+	return ret;
+}
+
+char* get_output_file_name(PARAM_SET *set, ERR_TRCKR *err,
+		const char *in_flags, const char *out_flags, int how_is_saved, int i, char *buf, size_t buf_len,
+		int (*generate_file_name)(PARAM_SET *set, ERR_TRCKR *err, const char *in_flags, const char *out_flags, int i, char *buf, size_t buf_len)) {
+	char *ret = NULL;
+	int res;
+	char *in_file_name = NULL;
+	char generated_name[1024] = "";
+	int in_count = 0;
+
+	if (set == NULL || err == NULL || buf == NULL || buf_len == 0) goto cleanup;
+
+	res = PARAM_SET_getValueCount(set, in_flags, NULL, PST_PRIORITY_NONE, &in_count);
+	if (res != PST_OK) goto cleanup;
+
+	res = PARAM_SET_getStr(set, in_flags, NULL, PST_PRIORITY_NONE, i, &in_file_name);
+	if (res != PST_OK && res != PST_PARAMETER_EMPTY && res != PST_PARAMETER_VALUE_NOT_FOUND) goto cleanup;
+
+	if (res == PST_PARAMETER_EMPTY || res == PST_PARAMETER_VALUE_NOT_FOUND) {
+		ERR_CATCH_MSG(err, res, "Error: Unable to get input file path.");
+	}
+
+
+	/**
+	 * Output file name hast to be generated.
+	 */
+	if (how_is_saved == OUTPUT_NEXT_TO_INPUT || how_is_saved == OUTPUT_TO_DIR) {
+		res = generate_file_name(set, err, in_flags, out_flags, i, generated_name, sizeof(generated_name));
+		ERR_CATCH_MSG(err, res, "Error: Unable to generate new file name.");
+	}
+
+	/**
+	 * Specify the output name.
+	 */
+	if (how_is_saved == OUTPUT_NEXT_TO_INPUT) {
+		KSI_snprintf(buf, buf_len, "%s", generated_name);
+	} else if (how_is_saved == OUTPUT_SPECIFIED_FILE) {
+		char *out_file_name = NULL;
+
+		res = PARAM_SET_getStr(set, out_flags, NULL, PST_PRIORITY_NONE, i, &out_file_name);
+		if (res != PST_OK) goto cleanup;
+
+		KSI_snprintf(buf, buf_len, "%s", out_file_name);
+	} else if (how_is_saved == OUTPUT_TO_DIR) {
+		char tmp[1024];
+		char *file_name = NULL;
+		int path_len = 0;
+		int is_slash = 0;
+		char *out_dir_name = NULL;
+
+
+		res = PARAM_SET_getStr(set, out_flags, NULL, PST_PRIORITY_NONE, 0, &out_dir_name);
+		if (res != PST_OK) goto cleanup;
+
+
+		file_name = STRING_extractAbstract(generated_name, "/", NULL, tmp, sizeof(tmp), find_charAfterLastStrn, NULL, NULL) == tmp ? tmp : generated_name;
+		path_len = (int)strlen(out_dir_name);
+
+		is_slash =(path_len != 0 && out_dir_name[path_len - 1]) == '/' ? 1 : 0;
+
+		KSI_snprintf(buf, buf_len, "%s%s%s",
+				out_dir_name,
+				is_slash ? "" : "/",
+				file_name);
+	} else if (how_is_saved == OUTPUT_TO_STDOUT) {
+		char *out_dir_name = NULL;
+
+		res = PARAM_SET_getStr(set, out_flags, NULL, PST_PRIORITY_NONE, 0, &out_dir_name);
+		if (res != PST_OK) goto cleanup;
+
+		KSI_snprintf(buf, buf_len, "%s", out_dir_name);
+	} else if (how_is_saved == OUTPUT_OVERWRITE_INPUT) {
+		KSI_strncpy(buf, in_file_name, buf_len);
+	}
+
+
+	ret = buf;
+
+cleanup:
+
+	return ret;
+}
+
+int get_smart_file_mode(ERR_TRCKR *err, int how_to_save, const char **mode) {
+	if (mode == NULL) return KT_INVALID_ARGUMENT;
+	if (how_to_save == OUTPUT_TO_STDOUT) *mode = "wbs";
+	else if (how_to_save == OUTPUT_NEXT_TO_INPUT) *mode = "wbi";
+	else if (how_to_save == OUTPUT_TO_DIR) *mode = "wbi";
+	else if (how_to_save == OUTPUT_SPECIFIED_FILE) *mode = "wb";
+	else if (how_to_save == OUTPUT_OVERWRITE_INPUT) *mode = "wbf";
+	else if (how_to_save >= OUTPUT_UNKNOWN) {
+		ERR_TRCKR_ADD(err, KT_UNKNOWN_ERROR, "Error: Unexpected error. Unable to resolve how the output signatures should be stored.");
+		return KT_INVALID_ARGUMENT;
+	}
+
+	return KT_OK;
+}
+
+int check_general_io_errors(PARAM_SET *set, ERR_TRCKR *err, const char *in_flags, const char *out_flags) {
+	int res;
+	int i = 0;
+	char *fname_in = NULL;
+	char *fname_out = NULL;
+	int in_count = 0;
+	int out_count = 0;
+
+	if (set == NULL || err == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		goto cleanup;
+	}
+
+	res = PARAM_SET_getValueCount(set, in_flags, NULL, PST_PRIORITY_NONE, &in_count);
+	if (res != PST_OK) goto cleanup;
+
+	res = PARAM_SET_getValueCount(set, out_flags, NULL, PST_PRIORITY_NONE, &out_count);
+	if (res != PST_OK) goto cleanup;
+
+	res = PARAM_SET_getStr(set, out_flags, NULL, PST_PRIORITY_NONE, 0, &fname_out);
+	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
+
+	/**
+	 * Examine if there is something wrong with the output.
+	 */
+	if (out_count > 1 && in_count > out_count) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: Not enough output parameters specified to store all signatures to corresponding files.");
+		goto cleanup;
+	}
+
+	if (out_count > in_count) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: More output parameters specified than the count of input parameters.");
+		goto cleanup;
+	}
+
+	if (out_count == 1 && in_count > 1) {
+		if (!SMART_FILE_isFileType(fname_out, SMART_FILE_TYPE_DIR)) {
+			ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: Only one output parameter specified, that is not directory, for multiple signatures.");
+			goto cleanup;
+		}
+	}
+
+
+	for (i = 0; out_count > 1 && i < out_count; i++) {
+		res = PARAM_SET_getStr(set, out_flags, NULL, PST_PRIORITY_NONE, i, &fname_out);
+		if (res != PST_OK) goto cleanup;
+
+		if (SMART_FILE_isFileType(fname_out, SMART_FILE_TYPE_DIR)) {
+			ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: There are multiple outputs specified and one output is directory '%s'.", fname_out);
+			goto cleanup;
+		}
+	}
+
+
+	/**
+	 * Check if there is something wrong with the input.
+	 */
+	for (i = 0; i < in_count; i++) {
+		res = PARAM_SET_getStr(set, in_flags, NULL, PST_PRIORITY_NONE, i, &fname_in);
+		if (res != PST_OK) goto cleanup;
+
+		if (SMART_FILE_isFileType(fname_in, SMART_FILE_TYPE_DIR)) {
+			ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: Input can not be directory ('%s').", fname_in);
+			goto cleanup;
+		}
+	}
+
+	res = KT_OK;
+
+cleanup:
+
+	return res;
 }

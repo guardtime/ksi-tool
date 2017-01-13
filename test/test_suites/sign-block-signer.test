@@ -52,7 +52,7 @@ EXECUTABLE sign --conf test/test.cfg -d --max-lvl 1 --mdata-cli-id "My Name" --m
 
 # Verify if metadata exists.
 EXECUTABLE verify --ver-int --conf test/test.cfg -d --dump -i test/out/sign/abcx-mdata.ksig
->>> /(.*:: My Name.*)/
+>>> /(.*'My Name'*)/
 >>>= 0
 
 # Sign 2 files with metadata and masking where maximum tree level is 3 (tree with max 8 leaves). Output to directory.
@@ -68,10 +68,10 @@ EXECUTABLE sign --conf test/test.cfg -d --max-lvl 3 --mdata-cli-id "My Name" --m
 
 # Verify if metadata exists.
 EXECUTABLE verify --ver-int --conf test/test.cfg -d --dump -i test/out/sign/abcd.ksig
->>> /(.*:: My Name.*)/
+>>> /(.*'My Name'*)/
 >>>= 0
 EXECUTABLE verify --ver-int --conf test/test.cfg -d --dump -i test/out/sign/abcx.ksig
->>> /(.*:: My Name.*)/
+>>> /(.*'My Name'*)/
 >>>= 0
 
 # Sign multiple hash imprints with enabled masking, no metadata.

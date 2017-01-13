@@ -894,7 +894,7 @@ int extract_inputHashFromFile(void *extra, const char* str, void** obj) {
 	return extract_input_hash(extra, str, obj, 1, 1);
 }
 
-int extract_inputSignature(void *extra, const char* str, void** obj) {
+static int extract_input_signature(void *extra, const char* str, void** obj, int isStream) {
 	int res;
 	void **extra_array = extra;
 	COMPOSITE *comp = (COMPOSITE*)(extra_array[1]);
@@ -906,12 +906,20 @@ int extract_inputSignature(void *extra, const char* str, void** obj) {
 		goto cleanup;
 	}
 
-	res = KSI_OBJ_loadSignature(err, ctx, str, "rbs", (KSI_Signature**)obj);
+	res = KSI_OBJ_loadSignature(err, ctx, str, isStream ? "rbs" : "rb", (KSI_Signature**)obj);
 	if (res != KT_OK) goto cleanup;
 
 cleanup:
 
 	return res;
+}
+
+int extract_inputSignature(void *extra, const char* str, void** obj) {
+	return extract_input_signature(extra, str, obj, 1);
+}
+
+int extract_inputSignatureFromFile(void *extra, const char* str, void** obj) {
+	return extract_input_signature(extra, str, obj, 1);
 }
 
 

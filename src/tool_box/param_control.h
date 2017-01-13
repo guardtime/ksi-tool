@@ -159,7 +159,7 @@ int convertRepair_mask(const char* arg, char* buf, unsigned len);
 int extract_mask(void *extra, const char* str, void** obj);
 
 int extract_inputSignature(void *extra, const char* str, void** obj);
-
+int extract_inputSignatureFromFile(void *extra, const char* str, void** obj);
 
 int get_pipe_out_error(PARAM_SET *set, ERR_TRCKR *err, const char *check_all_files, const char *out_file_names, const char *print_out_names);
 
