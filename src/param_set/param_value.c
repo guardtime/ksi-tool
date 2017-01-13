@@ -513,3 +513,116 @@ char* PARAM_VAL_toString(const PARAM_VAL *value, char *buf, size_t buf_len) {
 
 	return buf;
 }
+
+void ITERATOR_free(ITERATOR *itr) {
+	if (itr == NULL) return;
+	free(itr);
+}
+
+int ITERATOR_reset(ITERATOR *itr) {
+	if (itr == NULL) return PST_INVALID_ARGUMENT;
+	itr->value = itr->root;
+	itr->i = 0;
+	return PST_OK;
+}
+
+int ITERATOR_set(ITERATOR *itr, PARAM_VAL *new_root, const char* source, int priority, int at) {
+	int res;
+	PARAM_VAL *tmp = NULL;
+
+	if (itr == NULL) return PST_INVALID_ARGUMENT;
+
+	res = ITERATOR_reset(itr);
+	if (res != PST_OK) goto cleanup;
+
+	if (new_root != NULL) {
+		itr->root = new_root;
+	}
+
+	itr->source = source;
+	itr->priority = priority;
+
+	res = PARAM_VAL_getElement(itr->root, itr->source, itr->priority, at, &tmp);
+	if (res != PST_OK && res != PST_PARAMETER_VALUE_NOT_FOUND)  goto cleanup;
+
+	itr->value = tmp;
+	itr->i = at;
+	res = PST_OK;
+
+
+cleanup:
+
+	return PST_OK;
+}
+
+int ITERATOR_new(PARAM_VAL *root, ITERATOR **itr) {
+	ITERATOR *tmp = NULL;
+	int res = PST_UNKNOWN_ERROR;
+
+	if (root == NULL || itr == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	tmp = (ITERATOR*)malloc(sizeof(ITERATOR));
+	if (tmp == NULL) {
+		res = PST_OUT_OF_MEMORY;
+		goto cleanup;
+	}
+	tmp->root = root;
+	tmp->value = tmp->root;
+	tmp->i = 0;
+	tmp->source = NULL;
+	tmp->priority = PST_PRIORITY_NONE;
+
+	*itr = tmp;
+	tmp = NULL;
+	res = PST_OK;
+
+cleanup:
+
+	ITERATOR_free(tmp);
+	return res;
+}
+
+int ITERATOR_canBeUsedToFetch(ITERATOR *itr, const char* source, int priority, int at) {
+	if (itr == NULL) return 0;
+	if ((source == NULL && itr->source != NULL) && (source != NULL && itr->source == NULL)) return 0;
+	if (itr->priority != priority) return 0;
+	if (at < itr->i) return 0;
+	return 1;
+}
+
+int ITERATOR_fetch(ITERATOR *itr, const char* source, int priority, int at, PARAM_VAL **item) {
+	int res = PST_UNKNOWN_ERROR;
+	PARAM_VAL *tmp = NULL;
+	int virtual_at = 0;
+
+	if (itr == NULL || item == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+
+	/* If iterator is not suitable, reset its "pointer". */
+	if (!ITERATOR_canBeUsedToFetch(itr, source, priority, at)) {
+		res = ITERATOR_set(itr, NULL, source, priority, at);
+		if (res != PST_OK) goto cleanup;
+	}
+
+	virtual_at = at - itr->i;
+	res = PARAM_VAL_getElement(itr->value, itr->source, itr->priority, virtual_at, &tmp);
+	if (res != PST_OK)  goto cleanup;
+
+
+	itr->i = at;
+	itr->value = tmp;
+	*item = tmp;
+	tmp = NULL;
+
+
+cleanup:
+
+	return res;
+
+}

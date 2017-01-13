@@ -146,7 +146,7 @@ typedef struct PARAM_st PARAM;
 typedef struct PARAM_SET_st PARAM_SET;
 typedef enum PARAM_CONSTRAINTS_enum PARAM_CONSTRAINTS;
 typedef struct PARAM_ATR_st PARAM_ATR;
-
+typedef struct ITERATOR_st ITERATOR;
 
 typedef struct TASK_st TASK;
 typedef struct TASK_DEFINITION_st TASK_DEFINITION;

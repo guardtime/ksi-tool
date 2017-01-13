@@ -56,7 +56,9 @@ struct PARAM_st{
 	int parsing_options;			/* Some options used when parsing variables. */
 	int argCount;					/* Count of all arguments in chain. */
 
+	PARAM_VAL *last_element;	/* The last value in list. */
 	PARAM_VAL *arg;		/* Linked list of parameter values. */
+	ITERATOR *itr;
 	
 	/**
 	 * A function to extract object from the parameter.
@@ -164,9 +166,17 @@ struct TASK_SET_st {
 	TASK *consistentTask;
 
 	double cons[TASK_DEFINITION_MAX_COUNT];
-	int index[TASK_DEFINITION_MAX_COUNT];
+	size_t index[TASK_DEFINITION_MAX_COUNT];
 
 	int isAnalyzed;
+};
+
+struct ITERATOR_st {
+	PARAM_VAL *root;
+	PARAM_VAL *value;
+	const char *source;
+	int priority;
+	int i;
 };
 
 #ifdef	__cplusplus

@@ -50,7 +50,7 @@ static int param_get_value(PARAM *param, const char *source, int prio, int at,
 	int res;
 	PARAM_VAL *tmp = NULL;
 
-	if (param == NULL || value == NULL || value_getter == NULL) {
+	if (param == NULL || value == NULL) {
 		res = PST_INVALID_ARGUMENT;
 		goto cleanup;
 	}
@@ -60,8 +60,13 @@ static int param_get_value(PARAM *param, const char *source, int prio, int at,
 		goto cleanup;
 	}
 
-	res = value_getter(param->arg, source, prio, at, &tmp);
-	if (res != PST_OK) goto cleanup;
+	if (value_getter == NULL) {
+		res = ITERATOR_fetch(param->itr, source, prio, at, &tmp);
+		if (res != PST_OK) goto cleanup;
+	} else {
+		res = value_getter(param->arg, source, prio, at, &tmp);
+		if (res != PST_OK) goto cleanup;
+	}
 
 	*value = tmp;
 	tmp = NULL;
@@ -124,6 +129,8 @@ int PARAM_new(const char *flagName, const char *flagAlias, int constraints, int 
 	tmp->flagName = NULL;
 	tmp->flagAlias = NULL;
 	tmp->arg = NULL;
+	tmp->last_element = NULL;
+	tmp->itr = NULL;
 	tmp->highestPriority = 0;
 	tmp->constraints = constraints;
 	tmp->parsing_options = pars_opt;
@@ -133,6 +140,7 @@ int PARAM_new(const char *flagName, const char *flagAlias, int constraints, int 
 	tmp->convert = NULL;
 	tmp->extractObject = wrapper_returnStr;
 	tmp->expand_wildcard = NULL;
+	tmp->expand_wildcard_ctx = NULL;
 
 
 	tmpFlagName = new_string(flagName);
@@ -171,6 +179,7 @@ void PARAM_free(PARAM *obj) {
 	if (obj == NULL) return;
 	free(obj->flagName);
 	free(obj->flagAlias);
+	if (obj->itr) ITERATOR_free(obj->itr);
 	if (obj->arg) PARAM_VAL_free(obj->arg);
 	free(obj);
 }
@@ -227,6 +236,7 @@ int PARAM_addValue(PARAM *param, const char *argument, const char* source, int p
 	int res;
 	PARAM_VAL *newValue = NULL;
 	PARAM_VAL *pLastValue = NULL;
+	ITERATOR *tmpItr = NULL;
 	const char *arg = NULL;
 	char buf[1024];
 
@@ -252,9 +262,21 @@ int PARAM_addValue(PARAM *param, const char *argument, const char* source, int p
 
 	if (param->arg == NULL) {
 		param->arg = newValue;
+		/* If iterator is not initialized, do it.*/
+		if (param->itr == NULL) {
+			res = ITERATOR_new(param->arg, &tmpItr);
+			if (res != PST_OK) goto cleanup;
+
+			param->itr = tmpItr;
+			tmpItr = NULL;
+		}
 	} else{
-		res = PARAM_VAL_getElement(param->arg, NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, &pLastValue);
-		if (res != PST_OK) goto cleanup;
+		if (param->last_element == NULL) {
+			res = PARAM_VAL_getElement(param->arg, NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, &pLastValue);
+			if (res != PST_OK) goto cleanup;
+		} else {
+			pLastValue = param->last_element;
+		}
 
 		/* The last element must exists and its next value must be NULL. */
 		if (pLastValue == NULL || pLastValue->next != NULL) {
@@ -264,6 +286,7 @@ int PARAM_addValue(PARAM *param, const char *argument, const char* source, int p
 		newValue->previous = pLastValue;
 		pLastValue->next = newValue;
 	}
+	param->last_element = newValue;
 	param->argCount++;
 
 	if (param->highestPriority < priority)
@@ -275,12 +298,13 @@ int PARAM_addValue(PARAM *param, const char *argument, const char* source, int p
 cleanup:
 
 	PARAM_VAL_free(newValue);
+	ITERATOR_free(tmpItr);
 
 	return res;
 }
 
 int PARAM_getValue(PARAM *param, const char *source, int prio, int at, PARAM_VAL **value) {
-	return param_get_value(param, source, prio, at, PARAM_VAL_getElement, value);
+	return param_get_value(param, source, prio, at, NULL, value);
 }
 
 int PARAM_clearAll(PARAM *param) {
@@ -299,10 +323,32 @@ int PARAM_clearAll(PARAM *param) {
 	PARAM_VAL_free(param->arg);
 	param->arg = NULL;
 	param->argCount = 0;
+	param->last_element = NULL;
 	res = PST_OK;
 
 cleanup:
 	return res;
+}
+
+static int param_reser_iterator_if_needed_after_pop(PARAM *param, int popIndex) {
+	ITERATOR *itr = NULL;
+
+	if (param == NULL) return PST_INVALID_ARGUMENT;
+	if (param->itr == NULL) return PST_OK;
+
+	itr = param->itr;
+	if (itr == NULL) return PST_UNDEFINED_BEHAVIOUR;
+
+	/**
+	 * 1) Reset if the root value is changed.
+	 * 2) Reset if the value popped is currently pointed by the iterator or is
+	 *    already passed.
+	 */
+	if (itr->root != param->arg || itr->i <= popIndex) {
+		return ITERATOR_set(itr, param->arg, itr->source, itr->priority, 0);
+	}
+
+	return PST_OK;
 }
 
 int PARAM_clearValue(PARAM *param, const char *source, int priority, int at) {
@@ -321,6 +367,11 @@ int PARAM_clearValue(PARAM *param, const char *source, int priority, int at) {
 
 	res = PARAM_VAL_popElement(&(param->arg), source, priority, at, &pop);
 	if (res != PST_OK) goto cleanup;
+
+	res = param_reser_iterator_if_needed_after_pop(param, at);
+	if (res != PST_OK) goto cleanup;
+
+	if (param->last_element == pop) param->last_element = pop->previous;
 
 	param->argCount--;
 	PARAM_VAL_free(pop);
@@ -505,7 +556,9 @@ int PARAM_expandWildcard(PARAM *param, int *count) {
 		if (res != PST_OK) goto cleanup;
 
 		for (i = 0; i < initial_count; i++) {
-			res = PARAM_getValue(param, NULL, PST_PRIORITY_NONE, i + parameter_shif_correction, &value);
+			int absIndex = i + parameter_shif_correction;
+
+			res = PARAM_getValue(param, NULL, PST_PRIORITY_NONE, absIndex, &value);
 			if (res != PST_OK) goto cleanup;
 
 			/* Check if there are wildcard characters. If not goto next value. */
@@ -518,12 +571,18 @@ int PARAM_expandWildcard(PARAM *param, int *count) {
 			res = PARAM_VAL_popElement(&value, NULL, PST_PRIORITY_NONE, 0, &pop);
 			if (res != PST_OK) goto cleanup;
 
+
 			param->argCount += expanded_count - 1;
 			param->arg = value;
+
+			res = param_reser_iterator_if_needed_after_pop(param, absIndex);
+			if (res != PST_OK) goto cleanup;
 
 			PARAM_VAL_free(pop);
 			parameter_shif_correction += -1 + expanded_count;
 			counter += expanded_count;
+			pop = NULL;
+
 		}
 
 	}
@@ -532,6 +591,8 @@ int PARAM_expandWildcard(PARAM *param, int *count) {
 	res = PST_OK;
 
 cleanup:
+
+	PARAM_VAL_free(pop);
 
 	return res;
 }
