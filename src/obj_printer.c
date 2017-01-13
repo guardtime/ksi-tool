@@ -24,37 +24,6 @@
 #include "obj_printer.h"
 #include "api_wrapper.h"
 
-typedef struct {
-	KSI_VerificationErrorCode errorCode;
-	const char *code;
-} verificationErrorDetail_st;
-
-static const verificationErrorDetail_st verification_error[] = {
-	{ KSI_VER_ERR_GEN_1,	"GEN-1"},
-	{ KSI_VER_ERR_GEN_2,	"GEN-2"},
-	{ KSI_VER_ERR_INT_1,	"INT-1"},
-	{ KSI_VER_ERR_INT_2,	"INT-2"},
-	{ KSI_VER_ERR_INT_3,	"INT-3"},
-	{ KSI_VER_ERR_INT_4,	"INT-4"},
-	{ KSI_VER_ERR_INT_5,	"INT-5"},
-	{ KSI_VER_ERR_INT_6,	"INT-6"},
-	{ KSI_VER_ERR_INT_7,	"INT-7"},
-	{ KSI_VER_ERR_INT_8,	"INT-8"},
-	{ KSI_VER_ERR_INT_9,	"INT-9"},
-	{ KSI_VER_ERR_INT_10,	"INT-10"},
-	{ KSI_VER_ERR_INT_11,	"INT-11"},
-	{ KSI_VER_ERR_PUB_1,	"PUB-1"},
-	{ KSI_VER_ERR_PUB_2,	"PUB-2"},
-	{ KSI_VER_ERR_PUB_3,	"PUB-3"},
-	{ KSI_VER_ERR_KEY_1,	"KEY-1"},
-	{ KSI_VER_ERR_KEY_2,	"KEY-2"},
-	{ KSI_VER_ERR_CAL_1,	"CAL-1"},
-	{ KSI_VER_ERR_CAL_2,	"CAL-2"},
-	{ KSI_VER_ERR_CAL_3,	"CAL-3"},
-	{ KSI_VER_ERR_CAL_4,	"CAL-4"},
-	{ KSI_VER_ERR_NONE,		""}
-};
-
 void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile, int (*print)(const char *format, ... )){
 	int res = KSI_UNKNOWN_ERROR;
 	KSI_LIST(KSI_PublicationRecord)* list_publicationRecord = NULL;
@@ -384,20 +353,8 @@ static const char *getVerificationResultCode(KSI_VerificationResultCode code) {
 	}
 }
 
-static const verificationErrorDetail_st *getVerificationErrorDetails(KSI_VerificationErrorCode code) {
-	size_t i;
-	size_t size = sizeof(verification_error) / sizeof(verificationErrorDetail_st);
-
-	for (i = 0; i < size; i++) {
-		if (verification_error[i].errorCode == code) return &verification_error[i];
-	}
-	return NULL;
-}
-
 const char *OBJPRINT_getVerificationErrorCode(KSI_VerificationErrorCode code) {
-	const verificationErrorDetail_st *details = getVerificationErrorDetails(code);
-
-	return (details != NULL ? details->code : "Unknown");
+	return KSI_VerificationErrorCode_toString(code);
 }
 
 const char *OBJPRINT_getVerificationErrorDescription(KSI_VerificationErrorCode code) {
