@@ -1,3 +1,5 @@
+* IMPROVEMENT: Command-line parameter parser updated and optimized.
+* IMPROVEMENT: Windows Wildcard resolver optimized.
 * IMPROVEMENT: --dump prints identity metadata instead of signer identity (deprecated).
 * IMPROVEMENT: Windows installer automatically removes the older version.
 * IMPROVEMENT: Extending of multiple signatures implemented.

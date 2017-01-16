@@ -1432,6 +1432,7 @@ int Win32FileWildcard(PARAM_VAL *param_value, void *ctx, int *value_shift) {
 	const char *source;
 	int prio = 0;
 	PARAM_VAL *tmp = NULL;
+	PARAM_VAL *insertTo = param_value;
 	int count = 0;
 	char buf[1024] = "";
 	char path[1024] = "";
@@ -1446,7 +1447,7 @@ int Win32FileWildcard(PARAM_VAL *param_value, void *ctx, int *value_shift) {
 
 	/**
 	 * Search for a files and directories matching the wildcard.
-	 * Ignore "." and "..". If the current value is t and a, b and c are expaned
+	 * Ignore "." and "..". If the current value is t and a, b and c are expanded
 	 * value, the resulting array is [... t, a, b, c ...].
 	 */
 
@@ -1474,9 +1475,10 @@ int Win32FileWildcard(PARAM_VAL *param_value, void *ctx, int *value_shift) {
 		res = PARAM_VAL_new(buf, source, prio, &tmp);
 		if (res != PST_OK) goto cleanup;
 
-		res = PARAM_VAL_insert(param_value, NULL, PST_PRIORITY_NONE, count, tmp);
+		res = PARAM_VAL_insert(insertTo, NULL, PST_PRIORITY_NONE, 0, tmp);
 		if (res != PST_OK) goto cleanup;
 
+		insertTo = tmp;
 		tmp = NULL;
 		count++;
 	} while (FindNextFile(hfile, &found) != 0);
