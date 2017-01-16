@@ -21,7 +21,7 @@
 # EXECUTABLE --version > test\out\dummy.txt is used to overcome the first string
 # "EXECUTABLE" replacment with KSI and continue testing with gttlvutil.
 #
-# Note: givven test suite relies on prior execution of sign-metadata.test
+# Note: given test suite relies on prior execution of sign-metadata.test
 ##
 
 ##
