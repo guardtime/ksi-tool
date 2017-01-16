@@ -44,6 +44,12 @@
 #include "param_set/strn.h"
 #include "common.h"
 
+#ifdef _WIN32
+#	include <windows.h>
+#else
+#	include <sys/time.h>
+#endif
+
 typedef struct SIGNING_AGGR_ROUND_st {
 	/* Aggregation round block-signer. */
 	KSI_BlockSigner *block_signer;
@@ -1097,6 +1103,23 @@ cleanup:
 	return res;
 }
 
+
+KSI_uint64_t getTimeInMicros(void) {
+	KSI_uint64_t t = 0;
+#ifdef _WIN32
+	SYSTEMTIME t2;
+	KSI_uint64_t time_ms;
+	GetSystemTime(&t2);
+	time_ms = (KSI_uint64_t)time(NULL) * 1000 + t2.wMilliseconds;
+	t = time_ms * (KSI_uint64_t)1000;
+#else
+	struct timeval tv;
+	gettimeofday(&tv,NULL);
+	t = (KSI_uint64_t)tv.tv_sec * 1000000 + (KSI_uint64_t)tv.tv_usec;
+#endif
+	return t;
+}
+
 static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, size_t seq_offset, KSI_MetaData **mdata) {
 	int res;
 	char *cli_id = NULL;
@@ -1168,10 +1191,9 @@ static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, siz
 		 * Check if aggregation time is embedded into metadata record.
 		 */
 		if (PARAM_SET_isSetByName(set, "mdata-req-tm")) {
-			res = KSI_Integer_new(ksi, time(NULL) * 1000000, &aggr_time);
+			res = KSI_Integer_new(ksi, getTimeInMicros(), &aggr_time);
 			if (res != KSI_OK) goto cleanup;
 		}
-
 		/**
 		 * Create metadata record from input data.
 		 */
