@@ -587,7 +587,8 @@ cleanup:
 
 int ITERATOR_canBeUsedToFetch(ITERATOR *itr, const char* source, int priority, int at) {
 	if (itr == NULL) return 0;
-	if ((source == NULL && itr->source != NULL) && (source != NULL && itr->source == NULL)) return 0;
+	if ((source == NULL && itr->source != NULL) || (source != NULL && itr->source == NULL)) return 0;
+	if (source != NULL && strcmp(source, itr->source) != 0) return 0;
 	if (itr->priority != priority) return 0;
 	if (at < itr->i) return 0;
 	return 1;
