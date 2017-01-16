@@ -337,7 +337,6 @@ static int param_reser_iterator_if_needed_after_pop(PARAM *param, int popIndex) 
 	if (param->itr == NULL) return PST_OK;
 
 	itr = param->itr;
-	if (itr == NULL) return PST_UNDEFINED_BEHAVIOUR;
 
 	/**
 	 * 1) Reset if the root value is changed.
