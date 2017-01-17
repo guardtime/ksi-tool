@@ -697,7 +697,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 	int d = 0;
 	int prgrs = 0;
 	int in_count = 0;
-	int divider = 0;
+	size_t divider = 1;
 	char *signed_data_out = NULL;
 	KSI_HashAlgorithm algo = KSI_UNAVAILABLE_HASH_ALGORITHM;
 	COMPOSITE extra;
@@ -729,9 +729,6 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 	res = PARAM_SET_getValueCount(set, "i,input", NULL, PST_PRIORITY_NONE, &in_count);
 	if (res != PST_OK) goto cleanup;
 
-	if (in_count >= 10000) divider = in_count / 100;
-	else if (in_count >= 1000) divider = 10;
-	else divider = 1;
 
 	res = PARAM_SET_getStr(set, "data-out", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &signed_data_out);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
@@ -864,6 +861,9 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 
 			if (prgrs && (i % divider == 0 || i + 1 >= in_count || tree_input + 1 == to_be_signed_in_round)) {
 				PROGRESS_BAR_display((int)((tree_input + 1) * 100 / to_be_signed_in_round));
+
+				if (in_count > 64) divider = to_be_signed_in_round / 64;
+				else divider = 1;
 			}
 
 		}
