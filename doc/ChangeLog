@@ -3,6 +3,7 @@
 * IMPROVEMENT: --dump prints identity metadata instead of signer identity (deprecated).
 * IMPROVEMENT: Windows installer automatically removes the older version.
 * IMPROVEMENT: Extending of multiple signatures implemented.
+* IMPROVEMENT: Deprecated libksi functions removed.
 * FEATURE: It is possible to specify output (-o) as directory when extending.
 * FEATURE: It is possible to specify multiple inputs (-i) when extending.
 * FEATURE: Wildcard support when extending multiple files (works also on Windows).

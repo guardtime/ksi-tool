@@ -415,7 +415,7 @@ int KSITOOL_BlockSigner_closeAndSign(ERR_TRCKR *err, KSI_CTX *ctx, KSI_BlockSign
 		return res;
 	}
 
-	res = KSI_BlockSigner_close(signer, NULL);
+	res = KSI_BlockSigner_closeAndSign(signer);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
