@@ -69,7 +69,7 @@ Replace input KSI signature file with successfully extended version. During the 
 .\"
 .TP
 \fB-T \fItime\fR
-Specify the publication time to extend to as the number of seconds since 1970-01-01 00:00:00 UTC or time formatted as "YYYY-MM-DD hh:mm:ss".
+Specify the publication time to extend to as the number of seconds since 1970-01-01 00:00:00 UTC or time formatted as "YYYY-MM-DD hh:mm:ss". Note that if the time is chosen to be equal to an existing publication record's time, the publication record is not added to the signature; use \fB--pub-str\fR for publication records.
 .\"
 .TP
 \fB-V \fIfile\fR
@@ -146,5 +146,5 @@ Use the environment variable \fBKSI_CONF\fR to define the default configuration 
 Guardtime AS, http://www.guardtime.com/
 .LP
 .\"
-.SH SEE ALSO	
-\fBksi\fR(1), \fBksi-sign\fR(1), \fBksi-verify\fR(1), \fBksi-pubfile\fR(1), \fBksi-conf\fR(5) 
+.SH SEE ALSO
+\fBksi\fR(1), \fBksi-sign\fR(1), \fBksi-verify\fR(1), \fBksi-pubfile\fR(1), \fBksi-conf\fR(5)
