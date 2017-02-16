@@ -106,7 +106,7 @@ EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.k
 >>>= 0
 
 # Verify against local publications file.
-EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -d --dump -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -d --dump -P file://test/resource/publication/ksi-publications.bin --cnstr email=test@test.com -V test/resource/certificates/ok-test.crt
 >>>  /(PublicationsFileContainsSignaturePublication)
 (.*)(Final result)/
 >>>2 /(Signature publication-based verification with publications file)(.*ok.*)/
@@ -225,7 +225,7 @@ EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-2014-08-01.1.ksig 
 # ------ Publication based verification, use publications file. ------
 
 # Extending is not permitted.
-EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ksig -d --dump -P file://test/resource/publication/ksi-publications.bin --cnstr email=publications@guardtime.com
+EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ksig -d --dump -P file://test/resource/publication/ksi-publications.bin --cnstr email=test@test.com -V test/resource/certificates/ok-test.crt
 >>>  /Final result.*
 .*GEN-2.*ExtendingPermittedVerification/
 >>>2 /Signature publication-based verification with publications file.*failed.*/
