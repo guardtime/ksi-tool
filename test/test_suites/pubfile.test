@@ -54,7 +54,7 @@ EXECUTABLE pubfile --conf test/test.cfg -d -v --dump
 >>>= 0
 
 # Verify publications file with specified constraints (use short names).
-EXECUTABLE pubfile --conf test/test.cfg -d -v --dump --cnstr E=publications@guardtime.com --cnstr CN="Persona Not Validated - 1454602964718"
+EXECUTABLE pubfile --conf test/test.cfg -d -v --dump --cnstr E=publications@guardtime.com
 >>> /(KSI Publications file dump)(.*)
 (.*)(Publication Records)(.*)/
 >>>2 /(Receiving publications file)(.*ok.*)
@@ -64,7 +64,7 @@ EXECUTABLE pubfile --conf test/test.cfg -d -v --dump --cnstr E=publications@guar
 >>>= 0
 
 # Verify publications file with specified constraints (use long names).
-EXECUTABLE pubfile --conf test/test.cfg -d -v --dump --cnstr email=publications@guardtime.com --cnstr "common_name=Persona Not Validated - 1454602964718"
+EXECUTABLE pubfile --conf test/test.cfg -d -v --dump --cnstr email=publications@guardtime.com
 >>> /(KSI Publications file dump)(.*)
 (.*)(Publication Records)(.*)/
 >>>2 /(Receiving publications file)(.*ok.*)
@@ -74,7 +74,7 @@ EXECUTABLE pubfile --conf test/test.cfg -d -v --dump --cnstr email=publications@
 >>>= 0
 
 # Verify publications file with specified constraints (use OID).
-EXECUTABLE pubfile --conf test/test.cfg -d -v --dump --cnstr 1.2.840.113549.1.9.1=publications@guardtime.com --cnstr "2.5.4.3=Persona Not Validated - 1454602964718"
+EXECUTABLE pubfile --conf test/test.cfg -d -v --dump --cnstr 1.2.840.113549.1.9.1=publications@guardtime.com
 >>> /(KSI Publications file dump)(.*)
 (.*)(Publication Records)(.*)/
 >>>2 /(Receiving publications file)(.*ok.*)
