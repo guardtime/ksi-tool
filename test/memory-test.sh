@@ -108,7 +108,7 @@ $mem_test_dir/invalid-conf.test \
 $mem_test_dir/file-name-gen.test \
 $mem_test_dir/sign-block-signer.test \
 $mem_test_dir/sign-block-signer-cmd.test \
---with="valgrind --leak-check=full $tool" -- -j1
+--with="valgrind --leak-check=full --fair-sched=yes $tool" -- -j1
 exit_code=$?
 
 exit $exit_code
