@@ -21,13 +21,38 @@
 #define	TOOL_BOX_H
 
 #include "param_set/param_set.h"
+#include "err_trckr.h"
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
+/**
+ * Enumeration for tools output type. See functions how_is_output_saved_to and
+ * get_output_file_name.
+ */
+enum OUTPUT_TYPE {
+	/* Every input has explicitly specified output file. Existing files are overwritten.*/
+	OUTPUT_SPECIFIED_FILE = 0x01,
+	
+	/* Output is redirected to stdout. */
+	OUTPUT_TO_STDOUT,
+	
+	/* Output is redirected into specified directory with generated names. Existing files are not overwritten. */
+	OUTPUT_TO_DIR,
+	
+	/* Output is saved next to input file with generated name. Existing files are not overwritten. */
+	OUTPUT_NEXT_TO_INPUT,
+	
+	/* Output overwrites the input file. */
+	OUTPUT_OVERWRITE_INPUT,
+
+	/* Something went wrong. */
+	OUTPUT_UNKNOWN
+};
 	
 const char *OID_getShortDescriptionString(const char *OID);
+
 const char *OID_getFromString(const char *str);
 
 const char *getPublicationsFileRetrieveDescriptionString(PARAM_SET *set);
@@ -164,6 +189,58 @@ const char* find_charAfterLastStrn(const char* str, const char* findIt);
 const char *PATH_getPathRelativeToFile(const char *refFilePath, const char *origPath, char *buf, size_t buf_len);
 
 const char *PATH_URI_getPathRelativeToFile(const char *refFilePath, const char *origPath, char *buf, size_t buf_len);
+
+/**
+ * Determines how is the output saved to. Result is evaluated from input and
+ * output count. Output files with name - may be interpreted as stdout.
+ * \param set			Parameter set.
+ * \param in_flags		Input flags e.g. (i,input1,input2).
+ * \param out_flags		Output flags e.g. (o).
+ * \return KT_OK if successful, error code otherwise.
+ */
+int how_is_output_saved_to(PARAM_SET *set, const char *in_flags, const char *out_flags);
+
+/**
+ * Generates output file name. Use how_is_output_saved_to determine the output
+ * type.
+ * \param set					Parameter set.
+ * \param err					Error tracker.
+ * \param in_flags				Input flags e.g. (i,input1,input2).
+ * \param out_flags				Output flags e.g. (o). Only a single value makes sense.
+ * \param how_is_saved			Use how_is_output_saved_to to determine the output type.
+ * \param i						The index of the file names requested.
+ * \param buf					The buffer to be filled with the file name.
+ * \param buf_len				The size of the buffer.
+ * \param generate_file_name	A function used to generate the file name.
+ * \return buf if successful, NULL otherwise.
+ */
+char* get_output_file_name(PARAM_SET *set, ERR_TRCKR *err,
+		const char *in_flags, const char *out_flags, int how_is_saved, int i, char *buf, size_t buf_len,
+		int (*generate_file_name)(PARAM_SET *set, ERR_TRCKR *err, const char *in_flags, const char *out_flags, int i, char *buf, size_t buf_len));
+
+/**
+ * Get SMART_FILE mode from the output save strategy. See how_is_output_saved_to
+ * and get_output_file_name.
+ */
+int get_smart_file_mode(ERR_TRCKR *err, int how_to_save, const char **mode);
+
+/**
+ * Check general IO related errors, input_flags specifies the count of input and
+ * output_flag specifies the count of output. oc and ic are output and input
+ * count respectively:
+ *   1) oc > 1 && ic > oc - Too much input.
+ *   2) ox > ic - Too much output.
+ *   3) oc == 1 && ic > 1 && o != dir - Single output that is not dir for multiple inputs.
+ *   4) oc > 1 and one of o is directory.
+ *   5) i can not be directory.
+ * \param set			Parameter set.
+ * \param err			Error tracker.
+ * \param in_flags		Input flags e.g. (i,input1,input2).
+ * \param out_flags		Output flags e.g. (o). Only a single value makes sense.
+ * \return KT_OK if successful, error code otherwise.
+ */
+int check_general_io_errors(PARAM_SET *set, ERR_TRCKR *err, const char *input_flags, const char *output_flag);
+
 #ifdef	__cplusplus
 }
 #endif

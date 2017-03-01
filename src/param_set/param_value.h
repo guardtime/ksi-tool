@@ -138,6 +138,30 @@ int PARAM_VAL_getErrors(PARAM_VAL *rootValue, int *format, int* content);
 int PARAM_VAL_getInvalid(PARAM_VAL *rootValue, const char* source, int priority, int at, PARAM_VAL** val);
 
 char* PARAM_VAL_toString(const PARAM_VAL *value, char *buf, size_t buf_len);
+
+/**
+ * Create an iterator for a parameter value.
+ * \param root		- Root value.
+ * \param itr		- Pointer to receiving pointer to Iterator object.
+ * \return PST_OK if successful, error code otherwise.
+ */
+int ITERATOR_new(PARAM_VAL *root, ITERATOR **itr);
+
+void ITERATOR_free(ITERATOR *itr);
+
+/**
+ * Resets iterator to specified state.
+ * \param itr		- Iterator object that is changed.
+ * \param root		- Set new root value (e.g. the old one is not used) or NULL to let the base value remain the same.
+ * \param source	- The source constraint.
+ * \param priority	- The priority constraint.
+ * \param at		- Index constraint.
+ * \return PST_OK if successful error code otherwise.
+ */
+int ITERATOR_set(ITERATOR *itr, PARAM_VAL *new_root, const char* source, int priority, int at);
+
+int ITERATOR_fetch(ITERATOR *itr, const char* source, int priority, int at, PARAM_VAL **item);
+
 #ifdef	__cplusplus
 }
 #endif

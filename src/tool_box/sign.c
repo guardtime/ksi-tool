@@ -39,9 +39,16 @@
 #include "conf_file.h"
 #include "tool.h"
 #include "param_set/parameter.h"
-#include "../tool_box.h"
+#include "tool_box.h"
 #include "param_set/param_set_obj_impl.h"
 #include "param_set/strn.h"
+#include "common.h"
+
+#ifdef _WIN32
+#	include <windows.h>
+#else
+#	include <sys/time.h>
+#endif
 
 typedef struct SIGNING_AGGR_ROUND_st {
 	/* Aggregation round block-signer. */
@@ -62,11 +69,9 @@ typedef struct SIGNING_AGGR_ROUND_st {
 } SIGNING_AGGR_ROUND;
 
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
-static char* get_output_file_name(PARAM_SET *set, ERR_TRCKR *err, int how_is_saved, int i, char *buf, size_t buf_len);
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int check_hash_algo_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int check_io_naming_and_type_errors(PARAM_SET *set, ERR_TRCKR *err);
-static int how_is_output_saved_to(PARAM_SET *set);
 static void SIGNING_AGGR_ROUND_free(SIGNING_AGGR_ROUND *obj);
 static void SIGNING_AGGR_ROUND_ARRAY_free(SIGNING_AGGR_ROUND **array);
 static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size_t *inputs);
@@ -400,51 +405,9 @@ cleanup:
 	return res;
 }
 
-enum OUTPUT_TYPE {
-	OUTPUT_SPECIFIED_FILE = 0x01,
-	OUTPUT_TO_STDOUT,
-	OUTPUT_TO_DIR,
-	OUTPUT_NEXT_TO_INPUT,
-	OUTPUT_UNKNOWN
-};
-
-static int how_is_output_saved_to(PARAM_SET *set) {
-	int res;
-	int ret = OUTPUT_UNKNOWN;
-	int in_count = 0;
-	int out_count = 0;
-	char *out_file = NULL;
-
-	if (set == NULL) goto cleanup;
-
-	res = PARAM_SET_getValueCount(set, "i,input", NULL, PST_PRIORITY_NONE, &in_count);
-	if (res != PST_OK) goto cleanup;
-
-	res = PARAM_SET_getValueCount(set, "o", NULL, PST_PRIORITY_NONE, &out_count);
-	if (res != PST_OK) goto cleanup;
-
-	res = PARAM_SET_getStr(set, "o", NULL, PST_PRIORITY_NONE, 0, &out_file);
-	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
-
-	if (in_count == 1 && out_count == 1 && strcmp(out_file, "-") == 0) return OUTPUT_TO_STDOUT;
-	else if (out_count != 1 && in_count == out_count) return OUTPUT_SPECIFIED_FILE;
-	else if (out_count == 1 && !SMART_FILE_isFileType(out_file, SMART_FILE_TYPE_DIR) && in_count == out_count) return OUTPUT_SPECIFIED_FILE;
-	else if (out_count == 1 && SMART_FILE_isFileType(out_file, SMART_FILE_TYPE_DIR)) return OUTPUT_TO_DIR;
-	else if (out_count == 0) return OUTPUT_NEXT_TO_INPUT;
-
-cleanup:
-
-	return ret;
-}
-
 static int check_io_naming_and_type_errors(PARAM_SET *set, ERR_TRCKR *err) {
 	int res;
 	int in_count = 0;
-	int in_count_i = 0;
-	int out_count = 0;
-	int i = 0;
-	char *fname_in = NULL;
-	char *fname_out = NULL;
 	char *data_out = NULL;
 
 
@@ -456,18 +419,11 @@ static int check_io_naming_and_type_errors(PARAM_SET *set, ERR_TRCKR *err) {
 	/**
 	 * Get the count of inputs and outputs for error handling.
 	 */
-
 	res = PARAM_SET_getValueCount(set, "i,input", NULL, PST_PRIORITY_NONE, &in_count);
 	if (res != PST_OK) goto cleanup;
 
-	res = PARAM_SET_getValueCount(set, "i", NULL, PST_PRIORITY_NONE, &in_count_i);
+	res = check_general_io_errors(set, err, "i,input", "o");
 	if (res != PST_OK) goto cleanup;
-
-	res = PARAM_SET_getValueCount(set, "o", NULL, PST_PRIORITY_NONE, &out_count);
-	if (res != PST_OK) goto cleanup;
-
-	res = PARAM_SET_getStr(set, "o", NULL, PST_PRIORITY_NONE, 0, &fname_out);
-	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 
 	res = PARAM_SET_getStr(set, "data-out", NULL, PST_PRIORITY_NONE, 0, &data_out);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
@@ -480,51 +436,6 @@ static int check_io_naming_and_type_errors(PARAM_SET *set, ERR_TRCKR *err) {
 				is_data_out_stream ? "" : "'"
 				);
 		goto cleanup;
-	}
-
-	/**
-	 * Examine if there is something wrong with the output.
-	 */
-
-	if (out_count > 1 && in_count > out_count) {
-		ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: Not enough output parameters specified to store all signatures to corresponding file.");
-		goto cleanup;
-	}
-
-	if (out_count > in_count) {
-		ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: More output parameters specified than the count of input parameters.");
-		goto cleanup;
-	}
-
-	if (out_count == 1 && in_count > 1) {
-		if (!SMART_FILE_isFileType(fname_out, SMART_FILE_TYPE_DIR)) {
-			ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: Only one output parameter specified, that is not directory, for multiple signatures.");
-			goto cleanup;
-		}
-	}
-
-	for (i = 0; out_count > 1 && i < out_count; i++) {
-		res = PARAM_SET_getStr(set, "o", NULL, PST_PRIORITY_NONE, i, &fname_out);
-		if (res != PST_OK) goto cleanup;
-
-		if (SMART_FILE_isFileType(fname_out, SMART_FILE_TYPE_DIR)) {
-			ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: There are multiple outputs specified and one output is directory '%s'.", fname_out);
-			goto cleanup;
-		}
-	}
-
-	/**
-	 * Check if there is something wrong with the input.
-	 */
-
-	for (i = 0; i < in_count; i++) {
-		res = PARAM_SET_getStr(set, "i,input", NULL, PST_PRIORITY_NONE, i, &fname_in);
-		if (res != PST_OK) goto cleanup;
-
-		if (SMART_FILE_isFileType(fname_in, SMART_FILE_TYPE_DIR)) {
-			ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: Input can not be directory ('%s').", fname_in);
-			goto cleanup;
-		}
 	}
 
 	res = KT_OK;
@@ -786,7 +697,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 	int d = 0;
 	int prgrs = 0;
 	int in_count = 0;
-	int divider = 0;
+	size_t divider = 1;
 	char *signed_data_out = NULL;
 	KSI_HashAlgorithm algo = KSI_UNAVAILABLE_HASH_ALGORITHM;
 	COMPOSITE extra;
@@ -818,9 +729,6 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 	res = PARAM_SET_getValueCount(set, "i,input", NULL, PST_PRIORITY_NONE, &in_count);
 	if (res != PST_OK) goto cleanup;
 
-	if (in_count >= 10000) divider = in_count / 100;
-	else if (in_count >= 1000) divider = 10;
-	else divider = 1;
 
 	res = PARAM_SET_getStr(set, "data-out", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &signed_data_out);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
@@ -953,6 +861,9 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 
 			if (prgrs && (i % divider == 0 || i + 1 >= in_count || tree_input + 1 == to_be_signed_in_round)) {
 				PROGRESS_BAR_display((int)((tree_input + 1) * 100 / to_be_signed_in_round));
+
+				if (in_count > 64) divider = to_be_signed_in_round / 64;
+				else divider = 1;
 			}
 
 		}
@@ -998,99 +909,45 @@ cleanup:
 	return res;
 }
 
-static char* get_output_file_name(PARAM_SET *set, ERR_TRCKR *err, int how_is_saved, int i, char *buf, size_t buf_len) {
-	char *ret = NULL;
-	int res;
+static int generate_file_name(PARAM_SET *set, ERR_TRCKR *err, const char *in_flags, const char *out_flags, int i, char *buf, size_t buf_len) {
+	int res = KT_UNKNOWN_ERROR;
 	char *in_file_name = NULL;
-	char hash_algo[1024];
-	char generated_name[1024] = "";
-	char *colon = NULL;
 	int in_count = 0;
+	VARIABLE_IS_NOT_USED(out_flags);
+	VARIABLE_IS_NOT_USED(err);
 
-	if (set == NULL || err == NULL || buf == NULL || buf_len == 0) goto cleanup;
-
-	res = PARAM_SET_getValueCount(set, "i,input", NULL, PST_PRIORITY_NONE, &in_count);
+	res = PARAM_SET_getValueCount(set, in_flags, NULL, PST_PRIORITY_NONE, &in_count);
 	if (res != PST_OK) goto cleanup;
 
-	res = PARAM_SET_getStr(set, "i,input", NULL, PST_PRIORITY_NONE, i, &in_file_name);
-	if (res != PST_OK && res != PST_PARAMETER_EMPTY && res != PST_PARAMETER_VALUE_NOT_FOUND) goto cleanup;
+	res = PARAM_SET_getStr(set, in_flags, NULL, PST_PRIORITY_NONE, i, &in_file_name);
+	if (res != PST_OK) goto cleanup;
 
-	if (res == PST_PARAMETER_EMPTY || res == PST_PARAMETER_VALUE_NOT_FOUND) {
-		ERR_TRCKR_ADD(err, res, "Error: Unable to get path to output file name.");
-		goto cleanup;
-	}
+	if (strcmp(in_file_name, "-") == 0 && in_count == 1) {
+		KSI_snprintf(buf, buf_len, "stdin.ksig");
+	} else if (is_imprint(in_file_name)) {
+		char hash_algo[1024];
+		char *colon = NULL;
 
-	/**
-	 * Output file name hast to be generated.
-	 */
-	if (how_is_saved == OUTPUT_NEXT_TO_INPUT || how_is_saved == OUTPUT_TO_DIR) {
-		if (strcmp(in_file_name, "-") == 0 && in_count == 1) {
-			KSI_snprintf(generated_name, sizeof(generated_name), "stdin.ksig");
-		} else if (is_imprint(in_file_name)) {
-			/* Search for the algorithm name. */
-			KSI_strncpy(hash_algo, in_file_name, sizeof(hash_algo));
-			colon = strchr(hash_algo, ':');
+		/* Search for the algorithm name. */
+		KSI_strncpy(hash_algo, in_file_name, sizeof(hash_algo));
+		colon = strchr(hash_algo, ':');
 
-			/* Create the file name from hash algorithm. */
-			if (colon != NULL) {
-				*colon = '\0';
-				KSI_snprintf(generated_name, sizeof(generated_name), "%s.ksig", hash_algo);
-			} else {
-				KSI_snprintf(generated_name, sizeof(generated_name), "hash_imprint.ksig");
-			}
+		/* Create the file name from hash algorithm. */
+		if (colon != NULL) {
+			*colon = '\0';
+			KSI_snprintf(buf, buf_len, "%s.ksig", hash_algo);
 		} else {
-			KSI_snprintf(generated_name, sizeof(generated_name), "%s.ksig", in_file_name);
+			KSI_snprintf(buf, buf_len, "hash_imprint.ksig");
 		}
+	} else {
+		KSI_snprintf(buf, buf_len, "%s.ksig", in_file_name);
 	}
 
-	/**
-	 * Specify the output name.
-	 */
-	if (how_is_saved == OUTPUT_NEXT_TO_INPUT) {
-		KSI_snprintf(buf, buf_len, "%s", generated_name);
-	} else if (how_is_saved == OUTPUT_SPECIFIED_FILE) {
-		char *out_file_name = NULL;
-
-		res = PARAM_SET_getStr(set, "o", NULL, PST_PRIORITY_NONE, i, &out_file_name);
-		if (res != PST_OK) goto cleanup;
-
-		KSI_snprintf(buf, buf_len, "%s", out_file_name);
-	} else if (how_is_saved == OUTPUT_TO_DIR) {
-		char tmp[1024];
-		char *file_name = NULL;
-		int path_len = 0;
-		int is_slash = 0;
-		char *out_dir_name = NULL;
-
-
-		res = PARAM_SET_getStr(set, "o", NULL, PST_PRIORITY_NONE, 0, &out_dir_name);
-		if (res != PST_OK) goto cleanup;
-
-
-		file_name = STRING_extractAbstract(generated_name, "/", NULL, tmp, sizeof(tmp), find_charAfterLastStrn, NULL, NULL) == tmp ? tmp : generated_name;
-		path_len = (int)strlen(out_dir_name);
-
-		is_slash =(path_len != 0 && out_dir_name[path_len - 1]) == '/' ? 1 : 0;
-
-		KSI_snprintf(buf, buf_len, "%s%s%s",
-				out_dir_name,
-				is_slash ? "" : "/",
-				file_name);
-	} else if (how_is_saved == OUTPUT_TO_STDOUT) {
-		char *out_dir_name = NULL;
-
-		res = PARAM_SET_getStr(set, "o", NULL, PST_PRIORITY_NONE, 0, &out_dir_name);
-		if (res != PST_OK) goto cleanup;
-
-		KSI_snprintf(buf, buf_len, "%s", out_dir_name);
-	}
-
-
-	ret = buf;
+	res = KT_OK;
 
 cleanup:
 
-	return ret;
+	return res;
 }
 
 static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_AGGR_ROUND **aggr_round) {
@@ -1099,6 +956,7 @@ static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SI
 	int divider = 0;
 	int prgrs = 0;
 	int how_to_save = OUTPUT_UNKNOWN;
+	const char *mode = NULL;
 	int i = 0;
 	int n = 0;
 	int count = 0;
@@ -1119,7 +977,10 @@ static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SI
 
 	prgrs = PARAM_SET_isSetByName(set, "show-progress");
 
-	how_to_save = how_is_output_saved_to(set);
+	how_to_save = how_is_output_saved_to(set, "i,input", "o");
+
+	res = get_smart_file_mode(err, how_to_save, &mode);
+	if (res != KT_OK) goto cleanup;
 
 	if (prgrs) print_debug("Saving %i files.\n", in_count);
 
@@ -1129,7 +990,6 @@ static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SI
 			char real_output_name[1024] = "";
 			size_t real_out_name_size = 0;
 			KSI_DataHash *hsh = NULL;
-			const char *mode = NULL;
 			KSI_BlockSignerHandle *hndl = NULL;
 
 			/* Get the handle from the list. */
@@ -1149,17 +1009,8 @@ static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SI
 				goto cleanup;
 			}
 
-			if (get_output_file_name(set, err, how_to_save, count, save_to_file, sizeof(save_to_file)) == NULL) {
+			if (get_output_file_name(set, err, "i,input", "o", how_to_save, count, save_to_file, sizeof(save_to_file), generate_file_name) == NULL) {
 				ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Unexpected error. Unable to get the file name to save the signature to.");
-				goto cleanup;
-			}
-
-			if (how_to_save == OUTPUT_TO_STDOUT) mode = "wbs";
-			else if (how_to_save == OUTPUT_NEXT_TO_INPUT) mode = "wbi";
-			else if (how_to_save == OUTPUT_TO_DIR) mode = "wbi";
-			else if (how_to_save == OUTPUT_SPECIFIED_FILE) mode = "wb";
-			else if (how_to_save == OUTPUT_UNKNOWN) {
-				ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Unexpected error. Unable to resolve how the output signatures should be stored.");
 				goto cleanup;
 			}
 
@@ -1252,6 +1103,23 @@ cleanup:
 	return res;
 }
 
+
+KSI_uint64_t getTimeInMicros(void) {
+	KSI_uint64_t t = 0;
+#ifdef _WIN32
+	SYSTEMTIME t2;
+	KSI_uint64_t time_ms;
+	GetSystemTime(&t2);
+	time_ms = (KSI_uint64_t)time(NULL) * 1000 + t2.wMilliseconds;
+	t = time_ms * (KSI_uint64_t)1000;
+#else
+	struct timeval tv;
+	gettimeofday(&tv,NULL);
+	t = (KSI_uint64_t)tv.tv_sec * 1000000 + (KSI_uint64_t)tv.tv_usec;
+#endif
+	return t;
+}
+
 static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, size_t seq_offset, KSI_MetaData **mdata) {
 	int res;
 	char *cli_id = NULL;
@@ -1323,10 +1191,9 @@ static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, siz
 		 * Check if aggregation time is embedded into metadata record.
 		 */
 		if (PARAM_SET_isSetByName(set, "mdata-req-tm")) {
-			res = KSI_Integer_new(ksi, time(NULL) * 1000000, &aggr_time);
+			res = KSI_Integer_new(ksi, getTimeInMicros(), &aggr_time);
 			if (res != KSI_OK) goto cleanup;
 		}
-
 		/**
 		 * Create metadata record from input data.
 		 */

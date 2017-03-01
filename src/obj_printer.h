@@ -27,7 +27,7 @@
 extern "C" {
 #endif
 
-void OBJPRINT_signerIdentity(KSI_Signature *sig, int (*print)(const char *format, ... ));
+void OBJPRINT_IdentityMetadata(KSI_Signature *sig, int (*print)(const char *format, ... ));
 void OBJPRINT_signaturePublicationReference(KSI_Signature *sig, int (*print)(const char *format, ... ));
 void OBJPRINT_signatureVerificationInfo(KSI_Signature *sig, int (*print)(const char *format, ... ));
 void OBJPRINT_signatureSigningTime(const KSI_Signature *sig, int (*print)(const char *format, ... ));
