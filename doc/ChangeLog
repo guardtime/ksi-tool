@@ -1,6 +1,6 @@
 Version 2.4
 
-2017-01-20 2.4.1030
+2017-01-20 2.4.1038
 
 * IMPROVEMENT: Command-line parameter parser updated and optimized.
 * IMPROVEMENT: Windows Wildcard resolver optimized.
