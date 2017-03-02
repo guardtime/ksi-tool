@@ -92,7 +92,7 @@ See `CONTRIBUTING.md` file.
 ```
 Library   Version    License type  Source
 
-libksi    >=3.10     Apache 2.0    https://github.com/GuardTime/libksi
+libksi    >=3.12     Apache 2.0    https://github.com/GuardTime/libksi
 OpenSSL   >=0.9.8    BSD           https://github.com/openssl/
 Curl      >=7.37.0   MIT           https://github.com/curl/curl.git
 ```
