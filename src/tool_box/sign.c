@@ -74,9 +74,10 @@ static int check_hash_algo_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int check_io_naming_and_type_errors(PARAM_SET *set, ERR_TRCKR *err);
 static void SIGNING_AGGR_ROUND_free(SIGNING_AGGR_ROUND *obj);
 static void SIGNING_AGGR_ROUND_ARRAY_free(SIGNING_AGGR_ROUND **array);
-static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size_t *inputs);
+static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size_t *max_lvl, KSI_HashAlgorithm *algo);
+static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size_t remote_max_lvl, size_t *inputs);
 static int KT_SIGN_getAggregationRoundsNeeded(PARAM_SET *set, ERR_TRCKR *err, size_t max_tree_inputs, size_t *rounds);
-static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size_t max_tree_inputs, size_t rounds, SIGNING_AGGR_ROUND ***aggr_rounds_record);
+static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, KSI_HashAlgorithm remote_algo, size_t max_tree_inputs, size_t rounds, SIGNING_AGGR_ROUND ***aggr_rounds_record);
 static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_AGGR_ROUND **aggr_round);
 static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, size_t seq_offset, KSI_MetaData **mdata);
 static int KT_SIGN_dump(PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND **aggr_round);
@@ -94,13 +95,17 @@ int sign_run(int argc, char** argv, char **envp) {
 	int d = 0;
 	size_t max_tree_input = 0;
 	size_t rounds = 0;
+	size_t remote_max_lvl = 0;
+	KSI_HashAlgorithm remote_algo = KSI_HASHALG_INVALID;
 
 	/**
 	 * Extract command line parameters.
 	 */
 	res = PARAM_SET_new(
-			CONF_generate_param_set_desc("{sign}{i}{input}{o}{H}{data-out}{d}{dump}{log}{conf}{h|help}{dump-last-leaf}{prev-leaf}{mdata}{mask}{show-progress}", "S", buf, sizeof(buf)),
-			&set);
+			CONF_generate_param_set_desc(
+					"{sign}{i}{input}{o}{H}{data-out}{d}{dump}{dump-conf}{log}{conf}{h|help}{dump-last-leaf}"
+					"{prev-leaf}{mdata}{mask}{show-progress}{apply-remote-conf}", "S", buf, sizeof(buf)),
+					&set);
 	if (res != KT_OK) goto cleanup;
 
 	res = TASK_SET_new(&task_set);
@@ -129,16 +134,21 @@ int sign_run(int argc, char** argv, char **envp) {
 	res = check_io_naming_and_type_errors(set, err);
 	if (res != KT_OK) goto cleanup;
 
+	if (PARAM_SET_isSetByName(set, "apply-remote-conf")) {
+		res = KT_SIGN_getRemoteConf(set, err, ksi, &remote_max_lvl, &remote_algo);
+		if (res != KT_OK) goto cleanup;
+	}
+
 	/**
 	 * If everything OK, run the task.
 	 */
-	res = KT_SIGN_getMaximumInputsPerRound(set, err, &max_tree_input);
+	res = KT_SIGN_getMaximumInputsPerRound(set, err, remote_max_lvl, &max_tree_input);
 	if (res != KT_OK) goto cleanup;
 
 	res = KT_SIGN_getAggregationRoundsNeeded(set, err, max_tree_input, &rounds);
 	if (res != KT_OK) goto cleanup;
 
-	res = KT_SIGN_performSigning(set, err, ksi, max_tree_input, rounds, &aggr_rounds);
+	res = KT_SIGN_performSigning(set, err, ksi, remote_algo, max_tree_input, rounds, &aggr_rounds);
 	if (res != KT_OK) goto cleanup;
 
 	res = KT_SIGN_saveToOutput(set, err, ksi, aggr_rounds);
@@ -259,12 +269,31 @@ char *sign_help_toString(char*buf, size_t len) {
 		"             interpreted as regular files).\n"
 		" -d        - Print detailed information about processes and errors to stderr.\n"
 		" --dump    - Dump signature(s) created in human-readable format to stdout.\n"
+		" --dump-conf\n"
+		"           - Dump received configuration to stdout. Is valid only with\n"
+		"             option --apply-remote-conf.\n"
 		" --show-progress\n"
 		"           - Show progress bar. Is only valid with -d.\n"
 		" --conf <file>\n"
 		"           - Read configuration options from given file. It must be noted\n"
 		"             that configuration options given explicitly on command line will\n"
 		"             override the ones in the configuration file.\n"
+		" --apply-remote-conf\n"
+		"           - Obtain and apply configuration data from aggregation service server.\n"
+		"             Following configuration is received from server:\n"
+		"               * maximal level - value that the nodes in the client's aggregation\n"
+		"                 tree are allowed to have. Can be overridden with --max-lvl.\n"
+		"               * aggregation hash algorithm - identifier of the hash function\n"
+		"                 that the client is recommended to use in its aggregation trees.\n"
+		"                 Can be overridden with -H.\n"
+		"               * aggregation period - recommended duration of client's aggregation\n"
+		"                 round, in milliseconds.\n"
+		"               * maximum requests - maximum number of requests the client is\n"
+		"                 allowed to send within one aggregation period of the recommended\n"
+		"                 duration.\n"
+		"               * parent URI - parent server URI. Note that there may be several\n"
+		"                 parent servers listed in the configuration. Typically these are\n"
+		"                 all members of one aggregator cluster.\n"
 		" --log <file>\n"
 		"           - Write libksi log to given file. Use '-' as file name to redirect\n"
 		"             log to stdout.\n\n"
@@ -299,9 +328,9 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{input}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputHashFromFile);
 	PARAM_SET_addControl(set, "{H}", isFormatOk_hashAlg, isContentOk_hashAlg, NULL, extract_hashAlg);
 	PARAM_SET_addControl(set, "{prev-leaf}", isFormatOk_imprint, isContentOk_imprint, NULL, extract_imprint);
-	PARAM_SET_addControl(set, "{d}{dump}{dump-last-leaf}{mdata}{show-progress}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{d}{dump}{dump-conf}{dump-last-leaf}{mdata}{show-progress}{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{mask}", isFormatOk_mask, isContentOk_mask, convertRepair_mask, extract_mask);
-	PARAM_SET_setParseOptions(set, "{d}{dump}{dump-last-leaf}{mdata}{show-progress}", PST_PRSCMD_HAS_NO_VALUE);
+	PARAM_SET_setParseOptions(set, "{d}{dump}{dump-conf}{dump-last-leaf}{mdata}{show-progress}{apply-remote-conf}", PST_PRSCMD_HAS_NO_VALUE);
 
 	/**
 	 * To enable wildcard characters (WC) to work on Windows, configure the WC
@@ -445,7 +474,47 @@ cleanup:
 	return res;
 }
 
-static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size_t *inputs) {
+static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size_t *max_lvl, KSI_HashAlgorithm *algo) {
+	int res = KT_UNKNOWN_ERROR;
+	KSI_Config *config = NULL;
+	KSI_Integer *id = NULL;
+	KSI_Integer *lvl = NULL;
+	int d = 0;
+
+	if (set == NULL || err == NULL || ctx == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		goto cleanup;
+	}
+
+	d = PARAM_SET_isSetByName(set, "d");
+
+	print_progressDesc(d, "Receiving remote configuration... ");
+
+	res = KSI_receiveAggregatorConfig(ctx, &config);
+	ERR_CATCH_MSG(err, res, "Error: Unable to receive remote config.");
+
+	print_progressResult(res);
+
+	if (PARAM_SET_isSetByName(set, "dump-conf")) {
+		OBJPRINT_aggregatorConfDump(config, print_result);
+	}
+
+	res = KSI_Config_getAggrAlgo(config, &id);
+	ERR_CATCH_MSG(err, res, "Error: Unable to get aggregator algorithm id conf.");
+
+	res = KSI_Config_getMaxLevel(config, &lvl);
+	ERR_CATCH_MSG(err, res, "Error: Unable to get aggregator max level conf.");
+
+	if (max_lvl && lvl) *max_lvl = KSI_Integer_getUInt64(lvl);
+	if (algo && id) *algo = (KSI_HashAlgorithm)KSI_Integer_getUInt64(id);
+
+cleanup:
+	KSI_Config_free(config);
+
+	return res;
+}
+
+static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size_t remote_max_lvl, size_t *inputs) {
 	int res = KT_UNKNOWN_ERROR;
 	int max_lvl_virtual = 0;
 	int max_lvl = 0;
@@ -462,6 +531,11 @@ static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size
 
 	res = PARAM_SET_getObj(set, "max-lvl", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void*)&max_lvl);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
+
+	if (remote_max_lvl != 0 && max_lvl > remote_max_lvl) {
+		res = KT_AGGR_LVL_EXCEED_LIMIT;
+		goto cleanup;
+	}
 
 	/**
 	 * Check if masking is done and / or metadata is appended to the tree.
@@ -692,7 +766,7 @@ cleanup:
 	return res;
 }
 
-static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size_t max_tree_inputs, size_t rounds, SIGNING_AGGR_ROUND ***aggr_rounds_record) {
+static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, KSI_HashAlgorithm remote_algo, size_t max_tree_inputs, size_t rounds, SIGNING_AGGR_ROUND ***aggr_rounds_record) {
 	int res = KT_UNKNOWN_ERROR;
 	int d = 0;
 	int prgrs = 0;
@@ -742,7 +816,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 		res = PARAM_SET_getObjExtended(set, "H", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, NULL, (void**)&algo);
 		if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 	} else {
-		algo = KSI_getHashAlgorithmByName("default");
+		algo = (remote_algo != KSI_HASHALG_INVALID) ? remote_algo : KSI_getHashAlgorithmByName("default");
 	}
 
 	/**

@@ -77,9 +77,9 @@ EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-flags-valid-on-cmd-insi
 >>>= 16
 
 EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-flags-valid-on-cmd-inside-conf-3.cfg
->>>2 /(Unknown.*)(.*H.*)
+>>>2 /(Did You mean.*)(.*apply-remote-conf.*)(.*dump-last-leaf.*)
+(.*Unknown.*)(.*H.*)
 (.*Unknown.*)(.*h.*)
-(.*Unknown.*)(.*dump-last-leaf.*)
 (.*Unknown.*)(.*T.*)
 (.*Unknown.*)(.*ver-int.*)/
 >>>= 16

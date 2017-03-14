@@ -46,6 +46,9 @@ const char *OBJPRINT_getVerificationErrorDescription(KSI_VerificationErrorCode c
 
 void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *res, int (*print)(const char *format, ... ));
 
+void OBJPRINT_aggregatorConfDump(KSI_Config *config, int (*print)(const char *format, ... ));
+void OBJPRINT_extenderConfDump(KSI_Config *config, int (*print)(const char *format, ... ));
+
 #ifdef	__cplusplus
 }
 #endif
