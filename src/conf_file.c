@@ -173,7 +173,7 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 		res = PARAM_SET_addControl(conf, "{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
 		if (res != PST_OK) goto cleanup;
 
-		res = PARAM_SET_setParseOptions(conf, "apply-remote-conf", PST_PRSCMD_HAS_NO_VALUE | PST_PRSCMD_NO_TYPOS);
+		res = PARAM_SET_setParseOptions(conf, "apply-remote-conf", PST_PRSCMD_HAS_NO_VALUE);
 		if (res != PST_OK) goto cleanup;
 	}
 
@@ -190,7 +190,7 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 		res = PARAM_SET_addControl(conf, "{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
 		if (res != PST_OK) goto cleanup;
 
-		res = PARAM_SET_setParseOptions(conf, "apply-remote-conf", PST_PRSCMD_HAS_NO_VALUE | PST_PRSCMD_NO_TYPOS);
+		res = PARAM_SET_setParseOptions(conf, "apply-remote-conf", PST_PRSCMD_HAS_NO_VALUE);
 		if (res != PST_OK) goto cleanup;
 	}
 

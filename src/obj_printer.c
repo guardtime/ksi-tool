@@ -537,7 +537,7 @@ void OBJPRINT_aggregatorConfDump(KSI_Config *config, int (*print)(const char *fo
 
 	res = KSI_Config_getMaxLevel(config, &max_level);
 	if (res != KSI_OK) return;
-	if (max_level) print("  Maximal level: %d\n", KSI_Integer_getUInt64(max_level));
+	if (max_level) print("  Maximum level: %d\n", KSI_Integer_getUInt64(max_level));
 
 	res = KSI_Config_getAggrPeriod(config, &aggr_period);
 	if (res != KSI_OK) return;
@@ -573,6 +573,22 @@ void OBJPRINT_extenderConfDump(KSI_Config *config, int (*print)(const char *form
 
 	print("Extender configuration:\n");
 
+	res = KSI_Config_getCalendarFirstTime(config, &cal_first);
+	if (res != KSI_OK) return;
+	if (cal_first) {
+		print("  Calendar first time: (%i) %s+00:00\n",
+				KSI_Integer_getUInt64(cal_first),
+				KSI_Integer_toDateString(cal_first, date, sizeof(date)));
+	}
+
+	res = KSI_Config_getCalendarLastTime(config, &cal_last);
+	if (res != KSI_OK) return;
+	if (cal_last) {
+		print("  Calendar last time:  (%i) %s+00:00\n",
+				KSI_Integer_getUInt64(cal_last),
+				KSI_Integer_toDateString(cal_last, date, sizeof(date)));
+	}
+
 	res = KSI_Config_getMaxRequests(config, &max_req);
 	if (res != KSI_OK) return;
 	if (max_req) print("  Maximum requests: %d\n", KSI_Integer_getUInt64(max_req));
@@ -588,22 +604,6 @@ void OBJPRINT_extenderConfDump(KSI_Config *config, int (*print)(const char *form
 			if (res != KSI_OK) return;
 			print("    %s\n", KSI_Utf8String_cstr(uri));
 		}
-	}
-
-	res = KSI_Config_getCalendarFirstTime(config, &cal_first);
-	if (res != KSI_OK) return;
-	if (cal_first) {
-		print("  Calendar first time: (%i) %s+00:00\n",
-				KSI_Integer_getUInt64(cal_first),
-				KSI_Integer_toDateString(cal_first, date, sizeof(date)));
-	}
-
-	res = KSI_Config_getCalendarLastTime(config, &cal_last);
-	if (res != KSI_OK) return;
-	if (cal_last) {
-		print("  Calendar last time:  (%i) %s+00:00\n",
-				KSI_Integer_getUInt64(cal_last),
-				KSI_Integer_toDateString(cal_last, date, sizeof(date)));
 	}
 	print("\n");
 }

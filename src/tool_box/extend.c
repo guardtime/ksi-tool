@@ -187,15 +187,15 @@ char *extend_help_toString(char*buf, size_t len) {
 		" --apply-remote-conf\n"
 		"           - Obtain and apply configuration data from extender service server.\n"
 		"             Following configuration is received from server:\n"
-		"               * Maximum requests - maximum number of requests the client is\n"
-		"                 allowed to send within one second.\n"
-		"               * Parent URI - parent server URI. note that there may be several\n"
-		"                 parent servers listed in the configuration. Typically these are\n"
-		"                 all members of one aggregator cluster.\n"
 		"               * Calendar first time - aggregation time of the oldest calendar\n"
 		"                 record the extender has.\n"
 		"               * Calendar last time - aggregation time of the newest calendar\n"
 		"                 record the extender has."
+		"               * Maximum requests - maximum number of requests the client is\n"
+		"                 allowed to send within one second.\n"
+		"               * Parent URI - parent server URI. Note that there may be several\n"
+		"                 parent servers listed in the configuration. Typically these are\n"
+		"                 all members of one aggregator cluster.\n"
 		" --log <file>\n"
 		"           - Write libksi log to given file. Use '-' as file name to redirect\n"
 		"             log to stdout.\n",
@@ -356,7 +356,7 @@ static int obtain_remote_conf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size
 	KSI_Integer *last = NULL;
 	int d = 0;
 
-	if (set == NULL || err == NULL || ctx == NULL) {
+	if (set == NULL || err == NULL || ctx == NULL || calFirst == NULL || calLast == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
@@ -378,8 +378,8 @@ static int obtain_remote_conf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size
 	res = KSI_Config_getCalendarLastTime(config, &last);
 	ERR_CATCH_MSG(err, res, "Error: Unable to get extender calendat last time.");
 
-	if (calFirst && first) *calFirst = KSI_Integer_getUInt64(first);
-	if (calLast && last) *calLast = KSI_Integer_getUInt64(last);
+	if (first) *calFirst = KSI_Integer_getUInt64(first);
+	if (last) *calLast = KSI_Integer_getUInt64(last);
 
 cleanup:
 	KSI_Config_free(config);
@@ -423,7 +423,7 @@ static int extend_to_specified_time(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi
 
 	if ((calFirst != 0 && KSI_Integer_getUInt64(pubTime) < calFirst) ||
 			(calLast != 0 && KSI_Integer_getUInt64(pubTime) > calLast)) {
-		ERR_TRCKR_ADD(err, res = KT_EXT_CAL_TIME_OUT_OF_LIMIT,  "Error: Unable to extend signature.");
+		ERR_TRCKR_ADD(err, res = KT_EXT_CAL_TIME_OUT_OF_LIMIT,  "Error: Unable to extend signature to specified time.");
 		goto cleanup;
 	}
 

@@ -281,7 +281,7 @@ char *sign_help_toString(char*buf, size_t len) {
 		" --apply-remote-conf\n"
 		"           - Obtain and apply configuration data from aggregation service server.\n"
 		"             Following configuration is received from server:\n"
-		"               * maximal level - value that the nodes in the client's aggregation\n"
+		"               * maximum level - value that the nodes in the client's aggregation\n"
 		"                 tree are allowed to have. Can be overridden with --max-lvl.\n"
 		"               * aggregation hash algorithm - identifier of the hash function\n"
 		"                 that the client is recommended to use in its aggregation trees.\n"
@@ -491,7 +491,7 @@ static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, s
 	print_progressDesc(d, "Receiving remote configuration... ");
 
 	res = KSI_receiveAggregatorConfig(ctx, &config);
-	ERR_CATCH_MSG(err, res, "Error: Unable to receive remote config.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to receive remote configuration.");
 
 	print_progressResult(res);
 
@@ -500,10 +500,10 @@ static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, s
 	}
 
 	res = KSI_Config_getAggrAlgo(config, &id);
-	ERR_CATCH_MSG(err, res, "Error: Unable to get aggregator algorithm id conf.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to get aggregator algorithm id configuration.");
 
 	res = KSI_Config_getMaxLevel(config, &lvl);
-	ERR_CATCH_MSG(err, res, "Error: Unable to get aggregator max level conf.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to get aggregator maximum level configuration.");
 
 	if (max_lvl && lvl) *max_lvl = KSI_Integer_getUInt64(lvl);
 	if (algo && id) *algo = (KSI_HashAlgorithm)KSI_Integer_getUInt64(id);
@@ -533,7 +533,7 @@ static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 
 	if (remote_max_lvl != 0 && max_lvl > remote_max_lvl) {
-		res = KT_AGGR_LVL_EXCEED_LIMIT;
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_EXCEED_LIMIT, "Error: Configuration of local aggregation tree is too large.");
 		goto cleanup;
 	}
 
