@@ -33,7 +33,7 @@ sudo curl -O http://download.guardtime.com/ksi/configuration/guardtime.el6.repo
 # In case of RHEL / CentOS 7
 sudo curl -O http://download.guardtime.com/ksi/configuration/guardtime.el7.repo
 
-yum install ksi
+yum install ksi-tools
 ```
 
 ### From source code
