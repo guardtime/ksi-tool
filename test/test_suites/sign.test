@@ -79,3 +79,17 @@ EXECUTABLE sign --conf test/test.cfg -i - -o - --data-out test/out/sign/piped_da
 Data From Stdin
 >>>2 /Signature saved to/
 >>>= 0
+
+# KSI Simple sign. Obtain additional configuration from service server.
+EXECUTABLE sign --conf test/test.cfg -i test/resource/file/testFile -o test/out/sign/testFile.ksig -d --dump --apply-remote-conf --dump-conf
+>>> /.*((SHA|RIPEMD)\d?(-\d{3})?)([^$]|[
+])*.*\1/
+>>>2 /Signature saved to/
+>>>= 0
+
+# KSI sign and hash with specified hash algorithm SHA2-512. Obtain additional configuration from service server (-H has priority over server conf algorithm id).
+EXECUTABLE sign --conf test/test.cfg -i test/resource/file/testFile -H SHA2-512 -o test/out/sign/testFile.sha512.ksig -d --dump --apply-remote-conf --dump-conf
+>>> /.*((SHA|RIPEMD)\d?(-\d{3})?)([^$]|[
+])*.*[^\1]/
+>>>2 /Signature saved to/
+>>>= 0
