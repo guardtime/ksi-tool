@@ -149,5 +149,5 @@ EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08
 
 # Just dump extender configuration.
 EXECUTABLE extend --conf test/test.cfg --dump-conf --ext-pdu-v v2
->>> /Aggregator configuration:/
+>>> /Extender configuration:/
 >>>= 0

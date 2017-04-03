@@ -54,7 +54,7 @@ enum EXTEND_TASKS_en {
 	EXTEND_TO_HEAD = 0,
 	EXTEND_TO_TIME,
 	EXTEND_TO_PUB_STR,
-	DUMP_EXTENDER_CONF
+	EXTENDER_DUMP_CONF
 };
 
 int extend_run(int argc, char** argv, char **envp) {
@@ -362,7 +362,7 @@ static int obtain_remote_conf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size
 	KSI_Integer *last = NULL;
 	int d = 0;
 
-	if (set == NULL || err == NULL || ctx == NULL || calFirst == NULL || calLast == NULL) {
+	if (set == NULL || err == NULL || ctx == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
@@ -384,8 +384,8 @@ static int obtain_remote_conf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size
 	res = KSI_Config_getCalendarLastTime(config, &last);
 	ERR_CATCH_MSG(err, res, "Error: Unable to get extender calendat last time.");
 
-	if (first) *calFirst = KSI_Integer_getUInt64(first);
-	if (last) *calLast = KSI_Integer_getUInt64(last);
+	if (calFirst && first) *calFirst = KSI_Integer_getUInt64(first);
+	if (calLast && last) *calLast = KSI_Integer_getUInt64(last);
 
 cleanup:
 	KSI_Config_free(config);
@@ -558,11 +558,11 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	/**
 	 * Define possible tasks.
 	 */
-	/*					  ID	DESC												MAN				ATL				FORBIDDEN		IGN	*/
-	TASK_SET_add(task_set, EXTEND_TO_HEAD,		"Extend to the earliest available publication.",	"X,P",			"i,input",		"T,pub-str",	NULL);
-	TASK_SET_add(task_set, EXTEND_TO_TIME,		"Extend to the specified time.",					"X,T",			"i,input",		"pub-str",		NULL);
-	TASK_SET_add(task_set, EXTEND_TO_PUB_STR,	"Extend to time specified in publications string.",	"X,P,pub-str",	"i,input",		"T",			NULL);
-	TASK_SET_add(task_set, DUMP_EXTENDER_CONF,	"Dump extender configuration.",						"X",			"dump-conf",	"i,input,T",	NULL);
+	/*						ID					DESC												MAN				ATL			FORBIDDEN		IGN	*/
+	TASK_SET_add(task_set,	EXTEND_TO_HEAD,		"Extend to the earliest available publication.",	"X,P",			"i,input",	"T,pub-str",	NULL);
+	TASK_SET_add(task_set,	EXTEND_TO_TIME,		"Extend to the specified time.",					"X,T",			"i,input",	"pub-str",		NULL);
+	TASK_SET_add(task_set,	EXTEND_TO_PUB_STR,	"Extend to time specified in publications string.",	"X,P,pub-str",	"i,input",	"T",			NULL);
+	TASK_SET_add(task_set,	EXTENDER_DUMP_CONF,	"Dump extender configuration.",						"X,dump-conf",	NULL,		"i,input",		NULL);
 
 cleanup:
 
@@ -661,7 +661,7 @@ static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int task) {
 		case EXTEND_TO_PUB_STR:
 			res = perform_extending(set, err, ksi, task);
 			goto cleanup;
-		case DUMP_EXTENDER_CONF:
+		case EXTENDER_DUMP_CONF:
 			res = obtain_remote_conf(set, err, ksi, NULL, NULL);
 			goto cleanup;
 		default:

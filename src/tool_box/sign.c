@@ -73,7 +73,7 @@ enum SIGNER_TASKS_en {
 	SIGN_DATA_HASH,
 	SIGN_DATA_AND_SAVE,
 	SIGN_DATA_HASH_AND_SAVE,
-	DUMP_AGGREGATOR_CONF,
+	AGGREGATOR_DUMP_CONF,
 };
 
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
@@ -346,7 +346,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	TASK_SET_add(task_set,	SIGN_DATA_HASH,				"Sign data, specify hash alg.",				"S,H",			"i,input",		"data-out",		NULL);
 	TASK_SET_add(task_set,	SIGN_DATA_AND_SAVE,			"Sign and save data.",						"S,data-out",	"i,input",		"H",			NULL);
 	TASK_SET_add(task_set,	SIGN_DATA_HASH_AND_SAVE,	"Sign and save data, specify hash alg.",	"S,H,data-out", "i,input",		NULL,			NULL);
-	TASK_SET_add(task_set,	DUMP_AGGREGATOR_CONF,		"Dump aggregator configuration.",			"S",			"dump-conf",	"i,input",		NULL);
+	TASK_SET_add(task_set,	AGGREGATOR_DUMP_CONF,		"Dump aggregator configuration.",			"S,dump-conf",	NULL,			"i,input",		NULL);
 
 cleanup:
 
@@ -496,7 +496,7 @@ static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int task) {
 			}
 			goto cleanup;
 
-		case DUMP_AGGREGATOR_CONF:
+		case AGGREGATOR_DUMP_CONF:
 			res = KT_SIGN_getRemoteConf(set, err, ctx, NULL, NULL);
 			goto cleanup;
 
