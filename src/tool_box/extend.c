@@ -48,6 +48,14 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int check_other_input_param_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int task_id);
+static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int task);
+
+enum EXTEND_TASKS_en {
+	EXTEND_TO_HEAD = 0,
+	EXTEND_TO_TIME,
+	EXTEND_TO_PUB_STR,
+	DUMP_EXTENDER_CONF
+};
 
 int extend_run(int argc, char** argv, char **envp) {
 	int res;
@@ -96,9 +104,8 @@ int extend_run(int argc, char** argv, char **envp) {
 	res = check_other_input_param_errors(set, err);
 	if (res != PST_OK) goto cleanup;
 
-	res = perform_extending(set, err, ksi, TASK_getID(task));
+	res = handleTask(set, err, ksi, TASK_getID(task));
 	if (res != KT_OK) goto cleanup;
-
 
 cleanup:
 	/* Debugging and KSITOOL_KSI_ERRTrace_save is called in perform_extending. */
@@ -178,8 +185,7 @@ char *extend_help_toString(char*buf, size_t len) {
 		" --dump    - Dump extended signature and verification info in human-readable\n"
 		"             format to stdout.\n"
 		" --dump-conf\n"
-		"           - Dump received configuration to stdout. Is valid only with\n"
-		"             option --apply-remote-conf.\n"
+		"           - Dump extender configuration to stdout.\n"
 		" --conf <file>\n"
 		"             Read configuration options from given file. It must be noted\n"
 		"             that configuration options given explicitly on command line will\n"
@@ -552,10 +558,11 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	/**
 	 * Define possible tasks.
 	 */
-	/*					  ID	DESC												MAN				ATL			FORBIDDEN		IGN	*/
-	TASK_SET_add(task_set, 0,	"Extend to the earliest available publication.",	"X,P",			"i,input",	"T,pub-str",	NULL);
-	TASK_SET_add(task_set, 1,	"Extend to the specified time.",					"X,T",			"i,input",	"pub-str",		NULL);
-	TASK_SET_add(task_set, 2,	"Extend to time specified in publications string.",	"X,P,pub-str",	"i,input",	"T",			NULL);
+	/*					  ID	DESC												MAN				ATL				FORBIDDEN		IGN	*/
+	TASK_SET_add(task_set, EXTEND_TO_HEAD,		"Extend to the earliest available publication.",	"X,P",			"i,input",		"T,pub-str",	NULL);
+	TASK_SET_add(task_set, EXTEND_TO_TIME,		"Extend to the specified time.",					"X,T",			"i,input",		"pub-str",		NULL);
+	TASK_SET_add(task_set, EXTEND_TO_PUB_STR,	"Extend to time specified in publications string.",	"X,P,pub-str",	"i,input",		"T",			NULL);
+	TASK_SET_add(task_set, DUMP_EXTENDER_CONF,	"Dump extender configuration.",						"X",			"dump-conf",	"i,input,T",	NULL);
 
 cleanup:
 
@@ -645,6 +652,27 @@ cleanup:
 	return res;
 }
 
+static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int task) {
+	int res;
+
+	switch (task) {
+		case EXTEND_TO_HEAD:
+		case EXTEND_TO_TIME:
+		case EXTEND_TO_PUB_STR:
+			res = perform_extending(set, err, ksi, task);
+			goto cleanup;
+		case DUMP_EXTENDER_CONF:
+			res = obtain_remote_conf(set, err, ksi, NULL, NULL);
+			goto cleanup;
+		default:
+			ERR_CATCH_MSG(err, (res = KT_UNKNOWN_ERROR), "Error: Unknown extender task.");
+			goto cleanup;
+	}
+
+cleanup:
+	return res;
+}
+
 static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int task_id) {
 	int res;
 	int i = 0;
@@ -707,17 +735,15 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 		print_progressResult(res);
 
 		switch(task_id) {
-			case 0:
+			case EXTEND_TO_HEAD:
 				res = extend_to_nearest_publication(set, err, ksi, sig, &ext);
-			break;
-
-			case 1:
+				break;
+			case EXTEND_TO_TIME:
 				res = extend_to_specified_time(set, err, ksi, &extra, sig, &ext);
-			break;
-
-			case 2:
+				break;
+			case EXTEND_TO_PUB_STR:
 				res = extend_to_specified_publication(set, err, ksi, sig, &ext);
-			break;
+				break;
 		}
 		if (res != KT_OK) goto cleanup;
 
