@@ -6,6 +6,8 @@
 .SH SYNOPSIS
 .HP 4
 \fBksi sign \fR[\fB-o \fIout.ksig\fR]... \fB-S \fIURL \fR[\fB--aggr-user \fIuser \fB--aggr-key \fIkey\fR] \fR[\fB-H \fIalg\fR] [\fB--data-out \fIfile\fR] [\fB--dump\fR] [\fImore options\fR] [\fB-i \fIinput\fR]... [\fIinput\fR]... [\fB-- \fIonly_file_input\fR...]
+.HP 4
+\fBksi sign -S \fIURL \fR[\fB--aggr-user \fIuser \fB--aggr-key \fIkey\fR] \fB--dump-conf
 .\"
 .SH DESCRIPTION
 Signs the given input such as content of a given file or a precomputed hash value with KSI. User must have access to KSI signing service (KSI Aggregator) for signing. Note that until not extended, the signatures can be verified using the copy of calendar blockchain at KSI Extender (calendar-based verification) or using the PKI signature in the calendar authentication record (key-based verification, temporary only). See \fBksi-verify\fR(1) for details.
@@ -98,6 +100,10 @@ Print detailed information about processes and errors to \fIstderr\fR.
 Dump signature(s) created in human-readable format to \fIstdout\fR.
 .\"
 .TP
+\fB--dump-conf\fR
+Dump aggregator configuration in human-readable format to \fIstdout\fR.
+.\"
+.TP
 \fB--show-progress\fR
 Show progress bar and print it to \fIstderr\fR. Is only valid with \fB-d\fR. It must be noted that progress bar hides some debug information.
 .\"
@@ -137,7 +143,7 @@ See \fBksi\fR(1) for more information.
 .SH EXAMPLES
 In the following examples it is assumed that KSI service configuration options (URLs, access credentials) are defined. See \fBksi-conf\fR(5) for more information.
 .\"
-.TP 2
+.TP 3
 \fB1
 To sign a file \fIfile\fR and save signature to \fIsig.ksig\fR:
 .LP
@@ -145,7 +151,7 @@ To sign a file \fIfile\fR and save signature to \fIsig.ksig\fR:
 \fBksi sign -i \fIfile\fR \fB-o \fIsig.ksig\fR
 .RE
 .\"
-.TP 2
+.TP 3
 \fB2
 To sign a data hash (hashed with SHA256) and save the resulting signature to file \fIsig.ksig\fR:
 .LP
@@ -153,7 +159,7 @@ To sign a data hash (hashed with SHA256) and save the resulting signature to fil
 \fBksi sign -i \fISHA-256:c8ef6d57ac28d1b4e95a513959\\f5fcdd0688380a43d601a5ace1d2e96884690a\fB -o \fIsig.ksig\fR
 .RE
 .\"
-.TP 2
+.TP 3
 \fB3
 To sign a data file \fIfile\fR with non-default algorithm \fI SHA1\fR:
 .LP
@@ -161,7 +167,7 @@ To sign a data file \fIfile\fR with non-default algorithm \fI SHA1\fR:
 \fBksi sign -i \fIfile\fB -H\fI SHA1\fB -o\fI sig.ksig\fR
 .RE
 .\"
-.TP 2
+.TP 3
 \fB4
 To sign a stream (\fIstdin\fR), save data from stream to \fIfile\fR and save signature to \fIsig.ksig\fR:
 .LP
@@ -169,7 +175,7 @@ To sign a stream (\fIstdin\fR), save data from stream to \fIfile\fR and save sig
 \fBksi sign -i \fI-\fR \fB--data-out \fIfile\fB -o\fI sig.ksig\fR
 .RE
 .\"
-.TP 2
+.TP 3
 \fB5
 To perform local aggregation on files \fI*.doc\fR and save all the signatures to directory \fIdoc/sig\fR:
 .LP
@@ -177,7 +183,7 @@ To perform local aggregation on files \fI*.doc\fR and save all the signatures to
 \fBksi sign -o \fIdoc/sig\fR \fB--max-lvl \fI5\fB -- \fI*.doc\fR
 .RE
 .\"
-.TP 2
+.TP 3
 \fB6
 To embed user ID "\fIMy Name\fR" as metadata to the signature of document \fIfile\fR:
 .LP
@@ -185,7 +191,7 @@ To embed user ID "\fIMy Name\fR" as metadata to the signature of document \fIfil
 \fBksi sign \fIfile\fR \fB--max-lvl \fI2\fB \fB--mdata --mdata-cli-id \fR"\fIMy Name\fR"
 .RE
 .\"
-.TP 2
+.TP 3
 \fB7
 To sign more files than the user is permitted to sign during a single aggregation request:
 .LP
@@ -193,12 +199,28 @@ To sign more files than the user is permitted to sign during a single aggregatio
 \fBksi sign -o \fIdoc/sig\fR \fB--max-lvl \fI5\fB --max-aggr-rounds 10 -- \fI*.doc\fR
 .RE
 .\"
-.TP 2
+.TP 3
 \fB8
 To sign multiple files and enable masking with default configuration:
 .LP
 .RS 4
 \fBksi sign -o \fIdoc/sig\fR \fB--max-lvl \fI5\fB --mask -- \fI*.doc\fR
+.RE
+.\"
+.TP 3
+\fB9
+To sign a file \fIfile\fR, appling aggregator configuration, and save signature to \fIsig.ksig\fR:
+.LP
+.RS 4
+\fBksi sign -i \fIfile\fR \fB-o \fIsig.ksig\fB --apply-remote-conf\fR
+.RE
+.\"
+.TP 3
+\fB10
+Dump aggregator configuration in human-readable format to stdout:
+.LP
+.RS 4
+\fBksi sign -S \fIhttp://example.gateway.com:3333/gt-signingservice\fB --dump-conf\fR
 .RE
 .\"
 .SH ENVIRONMENT

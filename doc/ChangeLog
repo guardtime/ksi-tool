@@ -1,5 +1,5 @@
-* IMPROVEMENT: Support for easy server configuration dump.
-* FEATURE: New flag --apply-remote-conf for obtaining server configuration. Dump conf with --dump-conf.
+* FEATURE: New flag --dump-conf for dumping remote configuration to stdout.
+* FEATURE: New flag --apply-remote-conf for obtaining and applying server configuration.
 
 Version 2.4
 

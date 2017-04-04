@@ -379,10 +379,10 @@ static int obtain_remote_conf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size
 	}
 
 	res = KSI_Config_getCalendarFirstTime(config, &first);
-	ERR_CATCH_MSG(err, res, "Error: Unable to get extender calendat first time.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to get extender calendar first time.");
 
 	res = KSI_Config_getCalendarLastTime(config, &last);
-	ERR_CATCH_MSG(err, res, "Error: Unable to get extender calendat last time.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to get extender calendar last time.");
 
 	if (calFirst && first) *calFirst = KSI_Integer_getUInt64(first);
 	if (calLast && last) *calLast = KSI_Integer_getUInt64(last);
@@ -562,7 +562,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	TASK_SET_add(task_set,	EXTEND_TO_HEAD,		"Extend to the earliest available publication.",	"X,P",			"i,input",	"T,pub-str",	NULL);
 	TASK_SET_add(task_set,	EXTEND_TO_TIME,		"Extend to the specified time.",					"X,T",			"i,input",	"pub-str",		NULL);
 	TASK_SET_add(task_set,	EXTEND_TO_PUB_STR,	"Extend to time specified in publications string.",	"X,P,pub-str",	"i,input",	"T",			NULL);
-	TASK_SET_add(task_set,	EXTENDER_DUMP_CONF,	"Dump extender configuration.",						"X,dump-conf",	NULL,		"i,input",		NULL);
+	TASK_SET_add(task_set,	EXTENDER_DUMP_CONF,	"Dump extender configuration.",						"X,dump-conf",	NULL,		"i,input,o,pub-str,T,apply-remote-conf,replace-existing",	NULL);
 
 cleanup:
 

@@ -346,7 +346,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	TASK_SET_add(task_set,	SIGN_DATA_HASH,				"Sign data, specify hash alg.",				"S,H",			"i,input",		"data-out",		NULL);
 	TASK_SET_add(task_set,	SIGN_DATA_AND_SAVE,			"Sign and save data.",						"S,data-out",	"i,input",		"H",			NULL);
 	TASK_SET_add(task_set,	SIGN_DATA_HASH_AND_SAVE,	"Sign and save data, specify hash alg.",	"S,H,data-out", "i,input",		NULL,			NULL);
-	TASK_SET_add(task_set,	AGGREGATOR_DUMP_CONF,		"Dump aggregator configuration.",			"S,dump-conf",	NULL,			"i,input",		NULL);
+	TASK_SET_add(task_set,	AGGREGATOR_DUMP_CONF,		"Dump aggregator configuration.",			"S,dump-conf",	NULL,			"i,input,o,H,data-out,apply-remote-conf",		NULL);
 
 cleanup:
 

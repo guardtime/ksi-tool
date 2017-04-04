@@ -10,6 +10,8 @@
 \fBksi extend \fR[\fB-i \fIin.ksig\fR] [\fB-o \fIout.ksig\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-P \fIURL \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fB--pub-str \fIstr \fR[\fImore_options\fR] [\fB--\fR] \fIinput\fR...
 .HP 4
 \fBksi extend \fR[\fB-i \fIin.ksig\fR] [\fB-o \fIout.ksig\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-T \fItime \fR[\fImore_options\fR] [\fB--\fR] \fIinput\fR...
+.HP 4
+\fBksi extend -X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB--dump-conf
 .\"
 .SH DESCRIPTION
 Extends the given KSI signature to the time of given publication. After signature is extended and the corresponding publication record is attached, the signature can be verified by publication-based verification where only trusted publications file or a publication string in printed media is needed to perform the verification. See \fBksi-verify\fR(1) for details.
@@ -92,6 +94,10 @@ Print detailed information about processes and errors to \fIstderr\fR.
 Dump extended signature and verification info in human-readable format to \fIstdout\fR.
 .\"
 .TP
+\fB--dump-conf\fR
+Dump extender configuration in human-readable format to \fIstdout\fR.
+.\"
+.TP
 \fB--conf \fIfile\fR
 Read configuration options from given file. It must be noted that configuration options given explicitly on command line will override the ones in the configuration file. See \fBksi-conf\fR(5) for more information.
 .\"
@@ -155,6 +161,22 @@ In the following examples it is assumed that KSI service configuration (URLs, ac
 .LP
 .RS 4
 \fBksi extend \fI*.ksig \fB--pub-str \fIAAAAAA-CYFJIA-AALGBS-ED4BKO-CMKY7Z-OMMBA5-NT6SJB-ZM677Q-JKCQAW-3OXD3O-OERGEO-DWJRYN\fR
+.RE
+.\"
+.TP 2
+\fB5
+\fRTo extend a signature \fIsig.ksig\fR to specified calendar time \fI2015-05-05 00:00:00 \fR, applying extender configuration, and save it as \fIext.ksig\fR:
+.LP
+.RS 4
+\fBksi extend -i \fIsig.ksig \fB-o \fIext.ksig \fB-T \fI"2015-05-05 00:00:00"\fB --apply-remote-conf\fR
+.RE
+.\"
+.TP 2
+\fB6
+Dump extender configuration in human-readable format to stdout:
+.LP
+.RS 4
+\fBksi extend -X \fIhttp://example.gateway.com:8010/gt-extendingservice\fB --dump-conf\fR
 .RE
 .\"
 .SH ENVIRONMENT
