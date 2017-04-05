@@ -146,3 +146,8 @@ EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08
 >>> /(.*Extender configuration.*)/
 >>>2 /(.*Extend to time is out of extender calendar time limit.*)/
 >>>= 16
+
+# Just dump extender configuration.
+EXECUTABLE extend --conf test/test.cfg --dump-conf --ext-pdu-v v2
+>>> /Extender configuration:/
+>>>= 0

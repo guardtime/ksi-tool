@@ -68,10 +68,19 @@ typedef struct SIGNING_AGGR_ROUND_st {
 	size_t hash_count;
 } SIGNING_AGGR_ROUND;
 
+enum SIGNER_TASKS_en {
+	SIGN_DATA = 0,
+	SIGN_DATA_HASH,
+	SIGN_DATA_AND_SAVE,
+	SIGN_DATA_HASH_AND_SAVE,
+	AGGREGATOR_DUMP_CONF,
+};
+
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int check_hash_algo_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int check_io_naming_and_type_errors(PARAM_SET *set, ERR_TRCKR *err);
+static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int task);
 static void SIGNING_AGGR_ROUND_free(SIGNING_AGGR_ROUND *obj);
 static void SIGNING_AGGR_ROUND_ARRAY_free(SIGNING_AGGR_ROUND **array);
 static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size_t *max_lvl, KSI_HashAlgorithm *algo);
@@ -91,12 +100,7 @@ int sign_run(int argc, char** argv, char **envp) {
 	KSI_CTX *ksi = NULL;
 	ERR_TRCKR *err = NULL;
 	SMART_FILE *logfile = NULL;
-	SIGNING_AGGR_ROUND **aggr_rounds = NULL;
 	int d = 0;
-	size_t max_tree_input = 0;
-	size_t rounds = 0;
-	size_t remote_max_lvl = 0;
-	KSI_HashAlgorithm remote_algo = KSI_HASHALG_INVALID;
 
 	/**
 	 * Extract command line parameters.
@@ -134,30 +138,10 @@ int sign_run(int argc, char** argv, char **envp) {
 	res = check_io_naming_and_type_errors(set, err);
 	if (res != KT_OK) goto cleanup;
 
-	if (PARAM_SET_isSetByName(set, "apply-remote-conf")) {
-		res = KT_SIGN_getRemoteConf(set, err, ksi, &remote_max_lvl, &remote_algo);
-		if (res != KT_OK) goto cleanup;
-	}
-
 	/**
 	 * If everything OK, run the task.
 	 */
-	res = KT_SIGN_getMaximumInputsPerRound(set, err, remote_max_lvl, &max_tree_input);
-	if (res != KT_OK) goto cleanup;
-
-	res = KT_SIGN_getAggregationRoundsNeeded(set, err, max_tree_input, &rounds);
-	if (res != KT_OK) goto cleanup;
-
-	res = KT_SIGN_performSigning(set, err, ksi, remote_algo, max_tree_input, rounds, &aggr_rounds);
-	if (res != KT_OK) goto cleanup;
-
-	res = KT_SIGN_saveToOutput(set, err, ksi, aggr_rounds);
-	if (res != KT_OK) goto cleanup;
-
-	/**
-	 * If signature was created without errors print some info on demand.
-	 */
-	res = KT_SIGN_dump(set, err, aggr_rounds);
+	res = handleTask(set, err, ksi, TASK_getID(task));
 	if (res != KT_OK) goto cleanup;
 
 cleanup:
@@ -173,7 +157,6 @@ cleanup:
 		else 	ERR_TRCKR_printErrors(err);
 	}
 
-	SIGNING_AGGR_ROUND_ARRAY_free(aggr_rounds);
 	SMART_FILE_close(logfile);
 	TASK_SET_free(task_set);
 	PARAM_SET_free(set);
@@ -270,8 +253,7 @@ char *sign_help_toString(char*buf, size_t len) {
 		" -d        - Print detailed information about processes and errors to stderr.\n"
 		" --dump    - Dump signature(s) created in human-readable format to stdout.\n"
 		" --dump-conf\n"
-		"           - Dump received configuration to stdout. Is valid only with\n"
-		"             option --apply-remote-conf.\n"
+		"           - Dump aggregator configuration to stdout.\n"
 		" --show-progress\n"
 		"           - Show progress bar. Is only valid with -d.\n"
 		" --conf <file>\n"
@@ -359,11 +341,12 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	res = PARAM_SET_add(set, "max-aggr-rounds", "1", "default", PRIORITY_KSI_DEFAULT);
 	res = PARAM_SET_add(set, "max-lvl", "0", "default", PRIORITY_KSI_DEFAULT);
 
-	/*					  ID	DESC										MAN				ATL			FORBIDDEN	IGN	*/
-	TASK_SET_add(task_set, 0,	"Sign data.",								"S",			"i,input",	"H,data-out",		NULL);
-	TASK_SET_add(task_set, 1,	"Sign data, specify hash alg.",				"S,H",			"i,input",	"data-out",		NULL);
-	TASK_SET_add(task_set, 2,	"Sign and save data.",						"S,data-out",	"i,input",	"H",		NULL);
-	TASK_SET_add(task_set, 3,	"Sign and save data, specify hash alg.",	"S,H,data-out", "i,input",	NULL,		NULL);
+	/*						ID							DESC										MAN				ATL				FORBIDDEN		IGN	*/
+	TASK_SET_add(task_set,	SIGN_DATA,					"Sign data.",								"S",			"i,input",		"H,data-out",	NULL);
+	TASK_SET_add(task_set,	SIGN_DATA_HASH,				"Sign data, specify hash alg.",				"S,H",			"i,input",		"data-out",		NULL);
+	TASK_SET_add(task_set,	SIGN_DATA_AND_SAVE,			"Sign and save data.",						"S,data-out",	"i,input",		"H",			NULL);
+	TASK_SET_add(task_set,	SIGN_DATA_HASH_AND_SAVE,	"Sign and save data, specify hash alg.",	"S,H,data-out", "i,input",		NULL,			NULL);
+	TASK_SET_add(task_set,	AGGREGATOR_DUMP_CONF,		"Dump aggregator configuration.",			"S,dump-conf",	NULL,			"i,input,o,H,data-out,apply-remote-conf",		NULL);
 
 cleanup:
 
@@ -471,6 +454,59 @@ static int check_io_naming_and_type_errors(PARAM_SET *set, ERR_TRCKR *err) {
 
 cleanup:
 
+	return res;
+}
+
+static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int task) {
+	int res = KT_UNKNOWN_ERROR;
+	SIGNING_AGGR_ROUND **aggr_rounds = NULL;
+
+	switch (task) {
+		case SIGN_DATA:
+		case SIGN_DATA_HASH:
+		case SIGN_DATA_AND_SAVE:
+		case SIGN_DATA_HASH_AND_SAVE: {
+				size_t max_tree_input = 0;
+				size_t rounds = 0;
+				size_t remote_max_lvl = 0;
+				KSI_HashAlgorithm remote_algo = KSI_HASHALG_INVALID;
+
+				if (PARAM_SET_isSetByName(set, "apply-remote-conf")) {
+					res = KT_SIGN_getRemoteConf(set, err, ctx, &remote_max_lvl, &remote_algo);
+					if (res != KT_OK) goto cleanup;
+				}
+
+				res = KT_SIGN_getMaximumInputsPerRound(set, err, remote_max_lvl, &max_tree_input);
+				if (res != KT_OK) goto cleanup;
+
+				res = KT_SIGN_getAggregationRoundsNeeded(set, err, max_tree_input, &rounds);
+				if (res != KT_OK) goto cleanup;
+
+				res = KT_SIGN_performSigning(set, err, ctx, remote_algo, max_tree_input, rounds, &aggr_rounds);
+				if (res != KT_OK) goto cleanup;
+
+				res = KT_SIGN_saveToOutput(set, err, ctx, aggr_rounds);
+				if (res != KT_OK) goto cleanup;
+
+				/**
+				 * If signature was created without errors print some info on demand.
+				 */
+				res = KT_SIGN_dump(set, err, aggr_rounds);
+				if (res != KT_OK) goto cleanup;
+			}
+			goto cleanup;
+
+		case AGGREGATOR_DUMP_CONF:
+			res = KT_SIGN_getRemoteConf(set, err, ctx, NULL, NULL);
+			goto cleanup;
+
+		default:
+			ERR_CATCH_MSG(err, (res = KT_UNKNOWN_ERROR), "Error: Unknown signing task.");
+			goto cleanup;
+	}
+
+cleanup:
+	SIGNING_AGGR_ROUND_ARRAY_free(aggr_rounds);
 	return res;
 }
 

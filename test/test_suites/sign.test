@@ -93,3 +93,8 @@ EXECUTABLE sign --conf test/test.cfg -i test/resource/file/testFile -H SHA2-512 
 ])*.*[^\1]/
 >>>2 /Signature saved to/
 >>>= 0
+
+# Just dump aggregator configuration.
+EXECUTABLE sign --conf test/test.cfg --dump-conf
+>>> /Aggregator configuration:/
+>>>= 0
