@@ -165,10 +165,10 @@ In the following examples it is assumed that KSI service configuration (URLs, ac
 .\"
 .TP 2
 \fB5
-\fRTo extend a signature \fIsig.ksig\fR to specified calendar time \fI2015-05-05 00:00:00 \fR, applying extender configuration, and save it as \fIext.ksig\fR:
+\fRSame as \fIexample 2\fR. In addition verify that the \fIextend to \fRtime matches the calendar interval available in extender:
 .LP
 .RS 4
-\fBksi extend -i \fIsig.ksig \fB-o \fIext.ksig \fB-T \fI"2015-05-05 00:00:00"\fB --apply-remote-conf\fR
+\fBksi extend -i \fIsig.ksig \fB-o \fIext.ksig \fB--pub-str \fIAAAAAA-CW45II-AAKWRK-F7FBNM-KB6FNV-DYYFW7-PJQN6F-JKZWBQ-3OQYZO-HCB7RA-YNYAGA-ODRL2V\fB --apply-remote-conf\fR
 .RE
 .\"
 .TP 2
