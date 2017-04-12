@@ -21,6 +21,7 @@
 #include <ksi/pkitruststore.h>
 #include <ksi/compatibility.h>
 #include <string.h>
+#include <time.h>
 #include "param_set/param_set.h"
 #include "tool_box/ksi_init.h"
 #include "smart_file.h"
@@ -37,6 +38,75 @@
 #	include <limits.h>
 #	include <sys/time.h>
 #endif
+
+/* Global varaibles for message and instance id. */
+long long tool_global_msg_id = 0;
+long long tool_global_inst_id = 0;
+
+/* Fix this hack if KSI_Header has getter for KSI_CTX. */
+KSI_CTX *hack_ctx = NULL;
+
+static int ksi_header_formating_callback(KSI_Header *hdr) {
+	int res = KSI_UNKNOWN_ERROR;
+	KSI_Integer *msgId = NULL;
+	KSI_Integer *instId = NULL;
+
+	if (hdr == NULL) {
+		res = KSI_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	/* Check if has instance if or message id. Cleanup if needed. */
+	if (tool_global_inst_id >= 0) {
+		res = KSI_Header_getInstanceId(hdr, &instId);
+		if (res != KSI_OK) goto cleanup;
+		
+		if (instId != NULL) {
+			KSI_Integer_free(instId);
+			instId = NULL;
+
+			res = KSI_Header_setInstanceId(hdr, NULL);
+			if (res != KSI_OK) goto cleanup;
+		}
+		
+		res = KSI_Integer_new(hack_ctx, tool_global_inst_id, &instId);
+		if (res != KSI_OK) goto cleanup;
+		
+		res = KSI_Header_setInstanceId(hdr, instId);
+		if (res != KSI_OK) goto cleanup;
+		instId = NULL;
+	}
+	
+	if (tool_global_msg_id >= 0) {
+		res = KSI_Header_getMessageId(hdr, &msgId);
+		if (res != KSI_OK) goto cleanup;
+
+		if (msgId != NULL) {
+			KSI_Integer_free(msgId);
+			msgId = NULL;
+
+			res = KSI_Header_setMessageId(hdr, NULL);
+			if (res != KSI_OK) goto cleanup;
+		}
+
+		res = KSI_Integer_new(hack_ctx, tool_global_msg_id++, &msgId);
+		if (res != KSI_OK) goto cleanup;
+
+		res = KSI_Header_setMessageId(hdr, msgId);
+		if (res != KSI_OK) goto cleanup;
+		msgId = NULL;
+	}
+
+	res = KSI_OK;
+
+
+cleanup:
+
+	KSI_Integer_free(instId);
+	KSI_Integer_free(msgId);
+
+	return res;
+}
 
 static int tool_init_ksi_logger(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set, SMART_FILE **log) {
 	int res;
@@ -146,6 +216,39 @@ static int tool_init_ksi_network_provider(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SE
 		ERR_CATCH_MSG(err, res, "Error: Unable set transfer timeout.");
 	}
 
+	if (PARAM_SET_isOneOfSetByName(set, "inst-id, msg-id")) {
+		int instId = -1;
+		int msgId = -1;
+		char *dummy = NULL;
+		
+		if (PARAM_SET_isSetByName(set, "inst-id")) {
+			PARAM_SET_getStr(set, "inst-id", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &dummy);
+			
+			if (dummy != NULL) {
+				PARAM_SET_getObj(set, "inst-id", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&instId);
+			} else {
+				instId = (int)time(NULL);
+			}
+		}
+		
+		if (PARAM_SET_isSetByName(set, "msg-id")) {
+			PARAM_SET_getStr(set, "msg-id", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &dummy);
+			
+			if (dummy != NULL) {
+				PARAM_SET_getObj(set, "msg-id", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&msgId);
+			} else {
+				msgId = 0;
+			}
+		}
+		
+		tool_global_inst_id = instId;
+		tool_global_msg_id = msgId;
+		hack_ctx = ksi;
+				
+		res = KSI_CTX_setRequestHeaderCallback(ksi, ksi_header_formating_callback);
+		ERR_CATCH_MSG(err, res, "Error: Unable specify libksi callback KSI PDU header formating function.");
+	}
+	
 	res = KT_OK;
 
 cleanup:

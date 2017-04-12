@@ -633,7 +633,7 @@ int extract_int(void *extra, const char* str,  void** obj){
 	long tmp;
 	int *pI = (int*)obj;
 	VARIABLE_IS_NOT_USED(extra);
-	tmp = strtol(str, NULL, 10);
+	tmp = str != NULL ? strtol(str, NULL, 10) : 0;
 	if (tmp < INT_MIN || tmp > INT_MAX) return KT_INVALID_CMD_PARAM;
 	*pI = (int)tmp;
 	return PST_OK;
