@@ -237,7 +237,7 @@ static int tool_init_ksi_network_provider(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SE
 			if (dummy != NULL) {
 				PARAM_SET_getObj(set, "msg-id", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&msgId);
 			} else {
-				msgId = 0;
+				msgId = 1;
 			}
 		}
 		

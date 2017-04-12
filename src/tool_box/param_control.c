@@ -616,6 +616,11 @@ int isContentOk_uint_can_be_null(const char *integer) {
 	else return isContentOk_uint(integer);
 }
 
+int isContentOk_uint_not_zero_can_be_null(const char *integer) {
+	if (integer == NULL) return FORMAT_OK;
+	else return isContentOk_uint_not_zero(integer);
+}
+
 int isContentOk_int(const char* integer) {
 	long tmp;
 

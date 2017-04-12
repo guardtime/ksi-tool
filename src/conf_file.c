@@ -195,7 +195,10 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 		res = PARAM_SET_setParseOptions(conf, "apply-remote-conf", PST_PRSCMD_HAS_NO_VALUE);
 		if (res != PST_OK) goto cleanup;
 		
-		res = PARAM_SET_addControl(conf, "{inst-id}{msg-id}", isFormatOk_int_can_be_null, isContentOk_uint_can_be_null, NULL, extract_int);
+		res = PARAM_SET_addControl(conf, "{inst-id}", isFormatOk_int_can_be_null, isContentOk_uint_can_be_null, NULL, extract_int);
+		if (res != PST_OK) goto cleanup;
+		
+		res = PARAM_SET_addControl(conf, "{msg-id}", isFormatOk_int_can_be_null, isContentOk_uint_not_zero_can_be_null, NULL, extract_int);
 		if (res != PST_OK) goto cleanup;
 	}
 	
