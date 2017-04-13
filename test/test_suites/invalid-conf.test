@@ -48,16 +48,15 @@ EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-syntax-error.cfg
 
 # Conf with flags valid on command-line but do not belong to conf 1.
 EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-flags-valid-on-cmd-inside-conf-1.cfg
->>>2 /(.*d of)(.*sign).*([^$]|[
-])*(.*d of)(.*sign).*([^$]|[
-])*(.*d of)(.*i).*([^$]|[
+>>>2 /(.*d of)(.*i).*([^$]|[
 ])*(.*d of)(.*input).*([^$]|[
 ])*(.*d of)(.*o).*([^$]|[
 ])*(.*d of)(.*data-out).*([^$]|[
 ])*(.*d of)(.*dump).*([^$]|[
 ])*(.*d of)(.*log).*([^$]|[
 ])*(.*d of)(.*conf).*([^$]|[
-])*(.*d of)(.*help).*/
+])*(.*d of)(.*help).*([^$]|[
+])*(.*d of)(.*prev-leaf)/
 >>>= 16
 
 EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-flags-valid-on-cmd-inside-conf-1.cfg

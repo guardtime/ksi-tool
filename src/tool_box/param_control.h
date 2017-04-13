@@ -126,10 +126,29 @@ int extract_inputHash(void *extra, const char* str, void** obj);
 
 int isFormatOk_int(const char *integer);
 int isFormatOk_int_can_be_null(const char *integer);
-int isContentOk_uint_can_be_null(const char* integer);
 int isContentOk_uint(const char* integer);
 int isContentOk_uint_not_zero(const char* integer);
+int isContentOk_uint_can_be_null(const char* integer);
+int isContentOk_uint_not_zero_can_be_null(const char *integer);
 int isContentOk_int(const char* integer);
+
+/**
+ * Extracts a signed int value from string str. Parameter extra is not used.
+ * NB! Parameter obj MUST be a casted pointer that POINTS TO int value.
+ * For example:
+ *      int num;
+ *      extract_int(NULL, "1234", (void**)(&num));
+ *
+ * It must be noted that in case of an error, function returns 0. All the failure
+ * cases should be detected and reported by content and format check functions.
+ * This value extractor can be used together with isFormatOk_int_can_be_null
+ * to extract default value 0 if just the parameter flag is specified.
+ *
+ * \param extra - Is not used, specify as NULL.
+ * \param str - A string representation of integer.
+ * \param obj - A pointer to int casted to void**.
+ * \return - Returns integer value if successful. On failure returns 0.
+ */
 int extract_int(void *extra, const char* str,  void** obj);
 
 int isContentOk_tree_level(const char *integer);

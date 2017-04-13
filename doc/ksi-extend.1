@@ -119,6 +119,13 @@ Obtain and apply additional configuration data from extender service server. Fol
 .LP
 .\"
 .RE
+.TP
+\fB--inst-id \fR[\fIint\fR]
+An integer (>= 0) to identify the sender instance that is constant during the KSI tool process lifetime. It should stay constant or increase every time KSI tool is executed as server may drop future messages with lower \fIinstance identifier\fR values. When specified as integer, the constant value is used. When specified without argument, unix time is used in place of a constant. If not specified, \fIinstance identifier\fR is not included to the request header. It must be noted that this value only affects KSI protocol PDUs.
+.\"
+.TP
+\fB--msg-id \fR[\fIint\fR]
+An integer (>= 1) to identify the requests within KSI tool process lifetime. The \fImessage identifier\fR value is increased after every request. When specified without argument, 0 is used. If not specified \fImessage identifier\fR is not included to the request header. It must be noted that this value only affects KSI protocol PDUs.
 .\"
 .TP
 \fB--log \fIfile\fR
