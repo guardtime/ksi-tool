@@ -43,8 +43,6 @@
 long long tool_global_msg_id = 0;
 long long tool_global_inst_id = 0;
 
-/* Fix this hack if KSI_Header has getter for KSI_CTX. */
-KSI_CTX *hack_ctx = NULL;
 
 static int ksi_header_formating_callback(KSI_Header *hdr) {
 	int res = KSI_UNKNOWN_ERROR;
@@ -69,7 +67,7 @@ static int ksi_header_formating_callback(KSI_Header *hdr) {
 			if (res != KSI_OK) goto cleanup;
 		}
 		
-		res = KSI_Integer_new(hack_ctx, tool_global_inst_id, &instId);
+		res = KSI_Integer_new(KSI_Header_getCtx(hdr), tool_global_inst_id, &instId);
 		if (res != KSI_OK) goto cleanup;
 		
 		res = KSI_Header_setInstanceId(hdr, instId);
@@ -89,7 +87,7 @@ static int ksi_header_formating_callback(KSI_Header *hdr) {
 			if (res != KSI_OK) goto cleanup;
 		}
 
-		res = KSI_Integer_new(hack_ctx, tool_global_msg_id++, &msgId);
+		res = KSI_Integer_new(KSI_Header_getCtx(hdr), tool_global_msg_id++, &msgId);
 		if (res != KSI_OK) goto cleanup;
 
 		res = KSI_Header_setMessageId(hdr, msgId);
@@ -243,7 +241,6 @@ static int tool_init_ksi_network_provider(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SE
 		
 		tool_global_inst_id = instId;
 		tool_global_msg_id = msgId;
-		hack_ctx = ksi;
 				
 		res = KSI_CTX_setRequestHeaderCallback(ksi, ksi_header_formating_callback);
 		ERR_CATCH_MSG(err, res, "Error: Unable specify libksi callback KSI PDU header formating function.");
