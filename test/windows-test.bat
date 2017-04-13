@@ -74,6 +74,12 @@ if not ERRORLEVEL 1 (
 	set TEST_DEPENDING_ON_TLVUTIL=
 )
 
+gttlvdump -h > NUL && gttlvgrep -h > NUL && grep --help > NUL
+if not ERRORLEVEL 1 (
+	set TEST_DEPENDING_ON_TLVUTIL_GREP=test\test_suites\tlvutil-pdu-header.test
+) else (
+	set TEST_DEPENDING_ON_TLVUTIL_GREP=
+)
 
 shelltest ^
 test\test_suites\sign.test ^
@@ -99,6 +105,7 @@ test\test_suites\file-name-gen.test ^
 test\test_suites\sign-block-signer.test ^
 test\test_suites\sign-block-signer-cmd.test ^
 %TEST_DEPENDING_ON_TLVUTIL% ^
+%TEST_DEPENDING_ON_TLVUTIL_GREP% ^
 --with=%tool% -- -j1
 set exit_code=%errorlevel%
 

@@ -55,7 +55,7 @@ static int ksi_header_formating_callback(KSI_Header *hdr) {
 	}
 
 	/* Check if has instance if or message id. Cleanup if needed. */
-	if (tool_global_inst_id >= 0) {
+	if (tool_global_inst_id >= 1) {
 		res = KSI_Header_getInstanceId(hdr, &instId);
 		if (res != KSI_OK) goto cleanup;
 		
