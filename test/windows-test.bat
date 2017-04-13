@@ -76,7 +76,9 @@ if not ERRORLEVEL 1 (
 
 gttlvdump -h > NUL && gttlvgrep -h > NUL && grep --help > NUL
 if not ERRORLEVEL 1 (
-	set TEST_DEPENDING_ON_TLVUTIL_GREP=test\test_suites\tlvutil-pdu-header.test
+	REM Add test/test_suites/tlvutil-pdu-header.test to the list when gttlvutil new version is released.
+	REM set TEST_DEPENDING_ON_TLVUTIL_GREP=test\test_suites\tlvutil-pdu-header.test
+	set TEST_DEPENDING_ON_TLVUTIL_GREP=
 ) else (
 	set TEST_DEPENDING_ON_TLVUTIL_GREP=
 )
