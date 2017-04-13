@@ -77,6 +77,8 @@ static void print_general_help(PARAM_SET *set, const char *KSI_CONF){
 	char *aggre_url = NULL;
 	char *ext_url = NULL;
 	char *pub_url = NULL;
+	char *algo_from_conf = NULL;
+	const char *default_algo = NULL;
 	char *cnstr = NULL;
 	char buf[1024];
 	int i = 0;
@@ -92,6 +94,9 @@ static void print_general_help(PARAM_SET *set, const char *KSI_CONF){
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) return;
 
 	res = PARAM_SET_getStr(set, "P", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &pub_url);
+	if (res != PST_OK && res != PST_PARAMETER_EMPTY) return;
+
+	res = PARAM_SET_getStr(set, "H", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &algo_from_conf);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) return;
 
 
@@ -128,9 +133,14 @@ static void print_general_help(PARAM_SET *set, const char *KSI_CONF){
 	/**
 	 * Print info about supported hash algorithms.
 	 */
+	if (algo_from_conf != NULL) {
+		default_algo = KSI_getHashAlgorithmName(KSI_getHashAlgorithmByName(algo_from_conf));
+	} else {
+		default_algo = KSI_getHashAlgorithmName(KSI_getHashAlgorithmByName("DEFAULT"));
+	}
 	print_result(
-	"Supported hash algorithms:\n"
-	"  %s\n",
+	"Supported hash algorithms (default: %s):\n"
+	"  %s\n", default_algo,
 		hash_algorithms_to_string(buf, sizeof(buf)));
 }
 
