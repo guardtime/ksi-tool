@@ -27,7 +27,7 @@ EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-forbidden-flags.cfg
 
 # Unknown flags in configuration file are not allowed.
 EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-unknown-flags.cfg
->>>2 /(Unknown parameter)(.*H.*)(.*from.*)(.*nok-conf-unknown-flags.cfg.*)
+>>>2 /(Unknown parameter)(.*d.*)(.*from.*)(.*nok-conf-unknown-flags.cfg.*)
 (.*Unknown parameter)(.*T.*)(.*from.*)(.*nok-conf-unknown-flags.cfg.*)/
 >>>= 16
 
@@ -77,7 +77,7 @@ EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-flags-valid-on-cmd-insi
 
 EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-flags-valid-on-cmd-inside-conf-3.cfg
 >>>2 /(Did You mean.*)(.*apply-remote-conf.*)(.*dump-last-leaf.*)
-(.*Unknown.*)(.*H.*)
+(.*Unknown.*)(.*d.*)
 (.*Unknown.*)(.*h.*)
 (.*Unknown.*)(.*T.*)
 (.*Unknown.*)(.*ver-int.*)/

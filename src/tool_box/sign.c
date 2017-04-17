@@ -107,7 +107,7 @@ int sign_run(int argc, char** argv, char **envp) {
 	 */
 	res = PARAM_SET_new(
 			CONF_generate_param_set_desc(
-					"{sign}{i}{input}{o}{H}{data-out}{d}{dump}{dump-conf}{log}{conf}{h|help}{dump-last-leaf}"
+					"{sign}{i}{input}{o}{data-out}{d}{dump}{dump-conf}{log}{conf}{h|help}{dump-last-leaf}"
 					"{prev-leaf}{mdata}{mask}{show-progress}{apply-remote-conf}", "S", buf, sizeof(buf)),
 					&set);
 	if (res != KT_OK) goto cleanup;
@@ -308,7 +308,6 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{o}{data-out}{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputHash, isContentOk_inputHash, convertRepair_path, extract_inputHash);
 	PARAM_SET_addControl(set, "{input}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputHashFromFile);
-	PARAM_SET_addControl(set, "{H}", isFormatOk_hashAlg, isContentOk_hashAlg, NULL, extract_hashAlg);
 	PARAM_SET_addControl(set, "{prev-leaf}", isFormatOk_imprint, isContentOk_imprint, NULL, extract_imprint);
 	PARAM_SET_addControl(set, "{d}{dump}{dump-conf}{dump-last-leaf}{mdata}{show-progress}{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{mask}", isFormatOk_mask, isContentOk_mask, convertRepair_mask, extract_mask);

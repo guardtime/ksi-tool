@@ -54,6 +54,7 @@ char* CONF_generate_param_set_desc(char *description, const char *flags, char *b
 
 	if (is_S) {
 		count += KSI_snprintf(buf + count, buf_len - count,
+				"{H}"
 				"{S}{aggr-user}{aggr-key}"
 				"{max-lvl}{max-aggr-rounds}{mdata-cli-id}{mdata-mac-id}{mdata-sqn-nr}{mdata-req-tm}"
 				"{aggr-pdu-v}");
@@ -143,6 +144,9 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 	}
 
 	if (is_S) {
+		res = PARAM_SET_addControl(conf, "{H}", isFormatOk_hashAlg, isContentOk_hashAlg, NULL, extract_hashAlg);
+		if (res != PST_OK) goto cleanup;
+
 		res = PARAM_SET_addControl(conf, "{S}", isFormatOk_url, NULL, convertRepair_url, NULL);
 		if (res != PST_OK) goto cleanup;
 
