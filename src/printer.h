@@ -28,6 +28,7 @@
 #define	PRINT_WARNINGS  0x04
 #define	PRINT_ERRORS  0x08
 #define	PRINT_DEBUG  0x10
+#define	PRINT_SUGGESTION  0x20
 
 
 
@@ -44,6 +45,8 @@ int print_info(const char *format, ... );
 int print_warnings(const char *format, ... );
 int print_errors(const char *format, ... );
 int print_debug(const char *format, ... );
+int print_suggestion(const char *format, ... );
+
 #ifdef	__cplusplus
 }
 #endif

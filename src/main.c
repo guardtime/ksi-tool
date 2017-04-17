@@ -164,7 +164,7 @@ int main(int argc, char** argv, char **envp) {
 	 */
 	print_init();
 	print_disable(PRINT_WARNINGS | PRINT_INFO | PRINT_DEBUG);
-	print_enable(PRINT_RESULT | PRINT_ERRORS);
+	print_enable(PRINT_RESULT | PRINT_ERRORS | PRINT_SUGGESTION);
 
 
 	/**
