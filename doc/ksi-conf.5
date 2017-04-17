@@ -18,7 +18,7 @@ If a configuration option is specified in more than one source, the source with 
 .LP
 While defining options, a short parameter or multiple flags must have prefix '\fB-\fR' and long parameters have prefix '\fB--\fR'. If some parameter values contain whitespace characters, double quote marks (\fB"\fR) must be used to wrap the entire value. If double quote mark or backslash have to be used inside the value part, an escape character (\fB\\\fR) must be typed before the charcater(\fB\\"\fR or \fB\\\\\fR). If configuration option with unknown or invalid key-value pairs is used, an error is generated.
 .LP
-In configuration file each key-value pair must be placed on a single line. For commenting, start the line with \fB#\fR. 
+In configuration file each key-value pair must be placed on a single line. For commenting, start the line with \fB#\fR.
 .br
 In case of \fB-V\fR, \fB-W\fR and \fB-P\fR options file location is interpreted as relative to the configuration file, if full path is not defined.
 .br
@@ -40,12 +40,10 @@ Specify the HMAC key for signing service.
 .TP
 \fB--aggr-pdu-v \fIstr\fR
 Specify the KSIAP (KSI Aggregation Protocol) PDU version. Valid values are \fIv1\fR and \fIv2\fR. It must be noted that \fIv1\fR is \fBlegacy\fR implementation and will be fully replaced with \fIv2\fR in the future.
-
 .\"
 .TP
 \fB-H \fIalg\fR
 Use the given hash algorithm to hash the file to be signed. Use \fBksi -h \fRto get the list of supported hash algorithms.
-
 .\"
 .TP
 \fB-X \fIURL\fR
