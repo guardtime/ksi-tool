@@ -1,3 +1,4 @@
+* IMPROVEMENT: Publication-based verification may print some helpful hints how to fix the failing verification.
 * FEATURE: New flags --inst-id and --msg-id for specifying instance id and message id for KSI PDU header.
 * FEATURE: New flag --dump-conf for dumping remote configuration to stdout.
 * FEATURE: New flag --apply-remote-conf for obtaining and applying server configuration.
