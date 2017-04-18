@@ -108,6 +108,8 @@ void ERR_TRCKR_addAdditionalInfo(ERR_TRCKR *err, const char *info, ...) {
 void ERR_TRCKR_reset(ERR_TRCKR *err) {
 	if (err == NULL) return;
 	err->count = 0;
+	err->additionalInfo_len = 0;
+	err->additionalInfo[0] = '\0';
 }
 
 void ERR_TRCKR_printErrors(ERR_TRCKR *err) {
