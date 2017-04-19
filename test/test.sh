@@ -100,6 +100,7 @@ test/test_suites/file-name-gen.test \
 test/test_suites/sign-block-signer.test \
 test/test_suites/sign-block-signer-cmd.test \
 test/test_suites/sign-metadata.test \
+test/test_suites/verify-pub-suggestions.test \
 $TEST_DEPENDING_ON_TLVUTIL \
 --with=$tool -- -j1
 exit_code=$?

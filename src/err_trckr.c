@@ -34,6 +34,8 @@ typedef struct ERR_ENTRY_st {
 
 struct ERR_TRCKR_st {
 	ERR_ENTRY err[MAX_ERROR_COUNT];
+	char additionalInfo[MAX_ADDITIONAL_INFO_LEN];
+	size_t additionalInfo_len;
 	unsigned count;
 	int (*printErrors)(const char*, ...);
 	const char *(*errCodeToString)(int);
@@ -52,7 +54,8 @@ ERR_TRCKR *ERR_TRCKR_new(int (*printErrors)(const char*, ...),
 	if (tmp == NULL) return NULL;
 
 	tmp->count = 0;
-
+	tmp->additionalInfo_len = 0;
+	tmp->additionalInfo[0] = '\0';
 
 	tmp->printErrors = printErrors != NULL ? printErrors : printf;
 	tmp->errCodeToString = errCodeToString != NULL ? errCodeToString : dummy_errocode_to_string;
@@ -84,9 +87,29 @@ void ERR_TRCKR_add(ERR_TRCKR *err, int code, const char *fname, int lineN, const
 	return;
 }
 
+void ERR_TRCKR_addAdditionalInfo(ERR_TRCKR *err, const char *info, ...) {
+	size_t count = 0;
+	va_list va;
+
+	if (err == NULL || info == NULL) return;
+	if (err->additionalInfo_len >= MAX_ADDITIONAL_INFO_LEN) return;
+
+	count = err->additionalInfo_len;
+
+	va_start(va, info);
+	count += KSI_vsnprintf(err->additionalInfo + count, MAX_ADDITIONAL_INFO_LEN - count, info, va);
+	va_end(va);
+
+	err->additionalInfo_len = count;
+
+	return;
+}
+
 void ERR_TRCKR_reset(ERR_TRCKR *err) {
 	if (err == NULL) return;
 	err->count = 0;
+	err->additionalInfo_len = 0;
+	err->additionalInfo[0] = '\0';
 }
 
 void ERR_TRCKR_printErrors(ERR_TRCKR *err) {
@@ -100,6 +123,11 @@ void ERR_TRCKR_printErrors(ERR_TRCKR *err) {
 		} else {
 			err->printErrors("%i) %s%s",i+1,  err->err[i].message, (err->err[i].message[strlen(err->err[i].message) - 1] == '\n') ? ("") : ("\n"));
 		}
+	}
+
+	if (err->additionalInfo_len > 0) {
+		err->printErrors("\nAdditional info:\n");
+		err->printErrors("%s\n", err->additionalInfo);
 	}
 
 	return;
@@ -118,6 +146,11 @@ void ERR_TRCKR_printExtendedErrors(ERR_TRCKR *err) {
 				err->errCodeToString(err->err[i].code),
 				err->err[i].code,
 				(err->err[i].message[strlen(err->err[i].message) - 1] == '\n') ? ("") : ("\n") );
+	}
+
+	if (err->additionalInfo_len > 0) {
+		err->printErrors("\nAdditional info:\n");
+		err->printErrors("%s\n", err->additionalInfo);
 	}
 
 	return;
