@@ -1,3 +1,5 @@
+* IMPROVEMENT: New flag --aggr-hmac-alg for specifing KSI aggregator HMAC algorithm.
+* IMPROVEMENT: New flag --ext-hmac-alg for specifing KSI extender HMAC algorithm.
 * IMPROVEMENT: Publication-based verification may print some helpful hints how to fix the failing verification.
 * FEATURE: New flags --inst-id and --msg-id for specifying instance id and message id for KSI PDU header.
 * FEATURE: New flag --dump-conf for dumping remote configuration to stdout.
