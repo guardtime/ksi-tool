@@ -24,7 +24,7 @@ EXECUTABLE sign --conf test/resource/conf/static-sign-1.cfg -i SHA2-256:11a700b0
 >>>= 0
 
 # Simple static signing 2.
-EXECUTABLE sign --conf test/resource/conf/static-sign-2.cfg -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/static-2.ksig -d 
+EXECUTABLE sign --conf test/resource/conf/static-sign-2.cfg -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/static-2.ksig -d
 >>>2 /Signature saved to/
 >>>= 0
 
@@ -74,3 +74,8 @@ EXECUTABLE verify --ver-int -d -i test/out/sign/static_should_not_be.1.ksig -i t
 (File does not exist)(.*CMD.*)(.*-i.*)(.*5.*)
 (File does not exist)(.*CMD.*)(.*-i.*)(.*6.*)/
 >>>= 3
+
+# Simple static signing. Set HMAC algorithm to SHA2-512.
+EXECUTABLE sign --conf test/resource/conf/static-sign-4.hmac-sha512.cfg -i SHA2-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/static-4.hmac-sha512.ksig --aggr-hmac-alg SHA2-512 -d
+>>>2 /Signature saved to/
+>>>= 0
