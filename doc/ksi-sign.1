@@ -42,6 +42,10 @@ Specify the username for signing service.
 Specify the HMAC key for signing service.
 .\"
 .TP
+\fB--aggr-hmac-alg \fIalg\fR
+Hash algorithm to be used for computing HMAC on outgoing messages towards KSI aggregator. If not set, default algorithm is used. Use \fBksi -h \fRto get the list of supported hash algorithms.
+.\"
+.TP
 \fB--data-out \fIfile\fR
 Save signed data to file. Use when signing a stream. Use '-' as file name to redirect data being hashed to \fIstdout\fR.
 .\"
