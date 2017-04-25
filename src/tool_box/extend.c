@@ -200,11 +200,13 @@ char *extend_help_toString(char*buf, size_t len) {
 		"                 record the extender has.\n"
 		"               * Calendar last time - aggregation time of the newest calendar\n"
 		"                 record the extender has."
+#if 0
 		"               * Maximum requests - maximum number of requests the client is\n"
 		"                 allowed to send within one second.\n"
 		"               * Parent URI - parent server URI. Note that there may be several\n"
 		"                 parent servers listed in the configuration. Typically these are\n"
 		"                 all members of one aggregator cluster.\n"
+#endif
 		" --log <file>\n"
 		"           - Write libksi log to given file. Use '-' as file name to redirect\n"
 		"             log to stdout.\n",

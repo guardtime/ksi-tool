@@ -267,10 +267,11 @@ char *sign_help_toString(char*buf, size_t len) {
 		"           - Obtain and apply configuration data from aggregation service server.\n"
 		"             Following configuration is received from server:\n"
 		"               * maximum level - value that the nodes in the client's aggregation\n"
-		"                 tree are allowed to have. Can be overridden with --max-lvl.\n"
+		"                 tree are allowed to have.\n"
 		"               * aggregation hash algorithm - identifier of the hash function\n"
 		"                 that the client is recommended to use in its aggregation trees.\n"
 		"                 Can be overridden with -H.\n"
+#if 0
 		"               * aggregation period - recommended duration of client's aggregation\n"
 		"                 round, in milliseconds.\n"
 		"               * maximum requests - maximum number of requests the client is\n"
@@ -279,6 +280,7 @@ char *sign_help_toString(char*buf, size_t len) {
 		"               * parent URI - parent server URI. Note that there may be several\n"
 		"                 parent servers listed in the configuration. Typically these are\n"
 		"                 all members of one aggregator cluster.\n"
+#endif
 		" --log <file>\n"
 		"           - Write libksi log to given file. Use '-' as file name to redirect\n"
 		"             log to stdout.\n\n"
@@ -554,8 +556,9 @@ cleanup:
 
 static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size_t remote_max_lvl, size_t *inputs) {
 	int res = KT_UNKNOWN_ERROR;
-	int max_lvl_virtual = 0;
-	int max_lvl = 0;
+	size_t max_lvl_virtual = 0;
+	int user_max_lvl = 0;
+	size_t max_lvl = 0;
 	int has_prev_leaf = 0;
 	int is_masking = 0;
 	int is_metadata = 0;
@@ -567,13 +570,16 @@ static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size
 		goto cleanup;
 	}
 
-	res = PARAM_SET_getObj(set, "max-lvl", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void*)&max_lvl);
+	res = PARAM_SET_getObj(set, "max-lvl", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void*)&user_max_lvl);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 
-	if (remote_max_lvl != 0 && max_lvl > remote_max_lvl) {
-		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_EXCEED_LIMIT, "Error: Configuration of local aggregation tree is too large.");
+	if (remote_max_lvl != 0 && user_max_lvl > remote_max_lvl) {
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_EXCEED_LIMIT, "Error: Configuration of local aggregation tree is too large (see maximum level configuration).");
 		goto cleanup;
 	}
+
+	if (user_max_lvl > 0) max_lvl = (size_t)user_max_lvl;
+	else if (remote_max_lvl > 0) max_lvl = remote_max_lvl;
 
 	/**
 	 * Check if masking is done and / or metadata is appended to the tree.
@@ -588,22 +594,22 @@ static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size
 	}
 
 	if (max_lvl < 2 && has_prev_leaf && is_metadata) {
-		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to embed metadata and link the local aggregation tree with the last leaf of the previous local aggregation tree with masking as the local aggregation tree's maximum allowed depth is too small (see --max-lvl).\n");
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to embed metadata and link the local aggregation tree with the last leaf of the previous local aggregation tree with masking as the local aggregation tree's maximum allowed depth is too small (see maximum level configuration).\n");
 		goto cleanup;
 	}
 
 	if (max_lvl < 2 && is_masking && is_metadata) {
-		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to add metadata with masking as the local aggregation tree's maximum allowed depth is too small (see --max-lvl).\n");
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to add metadata with masking as the local aggregation tree's maximum allowed depth is too small (see maximum level configuration).\n");
 		goto cleanup;
 	}
 
 	if (max_lvl == 0 && is_metadata) {
-		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to embed metadata as the local aggregation tree's maximum allowed depth is too small (see --max-lvl).\n");
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to embed metadata as the local aggregation tree's maximum allowed depth is too small (see maximum level configuration).\n");
 		goto cleanup;
 	}
 
 	if (max_lvl == 0 && is_masking) {
-		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to use masking as the local aggregation tree's maximum allowed depth is too small (see --max-lvl).\n");
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to use masking as the local aggregation tree's maximum allowed depth is too small (see maximum level configuration).\n");
 		goto cleanup;
 	}
 
@@ -617,7 +623,7 @@ static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size
 	if (is_metadata) if (max_lvl_virtual > 0) max_lvl_virtual--;
 
 	if (sizeof(size_t) * 8 <= max_lvl_virtual) {
-		ERR_TRCKR_ADD(err, res = KT_INDEX_OVF, "Error: The maximum local aggregation tree to be generated may contain more values than internal iterators can handle (See --max-lvl).");
+		ERR_TRCKR_ADD(err, res = KT_INDEX_OVF, "Error: The maximum local aggregation tree to be generated may contain more values than internal iterators can handle (See maximum level configuration).");
 		goto cleanup;
 	}
 
