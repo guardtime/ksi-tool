@@ -373,8 +373,7 @@ static int obtain_remote_conf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size
 	d = PARAM_SET_isSetByName(set, "d");
 
 	print_progressDesc(d, "Receiving remote configuration... ");
-	res = KSI_receiveExtenderConfig(ctx, &config);
-	if (res == KSI_UNSUPPORTED_PDU_VERSION) ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion:  Use --ext-pdu-v to configure appropriate PDU version.\n");
+	res = KSITOOL_Extender_getConf(err, ctx, &config);
 	ERR_CATCH_MSG(err, res, "Error: Unable to receive remote config.");
 	print_progressResult(res);
 

@@ -528,7 +528,7 @@ static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, s
 
 	print_progressDesc(d, "Receiving remote configuration... ");
 
-	res = KSI_receiveAggregatorConfig(ctx, &config);
+	res = KSITOOL_Aggregator_getConf(err, ctx, &config);
 	ERR_CATCH_MSG(err, res, "Error: Unable to receive remote configuration.");
 
 	print_progressResult(res);
