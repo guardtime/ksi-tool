@@ -541,17 +541,17 @@ static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, i
 	}
 
 	res = KSI_Config_getAggrAlgo(config, &conf_id);
-	ERR_TRCKR_addWarning(err, "  * Unable to get aggregator algorithm id configuration.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to get aggregator algorithm id configuration.");
 
 	res = KSI_Config_getMaxLevel(config, &conf_lvl);
-	ERR_TRCKR_addWarning(err, "  * Unable to get aggregator maximum level configuration.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to get aggregator maximum level configuration.");
 
 	if (remote_max_lvl) {
 		if (conf_lvl) {
 			size_t lvl = KSI_Integer_getUInt64(conf_lvl);
 
 			if (lvl > 0xff) {
-				ERR_TRCKR_addWarning(err, "  * Remote configuration tree depth is out of range.\n");
+				ERR_CATCH_MSG(err, (res = KT_INVALID_CONF), "Error: Remote configuration tree depth is out of range.\n");
 				if (!dump) ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion: Use --dump-conf for more information.\n");
 				*remote_max_lvl = TREE_DEPTH_INVALID;
 			} else {
