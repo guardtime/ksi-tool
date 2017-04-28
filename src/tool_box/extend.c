@@ -111,12 +111,7 @@ cleanup:
 	/* Debugging and KSITOOL_KSI_ERRTrace_save is called in perform_extending. */
 	print_progressResult(res);
 
-	if (res != KT_OK) {
-		print_errors("\n");
-		if (d) ERR_TRCKR_printExtendedErrors(err);
-		else  ERR_TRCKR_printErrors(err);
-	}
-	ERR_TRCKR_printWarnings(err);
+	ERR_TRCKR_print(err, d);
 
 	SMART_FILE_close(logfile);
 	PARAM_SET_free(set);

@@ -173,12 +173,8 @@ cleanup:
 		KSITOOL_KSI_ERRTrace_LOG(ksi);
 		print_debug("\n");
 		DEBUG_verifySignature(ksi, res, sig, result, hsh);
-
-		print_errors("\n");
-		if (d) ERR_TRCKR_printExtendedErrors(err);
-		else  ERR_TRCKR_printErrors(err);
 	}
-	ERR_TRCKR_printWarnings(err);
+	ERR_TRCKR_print(err, d);
 
 	SMART_FILE_close(logfile);
 	PARAM_SET_free(set);

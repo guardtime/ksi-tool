@@ -149,11 +149,6 @@ void ERR_TRCKR_printErrors(ERR_TRCKR *err) {
 		}
 	}
 
-	if (err->additionalInfo_len > 0) {
-		err->printer("\nAdditional info:\n");
-		err->printer("%s\n", err->additionalInfo);
-	}
-
 	return;
 }
 
@@ -172,6 +167,12 @@ void ERR_TRCKR_printExtendedErrors(ERR_TRCKR *err) {
 				(err->err[i].message[strlen(err->err[i].message) - 1] == '\n') ? ("") : ("\n") );
 	}
 
+	return;
+}
+
+void ERR_TRCKR_printAdditionalInfo(ERR_TRCKR *err) {
+	if (err == NULL) return;
+
 	if (err->additionalInfo_len > 0) {
 		err->printer("\nAdditional info:\n");
 		err->printer("%s\n", err->additionalInfo);
@@ -187,6 +188,21 @@ void ERR_TRCKR_printWarnings(ERR_TRCKR *err) {
 		err->printer("\nWarnings:\n");
 		err->printer("%s\n", err->warnings);
 	}
+
+	return;
+}
+
+void ERR_TRCKR_print(ERR_TRCKR *err, int extended) {
+	if (err == NULL) return;
+
+	/* Print errors. */
+	if (err->count) err->printer("\n");
+	if (extended) ERR_TRCKR_printExtendedErrors(err);
+	else ERR_TRCKR_printErrors(err);
+	/* Print warnings. */
+	ERR_TRCKR_printWarnings(err);
+	/* Print additional info. */
+	ERR_TRCKR_printAdditionalInfo(err);
 
 	return;
 }
