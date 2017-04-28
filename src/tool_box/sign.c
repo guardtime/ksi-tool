@@ -76,6 +76,8 @@ enum SIGNER_TASKS_en {
 	AGGREGATOR_DUMP_CONF,
 };
 
+#define TREE_DEPTH_INVALID (-1)
+
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int check_hash_algo_errors(PARAM_SET *set, ERR_TRCKR *err);
@@ -83,8 +85,8 @@ static int check_io_naming_and_type_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int task);
 static void SIGNING_AGGR_ROUND_free(SIGNING_AGGR_ROUND *obj);
 static void SIGNING_AGGR_ROUND_ARRAY_free(SIGNING_AGGR_ROUND **array);
-static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size_t *max_lvl, KSI_HashAlgorithm *algo);
-static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size_t remote_max_lvl, size_t *inputs);
+static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int *remote_max_lvl, KSI_HashAlgorithm *remote_algo);
+static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, int remote_max_lvl, size_t *inputs);
 static int KT_SIGN_getAggregationRoundsNeeded(PARAM_SET *set, ERR_TRCKR *err, size_t max_tree_inputs, size_t *rounds);
 static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, KSI_HashAlgorithm remote_algo, size_t max_tree_inputs, size_t rounds, SIGNING_AGGR_ROUND ***aggr_rounds_record);
 static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_AGGR_ROUND **aggr_round);
@@ -156,6 +158,7 @@ cleanup:
 		if (d) 	ERR_TRCKR_printExtendedErrors(err);
 		else 	ERR_TRCKR_printErrors(err);
 	}
+	ERR_TRCKR_printWarnings(err);
 
 	SMART_FILE_close(logfile);
 	TASK_SET_free(task_set);
@@ -472,7 +475,7 @@ static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int task) {
 		case SIGN_DATA_HASH_AND_SAVE: {
 				size_t max_tree_input = 0;
 				size_t rounds = 0;
-				size_t remote_max_lvl = 0;
+				int remote_max_lvl = TREE_DEPTH_INVALID;
 				KSI_HashAlgorithm remote_algo = KSI_HASHALG_INVALID;
 
 				if (PARAM_SET_isSetByName(set, "apply-remote-conf")) {
@@ -514,12 +517,13 @@ cleanup:
 	return res;
 }
 
-static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size_t *max_lvl, KSI_HashAlgorithm *algo) {
+static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int *remote_max_lvl, KSI_HashAlgorithm *remote_algo) {
 	int res = KT_UNKNOWN_ERROR;
 	KSI_Config *config = NULL;
-	KSI_Integer *id = NULL;
-	KSI_Integer *lvl = NULL;
+	KSI_Integer *conf_id = NULL;
+	KSI_Integer *conf_lvl = NULL;
 	int d = 0;
+	int dump = 0;
 
 	if (set == NULL || err == NULL || ctx == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
@@ -535,18 +539,55 @@ static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, s
 
 	print_progressResult(res);
 
-	if (PARAM_SET_isSetByName(set, "dump-conf")) {
+	dump = PARAM_SET_isSetByName(set, "dump-conf");
+	if (dump) {
 		OBJPRINT_aggregatorConfDump(config, print_result);
 	}
 
-	res = KSI_Config_getAggrAlgo(config, &id);
-	ERR_CATCH_MSG(err, res, "Error: Unable to get aggregator algorithm id configuration.");
+	res = KSI_Config_getAggrAlgo(config, &conf_id);
+	ERR_TRCKR_addWarning(err, "  * Unable to get aggregator algorithm id configuration.");
 
-	res = KSI_Config_getMaxLevel(config, &lvl);
-	ERR_CATCH_MSG(err, res, "Error: Unable to get aggregator maximum level configuration.");
+	res = KSI_Config_getMaxLevel(config, &conf_lvl);
+	ERR_TRCKR_addWarning(err, "  * Unable to get aggregator maximum level configuration.");
 
-	if (max_lvl && lvl) *max_lvl = KSI_Integer_getUInt64(lvl);
-	if (algo && id) *algo = (KSI_HashAlgorithm)KSI_Integer_getUInt64(id);
+	if (remote_max_lvl) {
+		if (conf_lvl) {
+			size_t lvl = KSI_Integer_getUInt64(conf_lvl);
+
+			if (lvl > 0xff) {
+				ERR_TRCKR_addWarning(err, "  * Remote configuration tree depth is out of range.\n");
+				if (!dump) ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion: Use --dump-conf for more information.\n");
+				*remote_max_lvl = TREE_DEPTH_INVALID;
+			} else {
+				*remote_max_lvl = (int)lvl;
+			}
+		} else {
+			*remote_max_lvl = TREE_DEPTH_INVALID;
+		}
+	}
+
+	if (remote_algo) {
+		if (conf_id) {
+			int H = PARAM_SET_isSetByName(set, "H");
+			const char *suggestion = "  * Suggestion: Use -H to override aggregator configuration hash function.";
+			const char *using_def = "Using default algorithm.";
+			KSI_HashAlgorithm alg_id = (KSI_HashAlgorithm)KSI_Integer_getUInt64(conf_id);
+
+			if (!KSI_isHashAlgorithmSupported(alg_id)) {
+				ERR_TRCKR_addWarning(err, "  * Remote configuration algorithm is not supported. %s\n", (!H ? using_def : ""));
+				if (!H) ERR_TRCKR_addAdditionalInfo(err, "%s\n", suggestion);
+				*remote_algo = KSI_HASHALG_INVALID;
+			} else if (!KSI_isHashAlgorithmTrusted(alg_id)) {
+				ERR_TRCKR_addWarning(err, "  * Remote configuration algorithm is not trusted. %s\n", (!H ? using_def : ""));
+				if (!H) ERR_TRCKR_addAdditionalInfo(err, "%s\n", suggestion);
+				*remote_algo = KSI_HASHALG_INVALID;
+			} else {
+				*remote_algo = alg_id;
+			}
+		} else {
+			*remote_algo = KSI_HASHALG_INVALID;
+		}
+	}
 
 cleanup:
 	KSI_Config_free(config);
@@ -554,10 +595,10 @@ cleanup:
 	return res;
 }
 
-static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size_t remote_max_lvl, size_t *inputs) {
+static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, int remote_max_lvl, size_t *inputs) {
 	int res = KT_UNKNOWN_ERROR;
 	size_t max_lvl_virtual = 0;
-	int user_max_lvl = 0;
+	int user_max_lvl = TREE_DEPTH_INVALID;
 	size_t max_lvl = 0;
 	int has_prev_leaf = 0;
 	int is_masking = 0;
@@ -573,13 +614,19 @@ static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size
 	res = PARAM_SET_getObj(set, "max-lvl", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void*)&user_max_lvl);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 
-	if (remote_max_lvl != 0 && user_max_lvl > remote_max_lvl) {
-		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_EXCEED_LIMIT, "Error: Configuration of local aggregation tree is too large (see maximum level configuration).");
-		goto cleanup;
+	if (remote_max_lvl != TREE_DEPTH_INVALID) {
+		if (user_max_lvl > remote_max_lvl) {
+			ERR_TRCKR_addWarning(err, "  * --max-lvl is larger than allowed by aggregator. Using remote maximum level configuration.\n");
+			if (!PARAM_SET_isSetByName(set, "dump-conf")) ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion: Use --dump-conf for more information.\n");
+			max_lvl = (size_t)remote_max_lvl;
+		} else if (user_max_lvl != TREE_DEPTH_INVALID) {
+			max_lvl = (size_t)user_max_lvl;
+		} else {
+			max_lvl = (size_t)remote_max_lvl;
+		}
+	} else {
+		if (user_max_lvl > 0) max_lvl = (size_t)user_max_lvl;
 	}
-
-	if (user_max_lvl > 0) max_lvl = (size_t)user_max_lvl;
-	else if (remote_max_lvl > 0) max_lvl = remote_max_lvl;
 
 	/**
 	 * Check if masking is done and / or metadata is appended to the tree.

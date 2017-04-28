@@ -118,6 +118,7 @@ cleanup:
 		if (d) ERR_TRCKR_printExtendedErrors(err);
 		else  ERR_TRCKR_printErrors(err);
 	}
+	ERR_TRCKR_printWarnings(err);
 
 	KSI_PublicationsFile_free(pubfile);
 	SMART_FILE_close(logfile);

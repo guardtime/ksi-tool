@@ -116,6 +116,7 @@ cleanup:
 		if (d) ERR_TRCKR_printExtendedErrors(err);
 		else  ERR_TRCKR_printErrors(err);
 	}
+	ERR_TRCKR_printWarnings(err);
 
 	SMART_FILE_close(logfile);
 	PARAM_SET_free(set);
