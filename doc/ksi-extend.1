@@ -10,6 +10,8 @@
 \fBksi extend \fR[\fB-i \fIin.ksig\fR] [\fB-o \fIout.ksig\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-P \fIURL \fR[\fB--cnstr \fIoid\fR=\fIvalue\fR]... \fB--pub-str \fIstr \fR[\fImore_options\fR] [\fB--\fR] \fIinput\fR...
 .HP 4
 \fBksi extend \fR[\fB-i \fIin.ksig\fR] [\fB-o \fIout.ksig\fR] \fB-X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB-T \fItime \fR[\fImore_options\fR] [\fB--\fR] \fIinput\fR...
+.HP 4
+\fBksi extend -X \fIURL \fR[\fB--ext-user \fIuser \fB--ext-key \fIkey\fR] \fB--dump-conf
 .\"
 .SH DESCRIPTION
 Extends the given KSI signature to the time of given publication. After signature is extended and the corresponding publication record is attached, the signature can be verified by publication-based verification where only trusted publications file or a publication string in printed media is needed to perform the verification. See \fBksi-verify\fR(1) for details.
@@ -38,6 +40,10 @@ Specify the username for extending service.
 .TP
 \fB--ext-key \fIkey\fR
 Specify the HMAC key for extending service.
+.\"
+.TP
+\fB--ext-hmac-alg \fIalg\fR
+Hash algorithm to be used for computing HMAC on outgoing messages towards KSI extender. If not set, default algorithm is used. Use \fBksi -h \fRto get the list of supported hash algorithms.
 .\"
 .TP
 \fB-P \fIURL\fR
@@ -92,8 +98,38 @@ Print detailed information about processes and errors to \fIstderr\fR.
 Dump extended signature and verification info in human-readable format to \fIstdout\fR.
 .\"
 .TP
+\fB--dump-conf\fR
+Dump extender configuration in human-readable format to \fIstdout\fR.
+.\"
+.TP
 \fB--conf \fIfile\fR
 Read configuration options from given file. It must be noted that configuration options given explicitly on command line will override the ones in the configuration file. See \fBksi-conf\fR(5) for more information.
+.\"
+.TP
+\fB--apply-remote-conf\fR
+Obtain and apply additional configuration data from extender service server. Following configuration is received from server:
+.RS
+.IP \(bu 4
+\fBcalendar first time\fR - aggregation time of the oldest calendar record the extender has.
+.LP
+.IP \(bu 4
+\fBcalendar last time\fR - aggregation time of the newest calendar record the extender has.
+.LP
+.IP \(bu 4
+\fBmaximum requests\fR - maximum number of requests the client is allowed to send within one second.
+.LP
+.IP \(bu 4
+\fBparent URI\fR - parent server URI. Note that there may be several parent servers listed in the configuration. Typically these are all members of one aggregator cluster.
+.LP
+.\"
+.RE
+.TP
+\fB--inst-id \fR[\fIint\fR]
+An integer (>= 0) to identify the sender instance that is constant during the KSI tool process lifetime. It should stay constant or increase every time KSI tool is executed as server may drop future messages with lower \fIinstance identifier\fR values. When specified as integer, the constant value is used. When specified without argument, unix time is used in place of a constant. If not specified, \fIinstance identifier\fR is not included to the request header. It must be noted that this value only affects KSI protocol PDUs.
+.\"
+.TP
+\fB--msg-id \fR[\fIint\fR]
+An integer (>= 1) to identify the requests within KSI tool process lifetime. The \fImessage identifier\fR value is increased after every request. When specified without argument, 1 is used. If not specified \fImessage identifier\fR is not included to the request header. It must be noted that this value only affects KSI protocol PDUs.
 .\"
 .TP
 \fB--log \fIfile\fR
@@ -136,6 +172,22 @@ In the following examples it is assumed that KSI service configuration (URLs, ac
 .LP
 .RS 4
 \fBksi extend \fI*.ksig \fB--pub-str \fIAAAAAA-CYFJIA-AALGBS-ED4BKO-CMKY7Z-OMMBA5-NT6SJB-ZM677Q-JKCQAW-3OXD3O-OERGEO-DWJRYN\fR
+.RE
+.\"
+.TP 2
+\fB5
+\fRSame as \fIexample 2\fR. In addition verify that the \fIextend to \fRtime matches the calendar interval available in extender:
+.LP
+.RS 4
+\fBksi extend -i \fIsig.ksig \fB-o \fIext.ksig \fB--pub-str \fIAAAAAA-CW45II-AAKWRK-F7FBNM-KB6FNV-DYYFW7-PJQN6F-JKZWBQ-3OQYZO-HCB7RA-YNYAGA-ODRL2V\fB --apply-remote-conf\fR
+.RE
+.\"
+.TP 2
+\fB6
+Dump extender configuration in human-readable format to stdout:
+.LP
+.RS 4
+\fBksi extend -X \fIhttp://example.gateway.com:8010/gt-extendingservice\fB --dump-conf\fR
 .RE
 .\"
 .SH ENVIRONMENT

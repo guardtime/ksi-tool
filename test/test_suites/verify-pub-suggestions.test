@@ -1,0 +1,119 @@
+#
+# Copyright 2013-2016 Guardtime, Inc.
+#
+# This file is part of the Guardtime client SDK.
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES, CONDITIONS, OR OTHER LICENSES OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
+# "Guardtime" and "KSI" are trademarks or registered trademarks of
+# Guardtime, Inc., and no license to trademarks is granted; Guardtime
+# reserves and retains all trademark rights.
+
+##
+# This test suite examins suggestions given to the user when publication based
+# verification fails with GEN-2 verification result code.
+##
+
+#
+# Test cases:
+# 1) Signature is extended, extending is prohibited, publications file has publication record to extend to.
+#
+
+## 1
+# Nr. 1
+# Signature is extended to the last and only publication record in the publications
+# file (2016-02-15 00:00:00). Test is peformed to be extra sure that no suggestions
+# are printed to fix "non existing problems".
+##
+EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.re-ext-ok-pub-one-record-1.ksig -P file://test/resource/publication/ok-pub-one-record-1.bin -V test/resource/certificates/ok-test.crt --cnstr E=test@test.com
+>>>2 !/(.*Suggestion.*)/
+>>>= 0
+
+## 2
+# Nr. 2
+# Signature is extended (to 2014-08-15 00:00:00), publications file contains
+# only one publication (2016-02-15 00:00:00) that is suitable for the signature,
+# but extending is prohibited.
+##
+EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -P file://test/resource/publication/ok-pub-one-record-1.bin -V test/resource/certificates/ok-test.crt --cnstr E=test@test.com
+>>>2 /(GEN-2.*)([^$]|[
+])*(Error.*)(.*Signature is extended to a publication that does not exist in publications file.*)([^$]|[
+])*(Suggestion.*)(.*Try to use -x to permit automatic extending or use KSI tool extend command to re-extend the signature.*)/
+>>>= 6
+
+## 3
+# Nr. 3
+# Signature is extended (to 2014-08-15 00:00:00), publications file contains old
+# publications (from 2012) that are not suitable for the signature extension.
+# User is informed that the publications file may be out-of-date.
+##
+EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -P file://test/resource/publication/ok-publication-2012.bin -V test/resource/certificates/ok-test.crt --cnstr E=test@test.com
+>>>2 /(GEN-2.*)([^$]|[
+])*(Error.*)(.*Signature is extended to a publication that does not exist in publications file.*)([^$]|[
+])*(Suggestion.*)(.*Check if publications file is up-to-date as the latest publication in the publications file is older than the signatures publication record.*)/
+>>>= 6
+
+## 4
+# Nr. 4
+# Signature is not extended, publications file do not contain suitable publication.
+# Extension is prohibited. User is informed that the publications file should be
+# updated if possible or user has to wait the next publication and the signature
+# must be extended.
+##
+EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ksig -P file://test/resource/publication/ok-publication-2012.bin -V test/resource/certificates/ok-test.crt --cnstr E=test@test.com
+>>>2 /(GEN-2.*)([^$]|[
+])*(Error.*)(.*Signature is not extended.*)([^$]|[
+])*(Sug.*)(.*Check if pub.* file is up-to-date as there is not \(yet\) a publication record.*)([^$]|[
+])*(Sug.*)(.*Wait until next.*)([^$]|[
+])*(Sug.*)(.*When a suitable pub.*is available)/
+>>>= 6
+
+## 5
+# Nr. 5
+# Signature is not extended, publications file do not contain suitable publication.
+# Extension is permited. User is informed that the publications file should be
+# updated or user has to wait the next publication.
+##
+EXECUTABLE verify --ver-pub -x -i test/resource/signature/ok-sig-2014-08-01.1.ksig -P file://test/resource/publication/ok-publication-2012.bin -V test/resource/certificates/ok-test.crt --cnstr E=test@test.com
+>>>2 /(GEN-2.*)([^$]|[
+])*(Error.*)(.*Signature is not extended.*)([^$]|[
+])*(Sug.*)(.*Check if pub.* file is up-to-date as there is not \(yet\) a publication record.*)([^$]|[
+])*(Sug.*)(.*Wait until next.*)/
+>>>= 6
+
+## 6
+# Nr. 6
+# Signature is not extended, publications file has suitable publication.
+# Extension is prohibited. User is informed that signature must be extended.
+##
+EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ksig -P file://test/resource/publication/ok-pub-one-record-1.bin -V test/resource/certificates/ok-test.crt --cnstr E=test@test.com
+>>>2 /(GEN-2.*)([^$]|[
+])*(Error.*)(.*Signature is not extended.*)([^$]|[
+])*(Suggestion.*)(.*Use -x to permit automatic extending or use KSI tool extend command to extend the signature.*)/
+>>>= 6
+
+## 7
+# Nr. 7
+# Publication string (2014-07-15) is older than the signature.
+##
+EXECUTABLE verify --ver-pub -x -i test/resource/signature/ok-sig-2014-08-01.1.ksig --pub-str AAAAAA-CTYRXQ-AAJHOZ-DFKQ26-PNX7QF-QMO6PD-BDIR3Z-7YYHSK-BIO7FW-ITUKRT-QVQOHO-X5NBRR
+>>>2 /(GEN-2.*)([^$]|[
+])*(Error.*)(.*User publication string can not be older than the signatures signing time.*)/
+>>>= 6
+
+## 8
+# Nr. 8
+# Publication string is (2014-09-15) is more reacent than the signature.
+# Extending is prohibited.
+##
+EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ksig --pub-str AAAAAA-CUCYWA-AAOBM6-PNYLRK-EPI3VG-2PJGCF-Y5QHV3-XURLI2-GRFBK4-VHBED2-Q37QIB-UE3ENA
+>>>2 /(GEN-2.*)([^$]|[
+])*(Suggestion.*)(.*Use -x to permit automatic extending.*)/
+>>>= 6

@@ -18,7 +18,7 @@ If a configuration option is specified in more than one source, the source with 
 .LP
 While defining options, a short parameter or multiple flags must have prefix '\fB-\fR' and long parameters have prefix '\fB--\fR'. If some parameter values contain whitespace characters, double quote marks (\fB"\fR) must be used to wrap the entire value. If double quote mark or backslash have to be used inside the value part, an escape character (\fB\\\fR) must be typed before the charcater(\fB\\"\fR or \fB\\\\\fR). If configuration option with unknown or invalid key-value pairs is used, an error is generated.
 .LP
-In configuration file each key-value pair must be placed on a single line. For commenting, start the line with \fB#\fR. 
+In configuration file each key-value pair must be placed on a single line. For commenting, start the line with \fB#\fR.
 .br
 In case of \fB-V\fR, \fB-W\fR and \fB-P\fR options file location is interpreted as relative to the configuration file, if full path is not defined.
 .br
@@ -38,8 +38,16 @@ Specify the username for signing service.
 Specify the HMAC key for signing service.
 .\"
 .TP
+\fB--aggr-hmac-alg \fIalg\fR
+Hash algorithm to be used for computing HMAC on outgoing messages towards KSI aggregator. If not set, default algorithm is used. Use \fBksi -h \fRto get the list of supported hash algorithms.
+.\"
+.TP
 \fB--aggr-pdu-v \fIstr\fR
 Specify the KSIAP (KSI Aggregation Protocol) PDU version. Valid values are \fIv1\fR and \fIv2\fR. It must be noted that \fIv1\fR is \fBlegacy\fR implementation and will be fully replaced with \fIv2\fR in the future.
+.\"
+.TP
+\fB-H \fIalg\fR
+Use the given hash algorithm to hash the file to be signed. Use \fBksi -h \fRto get the list of supported hash algorithms.
 .\"
 .TP
 \fB-X \fIURL\fR
@@ -52,6 +60,10 @@ Specify the username for extending service.
 .TP
 \fB--ext-key \fIstr\fR
 Specify the HMAC key for extending service.
+.\"
+.TP
+\fB--ext-hmac-alg \fIalg\fR
+Hash algorithm to be used for computing HMAC on outgoing messages towards KSI extender. If not set, default algorithm is used. Use \fBksi -h \fRto get the list of supported hash algorithms.
 .\"
 .TP
 \fB--ext-pdu-v \fIstr\fR
@@ -122,6 +134,18 @@ Specify allowed network transfer timeout, after successful connect, in seconds.
 \fB--publications-file-no-verify\fR
 Force the KSI tool to trust the publications file without verifying it. This option can only be defined on command line to avoid the usage of insecure configuration files. It must be noted that the \fBoption is insecure\fR and may only be used for testing.
 .\"
+.TP
+\fB--apply-remote-conf\fR
+Obtain and apply additional configuration data from service server. See \fBksi-sign\fR(1) and \fBksi-extend\fR(1) for more information.
+.\"
+.TP
+\fB--inst-id \fR[\fIint\fR]
+An integer (>= 0) to identify the sender instance that is constant during the KSI tool process lifetime. It should stay constant or increase every time KSI tool is executed as server may drop future messages with lower \fIinstance identifier\fR values. When specified as integer, the constant value is used. When specified without argument, unix time is used in place of a constant. If not specified, \fIinstance identifier\fR is not included to the request header. It must be noted that this value only affects KSI protocol PDUs.
+.\"
+.TP
+\fB--msg-id \fR[\fIint\fR]
+An integer (>= 1) to identify the requests within KSI tool process lifetime. The \fImessage identifier\fR value is increased after every request. When specified without argument, 1 is used. If not specified \fImessage identifier\fR is not included to the request header. It must be noted that this value only affects KSI protocol PDUs.
+.\"
 .SH ENVIRONMENT
 Program \fBksi\fR(1) uses environment variable \fBKSI_CONF \fRto point to the default configuration file.
 .\"
@@ -140,6 +164,11 @@ An example of configuration file:
 \fB--aggr-user \fIanon
 .br
 \fB--aggr-key \fIanon
+.br
+.LP
+\fR# Override default hash algorithm:
+.br
+\fB-H \fISHA2-512
 .br
 .LP
 \fR# KSI Extending service parameters:

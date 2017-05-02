@@ -54,13 +54,22 @@ char* CONF_generate_param_set_desc(char *description, const char *flags, char *b
 
 	if (is_S) {
 		count += KSI_snprintf(buf + count, buf_len - count,
-				"{S}{aggr-user}{aggr-key}"
+				"{H}"
+				"{S}{aggr-user}{aggr-key}{aggr-hmac-alg}"
 				"{max-lvl}{max-aggr-rounds}{mdata-cli-id}{mdata-mac-id}{mdata-sqn-nr}{mdata-req-tm}"
 				"{aggr-pdu-v}");
 	}
 
 	if (is_X) {
-		count += KSI_snprintf(buf + count, buf_len - count, "{X}{ext-user}{ext-key}{ext-pdu-v}");
+		count += KSI_snprintf(buf + count, buf_len - count,
+				"{X}{ext-user}{ext-key}{ext-hmac-alg}"
+				"{ext-pdu-v}");
+	}
+
+	if (is_X || is_S) {
+		count += KSI_snprintf(buf + count, buf_len - count,
+				"{inst-id}{msg-id}"
+				"{apply-remote-conf}");
 	}
 
 	if (is_P) {
@@ -135,6 +144,9 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 	}
 
 	if (is_S) {
+		res = PARAM_SET_addControl(conf, "{H}{aggr-hmac-alg}", isFormatOk_hashAlg, isContentOk_hashAlg, NULL, extract_hashAlg);
+		if (res != PST_OK) goto cleanup;
+
 		res = PARAM_SET_addControl(conf, "{S}", isFormatOk_url, NULL, convertRepair_url, NULL);
 		if (res != PST_OK) goto cleanup;
 
@@ -170,6 +182,9 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 	}
 
 	if (is_X) {
+		res = PARAM_SET_addControl(conf, "{ext-hmac-alg}", isFormatOk_hashAlg, isContentOk_hashAlg, NULL, extract_hashAlg);
+		if (res != PST_OK) goto cleanup;
+
 		res = PARAM_SET_addControl(conf, "{X}", isFormatOk_url, NULL, convertRepair_url, NULL);
 		if (res != PST_OK) goto cleanup;
 
@@ -177,6 +192,20 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 		if (res != PST_OK) goto cleanup;
 
 		res = PARAM_SET_addControl(conf, "{ext-pdu-v}", isFormatOk_string, isContentOk_pduVersion, NULL, NULL);
+		if (res != PST_OK) goto cleanup;
+	}
+
+	if (is_X || is_S) {
+		res = PARAM_SET_addControl(conf, "{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_setParseOptions(conf, "apply-remote-conf", PST_PRSCMD_HAS_NO_VALUE);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_addControl(conf, "{inst-id}", isFormatOk_int_can_be_null, isContentOk_uint_can_be_null, NULL, extract_int);
+		if (res != PST_OK) goto cleanup;
+
+		res = PARAM_SET_addControl(conf, "{msg-id}", isFormatOk_int_can_be_null, isContentOk_uint_not_zero_can_be_null, NULL, extract_int);
 		if (res != PST_OK) goto cleanup;
 	}
 
@@ -354,8 +383,8 @@ int CONF_LoadEnvNameContent(PARAM_SET *set, const char *env_name, char **envp) {
 			break;
 		}
 
-        envp++;
-    }
+		envp++;
+	}
 
 
 

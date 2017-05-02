@@ -104,6 +104,16 @@ EXECUTABLE sign --conf test/test.cfg -i SHA1:a7d2c6238a92878b2a578c2477e8a33f9d8
 (.*--aggr-user.*)(.*instead of.*)(.*agr-usr.*)/
 >>>= 3
 
+# Use --msg-id as 0 and string.
+EXECUTABLE sign --conf test/test.cfg -i test/resource/file/testFile --msg-id 0 --msg-id plah -o test/out/sign/should_not_be.XX.ksig
+>>>2 /(Integer value is too small)(.*CMD.*)(.*--msg-id.*)(.*'0'.*)
+(Invalid integer)(.*CMD.*)(.*--msg-id.*)(.*'plah'.*)/
+>>>= 3
+
+# Use --inst-id as string.
+EXECUTABLE sign --conf test/test.cfg -i test/resource/file/testFile --inst-id plah -o test/out/sign/should_not_be.XX.ksig
+>>>2 /(Invalid integer)(.*CMD.*)(.*--inst-id.*)(.*'plah'.*)/
+>>>= 3
 
 # Verify that the signatures that should not have been created do not exist.
 
@@ -137,9 +147,10 @@ EXECUTABLE verify --ver-int -d -i test/out/sign/should_not_be.8.ksig -i test/out
 (File does not exist)(.*CMD.*)(.*-i.*)(.*12.*)/
 >>>= 3
 
-#EXECUTABLE verify --ver-int -d -i test/out/sign/should_not_be.13.ksig -i test/out/sign/should_not_be.14.ksig -i test/out/sign/should_not_be.4.1.ksig
+#EXECUTABLE verify --ver-int -d -i test/out/sign/should_not_be.13.ksig -i test/out/sign/should_not_be.14.ksig -i test/out/sign/should_not_be.4.1.ksig -i test/out/sign/should_not_be.XX.ksig
 #>>>2 /(File does not exist)(.*CMD.*)(.*-i.*)(.*13.*)
 #(File does not exist)(.*CMD.*)(.*-i.*)(.*14.*)
 #(File does not exist)(.*CMD.*)(.*-i.*)(.*15.*)
-#(File does not exist)(.*CMD.*)(.*-i.*)(.*4.1.*)/
+#(File does not exist)(.*CMD.*)(.*-i.*)(.*4.1.*)
+#(File does not exist)(.*CMD.*)(.*-i.*)(.*XX.*)/
 #>>>= 3

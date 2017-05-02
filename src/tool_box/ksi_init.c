@@ -21,6 +21,7 @@
 #include <ksi/pkitruststore.h>
 #include <ksi/compatibility.h>
 #include <string.h>
+#include <time.h>
 #include "param_set/param_set.h"
 #include "tool_box/ksi_init.h"
 #include "smart_file.h"
@@ -37,6 +38,73 @@
 #	include <limits.h>
 #	include <sys/time.h>
 #endif
+
+/* Global varaibles for message and instance id. */
+long long tool_global_msg_id = 0;
+long long tool_global_inst_id = 0;
+
+
+static int ksi_header_formating_callback(KSI_Header *hdr) {
+	int res = KSI_UNKNOWN_ERROR;
+	KSI_Integer *msgId = NULL;
+	KSI_Integer *instId = NULL;
+
+	if (hdr == NULL) {
+		res = KSI_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	/* Check if has instance if or message id. Cleanup if needed. */
+	if (tool_global_inst_id >= 1) {
+		res = KSI_Header_getInstanceId(hdr, &instId);
+		if (res != KSI_OK) goto cleanup;
+
+		if (instId != NULL) {
+			KSI_Integer_free(instId);
+			instId = NULL;
+
+			res = KSI_Header_setInstanceId(hdr, NULL);
+			if (res != KSI_OK) goto cleanup;
+		}
+
+		res = KSI_Integer_new(KSI_Header_getCtx(hdr), tool_global_inst_id, &instId);
+		if (res != KSI_OK) goto cleanup;
+
+		res = KSI_Header_setInstanceId(hdr, instId);
+		if (res != KSI_OK) goto cleanup;
+		instId = NULL;
+	}
+
+	if (tool_global_msg_id >= 0) {
+		res = KSI_Header_getMessageId(hdr, &msgId);
+		if (res != KSI_OK) goto cleanup;
+
+		if (msgId != NULL) {
+			KSI_Integer_free(msgId);
+			msgId = NULL;
+
+			res = KSI_Header_setMessageId(hdr, NULL);
+			if (res != KSI_OK) goto cleanup;
+		}
+
+		res = KSI_Integer_new(KSI_Header_getCtx(hdr), tool_global_msg_id++, &msgId);
+		if (res != KSI_OK) goto cleanup;
+
+		res = KSI_Header_setMessageId(hdr, msgId);
+		if (res != KSI_OK) goto cleanup;
+		msgId = NULL;
+	}
+
+	res = KSI_OK;
+
+
+cleanup:
+
+	KSI_Integer_free(instId);
+	KSI_Integer_free(msgId);
+
+	return res;
+}
 
 static int tool_init_ksi_logger(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set, SMART_FILE **log) {
 	int res;
@@ -96,7 +164,7 @@ static int tool_init_ksi_network_provider(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SE
 
 	/**
 	 * Extract values from the set.
-     */
+	 */
 	PARAM_SET_getStr(set, "S", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &aggr_url);
 	PARAM_SET_getStr(set, "X", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &ext_url);
 	PARAM_SET_getStr(set, "P", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &pub_url);
@@ -117,7 +185,7 @@ static int tool_init_ksi_network_provider(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SE
 
 	/**
 	 * Set service urls.
-     */
+	 */
 	if (ext_url != NULL) {
 		res = KSI_CTX_setExtender(ksi, ext_url, ext_user, ext_pass);
 		ERR_CATCH_MSG(err, res, "Error: Unable set extender.");
@@ -135,7 +203,7 @@ static int tool_init_ksi_network_provider(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SE
 
 	/**
 	 * Set service timeouts.
-     */
+	 */
 	if (networkTransferTimeout > 0) {
 		res = KSI_CTX_setConnectionTimeoutSeconds(ksi, networkConnectionTimeout);
 		ERR_CATCH_MSG(err, res, "Error: Unable set connection timeout.");
@@ -144,6 +212,38 @@ static int tool_init_ksi_network_provider(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SE
 	if (networkTransferTimeout > 0) {
 		res = KSI_CTX_setTransferTimeoutSeconds(ksi, networkTransferTimeout);
 		ERR_CATCH_MSG(err, res, "Error: Unable set transfer timeout.");
+	}
+
+	if (PARAM_SET_isOneOfSetByName(set, "inst-id, msg-id")) {
+		int instId = -1;
+		int msgId = -1;
+		char *dummy = NULL;
+
+		if (PARAM_SET_isSetByName(set, "inst-id")) {
+			PARAM_SET_getStr(set, "inst-id", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &dummy);
+
+			if (dummy != NULL) {
+				PARAM_SET_getObj(set, "inst-id", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&instId);
+			} else {
+				instId = (int)time(NULL);
+			}
+		}
+
+		if (PARAM_SET_isSetByName(set, "msg-id")) {
+			PARAM_SET_getStr(set, "msg-id", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &dummy);
+
+			if (dummy != NULL) {
+				PARAM_SET_getObj(set, "msg-id", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&msgId);
+			} else {
+				msgId = 1;
+			}
+		}
+
+		tool_global_inst_id = instId;
+		tool_global_msg_id = msgId;
+
+		res = KSI_CTX_setRequestHeaderCallback(ksi, ksi_header_formating_callback);
+		ERR_CATCH_MSG(err, res, "Error: Unable specify libksi callback KSI PDU header formating function.");
 	}
 
 	res = KT_OK;
@@ -228,7 +328,7 @@ static int tool_init_ksi_pub_cert_constraints(KSI_CTX *ksi, ERR_TRCKR *err, PARA
 	/**
 	 * Generate array of publications file signatures certificate constraints and
 	 * load it with values.
-     */
+	 */
 	constraintArray = KSI_malloc(sizeof(KSI_CertConstraint) * (1 + constraint_count));
 	if (constraintArray == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_OUT_OF_MEMORY, NULL);
@@ -270,7 +370,7 @@ static int tool_init_ksi_pub_cert_constraints(KSI_CTX *ksi, ERR_TRCKR *err, PARA
 
 	/**
 	 * Configure KSI publications file constraints.
-     */
+	 */
 	res = KSI_CTX_setDefaultPubFileCertConstraints(ksi, constraintArray);
 	ERR_CATCH_MSG(err, res, "Error: Unable to add cert constraints.");
 
@@ -306,7 +406,7 @@ static int tool_init_ksi_trust_store(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *se
 
 	/**
 	 * Check if there are trust store related files or directories.
-     */
+	 */
 	V = PARAM_SET_isSetByName(set,"V");
 	W = PARAM_SET_isSetByName(set,"W");
 
@@ -314,7 +414,7 @@ static int tool_init_ksi_trust_store(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *se
 	 * Configure KSI trust store.
 	 * TODO: look over Windows and Linux compatibility related with trust store
 	 * configuration.
-     */
+	 */
 	if (V || W) {
 		res = KSI_PKITruststore_new(ksi, 0, &tmp);
 		ERR_CATCH_MSG(err, res, "Error: Unable create new PKI trust store.");
@@ -360,9 +460,42 @@ static int tool_init_ksi_publications_file(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_S
 	 * If there is a direct need to not verify publications file do the publications
 	 * file request manually so KSI API do not verify the file extracted by the API
 	 * user.
-     */
+	 */
 	if (PARAM_SET_isSetByName(set, "publications-file-no-verify")) {
 		KSI_receivePublicationsFile(ksi, &tmp);
+	}
+
+	res = KT_OK;
+
+cleanup:
+
+	return res;
+}
+
+static int tool_init_hmac_alg(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set) {
+	int res;
+	KSI_HashAlgorithm aggr_alg = KSI_HASHALG_INVALID;
+	KSI_HashAlgorithm ext_alg  = KSI_HASHALG_INVALID;
+
+	if (ksi == NULL || err == NULL || set == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		goto cleanup;
+	}
+
+	res = PARAM_SET_getObjExtended(set, "aggr-hmac-alg", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, NULL, (void**)&aggr_alg);
+	if (res != PST_OK && res != PST_PARAMETER_EMPTY && res != PST_PARAMETER_NOT_FOUND) goto cleanup;
+
+	res = PARAM_SET_getObjExtended(set, "ext-hmac-alg", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, NULL, (void**)&ext_alg);
+	if (res != PST_OK && res != PST_PARAMETER_EMPTY && res != PST_PARAMETER_NOT_FOUND) goto cleanup;
+
+	if (aggr_alg != KSI_HASHALG_INVALID) {
+		res = KSI_CTX_setOption(ksi, KSI_OPT_AGGR_HMAC_ALGORITHM, (void*)aggr_alg);
+		if (res != KSI_OK) goto cleanup;
+	}
+
+	if (ext_alg != KSI_HASHALG_INVALID) {
+		res = KSI_CTX_setOption(ksi, KSI_OPT_EXT_HMAC_ALGORITHM, (void*)ext_alg);
+		if (res != KSI_OK) goto cleanup;
 	}
 
 	res = KT_OK;
@@ -386,7 +519,7 @@ int TOOL_init_ksi(PARAM_SET *set, KSI_CTX **ksi, ERR_TRCKR **error, SMART_FILE *
 	/**
 	 * Initialize error tracker and configure output parameter immediately to be
 	 * able to track errors if this function fails.
-     */
+	 */
 	err = ERR_TRCKR_new(print_errors, KSITOOL_errToString);
 	if (err == NULL) {
 		res = KT_OUT_OF_MEMORY;
@@ -403,7 +536,7 @@ int TOOL_init_ksi(PARAM_SET *set, KSI_CTX **ksi, ERR_TRCKR **error, SMART_FILE *
 	 * 3) TODO:pubfile.
 	 * 4) Publications file constraints.
 	 * 5) Trust store.
-     */
+	 */
 	res = KSI_CTX_new(&tmp);
 	if (res != KSI_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to initialize KSI context.");
@@ -413,6 +546,12 @@ int TOOL_init_ksi(PARAM_SET *set, KSI_CTX **ksi, ERR_TRCKR **error, SMART_FILE *
 	res = tool_init_ksi_logger(tmp, err, set, &tmp_log);
 	if (res != KT_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to configure KSI logger.");
+		goto cleanup;
+	}
+
+	res = tool_init_hmac_alg(tmp, err, set);
+	if (res != KT_OK) {
+		ERR_TRCKR_ADD(err, res, "Error: Unable to configure HMAC algorithm.");
 		goto cleanup;
 	}
 
