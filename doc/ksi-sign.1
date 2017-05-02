@@ -211,7 +211,7 @@ To sign multiple files and enable masking with default configuration:
 .\"
 .TP 3
 \fB9
-To sign a file \fIfile\fR, appling aggregator configuration, and save signature to \fIsig.ksig\fR:
+To sign a file \fIfile\fR with aggregator configuration and save signature to \fIsig.ksig\fR:
 .LP
 .RS 4
 \fBksi sign -i \fIfile\fR \fB-o \fIsig.ksig\fB --apply-remote-conf\fR
@@ -219,6 +219,30 @@ To sign a file \fIfile\fR, appling aggregator configuration, and save signature 
 .\"
 .TP 3
 \fB10
+To sign a file \fIfile\fR with aggregator configuration and save signature to \fIsig.ksig\fR. Override the remote algorithm configuration:
+.LP
+.RS 4
+\fBksi sign -i \fIfile\fB -H\fI SHA1\fB -o \fIsig.ksig\fB --apply-remote-conf\fR
+.RE
+.\"
+.TP 3
+\fB11
+To sign multiple files with aggregator configuration:
+.LP
+.RS 4
+\fBksi sign -o \fIdoc/sig\fB --apply-remote-conf -- \fI*.doc\fR
+.RE
+.\"
+.TP 3
+\fB12
+To sign multiple files with aggregator configuration. Override the remote maximum level:
+.LP
+.RS 4
+\fBksi sign -o \fIdoc/sig\fB --apply-remote-conf --max-lvl \fI5\fB -- \fI*.doc\fR
+.RE
+.\"
+.TP 3
+\fB13
 Dump aggregator configuration in human-readable format to stdout:
 .LP
 .RS 4

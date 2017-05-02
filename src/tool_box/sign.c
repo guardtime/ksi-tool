@@ -520,6 +520,9 @@ static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, i
 	KSI_Integer *conf_lvl = NULL;
 	int d = 0;
 	int dump = 0;
+	const char *suggestion_useDump = "  * Suggestion: Use --dump-conf for more information.";
+	const char *suggestion_useH    = "  * Suggestion: Use -H to override aggregator configuration hash function.";
+
 
 	if (set == NULL || err == NULL || ctx == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
@@ -552,7 +555,7 @@ static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, i
 
 			if (lvl > 0xff) {
 				ERR_CATCH_MSG(err, (res = KT_INVALID_CONF), "Error: Remote configuration tree depth is out of range.\n");
-				if (!dump) ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion: Use --dump-conf for more information.\n");
+				if (!dump) ERR_TRCKR_addAdditionalInfo(err, "%s\n", suggestion_useDump);
 				*remote_max_lvl = TREE_DEPTH_INVALID;
 			} else {
 				*remote_max_lvl = (int)lvl;
@@ -565,21 +568,23 @@ static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, i
 	if (remote_algo) {
 		if (conf_id) {
 			int H = PARAM_SET_isSetByName(set, "H");
-			const char *suggestion = "  * Suggestion: Use -H to override aggregator configuration hash function.";
-			const char *using_def = "Using default algorithm.";
 			KSI_HashAlgorithm alg_id = (KSI_HashAlgorithm)KSI_Integer_getUInt64(conf_id);
 
 			if (!KSI_isHashAlgorithmSupported(alg_id)) {
-				ERR_TRCKR_addWarning(err, "  * Remote configuration algorithm is not supported. %s\n", (!H ? using_def : ""));
-				if (!H) ERR_TRCKR_addAdditionalInfo(err, "%s\n", suggestion);
-				*remote_algo = KSI_HASHALG_INVALID;
+				if (!H) {
+					ERR_TRCKR_ADD(err, (res = KT_INVALID_CONF), "Error: Remote configuration algorithm is not supported.");
+					if (!dump) ERR_TRCKR_addAdditionalInfo(err, "%s\n", suggestion_useDump);
+					ERR_TRCKR_addAdditionalInfo(err, "%s\n", suggestion_useH);
+					goto cleanup;
+				}
 			} else if (!KSI_isHashAlgorithmTrusted(alg_id)) {
-				ERR_TRCKR_addWarning(err, "  * Remote configuration algorithm is not trusted. %s\n", (!H ? using_def : ""));
-				if (!H) ERR_TRCKR_addAdditionalInfo(err, "%s\n", suggestion);
-				*remote_algo = KSI_HASHALG_INVALID;
-			} else {
-				*remote_algo = alg_id;
+				if (!H) {
+					ERR_TRCKR_addWarning(err, "  * Remote configuration algorithm is not trusted.\n");
+					if (!dump) ERR_TRCKR_addAdditionalInfo(err, "%s\n", suggestion_useDump);
+					ERR_TRCKR_addAdditionalInfo(err, "%s\n", suggestion_useH);
+				}
 			}
+			*remote_algo = alg_id;
 		} else {
 			*remote_algo = KSI_HASHALG_INVALID;
 		}
