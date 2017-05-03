@@ -579,7 +579,7 @@ static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, i
 				}
 			} else if (!KSI_isHashAlgorithmTrusted(alg_id)) {
 				if (!H) {
-					ERR_TRCKR_addWarning(err, "  * Remote configuration algorithm is not trusted.\n");
+					ERR_TRCKR_addWarning(err, "  * Warning: Remote configuration algorithm is not trusted.\n");
 					if (!dump) ERR_TRCKR_addAdditionalInfo(err, "%s\n", suggestion_useDump);
 					ERR_TRCKR_addAdditionalInfo(err, "%s\n", suggestion_useH);
 				}
@@ -617,7 +617,7 @@ static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, int 
 
 	if (remote_max_lvl != TREE_DEPTH_INVALID) {
 		if (user_max_lvl > remote_max_lvl) {
-			ERR_TRCKR_addWarning(err, "  * --max-lvl is larger than allowed by aggregator. Using remote maximum level configuration.\n");
+			ERR_TRCKR_addWarning(err, "  * Warning: --max-lvl is larger than allowed by aggregator. Using remote maximum level configuration.\n");
 			if (!PARAM_SET_isSetByName(set, "dump-conf")) ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion: Use --dump-conf for more information.\n");
 			max_lvl = (size_t)remote_max_lvl;
 		} else if (user_max_lvl != TREE_DEPTH_INVALID) {
