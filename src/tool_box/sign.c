@@ -286,10 +286,11 @@ char *sign_help_toString(char*buf, size_t len) {
 #endif
 		"             It must be noted that the described parameters are optional and may\n"
 		"             not be provided by the server. Use --dump-conf to view configuration\n"
-		"             parameters."
+		"             parameters.\n"
 		" --log <file>\n"
 		"           - Write libksi log to given file. Use '-' as file name to redirect\n"
-		"             log to stdout.\n\n"
+		"             log to stdout.\n"
+		"\n"
 		, TOOL_getName()
 	);
 
