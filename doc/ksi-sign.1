@@ -27,7 +27,7 @@ Define the output file's path for the signature. Use '-' as file name to redirec
 .\"
 .TP
 \fB-H \fIalg\fR
-Use the given hash algorithm to hash the file to be signed. Use \fBksi -h \fRto get the list of supported hash algorithms.
+Use the given hash algorithm to hash the file to be signed. If not set, the default algorithm is used. Use \fBksi -h \fRto get the list of supported hash algorithms. If used in combination with \fB--apply-remote-conf\fR, the algorithm parameter provided by the server will be ignored.
 .\"
 .TP
 \fB-S \fIURL\fR
@@ -51,7 +51,7 @@ Save signed data to file. Use when signing a stream. Use '-' as file name to red
 .\"
 .TP
 \fB--max-lvl \fIint\fR
-Set the maximum depth (0 - 255) of the local aggregation tree (default: 0). It must be noted that when using masking (\fB--mask\fR) or embedding the metadata (\fB--mdata\fR), the maximum count of document hash values that could be signed during a single local aggregation round will be reduced. To enable signing in multiple local aggregation rounds see \fB--max-aggr-rounds\fR.
+Set the maximum depth (0 - 255) of the local aggregation tree (default: 0). It must be noted that when using masking (\fB--mask\fR) or embedding the metadata (\fB--mdata\fR), the maximum count of document hash values that could be signed during a single local aggregation round will be reduced. To enable signing in multiple local aggregation rounds see \fB--max-aggr-rounds\fR. If used in combination with \fB--apply-remote-conf\fR, where service \fImaximum level\fR is provided, the smaller value is applied.
 .\"
 .TP
 \fB--max-aggr-rounds \fIint\fR
@@ -117,14 +117,15 @@ Read configuration options from given file. It must be noted that configuration 
 .\"
 .TP
 \fB--apply-remote-conf\fR
-Obtain and apply additional configuration data from aggregation service server. Following configuration is received from server:
+Obtain and apply additional configuration data from aggregation service server. Following configuration parameters can be received from server:
 .RS
 .IP \(bu 4
-\fBmaximum level\fR - value that the nodes in the client's aggregation tree are allowed to have.
+\fBmaximum level\fR - maximum allowed depth of the local aggregation tree. This can be set to a lower value with \fB--max-lvl\fR.
 .LP
 .IP \(bu 4
-\fBaggregation hash algorithm\fR - identifier of the hash algorithm that the client is recommended to use in its aggregation trees. Can be overridden with \fB-H\fR.
+\fBaggregation hash algorithm\fR - recommended hash function identifier to be used for hashing the file to be signed. This parameter can be overridden with \fB-H\fR.
 .LP
+It must be noted that the described parameters are optional and may not be provided by the server. Use \fB--dump-conf\fR to view configuration parameters.
 .RE
 .TP
 \fB--inst-id \fR[\fIint\fR]
