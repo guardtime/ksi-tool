@@ -69,6 +69,10 @@ Specify the username for extending service.
 Specify the HMAC key for extending service.
 .\"
 .TP
+\fB--ext-hmac-alg \fIalg\fR
+Hash algorithm to be used for computing HMAC on outgoing messages towards KSI extender. If not set, default algorithm is used. Use \fBksi -h \fRto get the list of supported hash algorithms.
+.\"
+.TP
 \fB-x\fR
 Permit to use extender for publication-based verification.
 .\"

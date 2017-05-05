@@ -113,11 +113,8 @@ cleanup:
 		KSITOOL_KSI_ERRTrace_LOG(ksi);
 		print_debug("\n");
 		DEBUG_verifyPubfile(ksi, set, res, pubfile);
-
-		print_errors("\n");
-		if (d) ERR_TRCKR_printExtendedErrors(err);
-		else  ERR_TRCKR_printErrors(err);
 	}
+	ERR_TRCKR_print(err, d);
 
 	KSI_PublicationsFile_free(pubfile);
 	SMART_FILE_close(logfile);
@@ -158,6 +155,9 @@ char *pubfile_help_toString(char*buf, size_t len) {
 		"           - Username for extending service.\n"
 		" --ext-key <key>\n"
 		"           - HMAC key for extending service.\n"
+		" --ext-hmac-alg <alg>\n"
+		"           - Hash algorithm to be used for computing HMAC on outgoing messages\n"
+		"             towards KSI extender. If not set, default algorithm is used.\n"
 		" -T <time> - Time to create a publication string for as the number of seconds\n"
 		"             since 1970-01-01 00:00:00 UTC or time string formatted as \"YYYY-MM-DD hh:mm:ss\".\n"
 		" -d        - Print detailed information about processes and errors to stderr.\n"

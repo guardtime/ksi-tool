@@ -76,6 +76,8 @@ enum SIGNER_TASKS_en {
 	AGGREGATOR_DUMP_CONF,
 };
 
+#define TREE_DEPTH_INVALID (-1)
+
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int check_hash_algo_errors(PARAM_SET *set, ERR_TRCKR *err);
@@ -83,8 +85,8 @@ static int check_io_naming_and_type_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int task);
 static void SIGNING_AGGR_ROUND_free(SIGNING_AGGR_ROUND *obj);
 static void SIGNING_AGGR_ROUND_ARRAY_free(SIGNING_AGGR_ROUND **array);
-static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size_t *max_lvl, KSI_HashAlgorithm *algo);
-static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size_t remote_max_lvl, size_t *inputs);
+static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int *remote_max_lvl, KSI_HashAlgorithm *remote_algo);
+static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, int remote_max_lvl, size_t *inputs);
 static int KT_SIGN_getAggregationRoundsNeeded(PARAM_SET *set, ERR_TRCKR *err, size_t max_tree_inputs, size_t *rounds);
 static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, KSI_HashAlgorithm remote_algo, size_t max_tree_inputs, size_t rounds, SIGNING_AGGR_ROUND ***aggr_rounds_record);
 static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_AGGR_ROUND **aggr_round);
@@ -151,11 +153,8 @@ cleanup:
 	if (res != KT_OK) {
 		if (ERR_TRCKR_getErrCount(err) == 0) {ERR_TRCKR_ADD(err, res, NULL);}
 		KSITOOL_KSI_ERRTrace_LOG(ksi);
-
-		print_errors("\n");
-		if (d) 	ERR_TRCKR_printExtendedErrors(err);
-		else 	ERR_TRCKR_printErrors(err);
 	}
+	ERR_TRCKR_print(err, d);
 
 	SMART_FILE_close(logfile);
 	TASK_SET_free(task_set);
@@ -196,9 +195,11 @@ char *sign_help_toString(char*buf, size_t len) {
 		"             explicitly specified N x output every signature is saved to the\n"
 		"             corresponding path. If output file name is explicitly specified,\n"
 		"             will always overwrite the existing file.\n"
-		" -H <alg> \n"
-		"           - Use the given hash algorithm to hash the file to be signed.\n"
-		"             Use ksi -h to get the list of supported hash algorithms.\n"
+		" -H <alg>  - Use the given hash algorithm to hash the file to be signed. If not\n"
+		"             set, the default algorithm is used. Use ksi -h to get the list of\n"
+		"             supported hash algorithms.\n"
+		"             If used in combination with --apply-remote-conf, the algorithm\n"
+		"             parameter provided by the server will be ignored.\n"
 		" -S <URL>  - Signing service (KSI Aggregator) URL.\n"
 		" --aggr-user <str>\n"
 		"           - Username for signing service.\n"
@@ -210,10 +211,11 @@ char *sign_help_toString(char*buf, size_t len) {
 		" --data-out <file>\n"
 		"           - Save signed data to file. Use when signing an incoming stream.\n"
 		"             Use '-' as file name to redirect data being hashed to stdout.\n"
-
 		" --max-lvl <int>\n"
 		"           - Set the maximum depth (0 - 255) of the local aggregation tree\n"
-		"             (default 0).\n"
+		"             (default 0). If used in combination with --apply-remote-conf,\n"
+		"             where service maximum level is provided, the smaller value is\n"
+		"             applied.\n"
 		" --max-aggr-rounds <int>\n"
 		"           - Set the upper limit of local aggregation rounds that may be\n"
 		"             performed (default 1).\n"
@@ -265,12 +267,14 @@ char *sign_help_toString(char*buf, size_t len) {
 		"             override the ones in the configuration file.\n"
 		" --apply-remote-conf\n"
 		"           - Obtain and apply configuration data from aggregation service server.\n"
-		"             Following configuration is received from server:\n"
-		"               * maximum level - value that the nodes in the client's aggregation\n"
-		"                 tree are allowed to have. Can be overridden with --max-lvl.\n"
-		"               * aggregation hash algorithm - identifier of the hash function\n"
-		"                 that the client is recommended to use in its aggregation trees.\n"
-		"                 Can be overridden with -H.\n"
+		"             Following configuration parameters can be received from server:\n"
+		"               * maximum level - the maximum allowed depth of the local\n"
+		"                 aggregation tree. This can be set to a lower value with\n"
+		"                 --max-lvl.\n"
+		"               * aggregation hash algorithm - recommended hash function identifier\n"
+		"                 to be used for hashing the file to be signed. This parameter can\n"
+		"                 be overridden with -H.\n"
+#if 0
 		"               * aggregation period - recommended duration of client's aggregation\n"
 		"                 round, in milliseconds.\n"
 		"               * maximum requests - maximum number of requests the client is\n"
@@ -279,9 +283,14 @@ char *sign_help_toString(char*buf, size_t len) {
 		"               * parent URI - parent server URI. Note that there may be several\n"
 		"                 parent servers listed in the configuration. Typically these are\n"
 		"                 all members of one aggregator cluster.\n"
+#endif
+		"             It must be noted that the described parameters are optional and may\n"
+		"             not be provided by the server. Use --dump-conf to view configuration\n"
+		"             parameters.\n"
 		" --log <file>\n"
 		"           - Write libksi log to given file. Use '-' as file name to redirect\n"
-		"             log to stdout.\n\n"
+		"             log to stdout.\n"
+		"\n"
 		, TOOL_getName()
 	);
 
@@ -470,7 +479,7 @@ static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int task) {
 		case SIGN_DATA_HASH_AND_SAVE: {
 				size_t max_tree_input = 0;
 				size_t rounds = 0;
-				size_t remote_max_lvl = 0;
+				int remote_max_lvl = TREE_DEPTH_INVALID;
 				KSI_HashAlgorithm remote_algo = KSI_HASHALG_INVALID;
 
 				if (PARAM_SET_isSetByName(set, "apply-remote-conf")) {
@@ -512,12 +521,16 @@ cleanup:
 	return res;
 }
 
-static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size_t *max_lvl, KSI_HashAlgorithm *algo) {
+static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int *remote_max_lvl, KSI_HashAlgorithm *remote_algo) {
 	int res = KT_UNKNOWN_ERROR;
 	KSI_Config *config = NULL;
-	KSI_Integer *id = NULL;
-	KSI_Integer *lvl = NULL;
+	KSI_Integer *conf_id = NULL;
+	KSI_Integer *conf_lvl = NULL;
 	int d = 0;
+	int dump = 0;
+	const char *suggestion_useDump = "  * Suggestion: Use --dump-conf for more information.";
+	const char *suggestion_useH    = "  * Suggestion: Use -H to override aggregator configuration hash function.";
+
 
 	if (set == NULL || err == NULL || ctx == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
@@ -528,23 +541,62 @@ static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, s
 
 	print_progressDesc(d, "Receiving remote configuration... ");
 
-	res = KSI_receiveAggregatorConfig(ctx, &config);
+	res = KSITOOL_Aggregator_getConf(err, ctx, &config);
 	ERR_CATCH_MSG(err, res, "Error: Unable to receive remote configuration.");
 
 	print_progressResult(res);
 
-	if (PARAM_SET_isSetByName(set, "dump-conf")) {
+	dump = PARAM_SET_isSetByName(set, "dump-conf");
+	if (dump) {
 		OBJPRINT_aggregatorConfDump(config, print_result);
 	}
 
-	res = KSI_Config_getAggrAlgo(config, &id);
+	res = KSI_Config_getAggrAlgo(config, &conf_id);
 	ERR_CATCH_MSG(err, res, "Error: Unable to get aggregator algorithm id configuration.");
 
-	res = KSI_Config_getMaxLevel(config, &lvl);
+	res = KSI_Config_getMaxLevel(config, &conf_lvl);
 	ERR_CATCH_MSG(err, res, "Error: Unable to get aggregator maximum level configuration.");
 
-	if (max_lvl && lvl) *max_lvl = KSI_Integer_getUInt64(lvl);
-	if (algo && id) *algo = (KSI_HashAlgorithm)KSI_Integer_getUInt64(id);
+	if (remote_max_lvl) {
+		if (conf_lvl) {
+			size_t lvl = KSI_Integer_getUInt64(conf_lvl);
+
+			if (lvl > 0xff) {
+				ERR_CATCH_MSG(err, (res = KT_INVALID_CONF), "Error: Remote configuration tree depth is out of range.\n");
+				if (!dump) ERR_TRCKR_addAdditionalInfo(err, "%s\n", suggestion_useDump);
+				*remote_max_lvl = TREE_DEPTH_INVALID;
+			} else {
+				*remote_max_lvl = (int)lvl;
+			}
+		} else {
+			*remote_max_lvl = TREE_DEPTH_INVALID;
+		}
+	}
+
+	if (remote_algo) {
+		if (conf_id) {
+			int H = PARAM_SET_isSetByName(set, "H");
+			KSI_HashAlgorithm alg_id = (KSI_HashAlgorithm)KSI_Integer_getUInt64(conf_id);
+
+			if (!KSI_isHashAlgorithmSupported(alg_id)) {
+				if (!H) {
+					ERR_TRCKR_ADD(err, (res = KT_INVALID_CONF), "Error: Remote configuration algorithm is not supported.");
+					if (!dump) ERR_TRCKR_addAdditionalInfo(err, "%s\n", suggestion_useDump);
+					ERR_TRCKR_addAdditionalInfo(err, "%s\n", suggestion_useH);
+					goto cleanup;
+				}
+			} else if (!KSI_isHashAlgorithmTrusted(alg_id)) {
+				if (!H) {
+					ERR_TRCKR_addWarning(err, "  * Warning: Remote configuration algorithm is not trusted.\n");
+					if (!dump) ERR_TRCKR_addAdditionalInfo(err, "%s\n", suggestion_useDump);
+					ERR_TRCKR_addAdditionalInfo(err, "%s\n", suggestion_useH);
+				}
+			}
+			*remote_algo = alg_id;
+		} else {
+			*remote_algo = KSI_HASHALG_INVALID;
+		}
+	}
 
 cleanup:
 	KSI_Config_free(config);
@@ -552,10 +604,11 @@ cleanup:
 	return res;
 }
 
-static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size_t remote_max_lvl, size_t *inputs) {
+static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, int remote_max_lvl, size_t *inputs) {
 	int res = KT_UNKNOWN_ERROR;
-	int max_lvl_virtual = 0;
-	int max_lvl = 0;
+	size_t max_lvl_virtual = 0;
+	int user_max_lvl = TREE_DEPTH_INVALID;
+	size_t max_lvl = 0;
 	int has_prev_leaf = 0;
 	int is_masking = 0;
 	int is_metadata = 0;
@@ -567,12 +620,21 @@ static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size
 		goto cleanup;
 	}
 
-	res = PARAM_SET_getObj(set, "max-lvl", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void*)&max_lvl);
+	res = PARAM_SET_getObj(set, "max-lvl", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void*)&user_max_lvl);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 
-	if (remote_max_lvl != 0 && max_lvl > remote_max_lvl) {
-		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_EXCEED_LIMIT, "Error: Configuration of local aggregation tree is too large.");
-		goto cleanup;
+	if (remote_max_lvl != TREE_DEPTH_INVALID) {
+		if (user_max_lvl > remote_max_lvl) {
+			ERR_TRCKR_addWarning(err, "  * Warning: --max-lvl is larger than allowed by aggregator. Using remote maximum level configuration.\n");
+			if (!PARAM_SET_isSetByName(set, "dump-conf")) ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion: Use --dump-conf for more information.\n");
+			max_lvl = (size_t)remote_max_lvl;
+		} else if (user_max_lvl != TREE_DEPTH_INVALID) {
+			max_lvl = (size_t)user_max_lvl;
+		} else {
+			max_lvl = (size_t)remote_max_lvl;
+		}
+	} else {
+		if (user_max_lvl > 0) max_lvl = (size_t)user_max_lvl;
 	}
 
 	/**
@@ -588,22 +650,22 @@ static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size
 	}
 
 	if (max_lvl < 2 && has_prev_leaf && is_metadata) {
-		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to embed metadata and link the local aggregation tree with the last leaf of the previous local aggregation tree with masking as the local aggregation tree's maximum allowed depth is too small (see --max-lvl).\n");
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to embed metadata and link the local aggregation tree with the last leaf of the previous local aggregation tree with masking as the local aggregation tree's maximum allowed depth is too small (see maximum level configuration).\n");
 		goto cleanup;
 	}
 
 	if (max_lvl < 2 && is_masking && is_metadata) {
-		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to add metadata with masking as the local aggregation tree's maximum allowed depth is too small (see --max-lvl).\n");
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to add metadata with masking as the local aggregation tree's maximum allowed depth is too small (see maximum level configuration).\n");
 		goto cleanup;
 	}
 
 	if (max_lvl == 0 && is_metadata) {
-		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to embed metadata as the local aggregation tree's maximum allowed depth is too small (see --max-lvl).\n");
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to embed metadata as the local aggregation tree's maximum allowed depth is too small (see maximum level configuration).\n");
 		goto cleanup;
 	}
 
 	if (max_lvl == 0 && is_masking) {
-		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to use masking as the local aggregation tree's maximum allowed depth is too small (see --max-lvl).\n");
+		ERR_TRCKR_ADD(err, res = KT_AGGR_LVL_LIMIT_TOO_SMALL, "Error: Unable to use masking as the local aggregation tree's maximum allowed depth is too small (see maximum level configuration).\n");
 		goto cleanup;
 	}
 
@@ -617,7 +679,7 @@ static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, size
 	if (is_metadata) if (max_lvl_virtual > 0) max_lvl_virtual--;
 
 	if (sizeof(size_t) * 8 <= max_lvl_virtual) {
-		ERR_TRCKR_ADD(err, res = KT_INDEX_OVF, "Error: The maximum local aggregation tree to be generated may contain more values than internal iterators can handle (See --max-lvl).");
+		ERR_TRCKR_ADD(err, res = KT_INDEX_OVF, "Error: The maximum local aggregation tree to be generated may contain more values than internal iterators can handle (See maximum level configuration).");
 		goto cleanup;
 	}
 

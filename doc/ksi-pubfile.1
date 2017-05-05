@@ -66,6 +66,10 @@ Specify the username for extending service.
 Specify the HMAC key for extending service.
 .\"
 .TP
+\fB--ext-hmac-alg \fIalg\fR
+Hash algorithm to be used for computing HMAC on outgoing messages towards KSI extender. If not set, default algorithm is used. Use \fBksi -h \fRto get the list of supported hash algorithms.
+.\"
+.TP
 \fB-T \fItime\fR
 Specify the time to create a publication string for as the number of seconds since 1970-01-01 00:00:00 UTC or time string formatted as "YYYY-MM-DD hh:mm:ss".
 .\"
