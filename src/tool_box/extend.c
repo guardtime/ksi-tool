@@ -375,7 +375,7 @@ static int obtain_remote_conf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size
 	d = PARAM_SET_isSetByName(set, "d");
 
 	print_progressDesc(d, "Receiving remote configuration... ");
-	res = KSI_receiveExtenderConfig(ctx, &config);
+	res = KSITOOL_Extender_getConf(err, ctx, &config);
 	ERR_CATCH_MSG(err, res, "Error: Unable to receive remote config.");
 	print_progressResult(res);
 
