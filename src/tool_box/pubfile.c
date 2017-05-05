@@ -113,11 +113,8 @@ cleanup:
 		KSITOOL_KSI_ERRTrace_LOG(ksi);
 		print_debug("\n");
 		DEBUG_verifyPubfile(ksi, set, res, pubfile);
-
-		print_errors("\n");
-		if (d) ERR_TRCKR_printExtendedErrors(err);
-		else  ERR_TRCKR_printErrors(err);
 	}
+	ERR_TRCKR_print(err, d);
 
 	KSI_PublicationsFile_free(pubfile);
 	SMART_FILE_close(logfile);

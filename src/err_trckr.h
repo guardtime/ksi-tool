@@ -38,8 +38,11 @@ void ERR_TRCKR_free(ERR_TRCKR *obj);
 void ERR_TRCKR_add(ERR_TRCKR *err, int code, const char *fname, int lineN, const char *msg, ...);
 void ERR_TRCKR_reset(ERR_TRCKR *err);
 void ERR_TRCKR_addAdditionalInfo(ERR_TRCKR *err, const char *info, ...);
+void ERR_TRCKR_addWarning(ERR_TRCKR *err, const char *info, ...);
 void ERR_TRCKR_printErrors(ERR_TRCKR *err);
 void ERR_TRCKR_printExtendedErrors(ERR_TRCKR *err);
+void ERR_TRCKR_printWarnings(ERR_TRCKR *err);
+void ERR_TRCKR_print(ERR_TRCKR *err, int extended);
 int ERR_TRCKR_getErrCount(ERR_TRCKR *err);
 
 #define ERR_TRCKR_ADD(err, code, msg, ...) ERR_TRCKR_add(err, code, __FILE__, __LINE__, msg, ##__VA_ARGS__)

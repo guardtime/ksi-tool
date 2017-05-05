@@ -47,7 +47,7 @@ Specify the KSIAP (KSI Aggregation Protocol) PDU version. Valid values are \fIv1
 .\"
 .TP
 \fB-H \fIalg\fR
-Use the given hash algorithm to hash the file to be signed. Use \fBksi -h \fRto get the list of supported hash algorithms.
+Use the given hash algorithm to hash the file to be signed. If not set, the default algorithm is used. Use \fBksi -h \fRto get the list of supported hash algorithms. If used in combination with \fB--apply-remote-conf\fR, the algorithm parameter provided by the server will be ignored.
 .\"
 .TP
 \fB-X \fIURL\fR
@@ -72,7 +72,7 @@ Specify the KSIEP (KSI Extension Protocol) PDU version. Valid values are \fIv1\f
 .\"
 .TP
 \fB--max-lvl \fIint\fR
-Set the maximum depth (0 - 255) of the local aggregation tree (default: 0). It must be noted that when using masking (\fB--mask\fR) or embedding of the metadata (\fB--mdata\fR), the maximum count of document hash values that could be signed during a single local aggregation round will be reduced. To enable signing in multiple local aggregation rounds see \fB--max-aggr-rounds\fR.
+Set the maximum depth (0 - 255) of the local aggregation tree (default: 0). It must be noted that when using masking (\fB--mask\fR) or embedding of the metadata (\fB--mdata\fR), the maximum count of document hash values that could be signed during a single local aggregation round will be reduced. To enable signing in multiple local aggregation rounds see \fB--max-aggr-rounds\fR. If used in combination with \fB--apply-remote-conf\fR, where service \fImaximum level\fR is provided, the smaller value is applied.
 .\"
 .TP
 \fB--max-aggr-rounds \fIint\fR
