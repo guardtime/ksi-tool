@@ -18,7 +18,7 @@
 
 ##
 # This test suite examins suggestions given to the user when publication based
-# verification fails with GEN-2 verification result code.
+# verification fails with GEN-02 verification result code.
 ##
 
 #
@@ -43,7 +43,7 @@ EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.re-ex
 # but extending is prohibited.
 ##
 EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -P file://test/resource/publication/ok-pub-one-record-1.bin -V test/resource/certificates/ok-test.crt --cnstr E=test@test.com
->>>2 /(GEN-2.*)([^$]|[
+>>>2 /(GEN-02.*)([^$]|[
 ])*(Error.*)(.*Signature is extended to a publication that does not exist in publications file.*)([^$]|[
 ])*(Suggestion.*)(.*Try to use -x to permit automatic extending or use KSI tool extend command to re-extend the signature.*)/
 >>>= 6
@@ -55,7 +55,7 @@ EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.k
 # User is informed that the publications file may be out-of-date.
 ##
 EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -P file://test/resource/publication/ok-publication-2012.bin -V test/resource/certificates/ok-test.crt --cnstr E=test@test.com
->>>2 /(GEN-2.*)([^$]|[
+>>>2 /(GEN-02.*)([^$]|[
 ])*(Error.*)(.*Signature is extended to a publication that does not exist in publications file.*)([^$]|[
 ])*(Suggestion.*)(.*Check if publications file is up-to-date as the latest publication in the publications file is older than the signatures publication record.*)/
 >>>= 6
@@ -68,7 +68,7 @@ EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.k
 # must be extended.
 ##
 EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ksig -P file://test/resource/publication/ok-publication-2012.bin -V test/resource/certificates/ok-test.crt --cnstr E=test@test.com
->>>2 /(GEN-2.*)([^$]|[
+>>>2 /(GEN-02.*)([^$]|[
 ])*(Error.*)(.*Signature is not extended.*)([^$]|[
 ])*(Sug.*)(.*Check if pub.* file is up-to-date as there is not \(yet\) a publication record.*)([^$]|[
 ])*(Sug.*)(.*Wait until next.*)([^$]|[
@@ -82,7 +82,7 @@ EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ksig 
 # updated or user has to wait the next publication.
 ##
 EXECUTABLE verify --ver-pub -x -i test/resource/signature/ok-sig-2014-08-01.1.ksig -P file://test/resource/publication/ok-publication-2012.bin -V test/resource/certificates/ok-test.crt --cnstr E=test@test.com
->>>2 /(GEN-2.*)([^$]|[
+>>>2 /(GEN-02.*)([^$]|[
 ])*(Error.*)(.*Signature is not extended.*)([^$]|[
 ])*(Sug.*)(.*Check if pub.* file is up-to-date as there is not \(yet\) a publication record.*)([^$]|[
 ])*(Sug.*)(.*Wait until next.*)/
@@ -94,7 +94,7 @@ EXECUTABLE verify --ver-pub -x -i test/resource/signature/ok-sig-2014-08-01.1.ks
 # Extension is prohibited. User is informed that signature must be extended.
 ##
 EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ksig -P file://test/resource/publication/ok-pub-one-record-1.bin -V test/resource/certificates/ok-test.crt --cnstr E=test@test.com
->>>2 /(GEN-2.*)([^$]|[
+>>>2 /(GEN-02.*)([^$]|[
 ])*(Error.*)(.*Signature is not extended.*)([^$]|[
 ])*(Suggestion.*)(.*Use -x to permit automatic extending or use KSI tool extend command to extend the signature.*)/
 >>>= 6
@@ -104,7 +104,7 @@ EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ksig 
 # Publication string (2014-07-15) is older than the signature.
 ##
 EXECUTABLE verify --ver-pub -x -i test/resource/signature/ok-sig-2014-08-01.1.ksig --pub-str AAAAAA-CTYRXQ-AAJHOZ-DFKQ26-PNX7QF-QMO6PD-BDIR3Z-7YYHSK-BIO7FW-ITUKRT-QVQOHO-X5NBRR
->>>2 /(GEN-2.*)([^$]|[
+>>>2 /(GEN-02.*)([^$]|[
 ])*(Error.*)(.*User publication string can not be older than the signatures signing time.*)/
 >>>= 6
 
@@ -114,6 +114,6 @@ EXECUTABLE verify --ver-pub -x -i test/resource/signature/ok-sig-2014-08-01.1.ks
 # Extending is prohibited.
 ##
 EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ksig --pub-str AAAAAA-CUCYWA-AAOBM6-PNYLRK-EPI3VG-2PJGCF-Y5QHV3-XURLI2-GRFBK4-VHBED2-Q37QIB-UE3ENA
->>>2 /(GEN-2.*)([^$]|[
+>>>2 /(GEN-02.*)([^$]|[
 ])*(Suggestion.*)(.*Use -x to permit automatic extending.*)/
 >>>= 6
