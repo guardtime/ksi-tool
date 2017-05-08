@@ -29,9 +29,12 @@ yum install ksi-tools
 
 If the latest version is needed or the package is not available for the platform you are using, check out source code from Github and build it using `gcc` or VS. To build KSI tool `libksi` and `libksi-devel` (KSI C SDK) packages are needed. `libksi` is available in Guardtime repository or as source code in GitHub:
 [https://github.com/GuardTime/libksi](https://github.com/GuardTime/libksi).
-Use `rebuild.sh` script to build KSI tool on CentOS/RHEL. See `WinBuild.txt`
-to read how to build KSI tool on Windows. See `test/TEST-README.md` to
-learn how to run KSI command-line tool tests on Windows and Linux.
+
+Use `rebuild.sh` script to build KSI tool on CentOS/RHEL. 
+
+See `WinBuild.txt` to read how to build KSI tool on Windows.
+
+See `test/TEST-README.md` to learn how to run KSI command-line tool tests on Windows and Linux.
 
 
 ### Upgrade
