@@ -2,7 +2,7 @@
 .TH KSI-CONF 5
 .\"
 .SH NAME
-\fBksi.conf\fR - Keyless Signature Infrastructure (KSI) command-line tool configuration file.
+\fBksi conf\fR - Keyless Signature Infrastructure (KSI) command-line tool configuration file.
 .\"
 .SH DESCRIPTION
 The KSI command-line tool has several configuration options, most of them are related to the KSI service configuration (e.g. KSI signing service URL and access credentials). The configuration options are described in the \fBOPTIONS\fR section below. Ways to define the options are:
@@ -43,7 +43,7 @@ Hash algorithm to be used for computing HMAC on outgoing messages towards KSI ag
 .\"
 .TP
 \fB--aggr-pdu-v \fIstr\fR
-Specify the KSIAP (KSI Aggregation Protocol) PDU version. Valid values are \fIv1\fR and \fIv2\fR. It must be noted that \fIv1\fR is \fBlegacy\fR implementation and will be fully replaced with \fIv2\fR in the future.
+Specify the KSIAP (KSI Aggregation Protocol) PDU version. Valid values are \fIv1\fR and \fIv2\fR.Note that \fIv1\fR is \fBlegacy\fR implementation and will be fully replaced with \fIv2\fR in the future.
 .\"
 .TP
 \fB-H \fIalg\fR
@@ -67,7 +67,7 @@ Hash algorithm to be used for computing HMAC on outgoing messages towards KSI ex
 .\"
 .TP
 \fB--ext-pdu-v \fIstr\fR
-Specify the KSIEP (KSI Extension Protocol) PDU version. Valid values are \fIv1\fR and \fIv2\fR. It must be noted that \fIv1\fR is \fBlegacy\fR implementation and will be fully replaced with \fIv2\fR in the future.
+Specify the KSIEP (KSI Extension Protocol) PDU version. Valid values are \fIv1\fR and \fIv2\fR. Note that \fIv1\fR is \fBlegacy\fR implementation and will be fully replaced with \fIv2\fR in the future.
 .\"
 .\"
 .TP
@@ -140,11 +140,11 @@ Obtain and apply additional configuration data from service server. See \fBksi-s
 .\"
 .TP
 \fB--inst-id \fR[\fIint\fR]
-An integer (>= 0) to identify the sender instance that is constant during the KSI tool process lifetime. It should stay constant or increase every time KSI tool is executed as server may drop future messages with lower \fIinstance identifier\fR values. When specified as integer, the constant value is used. When specified without argument, unix time is used in place of a constant. If not specified, \fIinstance identifier\fR is not included to the request header. It must be noted that this value only affects KSI protocol PDUs.
+An integer (>= 0) to identify the sender instance that is constant during the KSI tool process lifetime. It should stay constant or increase every time KSI tool is executed as server may drop future messages with lower \fIinstance identifier\fR values. When specified as integer, the constant value is used. When specified without argument, unix time is used in place of a constant. If not specified, \fIinstance identifier\fR is not included to the request header. Note that this value only affects KSI protocol PDUs.
 .\"
 .TP
 \fB--msg-id \fR[\fIint\fR]
-An integer (>= 1) to identify the requests within KSI tool process lifetime. The \fImessage identifier\fR value is increased after every request. When specified without argument, 1 is used. If not specified \fImessage identifier\fR is not included to the request header. It must be noted that this value only affects KSI protocol PDUs.
+An integer (>= 1) to identify the requests within KSI tool process lifetime. The \fImessage identifier\fR value is increased after every request. When specified without argument, 1 is used. If not specified \fImessage identifier\fR is not included to the request header. Note that this value only affects KSI protocol PDUs.
 .\"
 .SH ENVIRONMENT
 Program \fBksi\fR(1) uses environment variable \fBKSI_CONF \fRto point to the default configuration file.
