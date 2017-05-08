@@ -118,7 +118,7 @@ EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/nok-sig-invali
 >>>2 /(.*Reading signature)(.*ok.*)
 (.*Verifying old signature)(.*failed.*)([^$]|[
 ])*(Error: Unable to verify signature)(.*0x20a.*)
-(.*INT-9)(.*Calendar hash chain root hash is inconsistent with published hash value)/
+(.*INT-09)(.*Calendar hash chain root hash is inconsistent with published hash value)/
 >>>= 6
 
 
