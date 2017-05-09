@@ -27,7 +27,7 @@ Flag \fB-i\fR can be omitted when specifying the input. Without \fB-i\fR it is n
 .\"
 .TP
 \fB-o \fIout.ksig\fR
-Specify the output file path for the extended signature. Use '\fB-\fR' as the path to redirect the signature binary stream to \fIstdout\fR. If not specified, the output is saved to the same directory where the input file is located. If specified as directory, all the signatures are saved there. When signature's output file name is not explicitly specified the signature is saved to <\fIinput[.E]\fR>.\fIext\fR.\fIksig\fR or <\fIinput[.E]\fR>.\fIext\fR_<\fInr\fR>.\fIksig\fR where \fIE\fR is input file extension that is NOT equal to \fIksig\fR and \fInr\fR is auto-incremented counter if the output file already exists. If output file name is explicitly specified, will always overwrite the existing file.
+Specify the output file path for the extended signature. Use '\fB-\fR' as the path to redirect the signature binary stream to \fIstdout\fR. If not specified, the output is saved to the same directory where the input file is located. If specified as directory, all the signatures are saved there. When signature's output file name is not explicitly specified the signature is saved to <input[.E]>.ext.ksig or <input[.E]>.ext_<nr>.ksig where .E is input file extension that is NOT equal to .ksig and nr is auto-incremented counter if the output file already exists. If output file name is explicitly specified, will always overwrite the existing file.
 .\"
 .TP
 \fB-X \fIURL\fR
@@ -71,7 +71,7 @@ Specify the publication record as publication string to extend signature to.
 .\"
 .TP
 \fB--replace-existing \fR
-Replace input KSI signature file with successfully extended version. During the saving process old signature is renamed and is handled as temporary buffer for the original file. If saving of extended signature is successfully performed the old signature is deleted. In cases of failures the old signatures may be left renamed as <\fIoriginal input file\fR>.\fIbackup\fR.<\fI20 random decimal digits\fR> and is not deleted.
+Replace input KSI signature file with successfully extended version. During the saving process old signature is renamed and is handled as temporary buffer for the original file. If saving of extended signature is successfully performed the old signature is deleted. In cases of failures the old signatures may be left renamed as <original input file>.backup.<20 random decimal digits> and is not deleted.
 .\"
 .TP
 \fB-T \fItime\fR
@@ -87,7 +87,7 @@ Specify an OpenSSL-style trust store directory for publications file verificatio
 .\"
 .TP
 \fB--\fR
-If used, \fBeverything\fR specified after the token is interpreted as \fBKSI signature input file\fR (command-line parameters (e.g. --conf, -d) and \fIstdin\fR (-) are all interpreted as regular files).
+If used, \fBeverything\fR specified after the token is interpreted as \fBKSI signature input file\fR (command-line parameters (e.g. --conf, -d) and \fIstdin\fR (\fB-\fR) are all interpreted as regular files).
 .\"
 .TP
 \fB-d\fR
@@ -115,7 +115,7 @@ Obtain and apply additional configuration data from the extender. Following conf
 .IP \(bu 4
 \fBcalendar last time\fR - Aggregation time of the newest calendar record the extender has.
 .LP
-The time span is used to verify, whether signature extend request could be successfully performed. It must be noted that the described parameters are optional and may not be provided by the extender that you turn to. Use \fB--dump-conf\fR to view th provided configuration parameters.
+The time span is used to verify, whether signature extend request could be successfully performed. Note that the described parameters are optional and may not be provided by the extender that you turn to. Use \fB--dump-conf\fR to view the provided configuration parameters.
 .\"
 .RE
 .TP

@@ -23,7 +23,7 @@ Flag \fB-i\fR can be omitted when specifying the input. Without \fB-i\fR it is n
 .\"
 .TP
 \fB-o \fIout.ksig\fR
-Define the output file's path for the signature. Use '\fB-\fR' as file name to redirect signature binary stream to \fIstdout\fR. If not specified, the output is saved to the same directory where the input file is located. If specified as directory, all the signatures are saved there. When signature's output file name is not explicitly specified the signature is saved to <\fIinput file\fR>.\fIksig\fR (or <\fIinput file\fR>_<\fInr\fR>.\fIksig\fR, where <\fInr\fR> is auto-incremented counter if the output file already exists). When there are N x input and explicitly specified N x output every signature is saved to the corresponding path. If output file name is explicitly specified, will always overwrite the existing file.
+Define the output file's path for the signature. Use '\fB-\fR' as file name to redirect signature binary stream to \fIstdout\fR. If not specified, the output is saved to the same directory where the input file is located. If specified as directory, all the signatures are saved there. When signature's output file name is not explicitly specified the signature is saved to <input file>.ksig (or <input file>_<nr>.ksig, where <nr> is auto-incremented counter if the output file already exists). When there are N x input and explicitly specified N x output every signature is saved to the corresponding path. If output file name is explicitly specified, will always overwrite the existing file.
 .\"
 .TP
 \fB-H \fIalg\fR
@@ -93,7 +93,7 @@ Embed request time extracted from the machine clock into the signature as metada
 .\"
 .TP
 \fB--\fR
-If used, \fBeverything\fR specified after the token is interpreted as \fBinput file\fR (command-line parameters (e.g. \fB--conf\fR, \fB-d\fR), \fIstdin\fR (-) and precomputed hash imprints (SHA-256:7647c6...) are all interpreted as regular files).
+If used, \fBeverything\fR specified after the token is interpreted as \fBinput file\fR (command-line parameters (e.g. --conf, -d), \fIstdin\fR (\fB-\fR) and precomputed hash imprints (SHA-256:7647c6...) are all interpreted as regular files).
 .\"
 .TP
 \fB-d\fR
@@ -125,7 +125,7 @@ Obtain and apply additional configuration data from the aggregator. Following co
 .IP \(bu 4
 \fBaggregation hash algorithm\fR - Recommended hash function identifier to be used for hashing the file to be signed. This parameter can be overridden with \fB-H\fR.
 .LP
-It must be noted that the described parameters are optional and may not be provided by the aggregator that you turn to. Use \fB--dump-conf\fR to view the provided configuration parameters.
+Note that the described parameters are optional and may not be provided by the aggregator that you turn to. Use \fB--dump-conf\fR to view the provided configuration parameters.
 .RE
 .TP
 \fB--inst-id \fR[\fIint\fR]
@@ -196,7 +196,7 @@ To embed user ID "\fIMy Name\fR" as metadata to the signature of document \fIfil
 .\"
 .TP 3
 \fB7
- Using \fB--max-aggr-rounds\fR to sign more files than a local aggregation tree can handle with the specified tree size, in multiple rounds:
+Using \fB--max-aggr-rounds\fR to sign more files than a local aggregation tree can handle with the specified tree size, in multiple rounds:
 .LP
 .RS 4
 \fBksi sign -o \fIdoc/sig\fR \fB--max-lvl \fI5\fB --max-aggr-rounds 10 -- \fI*.doc\fR
