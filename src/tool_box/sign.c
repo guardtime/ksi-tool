@@ -618,10 +618,8 @@ static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, int 
 		goto cleanup;
 	}
 
-	if (PARAM_SET_isSetByName(set, "max-lvl")) {
-		res = PARAM_SET_getObj(set, "max-lvl", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void*)&user_max_lvl);
-		if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
-	}
+	res = PARAM_SET_getObj(set, "max-lvl", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void*)&user_max_lvl);
+	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 
 	if (remote_max_lvl != TREE_DEPTH_INVALID) {
 		if (user_max_lvl != TREE_DEPTH_INVALID) {
