@@ -348,9 +348,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	/**
 	 * Add some default values.
 	 */
-
 	res = PARAM_SET_add(set, "max-aggr-rounds", "1", "default", PRIORITY_KSI_DEFAULT);
-	res = PARAM_SET_add(set, "max-lvl", "0", "default", PRIORITY_KSI_DEFAULT);
 
 	/*						ID							DESC										MAN				ATL				FORBIDDEN		IGN	*/
 	TASK_SET_add(task_set,	SIGN_DATA,					"Sign data.",								"S",			"i,input",		"H,data-out",	NULL);
@@ -620,16 +618,20 @@ static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, int 
 		goto cleanup;
 	}
 
-	res = PARAM_SET_getObj(set, "max-lvl", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void*)&user_max_lvl);
-	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
+	if (PARAM_SET_isSetByName(set, "max-lvl")) {
+		res = PARAM_SET_getObj(set, "max-lvl", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void*)&user_max_lvl);
+		if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
+	}
 
 	if (remote_max_lvl != TREE_DEPTH_INVALID) {
-		if (user_max_lvl > remote_max_lvl) {
-			ERR_TRCKR_addWarning(err, "  * Warning: --max-lvl is larger than allowed by aggregator. Using remote maximum level configuration.\n");
-			if (!PARAM_SET_isSetByName(set, "dump-conf")) ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion: Use --dump-conf for more information.\n");
-			max_lvl = (size_t)remote_max_lvl;
-		} else if (user_max_lvl != TREE_DEPTH_INVALID) {
-			max_lvl = (size_t)user_max_lvl;
+		if (user_max_lvl != TREE_DEPTH_INVALID) {
+			if (user_max_lvl > remote_max_lvl) {
+				ERR_TRCKR_addWarning(err, "  * Warning: --max-lvl is larger than allowed by aggregator. Using remote maximum level configuration.\n");
+				if (!PARAM_SET_isSetByName(set, "dump-conf")) ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion: Use --dump-conf for more information.\n");
+				max_lvl = (size_t)remote_max_lvl;
+			} else {
+				max_lvl = (size_t)user_max_lvl;
+			}
 		} else {
 			max_lvl = (size_t)remote_max_lvl;
 		}
