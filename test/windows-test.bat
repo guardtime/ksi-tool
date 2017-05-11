@@ -68,14 +68,12 @@ if exist bin\ksi.exe (
 )
 
 @echo off
-set "textfile=test\test_suites\win-pipe.test"
-set "newfile=test\out\tmp\win-pipe.test"
 setlocal enabledelayedexpansion
-(for /f "delims=" %%i in (test\test_suites\win-pipe.test) do (
+(for /f "delims=" %%i in (test\test_suites\pipe.test) do (
     set "line=%%i"
     set line=!line:{KSI_BIN}=%tool%!
 	echo !line!
-))>test\out\tmp\win-pipe.test
+))>test\out\tmp\pipe.test
 @echo on
 
 REM If gttlvdump and gttlvgrep exists include the tests using gttlvutil
@@ -106,7 +104,7 @@ test\test_suites\extend-verify.test ^
 test\test_suites\static-verify.test ^
 test\test_suites\static-sign-verify.test ^
 test\test_suites\static-extend.test ^
-test\out\tmp\win-pipe.test ^
+test\out\tmp\pipe.test ^
 test\test_suites\sign-cmd.test ^
 test\test_suites\extend-cmd.test ^
 test\test_suites\static-verify-invalid-signatures.test ^

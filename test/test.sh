@@ -67,8 +67,8 @@ else
 fi
 
 # Wait until shelltest next release that has macros and refactor it.
-cp test/test_suites/linux-pipe.test test/out/tmp
-sed -i -- "s|{KSI_BIN}|$tool|g" test/out/tmp/linux-pipe.test
+cp test/test_suites/pipe.test test/out/tmp
+sed -i -- "s|{KSI_BIN}|$tool|g" test/out/tmp/pipe.test
 
 # Add test/test_suites/tlvutil-pdu-header.test to the list when gttlvutil new version is released.
 
@@ -92,7 +92,7 @@ test/test_suites/extend-verify.test \
 test/test_suites/static-verify.test \
 test/test_suites/static-sign-verify.test \
 test/test_suites/static-extend.test \
-test/out/tmp/linux-pipe.test \
+test/out/tmp/pipe.test \
 test/test_suites/sign-cmd.test \
 test/test_suites/extend-cmd.test \
 test/test_suites/static-verify-invalid-signatures.test \

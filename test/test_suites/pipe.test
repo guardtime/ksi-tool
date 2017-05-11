@@ -17,7 +17,7 @@
 # reserves and retains all trademark rights.
 
 
-# Successful signing and extending pipe tests for Windows.
+# Successful signing and extending pipe tests.
 
 # KSI Sign stream and pipe KSI signature file to verification.
  {KSI_BIN} sign --conf test/test.cfg -i - -o - | {KSI_BIN} verify --conf test/test.cfg --ver-key -i - -d
