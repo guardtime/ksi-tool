@@ -20,14 +20,14 @@
 # Successful signing and extending pipe tests for Windows.
 
 # KSI Sign stream and pipe KSI signature file to verification.
-EXECUTABLE sign --conf test/test.cfg -i - -o - | bin\ksi.exe verify --conf test/test.cfg --ver-key -i - -d
-<<< 
+ {KSI_BIN} sign --conf test/test.cfg -i - -o - | {KSI_BIN} verify --conf test/test.cfg --ver-key -i - -d
+<<<
 Data From Stdin
 >>>2 /(Reading signature)(.*ok.*)
 (Signature key-based verification)(.*ok.*)/
 >>>= 0
 
 # KSI Extend signature and pipe extend signature to verification.
-EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o - | bin\ksi.exe verify --ver-pub --conf test/test.cfg -i - -d --pub-str AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
+ {KSI_BIN} extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o - | {KSI_BIN} verify --ver-pub --conf test/test.cfg -i - -d --pub-str AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
 >>>2 /(Signature publication-based verification with user publication string)(.*ok.*)/
 >>>= 0
