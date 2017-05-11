@@ -26,6 +26,7 @@ rmdir /S /Q test\out\sign
 rmdir /S /Q test\out\pubfile
 rmdir /S /Q test\out\fname
 rmdir /S /Q test\out\mass_extend
+rmdir /S /Q test\out\tmp
 
 REM Create test output directories.
 mkdir test\out\sign
@@ -34,6 +35,7 @@ mkdir test\out\extend-replace-existing
 mkdir test\out\pubfile
 mkdir test\out\fname
 mkdir test\out\mass_extend
+mkdir test\out\tmp
 
 REM Create some test files to output directory.
 copy /Y test\resource\file\testFile	test\out\fname\_
@@ -65,6 +67,15 @@ if exist bin\ksi.exe (
     set tool=ksi
 )
 
+@echo off
+setlocal enabledelayedexpansion
+(for /f "delims=" %%i in (test\test_suites\pipe.test) do (
+    set "line=%%i"
+    set line=!line:{KSI_BIN}=%tool%!
+	echo !line!
+))>test\out\tmp\pipe.test
+@echo on
+
 REM If gttlvdump and gttlvgrep exists include the tests using gttlvutil
 
 gttlvdump -h > NUL && gttlvgrep -h > NUL
@@ -93,7 +104,7 @@ test\test_suites\extend-verify.test ^
 test\test_suites\static-verify.test ^
 test\test_suites\static-sign-verify.test ^
 test\test_suites\static-extend.test ^
-test\test_suites\win-pipe.test ^
+test\out\tmp\pipe.test ^
 test\test_suites\sign-cmd.test ^
 test\test_suites\extend-cmd.test ^
 test\test_suites\static-verify-invalid-signatures.test ^

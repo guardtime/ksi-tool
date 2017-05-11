@@ -5,6 +5,7 @@
 * FEATURE: New flags --inst-id and --msg-id for specifying instance id and message id for KSI PDU header.
 * FEATURE: New flag --dump-conf for dumping remote configuration to stdout.
 * FEATURE: New flag --apply-remote-conf for obtaining and applying server configuration.
+* BUGFIX: Linux and Windows pipe test uses installed KSI tool when the binary is missing from the project directory.
 
 Version 2.4
 
