@@ -413,7 +413,7 @@ static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int task) {
 
 	switch (task) {
 		case SIGN_DATA:
-		case SIGN_DATA_AND_SAVE:
+		case SIGN_DATA_AND_SAVE: {
 				size_t max_tree_input = 0;
 				size_t rounds = 0;
 				int remote_max_lvl = TREE_DEPTH_INVALID;
