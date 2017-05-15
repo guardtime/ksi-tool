@@ -58,47 +58,47 @@ EXECUTABLE verify --ver-int -i test/resource/signature/nok-sig-two-anchors.ksig 
 
 # Try to verify a signature with inconsistent aggregation hash chain.
 EXECUTABLE verify --ver-int -i test/resource/signature/nok-sig-with-invalid-rfc3161-output-hash.ksig -d
->>>2 /(.*Error.*)(.*INT-01*)(.*Inconsistent aggregation hash chains.*)(.*0x20a.*)/
+>>>2 /(.*Error.*)(.*INT-1*)(.*Inconsistent aggregation hash chains.*)(.*0x20a.*)/
 >>>= 6
 
 # Try to verify a signature with inconsistent aggregation hash chain aggregation times.
 EXECUTABLE verify --ver-int -i test/resource/signature/nok-sig-inconsistent-aggregation-chain-time.ksig -d
->>>2 /(.*Error.*)(.*INT-02*)(.*Inconsistent aggregation hash chain aggregation times.*)(.*0x20a.*)/
+>>>2 /(.*Error.*)(.*INT-2*)(.*Inconsistent aggregation hash chain aggregation times.*)(.*0x20a.*)/
 >>>= 6
 
 # Try to verify a signature with invalid calendar hash chain.
 EXECUTABLE verify --ver-int -i test/resource/signature/nok-sig-with-invalid-calendar-hash-chain.ksig -d
->>>2 /(.*Error.*)(.*INT-03*)(.*Calendar hash chain input hash mismatch.*)(.*0x20a.*)/
+>>>2 /(.*Error.*)(.*INT-3*)(.*Calendar hash chain input hash mismatch.*)(.*0x20a.*)/
 >>>= 6
 
 # Try to verify a signature that contains calendar hash chain thats aggregation time does not match.
 EXECUTABLE verify --ver-int -i test/resource/signature/nok-sig-with-invalid-calendar-chain-aggregation-time.ksig -d
->>>2 /(.*Error.*)(.*INT-04*)(.*Calendar hash chain aggregation time mismatch.*)(.*0x20a.*)/
+>>>2 /(.*Error.*)(.*INT-4*)(.*Calendar hash chain aggregation time mismatch.*)(.*0x20a.*)/
 >>>= 6
 
 # Try to verify a signature thats calendar hash chain publications time does not match the one in calendar authentication record.
 EXECUTABLE verify --ver-int -i test/resource/signature/nok-sig-with-invalid-authentication-record-publication-time.ksig -d
->>>2 /(.*Error.*)(.*INT-06*)(.*Calendar hash chain time inconsistent with calendar authentication record time.*)(.*0x20a.*)/
+>>>2 /(.*Error.*)(.*INT-6*)(.*Calendar hash chain time inconsistent with calendar authentication record time.*)(.*0x20a.*)/
 >>>= 6
 
 # Try to verify a signature thats calendar hash chain publications time does not match the one in publication record.
 EXECUTABLE verify --ver-int -i test/resource/signature/nok-sig-with-invalid-publication-record-publication-data-time.ksig -d
->>>2 /(.*Error.*)(.*INT-07*)(.*Calendar hash chain time inconsistent with publication time.*)(.*0x20a.*)/
+>>>2 /(.*Error.*)(.*INT-7*)(.*Calendar hash chain time inconsistent with publication time.*)(.*0x20a.*)/
 >>>= 6
 
 # Try to verify a signature thats calendar hash chain hash value does not match the one in calendar authentication record.
 EXECUTABLE verify --ver-int -i test/resource/signature/nok-sig-with-invalid-calendar-authentication-record-hash.ksig -d
->>>2 /(.*Error.*)(.*INT-08*)(.*Calendar hash chain root hash is inconsistent with calendar authentication record input hash.*)(.*0x20a.*)/
+>>>2 /(.*Error.*)(.*INT-8*)(.*Calendar hash chain root hash is inconsistent with calendar authentication record input hash.*)(.*0x20a.*)/
 >>>= 6
 
 # Try to verify a signature thats calendar hash chain hash value does not match the one in publication record.
 EXECUTABLE verify --ver-int -i test/resource/signature/nok-sig-with-invalid-publication-record-publication-data-hash.ksig -d
->>>2 /(.*Error.*)(.*INT-09*)(.*Calendar hash chain root hash is inconsistent with published hash value.*)(.*0x20a.*)/
+>>>2 /(.*Error.*)(.*INT-9*)(.*Calendar hash chain root hash is inconsistent with published hash value.*)(.*0x20a.*)/
 >>>= 6
 
 # Try to verify a signature thats calendar hash chain hash value does not match the one in publication record.
 EXECUTABLE verify --ver-int -i test/resource/signature/nok-sig-with-invalid-publication-record-publication-data-hash.ksig -d
->>>2 /(.*Error.*)(.*INT-09*)(.*Calendar hash chain root hash is inconsistent with published hash value.*)(.*0x20a.*)/
+>>>2 /(.*Error.*)(.*INT-9*)(.*Calendar hash chain root hash is inconsistent with published hash value.*)(.*0x20a.*)/
 >>>= 6
 
 # Try to verify a signature that contains meta data that may be interpreted as imprint.
