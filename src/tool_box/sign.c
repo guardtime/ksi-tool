@@ -80,7 +80,6 @@ enum SIGNER_TASKS_en {
 
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
-static int check_hash_algo_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int check_io_naming_and_type_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int task);
 static void SIGNING_AGGR_ROUND_free(SIGNING_AGGR_ROUND *obj);
@@ -132,9 +131,6 @@ int sign_run(int argc, char** argv, char **envp) {
 	d = PARAM_SET_isSetByName(set, "d");
 
 	res = check_pipe_errors(set, err);
-	if (res != KT_OK) goto cleanup;
-
-	res = check_hash_algo_errors(set, err);
 	if (res != KT_OK) goto cleanup;
 
 	res = check_io_naming_and_type_errors(set, err);
@@ -351,11 +347,9 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	res = PARAM_SET_add(set, "max-aggr-rounds", "1", "default", PRIORITY_KSI_DEFAULT);
 
 	/*						ID							DESC										MAN				ATL				FORBIDDEN		IGN	*/
-	TASK_SET_add(task_set,	SIGN_DATA,					"Sign data.",								"S",			"i,input",		"H,data-out",	NULL);
-	TASK_SET_add(task_set,	SIGN_DATA_HASH,				"Sign data, specify hash alg.",				"S,H",			"i,input",		"data-out",		NULL);
-	TASK_SET_add(task_set,	SIGN_DATA_AND_SAVE,			"Sign and save data.",						"S,data-out",	"i,input",		"H",			NULL);
-	TASK_SET_add(task_set,	SIGN_DATA_HASH_AND_SAVE,	"Sign and save data, specify hash alg.",	"S,H,data-out", "i,input",		NULL,			NULL);
-	TASK_SET_add(task_set,	AGGREGATOR_DUMP_CONF,		"Dump aggregator configuration.",			"S,dump-conf",	NULL,			"i,input,o,H,data-out,apply-remote-conf",		NULL);
+	TASK_SET_add(task_set,	SIGN_DATA,					"Sign data.",								"S",			"i,input",		"data-out",	NULL);
+	TASK_SET_add(task_set,	SIGN_DATA_AND_SAVE,			"Sign and save data.",						"S,data-out",	"i,input",		NULL,			NULL);
+	TASK_SET_add(task_set,	AGGREGATOR_DUMP_CONF,		"Dump aggregator configuration.",			"S,dump-conf",	NULL,			"i,input,o,data-out",		NULL);
 
 cleanup:
 
@@ -372,57 +366,6 @@ static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err) {
 	if (res != KT_OK) goto cleanup;
 
 cleanup:
-	return res;
-}
-
-static int check_hash_algo_errors(PARAM_SET *set, ERR_TRCKR *err) {
-	int res;
-	char *i_value = NULL;
-	int count_i = 0;
-	int count_input = 0;
-	int imprint_count = 0;
-	int i = 0;
-
-	/**
-	 * Check if Hash algorithm is specified. If not there can't be Hash algorithm
-	 * errors.
-	 */
-	if (!PARAM_SET_isSetByName(set, "H")) {
-		res = KT_OK;
-		goto cleanup;
-	}
-
-	res = PARAM_SET_getValueCount(set, "input", NULL, PST_PRIORITY_NONE, &count_input);
-	if (res != KT_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
-
-	/**
-	 * Check if there are some regular files that can be signed with user
-	 * specified hash algorithms.
-	 */
-	if (count_input > 0) {
-		res = KT_OK;
-		goto cleanup;
-	}
-
-	res = PARAM_SET_getValueCount(set, "i", NULL, PST_PRIORITY_NONE, &count_i);
-	if (res != KT_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
-
-	for (i = 0; i < count_i; i++) {
-		res = PARAM_SET_getStr(set, "i", NULL, PST_PRIORITY_NONE, i, &i_value);
-		if (res != KT_OK) goto cleanup;
-
-		if (is_imprint(i_value)) imprint_count++;
-	}
-
-	if (count_i == imprint_count) {
-		ERR_TRCKR_ADD(err, res = KT_INVALID_CMD_PARAM, "Error: Unable to use -H as all inputs are pre-calculated hash imprints.");
-		goto cleanup;
-	}
-
-	res = KT_OK;
-
-cleanup:
-
 	return res;
 }
 

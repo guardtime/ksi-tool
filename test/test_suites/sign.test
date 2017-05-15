@@ -49,6 +49,11 @@ EXECUTABLE sign --conf test/test.cfg -i SHA1:a7d2c6238a92878b2a578c2477e8a33f9d8
 >>>2 /Signature saved to/
 >>>= 0
 
+# KSI Sign imprint SHA256 with specified hash algorithm (that is never used).
+EXECUTABLE sign --conf test/test.cfg -i SHA1:a7d2c6238a92878b2a578c2477e8a33f9d8591ab -o test/out/sign/dummy.ksig -d -H sha256
+>>>2 /Signature saved to/
+>>>= 0
+
 # KSI Sign imprint SHA256.
 EXECUTABLE sign --conf test/test.cfg -i SHA256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/imprint_sha256.ksig -d
 >>>2 /Signature saved to/
