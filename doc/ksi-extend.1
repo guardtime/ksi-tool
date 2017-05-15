@@ -21,13 +21,13 @@ User must have access to KSI extending service and trusted KSI publications file
 .SH OPTIONS
 .TP
 \fB-i \fIin.ksig\fR
-Specify the file path to the KSI signature file to be extended. Use '-' as the path to read the signature from \fIstdin\fR.
+Specify the file path to the KSI signature file to be extended. Use '\fB-\fR' as the path to read the signature from \fIstdin\fR.
 .\"
 Flag \fB-i\fR can be omitted when specifying the input. Without \fB-i\fR it is not possible to sign files that look like command line parameters (e.g. -a, --option). To interpret all inputs as regular files no matter what the file's name is, see parameter \fB--\fR.
 .\"
 .TP
 \fB-o \fIout.ksig\fR
-Specify the output file path for the extended signature. Use '-' as the path to redirect the signature binary stream to \fIstdout\fR. If not specified, the output is saved to the same directory where the input file is located. If specified as directory, all the signatures are saved there. When signature's output file name is not explicitly specified the signature is saved to <input[.E]>.ext.ksig or <input[.E]>.ext_<nr>.ksig where \fIE\fR is input file extension that is NOT equal to \fIksig\fR and \fInr\fR is auto-incremented counter if the output file already exists. If output file name is explicitly specified, will always overwrite the existing file.
+Specify the output file path for the extended signature. Use '\fB-\fR' as the path to redirect the signature binary stream to \fIstdout\fR. If not specified, the output is saved to the same directory where the input file is located. If specified as directory, all the signatures are saved there. When signature's output file name is not explicitly specified the signature is saved to <input[.E]>.ext.ksig or <input[.E]>.ext_<nr>.ksig where .E is input file extension that is NOT equal to .ksig and nr is auto-incremented counter if the output file already exists. If output file name is explicitly specified, will always overwrite the existing file.
 .\"
 .TP
 \fB-X \fIURL\fR
@@ -87,7 +87,7 @@ Specify an OpenSSL-style trust store directory for publications file verificatio
 .\"
 .TP
 \fB--\fR
-If used, \fBeverything\fR specified after the token is interpreted as \fBKSI signature input file\fR (command-line parameters (e.g. --conf, -d) and \fIstdin\fR (-) are all interpreted as regular files).
+If used, \fBeverything\fR specified after the token is interpreted as \fBKSI signature input file\fR (command-line parameters (e.g. --conf, -d) and \fIstdin\fR (\fB-\fR) are all interpreted as regular files).
 .\"
 .TP
 \fB-d\fR
@@ -99,7 +99,7 @@ Dump extended signature and verification info in human-readable format to \fIstd
 .\"
 .TP
 \fB--dump-conf\fR
-Dump extender configuration in human-readable format to \fIstdout\fR.
+Dump extender (URL specified by \fB-X\fR parameter) configuration in human-readable format to \fIstdout\fR.
 .\"
 .TP
 \fB--conf \fIfile\fR
@@ -107,25 +107,20 @@ Read configuration options from given file. It must be noted that configuration 
 .\"
 .TP
 \fB--apply-remote-conf\fR
-Obtain and apply additional configuration data from extender service server. Following configuration is received from server:
+Obtain and apply additional configuration data from the extender. Following configuration is received:
 .RS
 .IP \(bu 4
-\fBcalendar first time\fR - aggregation time of the oldest calendar record the extender has.
+\fBcalendar first time\fR - Aggregation time of the oldest calendar record the extender has.
 .LP
 .IP \(bu 4
-\fBcalendar last time\fR - aggregation time of the newest calendar record the extender has.
+\fBcalendar last time\fR - Aggregation time of the newest calendar record the extender has.
 .LP
-.IP \(bu 4
-\fBmaximum requests\fR - maximum number of requests the client is allowed to send within one second.
-.LP
-.IP \(bu 4
-\fBparent URI\fR - parent server URI. Note that there may be several parent servers listed in the configuration. Typically these are all members of one aggregator cluster.
-.LP
+The time span is used to verify, whether signature extend request could be successfully performed. Note that the described parameters are optional and may not be provided by the extender that you turn to. Use \fB--dump-conf\fR to view the provided configuration parameters.
 .\"
 .RE
 .TP
 \fB--inst-id \fR[\fIint\fR]
-An integer (>= 0) to identify the sender instance that is constant during the KSI tool process lifetime. It should stay constant or increase every time KSI tool is executed as server may drop future messages with lower \fIinstance identifier\fR values. When specified as integer, the constant value is used. When specified without argument, unix time is used in place of a constant. If not specified, \fIinstance identifier\fR is not included to the request header. It must be noted that this value only affects KSI protocol PDUs.
+An integer (>= 0) to identify the sender instance that is constant during the KSI tool process lifetime. It should stay constant or increase every time KSI tool is executed as server may drop future messages with lower \fIinstance identifier\fR values. When specified as integer, the constant value is used. When specified without argument, unix time is used in place of a constant. If not specified, \fIinstance identifier\fR is not included to the request header. Note that this value only affects KSI protocol PDUs.
 .\"
 .TP
 \fB--msg-id \fR[\fIint\fR]
@@ -133,7 +128,7 @@ An integer (>= 1) to identify the requests within KSI tool process lifetime. The
 .\"
 .TP
 \fB--log \fIfile\fR
-Write libksi log to given file. Use '-' as file name to redirect log to \fIstdout\fR.
+Write \fBlibksi\fR log to given file. Use '\fB-\fR' as file name to redirect log to \fIstdout\fR.
 .br
 .\"
 .SH EXIT STATUS
@@ -152,7 +147,7 @@ In the following examples it is assumed that KSI service configuration (URLs, ac
 .\"
 .TP 2
 \fB2
-\fRTo extend a signature \fIsig.ksig\fR to s specified publication (the publication string available from Financial Times, ISSN: 0307-1766, 2016-03-17 given as example):
+\fRTo extend a signature \fIsig.ksig\fR to specified publication (the publication string available from Financial Times, ISSN: 0307-1766, 2016-03-17 given as example):
 .LP
 .RS 4
 \fBksi extend -i \fIsig.ksig \fB-o \fIext.ksig \fB--pub-str \fIAAAAAA-CW45II-AAKWRK-F7FBNM-KB6FNV-DYYFW7-PJQN6F-JKZWBQ-3OQYZO-HCB7RA-YNYAGA-ODRL2V
@@ -176,7 +171,7 @@ In the following examples it is assumed that KSI service configuration (URLs, ac
 .\"
 .TP 2
 \fB5
-\fRSame as \fIexample 2\fR. In addition verify that the \fIextend to \fRtime matches the calendar interval available in extender:
+\fRSame as \fIExample 2\fR. In addition verify that the \fIextend to \fRtime matches the calendar interval available in the extender:
 .LP
 .RS 4
 \fBksi extend -i \fIsig.ksig \fB-o \fIext.ksig \fB--pub-str \fIAAAAAA-CW45II-AAKWRK-F7FBNM-KB6FNV-DYYFW7-PJQN6F-JKZWBQ-3OQYZO-HCB7RA-YNYAGA-ODRL2V\fB --apply-remote-conf\fR

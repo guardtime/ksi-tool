@@ -111,11 +111,7 @@ cleanup:
 	/* Debugging and KSITOOL_KSI_ERRTrace_save is called in perform_extending. */
 	print_progressResult(res);
 
-	if (res != KT_OK) {
-		print_errors("\n");
-		if (d) ERR_TRCKR_printExtendedErrors(err);
-		else  ERR_TRCKR_printErrors(err);
-	}
+	ERR_TRCKR_print(err, d);
 
 	SMART_FILE_close(logfile);
 	PARAM_SET_free(set);
@@ -199,12 +195,18 @@ char *extend_help_toString(char*buf, size_t len) {
 		"               * Calendar first time - aggregation time of the oldest calendar\n"
 		"                 record the extender has.\n"
 		"               * Calendar last time - aggregation time of the newest calendar\n"
-		"                 record the extender has."
+		"                 record the extender has.\n"
+#if 0
 		"               * Maximum requests - maximum number of requests the client is\n"
 		"                 allowed to send within one second.\n"
 		"               * Parent URI - parent server URI. Note that there may be several\n"
 		"                 parent servers listed in the configuration. Typically these are\n"
 		"                 all members of one aggregator cluster.\n"
+#endif
+		"             The time span is used to verify, whether the request could be\n"
+		"             successfully performed. It must be noted that the described\n"
+		"             parameters are optional and may not be provided by the server.\n"
+		"             Use --dump-conf to view configuration parameters.\n"
 		" --log <file>\n"
 		"           - Write libksi log to given file. Use '-' as file name to redirect\n"
 		"             log to stdout.\n",
@@ -373,7 +375,7 @@ static int obtain_remote_conf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size
 	d = PARAM_SET_isSetByName(set, "d");
 
 	print_progressDesc(d, "Receiving remote configuration... ");
-	res = KSI_receiveExtenderConfig(ctx, &config);
+	res = KSITOOL_Extender_getConf(err, ctx, &config);
 	ERR_CATCH_MSG(err, res, "Error: Unable to receive remote config.");
 	print_progressResult(res);
 
@@ -433,6 +435,7 @@ static int extend_to_specified_time(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi
 	if ((calFirst != 0 && KSI_Integer_getUInt64(pubTime) < calFirst) ||
 			(calLast != 0 && KSI_Integer_getUInt64(pubTime) > calLast)) {
 		ERR_TRCKR_ADD(err, res = KT_EXT_CAL_TIME_OUT_OF_LIMIT,  "Error: Unable to extend signature to specified time.");
+		ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion: Use --dump-conf for more information.");
 		goto cleanup;
 	}
 
