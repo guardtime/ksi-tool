@@ -50,10 +50,10 @@ AM_PROG_CC_C_O
 
 AC_PROG_LN_S
 # Checks for libraries.
-libksi_ver="3.12"
-AC_ARG_ENABLE(static-build,         
+libksi_ver="3.13"
+AC_ARG_ENABLE(static-build,
 [  --enable-static-build              enable static linking of ksi library)],:,:)
-AC_ARG_ENABLE(use-installed-libksi, 
+AC_ARG_ENABLE(use-installed-libksi,
 [  --enable-use-installed-libksi      use installed ksi library)],:,:)
 if test "$enable_static_build" = "yes" ; then
 	AC_CANONICAL_HOST
@@ -67,7 +67,7 @@ if test "$enable_static_build" = "yes" ; then
 	AC_MSG_NOTICE([KSI library will be linked statically.])
 	AC_CHECK_LIB([ksi], [KSI_CTX_new], [LIBS="-Wl,-static -lksi -Wl,$dy_link_flag $LIBS"], [AC_MSG_FAILURE([Could not find libksi (KSI C SDK). Install libksi or specify the library path manually.])])
 	KSI_RPM_BUILD_FLAGS="--enable-static-build"
-	
+
 	if test "$enable_use_installed_libksi" = "yes" ; then
 		KSI_BUILD_DEPENDECY="BuildRequires: libksi-devel >= $libksi_ver"
 	fi
