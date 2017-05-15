@@ -51,7 +51,7 @@ Specify the OpenSSL-style trust store directory for publications file's PKI sign
 .\"
 .TP
 \fB-o \fIfile\fR
-Specify the output file path to store publications file. Use '-' as file name to redirect publications file binary stream to \fIstdout\fR. Publications file is always verified before saving.
+Specify the output file path to store publications file. Use '\fB-\fR' as file name to redirect publications file binary stream to \fIstdout\fR. Publications file is always verified before saving.
 .\"
 .TP
 \fB-X \fIURL\fR
@@ -64,6 +64,10 @@ Specify the username for extending service.
 .TP
 \fB--ext-key \fIstr\fR
 Specify the HMAC key for extending service.
+.\"
+.TP
+\fB--ext-hmac-alg \fIalg\fR
+Hash algorithm to be used for computing HMAC on outgoing messages towards KSI extender. If not set, default algorithm is used. Use \fBksi -h \fRto get the list of supported hash algorithms.
 .\"
 .TP
 \fB-T \fItime\fR
@@ -83,7 +87,7 @@ Read configuration options from given file. It must be noted that configuration 
 .\"
 .TP
 \fB--log \fIfile\fR
-Write libksi log to given file. Use '-' as file name to redirect log to \fIstdout\fR.
+Write \fBlibksi\fR log to given file. Use '\fB-\fR' as file name to redirect log to \fIstdout\fR.
 .br
 .\"
 .SH EXIT STATUS
@@ -137,7 +141,7 @@ To verify the publications file with only certificates defined on command line:
 To create a publication string:
 .LP
 .RS 4
-\fBksi pubfile -T \fR"\fI2015-10-15 00:00:00\fR" 
+\fBksi pubfile -T \fR"\fI2015-10-15 00:00:00\fR"
 .RE
 .\"
 .SH ENVIRONMENT
@@ -146,5 +150,5 @@ Use the environment variable \fBKSI_CONF\fR to define the default configuration 
 .SH AUTHOR
 Guardtime AS, http://www.guardtime.com/
 .\"
-.SH SEE ALSO	
-\fBksi\fR(1), \fBksi-sign\fR(1), \fBksi-verify\fR(1), \fBksi-extend\fR(1), \fBksi-conf\fR(5) 
+.SH SEE ALSO
+\fBksi\fR(1), \fBksi-sign\fR(1), \fBksi-verify\fR(1), \fBksi-extend\fR(1), \fBksi-conf\fR(5)

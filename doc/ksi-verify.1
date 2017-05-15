@@ -50,7 +50,7 @@ Perform publication-based verification (use with \fB-x\fR to permit extending).
 .\"
 .TP
 \fB-i \fIin.ksig\fR
-Specify the signature file to be verified. Use '-' as file name to read signature file from \fIstdin\fR.
+Specify the signature file to be verified. Use '\fB-\fR' as file name to read signature file from \fIstdin\fR.
 .\"
 .TP
 \fB-f \fIdata\fR
@@ -67,6 +67,10 @@ Specify the username for extending service.
 .TP
 \fB--ext-key \fIstr\fR
 Specify the HMAC key for extending service.
+.\"
+.TP
+\fB--ext-hmac-alg \fIalg\fR
+Hash algorithm to be used for computing HMAC on outgoing messages towards KSI extender. If not set, default algorithm is used. Use \fBksi -h \fRto get the list of supported hash algorithms.
 .\"
 .TP
 \fB-x\fR
@@ -118,7 +122,7 @@ Read configuration options from given file. It must be noted that configuration 
 .\"
 .TP
 \fB--log \fIfile\fR
-Write libksi log to given file. Use '-' as file name to redirect log to \fIstdout\fR.
+Write \fBlibksi\fR log to given file. Use '\fB-\fR' as file name to redirect log to \fIstdout\fR.
 .br
 .\"
 .SH EXIT STATUS

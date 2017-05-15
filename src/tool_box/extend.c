@@ -48,6 +48,14 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int check_other_input_param_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int task_id);
+static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int task);
+
+enum EXTEND_TASKS_en {
+	EXTEND_TO_HEAD = 0,
+	EXTEND_TO_TIME,
+	EXTEND_TO_PUB_STR,
+	EXTENDER_DUMP_CONF
+};
 
 int extend_run(int argc, char** argv, char **envp) {
 	int res;
@@ -64,8 +72,10 @@ int extend_run(int argc, char** argv, char **envp) {
 	 * Extract command line parameters.
 	 */
 	res = PARAM_SET_new(
-			CONF_generate_param_set_desc("{i}{input}{o}{d}{x}{T}{pub-str}{dump}{conf}{log}{h|help}{replace-existing}", "XP", buf, sizeof(buf)),
-			&set);
+			CONF_generate_param_set_desc(
+					"{i}{input}{o}{d}{x}{T}{pub-str}{dump}{dump-conf}"
+					"{conf}{apply-remote-conf}{log}{h|help}{replace-existing}", "XP", buf, sizeof(buf)),
+					&set);
 	if (res != KT_OK) goto cleanup;
 
 	res = TASK_SET_new(&task_set);
@@ -94,19 +104,14 @@ int extend_run(int argc, char** argv, char **envp) {
 	res = check_other_input_param_errors(set, err);
 	if (res != PST_OK) goto cleanup;
 
-	res = perform_extending(set, err, ksi, TASK_getID(task));
+	res = handleTask(set, err, ksi, TASK_getID(task));
 	if (res != KT_OK) goto cleanup;
-
 
 cleanup:
 	/* Debugging and KSITOOL_KSI_ERRTrace_save is called in perform_extending. */
 	print_progressResult(res);
 
-	if (res != KT_OK) {
-		print_errors("\n");
-		if (d) ERR_TRCKR_printExtendedErrors(err);
-		else  ERR_TRCKR_printErrors(err);
-	}
+	ERR_TRCKR_print(err, d);
 
 	SMART_FILE_close(logfile);
 	PARAM_SET_free(set);
@@ -152,6 +157,9 @@ char *extend_help_toString(char*buf, size_t len) {
 		"           - Username for extending service.\n"
 		" --ext-key <key>\n"
 		"           - HMAC key for extending service.\n"
+		" --ext-hmac-alg <alg>\n"
+		"           - Hash algorithm to be used for computing HMAC on outgoing messages\n"
+		"             towards KSI extender. If not set, default algorithm is used.\n"
 		" -P <URL>  - Publications file URL (or file with URI scheme 'file://').\n"
 		" --cnstr <oid=value>\n"
 		"           - OID of the PKI certificate field (e.g. e-mail address) and the\n"
@@ -175,10 +183,30 @@ char *extend_help_toString(char*buf, size_t len) {
 		" -d        - Print detailed information about processes and errors.\n"
 		" --dump    - Dump extended signature and verification info in human-readable\n"
 		"             format to stdout.\n"
+		" --dump-conf\n"
+		"           - Dump extender configuration to stdout.\n"
 		" --conf <file>\n"
 		"             Read configuration options from given file. It must be noted\n"
 		"             that configuration options given explicitly on command line will\n"
 		"             override the ones in the configuration file.\n"
+		" --apply-remote-conf\n"
+		"           - Obtain and apply configuration data from extender service server.\n"
+		"             Following configuration is received from server:\n"
+		"               * Calendar first time - aggregation time of the oldest calendar\n"
+		"                 record the extender has.\n"
+		"               * Calendar last time - aggregation time of the newest calendar\n"
+		"                 record the extender has.\n"
+#if 0
+		"               * Maximum requests - maximum number of requests the client is\n"
+		"                 allowed to send within one second.\n"
+		"               * Parent URI - parent server URI. Note that there may be several\n"
+		"                 parent servers listed in the configuration. Typically these are\n"
+		"                 all members of one aggregator cluster.\n"
+#endif
+		"             The time span is used to verify, whether the request could be\n"
+		"             successfully performed. It must be noted that the described\n"
+		"             parameters are optional and may not be provided by the server.\n"
+		"             Use --dump-conf to view configuration parameters.\n"
 		" --log <file>\n"
 		"           - Write libksi log to given file. Use '-' as file name to redirect\n"
 		"             log to stdout.\n",
@@ -332,13 +360,52 @@ cleanup:
 	return res;
 }
 
+static int obtain_remote_conf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size_t *calFirst, size_t *calLast) {
+	int res = KT_UNKNOWN_ERROR;
+	KSI_Config *config = NULL;
+	KSI_Integer *first = NULL;
+	KSI_Integer *last = NULL;
+	int d = 0;
+
+	if (set == NULL || err == NULL || ctx == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		goto cleanup;
+	}
+
+	d = PARAM_SET_isSetByName(set, "d");
+
+	print_progressDesc(d, "Receiving remote configuration... ");
+	res = KSITOOL_Extender_getConf(err, ctx, &config);
+	ERR_CATCH_MSG(err, res, "Error: Unable to receive remote config.");
+	print_progressResult(res);
+
+	if (PARAM_SET_isSetByName(set, "dump-conf")) {
+		OBJPRINT_extenderConfDump(config, print_result);
+	}
+
+	res = KSI_Config_getCalendarFirstTime(config, &first);
+	ERR_CATCH_MSG(err, res, "Error: Unable to get extender calendar first time.");
+
+	res = KSI_Config_getCalendarLastTime(config, &last);
+	ERR_CATCH_MSG(err, res, "Error: Unable to get extender calendar last time.");
+
+	if (calFirst && first) *calFirst = KSI_Integer_getUInt64(first);
+	if (calLast && last) *calLast = KSI_Integer_getUInt64(last);
+
+cleanup:
+	KSI_Config_free(config);
+
+	return res;
+}
+
 static int extend_to_specified_time(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, COMPOSITE *extra, KSI_Signature *sig, KSI_Signature **ext) {
 	int res;
 	int d = 0;
 	KSI_Signature *tmp = NULL;
 	KSI_Integer *pubTime = NULL;
 	char buf[256];
-
+	size_t calFirst = 0;
+	size_t calLast = 0;
 
 	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || extra == NULL || ext == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
@@ -354,10 +421,24 @@ static int extend_to_specified_time(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi
 		goto cleanup;
 	}
 
+	/* Obtain configuration from server. */
+	if (PARAM_SET_isSetByName(set, "apply-remote-conf")) {
+		res = obtain_remote_conf(set, err, ksi, &calFirst, &calLast);
+		if (res != KT_OK) goto cleanup;
+	}
+
 	/* Extend the signature. */
 	print_progressDesc(d, "Extending the signature to %s (%i)... ",
 			KSI_Integer_toDateString(pubTime, buf, sizeof(buf)),
 			KSI_Integer_getUInt64(pubTime));
+
+	if ((calFirst != 0 && KSI_Integer_getUInt64(pubTime) < calFirst) ||
+			(calLast != 0 && KSI_Integer_getUInt64(pubTime) > calLast)) {
+		ERR_TRCKR_ADD(err, res = KT_EXT_CAL_TIME_OUT_OF_LIMIT,  "Error: Unable to extend signature to specified time.");
+		ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion: Use --dump-conf for more information.");
+		goto cleanup;
+	}
+
 	res = KSITOOL_Signature_extendTo(err, sig, ksi, pubTime, &tmp);
 	ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
 	print_progressResult(res);
@@ -456,9 +537,9 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFileWithPipe, convertRepair_path, extract_inputSignature);
 	PARAM_SET_addControl(set, "{input}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignatureFromFile);
 	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
-	PARAM_SET_addControl(set, "{d}{dump}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{d}{dump}{dump-conf}{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{pub-str}", isFormatOk_pubString, NULL, NULL, extract_pubString);
-	PARAM_SET_setParseOptions(set, "{d}{dump}{replace-existing}", PST_PRSCMD_HAS_NO_VALUE);
+	PARAM_SET_setParseOptions(set, "{d}{dump}{dump-conf}{replace-existing}{apply-remote-conf}", PST_PRSCMD_HAS_NO_VALUE);
 
 	/**
 	 * To enable wildcard characters (WC) to work on Windows, configure the WC
@@ -483,10 +564,11 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	/**
 	 * Define possible tasks.
 	 */
-	/*					  ID	DESC												MAN				ATL			FORBIDDEN		IGN	*/
-	TASK_SET_add(task_set, 0,	"Extend to the earliest available publication.",	"X,P",			"i,input",	"T,pub-str",	NULL);
-	TASK_SET_add(task_set, 1,	"Extend to the specified time.",					"X,T",			"i,input",	"pub-str",		NULL);
-	TASK_SET_add(task_set, 2,	"Extend to time specified in publications string.",	"X,P,pub-str",	"i,input",	"T",			NULL);
+	/*						ID					DESC												MAN				ATL			FORBIDDEN		IGN	*/
+	TASK_SET_add(task_set,	EXTEND_TO_HEAD,		"Extend to the earliest available publication.",	"X,P",			"i,input",	"T,pub-str",	NULL);
+	TASK_SET_add(task_set,	EXTEND_TO_TIME,		"Extend to the specified time.",					"X,T",			"i,input",	"pub-str",		NULL);
+	TASK_SET_add(task_set,	EXTEND_TO_PUB_STR,	"Extend to time specified in publications string.",	"X,P,pub-str",	"i,input",	"T",			NULL);
+	TASK_SET_add(task_set,	EXTENDER_DUMP_CONF,	"Dump extender configuration.",						"X,dump-conf",	NULL,		"i,input,o,pub-str,T,apply-remote-conf,replace-existing",	NULL);
 
 cleanup:
 
@@ -576,6 +658,27 @@ cleanup:
 	return res;
 }
 
+static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int task) {
+	int res;
+
+	switch (task) {
+		case EXTEND_TO_HEAD:
+		case EXTEND_TO_TIME:
+		case EXTEND_TO_PUB_STR:
+			res = perform_extending(set, err, ksi, task);
+			goto cleanup;
+		case EXTENDER_DUMP_CONF:
+			res = obtain_remote_conf(set, err, ksi, NULL, NULL);
+			goto cleanup;
+		default:
+			ERR_CATCH_MSG(err, (res = KT_UNKNOWN_ERROR), "Error: Unknown extender task.");
+			goto cleanup;
+	}
+
+cleanup:
+	return res;
+}
+
 static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int task_id) {
 	int res;
 	int i = 0;
@@ -638,17 +741,15 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 		print_progressResult(res);
 
 		switch(task_id) {
-			case 0:
+			case EXTEND_TO_HEAD:
 				res = extend_to_nearest_publication(set, err, ksi, sig, &ext);
-			break;
-
-			case 1:
+				break;
+			case EXTEND_TO_TIME:
 				res = extend_to_specified_time(set, err, ksi, &extra, sig, &ext);
-			break;
-
-			case 2:
+				break;
+			case EXTEND_TO_PUB_STR:
 				res = extend_to_specified_publication(set, err, ksi, sig, &ext);
-			break;
+				break;
 		}
 		if (res != KT_OK) goto cleanup;
 

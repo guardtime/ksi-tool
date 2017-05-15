@@ -124,6 +124,9 @@ static void appendNetworkErrors(ERR_TRCKR *err, int res) {
 static void appendExtenderErrors(ERR_TRCKR *err, int res) {
 	if (res == KSI_OK) return;
 	ERR_APPEND_KSI_ERR_EXT_MSG(err, res, KSI_EXTENDER_NOT_CONFIGURED, "Extender URL is not configured.");
+#ifdef KSI_UNSUPPORTED_PDU_VERSION
+	ERR_APPEND_KSI_ERR_EXT_MSG(err, res, KSI_UNSUPPORTED_PDU_VERSION, "PDU version for given request is not supported.");
+#endif
 	ERR_APPEND_KSI_ERR(err, res, KSI_EXTEND_NO_SUITABLE_PUBLICATION);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_DATABASE_CORRUPT);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_DATABASE_MISSING);
@@ -136,6 +139,9 @@ static void appendExtenderErrors(ERR_TRCKR *err, int res) {
 static void appendAggreErrors(ERR_TRCKR *err, int res) {
 	if (res == KSI_OK) return;
 	ERR_APPEND_KSI_ERR_EXT_MSG(err, res, KSI_AGGREGATOR_NOT_CONFIGURED, "Aggregator URL is not configured.");
+#ifdef KSI_UNSUPPORTED_PDU_VERSION
+	ERR_APPEND_KSI_ERR_EXT_MSG(err, res, KSI_UNSUPPORTED_PDU_VERSION, "PDU version for given request is not supported.");
+#endif
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_AGGR_REQUEST_TOO_LARGE);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_AGGR_REQUEST_OVER_QUOTA);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_AGGR_TOO_MANY_REQUESTS);
@@ -151,8 +157,7 @@ static void appendPubFileErros(ERR_TRCKR *err, int res) {
 	ERR_APPEND_KSI_ERR(err, res, KSI_PKI_CERTIFICATE_NOT_TRUSTED);
 }
 
-static int verify_signature(KSI_Signature *sig, KSI_CTX *ctx,
-							KSI_DataHash *hsh, KSI_uint64_t rootLevel,
+static int verify_signature(KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
 							int extAllowed, KSI_PublicationsFile *pubFile, KSI_PublicationData *pubData,
 							const KSI_Policy *policy,
 							KSI_PolicyVerificationResult **result) {
@@ -180,14 +185,6 @@ static int verify_signature(KSI_Signature *sig, KSI_CTX *ctx,
 
 	/* Init user publication data in verification context */
 	info.userPublication = pubData;
-
-	/* Init aggregation level in verification context */
-	if (rootLevel > 0xff) {
-		res = KSI_INVALID_FORMAT;
-		goto cleanup;
-	}
-
-	info.docAggrLevel = rootLevel;
 
 	/* Init extention permission in verification context */
 	info.extendingAllowed = !!extAllowed;
@@ -284,6 +281,48 @@ int KSITOOL_RequestHandle_getExtendResponse(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Re
 	return res;
 }
 
+int KSITOOL_Extender_getConf(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Config **config) {
+	int res;
+
+	if (err == NULL || ctx == NULL || config == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
+	res = KSI_receiveExtenderConfig(ctx, config);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
+
+	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
+		appendNetworkErrors(err, res);
+		appendExtenderErrors(err, res);
+	}
+#ifdef KSI_UNSUPPORTED_PDU_VERSION
+	if (res == KSI_UNSUPPORTED_PDU_VERSION) {
+		ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion:  Use --ext-pdu-v to configure appropriate PDU version.\n");
+	}
+#endif
+	return res;
+}
+
+int KSITOOL_Aggregator_getConf(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Config **config) {
+	int res;
+
+	if (err == NULL || ctx == NULL || config == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
+	res = KSI_receiveAggregatorConfig(ctx, config);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
+
+	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
+		appendNetworkErrors(err, res);
+		appendAggreErrors(err, res);
+	}
+
+	return res;
+}
+
 int KSITOOL_SignatureVerify_general(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
 									KSI_PublicationData *pubdata, int extperm,
 									KSI_PolicyVerificationResult **result) {
@@ -320,7 +359,7 @@ int KSITOOL_SignatureVerify_internally(ERR_TRCKR *err, KSI_Signature *sig, KSI_C
 		return res;
 	}
 
-	res = verify_signature(sig, ctx, hsh, 0, 0, NULL, NULL, KSI_VERIFICATION_POLICY_INTERNAL, result);
+	res = verify_signature(sig, ctx, hsh, 0, NULL, NULL, KSI_VERIFICATION_POLICY_INTERNAL, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 	appendBaseErrorIfPresent(err, res, ctx, __LINE__);
 
@@ -336,7 +375,7 @@ int KSITOOL_SignatureVerify_calendarBased(ERR_TRCKR *err, KSI_Signature *sig, KS
 		return res;
 	}
 
-	res = verify_signature(sig, ctx, hsh, 0, 1, NULL, NULL, KSI_VERIFICATION_POLICY_CALENDAR_BASED, result);
+	res = verify_signature(sig, ctx, hsh, 1, NULL, NULL, KSI_VERIFICATION_POLICY_CALENDAR_BASED, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -355,7 +394,7 @@ int KSITOOL_SignatureVerify_keyBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX
 		return res;
 	}
 
-	res = verify_signature(sig, ctx, hsh, 0, 0, NULL, NULL, KSI_VERIFICATION_POLICY_KEY_BASED, result);
+	res = verify_signature(sig, ctx, hsh, 0, NULL, NULL, KSI_VERIFICATION_POLICY_KEY_BASED, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -374,7 +413,7 @@ int KSITOOL_SignatureVerify_publicationsFileBased(ERR_TRCKR *err, KSI_Signature 
 		return res;
 	}
 
-	res = verify_signature(sig, ctx, hsh, 0, extperm, NULL, NULL, KSI_VERIFICATION_POLICY_PUBLICATIONS_FILE_BASED, result);
+	res = verify_signature(sig, ctx, hsh, extperm, NULL, NULL, KSI_VERIFICATION_POLICY_PUBLICATIONS_FILE_BASED, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -397,7 +436,7 @@ int KSITOOL_SignatureVerify_userProvidedPublicationBased(ERR_TRCKR *err, KSI_Sig
 
 	if (pubdata == NULL) return KSI_INVALID_FORMAT;
 
-	res = verify_signature(sig, ctx, hsh, 0, extperm, NULL, pubdata, KSI_VERIFICATION_POLICY_USER_PUBLICATION_BASED, result);
+	res = verify_signature(sig, ctx, hsh, extperm, NULL, pubdata, KSI_VERIFICATION_POLICY_USER_PUBLICATION_BASED, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {

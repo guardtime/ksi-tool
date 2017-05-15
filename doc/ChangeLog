@@ -1,3 +1,17 @@
+Version 2.5
+
+2017-05-15 2.5.1125
+
+* IMPROVEMENT: Remote configuration request failure may print some helpful hints.
+* IMPROVEMENT: Publication-based verification may print some helpful hints how to fix the failing verification.
+* IMPROVEMENT: Parameter -H can be used inside KSI configuration file to override default hash algorithm.
+* FEATURE: New flag --aggr-hmac-alg for specifing KSI aggregator HMAC algorithm.
+* FEATURE: New flag --ext-hmac-alg for specifing KSI extender HMAC algorithm.
+* FEATURE: New flags --inst-id and --msg-id for specifying instance id and message id for KSI PDU header.
+* FEATURE: New flag --dump-conf for dumping remote configuration to stdout.
+* FEATURE: New flag --apply-remote-conf for obtaining and applying server configuration.
+* BUGFIX: Linux and Windows pipe test uses installed KSI tool when the binary is missing from the project directory.
+
 Version 2.4
 
 2017-01-20 2.4.1038

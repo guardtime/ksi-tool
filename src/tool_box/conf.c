@@ -48,7 +48,7 @@ int conf_run(int argc, char** argv, char **envp) {
 
 	/**
 	 * Check for typos and unknown parameters.
-     */
+	 */
 	if (PARAM_SET_isTypoFailure(set)) {
 			print_errors("%s\n", PARAM_SET_typosToString(set, PST_TOSTR_DOUBLE_HYPHEN, NULL, buf, sizeof(buf)));
 			res = KT_INVALID_CMD_PARAM;
@@ -123,27 +123,39 @@ char *conf_help_toString(char *buf, size_t len) {
 		);
 
 	count += KSI_snprintf(buf + count, len - count,
-		" -S <URL>  - signing service (KSI Aggregator) URL.\n"
+		" -S <URL>  - Signing service (KSI Aggregator) URL.\n"
 		" --aggr-user <str>\n"
-		"           - username for signing service.\n"
+		"           - Username for signing service.\n"
 		" --aggr-key <str>\n"
 		"           - HMAC key for signing service.\n"
+		" --aggr-hmac-alg <alg>\n"
+		"           - Hash algorithm to be used for computing HMAC on outgoing messages towards\n"
+		"             KSI aggregator. If not set, default algorithm is used.\n"
+		" -H <alg>  - Use the given hash algorithm to hash the file to be signed. If not\n"
+		"             set, the default algorithm is used. Use ksi -h to get the list of\n"
+		"             supported hash algorithms.\n"
+		"             If used in combination with --apply-remote-conf, the algorithm\n"
+		"             parameter provided by the server will be ignored.\n"
 		" -X <URL>  - Extending service (KSI Extender) URL.\n"
 		" --ext-user <str>\n"
-		"           - username for extending service.\n"
+		"           - Username for extending service.\n"
 		" --ext-key <str>\n"
 		"           - HMAC key for extending service.\n"
-		" -P <URL>  - publications file URL (or file with URI scheme 'file://').\n"
+		" --ext-hmac-alg <alg>\n"
+		"           - Hash algorithm to be used for computing HMAC on outgoing messages towards\n"
+		"             KSI extender. If not set, default algorithm is used.\n"
+		" -P <URL>  - Publications file URL (or file with URI scheme 'file://').\n"
 		" --cnstr <oid=value>\n"
 		"           - OID of the PKI certificate field (e.g. e-mail address) and the expected\n"
 		"             value to qualify the certificate for verification of publications file\n"
 		"             PKI signature. At least one constraint must be defined.\n"
 		" -V        - Certificate file in PEM format for publications file verification.\n"
 		" -W <dir>  - specify an OpenSSL-style trust store directory for publications file verification.\n"
-
 		" --max-lvl <int>\n"
 		"           - Set the maximum depth (0 - 255) of the local aggregation tree\n"
-		"             (default 0).\n"
+		"             (default 0). If used in combination with --apply-remote-conf,\n"
+		"             where service maximum level is provided, the smaller value is\n"
+		"             applied.\n"
 		" --max-aggr-rounds <int>\n"
 		"           - Set the upper limit of local aggregation rounds that may be\n"
 		"             performed (default 1).\n"
@@ -161,13 +173,16 @@ char *conf_help_toString(char *buf, size_t len) {
 		" --mdata-req-tm <int>\n"
 		"           - Embed request time extracted from the machine clock into the\n"
 		"             signature as metadata. It is optional part of metadata.\n"
-		" -c <int>  - set network transfer timeout, after successful connect, in seconds.\n"
-		" -C <int>  - set network connect timeout in seconds (is not supported with TCP client).\n"
+		" -c <int>  - Set network transfer timeout, after successful connect, in seconds.\n"
+		" -C <int>  - Set network connect timeout in seconds (is not supported with TCP client).\n"
 		" --publications-file-no-verify\n"
-		"           - a flag to force the tool to trust the publications file without\n"
+		"           - A flag to force the tool to trust the publications file without\n"
 		"             verifying it. The flag can only be defined on command-line to avoid\n"
 		"             the usage of insecure configuration files. It must be noted that the\n"
 		"             option is insecure and may only be used for testing.\n"
+		" --apply-remote-conf\n"
+		"           - Obtain and apply additional configuration data from service server.\n"
+		"             Use ksi sign -h, or ksi extend -h for more information.\n"
 		"\n"
 		"\n"
 		);

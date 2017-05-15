@@ -54,7 +54,7 @@ EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08
 (Saving signature)(.*ok.*)/
 >>>= 0
 
-# KSI extend to the specified time without no publication record.
+# KSI extend to the specified time without publication record.
 # Publication string: AAAAAA-CVWIVC-QAIVKJ-SIRUQZ-MZBJPS-T7P2UX-DDX4JF-KLMCXI-TXIKGF-B6MAJQ-JIJPTD-C2EDEO
 # Publication date: (1437739560) 2015-07-24 12:06:00 UTC
 EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/specified.no-pub.ext.ksig -d -T "2015-07-24 12:06:00"
@@ -63,6 +63,15 @@ EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08
 (Saving signature)(.*ok.*)/
 >>>= 0
 
+# KSI extend to the specified time without publication record. Obtain additional configuration from extender (note - extender conf is supported from PDU v2).
+# Publication string: AAAAAA-CVWIVC-QAIVKJ-SIRUQZ-MZBJPS-T7P2UX-DDX4JF-KLMCXI-TXIKGF-B6MAJQ-JIJPTD-C2EDEO
+# Publication date: (1437739560) 2015-07-24 12:06:00 UTC
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/specified.no-pub.ext.ksig -d -T "2015-07-24 12:06:00" --apply-remote-conf --dump-conf --ext-pdu-v v2
+>>> /Extender configuration/
+>>>2 /(Extending the signature to)(.*1437739560)(.*ok.*)
+(Verifying extended signature)(.*ok.*)
+(Saving signature)(.*ok.*)/
+>>>= 0
 
 
 ## 3
@@ -121,3 +130,24 @@ EXECUTABLE verify --ver-int -d -i test/out/extend/should-not-be-1.ksig -i test/o
 (File does not exist)(.*CMD.*)(.*-i.*)(.*3.*)
 (File does not exist)(.*CMD.*)(.*-i.*)(.*4.*)/
 >>>= 3
+
+# KSI extend to the specified time without publication record. Obtain additional configuration from extender (note - extender conf is supported from PDU v2).
+# Publication string: AAAAAA-CVWIVC-QAIVKJ-SIRUQZ-MZBJPS-T7P2UX-DDX4JF-KLMCXI-TXIKGF-B6MAJQ-JIJPTD-C2EDEO
+# Publication date: (1437739560) 2015-07-24 12:06:00 UTC
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/specified.no-pub.ext.ksig -d -T "2015-07-24 12:06:00" --apply-remote-conf --dump-conf --ext-pdu-v v1
+>>>2 /(.*Receiving remote configuration.*)(.*failed.*)([^$]|[
+])*(.*Unable to receive remote config.*)/
+>>>= 1
+
+# KSI extend to the specified time without publication record. Obtain additional configuration from extender (note - extender conf is supported from PDU v2).
+# Publication string: AAAAAA-CVWIVC-QAIVKJ-SIRUQZ-MZBJPS-T7P2UX-DDX4JF-KLMCXI-TXIKGF-B6MAJQ-JIJPTD-C2EDEO
+# Publication date: (1437739560) 2015-07-24 12:06:00 UTC
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/specified.no-pub.ext.ksig -d -T "2008-01-01 00:00:00" --apply-remote-conf --dump-conf --ext-pdu-v v2
+>>> /(.*Extender configuration.*)/
+>>>2 /(.*Extend to time is out of extender calendar time limit.*)/
+>>>= 16
+
+# Just dump extender configuration.
+EXECUTABLE extend --conf test/test.cfg --dump-conf --ext-pdu-v v2
+>>> /Extender configuration:/
+>>>= 0

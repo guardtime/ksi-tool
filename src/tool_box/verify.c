@@ -66,6 +66,8 @@ static int signature_verify_publication_based_with_user_pub(PARAM_SET *set, ERR_
 static int signature_verify_publication_based_with_pubfile(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi,  KSI_Signature *sig, KSI_DataHash *hsh, KSI_PolicyVerificationResult **out);
 static int signature_verify_calendar_based(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_DataHash *hsh, KSI_PolicyVerificationResult **out);
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
+static void signature_print_suggestions_for_publication_based_verification(PARAM_SET *set, ERR_TRCKR *err, int errCode, KSI_CTX *ksi,
+											KSI_Signature *sig, KSI_PolicyVerificationResult *verRes, KSI_PublicationData *userPubData);
 
 int verify_run(int argc, char **argv, char **envp) {
 	int res;
@@ -171,11 +173,8 @@ cleanup:
 		KSITOOL_KSI_ERRTrace_LOG(ksi);
 		print_debug("\n");
 		DEBUG_verifySignature(ksi, res, sig, result, hsh);
-
-		print_errors("\n");
-		if (d) ERR_TRCKR_printExtendedErrors(err);
-		else  ERR_TRCKR_printErrors(err);
 	}
+	ERR_TRCKR_print(err, d);
 
 	SMART_FILE_close(logfile);
 	PARAM_SET_free(set);
@@ -221,6 +220,9 @@ char *verify_help_toString(char *buf, size_t len) {
 		"           - Username for extending service.\n"
 		" --ext-key <key>\n"
 		"           - HMAC key for extending service.\n"
+		" --ext-hmac-alg <alg>\n"
+		"           - Hash algorithm to be used for computing HMAC on outgoing messages\n"
+		"             towards KSI extender. If not set, default algorithm is used.\n"
 		" --pub-str <str>\n"
 		"           - Publication string to verify with.\n"
 		" -P <URL>  - Publications file URL (or file with URI scheme 'file://').\n"
@@ -477,8 +479,13 @@ static int signature_verify_publication_based_with_user_pub(PARAM_SET *set, ERR_
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_userProvidedPublicationBased(err, sig, ksi, hsh, pub_data, x, out);
 	if (*out != NULL) {
-		ERR_CATCH_MSG(err, res, "Error: [%s] %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode),
-				OBJPRINT_getVerificationErrorDescription((*out)->finalResult.errorCode), task);
+		if (res != KT_OK) {
+				signature_print_suggestions_for_publication_based_verification(set, err, res, ksi, sig, *out, pub_data);
+
+				ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode),
+										OBJPRINT_getVerificationErrorDescription((*out)->finalResult.errorCode), task);
+				goto cleanup;
+			}
 	} else {
 		ERR_CATCH_MSG(err, res, "Error: %s failed.", task);
 	}
@@ -508,8 +515,13 @@ static int signature_verify_publication_based_with_pubfile(PARAM_SET *set, ERR_T
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_publicationsFileBased(err, sig, ksi, hsh, x, out);
 	if (*out != NULL) {
-		ERR_CATCH_MSG(err, res, "Error: [%s] %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode),
-				OBJPRINT_getVerificationErrorDescription((*out)->finalResult.errorCode), task);
+			if (res != KT_OK) {
+				signature_print_suggestions_for_publication_based_verification(set, err, res, ksi, sig, *out, NULL);
+
+				ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode),
+										OBJPRINT_getVerificationErrorDescription((*out)->finalResult.errorCode), task);
+				goto cleanup;
+			}
 	} else {
 		ERR_CATCH_MSG(err, res, "Error: %s failed.", task);
 	}
@@ -562,4 +574,107 @@ static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err) {
 
 cleanup:
 	return res;
+}
+
+static void signature_print_suggestions_for_publication_based_verification(PARAM_SET *set, ERR_TRCKR *err, int errCode,
+														   KSI_CTX *ksi, KSI_Signature *sig,
+														   KSI_PolicyVerificationResult *verRes, KSI_PublicationData *userPubData) {
+
+	int res = KT_UNKNOWN_ERROR;
+	KSI_PublicationRecord *rec = NULL;
+	KSI_PublicationData *pubData = NULL;
+	KSI_PublicationsFile *pubFile = NULL;
+	KSI_Integer *sigTime = NULL;
+	KSI_Integer *userPubTime = NULL;
+	KSI_Integer *latestPubTimeInPubfile = NULL;
+	KSI_PublicationRecord *possibilityToExtendTo = NULL;
+	int x = 0;
+	int isExtended = 0;
+	int ispubfile = userPubData == NULL ? 1 : 0;
+
+	if (verRes == NULL || verRes->finalResult.errorCode != KSI_VER_ERR_GEN_2 || sig == NULL) return;
+
+
+	x = PARAM_SET_isSetByName(set, "x");
+	isExtended = KSI_OBJ_isSignatureExtended(sig);
+
+	res = KSI_Signature_getSigningTime(sig, &sigTime);
+	if (res != KSI_OK) return;
+
+	/* Get publications file and check if it is possible to extend the signature to some available publication. */
+	res = KSI_CTX_getPublicationsFile(ksi, &pubFile);
+	if (res != KSI_OK) return;
+
+	if (pubFile != NULL) {
+		KSI_PublicationRecord *lastRec = NULL;
+		KSI_PublicationData *lastRecData = NULL;
+
+		res = KSI_PublicationsFile_getLatestPublication(pubFile, sigTime, &possibilityToExtendTo);
+		if (res != KSI_OK) return;
+
+		res = KSI_PublicationsFile_getLatestPublication(pubFile, NULL, &lastRec);
+		if (res != KSI_OK) return;
+
+		res = KSI_PublicationRecord_getPublishedData(lastRec, &lastRecData);
+		if (res != KSI_OK) return;
+
+		res = KSI_PublicationData_getTime(lastRecData, &latestPubTimeInPubfile);
+		if (res != KSI_OK) return;
+	}
+
+	/* If there is user publication specified get its time. */
+	if (!ispubfile && userPubData != NULL) {
+		res = KSI_PublicationData_getTime(userPubData, &userPubTime);
+	}
+
+	if (!isExtended && ispubfile) {
+		if (possibilityToExtendTo != NULL && !x) {
+			ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion:  Use -x to permit automatic extending or use KSI tool extend command to extend the signature.\n");
+		} else if (possibilityToExtendTo == NULL) {
+			ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion:  Check if publications file is up-to-date as there is not (yet) a publication record in the publications file specified to extend the signature to.\n");
+			ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion:  Wait until next publication and try again.\n");
+			if (!x) ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion:  When a suitable publication is available use -x to permit automatic extending or use KSI tool extend command to extend the signature.\n");
+		}
+
+		ERR_TRCKR_ADD(err, errCode, "Error: Signature is not extended.");
+	} else {
+
+
+		if (ispubfile) {
+			KSI_PublicationRecord *pubrecInPubfile = NULL;
+			KSI_Integer *pubTime = NULL;
+			int isPubfileOlderThanSig;
+
+			/* Get the publication time. */
+			res = KSI_Signature_getPublicationRecord(sig, &rec);
+			if (res != KSI_OK) return;
+			res = KSI_PublicationRecord_getPublishedData(rec, &pubData);
+			if (res != KSI_OK) return;
+			res = KSI_PublicationData_getTime(pubData, &pubTime);
+			if (res != KSI_OK) return;
+
+			isPubfileOlderThanSig = KSI_Integer_compare(latestPubTimeInPubfile, sigTime) == -1 ? 1 : 0;
+
+			res = KSI_PublicationsFile_getPublicationDataByTime(pubFile, pubTime, &pubrecInPubfile);
+			if (res != KSI_OK) return;
+
+			if (pubrecInPubfile == NULL) {
+				ERR_TRCKR_ADD(err, errCode, "Error: Signature is extended to a publication that does not exist in publications file.");
+
+				if (possibilityToExtendTo == NULL && isPubfileOlderThanSig) {
+					ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion:  Check if publications file is up-to-date as the latest publication in the publications file is older than the signatures publication record.\n");
+				} else if (possibilityToExtendTo != NULL && !x) {
+					ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion:  Try to use -x to permit automatic extending or use KSI tool extend command to re-extend the signature.\n");
+				}
+			}
+		} else {
+			if (KSI_Integer_compare(userPubTime, sigTime) == -1) {
+				ERR_TRCKR_ADD(err, errCode, "Error: User publication string can not be older than the signatures signing time.");
+				return;
+			} else if (!x) {
+				ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion:  Use -x to permit automatic extending.\n");
+			}
+		}
+
+	}
 }

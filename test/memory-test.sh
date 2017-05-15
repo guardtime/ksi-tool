@@ -74,7 +74,7 @@ generate_test invalid-conf.test
 generate_test file-name-gen.test
 generate_test sign-block-signer.test
 generate_test sign-block-signer-cmd.test
-
+generate_test verify-pub-suggestions.test
 
 # Run generated test scripts.
 
@@ -108,6 +108,7 @@ $mem_test_dir/invalid-conf.test \
 $mem_test_dir/file-name-gen.test \
 $mem_test_dir/sign-block-signer.test \
 $mem_test_dir/sign-block-signer-cmd.test \
+$mem_test_dir/verify-pub-suggestions.test \
 --with="valgrind --leak-check=full --fair-sched=yes $tool" -- -j1
 exit_code=$?
 

@@ -25,6 +25,7 @@ rm -rf test/out/extend-replace-existing 2> /dev/null
 rm -rf test/out/pubfile 2> /dev/null
 rm -rf test/out/fname 2> /dev/null
 rm -rf test/out/mass_extend 2> /dev/null
+rm -rf test/out/tmp 2> /dev/null
 
 # Create test output directories.
 mkdir -p test/out/sign
@@ -33,6 +34,7 @@ mkdir -p test/out/extend-replace-existing/
 mkdir -p test/out/pubfile
 mkdir -p test/out/fname
 mkdir -p test/out/mass_extend
+mkdir -p test/out/tmp
 
 # Create some test files to output directory.
 cp test/resource/file/testFile	test/out/fname/_
@@ -64,6 +66,12 @@ else
 	tool=src/ksi
 fi
 
+# Wait until shelltest next release that has macros and refactor it.
+cp test/test_suites/pipe.test test/out/tmp
+sed -i -- "s|{KSI_BIN}|$tool|g" test/out/tmp/pipe.test
+
+# Add test/test_suites/tlvutil-pdu-header.test to the list when gttlvutil new version is released.
+
 if gttlvdump -h > /dev/null && gttlvgrep -h > /dev/null; then
 	TEST_DEPENDING_ON_TLVUTIL="\
 		test/test_suites/tlvutil-metadata.test \
@@ -84,7 +92,7 @@ test/test_suites/extend-verify.test \
 test/test_suites/static-verify.test \
 test/test_suites/static-sign-verify.test \
 test/test_suites/static-extend.test \
-test/test_suites/linux-pipe.test \
+test/out/tmp/pipe.test \
 test/test_suites/sign-cmd.test \
 test/test_suites/extend-cmd.test \
 test/test_suites/static-verify-invalid-signatures.test \
@@ -98,6 +106,7 @@ test/test_suites/file-name-gen.test \
 test/test_suites/sign-block-signer.test \
 test/test_suites/sign-block-signer-cmd.test \
 test/test_suites/sign-metadata.test \
+test/test_suites/verify-pub-suggestions.test \
 $TEST_DEPENDING_ON_TLVUTIL \
 --with=$tool -- -j1
 exit_code=$?

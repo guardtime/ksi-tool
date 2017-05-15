@@ -27,19 +27,19 @@ EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.ksig -d --dump 
 >>>2 /(Signature verification according to trust anchor)(.*ok.*)/
 >>>= 0
 
-# Trust anchor: Publication Record (with user publication string). 
+# Trust anchor: Publication Record (with user publication string).
 EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig --pub-str AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4 -d --dump --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>  /(Trust anchor: Publication Record.)/
 >>>2 /(Signature verification according to trust anchor)(.*ok.*)/
 >>>= 0
 
-# Trust anchor: Publication Record (with publications file). 
+# Trust anchor: Publication Record (with publications file).
 EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -d --dump --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>  /(Trust anchor: Publication Record.)/
 >>>2 /(Signature verification according to trust anchor)(.*ok.*)/
 >>>= 0
 
-# Trust anchor: Calendar Blockchain. 
+# Trust anchor: Calendar Blockchain.
 EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.no-cal-hashchain.ksig -d --dump  --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>  /(Trust anchor: Calendar Blockchain.)/
 >>>2 /(Signature verification according to trust anchor)(.*ok.*)/
@@ -175,12 +175,12 @@ EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-sha1-2016-05-26.ks
 
 # ------ Calendar based verification. ------
 
-# Verify signature with calendar hash chain attached. 
+# Verify signature with calendar hash chain attached.
 EXECUTABLE verify --ver-cal -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>2 /Signature calendar-based verification.*ok.*/
 >>>= 0
 
-# Verify signature without calendar hash chain attached. 
+# Verify signature without calendar hash chain attached.
 EXECUTABLE verify --ver-cal -i test/resource/signature/ok-sig-2014-08-01.1.no-cal-hashchain.ksig -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response-head.cfg
 >>>2 /Signature calendar-based verification.*ok.*/
 >>>= 0
@@ -251,7 +251,7 @@ EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.k
 
 # ------ Key based verification. ------
 
-# Calendar hash chain is missing. 
+# Calendar hash chain is missing.
 EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-2014-08-01.1.no-cal-hashchain.ksig -d --dump --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>  /Final result.*
 .*GEN-2.*CalendarHashChainExistence/
