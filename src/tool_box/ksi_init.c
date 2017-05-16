@@ -43,7 +43,6 @@
 long long tool_global_msg_id = 0;
 long long tool_global_inst_id = 0;
 
-
 static int ksi_header_formating_callback(KSI_Header *hdr) {
 	int res = KSI_UNKNOWN_ERROR;
 	KSI_Integer *msgId = NULL;
