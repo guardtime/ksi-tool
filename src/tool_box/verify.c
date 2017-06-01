@@ -131,7 +131,7 @@ int verify_run(int argc, char **argv, char **envp) {
 		if (res != KSI_OK) goto cleanup;
 		extra.h_alg = &alg;
 
-		print_progressDesc(d, "Reading documents hash... ");
+		print_progressDesc(d, "Reading document's hash... ");
 		/* TODO: fix hash extractor from file. */
 		res = PARAM_SET_getObjExtended(set, "f", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &extra, (void**)&hsh);
 		if (res != PST_OK) goto cleanup;
