@@ -294,7 +294,7 @@ int KSITOOL_Extender_getConf(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Config **config) 
 	}
 
 	if (res == KSI_UNSUPPORTED_PDU_VERSION) {
-		ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion:  Use --ext-pdu-v to configure appropriate PDU version.\n");
+		ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion:  Use '--ext-pdu-v v2' to configure appropriate PDU version.\n");
 	}
 
 	return res;
