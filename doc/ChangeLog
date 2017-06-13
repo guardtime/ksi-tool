@@ -1,3 +1,7 @@
+Version 2.6
+
+2017-06-13 2.6.1136
+
 * IMPROVEMENT: Error handling improved when PDU version 1 is used to fetch extender configuration.
 * IMPROVEMENT: Typo fixed in verification command.
 
