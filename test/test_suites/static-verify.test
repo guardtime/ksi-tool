@@ -47,13 +47,13 @@ EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.no-cal-hashchai
 
 # Verify document hash.
 EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.ksig -d -f SHA2-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
->>>2 /(Reading documents hash)(.*ok.*)
+>>>2 /(Reading document's hash)(.*ok.*)
 (Signature verification according to trust anchor)(.*ok.*)/
 >>>= 0
 
 # Verify document integrity.
 EXECUTABLE verify -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -f test/resource/file/testFile -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
->>>2 /(Reading documents hash)(.*ok.*)
+>>>2 /(Reading document's hash)(.*ok.*)
 (Signature verification according to trust anchor)(.*ok.*)/
 >>>= 0
 
@@ -71,13 +71,13 @@ EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-2014-08-01.1.ksig 
 
 # Verify document hash.
 EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-2014-08-01.1.ksig -d -f SHA2-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
->>>2 /(Reading documents hash)(.*ok.*)
+>>>2 /(Reading document's hash)(.*ok.*)
 (Signature internal verification)(.*ok.*)/
 >>>= 0
 
 # Verify document integrity.
 EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -f test/resource/file/testFile -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
->>>2 /(Reading documents hash)(.*ok.*)
+>>>2 /(Reading document's hash)(.*ok.*)
 (Signature internal verification)(.*ok.*)/
 >>>= 0
 
@@ -91,7 +91,7 @@ EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-2014-08-01.1.ext.k
 # Verifying legacy signature internally.
 EXECUTABLE verify --ver-int -i test/resource/signature/ok-legacy-sig-2014-06.gtts.ksig -d -f sha2-256:5466e3cba14a843a5e93b78e3d6ab8d3491edcac7e06431ce1a7f49828c340c3
 >>>2 /(Reading signature)(.*ok.*)
-(Reading documents hash)(.*ok.*)
+(Reading document's hash)(.*ok.*)
 (Signature internal verification)(.*ok.*)/
 >>>= 0
 
@@ -121,7 +121,7 @@ EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ksig 
 
 # Verify document hash.
 EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ksig -f SHA2-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -x -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
->>>2 /(Reading documents hash)(.*ok.*)
+>>>2 /(Reading document's hash)(.*ok.*)
 (Signature publication-based verification with publications file)(.*ok.*)/
 >>>= 0
 
@@ -166,7 +166,7 @@ EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-2014-08-01.1.ksig 
 
 # Verify signature where input hash is hashed with SHA1.
 EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -f test/resource/file/testFile -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
->>>2 /(Reading documents hash)(.*ok.*)
+>>>2 /(Reading document's hash)(.*ok.*)
 (Signature key-based verification)(.*ok.*)/
 >>>= 0
 
@@ -187,7 +187,7 @@ EXECUTABLE verify --ver-cal -i test/resource/signature/ok-sig-2014-08-01.1.no-ca
 
 # Verify document hash.
 EXECUTABLE verify --ver-cal -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -f SHA2-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
->>>2 /Reading documents hash.*ok.*
+>>>2 /Reading document's hash.*ok.*
 Signature calendar-based verification.*ok.*/
 >>>= 0
 
@@ -202,7 +202,7 @@ Signature calendar-based verification.*ok.*/
 # Trust anchor: Publication Record (with user publication string). Wrong publication string. Extending not permitted.
 EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig --pub-str AAAAAA-CV65PY-AAIVFG-UJMDXY-XGBKMO-DISYGA-YPPQYY-QEWTQ5-Y43NGX-B22W7H-IGZQNN-DRTW2H -d --dump --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>  /Final result.*
-.*GEN-2.*ExtendingPermittedVerification/
+.*GEN-02.*ExtendingPermittedVerification/
 >>>2 /Signature verification according to trust anchor.*failed.*/
 >>>= 6
 
@@ -214,8 +214,8 @@ EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig --pub-
 # Wrong document hash.
 EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-2014-08-01.1.ksig -d --dump -f SHA2-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b87720 --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>  /Final result.*
-.*GEN-1.*DocumentHashVerification/
->>>2 /(Reading documents hash)(.*ok.*)
+.*GEN-01.*DocumentHashVerification/
+>>>2 /(Reading document's hash)(.*ok.*)
 (Signature internal verification)(.*failed.*)/
 >>>= 6
 
@@ -227,7 +227,7 @@ EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-2014-08-01.1.ksig 
 # Extending is not permitted.
 EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ksig -d --dump -P file://test/resource/publication/ksi-publications.bin --cnstr email=test@test.com -V test/resource/certificates/ok-test.crt
 >>>  /Final result.*
-.*GEN-2.*ExtendingPermittedVerification/
+.*GEN-02.*ExtendingPermittedVerification/
 >>>2 /Signature publication-based verification with publications file.*failed.*/
 >>>= 6
 
@@ -244,7 +244,7 @@ EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.k
 # Wrong user publication string, extending not permitted.
 EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig --pub-str AAAAAA-CV65PY-AAIVFG-UJMDXY-XGBKMO-DISYGA-YPPQYY-QEWTQ5-Y43NGX-B22W7H-IGZQNN-DRTW2H -d --dump --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response-2015-09-15.cfg
 >>>  /Final result.*
-.*GEN-2.*ExtendingPermittedVerification/
+.*GEN-02.*ExtendingPermittedVerification/
 >>>2 /Signature publication-based verification with user publication string.*failed.*/
 >>>= 6
 
@@ -254,14 +254,14 @@ EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.k
 # Calendar hash chain is missing.
 EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-2014-08-01.1.no-cal-hashchain.ksig -d --dump --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>  /Final result.*
-.*GEN-2.*CalendarHashChainExistence/
+.*GEN-02.*CalendarHashChainExistence/
 >>>2 /Signature key-based verification.*failed.*/
 >>>= 6
 
 # Calendar authentication record is missing.
 EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -d --dump --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>  /Final result.*
-.*GEN-2.*CalendarAuthenticationRecordExistence/
+.*GEN-02.*CalendarAuthenticationRecordExistence/
 >>>2 /Signature key-based verification.*failed.*/
 >>>= 6
 
@@ -273,7 +273,7 @@ EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-2014-08-01.1.ext.k
 # Signature without calendar hash chain attached. Wrong extender response.
 EXECUTABLE verify --ver-cal -i test/resource/signature/ok-sig-2014-08-01.1.no-cal-hashchain.ksig -d --dump --conf test/resource/conf/verify-test_ok-sig-2015-09-13.extend_response.cfg
 >>>  /Final result.*
-.*CAL-2.*ExtendedSignatureCalendarChainInputHash/
+.*CAL-02.*ExtendedSignatureCalendarChainInputHash/
 >>>2 /Signature calendar-based verification.*failed.*/
 >>>= 6
 
