@@ -19,7 +19,7 @@
 # Publications file test.
 
 # Verify pubfile without saving it.
-EXECUTABLE pubfile --conf test/test.cfg -v -d 
+EXECUTABLE pubfile --conf test/test.cfg -v -d
 >>>2 /(Receiving publications file)(.*ok.*)
 (.*)
 (.*)
@@ -32,8 +32,27 @@ EXECUTABLE pubfile --conf test/test.cfg -d -o test/out/pubfile/pubfile.bin
 (.*)
 (.*)
 (.*)(Verifying publications file)(.*ok.*)
-(Saving publications file)(.*ok.*)/
+(Saving publications file)(.*ok.*)
+(Publications file saved to)(.*pubfile.bin.*)/
 >>>= 0
+
+# Download and verify pubfile. Save it through stdout.
+EXECUTABLE pubfile --conf test/test.cfg -d -o - > test/out/pubfile/pubfilepipe.bin
+>>>2 /(Receiving publications file)(.*ok.*)
+(.*)
+(.*)
+(.*)(Verifying publications file)(.*ok.*)
+(Saving publications file)(.*ok.*)
+(Publications file saved to)(.*stdout.*)/
+>>>= 0
+
+EXECUTABLE pubfile --conf test/test.cfg -dv -P "file://test/out/pubfile/pubfilepipe.bin"
+>>>2 /(Loading publications file from file)(.*ok.*)
+(.*)
+(.*)
+(.*)(Verifying publications file)(.*ok.*)/
+>>>= 0
+
 
 # Download and dump publications file without verifying it.
 EXECUTABLE pubfile --conf test/test.cfg -d --dump
