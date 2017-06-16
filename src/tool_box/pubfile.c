@@ -239,11 +239,16 @@ static int pubfile_task(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int id, KS
 	}
 
 	if (id == 2 && save_to != NULL) {
+		int isStdout = strcmp(save_to, "-") == 0;
+		const char *mode = isStdout ? "wbs" : "wb";
+
 		print_progressDesc(d, "Saving publications file... ");
-		res = KSI_OBJ_savePublicationsFile(err, ksi, tmp, "wb", save_to);
+		res = KSI_OBJ_savePublicationsFile(err, ksi, tmp, mode, save_to);
 		ERR_CATCH_MSG(err, res, "Error: Unable to save publications file.");
 		print_progressResult(res);
-		print_debug("Publications file saved to '%s'.\n", save_to);
+
+		if (isStdout) print_debug("Publications file saved to stdout.\n");
+		else print_debug("Publications file saved to '%s'.\n", save_to);
 	}
 
 
