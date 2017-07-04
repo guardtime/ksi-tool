@@ -488,7 +488,7 @@ char* get_output_file_name(PARAM_SET *set, ERR_TRCKR *err,
 		file_name = STRING_extractAbstract(generated_name, "/", NULL, tmp, sizeof(tmp), find_charAfterLastStrn, NULL, NULL) == tmp ? tmp : generated_name;
 		path_len = (int)strlen(out_dir_name);
 
-		is_slash =(path_len != 0 && out_dir_name[path_len - 1] == '/' ? 1 : 0);
+		is_slash = (path_len != 0 && out_dir_name[path_len - 1] == '/');
 
 		KSI_snprintf(buf, buf_len, "%s%s%s",
 				out_dir_name,
