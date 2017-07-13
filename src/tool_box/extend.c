@@ -301,7 +301,7 @@ static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Sig
 	d = PARAM_SET_isSetByName(set, "d");
 
 	print_progressDesc(d, "Verifying extended signature... ");
-	res = KSITOOL_SignatureVerify_general(err, ext, ksi, NULL, pub_data, 1, result);
+	res = KSITOOL_SignatureVerify_asPossible(err, ext, ksi, NULL, pub_data, 1, result);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify extended signature.");
 	print_progressResult(res);
 

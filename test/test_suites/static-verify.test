@@ -202,7 +202,7 @@ Signature calendar-based verification.*ok.*/
 # Trust anchor: Publication Record (with user publication string). Wrong publication string. Extending not permitted.
 EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig --pub-str AAAAAA-CV65PY-AAIVFG-UJMDXY-XGBKMO-DISYGA-YPPQYY-QEWTQ5-Y43NGX-B22W7H-IGZQNN-DRTW2H -d --dump --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>  /Final result.*
-.*GEN-02.*ExtendingPermittedVerification/
+.*GEN-02((.*ExtendingPermittedVerification.*)|(.*RequireNoUserProvidedPublication.*))/
 >>>2 /Signature verification according to trust anchor.*failed.*/
 >>>= 6
 

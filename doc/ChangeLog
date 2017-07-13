@@ -1,3 +1,4 @@
+* IMPROVEMENT: KSI signature task verify uses always libksi default verification policy when policy is not explicitly specified (e.g. --ver-pub).
 * BUGFIX: Publications file downloaded can be redirected to stdout (-o -).
 
 Version 2.6

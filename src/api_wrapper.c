@@ -319,7 +319,7 @@ int KSITOOL_Aggregator_getConf(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Config **config
 	return res;
 }
 
-int KSITOOL_SignatureVerify_general(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
+int KSITOOL_SignatureVerify_asPossible(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
 									KSI_PublicationData *pubdata, int extperm,
 									KSI_PolicyVerificationResult **result) {
 	int res;
@@ -343,6 +343,30 @@ int KSITOOL_SignatureVerify_general(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX 
 		}
 	}
 
+	return res;
+}
+
+int KSITOOL_SignatureVerify_general(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
+														 KSI_PublicationData *pubdata, int extperm,
+														 KSI_PolicyVerificationResult **result){
+	int res;
+
+
+	if (err == NULL || sig == NULL || ctx == NULL || result == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
+
+
+	res = verify_signature(sig, ctx, hsh, extperm, NULL, pubdata, KSI_VERIFICATION_POLICY_GENERAL, result);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
+
+	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
+		appendPubFileErros(err, res);
+		appendNetworkErrors(err, res);
+		appendExtenderErrors(err, res);
+	}
 	return res;
 }
 
