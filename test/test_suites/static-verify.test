@@ -39,12 +39,6 @@ EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -d --d
 >>>2 /(Signature verification according to trust anchor)(.*ok.*)/
 >>>= 0
 
-# Trust anchor: Calendar Blockchain.
-EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.no-cal-hashchain.ksig -d --dump  --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
->>>  /(Trust anchor: Calendar Blockchain.)/
->>>2 /(Signature verification according to trust anchor)(.*ok.*)/
->>>= 0
-
 # Verify document hash.
 EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.ksig -d -f SHA2-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>2 /(Reading document's hash)(.*ok.*)
@@ -202,11 +196,15 @@ Signature calendar-based verification.*ok.*/
 # Trust anchor: Publication Record (with user publication string). Wrong publication string. Extending not permitted.
 EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig --pub-str AAAAAA-CV65PY-AAIVFG-UJMDXY-XGBKMO-DISYGA-YPPQYY-QEWTQ5-Y43NGX-B22W7H-IGZQNN-DRTW2H -d --dump --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>  /Final result.*
-.*GEN-02.*ExtendingPermittedVerification/
+.*GEN-02((.*ExtendingPermittedVerification.*)|(.*RequireNoUserProvidedPublication.*))/
 >>>2 /Signature verification according to trust anchor.*failed.*/
 >>>= 6
 
-
+# Trust anchor: Calendar Blockchain. Verification is NA as default verification policy do not use calendar-based verification anymore. Calendar-based verification is not used by default as trusting extender is more complicated as trusting KSI publications file.
+EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.no-cal-hashchain.ksig -d --dump  --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
+>>>  /(NA.*GEN-02.*In rule.*CalendarHashChainExistence)/
+>>>2 /(Verification inconclusive Signature verification according to trust anchor failed)/
+>>>= 6
 
 
 # ------ Internal verification. ------

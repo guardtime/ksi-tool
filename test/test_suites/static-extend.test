@@ -46,7 +46,7 @@ EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.no-cal-hashchai
 (Saving signature)(.*ok.*)/
 >>>= 0
 
-# Extend signature to head.
+# Extend signature to time that has no publication.
 EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/ok-sig-2014-08-01.1-extended-1462454749.ksig -T 1462454749 -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-multi-extend_response-head.cfg
 >>>2 /(Extending the signature to 2016-05-05 13:25:49)(.*ok.*)
 (Verifying extended signature)(.*ok.*)
