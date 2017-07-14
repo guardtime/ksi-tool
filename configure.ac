@@ -50,6 +50,9 @@ AM_PROG_CC_C_O
 
 AC_PROG_LN_S
 # Checks for libraries.
+AC_CHECK_LIB([crypto], [SHA256_Init], [], [AC_MSG_FAILURE([Could not find OpenSSL 0.9.8+ libraries.])])
+AC_CHECK_LIB([curl], [curl_easy_init], [], [AC_MSG_FAILURE([Could nod find Curl libraries.])])
+
 libksi_ver="3.13"
 AC_ARG_ENABLE(static-build,
 [  --enable-static-build              enable static linking of ksi library)],:,:)
@@ -82,8 +85,6 @@ AC_SUBST(KSI_BUILD_DEPENDECY)
 AC_SUBST(KSI_RPM_BUILD_FLAGS)
 
 AC_CHECK_HEADER([ksi/ksi.h], [], [AC_MSG_FAILURE([Could not find include files (libksi-devel) of libksi (KSI C SDK). Install libksi-devel or specify the headers manually.])])
-AC_CHECK_LIB([crypto], [SHA256_Init], [], [AC_MSG_FAILURE([Could not find OpenSSL 0.9.8+ libraries.])])
-AC_CHECK_LIB([curl], [curl_easy_init], [], [AC_MSG_FAILURE([Could nod find Curl libraries.])])
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h])
