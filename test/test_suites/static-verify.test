@@ -91,7 +91,7 @@ EXECUTABLE verify --ver-int -i test/resource/signature/ok-legacy-sig-2014-06.gtt
 
 
 # ------ Publication based verification, use publications file. ------
-
+# KÜMNESS
 # Verify against online publications file.
 EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -d --dump --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>  /(PublicationsFileContainsSignaturePublication)
