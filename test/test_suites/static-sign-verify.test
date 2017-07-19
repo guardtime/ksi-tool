@@ -16,6 +16,11 @@
 # Guardtime, Inc., and no license to trademarks is granted; Guardtime
 # reserves and retains all trademark rights.
 
+##
+# Note that signatures are verified using the real KSI publications file that is
+# resigned with test certificates to make sure that the specified publications
+# file is used instead of publications file from system.
+##
 
 # Verify signatures created during signing.
 

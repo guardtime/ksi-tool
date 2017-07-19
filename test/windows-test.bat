@@ -57,7 +57,7 @@ copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\extend-replace
 REM Define KSI_CONF for temporary testing.
 setlocal
 
-set KSI_CONF=test/resource/conf/default-not-working-conf.cfg
+set KSI_CONF=test/resource/conf/default-conf.cfg
 
 REM If ksi tool in project directory is available use that one, if not
 REM use the one installed in the machine.
@@ -80,7 +80,7 @@ REM If gttlvdump and gttlvgrep exists include the tests using gttlvutil
 
 gttlvdump -h > NUL && gttlvgrep -h > NUL
 if not ERRORLEVEL 1 (
-	set TEST_DEPENDING_ON_TLVUTIL=test\test_suites\sign-metadata.test test\test_suites\sign-masking.test
+	set TEST_DEPENDING_ON_TLVUTIL=test\test_suites\tlvutil-metadata.test test\test_suites\tlvutil-pdu-header.test
 ) else (
 	set TEST_DEPENDING_ON_TLVUTIL=
 )
@@ -118,6 +118,8 @@ test\test_suites\file-name-gen.test ^
 test\test_suites\sign-block-signer.test ^
 test\test_suites\sign-block-signer-cmd.test ^
 test\test_suites\verify-pub-suggestions.test ^
+test\test_suites\sign-metadata.test ^
+test\test_suites\sign-masking.test ^
 %TEST_DEPENDING_ON_TLVUTIL% ^
 %TEST_DEPENDING_ON_TLVUTIL_GREP% ^
 --with=%tool% -- -j1

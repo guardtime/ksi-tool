@@ -45,7 +45,7 @@ cp test/resource/signature/ok-sig-2014-08-01.1.ksig $mem_test_dir/not-extended-1
 cp test/resource/signature/ok-sig-2014-08-01.1.ksig $mem_test_dir/not-extended-2B.ksig
 
 # Configure temporary KSI_CONF.
-export KSI_CONF=test/resource/conf/default-not-working-conf.cfg
+export KSI_CONF=test/resource/conf/default-conf.cfg
 
 # A function to convert a test file to memory test.
 function generate_test() {
