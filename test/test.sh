@@ -56,7 +56,7 @@ cp test/resource/signature/ok-sig-2014-08-01.1.ksig test/out/extend-replace-exis
 
 
 # Define KSI_CONF for temporary testing.
-export KSI_CONF=test/resource/conf/default-not-working-conf.cfg
+export KSI_CONF=test/resource/conf/default-conf.cfg
 
 # If ksi tool in project directory is available use that one, if not
 # use the one installed in the machine.

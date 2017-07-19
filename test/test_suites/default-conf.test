@@ -23,12 +23,12 @@
 
 # Check if KSI_CONF is set.
 EXECUTABLE conf -d
->>>2 /(test\/resource\/conf\/default-not-working-conf.cfg)/
+>>>2 /(test\/resource\/conf\/default-conf.cfg)/
 >>>= 0
 
 # Check if KSI_CONF dump works.
 EXECUTABLE conf --dump
->>> /(This is default not working configuration file)/
+>>> /(This is default configuration file that can contain global values)/
 >>>= 0
 
 # Dump default publications file. Add external configuration file as empty file.
@@ -39,15 +39,15 @@ EXECUTABLE pubfile --dump --conf test/resource/file/null
 # Check if KSI_CONF is displayd in -h message.
 EXECUTABLE -h
 >>> /(Configured service access URL-s)(.*)
-(.*Signing.*)(.*server\/ok_aggr_err_response-1.tlv.*)
-(.*Extending.*)(.*server\/ok-ext-err-resp-102.tlv.*)
+(.*Signing.*)(.*file\/abcd.*)
+(.*Extending.*)(.*file\/ebcd.*)
 (.*Publications file.*)(.*ok-pub-one-record-1.bin.*)/
 >>>= 0
 
-# Try to sign an imprint, signing should end with invalid payload error.
+# Try to sign an imprint. Signing should end with parsing error as default configuration specifies invalid TLV file.
 EXECUTABLE sign -d -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d
->>>2 /(The request contained invalid payload)(.*0x402.*)/
->>>= 1
+>>>2 /(Unable to read TLV from file)(.*0x101.*)/
+>>>= 4
 
 # Try to verify default publications file. It should fail as certificate and constraints are not set correctly.
 EXECUTABLE pubfile -v
@@ -80,7 +80,7 @@ EXECUTABLE pubfile --dump --conf test/resource/conf/ok-conf-1.cfg
 >>> /(Dummy publication nr 2)/
 >>>= 0
 
-# Dump publications file from command-line thus overriding all configuration file.
+# Specify publications file from command-line thus overriding all lower priority configuration files.
 EXECUTABLE pubfile --dump -P file://test/resource/publication/ok-pub-one-record-3.bin --conf test/resource/conf/ok-conf-1.cfg
 >>> /(Dummy publication nr 3)/
 >>>= 0
