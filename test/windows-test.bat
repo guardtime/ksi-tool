@@ -76,20 +76,17 @@ setlocal enabledelayedexpansion
 ))>test\out\tmp\pipe.test
 @echo on
 
-REM If gttlvdump and gttlvgrep exists include the tests using gttlvutil
 
 gttlvdump -h > NUL && gttlvgrep -h > NUL
 if not ERRORLEVEL 1 (
-	set TEST_DEPENDING_ON_TLVUTIL=test\test_suites\tlvutil-metadata.test test\test_suites\tlvutil-pdu-header.test
+	set TEST_DEPENDING_ON_TLVUTIL=test\test_suites\tlvutil-metadata.test test\test_suites\tlvutil-sign-masking.test
 ) else (
 	set TEST_DEPENDING_ON_TLVUTIL=
 )
 
 gttlvdump -h > NUL && gttlvgrep -h > NUL && grep --help > NUL
 if not ERRORLEVEL 1 (
-	REM Add test/test_suites/tlvutil-pdu-header.test to the list when gttlvutil new version is released.
-	REM set TEST_DEPENDING_ON_TLVUTIL_GREP=test\test_suites\tlvutil-pdu-header.test
-	set TEST_DEPENDING_ON_TLVUTIL_GREP=
+	set TEST_DEPENDING_ON_TLVUTIL_GREP=test\test_suites\tlvutil-pdu-header.test
 ) else (
 	set TEST_DEPENDING_ON_TLVUTIL_GREP=
 )
@@ -119,7 +116,6 @@ test\test_suites\sign-block-signer.test ^
 test\test_suites\sign-block-signer-cmd.test ^
 test\test_suites\verify-pub-suggestions.test ^
 test\test_suites\sign-metadata.test ^
-test\test_suites\sign-masking.test ^
 %TEST_DEPENDING_ON_TLVUTIL% ^
 %TEST_DEPENDING_ON_TLVUTIL_GREP% ^
 --with=%tool% -- -j1

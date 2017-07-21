@@ -75,6 +75,7 @@ sed -i -- "s|{KSI_BIN}|$tool|g" test/out/tmp/pipe.test
 if gttlvdump -h > /dev/null && gttlvgrep -h > /dev/null; then
 	TEST_DEPENDING_ON_TLVUTIL="\
 		test/test_suites/tlvutil-metadata.test \
+		test/test_suites/tlvutil-sign-masking.test \
 		test/test_suites/tlvutil-pdu-header.test"
 	echo Info: Extra tests depending on gttlvutil added.
 else
@@ -106,7 +107,6 @@ test/test_suites/file-name-gen.test \
 test/test_suites/sign-block-signer.test \
 test/test_suites/sign-block-signer-cmd.test \
 test/test_suites/sign-metadata.test \
-test/test_suites/sign-masking.test \
 test/test_suites/verify-pub-suggestions.test \
 $TEST_DEPENDING_ON_TLVUTIL \
 --with=$tool -- -j1
