@@ -1,7 +1,8 @@
 * IMPROVEMENT: Test suite accustomed to KSI PDU version 2.
 * IMPROVEMENT: KSI signature task verify uses always libksi default verification policy when policy is not explicitly specified (e.g. --ver-pub).
-* BUGFIX: Windows tests will run tlvutil-metadata.test and tlvutil-pdu-header.test if gttlvutil is installed.
+* BUGFIX: Tests will run both tlvutil-metadata.test and tlvutil-pdu-header.test if gttlvutil is installed.
 * BUGFIX: Publications file downloaded can be redirected to stdout (-o -).
+* BUGFIX: Verification result dump shows steps that are inconclusive as "na" instead of "failed".
 
 Version 2.6
 
