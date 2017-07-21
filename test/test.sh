@@ -70,12 +70,13 @@ fi
 cp test/test_suites/pipe.test test/out/tmp
 sed -i -- "s|{KSI_BIN}|$tool|g" test/out/tmp/pipe.test
 
-# Add test/test_suites/tlvutil-pdu-header.test to the list when gttlvutil new version is released.
+
 
 if gttlvdump -h > /dev/null && gttlvgrep -h > /dev/null; then
 	TEST_DEPENDING_ON_TLVUTIL="\
 		test/test_suites/tlvutil-metadata.test \
-		test/test_suites/sign-masking.test"
+		test/test_suites/tlvutil-sign-masking.test \
+		test/test_suites/tlvutil-pdu-header.test"
 	echo Info: Extra tests depending on gttlvutil added.
 else
 	TEST_DEPENDING_ON_TLVUTIL=""

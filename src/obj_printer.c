@@ -482,10 +482,12 @@ void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *resu
 	unsigned int i = 0;
 	size_t step;
 	size_t stepsLeft;
+	const char *not_ok_string = NULL;
 
 	if (result == NULL){
 		return;
 	}
+	not_ok_string = (result->resultCode == KSI_VER_RES_OK || result->resultCode == KSI_VER_RES_NA) ? "na" : "failed";
 
 	print("KSI Verification result dump:\n");
 	print("  Verification abstract:\n");
@@ -494,7 +496,7 @@ void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *resu
 	do {
 		if (result->finalResult.stepsPerformed & step) {
 			print("    %s.. %s", getVerificationStepDescription(step),
-					(getVerificationStepResult(step, result) ? "ok" : "failed"));
+					(getVerificationStepResult(step, result) ? "ok" : not_ok_string));
 			print("\n");
 		}
 		step <<= 1;
