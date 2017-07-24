@@ -103,8 +103,9 @@ test/test_suites/verify-invalid-pubfile.test \
 test/test_suites/verify-cmd.test \
 test/test_suites/default-conf.test \
 test/test_suites/invalid-conf.test \
-test/test_suites/file-name-gen.test \
 test/test_suites/sign-block-signer.test \
+test/test_suites/file-name-gen.test \
+test/test_suites/cmd.test \
 test/test_suites/sign-block-signer-cmd.test \
 test/test_suites/sign-metadata.test \
 test/test_suites/verify-pub-suggestions.test \

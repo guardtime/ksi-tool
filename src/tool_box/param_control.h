@@ -36,13 +36,13 @@ typedef struct COMPOSITE_st COMPOSITE;
 struct COMPOSITE_st {
 	/** A pointer to KSI context. Mandatory. */
 	void *ctx;
-	
+
 	/** A pointer to tool error handler. Mandatory. */
 	void *err;
-	
+
 	/** A pointer to hash algorithm. Mandatory if hashing input file. */
 	void *h_alg;
-	
+
 	/** A optional pointer to file name to save input data to file when hashing. */
 	void *fname_out;
 };
@@ -85,8 +85,8 @@ enum formatStatus_enum{
 	FORMAT_INVALID_OID,
 	FORMAT_URL_UNKNOWN_SCHEME,
 	FORMAT_FLAG_HAS_ARGUMENT,
-	FORMAT_INVALID_UTC,		
-	FORMAT_INVALID_UTC_OUT_OF_RANGE,		
+	FORMAT_INVALID_UTC,
+	FORMAT_INVALID_UTC_OUT_OF_RANGE,
 	FORMAT_UNKNOWN_ERROR
 };
 
@@ -94,12 +94,12 @@ const char *getParameterErrorString(int res);
 
 int isFormatOk_string(const char *str);
 int isFormatOk_hex(const char *hexin);
-int extract_OctetString(void *extra, const char* str, void** obj);
+int extract_OctetString(void **extra, const char* str, void** obj);
 
 int isFormatOk_hashAlg(const char *hashAlg);
 int isContentOk_hashAlg(const char *alg);
 /** extra is not used.*/
-int extract_hashAlg(void *extra, const char* str, void** obj);
+int extract_hashAlg(void **extra, const char* str, void** obj);
 
 int isFormatOk_inputFile(const char *path);
 int isContentOk_inputFile(const char* path);
@@ -114,15 +114,15 @@ int isContentOk_inputHash(const char *str);
 
 int isContentOk_imprint(const char *imprint);
 int isFormatOk_imprint(const char *imprint);
-int extract_imprint(void *extra, const char* str, void** obj);
-int extract_inputHashFromFile(void *extra, const char* str, void** obj);
+int extract_imprint(void **extra, const char* str, void** obj);
+int extract_inputHashFromFile(void **extra, const char* str, void** obj);
 
 /**
  * Requires \c COMPOSITE as extra. \c ctx, and \c err must not be NULL. \c h_alg
  * can be omitted if extracting imprint. \c fname_out must be NULL if input data
  * is not written into file / stream.
  */
-int extract_inputHash(void *extra, const char* str, void** obj);
+int extract_inputHash(void **extra, const char* str, void** obj);
 
 int isFormatOk_int(const char *integer);
 int isFormatOk_int_can_be_null(const char *integer);
@@ -149,7 +149,7 @@ int isContentOk_int(const char* integer);
  * \param obj - A pointer to int casted to void**.
  * \return - Returns integer value if successful. On failure returns 0.
  */
-int extract_int(void *extra, const char* str,  void** obj);
+int extract_int(void **extra, const char* str,  void** obj);
 
 int isContentOk_tree_level(const char *integer);
 int isContentOk_pduVersion(const char* version);
@@ -158,12 +158,12 @@ int isFormatOk_url(const char *url);
 int convertRepair_url(const char* arg, char* buf, unsigned len);
 
 int isFormatOk_pubString(const char *str);
-int extract_pubString(void *extra, const char* str, void** obj);
+int extract_pubString(void **extra, const char* str, void** obj);
 
 int isFormatOk_timeString(const char *time);
 int isFormatOk_utcTime(const char *time);
 int isContentOk_utcTime(const char *time);
-int extract_utcTime(void *extra, const char* str, void** obj);
+int extract_utcTime(void **extra, const char* str, void** obj);
 
 int isFormatOk_flag(const char *flag);
 int isFormatOk_constraint(const char *constraint);
@@ -175,10 +175,10 @@ int convertRepair_constraint(const char* arg, char* buf, unsigned len);
 int isFormatOk_mask(const char* mask);
 int isContentOk_mask(const char* mask);
 int convertRepair_mask(const char* arg, char* buf, unsigned len);
-int extract_mask(void *extra, const char* str, void** obj);
+int extract_mask(void **extra, const char* str, void** obj);
 
-int extract_inputSignature(void *extra, const char* str, void** obj);
-int extract_inputSignatureFromFile(void *extra, const char* str, void** obj);
+int extract_inputSignature(void **extra, const char* str, void** obj);
+int extract_inputSignatureFromFile(void **extra, const char* str, void** obj);
 
 int get_pipe_out_error(PARAM_SET *set, ERR_TRCKR *err, const char *check_all_files, const char *out_file_names, const char *print_out_names);
 

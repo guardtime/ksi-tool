@@ -77,6 +77,11 @@ EXECUTABLE extend --conf test/test.cfg -i test/out/sign/testFile.ksig -o test/ou
 >>>2 /(.*Error: --replace-existing can not be used with -o.*)/
 >>>= 3
 
+# Use empty url.
+EXECUTABLE extend --conf test/test.cfg -i test/out/sign/testFile.ksig -X -o test/out/extend/dummy-1.ksig --replace-existing
+>>>2 /(.*Parameter must have value.*)(.*CMD.*)(.*-X.*)/
+>>>= 3
+
 # Try to extend to invalid date 1. Year is out of range.
 EXECUTABLE extend -T "1899-12-12 00:00:00" --conf test/test.cfg -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -o test/out/extend/extend_cmd_should_not_be.4.ksig -d
 >>>2 /(Time out of range)(.*CMD.*)(.*-T.*)/

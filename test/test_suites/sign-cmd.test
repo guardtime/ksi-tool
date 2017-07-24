@@ -110,6 +110,11 @@ EXECUTABLE sign --conf test/test.cfg -i test/resource/file/testFile --inst-id pl
 >>>2 /(Invalid integer)(.*CMD.*)(.*--inst-id.*)(.*'plah'.*)/
 >>>= 3
 
+# Use empty string.
+EXECUTABLE sign --conf test/test.cfg -S  -i test/resource/file/testFile -o test/out/sign/should_not_be.XX.ksig
+>>>2 /(Parameter must have value.*)(.*CMD.*)(.*-S.*)/
+>>>= 3
+
 # Verify that the signatures that should not have been created do not exist.
 
 EXECUTABLE verify --ver-int -d -i test/out/sign/should_not_be.3.ksig

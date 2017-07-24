@@ -72,6 +72,7 @@ generate_test verify-cmd.test
 generate_test default-conf.test
 generate_test invalid-conf.test
 generate_test file-name-gen.test
+generate_test cmd.test
 generate_test sign-block-signer.test
 generate_test sign-block-signer-cmd.test
 generate_test verify-pub-suggestions.test
@@ -106,6 +107,7 @@ $mem_test_dir/verify-cmd.test \
 $mem_test_dir/default-conf.test \
 $mem_test_dir/invalid-conf.test \
 $mem_test_dir/file-name-gen.test \
+$mem_test_dir/cmd.test \
 $mem_test_dir/sign-block-signer.test \
 $mem_test_dir/sign-block-signer-cmd.test \
 $mem_test_dir/verify-pub-suggestions.test \

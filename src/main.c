@@ -30,6 +30,7 @@
 #include "ksitool_err.h"
 #include "printer.h"
 #include "conf_file.h"
+#include "common.h"
 
 
 #ifndef _WIN32
@@ -260,7 +261,8 @@ int main(int argc, char** argv, char **envp) {
 	if (task == NULL) {
 		print_errors("Error: Invalid task. Read help (-h) or man page.\n");
 		if (PARAM_SET_isTypoFailure(set_task_name)) {
-			print_errors("%s\n", PARAM_SET_typosToString(set_task_name, PST_TOSTR_NONE, NULL, buf, sizeof(buf)));
+
+			print_errors("%s\n", PARAM_SET_typosToString(set_task_name, NULL, buf, sizeof(buf)));
 		} else if (PARAM_SET_isUnknown(set_task_name)){
 			print_errors("%s\n", PARAM_SET_unknownsToString(set_task_name, NULL, buf, sizeof(buf)));
 		}
@@ -297,15 +299,27 @@ cleanup:
 	return retval;
 }
 
+static const char* getPrintName(PARAM *param, char *buf, unsigned buf_len) {
+	const char *name = NULL;
+	VARIABLE_IS_NOT_USED(buf);
+	VARIABLE_IS_NOT_USED(buf_len);
+	PARAM_getName(param, &name, NULL);
+	return name;
+}
+
 static int ksitool_compo_get(TASK_SET *tasks, PARAM_SET **set, TOOL_COMPONENT_LIST **compo) {
 	int res;
 	TOOL_COMPONENT_LIST *tmp_compo = NULL;
 	PARAM_SET *tmp_set = NULL;
+	const char *taskNames = "{sign}{extend}{verify}{pubfile}{conf}";
 
 	/**
 	 * Create parameter list that contains all known tasks.
 	 */
-	res = PARAM_SET_new("{sign}{extend}{verify}{pubfile}{conf}", &tmp_set);
+	res = PARAM_SET_new(taskNames, &tmp_set);
+	if (res != PST_OK) goto cleanup;
+
+	res = PARAM_SET_setPrintName(tmp_set, taskNames, NULL, getPrintName);
 	if (res != PST_OK) goto cleanup;
 
 	res = TOOL_COMPONENT_LIST_new(32, &tmp_compo);
@@ -319,6 +333,7 @@ static int ksitool_compo_get(TASK_SET *tasks, PARAM_SET **set, TOOL_COMPONENT_LI
 	TASK_SET_add(tasks, 2, "extend", "extend", NULL, NULL, NULL);
 	TASK_SET_add(tasks, 3, "pubfile", "pubfile", NULL, NULL, NULL);
 	TASK_SET_add(tasks, 0xffff, "conf", "conf", NULL, NULL, NULL);
+
 
 	/**
 	 * Define tool component as runnable.

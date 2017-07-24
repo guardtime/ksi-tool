@@ -26,6 +26,9 @@
 #include "param_set.h"
 #include "strn.h"
 
+#define PST_FORMAT_STATUS_OK 0
+#define PST_CONTENT_STATUS_OK 0
+
 static char *new_string(const char *str) {
 	char *tmp = NULL;
 	if (str == NULL) return NULL;
@@ -68,13 +71,13 @@ cleanup:
 	return res;
 }
 
-int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL **newObj) {
+int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL **new) {
 	int res;
 	PARAM_VAL *tmp = NULL;
 	char *tmp_value = NULL;
 	char *tmp_source = NULL;
 
-	if (newObj == NULL) {
+	if (new == NULL) {
 		res = PST_INVALID_ARGUMENT;
 		goto cleanup;
 	}
@@ -127,11 +130,11 @@ int PARAM_VAL_new(const char *value, const char* source, int priority, PARAM_VAL
 	 * If receiving pointer is NULL, initialize it. If receiving pointer is not
 	 * NULL iterate through linked list and append the value to the end.
 	 */
-	if (*newObj == NULL) {
-		tmp->previous = *newObj;
-		*newObj = tmp;
+	if (*new == NULL) {
+		tmp->previous = *new;
+		*new = tmp;
 	} else {
-		PARAM_VAL *current = *newObj;
+		PARAM_VAL *current = *new;
 
 		res = PARAM_VAL_insert(current, NULL, PST_PRIORITY_NONE, PST_INDEX_LAST, tmp);
 		if (res != PST_OK) goto cleanup;
@@ -585,7 +588,7 @@ cleanup:
 	return res;
 }
 
-int ITERATOR_canBeUsedToFetch(ITERATOR *itr, const char* source, int priority, int at) {
+static int ITERATOR_canBeUsedToFetch(ITERATOR *itr, const char* source, int priority, int at) {
 	if (itr == NULL) return 0;
 	if ((source == NULL && itr->source != NULL) || (source != NULL && itr->source == NULL)) return 0;
 	if (source != NULL && strcmp(source, itr->source) != 0) return 0;

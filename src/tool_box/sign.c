@@ -325,7 +325,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	 * values from command-line are read.
 	 */
 #ifdef _WIN32
-	res = PARAM_SET_wildcardExpander(set, "i,input", NULL, Win32FileWildcard);
+	res = PARAM_SET_setWildcardExpander(set, "i,input", NULL, NULL, Win32FileWildcard);
 	extra_parse_flags = PST_PRSCMD_EXPAND_WILDCARD;
 #endif
 

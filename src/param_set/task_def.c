@@ -149,12 +149,6 @@ PARAM_SET *TASK_getSet(TASK *task) {
 	else return task->set;
 }
 
-TASK_DEFINITION *TASK_getDef(TASK *task) {
-	if (task == NULL) return NULL;
-	else return task->def;
-}
-
-
 int TASK_DEFINITION_new(int id, const char *name, const char *man, const char *atleastone, const char *forb, const char *ignore, TASK_DEFINITION **new) {
 	int res;
 	TASK_DEFINITION *tmp = NULL;
@@ -590,16 +584,16 @@ cleanup:
 	return res;
 }
 
-void TASK_SET_free(TASK_SET *obj){
+void TASK_SET_free(TASK_SET *task_set){
 	int i;
-	if (obj != NULL) {
-		TASK_free(obj->consistentTask);
+	if (task_set != NULL) {
+		TASK_free(task_set->consistentTask);
 
 		for (i = 0; i < TASK_DEFINITION_MAX_COUNT; i++) {
-			TASK_DEFINITION_free(obj->array[i]);
+			TASK_DEFINITION_free(task_set->array[i]);
 		}
 
-		free(obj);
+		free(task_set);
 	}
 }
 

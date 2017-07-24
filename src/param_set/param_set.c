@@ -30,8 +30,25 @@
 
 #define TYPO_SENSITIVITY 10
 #define TYPO_MAX_COUNT 5
+#define VARIABLE_IS_NOT_USED(v) ((void)(v));
 
-//typedef struct INT_st {int value;} INT;
+#ifndef _WIN32
+#  include <stdbool.h>
+#  ifdef HAVE_CONFIG_H
+#    include "config.h"
+#  endif
+#endif
+
+#ifdef COMMIT_ID
+#  define PST_VERSION_STRING "libksi " VERSION "-" COMMIT_ID
+#else
+#  define PST_VERSION_STRING "libparamset " "1.0.0"
+#endif
+
+const char *PST_getVersion(void) {
+	static const char versionString[] = PST_VERSION_STRING;
+	return versionString;
+}
 
 static int isValidNameChar(int c) {
 	if ((ispunct(c) || isspace(c)) && c != '_' && c != '-') return 0;
@@ -433,6 +450,7 @@ static int param_set_analyze_similarity(PARAM_SET *set, const char *str, int sen
 	int numOfElements = 0;
 	PARAM **array = NULL;
 	int smallest_difference = 100;
+	int theFirstDiff = 1;
 	int typo_count = 0;
 	int i = 0;
 
@@ -481,7 +499,7 @@ static int param_set_analyze_similarity(PARAM_SET *set, const char *str, int sen
 			alias_difference = (alias_edit_distance * 100) / alias_len;
 		}
 
-		if (name_difference <= alias_difference) {
+		if (array[i]->flagAlias == NULL || name_difference <= alias_difference) {
 			isSubstring = string_is_substring(str, array[i]->flagName);
 			isSubstringAtTheBeginning = string_is_substring_at_the_beginning(str, array[i]->flagName);
 			typo_index[i].difference = name_difference;
@@ -506,8 +524,9 @@ static int param_set_analyze_similarity(PARAM_SET *set, const char *str, int sen
 		/**
 		 * Register the smallest difference value.
 		 */
-		if (typo_index[i].difference < smallest_difference) {
+		if (typo_index[i].difference < smallest_difference || theFirstDiff) {
 			smallest_difference = typo_index[i].difference;
+			theFirstDiff = 0;
 		}
 
 	}
@@ -910,7 +929,7 @@ int PARAM_SET_addControl(PARAM_SET *set, const char *names,
 		int (*controlFormat)(const char *),
 		int (*controlContent)(const char *),
 		int (*convert)(const char*, char*, unsigned),
-		int (*extractObject)(void *, const char *, void**)){
+		int (*extractObject)(void **, const char *, void**)){
 	int res;
 	PARAM *tmp = NULL;
 	const char *pName = NULL;
@@ -933,8 +952,100 @@ int PARAM_SET_addControl(PARAM_SET *set, const char *names,
 	return PST_OK;
 }
 
-int PARAM_SET_wildcardExpander(PARAM_SET *set, const char *names,
+
+
+static int param_set_set_print_name(PARAM_SET *set, const char *names,
+							int (*param_setPrintName)(PARAM *param, const char *constv, const char* (*getPrintName)(PARAM *param, char *buf, unsigned buf_len)),
+							const char *constv, const char* (*getPrintName)(PARAM *param, char *buf, unsigned buf_len)){
+	int res;
+	PARAM *tmp = NULL;
+	const char *pName = NULL;
+	char buf[1024];
+
+	if (set == NULL || names == NULL || (constv == NULL && getPrintName == NULL) || (constv != NULL && getPrintName != NULL)) return PST_INVALID_ARGUMENT;
+
+	pName = names;
+	while ((pName = extract_next_name(pName, isValidNameChar, buf, sizeof(buf), NULL)) != NULL) {
+		res = param_set_getParameterByName(set, buf, &tmp);
+		if (res != PST_OK) return res;
+
+		res = param_setPrintName(tmp, constv, getPrintName);
+		if (res != PST_OK) return res;
+	}
+
+	return PST_OK;
+}
+
+int PARAM_SET_setPrintName(PARAM_SET *set, const char *names,
+							const char *constv, const char* (*getPrintName)(PARAM *param, char *buf, unsigned buf_len)) {
+	return param_set_set_print_name(set, names, PARAM_setPrintName, constv, getPrintName);
+}
+
+int PARAM_SET_setPrintNameAlias(PARAM_SET *set, const char *names,
+							const char *constv, const char* (*getPrintName)(PARAM *param, char *buf, unsigned buf_len)) {
+	return param_set_set_print_name(set, names, PARAM_setPrintNameAlias, constv, getPrintName);
+}
+
+int PARAM_SET_setHelpText(PARAM_SET *set, const char *names, const char *txt) {
+	int res;
+	PARAM *tmp = NULL;
+	const char *pName = NULL;
+	char buf[1024];
+
+	if (set == NULL || names == NULL || txt == NULL) return PST_INVALID_ARGUMENT;
+
+	pName = names;
+	while ((pName = extract_next_name(pName, isValidNameChar, buf, sizeof(buf), NULL)) != NULL) {
+		res = param_set_getParameterByName(set, buf, &tmp);
+		if (res != PST_OK) return res;
+
+		res = PARAM_setHelpText(tmp, txt);
+		if (res != PST_OK) return res;
+	}
+
+	return PST_OK;
+}
+
+char* PARAM_SET_helpToString(const PARAM_SET *set, const char *names, int indent, int header, int rowWith, char *buf, size_t buf_len) {
+	int res;
+	const char *pName = NULL;
+	char nameBuf[1024];
+	size_t count = 0;
+
+	if (set == NULL || names == NULL || header == 0 || buf == NULL) return NULL;
+
+	pName = names;
+	while ((pName = extract_next_name(pName, isValidNameChar, nameBuf, sizeof(nameBuf), NULL)) != NULL) {
+		PARAM *tmp = NULL;
+		const char *name = NULL;
+		const char *alias = NULL;
+		char param_name_combo[256];
+		const char *param_name = NULL;
+
+		if (count > buf_len) return NULL;
+
+		res = param_set_getParameterByName(set, nameBuf, &tmp);
+		if (res != PST_OK) return NULL;
+
+		name = PARAM_getPrintName(tmp);
+		alias = PARAM_getPrintNameAlias(tmp);
+
+		if (alias == NULL) {
+			param_name = name;
+		} else {
+			PST_snprintf(param_name_combo, sizeof(param_name_combo), "%s, %s", name, alias);
+			param_name = param_name_combo;
+		}
+
+		count += PST_snhiprintf(buf + count, buf_len - count, indent, 0, header, rowWith, param_name, '-', "%s\n", PARAM_getHelpText(tmp));
+	}
+
+	return buf;
+}
+
+int PARAM_SET_setWildcardExpander(PARAM_SET *set, const char *names,
 		void *ctx,
+		void (*ctx_free)(void*),
 		int (*expand_wildcard)(PARAM_VAL *param_value, void *ctx, int *value_shift)){
 	int res;
 	PARAM *tmp = NULL;
@@ -948,7 +1059,7 @@ int PARAM_SET_wildcardExpander(PARAM_SET *set, const char *names,
 		res = param_set_getParameterByName(set, buf, &tmp);
 		if (res != PST_OK) return res;
 
-		res = PARAM_setWildcardExpander(tmp, ctx, expand_wildcard);
+		res = PARAM_setWildcardExpander(tmp, ctx, ctx_free, expand_wildcard);
 		if (res != PST_OK) return res;
 	}
 
@@ -1033,7 +1144,7 @@ cleanup:
 	return res;
 }
 
-int PARAM_SET_getObjExtended(PARAM_SET *set, const char *name, const char *source, int priority, int at, void *ctxt, void **obj) {
+int PARAM_SET_getObjExtended(PARAM_SET *set, const char *name, const char *source, int priority, int at, void *ctx, void **obj) {
 	int res;
 	PARAM *param = NULL;
 	void *extras[2] = {NULL, NULL};
@@ -1057,7 +1168,7 @@ int PARAM_SET_getObjExtended(PARAM_SET *set, const char *name, const char *sourc
 	}
 
 	extras[0] = set;
-	extras[1] = ctxt;
+	extras[1] = ctx;
 
 	/**
 	 * Obj must be feed directly to the getter function, asi it enables to manipulate
@@ -1121,7 +1232,6 @@ cleanup:
 int PARAM_SET_getAtr(PARAM_SET *set, const char *name, const char *source, int priority, int at, PARAM_ATR *atr) {
 	int res;
 	PARAM *param = NULL;
-	PARAM_VAL *val = NULL;
 
 	if (set == NULL || name == NULL || atr == NULL) {
 		res = PST_INVALID_ARGUMENT;
@@ -1131,23 +1241,49 @@ int PARAM_SET_getAtr(PARAM_SET *set, const char *name, const char *source, int p
 	res = param_set_getParameterByName(set, name, &param);
 	if (res != PST_OK) goto cleanup;
 
-	res = PARAM_getValue(param, source, priority, at, &val);
+	res = PARAM_getAtr(param, source, priority, at, atr);
 	if (res != PST_OK) goto cleanup;
-
-
-	atr->cstr_value = val->cstr_value;
-	atr->formatStatus = val->formatStatus;
-	atr->contentStatus = val->contentStatus;
-	atr->priority = val->priority;
-	atr->source = val->source;
-	atr->name = param->flagName;
-	atr->alias = param->flagAlias;
 
 	res = PST_OK;
 
 cleanup:
 
 	return res;
+}
+
+
+
+static int param_set_get_print_name(PARAM_SET *set, const char *name, const char* (*param_get_print_name)(PARAM *obj), const char **print_name) {
+	int res = PST_UNKNOWN_ERROR;
+	PARAM *param = NULL;
+	const char *tmp = NULL;
+
+	if (set == NULL || name == NULL) {
+		res = PST_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	res = param_set_getParameterByName(set, name, &param);
+	if (res != PST_OK) goto cleanup;
+
+	tmp = param_get_print_name(param);
+	if (tmp == NULL) goto cleanup;
+
+	*print_name = tmp;
+	res = PST_OK;
+
+cleanup:
+
+	return res;
+}
+
+int PARAM_SET_getPrintName(PARAM_SET *set, const char *name, const char **print_name) {
+	return param_set_get_print_name(set, name, PARAM_getPrintName, print_name);
+}
+
+int PARAM_SET_getPrintNameAlias(PARAM_SET *set, const char *name, const char **print_name) {
+	int res = param_set_get_print_name(set, name, PARAM_getPrintNameAlias, print_name);
+	return (res == PST_UNKNOWN_ERROR) ? PST_ALIAS_NOT_SPECIFIED : res;
 }
 
 int PARAM_SET_clearParameter(PARAM_SET *set, const char *names){
@@ -1584,9 +1720,9 @@ static char* pars_flags_to_string(int type, char *buf, size_t len) {
 			((type & PST_PRSCMD_DEFAULT) == PST_PRSCMD_DEFAULT) ? "D:" : "",
 			(type & PST_PRSCMD_HAS_NO_VALUE) ? "NV:" : "",
 			(type & PST_PRSCMD_HAS_VALUE) ? "V:" : "",
-			(type & PST_PRSCMD_HAS_MULTIPLE_INSTANCES) ? "M:" : "",
+			(type & PST_PRSCMD_HAS_VALUE_SEQUENCE) ? "M:" : "",
 			(type & PST_PRSCMD_BREAK_WITH_POTENTIAL_PARAMETER) ? "PPBR:" : "",
-			(type & PST_PRSCMD_BREAK_VALUE_WITH_EXISTING_PARAMETER_MATCH) ? "MBR:" : "");
+			(type & PST_PRSCMD_BREAK_WITH_EXISTING_PARAMETER_MATCH) ? "MBR:" : "");
 	return buf;
 }
 
@@ -1672,7 +1808,7 @@ static int COLLECTORS_new(PARAM_SET *set, COLLECTORS **new) {
 			if (PARAM_isParsOptionSet(p, PST_PRSCMD_COLLECT_WHEN_PARSING_IS_CLOSED)) tmp->rec[tmp->count].collect_when_parsing_is_closed = 1;
 			if (PARAM_isParsOptionSet(p, PST_PRSCMD_COLLECT_HAS_LOWER_PRIORITY)) tmp->rec[tmp->count].reduced_priority = 1;
 
-			if (PARAM_isParsOptionSet(p, PST_PRSCMD_COLLECT_LIMITER_ON)) {
+			if (PARAM_isParsOptionSet(p, PST_PRSCMD_COLLECT_LIMITER_BREAK_ON)) {
 				tmp->rec[tmp->count].collect_limiter = 1;
 				tmp->rec[tmp->count].max_collect_count = (p->parsing_options & PST_PRSCMD_COLLECT_LIMITER_MAX_MASK) / PST_PRSCMD_COLLECT_LIMITER_1X;
 			}
@@ -1804,9 +1940,11 @@ int PARAM_SET_parseCMD(PARAM_SET *set, int argc, char **argv, const char *source
 
 
 			if (is_parameter_opend) {
-				token_match_break = (TOKEN_IS_MATCH(token_type) && PARAM_isParsOptionSet(opend_parameter, PST_PRSCMD_BREAK_VALUE_WITH_EXISTING_PARAMETER_MATCH)) ? 1 : 0;
+				token_match_break = ((TOKEN_IS_MATCH(token_type)
+						|| ((TOKEN_IS_NULL_HAS_DOUBLE_DASH(token_type)) && collector->close_parsing_permited))
+						&& PARAM_isParsOptionSet(opend_parameter, PST_PRSCMD_BREAK_WITH_EXISTING_PARAMETER_MATCH)) ? 1 : 0;
 				token_pot_param_break = ((TOKE_IS_VALID_POT_PARAM_BREAKER(token_type)
-						|| (TOKEN_IS_NULL_HAS_DOUBLE_DASH(token_type) && COLLECTORS_doCollectorsExist(collector)))
+						|| ((TOKEN_IS_NULL_HAS_DOUBLE_DASH(token_type) && collector->close_parsing_permited)))
 						&& PARAM_isParsOptionSet(opend_parameter, PST_PRSCMD_BREAK_WITH_POTENTIAL_PARAMETER)) ? 2 : 0;
 				token_no_param_break = PARAM_isParsOptionSet(opend_parameter, PST_PRSCMD_HAS_NO_VALUE) ? 4 : 0;
 
@@ -1823,6 +1961,7 @@ int PARAM_SET_parseCMD(PARAM_SET *set, int argc, char **argv, const char *source
 					dpgprint("----------------------------------\n");
 					if (value_counter == 0) {
 						res = PARAM_SET_add(set, opend_parameter->flagName, NULL, source, priority);
+						if (res != PST_OK) goto cleanup;
 						dpgprint("P:CLOSE (%s = NULL)%s\n", opend_parameter->flagName, break_type_to_string(token_match_break + token_pot_param_break + token_no_param_break + value_saturation_break, buf, sizeof(buf)));
 					} else {
 						dpgprint("P:CLOSE (%s ---)%s\n", opend_parameter->flagName, break_type_to_string(token_match_break + token_pot_param_break + token_no_param_break + value_saturation_break, buf, sizeof(buf)));
@@ -1855,6 +1994,7 @@ int PARAM_SET_parseCMD(PARAM_SET *set, int argc, char **argv, const char *source
 
 				if (last_token_brake && value_counter == 0) {
 					res = PARAM_SET_add(set, opend_parameter->flagName, NULL, source, priority);
+					if (res != PST_OK) goto cleanup;
 				}
 
 				continue;
@@ -2027,9 +2167,8 @@ static size_t param_value_add_errorstring_to_buf(PARAM *parameter, PARAM_VAL *in
 	/**
 	 * Add the parameter and its value.
 	 */
-	count += PST_snprintf(buf + count, buf_len - count, "%s%s '%s'.",
-							strlen(parameter->flagName) > 1 ? "--" : "-",
-							parameter->flagName,
+	count += PST_snprintf(buf + count, buf_len - count, "%s '%s'.",
+							PARAM_getPrintName(parameter),
 							value != NULL ? value : ""
 							);
 
@@ -2158,7 +2297,7 @@ char* PARAM_SET_syntaxErrorsToString(const PARAM_SET *set, const char *prefix, c
 	return buf;
 }
 
-char* PARAM_SET_typosToString(PARAM_SET *set, int flags, const char *prefix, char *buf, size_t buf_len) {
+char* PARAM_SET_typosToString(PARAM_SET *set, const char *prefix, char *buf, size_t buf_len) {
 	int res;
 	const char *use_prefix = NULL;
 	PARAM_VAL *typo = NULL;
@@ -2169,16 +2308,6 @@ char* PARAM_SET_typosToString(PARAM_SET *set, int flags, const char *prefix, cha
 	int n = 0;
 	const char *similar = NULL;
 	size_t count = 0;
-	char *hyphen = "";
-	char *d_hyphen = "";
-
-	if (flags & PST_TOSTR_HYPHEN) {
-		hyphen = "-";
-		d_hyphen = "-";
-	} else if (flags & PST_TOSTR_DOUBLE_HYPHEN) {
-		hyphen = "-";
-		d_hyphen = "--";
-	}
 
 	if (set == NULL || buf == NULL || buf_len == 0) {
 		return NULL;
@@ -2199,13 +2328,17 @@ char* PARAM_SET_typosToString(PARAM_SET *set, int flags, const char *prefix, cha
 		if (res != PST_OK) return NULL;
 
 		for (n = 0; n < similar_count; n++) {
+			PARAM *param = NULL;
+
 			res = PARAM_getObject(set->typos, name, 0, n, NULL, (void**)&similar);
 			if (res != PST_OK || similar == NULL) return NULL;
 
-			count += PST_snprintf(buf + count, buf_len - count, "%sDid You mean '%s%s' instead of '%s'.\n",
+			res = param_set_getParameterByName(set, similar, &param);
+			if (res != PST_OK || param == NULL) return NULL;
+
+			count += PST_snprintf(buf + count, buf_len - count, "%sDid You mean '%s' instead of '%s'.\n",
 						use_prefix,
-						strlen(similar) > 1 ? d_hyphen : hyphen,
-						similar,
+						PARAM_getPrintName(param),
 						name);
 			if (count >= buf_len - 1) return buf;
 		}
@@ -2332,6 +2465,10 @@ const char* PARAM_SET_errorToString(int err) {
 		return "Wildcard expander function not specified.";
 	case PST_UNDEFINED_BEHAVIOUR:
 		return "PARAM_SET undefined behaviour.";
+	case PST_PARAM_CONVERT_NOT_PERFORMED:
+		return "PARAM object value conversion is skipped.";
+	case PST_ALIAS_NOT_SPECIFIED:
+		return "PARAM object alias does not exist.";
 	case PST_UNKNOWN_ERROR:
 		return "PARAM_SET unknown error.";
 	}
