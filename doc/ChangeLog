@@ -1,4 +1,5 @@
 * IMPROVEMENT: Test suite accustomed to KSI PDU version 2.
+* IMPROVEMENT: Task verify supports input without specifying -i (only files that do not look like potential parameters, e.g. -a or --option).
 * IMPROVEMENT: KSI signature task verify uses always libksi default verification policy when policy is not explicitly specified (e.g. --ver-pub).
 * BUGFIX: Tests will run both tlvutil-metadata.test and tlvutil-pdu-header.test if gttlvutil is installed.
 * BUGFIX: Publications file downloaded can be redirected to stdout (-o -).

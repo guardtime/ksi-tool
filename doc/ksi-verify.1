@@ -50,7 +50,7 @@ Perform publication-based verification (use with \fB-x\fR to permit extending).
 .\"
 .TP
 \fB-i \fIin.ksig\fR
-Specify the signature file to be verified. Use '\fB-\fR' as file name to read signature file from \fIstdin\fR.
+Specify the signature file to be verified. Use '\fB-\fR' as file name to read signature file from \fIstdin\fR. Flag \fB-i\fR can be omitted when specifying the input. Without \fB-i\fR it is not possible to sign files that look like command-line parameters (e.g. -a, --option).
 .\"
 .TP
 \fB-f \fIdata\fR
