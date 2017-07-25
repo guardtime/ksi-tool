@@ -88,7 +88,7 @@ static int KT_SIGN_getAggregationRoundsNeeded(PARAM_SET *set, ERR_TRCKR *err, si
 static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, KSI_HashAlgorithm remote_algo, size_t max_tree_inputs, size_t rounds, SIGNING_AGGR_ROUND ***aggr_rounds_record);
 static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_AGGR_ROUND **aggr_round);
 static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, size_t seq_offset, KSI_MetaData **mdata);
-static int KT_SIGN_dump(PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND **aggr_round);
+static int KT_SIGN_dump(KSI_CTX *ksi, PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND **aggr_round);
 
 int sign_run(int argc, char** argv, char **envp) {
 	int res;
@@ -439,7 +439,7 @@ static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int task) {
 				/**
 				 * If signature was created without errors print some info on demand.
 				 */
-				res = KT_SIGN_dump(set, err, aggr_rounds);
+				res = KT_SIGN_dump(NULL, set, err, aggr_rounds);
 				if (res != KT_OK) goto cleanup;
 			}
 			goto cleanup;
@@ -1166,7 +1166,7 @@ cleanup:
 	return res;
 }
 
-static int KT_SIGN_dump(PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND **aggr_round) {
+static int KT_SIGN_dump(KSI_CTX *ksi, PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND **aggr_round) {
 	int res = PST_UNKNOWN_ERROR;
 	int i = 0;
 	int n = 0;
@@ -1199,7 +1199,7 @@ static int KT_SIGN_dump(PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND **agg
 
 			print_result("Document : '%s'\n", aggr_round[i]->fname[n]);
 			print_result("Signature: '%s'\n", aggr_round[i]->fname_out[n]);
-			OBJPRINT_signatureDump(sig, print_result);
+			OBJPRINT_signatureDump(ksi, sig, print_result);
 			KSI_Signature_free(sig);
 			sig = NULL;
 			print_result("\n\n");

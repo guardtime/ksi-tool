@@ -761,10 +761,10 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 		if (PARAM_SET_isSetByName(set, "dump")) {
 			print_result("\n");
 			print_result("=== Old signature ===\n");
-			OBJPRINT_signatureDump(sig, print_result);
+			OBJPRINT_signatureDump(ksi, sig, print_result);
 			print_result("\n");
 			print_result("=== Extended signature ===\n");
-			OBJPRINT_signatureDump(ext, print_result);
+			OBJPRINT_signatureDump(ksi, ext, print_result);
 			print_result("\n");
 			print_result("=== Extended signature verification ===\n");
 			OBJPRINT_signatureVerificationResultDump(result_ext , print_result);
