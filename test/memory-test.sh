@@ -63,6 +63,7 @@ generate_test static-verify.test
 generate_test static-sign-verify.test
 generate_test static-extend.test
 generate_test sign-cmd.test
+generate_test signature-dump.test
 generate_test extend-cmd.test
 generate_test static-verify-invalid-signatures.test
 generate_test pubfile.test
@@ -97,6 +98,7 @@ $mem_test_dir/static-verify.test \
 $mem_test_dir/static-sign-verify.test \
 $mem_test_dir/static-extend.test \
 $mem_test_dir/sign-cmd.test \
+$mem_test_dir/signature-dump.test \
 $mem_test_dir/extend-cmd.test \
 $mem_test_dir/static-verify-invalid-signatures.test \
 $mem_test_dir/pubfile.test \

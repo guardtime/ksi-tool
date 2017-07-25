@@ -265,7 +265,7 @@ EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-2014-08-01.1.ext.k
 # Calendar authentication record signature certificate ID changed so that it does not refer to any certificate in publications file.
 EXECUTABLE verify --ver-key -i test/resource/signature/nok-sig-2014-08-01-cert-id-changed.ksig --dump --conf test/resource/conf/static-sign-1.cfg
 >>>  /(Signing certificate ID)(.*ff:ff:ff:01.*)
-(.*Signing certificate CN)(.*Certificate not found from publications file)([^$]|[
+(.*Signing certificate issued to)(.*Certificate not found from publications file)([^$]|[
 ])+
 (.*KEY-01)(.*Certificate not found)/
 >>>2 /(KEY-01)(.*Certificate not found)(.*Signature key-based verification failed.)/

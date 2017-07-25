@@ -326,14 +326,13 @@ void OBJPRINT_signatureCertificate(KSI_CTX *ctx, const KSI_Signature *sig, int (
 
 		if(KSI_PKICertificate_toString(verificationCert, buf, sizeof(buf)) == NULL) break;
 
-		if(STRING_extract(buf, "Issued to: ", "\n", tmp, sizeof(tmp)) == NULL) break;
+		if(STRING_extractAbstract(buf, "Issued to: ", "\n  * Issued by", tmp, sizeof(tmp), find_charAfterStrn, find_charBeforeStrn, NULL) == NULL) break;
 		CN = tmp;
 	} while(0);
-//	KSI_PublicationsFile_getPKICertificateById()
 
 	print("Calendar Authentication Record %s signature:\n", get_signature_type_from_oid(KSI_Utf8String_cstr(sig_type)));
 	print("  Signing certificate ID: %s\n", str_id);
-	if (CN) print("  Signing certificate CN: %s\n", CN);
+	if (CN) print("  Signing certificate issued to: %s\n", CN);
 	print("  Signature type: %s\n", KSI_Utf8String_cstr(sig_type));
 
 cleanup:
