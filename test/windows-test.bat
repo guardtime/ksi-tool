@@ -109,6 +109,7 @@ test\test_suites\pubfile.test ^
 test\test_suites\static-pubfile.test ^
 test\test_suites\verify-invalid-pubfile.test ^
 test\test_suites\verify-cmd.test ^
+test\test_suites\signature-dump.test ^
 test\test_suites\default-conf.test ^
 test\test_suites\invalid-conf.test ^
 test\test_suites\file-name-gen.test ^

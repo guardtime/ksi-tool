@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include "obj_printer.h"
 #include "api_wrapper.h"
+#include "tool_box.h"
 
 void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile, int (*print)(const char *format, ... )){
 	int res = KSI_UNKNOWN_ERROR;
@@ -278,14 +279,17 @@ static const char *get_signature_type_from_oid(const char *oid) {
 	}
 }
 
-void OBJPRINT_signatureCertificate(const KSI_Signature *sig, int (*print)(const char *format, ... )) {
+void OBJPRINT_signatureCertificate(KSI_CTX *ctx, const KSI_Signature *sig, int (*print)(const char *format, ... )) {
 	int res;
 	KSI_CalendarAuthRec *calAuthRec = NULL;
 	KSI_PKISignedData *pki_data = NULL;
 	KSI_OctetString *ID = NULL;
 	KSI_Utf8String *sig_type = NULL;
+	KSI_PublicationsFile *pubfile = NULL;
 
+	char tmp[1024];
 	char str_id[1024];
+	const char *CN = NULL;
 
 	char *ret;
 
@@ -306,12 +310,34 @@ void OBJPRINT_signatureCertificate(const KSI_Signature *sig, int (*print)(const 
 	ret = KSI_OctetString_toString(ID, ':', str_id, sizeof(str_id));
 	if (ret != str_id) goto cleanup;
 
+	do {
+		KSI_PKICertificate *verificationCert = NULL;
+		char buf[1024];
+
+		if (ctx == NULL) break;
+
+		res = KSI_receivePublicationsFile(ctx, &pubfile);
+		if (res == KSI_PUBLICATIONS_FILE_NOT_CONFIGURED) CN = "(Publications file not specified!)";
+		if (res != KSI_OK || pubfile == NULL) break;
+
+		res = KSI_PublicationsFile_getPKICertificateById(pubfile, ID, &verificationCert);
+		if (verificationCert == NULL) CN = "(Certificate not found from publications file!)";
+		if (res != KSI_OK || verificationCert == NULL) break;
+
+		if(KSI_PKICertificate_toString(verificationCert, buf, sizeof(buf)) == NULL) break;
+
+		if(STRING_extractAbstract(buf, "Issued to: ", "\n  * Issued by", tmp, sizeof(tmp), find_charAfterStrn, find_charBeforeStrn, NULL) == NULL) break;
+		CN = tmp;
+	} while(0);
+
 	print("Calendar Authentication Record %s signature:\n", get_signature_type_from_oid(KSI_Utf8String_cstr(sig_type)));
 	print("  Signing certificate ID: %s\n", str_id);
+	if (CN) print("  Signing certificate issued to: %s\n", CN);
 	print("  Signature type: %s\n", KSI_Utf8String_cstr(sig_type));
 
 cleanup:
 
+	KSI_PublicationsFile_free(pubfile);
 
 	return;
 }
@@ -372,7 +398,7 @@ cleanup:
 	return;
 }
 
-void OBJPRINT_signatureDump(KSI_Signature *sig, int (*print)(const char *format, ... )) {
+void OBJPRINT_signatureDump(KSI_CTX *ctx, KSI_Signature *sig, int (*print)(const char *format, ... )) {
 
 	print("KSI Signature dump:\n");
 
@@ -391,7 +417,7 @@ void OBJPRINT_signatureDump(KSI_Signature *sig, int (*print)(const char *format,
 
 	if (KSITOOL_Signature_isCalendarAuthRecPresent(sig)) {
 		print("Calendar Authentication Record.\n\n");
-		OBJPRINT_signatureCertificate(sig, print);
+		OBJPRINT_signatureCertificate(ctx, sig, print);
 	} else if (KSITOOL_Signature_isPublicationRecordPresent(sig)) {
 		print("Publication Record.\n\n");
 		OBJPRINT_signaturePublicationReference(sig, print);

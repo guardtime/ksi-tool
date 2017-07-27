@@ -18,7 +18,7 @@
 # Guardtime, Inc., and no license to trademarks is granted; Guardtime
 # reserves and retains all trademark rights.
 
-# Remove test output directories.  
+# Remove test output directories.
 rm -rf test/out/sign 2> /dev/null
 rm -rf test/out/extend 2> /dev/null
 rm -rf test/out/extend-replace-existing 2> /dev/null
@@ -95,6 +95,7 @@ test/test_suites/static-sign-verify.test \
 test/test_suites/static-extend.test \
 test/out/tmp/pipe.test \
 test/test_suites/sign-cmd.test \
+test/test_suites/signature-dump.test \
 test/test_suites/extend-cmd.test \
 test/test_suites/static-verify-invalid-signatures.test \
 test/test_suites/pubfile.test \
