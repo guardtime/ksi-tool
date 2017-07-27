@@ -23,6 +23,7 @@
 #include <ksi/compatibility.h>
 #include <ksi/policy.h>
 #include "param_set/param_set.h"
+#include "param_set/parameter.h"
 #include "param_set/task_def.h"
 #include "tool_box/ksi_init.h"
 #include "tool_box/param_control.h"
@@ -210,7 +211,9 @@ char *verify_help_toString(char *buf, size_t len) {
 		" --ver-pub - Perform publication-based verification (use with -x to permit extending).\n"
 		" -i <in.ksig>\n"
 		"           - Signature file to be verified. Use '-' as file name to read\n"
-		"             the signature from stdin.\n"
+		"             the signature from stdin. Flag -i can be omitted when specifying\n"
+		"             the input. Without -i it is not possible to sign files that look\n"
+		"             like command-line parameters (e.g. -a, --option).\n"
 		" -f <data> - Path to file to be hashed or data hash imprint to extract the hash\n"
 		"             value that is going to be verified. Hash format: <alg>:<hash in hex>.\n"
 		"             Use '-' as file name to read data to be hashed from stdin.\n"
@@ -280,6 +283,9 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{f}", isFormatOk_inputHash, isContentOk_inputHash, convertRepair_path, extract_inputHash);
 	PARAM_SET_addControl(set, "{d}{x}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{pub-str}", isFormatOk_pubString, NULL, NULL, extract_pubString);
+
+	PARAM_SET_setParseOptions(set, "i", PST_PRSCMD_HAS_VALUE | PST_PRSCMD_COLLECT_LOOSE_VALUES);
+	PARAM_SET_setParseOptions(set, "{x}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}", PST_PRSCMD_HAS_NO_VALUE);
 
 	/*						ID						DESC								MAN							ATL		FORBIDDEN											IGN	*/
 	TASK_SET_add(task_set,	ANC_BASED_DEFAULT,		"Verify.",							"i",						NULL,	"ver-int,ver-cal,ver-key,ver-pub,P,cnstr,pub-str",	NULL);
