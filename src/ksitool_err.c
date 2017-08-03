@@ -124,7 +124,7 @@ static const char* ksitoolErrToString(int error_code) {
 		case KT_UNKNOWN_HASH_ALG:
 			return "The hash algorithm is unknown or unimplemented.";
 		case KT_INVALID_CMD_PARAM:
-			return "The command-line parameters is invalid or missing.";
+			return "The command-line parameter is invalid or missing.";
 		case KT_NO_PRIVILEGES:
 			return "User has no privileges.";
 		case KT_KSI_SIG_VER_IMPOSSIBLE:

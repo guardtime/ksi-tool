@@ -51,7 +51,7 @@ AM_PROG_CC_C_O
 AC_PROG_LN_S
 # Checks for libraries.
 AC_CHECK_LIB([crypto], [SHA256_Init], [], [AC_MSG_FAILURE([Could not find OpenSSL 0.9.8+ libraries.])])
-AC_CHECK_LIB([curl], [curl_easy_init], [], [AC_MSG_FAILURE([Could nod find Curl libraries.])])
+AC_CHECK_LIB([curl], [curl_easy_init], [], [AC_MSG_FAILURE([Could not find Curl libraries.])])
 
 libksi_ver="3.13"
 AC_ARG_ENABLE(static-build,

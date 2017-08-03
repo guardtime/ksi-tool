@@ -429,7 +429,7 @@ char* TASK_DEFINITION_toString(TASK_DEFINITION *def, char *buf, size_t buf_len) 
 	return buf;
 }
 
-char *TASK_DEFINITION_howToRepiar_toString(TASK_DEFINITION *def, PARAM_SET *set, const char *prefix, char *buf, size_t buf_len) {
+char *TASK_DEFINITION_howToRepair_toString(TASK_DEFINITION *def, PARAM_SET *set, const char *prefix, char *buf, size_t buf_len) {
 	const char *pName = NULL;
 	int err_printed = 0;
 	size_t count = 0;
@@ -761,7 +761,7 @@ int TASK_SET_getConsistentTask(TASK_SET *task_set, TASK **task) {
 	}
 
 	/**
-	 * If there is not exactly one consistent task there must be a error.
+	 * If there is not exactly one consistent task there must be an error.
 	 */
 	if (task_set->consistent_count != 1) {
 		res = task_set->consistent_count == 0 ? PST_TASK_ZERO_CONSISTENT_TASKS : PST_TASK_MULTIPLE_CONSISTENT_TASKS;
@@ -881,7 +881,7 @@ char* TASK_SET_howToRepair_toString(TASK_SET *task_set, PARAM_SET *set, int ID, 
 				count += PST_snprintf(buf + count, buf_len - count, "Task '%s' %s is OK.", task_set->array[i]->name, task_set->array[i]->toString);
 			} else {
 				count += PST_snprintf(buf + count, buf_len - count, "Task '%s' %s is invalid:\n", task_set->array[i]->name, task_set->array[i]->toString);
-				tmp = TASK_DEFINITION_howToRepiar_toString(task_set->array[i], set, prefix, buf + count, buf_len - count);
+				tmp = TASK_DEFINITION_howToRepair_toString(task_set->array[i], set, prefix, buf + count, buf_len - count);
 
 				if (tmp == NULL) return NULL;
 				else return buf;

@@ -30,7 +30,7 @@ extern "C" {
 /**
  * Parameter object that has a name and list of values. Accessing values in
  * sequence (index is increased) is optimized. Contains optional functionality
- * for format and content control.
+ * for format and content checking.
  */
 typedef struct PARAM_st PARAM;
 
@@ -54,7 +54,7 @@ enum PARAM_CONSTRAINTS_enum {
 
 /**
  * Object that is meant to be used with function #PARAM_SET_getAtr to get details
- * about Parameters value.
+ * about parameter value.
  */
 struct PARAM_ATR_st {
 	/** Name. */
@@ -91,7 +91,7 @@ struct PARAM_ATR_st {
  * takes configuration file with odd name "--conf" as input "--conf --conf").
  *
  * Terms used in parsing option descriptions:
- * - \c curr - Current parameter which parsing options are active.
+ * - \c curr - Current parameter whose parsing options are active.
  * - \c known or \c unknown - A known and unknown parameter accordingly.
  * - \c param - Both \c known and \c unknown parameter.
  * - \c bindv - A value that belongs to \c curr and is bound with it.
@@ -164,7 +164,7 @@ struct PARAM_ATR_st {
  *     a = {"w"}
  *     b = {NULL}
  *
- * 7) Collect all loose values and enable parameter "--" to closing parsing and redirect all tokens to parameter "j".
+ * 7) Collect all loose values and enable parameter "--" to close parsing and redirect all tokens to parameter "j".
  *   cmd = "x y z -i v -j w -i -- -- -- - -i -j"
  *   PARAM_SET = {i, j}
  *     i = PST_PRSCMD_HAS_VALUE | PST_PRSCMD_COLLECT_LOOSE_VALUES
@@ -219,7 +219,7 @@ enum PARAM_PARS_OPTIONS_enum {
 	PST_PRSCMD_HAS_NO_VALUE = 0x0002,
 
 	/**
-	 * If set the parameter takes next token as its value even if it equals to
+	 * If set the parameter takes next token as its value even if it equals
 	 * known / unknown parameter. If there is no next value to be read or a
 	 * break occurred (see \c notes), the value is set to \c NULL indicating that
 	 * the parameter was specified but it was not possible to get its value.
@@ -243,9 +243,9 @@ enum PARAM_PARS_OPTIONS_enum {
 
 	/**
 	 * If set the parameter takes all the next tokens as its values even if some
-	 * values equals  to known / unknown parameters. If there is no next value to
-	 * be read or a break occurred (see \c notes) the parsing of current parameter
-	 * is closed. If during the parsing there was no values bound with the current
+	 * values equal known / unknown parameters. If there is no next value to
+	 * be read or a break occurred (see \c notes), the parsing of current parameter
+	 * is closed. If during the parsing there were no values bound with the current
 	 * parameter, its value is set to \c NULL, otherwise the parsing is closed
 	 * without adding any new data to the #PARAM.
 	 *
@@ -271,7 +271,7 @@ enum PARAM_PARS_OPTIONS_enum {
 	 * "--zzz", "---").
 	 *
 	 * \note Note that  when #PST_PRSCMD_CLOSE_PARSING is set for <b>any
-	 * parameter</b> (not just the current one) on the set, "--" is
+	 * parameter</b> (not just the current one) in the set, "--" is
 	 * considered as legal known parameter that will perform the break.
 	 */
 	PST_PRSCMD_BREAK_WITH_POTENTIAL_PARAMETER = 0x0010,
@@ -282,14 +282,14 @@ enum PARAM_PARS_OPTIONS_enum {
 	 * \todo: Check if bunch of known flags are triggering the break.
 	 *
 	 * \note Note that  when #PST_PRSCMD_CLOSE_PARSING is set for <b>any
-	 * parameter</b> (not just the current one) on the set, "--" is
+	 * parameter</b> (not just the current one) in the set, "--" is
 	 * considered as known parameter that will perform the break.
 	 */
 	PST_PRSCMD_BREAK_WITH_EXISTING_PARAMETER_MATCH = 0x0020,
 
 
 	/**
-	 * The default parsing options interprete each token as potential parameter
+	 * The default parsing options interpret each token as potential parameter
 	 * which can bind next token as its single value.
 	 *
 	 * \code{.txt}
@@ -302,7 +302,7 @@ enum PARAM_PARS_OPTIONS_enum {
 	/**
 	 * Collect all tokens that are not bound with some parameter and that do not
 	 * look like potential parameters. If used together with
-	 * #PST_PRSCMD_COLLECT_LIMITER_BREAK_ON collect maximum count is limited.
+	 * #PST_PRSCMD_COLLECT_LIMITER_BREAK_ON, collect maximum count is limited.
 	 * \note Note that by default, if not bound with some parameter, "-" and "--"
 	 * are considered as loose values. But in case when #PST_PRSCMD_CLOSE_PARSING
 	 * is set for <b>any parameter</b> (not just the current one) on the set, "--"
@@ -312,7 +312,7 @@ enum PARAM_PARS_OPTIONS_enum {
 
 	/**
 	 * Collect all loose (unknown or misspelled) parameters (e.q. "-x", "-xy", "--zzz",
-	 * "---"). If used together with #PST_PRSCMD_COLLECT_LIMITER_BREAK_ON collect
+	 * "---"). If used together with #PST_PRSCMD_COLLECT_LIMITER_BREAK_ON, collect
 	 * maximum count is limited.
 	 * \attention No typos or unknowns are detected as all unknown or misspelled
 	 * parameters are redirected to parameters with the this options set.
@@ -332,7 +332,7 @@ enum PARAM_PARS_OPTIONS_enum {
 	 * what all tokens are redirected to parameters that have
 	 * #PST_PRSCMD_COLLECT_WHEN_PARSING_IS_CLOSED set. Value "--" can still be used
 	 * when it is bound with a parameter (see #PST_PRSCMD_HAS_VALUE).
-	 * \note This options affect #PST_PRSCMD_BREAK_WITH_POTENTIAL_PARAMETER,
+	 * \note This option affects #PST_PRSCMD_BREAK_WITH_POTENTIAL_PARAMETER,
 	 * #PST_PRSCMD_BREAK_WITH_EXISTING_PARAMETER_MATCH and #PST_PRSCMD_COLLECT_LOOSE_VALUES.
 	 */
 	PST_PRSCMD_CLOSE_PARSING = 0x0200,
@@ -355,7 +355,7 @@ enum PARAM_PARS_OPTIONS_enum {
 	PST_PRSCMD_NO_TYPOS = 0x1000,
 
 	/**
-	 * With this parameter only the highest priority last parameters format is
+	 * With this parameter only the highest priority last parameter format is
 	 * checked in functions #PARAM_SET_isFormatOK and #PARAM_SET_invalidParametersToString.
 	 * The error status is set in spite of the given option.
 	 */
@@ -369,16 +369,16 @@ enum PARAM_PARS_OPTIONS_enum {
 	 *
 	 * The \c WC expanding is performed by abstract \c WC expander function that
 	 * must be implemented (see #PARAM_SET_setWildcardExpander and
-	 * #PARAM_setWildcardExpander). If not implemented parsing fails.
+	 * #PARAM_setWildcardExpander). If not implemented, parsing fails.
 	 * \see #PARAM_expandWildcard and #PARAM_SET_parseCMD.
 	 */
 	PST_PRSCMD_EXPAND_WILDCARD = 0x4000,
 
 	/**
-	 * If set, this option will affect the maximum possible count of a collected
+	 * If set, this option will affect the maximum possible count of collected
 	 * values during entire command-line parsing. It is possible to create multiple
 	 * parameters with different count limits that are computed separately. If
-	 * the limit for all counters are exceeded, the value is redirected to typo
+	 * the limit for all counters is exceeded, the value is redirected to typo
 	 * or unknown parameter check.
 	 *
 	 * This must be used together with #PST_PRSCMD_COLLECT_LIMITER_1X * \c N,
@@ -389,7 +389,7 @@ enum PARAM_PARS_OPTIONS_enum {
 	 * \code{.txt}
 	 * PST_PRSCMD_COLLECT_LIMITER_BREAK_ON | ((PST_PRSCMD_COLLECT_LIMITER_1X * 5) & PST_PRSCMD_COLLECT_LIMITER_MAX_MASK)
 	 * \endcode
-	 * \attention Make sure that the count value specified do not exceed the maximum
+	 * \attention Make sure that the count value specified does not exceed the maximum
 	 * supported value or spoil some other parse options. Use #PST_PRSCMD_COLLECT_LIMITER_MAX_MASK
 	 * to clean collect limiter parse option.
 	 */
@@ -409,10 +409,10 @@ enum PARAM_PARS_OPTIONS_enum {
 /**
  * Create a new and empty parameter.
  *
- * \param	flagName	The parameters name.
+ * \param	flagName	The parameter name.
  * \param	flagAlias	The alias for the name. Can be <tt>NULL</tt>.
  * \param	constraint	Constraints for the parameter and its values (see #PARAM_CONSTRAINTS).
- * \param	pars_opt	Parsing Options (see [PARAM_PARS_OPTIONS](@ref PARAM_PARS_OPTIONS_enum)). Can be <tt>0</tt>.
+ * \param	pars_opt	Parsing options (see [PARAM_PARS_OPTIONS](@ref PARAM_PARS_OPTIONS_enum)). Can be <tt>0</tt>.
  * \param	newObj		Pointer to receiving pointer to new object.
  * \return #PST_OK when successful, error code otherwise.
  *
@@ -424,21 +424,21 @@ int PARAM_new(const char *flagName, const char *flagAlias, int constraint, int p
 
 /**
  * Function to free #PARAM object.
- * \param param	Pointer to Object to be freed.
+ * \param param	Pointer to object to be freed.
  */
 void PARAM_free(PARAM *param);
 
 /**
  * Adds several optional functions to a parameter. Each function takes
- * the first parameters as c-string value (must not fail if is \c NULL). All the
+ * the first parameter as c-string value (must not fail if is \c NULL). All the
  * functions are applied when adding the value to the #PARAM object.
  *
- * Function \c controlFormat is to control the format. Return \c 0 if format is ok,
+ * Function \c controlFormat is to check the format. Return \c 0 if format is ok,
  * error code otherwise.
  *
  * <tt>int (*controlFormat)(const char *str)</tt>
  *
- * Function \c controlContent is to control the content. Return 0 if content is
+ * Function \c controlContent is to check the content. Return 0 if content is
  * ok, error code otherwise.
  *
  * <tt>int (*controlContent)(const char *str)</tt>
@@ -452,8 +452,8 @@ void PARAM_free(PARAM *param);
  *
  *
  * \param	param			#PARAM object.
- * \param	controlFormat	Function for format control.
- * \param	controlContent	Function for content control.
+ * \param	controlFormat	Function for format checking.
+ * \param	controlContent	Function for content checking.
  * \param	convert			Function for parameter value conversion.
  * \return #PST_OK if successful, error code otherwise.
  * \note Note that \c controlFormat and \c controlContent may return any error code
@@ -473,7 +473,7 @@ int PARAM_addControl(PARAM *param, int (*controlFormat)(const char *), int (*con
  * \see [PARAM_PARS_OPTIONS](@ref PARAM_PARS_OPTIONS_enum), #PARAM_setParseOption and #PARAM_SET_parseCMD
  * for more information.
  */
-int PARAM_isParsOptionSet(PARAM *param, int state);
+int PARAM_isParseOptionSet(PARAM *param, int state);
 
 
 /**
@@ -483,17 +483,17 @@ int PARAM_isParsOptionSet(PARAM *param, int state);
  * \param param		#PARAM object.
  * \param option	Parsing options.
  * \return #PST_OK if successful, error code otherwise. #PST_PRSCMD_INVALID_COMBINATION
- * is returned if conflicting parsing option combination is feed to the function.
+ * is returned if conflicting parsing option combination is fed to the function.
  */
 int PARAM_setParseOption(PARAM *param, int option);
 
 /**
  * Set object extractor to the parameter that implements #PARAM_getObject.
  *
- * Function \c extractObject is used to extract an object from the parameters value.
+ * Function \c extractObject is used to extract an object from the parameter value.
  * Function \c extractObject affects #PARAM_getObject behaviour. If not specified,
  * the default function is used that extracts the c-string value. Parameter \c extra
- * is <tt>void**</tt> pointer to array with 2 elements, \c str is parameters value
+ * is <tt>void**</tt> pointer to array with 2 elements, \c str is parameter value
  * and \c obj is pointer to receiving pointer. Calling #PARAM_getObject both array
  * elements in \c extra are pointing to #PARAM_SET itself (<tt>void **extra = {set, set}</tt>),
  * when calling #PARAM_SET_getObjExtended, the second value is determined by
@@ -509,11 +509,11 @@ int PARAM_setObjectExtractor(PARAM *param, int (*extractObject)(void **, const c
 
 /**
  * Appends value to the parameter. Invalid value format or content is not handled
- * as error, but the state is saved. Internal format or content errors can  be
+ * as error, but the state is saved. Internal format or content errors can be
  * detected - see #PARAM_getInvalid.
  *
  * \param	param		#PARAM object.
- * \param	value		Parameters value as c-string. Can be \c NULL.
+ * \param	value		Parameter value as c-string. Can be \c NULL.
  * \param	source		Source description as c-string. Can be \c NULL.
  * \param	prio		Priority that can be \c PST_PRIORITY_VALID_BASE (<tt>0</tt>) or higher.
  * \return #PST_OK when successful, error code otherwise.
@@ -524,15 +524,15 @@ int PARAM_addValue(PARAM *param, const char *value, const char* source, int prio
 /**
  *
  * Values are filtered by constraints where parameter\c at is used to index over
- * values. If parameters is empty #PST_PARAMETER_EMPTY is returned. If there is
- * no value matching the constraints error #PST_PARAMETER_VALUE_NOT_FOUND is
+ * values. If parameter is empty, #PST_PARAMETER_EMPTY is returned. If there is
+ * no value matching the constraints error, #PST_PARAMETER_VALUE_NOT_FOUND is
  * returned.
  *
  * Use #PST_INDEX_LAST as \c at to extract the last value matching the constraints.
  * If there are values with different priority levels use #PST_PRIORITY_HIGHEST
  * (see #PST_PRIORITY_enum) to get the values with the highest priority. To extract
  * values that have source specified, set \c source as desired value or if there
- * is need to ignore the source set \c source as \c NULL.
+ * is need to ignore the source, set \c source as \c NULL.
  *
  * \param	param		#PARAM object.
  * \param	source		Constraint for the source, can be \c NULL.
@@ -547,8 +547,8 @@ int PARAM_getValue(PARAM *param, const char *source, int prio, int at, PARAM_VAL
 /**
  * Same as #PARAM_getValue, but instead of #PARAM_VAL object it fills output
  * parameter with #PARAM attributes. Note that \c name in #PARAM_ATR is the real
- * string representation of the parameters name and is \b NOT altered by function
- * #PARAM_setPrintName. See #PARAM_getPrintName to extract parameters print name.
+ * string representation of the parameter name and is \b NOT altered by function
+ * #PARAM_setPrintName. See #PARAM_getPrintName to extract parameter print name.
  * \param	param		#PARAM object.
  * \param	source		Constraint for the source, can be \c NULL.
  * \param	prio		Priority that can be \c PST_PRIORITY_VALID_BASE (<tt>0</tt>) or higher.
@@ -560,7 +560,7 @@ int PARAM_getValue(PARAM *param, const char *source, int prio, int at, PARAM_VAL
 int PARAM_getAtr(PARAM *param, const char *source, int prio, int at, PARAM_ATR *atr);
 
 /**
- * This function extracts parameters real name or / and its alias.
+ * This function extracts real name of parameter and/or its alias.
  * \param	param		#PARAM object.
  * \param	name		Pointer to receiving pointer to name.
  * \param	alias		Pointer to receiving pointer to alias.
@@ -585,13 +585,13 @@ int PARAM_getName(PARAM *param, const char **name, const char **alias);
  * #PST_PARAMETER_INVALID_FORMAT and #PST_PARAMETER_UNIMPLEMENTED_OBJ.
  * \note Noted that if format or content status is invalid, it is not possible to extract
  * the object.
- * \attention Returned value must be freed by the user if the implementation needs it.
+ * \attention Returned value must be freed by the user if the implementation requires it.
  */
 int PARAM_getObject(PARAM *param, const char *source, int prio, int at, void **extra, void **value);
 
 /**
  * Same as #PARAM_getValue but extracts only values that have invalid content or
- * error status set. See #PARAM_addControl how to apply value control.
+ * error status set. See #PARAM_addControl how to apply value checking.
  * \param	param		#PARAM object.
  * \param	source		Constraint for the source, can be \c NULL.
  * \param	prio		Priority that can be \c PST_PRIORITY_VALID_BASE (<tt>0</tt>) or higher.
@@ -602,22 +602,22 @@ int PARAM_getObject(PARAM *param, const char *source, int prio, int at, void **e
 int PARAM_getInvalid(PARAM *param, const char *source, int prio, int at, PARAM_VAL **value);
 
 /**
- * Return parameters value count matching the constraints.
+ * Return parameter value count matching the constraints.
  * \param	param		#PARAM object.
  * \param	source		Constraint for the source, can be \c NULL.
  * \param	prio		Priority that can be \c PST_PRIORITY_VALID_BASE (<tt>0</tt>) or higher.
- * \param	count		Pointer to to store tha count value.
+ * \param	count		Pointer to to store the count value.
  * \return #PST_OK when successful, error code otherwise.
  */
 int PARAM_getValueCount(PARAM *param, const char *source, int prio, int *count);
 
 /**
- * Return parameters invalid value count matching the constraints. See
- * #PARAM_addControl how to apply value control.
+ * Return parameter's invalid value count matching the constraints. See
+ * #PARAM_addControl how to apply value checking.
  * \param	param		#PARAM object.
  * \param	source		Constraint for the source, can be \c NULL.
  * \param	prio		Priority that can be \c PST_PRIORITY_VALID_BASE (<tt>0</tt>) or higher.
- * \param	count		Pointer to to store tha count value.
+ * \param	count		Pointer to to store the count value.
  * \return #PST_OK when successful, error code otherwise.
  */
 int PARAM_getInvalidCount(PARAM *param, const char *source, int prio, int *count);
@@ -668,7 +668,7 @@ const char* PARAM_getPrintName(PARAM *obj);
 /**
  * Same as #PARAM_getPrintName but works with alias.
  * \param obj			#PARAM object.
- * \return String that is the string representation of the parameter alias. If alias does not exists \c NULL is returned.
+ * \return String that is the string representation of the parameter alias. If alias does not exist, \c NULL is returned.
  */
 const char* PARAM_getPrintNameAlias(PARAM *obj);
 /**
@@ -682,7 +682,7 @@ int PARAM_setHelpText(PARAM *param, const char *txt);
 /**
  * Returns the help text of the parameter. See #PARAM_setHelpText to change the value.
  * \param obj			#PARAM object.
- * \return String that is the help text of the parameter. If value is not specified
+ * \return String that is the help text of the parameter. If value is not specified,
  * \c NULL is returned.
  */
 const char* PARAM_getHelpText(PARAM *obj);
@@ -729,9 +729,9 @@ int PARAM_clearValue(PARAM *param, const char *source, int prio, int at);
  *
  *
  * \param	param				#PARAM_SET object.
- * \param	ctx					Data structure used by Wildcard expander. Can be \c NULL.
+ * \param	ctx					Data structure used by wildcard expander. Can be \c NULL.
  * \param	ctx_free			Data structure release function. Can be \c NULL.
- * \param	expand_wildcard		Function pointer to Wildcard Expander function.
+ * \param	expand_wildcard		Function pointer to wildcard expander function.
  * \return #PST_OK if successful, error code otherwise.
  * \note #PARAM_SET_parseCMD must be used and parsing option #PST_PRSCMD_EXPAND_WILDCARD
  * must be set using #PARAM_SET_setParseOptions.

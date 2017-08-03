@@ -33,7 +33,7 @@ extern "C" {
 
 /**
  * Parameter value data structure that contains the data and information about its
- * status, priority and source. Data is hold as a linked list of values.
+ * status, priority and source. Data is held as a linked list of values.
  */
 
 struct PARAM_VAL_st{
@@ -57,7 +57,7 @@ struct PARAM_st{
 	char *flagName;					/* The name of the parameter. */
 	char *flagAlias;				/* The alias for the parameter. */
 	char *helpText;				/* The help text for a parameter. */
-	int constraints;			/* Constraint If there is more than 1 parameters allowed. For validity check. */
+	int constraints;			/* Constraint If there is more than 1 parameter allowed. For validity check. */
 	int highestPriority;			/* Highest priority of inserted values. */
 	int parsing_options;			/* Some options used when parsing variables. */
 	int argCount;					/* Count of all arguments in chain. */
@@ -69,7 +69,7 @@ struct PARAM_st{
 	/**
 	 * A function to extract object from the parameter.
 	 * int extractObject(void **extra, const char *str, void **obj)
-	 * extra - optional pointer to array of pointer size 2.
+	 * extra - optional pointer to array of pointers of size 2.
 	 * str - c-string value that belongs to PARAM_VAL object.
 	 * obj - pointer to receiving pointer to desired object.
 	 * Returns PST_OK if successful, error code otherwise.
@@ -82,7 +82,7 @@ struct PARAM_st{
 	 * buf - a buffer that will contain value after conversion.
 	 * buf_len - the size of the buffer.
 	 * Returns #PST_OK (0) if conversion successful, error code otherwise. If
-	 * conversion is not performed #PST_PARAM_CONVERT_NOT_PERFORMED must be used
+	 * conversion is not performed, #PST_PARAM_CONVERT_NOT_PERFORMED must be used
 	 * or \c str must be copied to \ buf.
 	 */
 	int (*convert)(const char *str, char *buf, unsigned buf_len);
@@ -104,8 +104,8 @@ struct PARAM_st{
 	int (*controlContent)(const char *str);
 
 	/**
-	 * This buffer and its size is feed to the abstract function getPrintName.
-	 * It is not ment to be used directly.
+	 * This buffer and its size is fed to the abstract function getPrintName.
+	 * It is not meant to be used directly.
 	 */
 	char print_name_buf[256];
 	char print_name_alias_buf[256];
@@ -141,7 +141,7 @@ struct PARAM_st{
 	void *expand_wildcard_ctx;
 
 	/**
-	 * An optional expaned wildcard ctx object.
+	 * An optional expanded wildcard ctx object.
 	 */
 	void (*expand_wildcard_free)(void *);
 };

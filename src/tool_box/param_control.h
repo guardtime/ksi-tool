@@ -43,7 +43,7 @@ struct COMPOSITE_st {
 	/** A pointer to hash algorithm. Mandatory if hashing input file. */
 	void *h_alg;
 
-	/** A optional pointer to file name to save input data to file when hashing. */
+	/** An optional pointer to file name to save input data to file when hashing. */
 	void *fname_out;
 };
 

@@ -82,7 +82,7 @@ enum PST_INDEX_enum {
 /**
  * Creates a new #PARAM_VAL object. If \c new is pointer to \c NULL, a new
  * object is created. If \c new points to existing #PARAM_VAL object, a new
- * value is created and appended to the end list.
+ * value is created and appended to the end of the list.
  * \param value		Value as c-string. Can be \c NULL.
  * \param source	Describes the source e.g. file name or environment variable. Can be \c NULL.
  * \param priority	Priority of the parameter, must be positive.
@@ -114,11 +114,11 @@ void PARAM_VAL_free(PARAM_VAL *rootValue);
 /**
  * Extracts element from #PARAM_VAL list. Element is extracted from given
  * priority level at the given index. If \c at is #PST_INDEX_LAST, the last element is
- * extracted. If priority is #PST_PRIORITY_NONE every element is counted and returned
+ * extracted. If priority is #PST_PRIORITY_NONE, every element is counted and returned
  * at given index. If priority is #PST_PRIORITY_VALID_BASE (<tt>0</tt>) or higher, only
  * elements at the given priority are counted and extracted. For example if list contains
- * 2 lower priority values followed by higher priority value at position 3 and at
- * is 0, function returns the last value (but the  first value matching the priority).
+ * 2 lower priority values followed by higher priority value at position 3 and \c at
+ * is 0, function returns the last value (but the first value matching the priority).
  * Priority #PST_PRIORITY_LOWEST and #PST_PRIORITY_HIGHEST are used to extract only
  * the lowest and the highest priority values. Use #PST_PRIORITY_HIGHER_THAN + \c priority
  * or #PST_PRIORITY_LOWER_THAN + \c priority to extract values with higher or lower
@@ -135,18 +135,18 @@ void PARAM_VAL_free(PARAM_VAL *rootValue);
 int PARAM_VAL_getElement(PARAM_VAL *rootValue, const char* source, int priority, int at, PARAM_VAL** val);
 
 /**
- * This function pops an element out of the \c rootValue and outputs is via \c val.
+ * This function pops an element out of the \c rootValue and outputs it via \c val.
  *
  * \param	rootValue	The pointer to pointer to the first #PARAM_VAL link in the linked list.
  * \param	source		Constraint for the source.
  * \param	priority	Constraint for the priority.
  * \param	at			Parameter index in the matching set composed with the constraints.
- * \param	val			Pointer to receiving pointer of poped element.
+ * \param	val			Pointer to receiving pointer of popped element.
  * \return #PST_OK when successful, error code otherwise.
- * \attention After successful poping \c rootValue will point to the first element
- * in the list. Thats is, if not the \b root value link is feed to the function
+ * \attention After successful popping \c rootValue will point to the first element
+ * in the list. That is, if not the \b root value link is fed to the function
  * it will be changed to the first element in list.
- * \attention User is responsible to free the object pointed by \c val.
+ * \attention User is responsible for freeing the object pointed by \c val.
  */
 int PARAM_VAL_popElement(PARAM_VAL **rootValue, const char* source, int priority, int at, PARAM_VAL** val);
 
@@ -162,7 +162,7 @@ int PARAM_VAL_extract(PARAM_VAL *rootValue, const char **value, const char **sou
 
 /**
  * Count the values with given constraints. If there are no values matching the
- * constraints 0 is returned.
+ * constraints, 0 is returned.
  * \param	rootValue	The first #PARAM_VAL link in the linked list.
  * \param	source		Constraint for the source.
  * \param	prio		Constraint for the priority.
@@ -173,7 +173,7 @@ int PARAM_VAL_getElementCount(PARAM_VAL *rootValue, const char *source, int prio
 
 /**
  * Count the invalid values with given constraints. If there are no values matching the
- * constraints 0 is returned.
+ * constraints, 0 is returned.
  * \param	rootValue	The first #PARAM_VAL link in the linked list.
  * \param	source		Constraint for the source.
  * \param	prio		Constraint for the priority.

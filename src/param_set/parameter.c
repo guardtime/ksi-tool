@@ -233,7 +233,7 @@ static int is_flag_set(int field, int flag) {
 	return 0;
 }
 
-int PARAM_isParsOptionSet(PARAM *param, int state) {
+int PARAM_isParseOptionSet(PARAM *param, int state) {
 	if (param == NULL) return 0;
 	return is_flag_set(param->parsing_options, state);
 }
@@ -336,7 +336,7 @@ int PARAM_addValue(PARAM *param, const char *value, const char* source, int prio
 		arg = value;
 	}
 
-	/*Create new object and control the format*/
+	/*Create new object and check the format*/
 	res = PARAM_VAL_new(arg, source, prio, &newValue);
 	if (res != PST_OK) goto cleanup;
 
@@ -363,7 +363,7 @@ int PARAM_addValue(PARAM *param, const char *value, const char* source, int prio
 			pLastValue = param->last_element;
 		}
 
-		/* The last element must exists and its next value must be NULL. */
+		/* The last element must exist and its next value must be NULL. */
 		if (pLastValue == NULL || pLastValue->next != NULL) {
 			res = PST_UNDEFINED_BEHAVIOUR;
 			goto cleanup;
@@ -673,7 +673,7 @@ int PARAM_expandWildcard(PARAM *param, int *count) {
 		goto cleanup;
 	}
 
-	if (PARAM_isParsOptionSet(param, PST_PRSCMD_EXPAND_WILDCARD)) {
+	if (PARAM_isParseOptionSet(param, PST_PRSCMD_EXPAND_WILDCARD)) {
 		res = PARAM_getValueCount(param, NULL, PST_PRIORITY_NONE, &initial_count);
 		if (res != PST_OK) goto cleanup;
 

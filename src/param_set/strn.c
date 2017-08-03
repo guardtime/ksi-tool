@@ -108,13 +108,15 @@ static size_t getWord(char *buf, size_t buf_len, const char *str, const char **n
 }
 
 /**
- * This function works similar to the #PST_snprintf but is used to print text for
+ * This function works similarly to the #PST_snprintf but is used to print text for
  * command-line help. Formatter can:
  *
- *  + Print formatted text (\c desc) with maximum length (including indention) is \c rowLen.
- *  + Print indented text (\c desc) where indention is size of \c indent. See Example 1.
- *  + Print indented text (\c desc) where next line has extra indention in size of \c nxtLnIndnt. See Example 2.
- *  + Print a header in size of \c headerLen. It is composed of \c paramName and \c delimiter (including \c indent). If real header is larger than \c headerLen, it is printed without delimiter on the first line. In that case \c delimiter is printed on the next row followed by description (\c desc). See Example 3 and Example 4.
+ *  + Print formatted text (\c desc) with maximum length (including indention) of \c rowLen.
+ *  + Print indented text (\c desc) where indention size is \c indent. See Example 1.
+ *  + Print indented text (\c desc) where next line has extra indention of \c nxtLnIndnt. See Example 2.
+ *  + Print a header with size of \c headerLen. It is composed of \c paramName and \c delimiter (including \c indent).
+ *    If real header is larger than \c headerLen, it is printed without delimiter on the first line. In that case
+ *    \c delimiter is printed on the next row followed by description (\c desc). See Example 3 and Example 4.
  *
  * Usage and examples:
  * \code{.txt}

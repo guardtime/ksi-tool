@@ -37,7 +37,7 @@ void TASK_DEFINITION_free(TASK_DEFINITION *obj);
 int TASK_DEFINITION_analyzeConsistency(TASK_DEFINITION *def, PARAM_SET *set, double *cons);
 int TASK_DEFINITION_getMoreConsistent(TASK_DEFINITION *A, TASK_DEFINITION *B, PARAM_SET *set, double sensitivity, TASK_DEFINITION **result);
 char* TASK_DEFINITION_toString(TASK_DEFINITION *def, char *buf, size_t buf_len);
-char *TASK_DEFINITION_howToRepiar_toString(TASK_DEFINITION *def, PARAM_SET *set, const char *prefix, char *buf, size_t buf_len);
+char *TASK_DEFINITION_howToRepair_toString(TASK_DEFINITION *def, PARAM_SET *set, const char *prefix, char *buf, size_t buf_len);
 char* TASK_DEFINITION_ignoredParametersToString(TASK_DEFINITION *def, PARAM_SET *set, const char *prefix, char *buf, size_t buf_len);
 
 
@@ -62,7 +62,7 @@ void ITERATOR_free(ITERATOR *itr);
  * \param source	- The source constraint.
  * \param priority	- The priority constraint.
  * \param at		- Index constraint.
- * \return #PST_OK if successful error code otherwise.
+ * \return #PST_OK if successful, error code otherwise.
  */
 int ITERATOR_set(ITERATOR *itr, PARAM_VAL *new_root, const char* source, int priority, int at);
 
@@ -73,7 +73,7 @@ int ITERATOR_set(ITERATOR *itr, PARAM_VAL *new_root, const char* source, int pri
  * \param	priority	Constraint for the priority.
  * \param	at			Parameter index in the matching set composed with the constraints.
  * \param	item		Pointer to receiving pointer.
- * \return #PST_OK if successful error code otherwise.
+ * \return #PST_OK if successful, error code otherwise.
  */
 int ITERATOR_fetch(ITERATOR *itr, const char* source, int priority, int at, PARAM_VAL **item);
 
