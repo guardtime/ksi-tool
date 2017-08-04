@@ -25,27 +25,27 @@
 ##
 EXECUTABLE signx
 >>>2 /(.*Error)(.*Invalid task)(.*Read help.*)
-(.*Did You mean)(.*'sign')(.*instead of)(.*'signx')/
+(.*Did you mean)(.*'sign')(.*instead of)(.*'signx')/
 >>>= 3
 
 EXECUTABLE onf
 >>>2 /(.*Error)(.*Invalid task)(.*Read help.*)
-(.*Did You mean)(.*'conf')(.*instead of)(.*'onf')/
+(.*Did you mean)(.*'conf')(.*instead of)(.*'onf')/
 >>>= 3
 
 EXECUTABLE erify
 >>>2 /(.*Error)(.*Invalid task)(.*Read help.*)
-(.*Did You mean)(.*'verify')(.*instead of)(.*'erify')/
+(.*Did you mean)(.*'verify')(.*instead of)(.*'erify')/
 >>>= 3
 
 EXECUTABLE ectendf
 >>>2 /(.*Error)(.*Invalid task)(.*Read help.*)
-(.*Did You mean)(.*'extend')(.*instead of)(.*'ectendf')/
+(.*Did you mean)(.*'extend')(.*instead of)(.*'ectendf')/
 >>>= 3
 
 EXECUTABLE pubfiaile
 >>>2 /(.*Error)(.*Invalid task)(.*Read help.*)
-(.*Did You mean)(.*'pubfile')(.*instead of)(.*'pubfiaile')/
+(.*Did you mean)(.*'pubfile')(.*instead of)(.*'pubfiaile')/
 >>>= 3
 
 ## 6
@@ -54,5 +54,5 @@ EXECUTABLE pubfiaile
 ##
 EXECUTABLE --sign
 >>>2 /(.*Error)(.*Invalid task)(.*Read help.*)
-(.*Did You mean)(.*'sign')(.*instead of)(.*'--sign')/
+(.*Did you mean)(.*'sign')(.*instead of)(.*'--sign')/
 >>>= 3
