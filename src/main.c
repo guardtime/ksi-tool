@@ -313,6 +313,11 @@ static int ksitool_compo_get(TASK_SET *tasks, PARAM_SET **set, TOOL_COMPONENT_LI
 	PARAM_SET *tmp_set = NULL;
 	const char *taskNames = "{sign}{extend}{verify}{pubfile}{conf}";
 
+	if (tasks == NULL || set == NULL || compo == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
 	/**
 	 * Create parameter list that contains all known tasks.
 	 */
