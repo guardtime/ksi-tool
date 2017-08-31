@@ -30,7 +30,7 @@ if [ "$#" -eq 1 ]; then
 	export LDFLAGS=-L$libksi_path/lib
 	export LD_LIBRARY_PATH=$libksi_path/lib
 else
-	conf_args+=" --enable-use-installed-libksi"
+	conf_args="$conf_args --enable-use-installed-libksi"
 fi
 
 autoreconf -if && \

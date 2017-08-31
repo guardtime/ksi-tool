@@ -45,6 +45,7 @@ Obsoletes: ksi <= 2.0.744-2
 
 # Dependencies are set in config.ac
 @KSI_BUILD_DEPENDECY@
+@KSI_RPM_DEPENDECY@
 
 %description
 Guardtime signing and verification tool. Execute %{name_tool} -h to view brief usage instructions.

@@ -1,0 +1,8 @@
+Package: @PACKAGE@
+Version: @VERSION@
+Section: utils
+Priority: optional
+Architecture: @DPKG_VERSION_REPLACED_WITH_SED@
+Maintainer: Guardtime <support@guardtime.com>
+Description: Command-line tool to access Guardtime KSI service.
+@KSI_DEB_DEPENDECY@

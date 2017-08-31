@@ -24,9 +24,10 @@ AC_INIT([ksi-tools], m4_esyscmd([tr -d [:space:] < VERSION]), [support@guardtime
 TOOL_NAME=ksi
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign -Wall -Werror foreign subdir-objects])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
-AC_CONFIG_HEADERS([config.h])
+
 
 # Checks for programs.
 AC_CHECK_PROG(git_installed,git,"yes", "no")
@@ -42,6 +43,7 @@ else
 	AC_MSG_RESULT([no])
 fi
 
+
 AC_DEFINE_UNQUOTED(TOOL_NAME, "$TOOL_NAME", [Commit id])
 AC_SUBST(TOOL_NAME)
 # Checks for programs.
@@ -53,7 +55,7 @@ AC_PROG_LN_S
 AC_CHECK_LIB([crypto], [SHA256_Init], [], [AC_MSG_FAILURE([Could not find OpenSSL 0.9.8+ libraries.])])
 AC_CHECK_LIB([curl], [curl_easy_init], [], [AC_MSG_FAILURE([Could nod find Curl libraries.])])
 
-libksi_ver="3.13"
+LIBKSI_VER="3.14"
 AC_ARG_ENABLE(static-build,
 [  --enable-static-build              enable static linking of ksi library)],:,:)
 AC_ARG_ENABLE(use-installed-libksi,
@@ -72,17 +74,21 @@ if test "$enable_static_build" = "yes" ; then
 	KSI_RPM_BUILD_FLAGS="--enable-static-build"
 
 	if test "$enable_use_installed_libksi" = "yes" ; then
-		KSI_BUILD_DEPENDECY="BuildRequires: libksi-devel >= $libksi_ver"
+		KSI_BUILD_DEPENDECY="BuildRequires: libksi-devel >= $LIBKSI_VER"
 	fi
 else
 	AC_MSG_NOTICE([KSI library will be linked dynamically.])
 	AC_CHECK_LIB([ksi], [KSI_CTX_new], [], [AC_MSG_FAILURE([Could not find libksi (KSI C SDK). Install libksi or specify the library path manually.])])
-	KSI_BUILD_DEPENDECY="BuildRequires: libksi-devel >= $libksi_ver"
+	KSI_BUILD_DEPENDECY="BuildRequires: libksi-devel >= $LIBKSI_VER"
+	KSI_RPM_DEPENDECY="Requires: libksi >= $LIBKSI_VER"
+	KSI_DEB_DEPENDECY="Depends: libksi(>=$LIBKSI_VER)"
 fi
 
 AC_SUBST(KSI_RPM_DEPENDECY)
+AC_SUBST(KSI_DEB_DEPENDECY)
 AC_SUBST(KSI_BUILD_DEPENDECY)
 AC_SUBST(KSI_RPM_BUILD_FLAGS)
+
 
 AC_CHECK_HEADER([ksi/ksi.h], [], [AC_MSG_FAILURE([Could not find include files (libksi-devel) of libksi (KSI C SDK). Install libksi-devel or specify the headers manually.])])
 
@@ -99,5 +105,5 @@ AC_CHECK_FUNCS([strchr])
 # Add more warnings
 CFLAGS+=" -Wall"
 
-AC_CONFIG_FILES([GNUmakefile src/GNUmakefile packaging/redhat/ksi.spec])
+AC_CONFIG_FILES([GNUmakefile src/GNUmakefile packaging/redhat/ksi.spec packaging/deb/ksi-tools/DEBIAN/control])
 AC_OUTPUT
