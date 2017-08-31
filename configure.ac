@@ -89,7 +89,6 @@ AC_SUBST(KSI_DEB_DEPENDECY)
 AC_SUBST(KSI_RPM_DEPENDECY)
 AC_SUBST(KSI_BUILD_DEPENDECY)
 AC_SUBST(KSI_RPM_BUILD_FLAGS)
-AC_SUBST(LIBKSI_VER)
 
 
 AC_CHECK_HEADER([ksi/ksi.h], [], [AC_MSG_FAILURE([Could not find include files (libksi-devel) of libksi (KSI C SDK). Install libksi-devel or specify the headers manually.])])
