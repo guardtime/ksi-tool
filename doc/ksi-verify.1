@@ -29,7 +29,7 @@ Key-based verification (\fB--ver-key\fR). Signature must contain a calendar hash
 .IP \(bu 4
 Publication-based verification (\fB--ver-pub\fR). Signature must be extended to a time of publication and contain a publication record unless automatic extension of the signature is enabled with \fB-x\fR. Verification is done by checking that the publication record in the signature matches a publication in the publications file or the publication string given on the command line. Publications file or publication string retrieved from printed media is needed.
 .LP
-Note that only publication-based verification should be preferred in long term as it does not rely on any keys and trusted services. The other policies can be used temporarily when the signature is created and there is not yet a publication to extend the signature to. If policy is not explicitly specified, default verification policy is used. Default policy uses publication-based and key-based verification where the preferable method is selected according to the given verification info. Default policy is affected by command-line options as the other policies.
+Note that only publication-based verification should be preferred in long term as it does not rely on any keys and trusted services. The other policies can be used temporarily when the signature is created and there is no publication yet to extend the signature to. Default verification policy is used if policy is not explicitly specified. Default policy uses publication-based and key-based verification where the preferable method is selected according to the given verification info. Default policy is affected by command-line options as the other policies.
 .\"
 .SH OPTIONS
 .TP
