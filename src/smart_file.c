@@ -789,7 +789,7 @@ int SMART_FILE_write(SMART_FILE *file, char *raw, size_t raw_len, size_t *count)
 		res = file->file_write(file->file, raw, raw_len, &c);
 		if (res != SMART_FILE_OK) goto cleanup;
 	} else {
-		return SMART_FILE_NOT_OPEND;
+		return SMART_FILE_NOT_OPENED;
 	}
 
 	if (count != NULL) {
@@ -821,7 +821,7 @@ int SMART_FILE_read(SMART_FILE *file, char *raw, size_t raw_len, size_t *count) 
 		res = file->file_read(file->file, raw, raw_len, &c);
 		if (res != SMART_FILE_OK) goto cleanup;
 	} else {
-		return SMART_FILE_NOT_OPEND;
+		return SMART_FILE_NOT_OPENED;
 	}
 
 	/**
@@ -960,7 +960,7 @@ const char* SMART_FILE_errorToString(int error_code) {
 			return "Unable to write to file.";
 		case SMART_FILE_BUFFER_TOO_SMALL:
 			return "Insufficient buffer size.";
-		case SMART_FILE_NOT_OPEND:
+		case SMART_FILE_NOT_OPENED:
 			return "File is not opened.";
 		case SMART_FILE_DOES_NOT_EXIST:
 			return "File does not exist.";

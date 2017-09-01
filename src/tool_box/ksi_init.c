@@ -411,7 +411,7 @@ static int tool_init_ksi_trust_store(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *se
 
 	/**
 	 * Configure KSI trust store.
-	 * TODO: look over Windows and Linux compatibility related with trust store
+	 * TODO: look over Windows and Linux compatibility related to trust store
 	 * configuration.
 	 */
 	if (V || W) {

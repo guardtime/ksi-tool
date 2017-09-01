@@ -1,3 +1,4 @@
+* IMPROVEMENT: Task and command-line parameter parser updated.
 * IMPROVEMENT: Test suite accustomed to KSI PDU version 2.
 * IMPROVEMENT: Task verify supports input without specifying -i (only files that do not look like potential parameters, e.g. -a or --option).
 * IMPROVEMENT: KSI signature task verify uses always libksi default verification policy when policy is not explicitly specified (e.g. --ver-pub).

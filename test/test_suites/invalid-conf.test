@@ -34,8 +34,8 @@ EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-unknown-flags.cfg
 # Test typo suggestions.
 EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-typos.cfg
 >>>2 /(configuration file)(.*nok-conf-typos.cfg.*)(.*is invalid.*)
-(.*Did You mean.*)(.*--aggr-key.*)(.*instead of.*)(.*aggre-keey.*)
-(.*Did You mean.*)(.*--aggr-user.*)(.*instead of.*)(.*agepusr.*)/
+(.*Did you mean.*)(.*--aggr-key.*)(.*instead of.*)(.*aggre-keey.*)
+(.*Did you mean.*)(.*--aggr-user.*)(.*instead of.*)(.*agepusr.*)/
 >>>= 16
 
 # Conf with invalid syntax.
