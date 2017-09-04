@@ -296,7 +296,7 @@ static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Sig
 	d = PARAM_SET_isSetByName(set, "d");
 
 	print_progressDesc(d, "Verifying extended signature... ");
-	res = KSITOOL_SignatureVerify_asPossible(err, ext, ksi, NULL, pub_data, 1, result);
+    res = KSITOOL_SignatureVerify_with_publications_file_or_calendar(err, ext, ksi, NULL, 1, result);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify extended signature.");
 	print_progressResult(res);
 
@@ -519,13 +519,13 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	}
 
 	/**
-	 * Configure parameter set, control, repair and object extractor function.
+	 * Configure parameter set, check, repair and object extractor function.
 	 */
 	res = CONF_initialize_set_functions(set, "XP");
 	if (res != KT_OK) goto cleanup;
 
 	/**
-	 * Configure parameter set, control, repair and object extractor function.
+	 * Configure parameter set, check, repair and object extractor function.
 	 */
 	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFileRestrictPipe, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{log}{o}", isFormatOk_path, NULL, convertRepair_path, NULL);
@@ -542,7 +542,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	 * values from command-line are read.
 	 */
 #ifdef _WIN32
-	res = PARAM_SET_wildcardExpander(set, "i,input", NULL, Win32FileWildcard);
+	res = PARAM_SET_setWildcardExpander(set, "i,input", NULL, NULL, Win32FileWildcard);
 	extra_parse_flags = PST_PRSCMD_EXPAND_WILDCARD;
 #endif
 

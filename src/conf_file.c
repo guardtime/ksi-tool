@@ -324,7 +324,7 @@ char *CONF_errorsToString(PARAM_SET *set, const char *prefix, char *buf, size_t 
 	}
 
 	if (PARAM_SET_isTypoFailure(set)) {
-			PARAM_SET_typosToString(set, PST_TOSTR_DOUBLE_HYPHEN, prefix, tmp, sizeof(tmp));
+			PARAM_SET_typosToString(set, prefix, tmp, sizeof(tmp));
 			count += KSI_snprintf(buf + count, buf_len - count, "%s", tmp);
 	}
 

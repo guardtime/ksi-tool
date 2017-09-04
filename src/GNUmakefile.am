@@ -60,6 +60,7 @@ ksi_SOURCES = \
 	param_set/param_set.h \
 	param_set/task_def.c \
 	param_set/task_def.h \
+	param_set/internal.h \
 	param_set/strn.c \
 	param_set/strn.h \
 	tool.h \

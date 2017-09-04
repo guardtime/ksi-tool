@@ -264,17 +264,17 @@ static const char* find_group_start(const char *str, const char *ignore) {
 }
 
 static const char* find_group_end(const char *str, const char *ignore) {
-	int is_quato_opend = 0;
+	int is_quote_opened = 0;
 	int is_firs_non_whsp_found = 0;
 	size_t i = 0;
 
 	if (ignore);
 	while (str[i]) {
 		if (!isspace(str[i])) is_firs_non_whsp_found = 1;
-		if (isspace(str[i]) && is_quato_opend == 0 && is_firs_non_whsp_found) return &str[i - 1];
+		if (isspace(str[i]) && is_quote_opened == 0 && is_firs_non_whsp_found) return &str[i - 1];
 
-		if (str[i] == '"' && is_quato_opend == 0) is_quato_opend = 1;
-		else if (str[i] == '"' && is_quato_opend == 1) return &str[i];
+		if (str[i] == '"' && is_quote_opened == 0) is_quote_opened = 1;
+		else if (str[i] == '"' && is_quote_opened == 1) return &str[i];
 
 		i++;
 	}
@@ -392,7 +392,7 @@ const char *PATH_URI_getPathRelativeToFile(const char *refFilePath, const char *
 	if (!isFileUri) return origPath;
 
 	/**
-	 * If uri scheme is file, cut the files path and convert. Append to file scheme.
+	 * If uri scheme is file, cut the file path and convert. Append to file scheme.
 	 */
 	pOrigPath = isFileUri ? origPath + 7 : origPath;
 	KSI_snprintf(buf, buf_len, "file://%s", PATH_getPathRelativeToFile(refFilePath, pOrigPath, buf_inner, sizeof(buf_inner)));

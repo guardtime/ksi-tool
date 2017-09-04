@@ -134,7 +134,7 @@ char *STRING_extractRmWhite(const char *strn, const char *from, const char *to, 
  * This function extracts "chunks" from the input string. Input string is cut into
  * peaces by whitespace characters. If there are opening '"' inside the input string
  * next whitespace characters are ignored until closing '"'. Function returns a 
- * pointer (inside input string) that can be feed to the same function to extract
+ * pointer (inside input string) that can be fed to the same function to extract
  * the next chunk. If the end of input string is reached NULL is returned.
  * For example:
  * 
