@@ -16,7 +16,7 @@
 .SH DESCRIPTION
 Extends the given KSI signature to the time of given publication. After signature is extended and the corresponding publication record is attached, the signature can be verified by publication-based verification where only trusted publications file or a publication string in printed media is needed to perform the verification. See \fBksi-verify\fR(1) for details.
 .LP
-User must have access to KSI extending service and trusted KSI publications file to extend the KSI signature. By default signature is extended to the earliest available publication. Use the option \fB--pub-str\fR to extend signature to the publication denoted by the given publication string. It is also possible to extend to the specified time with option \fB-T\fR but this is not recommended as the extended signature will have no calendar authentication nor publication record and can only be verified by calendar-based verification.
+User must have access to KSI extending service and trusted KSI publications file to extend the KSI signature. By default signature is extended to the earliest available publication. Use the option \fB--pub-str\fR to extend signature to the publication denoted by the given publication string (note that the publication record \fBmust exist\fR in publications file). It is also possible to extend to the specified time with option \fB-T\fR but this is not recommended as the extended signature will have no calendar authentication nor publication record and can only be verified by calendar-based verification.
 .\"
 .SH OPTIONS
 .TP
@@ -67,7 +67,7 @@ For more common OIDs there are convenience names defined:
 .\"
 .TP
 \fB--pub-str \fIstr\fR
-Specify the publication record as publication string to extend signature to.
+Specify the publication string that denotes to existing publication record in KSI publications file to extend to.
 .\"
 .TP
 \fB--replace-existing \fR
@@ -135,7 +135,7 @@ Write \fBlibksi\fR log to given file. Use '\fB-\fR' as file name to redirect log
 See \fBksi\fR(1) for more information.
 .\"
 .SH EXAMPLES
-In the following examples it is assumed that KSI service configuration (URLs, access credentials) options and trusted publications file are defined. See \fBksi-conf\fR(5) for more information.
+In the following examples it is assumed that KSI service configuration (URLs, access credentials) options and trusted publications file are defined. See \fBksi-conf\fR(5) for more information. Note that the publication strings date is not exact match with publications date as the publication process takes some time.
 .\"
 .TP 2
 \fB1

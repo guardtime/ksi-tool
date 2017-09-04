@@ -5,6 +5,8 @@
 * IMPROVEMENT: KSI signature task verify is always using libksi's default verification policy when policy is not explicitly specified (e.g. --ver-pub).
 * IMPROVEMENT: KSI signature dump (--dump) will print some extra information for Calendar Authentication Record signatures certificate (works with extend and verify).
 * IMPROVEMENT: New script rebuild-deb.sh to build debian package.
+* IMPROVEMENT: Parameter -T and its use case is removed from ksi extend help (ksi extend -h).
+* IMPROVEMENT: Extending with flags -T and --pub-str explained more explicitly in ksi-extend.1.
 * BUGFIX: Tests will run both tlvutil-metadata.test and tlvutil-pdu-header.test if gttlvutil is installed.
 * BUGFIX: Publications file downloaded can be redirected to stdout (-o -).
 * BUGFIX: Verification result dump shows steps that are inconclusive as "na" instead of "failed".
