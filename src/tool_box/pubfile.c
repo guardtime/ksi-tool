@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <ksi/ksi.h>
 #include <ksi/net.h>
 #include <ksi/hashchain.h>
@@ -296,7 +297,8 @@ static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ks
 			KSI_Integer_toDateString(start, buf, sizeof(buf)),
 			KSI_Integer_getUInt64(start));
 
-	res = KSI_Integer_new(ksi, (KSI_uint64_t)start, &reqID);
+	srand((unsigned)time(NULL));
+	res = KSI_Integer_new(ksi, (KSI_uint64_t)rand(), &reqID);
 	ERR_CATCH_MSG(err, res, "Error: %s", KSITOOL_errToString(res));
 	res = KSI_ExtendReq_new(ksi, &extReq);
 	ERR_CATCH_MSG(err, res, "Error: %s", KSITOOL_errToString(res));

@@ -23,6 +23,7 @@
 #include <ctype.h>
 #include <limits.h>
 #include <string.h>
+#include <time.h>
 #include <ksi/ksi.h>
 #include <ksi/compatibility.h>
 #include "tool_box.h"
