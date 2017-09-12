@@ -66,7 +66,6 @@ sed -i s/@DPKG_VERSION_REPLACED_WITH_SED@/$ARCH/g $deb_dir/tmp/ksi-tools/DEBIAN/
 
 #Build DEB
 dpkg-deb --build $deb_dir/tmp/ksi-tools
-echo RELES IS ${RELEASE_VERSION}
 mv $deb_dir/tmp/ksi-tools.deb ksi-tools_${VER}-${PKG_VERSION}.${RELEASE_VERSION}_${ARCH}.deb
 
 
