@@ -24,6 +24,7 @@ set -e
 #Get Version and architecture
 VER=$(tr -d [:space:] < VERSION)
 ARCH=$(dpkg --print-architecture)
+RELEASE_VERSION="$(lsb_release -is)$(lsb_release -rs | grep -Po [0-9] | head -1)"
 PKG_VERSION=1
 
 
@@ -65,7 +66,7 @@ sed -i s/@DPKG_VERSION_REPLACED_WITH_SED@/$ARCH/g $deb_dir/tmp/ksi-tools/DEBIAN/
 
 #Build DEB
 dpkg-deb --build $deb_dir/tmp/ksi-tools
-mv $deb_dir/tmp/ksi-tools.deb ksi-tools_${VER}-${PKG_VERSION}_${ARCH}.deb
+mv $deb_dir/tmp/ksi-tools.deb ksi-tools_${VER}-${PKG_VERSION}.${RELEASE_VERSION}_${ARCH}.deb
 
 
 #Clean
