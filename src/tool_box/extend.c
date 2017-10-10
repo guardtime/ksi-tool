@@ -283,7 +283,7 @@ cleanup:
 	return res;
 }
 
-static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *ext, const char *fname, const char *mode, KSI_PublicationData *pub_data, KSI_PolicyVerificationResult **result) {
+static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *ext, const char *fname, const char *mode, KSI_PolicyVerificationResult **result) {
 	int res;
 	int d;
 
@@ -296,7 +296,7 @@ static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Sig
 	d = PARAM_SET_isSetByName(set, "d");
 
 	print_progressDesc(d, "Verifying extended signature... ");
-    res = KSITOOL_SignatureVerify_with_publications_file_or_calendar(err, ext, ksi, NULL, 1, result);
+	res = KSITOOL_SignatureVerify_with_publications_file_or_calendar(err, ext, ksi, NULL, 1, result);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify extended signature.");
 	print_progressResult(res);
 
@@ -750,7 +750,7 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 
 		save_to = get_output_file_name(set, err, "i,input", "o", how_to_save, i, buf, sizeof(buf), generate_file_name);
 
-		res = verify_and_save(set, err, ksi, ext, save_to, mode, NULL, &result_ext);
+		res = verify_and_save(set, err, ksi, ext, save_to, mode, &result_ext);
 		if (res != KT_OK) goto cleanup;
 
 		if (PARAM_SET_isSetByName(set, "dump")) {

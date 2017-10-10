@@ -170,7 +170,6 @@ static int x(char c){
 	if (c >= 'A' && c <= 'F')
 		return c - 'A' + 10;
 	abort(); // isxdigit lies.
-	return -1; // makes compiler happy
 }
 
 static int xx(char c1, char c2){
