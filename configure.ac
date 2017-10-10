@@ -60,8 +60,18 @@ AC_ARG_ENABLE(static-build,
 [  --enable-static-build              enable static linking of ksi library)],:,:)
 AC_ARG_ENABLE(use-installed-libksi,
 [  --enable-use-installed-libksi      use installed ksi library)],:,:)
+
+if test "$enable_use_installed_libksi" = "yes" ; then
+	KSI_RPM_BUILD_DEPENDECY="BuildRequires: libksi-devel >= $LIBKSI_VER"
+	KSI_DEB_BUILD_DEPENDECY="Build-Depends: libksi-dev(>=$LIBKSI_VER)"
+	KSI_RPM_RUN_DEPENDECY="Requires: libksi >= $LIBKSI_VER"
+	KSI_DEB_RUN_DEPENDECY="Depends: libksi(>=$LIBKSI_VER)"
+fi
+
 if test "$enable_static_build" = "yes" ; then
 	AC_CANONICAL_HOST
+	KSI_RPM_RUN_DEPENDECY=""
+	KSI_DEB_RUN_DEPENDECY=""
 
 	if test "${host_os#*linux}" != "$host_os"; then
 		dy_link_flag="-Bdynamic"
@@ -71,23 +81,17 @@ if test "$enable_static_build" = "yes" ; then
 
 	AC_MSG_NOTICE([KSI library will be linked statically.])
 	AC_CHECK_LIB([ksi], [KSI_CTX_new], [LIBS="-Wl,-static -lksi -Wl,$dy_link_flag $LIBS"], [AC_MSG_FAILURE([Could not find libksi (KSI C SDK). Install libksi or specify the library path manually.])])
-	KSI_RPM_BUILD_FLAGS="--enable-static-build"
-
-	if test "$enable_use_installed_libksi" = "yes" ; then
-		KSI_BUILD_DEPENDECY="BuildRequires: libksi-devel >= $LIBKSI_VER"
-	fi
+	KSI_PACKAGING_BUILD_FLAGS="--enable-static-build"
 else
 	AC_MSG_NOTICE([KSI library will be linked dynamically.])
 	AC_CHECK_LIB([ksi], [KSI_CTX_new], [], [AC_MSG_FAILURE([Could not find libksi (KSI C SDK). Install libksi or specify the library path manually.])])
-	KSI_BUILD_DEPENDECY="BuildRequires: libksi-devel >= $LIBKSI_VER"
-	KSI_RPM_DEPENDECY="Requires: libksi >= $LIBKSI_VER"
-	KSI_DEB_DEPENDECY="Depends: libksi(>=$LIBKSI_VER)"
 fi
 
-AC_SUBST(KSI_RPM_DEPENDECY)
-AC_SUBST(KSI_DEB_DEPENDECY)
-AC_SUBST(KSI_BUILD_DEPENDECY)
-AC_SUBST(KSI_RPM_BUILD_FLAGS)
+AC_SUBST(KSI_RPM_RUN_DEPENDECY)
+AC_SUBST(KSI_DEB_RUN_DEPENDECY)
+AC_SUBST(KSI_DEB_BUILD_DEPENDECY)
+AC_SUBST(KSI_RPM_BUILD_DEPENDECY)
+AC_SUBST(KSI_PACKAGING_BUILD_FLAGS)
 
 
 AC_CHECK_HEADER([ksi/ksi.h], [], [AC_MSG_FAILURE([Could not find include files (libksi-devel) of libksi (KSI C SDK). Install libksi-devel or specify the headers manually.])])
@@ -105,5 +109,5 @@ AC_CHECK_FUNCS([strchr])
 # Add more warnings
 CFLAGS+=" -Wall"
 
-AC_CONFIG_FILES([GNUmakefile src/GNUmakefile packaging/redhat/ksi.spec packaging/deb/ksi-tools/DEBIAN/control])
+AC_CONFIG_FILES([GNUmakefile src/GNUmakefile packaging/redhat/ksi.spec packaging/deb/control packaging/deb/rules])
 AC_OUTPUT
