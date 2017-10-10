@@ -86,7 +86,7 @@ rm -fr $tmpdir
 # It is not possible to specify control file from command-line.
 mkdir -p $tmpdir/debian
 cp $controlpath $tmpdir/debian
-rela_changelog_path=$(realpath $chlogpath)
+full_changelog_path=$(realpath $chlogpath)
 cd $tmpdir
 
 
@@ -149,7 +149,7 @@ while read line; do
   elif [[ $line == \** ]] ; then
     array+=("${line:2}")
   fi
-done <<< "$(tac -r $rela_changelog_path)"
+done <<< "$(tac -r $full_changelog_path)"
 
 cd ..
 cp $tmpdir/debian/changelog $outputpath
