@@ -67,7 +67,7 @@ binary-arch: build
 	# Use make install to create directory structure needed for packaging.
 	# Use gzip to compress manpages.
 	$(MAKE) install DESTDIR=$(FAKE_INSTALL)
-	gzip --best -n $(FAKE_INSTALL)/$(INSTALL_MAN)/man1/ksi-*
+	gzip --best -n $(FAKE_INSTALL)/$(INSTALL_MAN)/man1/ksi*
 	gzip --best -n $(FAKE_INSTALL)/$(INSTALL_MAN)/man5/ksi-*
 
 
