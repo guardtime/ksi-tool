@@ -117,7 +117,7 @@ Version 2.0
 
 Version 1.10
 
-2016-18-04 1.10.0
+2016-04-19 1.10.0
 
 * IMPROVEMENT: Enabled autotools option subdir-objects to remove build errors (on Mac OS and Ubuntu). (TOOL-97)
 * IMPROVEMENT: Added option to build static ksitool. (TOOL-103)

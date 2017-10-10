@@ -23,7 +23,7 @@ BUILD_DIR=~/rpmbuild
 version=$(tr -d [:space:] < VERSION)
 
 autoreconf -if && \
-./configure $* && \
+./configure --enable-use-installed-libksi $* && \
 make clean && \
 make dist && \
 mkdir -p $BUILD_DIR/{BUILD,RPMS,SOURCES,SPECS,SRPMS,tmp} && \
