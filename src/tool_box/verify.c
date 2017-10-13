@@ -23,6 +23,7 @@
 #include <ksi/compatibility.h>
 #include <ksi/policy.h>
 #include "param_set/param_set.h"
+#include "param_set/parameter.h"
 #include "param_set/task_def.h"
 #include "tool_box/ksi_init.h"
 #include "tool_box/param_control.h"
@@ -149,7 +150,7 @@ int verify_run(int argc, char **argv, char **envp) {
 		 * Dump signature.
 		 */
 		print_result("\n");
-		OBJPRINT_signatureDump(sig, print_result);
+		OBJPRINT_signatureDump(ksi, sig, print_result);
 		/**
 		 * Dump verification result data.
 		 */
@@ -210,7 +211,9 @@ char *verify_help_toString(char *buf, size_t len) {
 		" --ver-pub - Perform publication-based verification (use with -x to permit extending).\n"
 		" -i <in.ksig>\n"
 		"           - Signature file to be verified. Use '-' as file name to read\n"
-		"             the signature from stdin.\n"
+		"             the signature from stdin. Flag -i can be omitted when specifying\n"
+		"             the input. Without -i it is not possible to sign files that look\n"
+		"             like command-line parameters (e.g. -a, --option).\n"
 		" -f <data> - Path to file to be hashed or data hash imprint to extract the hash\n"
 		"             value that is going to be verified. Hash format: <alg>:<hash in hex>.\n"
 		"             Use '-' as file name to read data to be hashed from stdin.\n"
@@ -234,7 +237,11 @@ char *verify_help_toString(char *buf, size_t len) {
 		"             All values from lower priority source are ignored.\n"
 		"\n"
 		" -d        - Print detailed information about processes and errors to stderr.\n"
-		" --dump    - Dump signature and document hash being verified in human-readable format to stdout.\n"
+		" --dump    - Dump signature and document hash being verified in human-readable\n"
+		"             format to stdout. In verification report 'OK' means that the step\n"
+		"             is performed successfully, 'NA' means that it could not be performed\n"
+		"             as there was not enough information and 'FAILED' means that the\n"
+		"             verification was unsuccessful.\n"
 		" --conf <file>\n"
 		"             Read configuration options from given file. It must be noted\n"
 		"             that configuration options given explicitly on command line will\n"
@@ -265,7 +272,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	}
 
 	/**
-	 * Configure parameter set, control, repair and object extractor function.
+	 * Configure parameter set, check, repair and object extractor function.
 	 */
 	res = CONF_initialize_set_functions(set, "XP");
 	if (res != KT_OK) goto cleanup;
@@ -276,6 +283,9 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{f}", isFormatOk_inputHash, isContentOk_inputHash, convertRepair_path, extract_inputHash);
 	PARAM_SET_addControl(set, "{d}{x}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{pub-str}", isFormatOk_pubString, NULL, NULL, extract_pubString);
+
+	PARAM_SET_setParseOptions(set, "i", PST_PRSCMD_HAS_VALUE | PST_PRSCMD_COLLECT_LOOSE_VALUES);
+	PARAM_SET_setParseOptions(set, "{x}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}", PST_PRSCMD_HAS_NO_VALUE);
 
 	/*						ID						DESC								MAN							ATL		FORBIDDEN											IGN	*/
 	TASK_SET_add(task_set,	ANC_BASED_DEFAULT,		"Verify.",							"i",						NULL,	"ver-int,ver-cal,ver-key,ver-pub,P,cnstr,pub-str",	NULL);
@@ -385,7 +395,7 @@ static int signature_verify_general(PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_general(err, sig, ksi, hsh, pub_data, x, out);
 	if (*out != NULL) {
-		ERR_CATCH_MSG(err, res, "Error: [%s] %s %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode),
+		ERR_CATCH_MSG(err, res, "Error: [%s] %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode),
 				OBJPRINT_getVerificationErrorDescription((*out)->finalResult.errorCode), task);
 	} else {
 		ERR_CATCH_MSG(err, res, "Error: %s failed.", task);
@@ -443,7 +453,7 @@ static int signature_verify_key_based(PARAM_SET *set, ERR_TRCKR *err,
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_keyBased(err, sig, ksi, hsh, out);
 	if (*out != NULL) {
-		ERR_CATCH_MSG(err, res, "Error: [%s] %s %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode),
+		ERR_CATCH_MSG(err, res, "Error: [%s] %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode),
 				OBJPRINT_getVerificationErrorDescription((*out)->finalResult.errorCode), task);
 	} else {
 		ERR_CATCH_MSG(err, res, "Error: %s failed.", task);

@@ -23,6 +23,7 @@
 #include <ctype.h>
 #include <limits.h>
 #include <string.h>
+#include <time.h>
 #include <ksi/ksi.h>
 #include <ksi/compatibility.h>
 #include "tool_box.h"
@@ -169,7 +170,6 @@ static int x(char c){
 	if (c >= 'A' && c <= 'F')
 		return c - 'A' + 10;
 	abort(); // isxdigit lies.
-	return -1; // makes compiler happy
 }
 
 static int xx(char c1, char c2){
@@ -244,7 +244,7 @@ int isFormatOk_hex(const char *hexin){
 	return FORMAT_OK;
 }
 
-int extract_OctetString(void *extra, const char* str, void** obj) {
+int extract_OctetString(void **extra, const char* str, void** obj) {
 	int res;
 	void **extra_array = (void**)extra;
 	COMPOSITE *comp = NULL;
@@ -537,7 +537,8 @@ int convertRepair_url(const char* arg, char* buf, unsigned len) {
 	unsigned i = 0;
 	int isFile;
 
-	if (arg == NULL || buf == NULL) return 0;
+	if (arg == NULL) return PST_PARAM_CONVERT_NOT_PERFORMED;
+	if (buf == NULL) return PST_INVALID_ARGUMENT;
 	scheme = strstr(arg, "://");
 	isFile = (strstr(arg, "file://") == arg);
 
@@ -546,7 +547,7 @@ int convertRepair_url(const char* arg, char* buf, unsigned len) {
 		if (strlen(buf)+strlen(arg) < len)
 			strcat(buf, arg);
 		else
-			return 0;
+			return PST_PARAM_CONVERT_NOT_PERFORMED;
 	} else {
 		while (arg[i] && i < len - 1) {
 			if (&arg[i] < scheme) {
@@ -565,7 +566,7 @@ int convertRepair_url(const char* arg, char* buf, unsigned len) {
 		}
 		buf[i] = 0;
 	}
-	return 1;
+	return PST_OK;
 }
 
 
@@ -634,7 +635,7 @@ int isContentOk_int(const char* integer) {
 	return PARAM_OK;
 }
 
-int extract_int(void *extra, const char* str,  void** obj){
+int extract_int(void **extra, const char* str,  void** obj){
 	long tmp;
 	int *pI = (int*)obj;
 	VARIABLE_IS_NOT_USED(extra);
@@ -707,7 +708,8 @@ int isContentOk_inputFileRestrictPipe(const char* path){
 int convertRepair_path(const char* arg, char* buf, unsigned len){
 	char *toBeReplaced = NULL;
 
-	if (arg == NULL || buf == NULL) return 0;
+	if (arg == NULL) return PST_PARAM_CONVERT_NOT_PERFORMED;
+	if (buf == NULL) return PST_INVALID_ARGUMENT;
 	KSI_strncpy(buf, arg, len - 1);
 
 
@@ -717,7 +719,7 @@ int convertRepair_path(const char* arg, char* buf, unsigned len){
 		toBeReplaced++;
 	}
 
-	return 1;
+	return PST_OK;
 }
 
 int isFormatOk_path(const char *path) {
@@ -737,11 +739,11 @@ int isContentOk_hashAlg(const char *alg){
 	else return HASH_ALG_INVALID_NAME;
 }
 
-int extract_hashAlg(void *extra, const char* str, void** obj) {
+int extract_hashAlg(void **extra, const char* str, void** obj) {
 	const char *hash_alg_name = NULL;
 	KSI_HashAlgorithm *hash_id = (KSI_HashAlgorithm*)obj;
+	VARIABLE_IS_NOT_USED(extra);
 
-	if (extra);
 	hash_alg_name = str != NULL ? (str) : ("default");
 	*hash_id = KSI_getHashAlgorithmByName(hash_alg_name);
 
@@ -800,7 +802,7 @@ cleanup:
 	return res;
 }
 
-int extract_imprint(void *extra, const char* str, void** obj) {
+int extract_imprint(void **extra, const char* str, void** obj) {
 	int res;
 	void **extra_array = (void**)extra;
 	COMPOSITE *comp = NULL;
@@ -850,7 +852,7 @@ int isContentOk_inputHash(const char *str) {
 	}
 }
 
-static int extract_input_hash(void *extra, const char* str, void** obj, int no_imprint, int no_stream) {
+static int extract_input_hash(void **extra, const char* str, void** obj, int no_imprint, int no_stream) {
 	int res;
 	void **extra_array = extra;
 	PARAM_SET *set = (PARAM_SET*)(extra_array[0]);
@@ -891,15 +893,15 @@ cleanup:
 	return res;
 }
 
-int extract_inputHash(void *extra, const char* str, void** obj) {
+int extract_inputHash(void **extra, const char* str, void** obj) {
 	return extract_input_hash(extra, str, obj, 0, 0);
 }
 
-int extract_inputHashFromFile(void *extra, const char* str, void** obj) {
+int extract_inputHashFromFile(void **extra, const char* str, void** obj) {
 	return extract_input_hash(extra, str, obj, 1, 1);
 }
 
-static int extract_input_signature(void *extra, const char* str, void** obj, int isStream) {
+static int extract_input_signature(void **extra, const char* str, void** obj, int isStream) {
 	int res;
 	void **extra_array = extra;
 	COMPOSITE *comp = (COMPOSITE*)(extra_array[1]);
@@ -919,11 +921,11 @@ cleanup:
 	return res;
 }
 
-int extract_inputSignature(void *extra, const char* str, void** obj) {
+int extract_inputSignature(void **extra, const char* str, void** obj) {
 	return extract_input_signature(extra, str, obj, 1);
 }
 
-int extract_inputSignatureFromFile(void *extra, const char* str, void** obj) {
+int extract_inputSignatureFromFile(void **extra, const char* str, void** obj) {
 	return extract_input_signature(extra, str, obj, 1);
 }
 
@@ -944,7 +946,7 @@ int isFormatOk_pubString(const char *str) {
 	return FORMAT_OK;
 }
 
-int extract_pubString(void *extra, const char* str, void** obj) {
+int extract_pubString(void **extra, const char* str, void** obj) {
 	int res;
 	void **extra_array = extra;
 	COMPOSITE *comp = (COMPOSITE*)(extra_array[1]);
@@ -993,7 +995,7 @@ int isContentOk_utcTime(const char *time) {
 	}
 }
 
-int extract_utcTime(void *extra, const char* str, void** obj) {
+int extract_utcTime(void **extra, const char* str, void** obj) {
 	int res;
 	void **extra_array = extra;
 	COMPOSITE *comp = (COMPOSITE*)(extra_array[1]);
@@ -1088,19 +1090,22 @@ int convertRepair_constraint(const char* arg, char* buf, unsigned len) {
 	char *value = NULL;
 	const char *oid = NULL;
 
-	if (arg == NULL || buf == NULL) return 0;
-	KSI_strncpy(buf, arg, len-1);
+	if (arg == NULL) return PST_PARAM_CONVERT_NOT_PERFORMED;
+	if (buf == NULL) return PST_INVALID_ARGUMENT;
 
 	value = strchr(arg, '=');
-	if (value == NULL) return 0;
+	if (value == NULL) return PST_PARAM_CONVERT_NOT_PERFORMED;
 	else value++;
 
 	oid = OID_getFromString(arg);
 
-	if (oid != NULL && value != NULL)
+	if (oid != NULL && value != NULL) {
 		KSI_snprintf(buf, len, "%s=%s", oid, value);
+	} else {
+		return PST_PARAM_CONVERT_NOT_PERFORMED;
+	}
 
-	return 1;
+	return PST_OK;
 }
 
 
@@ -1323,13 +1328,13 @@ int isContentOk_mask(const char* mask) {
 }
 
 int convertRepair_mask(const char* arg, char* buf, unsigned len) {
-	if (buf == NULL || len == 0) return 0;
+	if (buf == NULL || len == 0) return PST_INVALID_ARGUMENT;
 	if (arg == NULL) PST_strncpy(buf, "crand:", len);
-	else PST_strncpy(buf, arg, len);
-	return 1;
+	else return PST_PARAM_CONVERT_NOT_PERFORMED;
+	return PST_OK;
 }
 
-int extract_mask(void *extra, const char* str, void** obj) {
+int extract_mask(void **extra, const char* str, void** obj) {
 	int res;
 	void **extra_array = extra;
 	COMPOSITE *comp = (COMPOSITE*)(extra_array[1]);

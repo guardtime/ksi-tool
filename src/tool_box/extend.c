@@ -132,8 +132,6 @@ char *extend_help_toString(char*buf, size_t len) {
 		" %s extend [-i <in.ksig>] [-o <out.ksig>] -X <URL>\n"
 		"    [--ext-user <user> --ext-key <key>] -P <URL> [--cnstr <oid=value>]...\n"
 		"    [--pub-str <str>] [more_options] [--] input...\n"
-		" %s extend [-i <in.ksig>] [-o <out.ksig>] -X <URL>\n"
-		"    [--ext-user <user> --ext-key <key>] -T time [more_options] [--] input...\n"
 		"\n"
 		" -i <in.ksig>\n"
 		"           - File path to the KSI signature file to be extended. Use '-' as the\n"
@@ -167,13 +165,10 @@ char *extend_help_toString(char*buf, size_t len) {
 		"             publications file PKI signature. At least one constraint must be\n"
 		"             defined.\n"
 		" --pub-str <str>\n"
-		"           - Publication record as publication string to extend the signature\n"
-		"             to.\n"
+		"           - Publication string that denotes to existing publication record in\n"
+		"             KSI publications file to extend to.\n"
 		" --replace-existing\n"
 		"           - Replace input KSI signature with the successfully extended version.\n"
-		" -T <time> - Publication time to extend to as the number of seconds since\n"
-		"             1970-01-01 00:00:00 UTC or time string formatted as\n"
-		"             \"YYYY-MM-DD hh:mm:ss\".\n"
 		" -V        - Certificate file in PEM format for publications file verification.\n"
 		"             All values from lower priority source are ignored.\n"
 		" --        - If used everything specified after the token is interpreted as\n"
@@ -288,7 +283,7 @@ cleanup:
 	return res;
 }
 
-static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *ext, const char *fname, const char *mode, KSI_PublicationData *pub_data, KSI_PolicyVerificationResult **result) {
+static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *ext, const char *fname, const char *mode, KSI_PolicyVerificationResult **result) {
 	int res;
 	int d;
 
@@ -301,7 +296,7 @@ static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Sig
 	d = PARAM_SET_isSetByName(set, "d");
 
 	print_progressDesc(d, "Verifying extended signature... ");
-	res = KSITOOL_SignatureVerify_general(err, ext, ksi, NULL, pub_data, 1, result);
+	res = KSITOOL_SignatureVerify_with_publications_file_or_calendar(err, ext, ksi, NULL, 1, result);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify extended signature.");
 	print_progressResult(res);
 
@@ -524,13 +519,13 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	}
 
 	/**
-	 * Configure parameter set, control, repair and object extractor function.
+	 * Configure parameter set, check, repair and object extractor function.
 	 */
 	res = CONF_initialize_set_functions(set, "XP");
 	if (res != KT_OK) goto cleanup;
 
 	/**
-	 * Configure parameter set, control, repair and object extractor function.
+	 * Configure parameter set, check, repair and object extractor function.
 	 */
 	PARAM_SET_addControl(set, "{conf}", isFormatOk_inputFile, isContentOk_inputFileRestrictPipe, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{log}{o}", isFormatOk_path, NULL, convertRepair_path, NULL);
@@ -547,7 +542,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	 * values from command-line are read.
 	 */
 #ifdef _WIN32
-	res = PARAM_SET_wildcardExpander(set, "i,input", NULL, Win32FileWildcard);
+	res = PARAM_SET_setWildcardExpander(set, "i,input", NULL, NULL, Win32FileWildcard);
 	extra_parse_flags = PST_PRSCMD_EXPAND_WILDCARD;
 #endif
 
@@ -755,16 +750,16 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 
 		save_to = get_output_file_name(set, err, "i,input", "o", how_to_save, i, buf, sizeof(buf), generate_file_name);
 
-		res = verify_and_save(set, err, ksi, ext, save_to, mode, NULL, &result_ext);
+		res = verify_and_save(set, err, ksi, ext, save_to, mode, &result_ext);
 		if (res != KT_OK) goto cleanup;
 
 		if (PARAM_SET_isSetByName(set, "dump")) {
 			print_result("\n");
 			print_result("=== Old signature ===\n");
-			OBJPRINT_signatureDump(sig, print_result);
+			OBJPRINT_signatureDump(ksi, sig, print_result);
 			print_result("\n");
 			print_result("=== Extended signature ===\n");
-			OBJPRINT_signatureDump(ext, print_result);
+			OBJPRINT_signatureDump(ksi, ext, print_result);
 			print_result("\n");
 			print_result("=== Extended signature verification ===\n");
 			OBJPRINT_signatureVerificationResultDump(result_ext , print_result);

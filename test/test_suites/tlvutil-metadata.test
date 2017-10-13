@@ -42,9 +42,9 @@
 # Verify chain index correctness.
  gttlvgrep -er 800.801[5] test/out/sign/ebcd-mdata-1.ksig | gttlvdump -pPy
 >>>/(.*Chain index.*10.*)
-(.*Chain index.*1791.*)
-(.*Chain index.*1007.*)
-(.*Chain index.*5.*)
+(.*Chain index.*31.*)
+(.*Chain index.*13.*)
+(.*Chain index.*11.*)
 (.*Chain index.*3.*)
 (.*Chain index.*3.*)/
 >>>= 0

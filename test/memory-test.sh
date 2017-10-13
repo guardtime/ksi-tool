@@ -45,7 +45,7 @@ cp test/resource/signature/ok-sig-2014-08-01.1.ksig $mem_test_dir/not-extended-1
 cp test/resource/signature/ok-sig-2014-08-01.1.ksig $mem_test_dir/not-extended-2B.ksig
 
 # Configure temporary KSI_CONF.
-export KSI_CONF=test/resource/conf/default-not-working-conf.cfg
+export KSI_CONF=test/resource/conf/default-conf.cfg
 
 # A function to convert a test file to memory test.
 function generate_test() {
@@ -63,6 +63,7 @@ generate_test static-verify.test
 generate_test static-sign-verify.test
 generate_test static-extend.test
 generate_test sign-cmd.test
+generate_test signature-dump.test
 generate_test extend-cmd.test
 generate_test static-verify-invalid-signatures.test
 generate_test pubfile.test
@@ -72,6 +73,7 @@ generate_test verify-cmd.test
 generate_test default-conf.test
 generate_test invalid-conf.test
 generate_test file-name-gen.test
+generate_test cmd.test
 generate_test sign-block-signer.test
 generate_test sign-block-signer-cmd.test
 generate_test verify-pub-suggestions.test
@@ -97,6 +99,7 @@ $mem_test_dir/static-verify.test \
 $mem_test_dir/static-sign-verify.test \
 $mem_test_dir/static-extend.test \
 $mem_test_dir/sign-cmd.test \
+$mem_test_dir/signature-dump.test \
 $mem_test_dir/extend-cmd.test \
 $mem_test_dir/static-verify-invalid-signatures.test \
 $mem_test_dir/pubfile.test \
@@ -106,6 +109,7 @@ $mem_test_dir/verify-cmd.test \
 $mem_test_dir/default-conf.test \
 $mem_test_dir/invalid-conf.test \
 $mem_test_dir/file-name-gen.test \
+$mem_test_dir/cmd.test \
 $mem_test_dir/sign-block-signer.test \
 $mem_test_dir/sign-block-signer-cmd.test \
 $mem_test_dir/verify-pub-suggestions.test \

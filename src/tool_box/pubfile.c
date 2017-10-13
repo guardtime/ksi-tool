@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <ksi/ksi.h>
 #include <ksi/net.h>
 #include <ksi/hashchain.h>
@@ -239,11 +240,16 @@ static int pubfile_task(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int id, KS
 	}
 
 	if (id == 2 && save_to != NULL) {
+		int isStdout = strcmp(save_to, "-") == 0;
+		const char *mode = isStdout ? "wbs" : "wb";
+
 		print_progressDesc(d, "Saving publications file... ");
-		res = KSI_OBJ_savePublicationsFile(err, ksi, tmp, "wb", save_to);
+		res = KSI_OBJ_savePublicationsFile(err, ksi, tmp, mode, save_to);
 		ERR_CATCH_MSG(err, res, "Error: Unable to save publications file.");
 		print_progressResult(res);
-		print_debug("Publications file saved to '%s'.\n", save_to);
+
+		if (isStdout) print_debug("Publications file saved to stdout.\n");
+		else print_debug("Publications file saved to '%s'.\n", save_to);
 	}
 
 
@@ -291,7 +297,8 @@ static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ks
 			KSI_Integer_toDateString(start, buf, sizeof(buf)),
 			KSI_Integer_getUInt64(start));
 
-	res = KSI_Integer_new(ksi, (KSI_uint64_t)start, &reqID);
+	srand((unsigned)time(NULL));
+	res = KSI_Integer_new(ksi, (KSI_uint64_t)rand(), &reqID);
 	ERR_CATCH_MSG(err, res, "Error: %s", KSITOOL_errToString(res));
 	res = KSI_ExtendReq_new(ksi, &extReq);
 	ERR_CATCH_MSG(err, res, "Error: %s", KSITOOL_errToString(res));
@@ -378,7 +385,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	}
 
 	/**
-	 * Configure parameter set, control, repair and object extractor function.
+	 * Configure parameter set, check, repair and object extractor function.
 	 */
 	res = CONF_initialize_set_functions(set, "XP");
 	if (res != KT_OK) goto cleanup;

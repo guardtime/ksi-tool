@@ -30,25 +30,90 @@ extern "C" {
 /**
  * Platform independent version of snprintf.
  * \param[in]		buf		Pointer to buffer.
- * \param[in]		n		Maximum number of bytes to be written into buffer. Includes terminating NUL character.
+ * \param[in]		n		Maximum number of bytes to be written into buffer. Includes terminating null character.
  * \param[in]		format	Format string.
  * \param[in]		...		Extra parameters for formatting.
- * \return The number of characters written, not including terminating NUL character. On error 0 is returned.
+ * \return The number of characters written, not including terminating null character. On error \c 0 is returned.
  */
 size_t PST_snprintf(char *buf, size_t n, const char *format, ... );
 
 /**
- * Platform independent version of strncpy that guarantees NULL terminated
- * destination. To copy N characters from source to destination n and size of
- * destination must be N+1.
+ * Platform independent version of strncpy that guarantees null terminated
+ * destination. To copy \c N characters from source to destination \c n and size of
+ * destination must be <tt>N + 1</tt>.
  * \param[in]		destination Pointer to destination.
  * \param[in]		source		Pointer to source.
- * \param[in]		n			Maximum number of characters to be copied including terminating NUL
- * \return The pointer to destination is returned. On error NULL is returned.
+ * \param[in]		n			Maximum number of characters to be copied including terminating null.
+ * \return The pointer to destination is returned. On error \c NULL is returned.
  */
 char *PST_strncpy (char *destination, const char *source, size_t n);
 
-
+/**
+ * This function works similarly to the #PST_snprintf but is used to print text for
+ * command-line help. Formatter can:
+ *
+ *  + Print formatted text (\c desc) with a maximum length (including indention) of \c rowLen.
+ *  + Print indented text (\c desc) where indention size is \c indent. See Example 1.
+ *  + Print indented text (\c desc) where next line has extra indention of size \c nxtLnIndnt. See Example 2.
+ *  + Print a header with a size of \c headerLen. It is composed of \c paramName and \c delimiter (including \c indent).
+ *    If real header is larger than \c headerLen, it is printed without delimiter on the first line. In that case,
+ *    \c delimiter is printed on the next row followed by description (\c desc). See Example 3 and Example 4.
+ *
+ * Usage and examples:
+ * \code{.txt}
+ *
+ * [          maximum row size           ]
+ *
+ * Regular text with indention:
+ * [     indent      ][    text  line 1  ]
+ * [     indent      ][    text  line N  ]
+ * Example 1. (indent = 2, headerLen = 0, delimiter = '\0', nxtLnIndnt = 0, paramName = NULL, rowLen = 10):
+ *     "1234567890"
+ *     "  this is "
+ *     "  sample"
+ *
+ * Regular text with extra indention from next row:
+ * [indent][         text line 1         ]
+ * [indent][eint][   text line 2         ]
+ * [indent][eint][   text line N         ]
+ * Example 2. (indent = 2, headerLen = 0, delimiter = '\0', nxtLnIndnt = 2, paramName = NULL, rowLen = 10):
+ *     "1234567890"
+ *     "  this is "
+ *     "    sample"
+ *     "    text  "
+ *
+ * Parameter description with indention:
+ * [header][delimiter][    desc. line 1  ]
+ * [     indent      ][    desc. line N  ]
+ * Example 3. (indent = 2, headerLen = 8, delimiter = '-', nxtLnIndnt = 0, paramName = "-a", rowLen = 20):
+ *     "123456789_1234567890"
+ *     "  -a  - this is my  "
+ *     "        description "
+ *
+ * Parameter description with indention where header is larger than expected:
+ * [ too large header]
+ * [indent][delimiter][   desc. line 1   ]
+ * [indent           ][   desc. line N   ]
+ * Example 4. (indent = 2, headerLen = 8, delimiter = '-', nxtLnIndnt = 0, paramName = "-a", rowLen = 20):
+ *     "123456789_1234567890"
+ *     "  --long            "
+ *     "      - this is long"
+ *     "        description "
+ * \endcode
+ *
+ * \param buf			Pointer to buffer.
+ * \param buf_len		The size of the buffer.
+ * \param indent		The size of regular indention. Can be \c 0.
+ * \param nxtLnIndnt	The amount of extra indention beginning from the next line. Can be \c 0.
+ * \param headerLen		The size of the header. Can be \c 0.
+ * \param rowLen		The overall size of the line.
+ * \param paramName		Parameter name used to compose header.
+ * \param delimiter		Delimiter character used for delimiter that separates parameter name from description.
+ * \param desc		Format string, parameter description.
+ * \param ...			Extra parameters for formatting.
+ * \return The number of characters written, not including terminating null character. On error \c  0 is returned.
+ */
+size_t PST_snhiprintf(char *buf, size_t buf_len, int indent, int nxtLnIndnt, int headerLen, int rowLen, const char *paramName, const char delimiter, const char *desc, ...);
 /*
  * @}
  */

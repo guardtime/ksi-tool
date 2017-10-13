@@ -319,9 +319,8 @@ int KSITOOL_Aggregator_getConf(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Config **config
 	return res;
 }
 
-int KSITOOL_SignatureVerify_general(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
-									KSI_PublicationData *pubdata, int extperm,
-									KSI_PolicyVerificationResult **result) {
+int KSITOOL_SignatureVerify_with_publications_file_or_calendar(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
+                                          int extperm, KSI_PolicyVerificationResult **result) {
 	int res;
 
 	if (err == NULL || sig == NULL || ctx == NULL || result == NULL) {
@@ -329,20 +328,34 @@ int KSITOOL_SignatureVerify_general(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX 
 		return res;
 	}
 
-	/* First check if user has provided publications */
-	if (pubdata != NULL) {
-		res = KSITOOL_SignatureVerify_userProvidedPublicationBased(err, sig, ctx, hsh, pubdata, extperm, result);
-	} else {
-		/* Get available trust anchor from the signature */
-		if (KSITOOL_Signature_isCalendarAuthRecPresent(sig)) {
-			res = KSITOOL_SignatureVerify_keyBased(err, sig, ctx, hsh, result);
-		} else if (KSITOOL_Signature_isPublicationRecordPresent(sig)) {
-			res = KSITOOL_SignatureVerify_publicationsFileBased(err, sig, ctx, hsh, extperm, result);
-		} else {
-			res = KSITOOL_SignatureVerify_calendarBased(err, sig, ctx, hsh, result);
-		}
+    if (KSITOOL_Signature_isPublicationRecordPresent(sig)) {
+        res = KSITOOL_SignatureVerify_publicationsFileBased(err, sig, ctx, hsh, extperm, result);
+    } else {
+        res = KSITOOL_SignatureVerify_calendarBased(err, sig, ctx, hsh, result);
+    }
+
+    return res;
+}
+
+int KSITOOL_SignatureVerify_general(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
+														 KSI_PublicationData *pubdata, int extperm,
+														 KSI_PolicyVerificationResult **result){
+	int res;
+
+
+	if (err == NULL || sig == NULL || ctx == NULL || result == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
 	}
 
+	res = verify_signature(sig, ctx, hsh, extperm, NULL, pubdata, KSI_VERIFICATION_POLICY_GENERAL, result);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
+
+	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
+		appendPubFileErros(err, res);
+		appendNetworkErrors(err, res);
+		appendExtenderErrors(err, res);
+	}
 	return res;
 }
 

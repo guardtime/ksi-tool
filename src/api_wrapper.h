@@ -64,6 +64,7 @@ int KSITOOL_SignatureVerify_calendarBased(ERR_TRCKR *err, KSI_Signature *sig, KS
 int KSITOOL_SignatureVerify_keyBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh, KSI_PolicyVerificationResult **result);
 int KSITOOL_SignatureVerify_publicationsFileBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh, int extperm, KSI_PolicyVerificationResult **result);
 int KSITOOL_SignatureVerify_userProvidedPublicationBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh, KSI_PublicationData *pubdata, int extperm, KSI_PolicyVerificationResult **result);
+int KSITOOL_SignatureVerify_with_publications_file_or_calendar(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh, int extperm, KSI_PolicyVerificationResult **result);
 
 char *KSITOOL_DataHash_toString(KSI_DataHash *hsh, char *buf, size_t buf_len);
 char *KSITOOL_PublicationData_toString(KSI_PublicationData *data, char *buf, size_t buf_len);

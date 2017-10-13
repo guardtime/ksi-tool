@@ -50,7 +50,7 @@ int conf_run(int argc, char** argv, char **envp) {
 	 * Check for typos and unknown parameters.
 	 */
 	if (PARAM_SET_isTypoFailure(set)) {
-			print_errors("%s\n", PARAM_SET_typosToString(set, PST_TOSTR_DOUBLE_HYPHEN, NULL, buf, sizeof(buf)));
+			print_errors("%s\n", PARAM_SET_typosToString(set, NULL, buf, sizeof(buf)));
 			res = KT_INVALID_CMD_PARAM;
 			goto cleanup;
 	} else if (PARAM_SET_isUnknown(set)){

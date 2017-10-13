@@ -26,7 +26,7 @@
 # Specify only instance id. Check if instance id was set and there is no message id record.
 ##
 EXECUTABLE sign --conf test/test.cfg -i test/resource/file/abcd -o test/out/sign/dummy.sig --inst-id 12345 --log - | grep -oP "request.*\(len.*=[0-9]*.*\).*:\K.*" | gttlvdump -pP -E hex
->>> /(.*200.*)(.*Aggregation PDU.*)([^$]|[
+>>> /(.*220.*)(.*Aggregation request PDU.*)([^$]|[
 ])*(PDU header.*)
 (.*01.*)(.*Login id.*)
 (.*02.*)(.*Instance id.*)(.*12345.*)/
@@ -41,7 +41,7 @@ EXECUTABLE sign --conf test/test.cfg -i test/resource/file/abcd -o test/out/sign
 # Specify only message id. Check if message id was set and there is no instance id record.
 ##
 EXECUTABLE sign --conf test/test.cfg -i test/resource/file/abcd -o test/out/sign/dummy.sig --msg-id 54321 --log - | grep -oP "request.*\(len.*=[0-9]*.*\).*:\K.*" | gttlvdump -pP -E hex
->>> /(.*200.*)(.*Aggregation PDU.*)([^$]|[
+>>> /(.*220.*)(.*Aggregation request PDU.*)([^$]|[
 ])*(PDU header.*)
 (.*01.*)(.*Login id.*)
 (.*03.*)(.*Message id.*)(.*54321.*)/
@@ -56,7 +56,7 @@ EXECUTABLE sign --conf test/test.cfg -i test/resource/file/abcd -o test/out/sign
 # Specify both message id and client id. Check if both are set.
 ##
 EXECUTABLE sign --conf test/test.cfg -i test/resource/file/abcd -o test/out/sign/dummy.sig --msg-id 54321 --inst-id 12345 --log - | grep -oP "request.*\(len.*=[0-9]*.*\).*:\K.*" | gttlvdump -pP -E hex
->>> /(.*200.*)(.*Aggregation PDU.*)([^$]|[
+>>> /(.*220.*)(.*Aggregation request PDU.*)([^$]|[
 ])*(PDU header.*)
 (.*01.*)(.*Login id.*)
 (.*02.*)(.*Instance id.*)(.*12345.*)
@@ -68,7 +68,7 @@ EXECUTABLE sign --conf test/test.cfg -i test/resource/file/abcd -o test/out/sign
 # Specify both message id and client id without argument - default values are used. Check if both are set.
 ##
 EXECUTABLE sign --conf test/test.cfg -i test/resource/file/abcd -o test/out/sign/dummy.sig --msg-id --inst-id --log - | grep -oP "request.*\(len.*=[0-9]*.*\).*:\K.*" | gttlvdump -pP -E hex
->>> /(.*200.*)(.*Aggregation PDU.*)([^$]|[
+>>> /(.*220.*)(.*Aggregation request PDU.*)([^$]|[
 ])*(PDU header.*)
 (.*01.*)(.*Login id.*)
 (.*02.*)(.*Instance id.*)(.*[0-9]{10,16}.*)
@@ -92,7 +92,7 @@ EXECUTABLE sign --conf test/test.cfg -i test/resource/file/abcd test/resource/fi
 # Specify only instance id. Check if instance id was set and there is no message id record.
 ##
 EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -o test/out/extend/dummy.ksig --inst-id 12345 --log - | grep -oP "request.*\(len.*=[0-9]*.*\).*:\K.*" | gttlvdump -pP -E hex
->>> /(.*300.*)(.*Extension PDU.*)([^$]|[
+>>> /(.*320.*)(.*Extension request PDU.*)([^$]|[
 ])*(PDU header.*)
 (.*01.*)(.*Login id.*)
 (.*02.*)(.*Instance id.*)(.*12345.*)/
@@ -107,7 +107,7 @@ EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08
 # Specify only message id. Check if message id was set and there is no instance id record.
 ##
 EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -o test/out/extend/dummy.ksig --msg-id 54321 --log - | grep -oP "request.*\(len.*=[0-9]*.*\).*:\K.*" | gttlvdump -pP -E hex
->>> /(.*300.*)(.*Extension PDU.*)([^$]|[
+>>> /(.*320.*)(.*Extension request PDU.*)([^$]|[
 ])*(PDU header.*)
 (.*01.*)(.*Login id.*)
 (.*03.*)(.*Message id.*)(.*54321.*)/
@@ -122,7 +122,7 @@ EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08
 # Specify both message id and client id. Check if both are set.
 ##
 EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -o test/out/extend/dummy.ksig --msg-id 54321 --inst-id 12345 --log - | grep -oP "request.*\(len.*=[0-9]*.*\).*:\K.*" | gttlvdump -pP -E hex
->>> /(.*300.*)(.*Extension PDU.*)([^$]|[
+>>> /(.*320.*)(.*Extension request PDU.*)([^$]|[
 ])*(PDU header.*)
 (.*01.*)(.*Login id.*)
 (.*02.*)(.*Instance id.*)(.*12345.*)
@@ -134,7 +134,7 @@ EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08
 # Specify both message id and client id without argument - default values are used. Check if both are set.
 ##
 EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -o test/out/extend/dummy.ksig --msg-id --inst-id --log - | grep -oP "request.*\(len.*=[0-9]*.*\).*:\K.*" | gttlvdump -pP -E hex
->>> /(.*300.*)(.*Extension PDU.*)([^$]|[
+>>> /(.*320.*)(.*Extension request PDU.*)([^$]|[
 ])*(PDU header.*)
 (.*01.*)(.*Login id.*)
 (.*02.*)(.*Instance id.*)(.*[0-9]{10,16}.*)

@@ -39,12 +39,6 @@ EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -d --d
 >>>2 /(Signature verification according to trust anchor)(.*ok.*)/
 >>>= 0
 
-# Trust anchor: Calendar Blockchain.
-EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.no-cal-hashchain.ksig -d --dump  --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
->>>  /(Trust anchor: Calendar Blockchain.)/
->>>2 /(Signature verification according to trust anchor)(.*ok.*)/
->>>= 0
-
 # Verify document hash.
 EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.ksig -d -f SHA2-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>2 /(Reading document's hash)(.*ok.*)
@@ -97,7 +91,6 @@ EXECUTABLE verify --ver-int -i test/resource/signature/ok-legacy-sig-2014-06.gtt
 
 
 # ------ Publication based verification, use publications file. ------
-
 # Verify against online publications file.
 EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -d --dump --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>  /(PublicationsFileContainsSignaturePublication)
@@ -202,11 +195,15 @@ Signature calendar-based verification.*ok.*/
 # Trust anchor: Publication Record (with user publication string). Wrong publication string. Extending not permitted.
 EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig --pub-str AAAAAA-CV65PY-AAIVFG-UJMDXY-XGBKMO-DISYGA-YPPQYY-QEWTQ5-Y43NGX-B22W7H-IGZQNN-DRTW2H -d --dump --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>  /Final result.*
-.*GEN-02.*ExtendingPermittedVerification/
+.*GEN-02((.*ExtendingPermittedVerification.*)|(.*RequireNoUserProvidedPublication.*))/
 >>>2 /Signature verification according to trust anchor.*failed.*/
 >>>= 6
 
-
+# Trust anchor: Calendar Blockchain. Verification is NA as default verification policy do not use calendar-based verification.
+EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.no-cal-hashchain.ksig -d --dump  --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
+>>>  /(NA.*GEN-02.*In rule.*CalendarHashChainExistence)/
+>>>2 /(Verification inconclusive. Signature verification according to trust anchor failed)/
+>>>= 6
 
 
 # ------ Internal verification. ------
@@ -265,8 +262,14 @@ EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-2014-08-01.1.ext.k
 >>>2 /Signature key-based verification.*failed.*/
 >>>= 6
 
-
-
+# Calendar authentication record signature certificate ID changed so that it does not refer to any certificate in publications file.
+EXECUTABLE verify --ver-key -i test/resource/signature/nok-sig-2014-08-01-cert-id-changed.ksig --dump --conf test/resource/conf/static-sign-1.cfg
+>>>  /(Signing certificate ID)(.*ff:ff:ff:01.*)
+(.*Signing certificate issued to)(.*Certificate not found from publications file)([^$]|[
+])+
+(.*KEY-01)(.*Certificate not found)/
+>>>2 /(KEY-01)(.*Certificate not found)(.*Signature key-based verification failed.)/
+>>>= 6
 
 # ------ Calendar based verification. ------
 

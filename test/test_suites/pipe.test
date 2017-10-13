@@ -27,6 +27,14 @@ Data From Stdin
 (Signature key-based verification)(.*ok.*)/
 >>>= 0
 
+# KSI Sign stream and pipe KSI signature file to verification without -i.
+ {KSI_BIN} sign --conf test/test.cfg - -o - | {KSI_BIN} verify --conf test/test.cfg --ver-key - -d
+<<<
+Data From Stdin
+>>>2 /(Reading signature)(.*ok.*)
+(Signature key-based verification)(.*ok.*)/
+>>>= 0
+
 # KSI Extend signature and pipe extend signature to verification.
  {KSI_BIN} extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o - | {KSI_BIN} verify --ver-pub --conf test/test.cfg -i - -d --pub-str AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
 >>>2 /(Signature publication-based verification with user publication string)(.*ok.*)/

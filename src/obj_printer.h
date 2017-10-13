@@ -31,8 +31,8 @@ void OBJPRINT_IdentityMetadata(KSI_Signature *sig, int (*print)(const char *form
 void OBJPRINT_signaturePublicationReference(KSI_Signature *sig, int (*print)(const char *format, ... ));
 void OBJPRINT_signatureVerificationInfo(KSI_Signature *sig, int (*print)(const char *format, ... ));
 void OBJPRINT_signatureSigningTime(const KSI_Signature *sig, int (*print)(const char *format, ... ));
-void OBJPRINT_signatureCertificate(const KSI_Signature *sig, int (*print)(const char *format, ... ));
-void OBJPRINT_signatureDump(KSI_Signature *sig, int (*print)(const char *format, ... ));
+void OBJPRINT_signatureCertificate(KSI_CTX *ctx, const KSI_Signature *sig, int (*print)(const char *format, ... ));
+void OBJPRINT_signatureDump(KSI_CTX *ctx, KSI_Signature *sig, int (*print)(const char *format, ... ));
 
 void OBJPRINT_Hash(KSI_DataHash *hsh, const char *prefix, int (*print)(const char *format, ... ));
 

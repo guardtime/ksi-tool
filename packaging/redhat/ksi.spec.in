@@ -44,7 +44,9 @@ BuildRoot: %{_tmppath}/%{name_package}-%{version}-build
 Obsoletes: ksi <= 2.0.744-2
 
 # Dependencies are set in config.ac
-@KSI_BUILD_DEPENDECY@
+@KSI_RPM_BUILD_DEPENDECY@
+@KSI_RPM_RUN_DEPENDECY@
+
 
 %description
 Guardtime signing and verification tool. Execute %{name_tool} -h to view brief usage instructions.
@@ -57,7 +59,7 @@ echo "Warning: Package ksitool is legacy version of the package ksi-tools and wi
 %setup -q -n %{name_package}-%{version}
 
 %build
-%configure @KSI_RPM_BUILD_FLAGS@
+%configure @KSI_PACKAGING_BUILD_FLAGS@
 make
 
 %install

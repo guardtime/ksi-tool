@@ -16,7 +16,7 @@
 .SH DESCRIPTION
 Extends the given KSI signature to the time of given publication. After signature is extended and the corresponding publication record is attached, the signature can be verified by publication-based verification where only trusted publications file or a publication string in printed media is needed to perform the verification. See \fBksi-verify\fR(1) for details.
 .LP
-User must have access to KSI extending service and trusted KSI publications file to extend the KSI signature. By default signature is extended to the earliest available publication. Use the option \fB--pub-str\fR to extend signature to the publication denoted by the given publication string. It is also possible to extend to the specified time with option \fB-T\fR but this is not recommended as the extended signature will have no calendar authentication nor publication record and can only be verified by calendar-based verification.
+User must have access to KSI extending service and trusted KSI publications file to extend the KSI signature. By default signature is extended to the earliest available publication. Use the option \fB--pub-str\fR to extend signature to the publication denoted by the given publication string (note that the publication record \fBmust exist\fR in publications file). It is also possible to extend to the specified time with option \fB-T\fR but this is not recommended as the extended signature will have no calendar authentication nor publication record and can only be verified by calendar-based verification.
 .\"
 .SH OPTIONS
 .TP
@@ -67,7 +67,7 @@ For more common OIDs there are convenience names defined:
 .\"
 .TP
 \fB--pub-str \fIstr\fR
-Specify the publication record as publication string to extend signature to.
+Specify the publication string that denotes to existing publication record in KSI publications file to extend to.
 .\"
 .TP
 \fB--replace-existing \fR
@@ -147,7 +147,7 @@ In the following examples it is assumed that KSI service configuration (URLs, ac
 .\"
 .TP 2
 \fB2
-\fRTo extend a signature \fIsig.ksig\fR to specified publication (the publication string available from Financial Times, ISSN: 0307-1766, 2016-03-17 given as example):
+\fRTo extend a signature \fIsig.ksig\fR to specified publication (the publication string available from Financial Times, ISSN: 0307-1766, 2016-03-17 given as example). Note that the publication must exist in the trusted publications file:
 .LP
 .RS 4
 \fBksi extend -i \fIsig.ksig \fB-o \fIext.ksig \fB--pub-str \fIAAAAAA-CW45II-AAKWRK-F7FBNM-KB6FNV-DYYFW7-PJQN6F-JKZWBQ-3OQYZO-HCB7RA-YNYAGA-ODRL2V
@@ -163,7 +163,7 @@ In the following examples it is assumed that KSI service configuration (URLs, ac
 .\"
 .TP 2
 \fB4
-\fRTo extend all signatures matching the pattern \fI*.ksig\fR to specified publication (see https://twitter.com/Guardtime/status/799214699296346112) \fRand save the output to the same directory where the input file is located (with altered file extension \fIext.ksig\fR):
+\fRTo extend all signatures matching the pattern \fI*.ksig\fR to specified publication (see https://twitter.com/Guardtime/status/799214699296346112) \fRand save the output to the same directory where the input file is located (with altered file extension \fIext.ksig\fR). Note that the publication must exist in the trusted publications file:
 .LP
 .RS 4
 \fBksi extend \fI*.ksig \fB--pub-str \fIAAAAAA-CYFJIA-AALGBS-ED4BKO-CMKY7Z-OMMBA5-NT6SJB-ZM677Q-JKCQAW-3OXD3O-OERGEO-DWJRYN\fR

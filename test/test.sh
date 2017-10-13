@@ -18,7 +18,7 @@
 # Guardtime, Inc., and no license to trademarks is granted; Guardtime
 # reserves and retains all trademark rights.
 
-# Remove test output directories.  
+# Remove test output directories.
 rm -rf test/out/sign 2> /dev/null
 rm -rf test/out/extend 2> /dev/null
 rm -rf test/out/extend-replace-existing 2> /dev/null
@@ -56,7 +56,7 @@ cp test/resource/signature/ok-sig-2014-08-01.1.ksig test/out/extend-replace-exis
 
 
 # Define KSI_CONF for temporary testing.
-export KSI_CONF=test/resource/conf/default-not-working-conf.cfg
+export KSI_CONF=test/resource/conf/default-conf.cfg
 
 # If ksi tool in project directory is available use that one, if not
 # use the one installed in the machine.
@@ -70,12 +70,13 @@ fi
 cp test/test_suites/pipe.test test/out/tmp
 sed -i -- "s|{KSI_BIN}|$tool|g" test/out/tmp/pipe.test
 
-# Add test/test_suites/tlvutil-pdu-header.test to the list when gttlvutil new version is released.
+
 
 if gttlvdump -h > /dev/null && gttlvgrep -h > /dev/null; then
 	TEST_DEPENDING_ON_TLVUTIL="\
 		test/test_suites/tlvutil-metadata.test \
-		test/test_suites/sign-masking.test"
+		test/test_suites/tlvutil-sign-masking.test \
+		test/test_suites/tlvutil-pdu-header.test"
 	echo Info: Extra tests depending on gttlvutil added.
 else
 	TEST_DEPENDING_ON_TLVUTIL=""
@@ -94,6 +95,7 @@ test/test_suites/static-sign-verify.test \
 test/test_suites/static-extend.test \
 test/out/tmp/pipe.test \
 test/test_suites/sign-cmd.test \
+test/test_suites/signature-dump.test \
 test/test_suites/extend-cmd.test \
 test/test_suites/static-verify-invalid-signatures.test \
 test/test_suites/pubfile.test \
@@ -102,8 +104,9 @@ test/test_suites/verify-invalid-pubfile.test \
 test/test_suites/verify-cmd.test \
 test/test_suites/default-conf.test \
 test/test_suites/invalid-conf.test \
-test/test_suites/file-name-gen.test \
 test/test_suites/sign-block-signer.test \
+test/test_suites/file-name-gen.test \
+test/test_suites/cmd.test \
 test/test_suites/sign-block-signer-cmd.test \
 test/test_suites/sign-metadata.test \
 test/test_suites/verify-pub-suggestions.test \

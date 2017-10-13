@@ -1,0 +1,85 @@
+#!/usr/bin/make -f
+
+#
+# Copyright 2013-2017 Guardtime, Inc.
+#
+# This file is part of the Guardtime client SDK.
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES, CONDITIONS, OR OTHER LICENSES OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
+# "Guardtime" and "KSI" are trademarks or registered trademarks of
+# Guardtime, Inc., and no license to trademarks is granted; Guardtime
+# reserves and retains all trademark rights.
+#
+
+package = @PACKAGE@
+PROJECT_ROOT  = $(shell if [ "$$PWD" != "" ]; then echo $$PWD; else pwd; fi)
+FAKE_INSTALL = $(PROJECT_ROOT)/debian/$(package)
+INSTALL_ROOT=usr
+INSTALL_MAN=$(INSTALL_ROOT)/share/man
+
+
+# Helper definitions and targets for debian rules.
+
+define is-in-build-dir
+	@test -f debian/rules -a -f src/main.c || (echo Not in correct directory; exit 1)
+endef
+
+define is-root
+	@test $$(id -u) = 0 || (echo need root priviledges; exit 1)
+endef
+
+
+configure-stamp:
+	$(is-in-build-dir)
+	./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/$(INSTALL_ROOT) --mandir=/$(INSTALL_MAN) @KSI_PACKAGING_BUILD_FLAGS@
+	touch configure-stamp
+
+build-stamp: configure-stamp
+	$(is-in-build-dir)
+	-rm -f build-stamp
+	$(MAKE)
+	touch build-stamp
+
+# Debian rules.
+
+build: build-stamp
+
+clean: configure-stamp
+	$(is-in-build-dir)
+	-rm -f *-stamp
+	$(MAKE) distclean
+	-rm -rf debian/$(package)
+
+binary-indep: build
+
+binary-arch: build
+	$(is-in-build-dir)
+	$(is-root)
+
+	# Use make install to create directory structure needed for packaging.
+	# Use gzip to compress manpages.
+	$(MAKE) install DESTDIR=$(FAKE_INSTALL)
+	gzip --best -n $(FAKE_INSTALL)/$(INSTALL_MAN)/man1/ksi*
+	gzip --best -n $(FAKE_INSTALL)/$(INSTALL_MAN)/man5/ksi-*
+
+
+	# Generate the control file from source control (debian/control)file. Top
+	# DEBIAN/control. If source package specifies more than 1 binary package see
+	# option -p<package> to specify target binary package.
+	mkdir $(FAKE_INSTALL)/DEBIAN
+	dpkg-gencontrol -isp -P$(FAKE_INSTALL)
+	# dpkg-shlibdeps src/$(package)
+	dpkg-deb -b $(FAKE_INSTALL) ../
+
+
+binary: binary-indep binary-arch
+
+.PHONY: binary binary-arch binary-indep clean build
