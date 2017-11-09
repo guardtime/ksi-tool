@@ -1,3 +1,4 @@
+* IMPROVEMENT: Build requires libksi version >= 3.17.
 * IMPROVEMENT: README.md included to packaging.
 
 Version 2.7

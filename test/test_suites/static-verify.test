@@ -93,15 +93,15 @@ EXECUTABLE verify --ver-int -i test/resource/signature/ok-legacy-sig-2014-06.gtt
 # ------ Publication based verification, use publications file. ------
 # Verify against online publications file.
 EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -d --dump --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
->>>  /(PublicationsFileContainsSignaturePublication)
-(.*)(Final result)/
+>>>  /(PublicationsFileContainsSignaturePublication)([^$]|[
+])*(Final result)/
 >>>2 /(Signature publication-based verification with publications file)(.*ok.*)/
 >>>= 0
 
 # Verify against local publications file.
 EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -d --dump -P file://test/resource/publication/ksi-publications.bin --cnstr email=test@test.com -V test/resource/certificates/ok-test.crt
->>>  /(PublicationsFileContainsSignaturePublication)
-(.*)(Final result)/
+>>>  /(PublicationsFileContainsSignaturePublication)([^$]|[
+])*(Final result)/
 >>>2 /(Signature publication-based verification with publications file)(.*ok.*)/
 >>>= 0
 
