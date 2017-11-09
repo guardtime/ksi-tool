@@ -1,5 +1,6 @@
 * IMPROVEMENT: Build requires libksi version >= 3.17.
 * IMPROVEMENT: README.md included to packaging.
+* IMPROVEMENT: Tests refactored to suite with libksi 3.17.
 
 Version 2.7
 
