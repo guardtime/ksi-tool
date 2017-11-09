@@ -25,7 +25,7 @@ man_MANS = \
 	../doc/ksi-pubfile.1 \
 	../doc/ksi-verify.1
 
-dist_doc_DATA = ../LICENSE ../doc/ChangeLog
+dist_doc_DATA = ../LICENSE ../README.md ../doc/ChangeLog
 
 EXTRA_DIST = ../VERSION $(man_MANS) $(dist_doc_DATA)
 ksi_LDADD = -lm

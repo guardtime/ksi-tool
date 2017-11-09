@@ -78,6 +78,7 @@ make install DESTDIR=%{buildroot}
 %{_mandir}/man1/ksi-verify.1*
 %{_mandir}/man5/ksi-conf.5*
 %{_docdir}/%{name_package}/LICENSE
+%{_docdir}/%{name_package}/README.md
 %{_docdir}/%{name_package}/ChangeLog
 
 %changelog
