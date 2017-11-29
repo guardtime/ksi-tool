@@ -242,7 +242,7 @@ char *sign_help_toString(char*buf, size_t len) {
 		"             aggregation round) sequence number of the request as integer\n"
 		"             that will be embedded into the signature as metadata. It is\n"
 		"             optional part of metadata.\n"
-		" --mdata-req-tm <int>\n"
+		" --mdata-req-tm\n"
 		"           - Embed request time extracted from the machine clock into the\n"
 		"             signature as metadata. It is optional part of metadata.\n"
 		" --        - If used everything specified after the token is interpreted as\n"

@@ -1,4 +1,5 @@
 * IMPROVEMENT: Tests refactored to suite with libksi 3.17.
+* BUGFIX: Int type argument removed from parameter --mdata-req-tm. Affects "ksi sign -h" and "ksi conf -h".
 
 Version 2.7
 
