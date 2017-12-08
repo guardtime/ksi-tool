@@ -86,8 +86,6 @@ extra_linker_flags=""
 extra_compiler_flags=""
 
 is_installed_libksi=true
-is_path_set=false
-is_path_override=false
 is_inc_dir_set=false
 is_lib_dir_set=false
 is_libksi_static=false
@@ -115,7 +113,8 @@ while [ "$1" != "" ]; do
 								 libksi_include_dir="$1/include"
 								 libksi_lib_dir="$1/lib"
 								 is_installed_libksi=false
-								 is_path_set=true
+								 is_lib_dir_set=true
+								 is_inc_dir_set=true
 								 ;;
 		--libksi-lib-dir | -l )	 shift
 								 echo "Using libksi library located in dir '$1'."
