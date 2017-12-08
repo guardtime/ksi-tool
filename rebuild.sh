@@ -41,7 +41,7 @@ help_txt() {
 	echo "       - Build Deb package."
 	echo ""
 	echo "  --libksi-path | -p"
-	echo "       - The path to libksi library and include files!. Directory pointed by"
+	echo "       - The path to libksi library and include files. Directory pointed by"
 	echo "         this, must contain directories 'lib' and 'include/ksi'. To be more"
 	echo "         precise see --libksi-lib-dir and --libksi-inc-dir. Note that the final"
 	echo "         value used depends on the order of -p, -l and -i on command-line!"
