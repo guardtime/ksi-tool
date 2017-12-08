@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# Copyright 2013-2016 Guardtime, Inc.
+# Copyright 2013-2017 Guardtime, Inc.
 #
 # This file is part of the Guardtime client SDK.
 #
@@ -18,15 +18,203 @@
 # Guardtime, Inc., and no license to trademarks is granted; Guardtime
 # reserves and retains all trademark rights.
 
+set -e
 
-PRF=ksi-$(tr -d [:space:] < VERSION)
 
-rm -f ${PRF}*.tar.gz && \
-mkdir -p config m4 && \
-echo Running autoreconf... && \
-autoreconf -if && \
-echo Running configure script... && \
-./configure $* && \
-echo Running make... && \
-make clean && \
-make \
+help_txt() {
+    echo "Usage:"
+    echo "  $0 [-c options] [-m options] [-s] [-p path] [-l path -i path] [-d|-r]"
+    echo ""
+    echo "Description:"
+    echo "  This is KSI tool general build script. It can be used to build KSI tool"
+    echo "  (packages rpm or deb) with libksi statically or dynamically."
+    echo ""
+    echo ""
+    echo "Options:"
+    echo "  --libksi-static | -s"
+    echo "       - Link libksi statically. Note that only libksi is linked statically."
+    echo ""
+    echo "  --build-rpm | -r"
+    echo "       - Build RPM package."
+    echo ""
+    echo "  --build-deb | -d"
+    echo "       - Build Deb package."
+    echo ""
+    echo "  --libksi-path | -p"
+    echo "       - The path to libksi library and include files!. Directory pointed by"
+	echo "         this, must contain directories 'lib' and 'include/ksi'. To override"
+	echo "         see --libksi-lib-dir and --libksi-inc-dir."
+	echo ""
+    echo "  --libksi-lib-dir | -l"
+    echo "       - Path to folder containing libksi library objects."
+	echo ""
+    echo "  --libksi-inc-dir | -i"
+    echo "       - Path to dir containing directory 'ksi' that contains the actual include"
+	echo "         files."
+	echo ""
+    echo "  --configure-flags | -c"
+    echo "       - Extra flags for configure script. Note that -s, -l and -i will already"
+	echo "         add something to configure options."
+	echo ""
+    echo "  --make-flags | -m"
+    echo "       - Extra flags for make file."
+	echo ""
+    echo "  --help | -h"
+    echo "       - You are reading it right now."
+	echo ""
+}
+
+conf_args=""
+make_args=""
+libksi_include_dir=""
+libksi_lib_dir=""
+
+is_installed_libksi=true
+is_path_set=false
+is_path_override=false
+is_libksi_static=false
+do_build_rpm=false
+do_build_deb=false
+show_help=false
+
+
+# Simple command-line parameter parser.
+while [ "$1" != "" ]; do
+    case $1 in
+        --libksi-static | -s )   echo "Linking libksi statically."
+                                 is_libksi_static=true
+                                 ;;
+        --build-rpm | -r )       echo "Building rpm."
+                                 do_build_rpm=true
+                                 ;;
+        --build-deb | -d )       echo "Building deb."
+                                 do_build_deb=true
+                                 ;;
+        --libksi-path | -p )     shift
+                                 echo "Using libksi includes and lib from dir '$1'."
+                                 libksi_include_dir="$1/include"
+                                 libksi_lib_dir="$1/lib"
+                                 is_installed_libksi=false
+                                 is_path_set=true
+                                 ;;
+        --libksi-lib-dir | -l )  shift
+                                 echo "Using libksi library located in dir '$1'."
+                                 libksi_lib_dir=$1
+                                 is_installed_libksi=false
+                                 is_path_override=true
+                                 ;;
+        --libksi-inc-dir | -i )  shift
+                                 echo "Using libksi includes located in dir '$1'."
+                                 libksi_include_dir=$1
+                                 is_installed_libksi=false
+                                 is_path_override=true
+                                 ;;
+        --configure-flags | -c ) shift
+                                 echo "Using extra configure flags '$1'."
+                                 conf_args=$1
+                                 ;;
+        --make-flags | -m )      shift
+                                 echo "Using extra make flags '$1'."
+                                 make_args=$1
+                                 ;;
+        --help | -h )            show_help=true
+                                 ;;
+        * )                      echo "Unknown token '$1' from command-line."
+		                         show_help=true
+    esac
+    shift
+done
+
+if $show_help ; then
+	help_txt
+	exit 0
+fi
+
+if $is_installed_libksi ; then
+	echo "Using installed libksi."
+	conf_args="$conf_args --enable-use-installed-libksi"
+else
+	export CPPFLAGS="$CPPFLAGS -I$libksi_include_dir"
+	export LDFLAGS="$LDFLAGS -L$libksi_lib_dir"
+	export LD_LIBRARY_PATH="$LD_LIBRARY_PATH $libksi_lib_dir"
+fi
+
+
+if $is_libksi_static ; then
+	conf_args="$conf_args --enable-static-build"
+else
+	echo "Linking with libksi dynamically."
+fi
+
+
+# Error handling.
+if $do_build_rpm && $do_build_deb; then
+	>&2 echo  "Error: It is not possible to build both deb and rpm packages!"
+	exit 1
+fi
+
+if $is_path_override && $is_path_set ; then
+	>&2 echo  "Warning: Variable --libksi-path | -p is overridden by --libksi-lib-dir or --libksi-inc-dir!"
+fi
+
+echo ""
+
+# Simple configure and make with extra options.
+autoreconf -if
+./configure $conf_args
+make $make_args clean
+
+# Package the software.
+if $do_build_rpm || $do_build_deb; then
+	echo "Making dist."
+	make dist
+	version=$(tr -d [:space:] < VERSION)
+
+	if $do_build_rpm ; then
+		echo "Making rpm."
+		BUILD_DIR=~/rpmbuild
+		mkdir -p $BUILD_DIR/{BUILD,RPMS,SOURCES,SPECS,SRPMS,tmp} && \
+		cp packaging/redhat/ksi.spec $BUILD_DIR/SPECS/ && \
+		cp ksi-tools-*.tar.gz $BUILD_DIR/SOURCES/ && \
+		rpmbuild -ba $BUILD_DIR/SPECS/ksi.spec && \
+		cp $BUILD_DIR/RPMS/*/ksi-tools-*$version*.rpm . && \
+		cp $BUILD_DIR/SRPMS/ksi-tools-*$version*.rpm . && \
+		chmod -v 644 *.rpm
+	elif $do_build_deb ; then
+		ARCH=$(dpkg --print-architecture)
+		RELEASE_VERSION="$(lsb_release -is)$(lsb_release -rs | grep -Po "[0-9]{1,3}" | head -1)"
+		PKG_VERSION=1
+		DEB_DIR=packaging/deb
+
+
+		# Rebuild debian changelog.
+		if command  -v dch > /dev/null; then
+		  echo "Generating debian changelog..."
+		  $DEB_DIR/rebuild_changelog.sh doc/ChangeLog $DEB_DIR/control ksi-tools $DEB_DIR/changelog "1.0.0:unstable "
+		else
+		  >&2 echo "Error: Unable to generate Debian changelog file as dch is not installed!"
+		  >&2 echo "Install devscripts 'apt-get install devscripts'"
+		  exit 1
+		fi
+
+		tar xvfz ksi-tools-$version.tar.gz
+		mv ksi-tools-$version.tar.gz ksi-tools-$version.orig.tar.gz
+		mkdir ksi-tools-$version/debian
+		cp $DEB_DIR/control $DEB_DIR/changelog $DEB_DIR/rules $DEB_DIR/copyright ksi-tools-$version/debian
+		chmod +x ksi-tools-$version/debian/rules
+		cd ksi-tools-$version
+		debuild -us -uc
+		cd ..
+
+		suffix=${version}-${PKG_VERSION}.${RELEASE_VERSION}_${ARCH}
+		mv ksi-tools_${version}_${ARCH}.changes ksi-tools_$suffix.changes
+		mv ksi-tools_${version}_${ARCH}.deb ksi-tools_$suffix.deb
+
+		rm -rf ksi-tools-$version
+	else
+		>&2 echo  "Error: Undefined behaviour!"
+		exit 1
+	fi
+else
+	make $make_args
+fi
