@@ -22,45 +22,59 @@ set -e
 
 
 help_txt() {
-    echo "Usage:"
-    echo "  $0 [-c options] [-m options] [-s] [-p path] [-l path -i path] [-d|-r]"
-    echo ""
-    echo "Description:"
-    echo "  This is KSI tool general build script. It can be used to build KSI tool"
-    echo "  (packages rpm or deb) with libksi statically or dynamically."
-    echo ""
-    echo ""
-    echo "Options:"
-    echo "  --libksi-static | -s"
-    echo "       - Link libksi statically. Note that only libksi is linked statically."
-    echo ""
-    echo "  --build-rpm | -r"
-    echo "       - Build RPM package."
-    echo ""
-    echo "  --build-deb | -d"
-    echo "       - Build Deb package."
-    echo ""
-    echo "  --libksi-path | -p"
-    echo "       - The path to libksi library and include files!. Directory pointed by"
-	echo "         this, must contain directories 'lib' and 'include/ksi'. To override"
-	echo "         see --libksi-lib-dir and --libksi-inc-dir."
+	echo "Usage:"
+	echo "  $0 [-c options] [-m options] [-s] [-p path] [-l path -i path] [-d|-r]"
 	echo ""
-    echo "  --libksi-lib-dir | -l"
-    echo "       - Path to folder containing libksi library objects."
+	echo "Description:"
+	echo "  This is KSI tool general build script. It can be used to build KSI tool"
+	echo "  (packages rpm or deb) with libksi statically or dynamically."
 	echo ""
-    echo "  --libksi-inc-dir | -i"
-    echo "       - Path to dir containing directory 'ksi' that contains the actual include"
-	echo "         files."
 	echo ""
-    echo "  --configure-flags | -c"
-    echo "       - Extra flags for configure script. Note that -s, -l and -i will already"
+	echo "Options:"
+	echo "  --libksi-static | -s"
+	echo "       - Link libksi statically. Note that only libksi is linked statically."
+	echo ""
+	echo "  --build-rpm | -r"
+	echo "       - Build RPM package."
+	echo ""
+	echo "  --build-deb | -d"
+	echo "       - Build Deb package."
+	echo ""
+	echo "  --libksi-path | -p"
+	echo "       - The path to libksi library and include files!. Directory pointed by"
+	echo "         this, must contain directories 'lib' and 'include/ksi'. To be more"
+	echo "         precise see --libksi-lib-dir and --libksi-inc-dir. Note that the final"
+	echo "         value used depends on the order of -p, -l and -i on command-line!"
+	echo ""
+	echo "  --libksi-lib-dir | -l"
+	echo "       - Path to folder containing libksi library objects. Note that the final"
+	echo "         value used depends on the order of -p, -l and -i on command-line!"
+	echo ""
+	echo "  --libksi-inc-dir | -i"
+	echo "       - Path to dir containing directory 'ksi' that contains the actual include"
+	echo "         files. Note that the final value used depends on the order of -p, -l"
+	echo "         and -i on command-line!"
+	echo ""
+	echo "  --configure-flags | -c"
+	echo "       - Extra flags for configure script. Note that -s, -l and -i will already"
 	echo "         add something to configure options."
 	echo ""
-    echo "  --make-flags | -m"
-    echo "       - Extra flags for make file."
+	echo "  --make-flags | -m"
+	echo "       - Extra flags for make file."
 	echo ""
-    echo "  --help | -h"
-    echo "       - You are reading it right now."
+	echo "  --linker-flags | -L"
+	echo "       - Extra flags that are set to temporary environment variable LDFLAGS."
+	echo "         Note that -p and -l add '-L' with libksi library to it."
+	echo ""
+	echo "  --compiler-flags | -C"
+	echo "       - Extra flags that are set to temporary environment variable CPPFLAGS."
+	echo "         Note that -p and -i add '-I' with libksi includes to it."
+	echo ""
+	echo "  -v"
+	echo "       - Verbose output."
+	echo ""
+	echo "  --help | -h"
+	echo "       - You are reading it right now."
 	echo ""
 }
 
@@ -68,11 +82,17 @@ conf_args=""
 make_args=""
 libksi_include_dir=""
 libksi_lib_dir=""
+extra_linker_flags=""
+extra_compiler_flags=""
 
 is_installed_libksi=true
 is_path_set=false
 is_path_override=false
+is_inc_dir_set=false
+is_lib_dir_set=false
 is_libksi_static=false
+is_extra_l_or_c_flags=false
+is_verbose=false
 do_build_rpm=false
 do_build_deb=false
 show_help=false
@@ -80,49 +100,59 @@ show_help=false
 
 # Simple command-line parameter parser.
 while [ "$1" != "" ]; do
-    case $1 in
-        --libksi-static | -s )   echo "Linking libksi statically."
-                                 is_libksi_static=true
-                                 ;;
-        --build-rpm | -r )       echo "Building rpm."
-                                 do_build_rpm=true
-                                 ;;
-        --build-deb | -d )       echo "Building deb."
-                                 do_build_deb=true
-                                 ;;
-        --libksi-path | -p )     shift
-                                 echo "Using libksi includes and lib from dir '$1'."
-                                 libksi_include_dir="$1/include"
-                                 libksi_lib_dir="$1/lib"
-                                 is_installed_libksi=false
-                                 is_path_set=true
-                                 ;;
-        --libksi-lib-dir | -l )  shift
-                                 echo "Using libksi library located in dir '$1'."
-                                 libksi_lib_dir=$1
-                                 is_installed_libksi=false
-                                 is_path_override=true
-                                 ;;
-        --libksi-inc-dir | -i )  shift
-                                 echo "Using libksi includes located in dir '$1'."
-                                 libksi_include_dir=$1
-                                 is_installed_libksi=false
-                                 is_path_override=true
-                                 ;;
-        --configure-flags | -c ) shift
-                                 echo "Using extra configure flags '$1'."
-                                 conf_args=$1
-                                 ;;
-        --make-flags | -m )      shift
-                                 echo "Using extra make flags '$1'."
-                                 make_args=$1
-                                 ;;
-        --help | -h )            show_help=true
-                                 ;;
-        * )                      echo "Unknown token '$1' from command-line."
-		                         show_help=true
-    esac
-    shift
+	case $1 in
+		--libksi-static | -s )	 echo "Linking libksi statically."
+								 is_libksi_static=true
+								 ;;
+		--build-rpm | -r )		 echo "Building rpm."
+								 do_build_rpm=true
+								 ;;
+		--build-deb | -d )		 echo "Building deb."
+								 do_build_deb=true
+								 ;;
+		--libksi-path | -p )	 shift
+								 echo "Using libksi includes and lib from dir '$1'."
+								 libksi_include_dir="$1/include"
+								 libksi_lib_dir="$1/lib"
+								 is_installed_libksi=false
+								 is_path_set=true
+								 ;;
+		--libksi-lib-dir | -l )	 shift
+								 echo "Using libksi library located in dir '$1'."
+								 libksi_lib_dir=$1
+								 is_installed_libksi=false
+								 is_lib_dir_set=true
+								 ;;
+		--libksi-inc-dir | -i )	 shift
+								 echo "Using libksi includes located in dir '$1'."
+								 libksi_include_dir=$1
+								 is_installed_libksi=false
+								 is_inc_dir_set=true
+								 ;;
+		--configure-flags | -c ) shift
+								 echo "Using extra configure flags '$1'."
+								 conf_args=$1
+								 ;;
+		--make-flags | -m )		 shift
+								 echo "Using extra make flags '$1'."
+								 make_args=$1
+								 ;;
+		--linker-flags | -L )	 shift
+								 extra_linker_flags=$1
+								 is_extra_l_or_c_flags=true
+								 ;;
+		--compiler-flags | -C )	 shift
+								 extra_compiler_flags=$1
+								 is_extra_l_or_c_flags=true
+								 ;;
+		-v )					 is_verbose=true
+								 ;;
+		--help | -h )			 show_help=true
+								 ;;
+		* )						 echo "Unknown token '$1' from command-line."
+								 show_help=true
+	esac
+	shift
 done
 
 if $show_help ; then
@@ -130,13 +160,23 @@ if $show_help ; then
 	exit 0
 fi
 
+if $is_extra_l_or_c_flags ; then
+	export CPPFLAGS="$CPPFLAGS $extra_compiler_flags"
+	export LDFLAGS="$LDFLAGS $extra_linker_flags"
+fi
+
 if $is_installed_libksi ; then
 	echo "Using installed libksi."
 	conf_args="$conf_args --enable-use-installed-libksi"
 else
-	export CPPFLAGS="$CPPFLAGS -I$libksi_include_dir"
-	export LDFLAGS="$LDFLAGS -L$libksi_lib_dir"
-	export LD_LIBRARY_PATH="$LD_LIBRARY_PATH $libksi_lib_dir"
+	if $is_inc_dir_set ; then
+		export CPPFLAGS="$CPPFLAGS -I$libksi_include_dir"
+	fi
+
+	if $is_lib_dir_set ; then
+		export LDFLAGS="$LDFLAGS -L$libksi_lib_dir"
+		export LD_LIBRARY_PATH="$LD_LIBRARY_PATH $libksi_lib_dir"
+	fi
 fi
 
 
@@ -153,13 +193,17 @@ if $do_build_rpm && $do_build_deb; then
 	exit 1
 fi
 
-if $is_path_override && $is_path_set ; then
-	>&2 echo  "Warning: Variable --libksi-path | -p is overridden by --libksi-lib-dir or --libksi-inc-dir!"
+
+# Simple configure and make with extra options.
+if $is_verbose ; then
+	echo "Using extra configure flags: '$conf_args'"
+	echo "Using extra make flags: '$make_args'"
+	echo "CPPFLAGS = $CPPFLAGS"
+	echo "LDFLAGS  = $LDFLAGS"
 fi
 
 echo ""
 
-# Simple configure and make with extra options.
 autoreconf -if
 ./configure $conf_args
 make $make_args clean
