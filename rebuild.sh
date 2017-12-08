@@ -47,13 +47,13 @@ help_txt() {
 	echo "         value used depends on the order of -p, -l and -i on command-line!"
 	echo ""
 	echo "  --libksi-lib-dir | -l"
-	echo "       - Path to folder containing libksi library objects. Note that the final"
-	echo "         value used depends on the order of -p, -l and -i on command-line!"
+	echo "       - Path to directory containing libksi library objects. Note that the"
+	echo "         final value used depends on the order of -p, -l and -i on command-line!"
 	echo ""
 	echo "  --libksi-inc-dir | -i"
-	echo "       - Path to dir containing directory 'ksi' that contains the actual include"
-	echo "         files. Note that the final value used depends on the order of -p, -l"
-	echo "         and -i on command-line!"
+	echo "       - Path to directory containing directory 'ksi' that contains the actual"
+	echo "         include files. Note that the final value used depends on the order of"
+	echo "         -p, -l and -i on command-line!"
 	echo ""
 	echo "  --configure-flags | -c"
 	echo "       - Extra flags for configure script. Note that -s, -l and -i will already"
@@ -109,7 +109,7 @@ while [ "$1" != "" ]; do
 								 do_build_deb=true
 								 ;;
 		--libksi-path | -p )	 shift
-								 echo "Using libksi includes and lib from dir '$1'."
+								 echo "Using libksi includes and lib from directory '$1'."
 								 libksi_include_dir="$1/include"
 								 libksi_lib_dir="$1/lib"
 								 is_installed_libksi=false
@@ -117,13 +117,13 @@ while [ "$1" != "" ]; do
 								 is_inc_dir_set=true
 								 ;;
 		--libksi-lib-dir | -l )	 shift
-								 echo "Using libksi library located in dir '$1'."
+								 echo "Using libksi library located in directory '$1'."
 								 libksi_lib_dir=$1
 								 is_installed_libksi=false
 								 is_lib_dir_set=true
 								 ;;
 		--libksi-inc-dir | -i )	 shift
-								 echo "Using libksi includes located in dir '$1'."
+								 echo "Using libksi includes located in directory '$1'."
 								 libksi_include_dir=$1
 								 is_installed_libksi=false
 								 is_inc_dir_set=true
