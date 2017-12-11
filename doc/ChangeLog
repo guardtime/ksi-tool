@@ -1,4 +1,6 @@
 * IMPROVEMENT: Script rebuild.sh changed to main buildscript that is called from the others.
+* IMPROVEMENT: Script configure intreface changed where '--enable-use-installed-libksi' renamed to '--enable-libksi-as-packaging-dependency'.
+* IMPROVEMENT: New option '--without-libksi' added to configure script that removes -lksi from linking thus making it possible to explicitly specify the concrete libksi library file that is used for linking.
 * IMPROVEMENT: Interface for build scripts improved.
 * IMPROVEMENT: Build requires libksi version >= 3.17.
 * IMPROVEMENT: README.md included to packaging.
