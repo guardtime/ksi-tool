@@ -25,11 +25,13 @@ help_txt() {
 	echo "Usage:"
 	echo "  $0 [-c options] [-m options] [-s] [-p path] [-l path -i path] [-d|-r]"
 	echo ""
+
 	echo "Description:"
 	echo "  This is KSI tool general build script. It can be used to build KSI tool"
 	echo "  (packages rpm or deb) with libksi statically or dynamically."
 	echo ""
 	echo ""
+
 	echo "Options:"
 	echo "  --libksi-static | -s"
 	echo "       - Link libksi statically. Note that only libksi is linked statically."
@@ -75,6 +77,23 @@ help_txt() {
 	echo ""
 	echo "  --help | -h"
 	echo "       - You are reading it right now."
+	echo ""
+	echo ""
+
+	echo "Examples:"
+	echo ""
+
+	echo "  1) Link KSI tool with libksi (e.g. cloned from github) from not"
+	echo "  default location statically."
+	echo ""
+	echo "    ./rebuild.sh -s -i /usr/tmp/libksi/src/ -l /usr/tmp/libksi/src/ksi/.libs/"
+	echo ""
+
+	echo "  2) Force KSI tool to link with static libksi library when --libksi-static"
+	echo "  fails or does not perform static linking."
+	echo ""
+	echo "    ./rebuild.sh -i /usr/src/ksi/ -c '--without-libksi --disable-silent-rules"
+	echo "     LIBS=/usr/lib/libksi.a'"
 	echo ""
 }
 
@@ -166,7 +185,6 @@ fi
 
 if $is_installed_libksi ; then
 	echo "Using installed libksi."
-	conf_args="$conf_args --enable-use-installed-libksi"
 else
 	if $is_inc_dir_set ; then
 		export CPPFLAGS="$CPPFLAGS -I$libksi_include_dir"
