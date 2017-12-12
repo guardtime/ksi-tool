@@ -166,7 +166,6 @@ fi
 
 if $is_installed_libksi ; then
 	echo "Using installed libksi."
-	conf_args="$conf_args --enable-use-installed-libksi"
 else
 	if $is_inc_dir_set ; then
 		export CPPFLAGS="$CPPFLAGS -I$libksi_include_dir"
