@@ -920,7 +920,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 		res = SIGNING_AGGR_ROUND_new(to_be_signed_in_round, &aggr_round[r]);
 		ERR_CATCH_MSG(err, res, "Error: Unable to create a record for aggregation round.");
 
-		res = KSI_BlockSigner_new(ctx, algo, isMasking ? prev_leaf : NULL, isMasking ? mask_iv : NULL, &bs);
+		res = KSITOOL_KSI_BlockSigner_new(err, ctx, algo, isMasking ? prev_leaf : NULL, isMasking ? mask_iv : NULL, &bs);
 		ERR_CATCH_MSG(err, res, "Error: Unable to create KSI Block Signer.");
 
 		/* Initialize a list for keeping hash handles. */

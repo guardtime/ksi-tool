@@ -51,6 +51,7 @@ int KSITOOL_Extender_getConf(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Config **config);
 int KSITOOL_Aggregator_getConf(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Config **config);
 int KSITOOL_Signature_isCalendarAuthRecPresent(const KSI_Signature *sig);
 int KSITOOL_Signature_isPublicationRecordPresent(const KSI_Signature *sig);
+int KSITOOL_KSI_BlockSigner_new(ERR_TRCKR *err, KSI_CTX *ctx, KSI_HashAlgorithm algoId, KSI_DataHash *prevLeaf, KSI_OctetString *initVal, KSI_BlockSigner **signer);
 int KSITOOL_BlockSigner_closeAndSign(ERR_TRCKR *err, KSI_CTX *ctx, KSI_BlockSigner *signer);
 int KSITOOL_BlockSigner_addLeaf(ERR_TRCKR *err, KSI_CTX *ctx, KSI_BlockSigner *signer, KSI_DataHash *hsh, int level, KSI_MetaData *metaData, KSI_BlockSignerHandle **handle);
 int KSITOOL_receivePublicationsFile(ERR_TRCKR *err ,KSI_CTX *ctx, KSI_PublicationsFile **pubFile);

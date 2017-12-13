@@ -464,6 +464,23 @@ int KSITOOL_SignatureVerify_userProvidedPublicationBased(ERR_TRCKR *err, KSI_Sig
 	return res;
 }
 
+int KSITOOL_KSI_BlockSigner_new(ERR_TRCKR *err, KSI_CTX *ctx, KSI_HashAlgorithm algoId, KSI_DataHash *prevLeaf, KSI_OctetString *initVal, KSI_BlockSigner **signer) {
+	int res;
+
+	if (err == NULL || ctx == NULL || signer == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
+	res = KSI_BlockSigner_new(ctx, algoId, prevLeaf, initVal, signer);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
+
+	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
+		appendAggreErrors(err, res);
+	}
+	return res;
+}
+
 int KSITOOL_BlockSigner_closeAndSign(ERR_TRCKR *err, KSI_CTX *ctx, KSI_BlockSigner *signer) {
 	int res;
 
@@ -975,6 +992,7 @@ int KSITOOL_KSI_ERR_toExitCode(int error_code) {
 		 * HMAC error.
 		 */
 		case KSI_HMAC_MISMATCH:
+		case KSI_HMAC_ALGORITHM_MISMATCH:
 			return EXIT_HMAC_ERROR;
 
 		case KSI_SERVICE_AUTHENTICATION_FAILURE:
