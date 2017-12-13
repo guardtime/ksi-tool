@@ -149,18 +149,18 @@ while [ "$1" != "" ]; do
 								 ;;
 		--configure-flags | -c ) shift
 								 echo "Using extra configure flags '$1'."
-								 conf_args=$1
+								 conf_args="$conf_args $1"
 								 ;;
 		--make-flags | -m )		 shift
 								 echo "Using extra make flags '$1'."
-								 make_args=$1
+								 make_args="$make_args $1"
 								 ;;
 		--linker-flags | -L )	 shift
-								 extra_linker_flags=$1
+								 extra_linker_flags="$extra_linker_flags $1"
 								 is_extra_l_or_c_flags=true
 								 ;;
 		--compiler-flags | -C )	 shift
-								 extra_compiler_flags=$1
+								 extra_compiler_flags="$extra_compiler_flags $1"
 								 is_extra_l_or_c_flags=true
 								 ;;
 		-v )					 is_verbose=true
