@@ -5,6 +5,7 @@
 * IMPROVEMENT: Build requires libksi version >= 3.17.
 * IMPROVEMENT: README.md included to packaging.
 * IMPROVEMENT: Tests refactored to suite with libksi 3.17.
+* IMPROVEMENT: Error message improed when untrusted hash algorithm is used.
 * BUGFIX: Int type argument removed from parameter --mdata-req-tm. Affects "ksi sign -h" and "ksi conf -h".
 * BUGFIX: Empty first page from doc/ksi-conf.pdf removed.
 

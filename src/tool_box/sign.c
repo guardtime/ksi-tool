@@ -956,7 +956,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 					(isMetadata && isMasking) ? "and metadata with enabled masking " : ""
 					);
 
-			res = KSI_BlockSigner_addLeaf(bs, hash, 0, mdata, &hndl);
+			res = KSITOOL_BlockSigner_addLeaf(err, ctx, bs, hash, 0, mdata, &hndl);
 			ERR_CATCH_MSG(err, res, "Error: Unable to add a hash value to a local aggregation tree.");
 
 			res = KSI_BlockSignerHandleList_append(hndlList, hndl);
