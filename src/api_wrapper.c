@@ -121,6 +121,13 @@ static void appendNetworkErrors(ERR_TRCKR *err, int res) {
 	ERR_APPEND_KSI_ERR(err, res, KSI_HTTP_ERROR);
 }
 
+static void appendHashAlgoErrors(ERR_TRCKR *err, int res) {
+	if (res == KSI_OK) return;
+
+	ERR_APPEND_KSI_ERR(err, res, KSI_UNTRUSTED_HASH_ALGORITHM);
+	ERR_APPEND_KSI_ERR(err, res, KSI_UNAVAILABLE_HASH_ALGORITHM);
+}
+
 static void appendExtenderErrors(ERR_TRCKR *err, int res) {
 	if (res == KSI_OK) return;
 	ERR_APPEND_KSI_ERR_EXT_MSG(err, res, KSI_EXTENDER_NOT_CONFIGURED, "Extender URL is not configured.");
@@ -132,6 +139,7 @@ static void appendExtenderErrors(ERR_TRCKR *err, int res) {
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_REQUEST_TIME_TOO_NEW);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_REQUEST_TIME_TOO_OLD);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_INVALID_TIME_RANGE);
+	appendHashAlgoErrors(err, res);
 }
 
 static void appendAggreErrors(ERR_TRCKR *err, int res) {
@@ -142,6 +150,7 @@ static void appendAggreErrors(ERR_TRCKR *err, int res) {
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_AGGR_REQUEST_OVER_QUOTA);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_AGGR_TOO_MANY_REQUESTS);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_AGGR_INPUT_TOO_LONG);
+	appendHashAlgoErrors(err, res);
 }
 
 static void appendPubFileErros(ERR_TRCKR *err, int res) {
@@ -455,6 +464,23 @@ int KSITOOL_SignatureVerify_userProvidedPublicationBased(ERR_TRCKR *err, KSI_Sig
 	return res;
 }
 
+int KSITOOL_KSI_BlockSigner_new(ERR_TRCKR *err, KSI_CTX *ctx, KSI_HashAlgorithm algoId, KSI_DataHash *prevLeaf, KSI_OctetString *initVal, KSI_BlockSigner **signer) {
+	int res;
+
+	if (err == NULL || ctx == NULL || signer == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
+	res = KSI_BlockSigner_new(ctx, algoId, prevLeaf, initVal, signer);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
+
+	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
+		appendAggreErrors(err, res);
+	}
+	return res;
+}
+
 int KSITOOL_BlockSigner_closeAndSign(ERR_TRCKR *err, KSI_CTX *ctx, KSI_BlockSigner *signer) {
 	int res;
 
@@ -472,6 +498,24 @@ int KSITOOL_BlockSigner_closeAndSign(ERR_TRCKR *err, KSI_CTX *ctx, KSI_BlockSign
 	}
 	return res;
 }
+
+int KSITOOL_BlockSigner_addLeaf(ERR_TRCKR *err, KSI_CTX *ctx, KSI_BlockSigner *signer, KSI_DataHash *hsh, int level, KSI_MetaData *metaData, KSI_BlockSignerHandle **handle) {
+	int res;
+
+	if (err == NULL || ctx == NULL || signer == NULL || hsh == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
+	res = KSI_BlockSigner_addLeaf(signer, hsh, level, metaData, handle);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
+
+	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
+		appendHashAlgoErrors(err, res);
+	}
+	return res;
+}
+
 
 int KSITOOL_receivePublicationsFile(ERR_TRCKR *err, KSI_CTX *ctx, KSI_PublicationsFile **pubFile) {
 	int res;
@@ -948,6 +992,7 @@ int KSITOOL_KSI_ERR_toExitCode(int error_code) {
 		 * HMAC error.
 		 */
 		case KSI_HMAC_MISMATCH:
+		case KSI_HMAC_ALGORITHM_MISMATCH:
 			return EXIT_HMAC_ERROR;
 
 		case KSI_SERVICE_AUTHENTICATION_FAILURE:

@@ -27,7 +27,8 @@ EXECUTABLE sign --conf test/test.cfg -i test/resource/file/testFile -o test/out/
 # KSI sign and hash with specified hash algorithm SHA1.
 # Fail as SHA1 is deprecated.
 EXECUTABLE sign --conf test/test.cfg -i test/resource/file/testFile -H SHA1 -o test/out/sign/testFile.sha1.ksig -d
->>>2 /.*The hash algorithm is not trusted.*/
+>>>2 /(.*Unable to create KSI Block Signer.*)(.*The hash algorithm is not trusted.*)(.*0x102.*)
+(.*The aggregation hash algorithm is no longer trusted.*)/
 >>>= 10
 
 # KSI sign and hash with specified hash algorithm SHA2-256.
