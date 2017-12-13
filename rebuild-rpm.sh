@@ -19,4 +19,4 @@
 # reserves and retains all trademark rights.
 
 
-./rebuild.sh --build-rpm --enable-libksi-as-packaging-dependency $*
+./rebuild.sh --build-rpm -c '--enable-libksi-as-packaging-dependency' $*
