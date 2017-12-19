@@ -52,6 +52,7 @@ enum contentStatus {
 	PARAM_OK = 0x00,
 	PARAM_INVALID,
 	HASH_ALG_INVALID_NAME,
+	HASH_ALG_UNTRUSTED,
 	HASH_IMPRINT_INVALID_LEN,
 	INTEGER_TOO_LARGE,
 	INTEGER_TOO_SMALL,
@@ -98,6 +99,7 @@ int extract_OctetString(void **extra, const char* str, void** obj);
 
 int isFormatOk_hashAlg(const char *hashAlg);
 int isContentOk_hashAlg(const char *alg);
+int isContentOk_hashAlgRejectDeprecated(const char *alg);
 /** extra is not used.*/
 int extract_hashAlg(void **extra, const char* str, void** obj);
 
