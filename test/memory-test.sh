@@ -113,7 +113,7 @@ $mem_test_dir/cmd.test \
 $mem_test_dir/sign-block-signer.test \
 $mem_test_dir/sign-block-signer-cmd.test \
 $mem_test_dir/verify-pub-suggestions.test \
---with="valgrind --leak-check=full --fair-sched=yes $tool" -- -j1
+--with="valgrind --leak-check=full --fair-sched=yes $tool" -a -- -j1
 exit_code=$?
 
 exit $exit_code
