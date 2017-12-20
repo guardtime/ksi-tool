@@ -201,7 +201,7 @@ EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig --pub-
 
 # Trust anchor: Calendar Blockchain. Verification is NA as default verification policy do not use calendar-based verification.
 EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.no-cal-hashchain.ksig -d --dump  --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
->>>  /(NA.*GEN-02.*In rule.*CalendarHashChainExistence)/
+>>>  /(NA.*GEN-02.*In rule.*CalendarHashChainPresenceVerification)/
 >>>2 /(Verification inconclusive. Signature verification according to trust anchor failed)/
 >>>= 6
 
@@ -224,7 +224,7 @@ EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-2014-08-01.1.ksig 
 # Extending is not permitted.
 EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ksig -d --dump -P file://test/resource/publication/ksi-publications.bin --cnstr email=test@test.com -V test/resource/certificates/ok-test.crt
 >>>  /Final result.*
-.*GEN-02.*ExtendingPermittedVerification/
+.*GEN-02.*PublicationsFileExtendingPermittedVerification/
 >>>2 /Signature publication-based verification with publications file.*failed.*/
 >>>= 6
 
@@ -240,8 +240,9 @@ EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.k
 
 # Wrong user publication string, extending not permitted.
 EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig --pub-str AAAAAA-CV65PY-AAIVFG-UJMDXY-XGBKMO-DISYGA-YPPQYY-QEWTQ5-Y43NGX-B22W7H-IGZQNN-DRTW2H -d --dump --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response-2015-09-15.cfg
->>>  /Final result.*
-.*GEN-02.*ExtendingPermittedVerification/
+>>>  /.*GEN-02.*UserProvidedPublicationExtendingPermittedVerification.*
+.*Final result.*
+.*NA.*SignaturePublicationRecordMissing/
 >>>2 /Signature publication-based verification with user publication string.*failed.*/
 >>>= 6
 
@@ -251,14 +252,14 @@ EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.k
 # Calendar hash chain is missing.
 EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-2014-08-01.1.no-cal-hashchain.ksig -d --dump --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>  /Final result.*
-.*GEN-02.*CalendarHashChainExistence/
+.*GEN-02.*CalendarHashChainPresenceVerification/
 >>>2 /Signature key-based verification.*failed.*/
 >>>= 6
 
 # Calendar authentication record is missing.
 EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -d --dump --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>  /Final result.*
-.*GEN-02.*CalendarAuthenticationRecordExistence/
+.*GEN-02.*CalendarAuthenticationRecordPresenceVerification/
 >>>2 /Signature key-based verification.*failed.*/
 >>>= 6
 
