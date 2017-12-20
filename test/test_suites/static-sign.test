@@ -46,10 +46,9 @@ EXECUTABLE sign --conf test/resource/conf/static-sign-1.cfg -i SHA-256:11a700b0c
 >>>= 11
 
 # Aggregator returns a package with untrusted HMAC algorithm.
-EXECUTABLE sign -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/dummy.ksig -d -S file://test/resource/server/ok-sig-2017-07-14.1-nok_aggr_response_sha1_hmac.tlv --aggr-hmac-alg sha1
->>>2 /(.*Unable to create signature.*)(.*The hash algorithm is not trusted.*)(.*0x102.*)
-(.*Aggregation HMAC algorithm not trusted.*)/
->>>= 10
+EXECUTABLE sign -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/dummy.ksig -d -S file://test/resource/server/ok-sig-2017-07-14.1-nok_aggr_response_sha1_hmac.tlv --aggr-hmac-alg SHA1
+>>>2 /(.*Algorithm is not trusted.*)(.*CMD.*)(.*aggr-hmac-alg.*)(.*SHA1.*)/
+>>>= 3
 
 # Aggregator returns a package with different HMAC algorithm.
 EXECUTABLE sign -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/dummy.ksig -d -S file://test/resource/server/ok-sig-2017-07-14.1-nok_aggr_response_sha1_hmac.tlv --aggr-hmac-alg sha256

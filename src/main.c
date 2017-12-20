@@ -49,7 +49,7 @@ const char *TOOL_getName(void) {
 	return name;
 }
 
-static char *hash_algorithms_to_string(char *buf, size_t buf_len) {
+static char *hash_algorithms_to_string(char *buf, size_t buf_len, int isTrusted) {
 	int i;
 	size_t count = 0;
 
@@ -59,7 +59,7 @@ static char *hash_algorithms_to_string(char *buf, size_t buf_len) {
 
 
 	for (i = 0; i < KSI_NUMBER_OF_KNOWN_HASHALGS; i++) {
-		if (KSI_isHashAlgorithmSupported(i)) {
+		if (KSI_isHashAlgorithmSupported(i) && ((KSI_isHashAlgorithmTrusted(i) && isTrusted) || (!KSI_isHashAlgorithmTrusted(i) && !isTrusted))) {
 			count += KSI_snprintf(buf + count, buf_len - count, "%s%s",
 				count == 0 ? "" : " ",
 				KSI_getHashAlgorithmName(i)
@@ -142,7 +142,11 @@ static void print_general_help(PARAM_SET *set, const char *KSI_CONF){
 	print_result(
 	"Supported hash algorithms (default: %s):\n"
 	"  %s\n", default_algo,
-		hash_algorithms_to_string(buf, sizeof(buf)));
+		hash_algorithms_to_string(buf, sizeof(buf), 1));
+
+	print_result(
+	"Supported but NOT TRUSTED hash algorithms (can not be used for signing or HMAC):\n"
+	"  %s\n", hash_algorithms_to_string(buf, sizeof(buf), 0));
 }
 
 static int ksitool_compo_get(TASK_SET *tasks, PARAM_SET **set, TOOL_COMPONENT_LIST **compo);

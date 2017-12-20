@@ -728,16 +728,31 @@ int isFormatOk_path(const char *path) {
 	return FORMAT_OK;
 }
 
-int isFormatOk_hashAlg(const char *hashAlg){
+int isFormatOk_hashAlg(const char *hashAlg) {
 	if (hashAlg == NULL) return FORMAT_NULLPTR;
 	if (strlen(hashAlg) == 0) return FORMAT_NOCONTENT;
 	return FORMAT_OK;
 }
 
-int isContentOk_hashAlg(const char *alg){
+int isContentOk_hashAlg(const char *alg) {
 	if (KSI_getHashAlgorithmByName(alg) != KSI_HASHALG_INVALID) return PARAM_OK;
 	else return HASH_ALG_INVALID_NAME;
 }
+
+int isContentOk_hashAlgRejectDeprecated(const char *alg) {
+	int ret;
+
+	ret = isContentOk_hashAlg(alg);
+	if (ret != PARAM_OK) return ret;
+
+	if (!KSI_isHashAlgorithmTrusted(KSI_getHashAlgorithmByName(alg))) {
+		return HASH_ALG_UNTRUSTED;
+	}
+
+	return PARAM_OK;
+}
+
+
 
 int extract_hashAlg(void **extra, const char* str, void** obj) {
 	const char *hash_alg_name = NULL;
@@ -1124,6 +1139,7 @@ const char *getParameterErrorString(int res) {
 		case PARAM_INVALID: return "Parameter is invalid";
 		case FORMAT_NOT_INTEGER: return "Invalid integer";
 		case HASH_ALG_INVALID_NAME: return "Algorithm name is incorrect";
+		case HASH_ALG_UNTRUSTED: return "Algorithm is not trusted";
 		case HASH_IMPRINT_INVALID_LEN: return "Hash length is incorrect";
 		case FORMAT_INVALID_HEX_CHAR: return "Invalid hex character";
 		case FORMAT_ODD_NUMBER_OF_HEX_CHARACTERS: return "There must be even number of hex characters";

@@ -120,7 +120,7 @@ test\test_suites\verify-pub-suggestions.test ^
 test\test_suites\sign-metadata.test ^
 %TEST_DEPENDING_ON_TLVUTIL% ^
 %TEST_DEPENDING_ON_TLVUTIL_GREP% ^
---with=%tool% -- -j1
+--with=%tool% -a -- -j1
 set exit_code=%errorlevel%
 
 endlocal
