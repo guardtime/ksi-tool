@@ -8,6 +8,7 @@
 * IMPROVEMENT: Error message improved when untrusted hash algorithm is used.
 * BUGFIX: Int type argument removed from parameter --mdata-req-tm. Affects "ksi sign -h" and "ksi conf -h".
 * BUGFIX: Empty first page from doc/ksi-conf.pdf removed.
+* IMPROVEMENT: Update verify handling in accordance with libksi improvements.
 
 Version 2.7
 
