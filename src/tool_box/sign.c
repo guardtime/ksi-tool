@@ -812,7 +812,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 	int in_count = 0;
 	size_t divider = 1;
 	char *signed_data_out = NULL;
-	KSI_HashAlgorithm algo = KSI_UNAVAILABLE_HASH_ALGORITHM;
+	KSI_HashAlgorithm algo = KSI_HASHALG_INVALID;
 	COMPOSITE extra;
 	KSI_OctetString *mask_iv = NULL;
 	int isMetadata = 0;
@@ -941,7 +941,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 
 		for (tree_input = 0; tree_input < max_tree_inputs && i < in_count; tree_input++, i++) {
 			char *fname = NULL;
-			KSI_HashAlgorithm hash_algo = KSI_UNAVAILABLE_HASH_ALGORITHM;
+			KSI_HashAlgorithm hash_algo = KSI_HASHALG_INVALID;
 
 			if (!prgrs) print_progressDesc(d, "Extracting hash from input... ");
 
@@ -959,7 +959,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 
 			KSI_DataHash_getHashAlg(hash, &hash_algo);
 			res = KSITOOL_BlockSigner_addLeaf(err, ctx, bs, hash, 0, mdata, &hndl);
-			ERR_CATCH_MSG(err, res, "Error: Unable to add a hash value (%s) to a local aggregation tree.", KSI_getHashAlgorithmName(hash_algo));
+			ERR_CATCH_MSG(err, res, "Error: Unable to add a (%s) hash value to a local aggregation tree.", KSI_getHashAlgorithmName(hash_algo));
 
 			res = KSI_BlockSignerHandleList_append(hndlList, hndl);
 			ERR_CATCH_MSG(err, res, "Error: Unable to append block-signer handle to the list.");

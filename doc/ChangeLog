@@ -8,9 +8,9 @@
 * IMPROVEMENT: Error message improved when untrusted hash algorithm is used.
 * IMPROVEMENT: Parameters -H, --aggr-hmac-alg and --ext-hmac-alg do not permit usage of untrusted hash algorithm.
 * IMPROVEMENT: Help (ksi -h) separates untrusted hash algorithms from trusted ones.
+* IMPROVEMENT: Update verify handling in accordance with libksi improvements.
 * BUGFIX: Int type argument removed from parameter --mdata-req-tm. Affects "ksi sign -h" and "ksi conf -h".
 * BUGFIX: Empty first page from doc/ksi-conf.pdf removed.
-* IMPROVEMENT: Update verify handling in accordance with libksi improvements.
 
 Version 2.7
 
