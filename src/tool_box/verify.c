@@ -394,7 +394,7 @@ static int signature_verify_general(PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 	 */
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_general(err, sig, ksi, hsh, pub_data, x, out);
-	if (*out != NULL) {
+	if (res != KSI_OK && *out != NULL) {
 		KSI_RuleVerificationResult *verificationResult = NULL;
 
 		if (KSI_RuleVerificationResultList_elementAt(
@@ -431,7 +431,7 @@ static int signature_verify_internally(PARAM_SET *set, ERR_TRCKR *err,
 
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_internally(err, sig, ksi, hsh, out);
-	if (*out != NULL) {
+	if (res != KSI_OK && *out != NULL) {
 		KSI_RuleVerificationResult *verificationResult = NULL;
 
 		if (KSI_RuleVerificationResultList_elementAt(
@@ -468,7 +468,7 @@ static int signature_verify_key_based(PARAM_SET *set, ERR_TRCKR *err,
 	 */
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_keyBased(err, sig, ksi, hsh, out);
-	if (*out != NULL) {
+	if (res != KSI_OK && *out != NULL) {
 		KSI_RuleVerificationResult *verificationResult = NULL;
 
 		if (KSI_RuleVerificationResultList_elementAt(
@@ -512,7 +512,7 @@ static int signature_verify_publication_based_with_user_pub(PARAM_SET *set, ERR_
 	 */
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_userProvidedPublicationBased(err, sig, ksi, hsh, pub_data, x, out);
-	if (*out != NULL) {
+	if (res != KSI_OK && *out != NULL) {
 		if (res != KT_OK) {
 			KSI_RuleVerificationResult *verificationResult = NULL;
 
@@ -555,7 +555,7 @@ static int signature_verify_publication_based_with_pubfile(PARAM_SET *set, ERR_T
 	 */
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_publicationsFileBased(err, sig, ksi, hsh, x, out);
-	if (*out != NULL) {
+	if (res != KSI_OK && *out != NULL) {
 		if (res != KT_OK) {
 			KSI_RuleVerificationResult *verificationResult = NULL;
 
@@ -596,7 +596,7 @@ static int signature_verify_calendar_based(PARAM_SET *set, ERR_TRCKR *err,
 	 */
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_calendarBased(err, sig, ksi, hsh, out);
-	if (*out != NULL) {
+	if (res != KSI_OK && *out != NULL) {
 		KSI_RuleVerificationResult *verificationResult = NULL;
 
 		if (KSI_RuleVerificationResultList_elementAt(
