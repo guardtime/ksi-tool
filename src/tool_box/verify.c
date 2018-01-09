@@ -435,7 +435,7 @@ static int signature_verify_internally(PARAM_SET *set, ERR_TRCKR *err,
 		KSI_RuleVerificationResult *verificationResult = NULL;
 
 		if (KSI_RuleVerificationResultList_elementAt(
-			(*out)->ruleResults, KSI_RuleVerificationResultList_length((*out)->ruleResults) - 1,
+				(*out)->ruleResults, KSI_RuleVerificationResultList_length((*out)->ruleResults) - 1,
 				&verificationResult) == KSI_OK && verificationResult != NULL) {
 			ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.",
 					OBJPRINT_getVerificationErrorCode(verificationResult->errorCode),
