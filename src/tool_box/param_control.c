@@ -1316,7 +1316,7 @@ static int decode_mask(const char* mask, int *func, char *arg1, char *arg2, size
 
 int isFormatOk_mask(const char* mask) {
 	if (mask == NULL) return FORMAT_OK;
-	if (mask == '\0') return FORMAT_NOCONTENT;
+	if (*mask == '\0') return FORMAT_NOCONTENT;
 
 	if (strchr(mask, ':') != NULL) {
 		return FORMAT_OK;
@@ -1332,7 +1332,7 @@ int isContentOk_mask(const char* mask) {
 	int function = MASK_F_INVALID;
 
 	if (mask == NULL) return PARAM_OK;
-	if (mask == '\0') return FORMAT_NOCONTENT;
+	if (*mask == '\0') return FORMAT_NOCONTENT;
 
 	if (strchr(mask, ':') != NULL) {
 		res = decode_mask(mask, &function, arg1, arg2, sizeof(arg1));
