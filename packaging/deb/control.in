@@ -9,5 +9,5 @@ Package: @PACKAGE@
 Architecture: any
 Section: utils
 Priority: optional
-Description: Log signature command-line tool for Keyless Signature Infrastructure.
+Description: Keyless Signature Infrastructure (KSI) command-line tool, also called KSI tool. Execute ksi -h to view brief usage instructions.
 @KSI_DEB_RUN_DEPENDECY@
