@@ -12,6 +12,7 @@
 * BUGFIX: Int type argument removed from parameter --mdata-req-tm. Affects "ksi sign -h" and "ksi conf -h".
 * BUGFIX: Empty first page from doc/ksi-conf.pdf removed.
 * BUGFIX: Pointer handling in param_control.c fixed.
+* BUGFIX: Description of Debian package fixed.
 
 Version 2.7
 

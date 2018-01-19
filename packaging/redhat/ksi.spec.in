@@ -49,7 +49,7 @@ Obsoletes: ksi <= 2.0.744-2
 
 
 %description
-Guardtime signing and verification tool. Execute %{name_tool} -h to view brief usage instructions.
+Keyless Signature Infrastructure (KSI) command-line tool, also called KSI tool. Execute %{name_tool} -h to view brief usage instructions.
 
 
 %post
