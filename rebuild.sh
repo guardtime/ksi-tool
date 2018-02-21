@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# Copyright 2013-2017 Guardtime, Inc.
+# Copyright 2013-2018 Guardtime, Inc.
 #
 # This file is part of the Guardtime client SDK.
 #
@@ -20,21 +20,24 @@
 
 set -e
 
-
 help_txt() {
 	echo "Usage:"
-	echo "  $0 [-c options] [-m options] [-s] [-p path] [-l path -i path] [-d|-r]"
+	echo "  $0 [-s] [-d|-r] [Options]"
+	echo "  $0 --get-dep-online [-s] [-d|-r --no-dep-check] [Options]"
+	echo "  $0 -l path -i path [-s] [-d|-r --no-dep-check] [Options]"
 	echo ""
 
 	echo "Description:"
 	echo "  This is KSI tool general build script. It can be used to build KSI tool"
-	echo "  (packages rpm or deb) with libksi statically or dynamically."
+	echo "  (packages rpm or deb) with libksi and libparamset statically or dynamically."
 	echo ""
 	echo ""
 
 	echo "Options:"
-	echo "  --libksi-static | -s"
-	echo "       - Link libksi statically. Note that only libksi is linked statically."
+	echo "  --link-static | -s"
+	echo "       - Link libksi and libparamset statically. Note that ONLY libksi and"
+	echo "         libparamset are linked statically. On some platforms this may not work."
+	echo "         See example 2, 4 and ./configure -h to alter linking process."
 	echo ""
 	echo "  --build-rpm | -r"
 	echo "       - Build RPM package."
@@ -42,35 +45,45 @@ help_txt() {
 	echo "  --build-deb | -d"
 	echo "       - Build Deb package."
 	echo ""
-	echo "  --libksi-path | -p"
-	echo "       - The path to libksi library and include files. Directory pointed by"
-	echo "         this, must contain directories 'lib' and 'include/ksi'. To be more"
-	echo "         precise see --libksi-lib-dir and --libksi-inc-dir. Note that the final"
-	echo "         value used depends on the order of -p, -l and -i on command-line!"
+	echo "  --lib-dir | -l"
+	echo "       - Path to directory containing library objects. Can have multiple"
+	echo "         values. Note that full path is required!"
 	echo ""
-	echo "  --libksi-lib-dir | -l"
-	echo "       - Path to directory containing libksi library objects. Note that the"
-	echo "         final value used depends on the order of -p, -l and -i on command-line!"
+	echo "  --inc-dir | -i"
+	echo "       - Path to directory containing include directories. Can have."
+	echo "         multiple values. Note that full path is required!"
 	echo ""
-	echo "  --libksi-inc-dir | -i"
-	echo "       - Path to directory containing directory 'ksi' that contains the actual"
-	echo "         include files. Note that the final value used depends on the order of"
-	echo "         -p, -l and -i on command-line!"
+	echo "  --lib | -b"
+	echo "       - Alter environment variable LIBS (see configure -h). Can be used to"
+	echo "         specify library file explicitly. Note that full path is required!"
+	echo "         See examples 2 and 4."
 	echo ""
 	echo "  --configure-flags | -c"
-	echo "       - Extra flags for configure script. Note that -s, -l and -i will already"
-	echo "         add something to configure options."
+	echo "       - Extra flags for configure script. Note that -s will already add"
+	echo "         something to configure options."
 	echo ""
 	echo "  --make-flags | -m"
 	echo "       - Extra flags for make file."
 	echo ""
 	echo "  --linker-flags | -L"
 	echo "       - Extra flags that are set to temporary environment variable LDFLAGS."
-	echo "         Note that -p and -l add '-L' with libksi library to it."
+	echo "         Note that -l and --get-dep-online will affect that."
 	echo ""
 	echo "  --compiler-flags | -C"
 	echo "       - Extra flags that are set to temporary environment variable CPPFLAGS."
-	echo "         Note that -p and -i add '-I' with libksi includes to it."
+	echo "         Note that -i and --get-dep-online will affect that."
+	echo ""
+	echo "  --get-dep-online"
+	echo "       - When this flag is set, libksi and libparamset are downloaded from"
+	echo "         github and built. Result is dumped in directory 'dependencies' that"
+	echo "         will contain 'include' and 'lib' directory. Libraries built should"
+	echo "         be available automatically. If not, see -l and -i."
+	echo ""
+	echo "  --no-dep-check"
+	echo "       - No dependency check is performed when building rpm or deb package. Note"
+	echo "         that it doesn't remove required dependencies from constructed packages!"
+	echo "         It is useful when building packages with dependencies that are not"
+	echo "         installed by package manager."
 	echo ""
 	echo "  -v"
 	echo "       - Verbose output."
@@ -82,44 +95,62 @@ help_txt() {
 
 	echo "Examples:"
 	echo ""
-
-	echo "  1) Link KSI tool with libksi (e.g. cloned from github) from not"
-	echo "  default location statically."
+	echo "  1) Link KSI tool with libksi and libparamset (e.g. cloned from github), from"
+	echo "  not default location, statically. Useful when libksi and libparamset are not"
+	echo "  installed or installed version do not match."
 	echo ""
 	echo "    ./rebuild.sh -s -i /usr/tmp/libksi/src/ -l /usr/tmp/libksi/src/ksi/.libs/"
 	echo ""
-
-	echo "  2) Force KSI tool to link with static libksi library when --libksi-static"
+	echo "  2) Force KSI tool to link with static libksi library when --link-static"
 	echo "  fails or does not perform static linking."
 	echo ""
-	echo "    ./rebuild.sh -i /usr/src/ksi/ -c '--without-libksi --disable-silent-rules"
-	echo "     LIBS=/usr/lib/libksi.a'"
+	echo "    ./rebuild.sh -i /usr/src/ksi/ -c '--without-libksi --disable-silent-rules' \\"
+	echo "     --lib /usr/lib/libksi.a'"
 	echo ""
+	echo "  3) Build KSI tool rpm packages with libksi and libparamset from github. Libksi"
+	echo "  and libparamset are linked and packaged statically."
+	echo ""
+	echo "    ./rebuild.sh --get-dep-online --no-dep-check --link-static --build-rpm"
+	echo ""
+	echo "  4) Build KSI tool deb packages with libksi and libparamset from github. Force"
+	echo "  libksi and libparamset to be linked and packaged statically."
+	echo ""
+	echo "    ./rebuild.sh --get-dep-online --no-dep-check --build-deb \\"
+	echo "    -c '--without-libksi --without-libparamset' \\"
+	echo "    --lib \`pwd\`/dependencies/lib/libksi.a \\"
+	echo "    --lib \`pwd\`/dependencies/lib/libparamset.a"
+	echo ""
+
 }
 
 conf_args=""
 make_args=""
-libksi_include_dir=""
-libksi_lib_dir=""
+include_dir=""
+lib_dir=""
+lib_path=""
+lib_extra=""
 extra_linker_flags=""
 extra_compiler_flags=""
+rpmbuild_flags=""
+debuild_flags=""
 
-is_installed_libksi=true
 is_inc_dir_set=false
 is_lib_dir_set=false
-is_libksi_static=false
+is_lib_extra=false
+is_liblink_static=false
 is_extra_l_or_c_flags=false
 is_verbose=false
 do_build_rpm=false
 do_build_deb=false
+do_build_dependecies=false
 show_help=false
 
 
 # Simple command-line parameter parser.
 while [ "$1" != "" ]; do
 	case $1 in
-		--libksi-static | -s )	 echo "Linking libksi statically."
-								 is_libksi_static=true
+		--link-static | -s )	 echo "Linking libksi and libparamset statically."
+								 is_liblink_static=true
 								 ;;
 		--build-rpm | -r )		 echo "Building rpm."
 								 do_build_rpm=true
@@ -127,25 +158,21 @@ while [ "$1" != "" ]; do
 		--build-deb | -d )		 echo "Building deb."
 								 do_build_deb=true
 								 ;;
-		--libksi-path | -p )	 shift
-								 echo "Using libksi includes and lib from directory '$1'."
-								 libksi_include_dir="$1/include"
-								 libksi_lib_dir="$1/lib"
-								 is_installed_libksi=false
-								 is_lib_dir_set=true
-								 is_inc_dir_set=true
-								 ;;
-		--libksi-lib-dir | -l )	 shift
-								 echo "Using libksi library located in directory '$1'."
-								 libksi_lib_dir=$1
-								 is_installed_libksi=false
+		--lib-dir | -l )	 	 shift
+								 echo "Library search path added: '$1'."
+								 lib_dir="$lib_dir -L$1"
+								 lib_path="$lib_path $1:"
 								 is_lib_dir_set=true
 								 ;;
-		--libksi-inc-dir | -i )	 shift
-								 echo "Using libksi includes located in directory '$1'."
-								 libksi_include_dir=$1
-								 is_installed_libksi=false
+		--inc-dir | -i )	 	 shift
+								 echo "Include file path added: '$1'."
+								 include_dir="$include_dir -I$1"
 								 is_inc_dir_set=true
+								 ;;
+		--lib | -b )			 shift
+								 echo "Library added to LIBS (configure env): '$1'."
+								 lib_extra="$lib_extra $1"
+								 is_lib_extra=true
 								 ;;
 		--configure-flags | -c ) shift
 								 echo "Using extra configure flags '$1'."
@@ -163,6 +190,13 @@ while [ "$1" != "" ]; do
 								 extra_compiler_flags="$extra_compiler_flags $1"
 								 is_extra_l_or_c_flags=true
 								 ;;
+		--get-dep-online )	     echo "Download and build libksi and libparamset."
+								 do_build_dependecies=true
+								 ;;
+		--no-dep-check )	     echo "Ignoring 'build depends on' when building a package."
+								 rpmbuild_flags="--nodeps"
+								 debuild_flags="-d"
+								 ;;
 		-v )					 is_verbose=true
 								 ;;
 		--help | -h )			 show_help=true
@@ -178,26 +212,36 @@ if $show_help ; then
 	exit 0
 fi
 
+if $do_build_dependecies ; then
+	is_inc_dir_set=true
+	is_lib_dir_set=true
+	./rebuild-tool-dependencies.sh
+	include_dir="$include_dir -I$(pwd)/dependencies/include"
+	lib_dir="$lib_dir -L$(pwd)/dependencies/lib"
+	lib_path="$lib_path $(pwd)/dependencies/lib:"
+fi
+
 if $is_extra_l_or_c_flags ; then
 	export CPPFLAGS="$CPPFLAGS $extra_compiler_flags"
 	export LDFLAGS="$LDFLAGS $extra_linker_flags"
 fi
 
-if $is_installed_libksi ; then
-	echo "Using installed libksi."
-else
-	if $is_inc_dir_set ; then
-		export CPPFLAGS="$CPPFLAGS -I$libksi_include_dir"
-	fi
+if $is_lib_extra ; then
+	export LIBS="$lib_extra"
+fi
 
-	if $is_lib_dir_set ; then
-		export LDFLAGS="$LDFLAGS -L$libksi_lib_dir"
-		export LD_LIBRARY_PATH="$LD_LIBRARY_PATH $libksi_lib_dir"
-	fi
+if $is_inc_dir_set ; then
+	export CPPFLAGS="$CPPFLAGS $include_dir"
+fi
+
+if $is_lib_dir_set ; then
+	export LDFLAGS="$LDFLAGS $lib_dir"
+	export LD_LIBRARY_PATH="$LD_LIBRARY_PATH $lib_path"
 fi
 
 
-if $is_libksi_static ; then
+
+if $is_liblink_static ; then
 	conf_args="$conf_args --enable-static-build"
 else
 	echo "Linking with libksi dynamically."
@@ -213,6 +257,7 @@ fi
 
 # Simple configure and make with extra options.
 if $is_verbose ; then
+	conf_args="$conf_args --disable-silent-rules"
 	echo "Using extra configure flags: '$conf_args'"
 	echo "Using extra make flags: '$make_args'"
 	echo "CPPFLAGS = $CPPFLAGS"
@@ -237,7 +282,7 @@ if $do_build_rpm || $do_build_deb; then
 		mkdir -p $BUILD_DIR/{BUILD,RPMS,SOURCES,SPECS,SRPMS,tmp} && \
 		cp packaging/redhat/ksi.spec $BUILD_DIR/SPECS/ && \
 		cp ksi-tools-*.tar.gz $BUILD_DIR/SOURCES/ && \
-		rpmbuild -ba $BUILD_DIR/SPECS/ksi.spec && \
+		rpmbuild -ba $rpmbuild_flags $BUILD_DIR/SPECS/ksi.spec && \
 		cp $BUILD_DIR/RPMS/*/ksi-tools-*$version*.rpm . && \
 		cp $BUILD_DIR/SRPMS/ksi-tools-*$version*.rpm . && \
 		chmod -v 644 *.rpm
@@ -264,7 +309,8 @@ if $do_build_rpm || $do_build_deb; then
 		cp $DEB_DIR/control $DEB_DIR/changelog $DEB_DIR/rules $DEB_DIR/copyright ksi-tools-$version/debian
 		chmod +x ksi-tools-$version/debian/rules
 		cd ksi-tools-$version
-		debuild -us -uc
+		# debuild cleans some environment variables, to keep LIBS -e is used.
+		debuild -e LIBS -us -uc $debuild_flags
 		cd ..
 
 		suffix=${version}-${PKG_VERSION}.${RELEASE_VERSION}_${ARCH}

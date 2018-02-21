@@ -1,5 +1,5 @@
 #
-# Copyright 2013-2016 Guardtime, Inc.
+# Copyright 2013-2018 Guardtime, Inc.
 #
 # This file is part of the Guardtime client SDK.
 #
@@ -34,8 +34,8 @@ EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-unknown-flags.cfg
 # Test typo suggestions.
 EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-typos.cfg
 >>>2 /(configuration file)(.*nok-conf-typos.cfg.*)(.*is invalid.*)
-(.*Did you mean.*)(.*--aggr-key.*)(.*instead of.*)(.*aggre-keey.*)
-(.*Did you mean.*)(.*--aggr-user.*)(.*instead of.*)(.*agepusr.*)/
+(.*Did [yY]ou mean.*)(.*--aggr-key.*)(.*instead of.*)(.*aggre-keey.*)
+(.*Did [yY]ou mean.*)(.*--aggr-user.*)(.*instead of.*)(.*agepusr.*)/
 >>>= 16
 
 # Conf with invalid syntax.

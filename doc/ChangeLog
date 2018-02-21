@@ -1,7 +1,8 @@
-* IMPROVEMENT: Script rebuild.sh changed to main buildscript that is called from the others.
-* IMPROVEMENT: Script configure interface changed where '--enable-use-installed-libksi' renamed to '--enable-libksi-as-packaging-dependency'.
+* IMPROVEMENT: Task and command-line parameter parser is linked as external library (libparamset).
+* IMPROVEMENT: Script rebuild.sh changed to main build script that is called from the others.
+* IMPROVEMENT: Convenience script WinBuildOnline.bat that links KSI tool with libksi and libparamset statically. Libksi and libparamset are downloaded and built from Github.
+* IMPROVEMENT: Convenience script rebuild.sh --get-dep-online that links KSI tool with libksi and libparamset statically. Libksi and libparamset are downloaded and built from Github.
 * IMPROVEMENT: New option '--without-libksi' added to configure script that removes -lksi from linking thus making it possible to explicitly specify the libksi library file that is used for linking.
-* IMPROVEMENT: Interface for build scripts improved.
 * IMPROVEMENT: Build requires libksi version >= 3.17.
 * IMPROVEMENT: README.md included to packaging.
 * IMPROVEMENT: Tests refactored to suite with libksi 3.17.

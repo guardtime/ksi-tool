@@ -1,5 +1,5 @@
 #
-# Copyright 2013-2016 Guardtime, Inc.
+# Copyright 2013-2018 Guardtime, Inc.
 #
 # This file is part of the Guardtime client SDK.
 #
@@ -46,7 +46,8 @@ Obsoletes: ksi <= 2.0.744-2
 # Dependencies are set in config.ac
 @KSI_RPM_BUILD_DEPENDECY@
 @KSI_RPM_RUN_DEPENDECY@
-
+@PST_RPM_BUILD_DEPENDECY@
+@PST_RPM_RUN_DEPENDECY@
 
 %description
 Keyless Signature Infrastructure (KSI) command-line tool, also called KSI tool. Execute %{name_tool} -h to view brief usage instructions.

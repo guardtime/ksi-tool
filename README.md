@@ -30,9 +30,9 @@ yum install ksi-tools
 If the latest version is needed or the package is not available for the platform you are using, check out source code from Github and build it using `gcc` or `VS`. To build KSI tool `libksi` and `libksi-devel` (KSI C SDK) packages are needed. `libksi` is available in Guardtime repository or as source code in GitHub:
 [https://github.com/GuardTime/libksi](https://github.com/GuardTime/libksi).
 
-Use `rebuild.sh` script to build KSI tool on CentOS/RHEL. 
+Use `rebuild.sh` script to build KSI tool on CentOS/RHEL. Call `rebuild.sh -h` for more details.
 
-See `WinBuild.txt` to read how to build KSI tool on Windows.
+Use `WinBuildOnline.bat` to get and build dependencies from Github or see `WinBuild.txt` to read in detail how to build KSI tool on Windows.
 
 See `test/TEST-README.md` to learn how to run KSI command-line tool tests on Windows and Linux.
 
@@ -78,9 +78,10 @@ See `CONTRIBUTING.md` file.
 ```
 Library   Version    License type  Source
 
-libksi    >=3.12     Apache 2.0    https://github.com/GuardTime/libksi
-OpenSSL   >=0.9.8    BSD           https://github.com/openssl/
-Curl      >=7.37.0   MIT           https://github.com/curl/curl.git
+libksi       >=3.17     Apache 2.0    https://github.com/GuardTime/libksi
+libparamset  >=1.0      Apache 2.0    https://github.com/GuardTime/libparamset
+OpenSSL      >=0.9.8    BSD           https://github.com/openssl/
+Curl         >=7.37.0   MIT           https://github.com/curl/curl.git
 ```
 
 * Note 1: OpenSSL is `libksi` dependency. On Windows platform it's optional.

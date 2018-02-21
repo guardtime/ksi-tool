@@ -3,11 +3,11 @@ Section: utils
 Priority: optional
 Maintainer: Guardtime <support@guardtime.com>
 Standards-Version: 3.9.8
-@KSI_DEB_BUILD_DEPENDECY@
+Build-Depends: @KSI_DEB_BUILD_DEPENDECY@, @PST_DEB_BUILD_DEPENDECY@
 
 Package: @PACKAGE@
 Architecture: any
 Section: utils
 Priority: optional
 Description: Keyless Signature Infrastructure (KSI) command-line tool, also called KSI tool. Execute ksi -h to view brief usage instructions.
-@KSI_DEB_RUN_DEPENDECY@
+Depends: @KSI_DEB_RUN_DEPENDECY@, @PST_DEB_RUN_DEPENDECY@

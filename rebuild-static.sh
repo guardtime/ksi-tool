@@ -19,4 +19,4 @@
 # reserves and retains all trademark rights.
 
 
-./rebuild.sh --libksi-static $*
+./rebuild.sh --link-static $*

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# Copyright 2013-2016 Guardtime, Inc.
+# Copyright 2013-2018 Guardtime, Inc.
 #
 # This file is part of the Guardtime client SDK.
 #
@@ -19,4 +19,4 @@
 # reserves and retains all trademark rights.
 
 
-./rebuild.sh --build-rpm --libksi-static $*
+./rebuild.sh --build-rpm --link-static $*
