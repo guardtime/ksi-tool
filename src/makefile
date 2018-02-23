@@ -1,5 +1,5 @@
 #
-# Copyright 2013-2016 Guardtime, Inc.
+# Copyright 2013-2018 Guardtime, Inc.
 #
 # This file is part of the Guardtime client SDK.
 #
@@ -33,7 +33,6 @@
 SRC_DIR = .
 OBJ_DIR = ..\obj
 
-PARAM_SET_DIR = param_set
 TOOL_BOX_DIR = tool_box
 
 LIB_OBJ = \
@@ -57,37 +56,27 @@ CCFLAGS = $(CCFLAGS) /DCOMMIT_ID=\"$(COM_ID)\"
 CCFLAGS = $(CCFLAGS) /DVERSION=\"$(VER)\"
 !ENDIF
 
-CCFLAGS = /DVERSION=\"$(VERSION)\" /DTOOL_NAME=\"$(TOOL_NAME)\" /I$(SRC_DIR) /I$(PARAM_SET_DIR) /I$(TOOL_BOX_DIR)
+CCFLAGS = /DVERSION=\"$(VERSION)\" /DTOOL_NAME=\"$(TOOL_NAME)\" /I$(SRC_DIR) /I$(TOOL_BOX_DIR)
 CCFLAGS = $(CCFLAGS) $(CCEXTRA)
 
-default: $(OBJ_DIR) $(LIB_OBJ) build_param_set build_tool_box
-
-build_param_set:
-	cd $(PARAM_SET_DIR)
-	nmake /S RTL=$(RTL) DLL=$(DLL)
-	cd ..
+default: $(OBJ_DIR) $(LIB_OBJ)  build_tool_box
 
 build_tool_box:
 	cd $(TOOL_BOX_DIR)
 	nmake /S RTL=$(RTL) DLL=$(DLL)
 	cd ..
 
-#C file compilation  	
+#C file compilation
 {$(SRC_DIR)\}.c{$(OBJ_DIR)\}.obj:
 	cl /c /$(RTL) $(CCFLAGS) /Fo$@ $<
 
-#Folder factory	
+#Folder factory
 $(OBJ_DIR):
 	@if not exist $@ mkdir $@
-	
+
 clean:
-	cd $(PARAM_SET_DIR)
-	nmake RTL=$(RTL) clean
-	cd ..
-	
 	cd $(TOOL_BOX_DIR)
 	nmake RTL=$(RTL) clean
 	cd ..
-	
+
 	del $(LIB_OBJ)
-	

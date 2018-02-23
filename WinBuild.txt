@@ -1,83 +1,79 @@
 Building with Microsoft Visual Studio
 =====================================
 
-	This document describes how to build ksi command-line tool KSI tool using
-	Microsoft Visual Studio tools and different libraries.
-	
-	
+    This document describes how to build Guardtime command-line tool KSI tool
+    using Microsoft Visual Studio tools and different libraries.
+
+
 Prerequisites
 =====================================
 
-	To be able to build ksi one must have the following software pieces:
+    To be able to build KSI tool one must have the following software pieces
+    (latest stable version is recommended for third party components):
 
-		1) Microsoft Visual Studio 10 or Windows SDK 7.1 for building tools.
-		2) Guardtime KSI C SDK (libksi).
-		3) Cryptography provider (must have one).
-			3.1) OpenSSL 0.9.8g (recommended).
-			3.2) Windows native CryptoAPI.
-		4) Network provider (must have one)
-			4.1) Lib Curl 7.37.0 (recommended).
-			4.2) Windows native WinINet.
-			4.3) Windows native WinHTTP.
-		5) WiX Toolset 3.9 for installer build. 
-	
-	Given versions are the same used in testing. It is strongly	recommended
-	to use exactly the same versions.
-	
-	Windows native libraries are already installed with	Windows but
-	when libksi uses OpenSSl or Curl the location of libraries must be
-	specified containing libksi itself. See makefile options CURL_DIR,
-	OPENSSL_DIR and KSI_DIR. The structure of the directories must be
-	as follows:
-	
-	For CURL
-	
-    dll
-    include
-      |curl
-    lib
-	
-	For OpenSSL
-	
-    dll
-    include
-      |openssl
-    lib
+        1) Microsoft Visual Studio and Windows SDK.
+        2) Guardtime KSI C SDK (libksi).
+        3) Guardtime C SDK, for handling command-line parameters and program
+           tasks (libparamset).
+        4) Cryptography provider (must have one).
+            4.1) OpenSSL (recommended).
+            4.2) Windows native CryptoAPI.
+        5) Network provider (must have one).
+            5.1) Lib Curl (recommended).
+            5.2) Windows native WinINet.
+            5.3) Windows native WinHTTP.
+        6) WiX Toolset for installer build.
 
-	For libksi
+    Windows native libraries are already installed but for third party
+    components, library and include locations must be specified. See make file
+    options KSI_DIR, PST_DIR, CURL_DIR and OPENSSL_DIR. The directory
+    containing external resources must have following structure:
 
     dll
     include
-      |ksi
+      |<include dir>
     lib
-	
-	
+
+    Directory <include dir> contains real header files and is different for
+    each dependency. For libksi, libparamset, Curl and OpenSSL specify as
+    'ksi', 'param_set', 'curl' and 'openssl' accordingly. Directories dll and
+    lib are for dynamic and static libraries. Note that when linking against
+    dll there must be import library in the same directory as the dll file.
+
+
 Build process
 =====================================
-	
-	Below is the abstract structure of the project that describes the location
-	of the documentation, source code, makefiles and output. Root directory
-	contains top-level build scripts that are used to build ksi tool. After
-	successful build obj and bin directory is created. Obj directory contains
-	compiled obj files. Out directory contains executable and if built the msi
-	installer file.
-	
-	WinBuild.bat.sample is a sample build script. It must be modified to get the
-	build working.
-	
-	// Top level build scripts.
+
+    Below is the abstract structure of the project that describes the location
+    of the documentation, source code, makefiles and output. Root directory
+    contains top-level build scripts that are used to build KSI tool. After
+    successful build obj and bin directory is created. Obj directory contains
+    compiled obj files. Out directory contains executable and if built the msi
+    installer.
+
+    rebuild-tool-dependencies.bat is a helper build script that will download
+    and build libksi and libparamset. It is used by WinBuildOnline.bat.
+
+    WinBuildOnline.bat is a convenience script that will download and build
+    libksi (built with Windows native libraries) and libparamset. Result is
+    statically linked KSI tool.
+
+    WinBuild.bat.sample is a sample build script. It must be modified to get
+    the build working.
+
+
+    // Top level build scripts.
+    rebuild-tool-dependencies.bat
     WinBuild.bat.sample
+    WinBuildOnline.bat
     makefile
-    
-    //Documentation and source code for ksi tool.
+
+   // Documentation and source code for KSI tool.
    doc
      | *.pdf
    src
      | *.c
      | *.h
-     | param_set
-        | *.c
-        | *.h
      | tool_box
         | *.c
         | *.h
@@ -95,77 +91,80 @@ Build process
 
 
 Configuring build scripts
-=====================================	
-	
-	For building process, above described top-level makefile or modified
-	versions of WinBuild.bat.sample must be called. WinBuild.bat.sample
-	contain the call to the makefile that must be modified. See sample build
-	scripts, the options of makefile and examples in the end of this document
-	to learn how to get the build to work properly.
-	
-	Makefile can be executed via CMD shell or Visual Studio command prompt
-	shell. When using CMD shell environment must be configured using setenv
-	command. For example setenv /x64 configures the build environment for
-	64-bit build. It must be noted that both libksi and KSI tool must be built
-	for the same architecture. Makefile option INSTALL_MACHINE does not change
-	the build environment and is only used to configure the installer build.
-	
-	It must be noted that when an environment variable is defined with the same
-	name as one of the makefile options and the option is not set during nmake
-	call, the environment variable is used in the build.
-	
-	Makefile has following tasks:
-	
-      1) default       - build ksi tool executable.
-      2) installer     - build ksi tool Windows installer (KSI_LIB must be lib).
+=====================================
+
+    For building process, above described top-level makefile,
+    WinBuildOnline.bat or modified versions of WinBuild.bat.sample must be
+    called. See sample build scripts, the options of makefile and examples in
+    the end of this document to learn how to get the build to work properly.
+
+    Makefile can be executed via CMD shell or Visual Studio command prompt
+    shell. When using CMD shell environment must be configured using setenv
+    command. For example setenv /x64 configures the build environment for
+    64-bit build. It must be noted that both libksi and KSI tool must be built
+    for the same architecture. Makefile option INSTALL_MACHINE does not change
+    the build environment and is only used to configure the installer build.
+
+    It must be noted that when an environment variable is defined with the same
+    name as one of the makefile options and the option is not set during nmake
+    call, the environment variable is used in the build.
+
+    Makefile has following tasks:
+
+      1) default       - build KSI tool executable.
+      2) installer     - build KSI tool Windows installer (KSI_LIB must be
+                         lib).
       3) clean         - clean build.
-	
-		
-	Makefile has following options:
-	
-      1) KSI_LIB      - select libksi library format (lib, dll).
-                        Default is lib.
+
+
+    Makefile has following options:
+
+      1) KSI_LIB      - select library (libksi and libparamset) format (lib,
+                        dll). Default is lib.
       2) RTL          - select C run-time library (RTL) (MT, MTd, MD, MDd).
                         Default is MT.
       3) INSTALL_MACHINE
-                      - values 32 and 64 for configuring installer task.
-                        to configure build environment for 32 on 64 bit build
+                      - values 32 and 64 for configuring installer task. To
+                        configure build environment for 32 on 64 bit build
                         setenv /x64 or /x86 must be called.
       4) CURL_DIR     - directory containing Curl library and include files.
       5) OPENSSL_DIR  - directory containing OpenSLL library and include files.
       6) KSI_DIR      - directory containing libksi library and include files.
-      7) LNK_CURL     - link against CURL library (yes/no).
-      8) LNK_OPENSSL  - link against OpenSLL library (yes/no).
-      9) LNK_WININET  - link against WinINet library (yes/no).
-      10) LNK_WINHTTP - link against WinHTTP library (yes/no).
-      11) LNK_CRYPTOAPI
+      7) PST_DIR      - directory containing libparamset library and include
+                        files.
+      8) LNK_CURL     - link against CURL library (yes/no).
+      9) LNK_OPENSSL  - link against OpenSLL library (yes/no).
+      10) LNK_WININET - link against WinINet library (yes/no).
+      11) LNK_WINHTTP - link against WinHTTP library (yes/no).
+      12) LNK_CRYPTOAPI
                       - link against CryptoAPI library (yes/no).
-      12) LDEXTRA     - extra flags for linker.
-      13) CCEXTRA     - extra flags for compiler.
-		
-	When compiling one must know how the libksi was linked - DLL and RTL must
-	be configured accordingly and LNK_<lib_name> must be defined for libraries
-	necessary for the build. The location of libksi must be specified by
-	defining KSI_DIR. If libksi uses Curl or OpenSSL CURL_DIR and OPENSSL_DIR
-	must be specified. 
+      13) LDEXTRA     - extra flags for linker.
+      14) CCEXTRA     - extra flags for compiler.
 
-	
+    When compiling, one must know how the libksi and libparamset was linked -
+    DLL and RTL must be configured accordingly and LNK_<lib_name> must be
+    defined for libraries necessary for the build. The location of libksi must
+    be specified by defining KSI_DIR and location for the libparamset must be
+    specified by defining PST_DIR. If libksi uses Curl or OpenSSL CURL_DIR and
+    OPENSSL_DIR must be specified.
+
+
 Examples
 =====================================
-	
-	1) libksi is built as lib using MT RTL and windows native libraries:
-		nmake RTL=MT KSI_LIB=lib KSI_DIR="C:\KSI" LNK_WININET=yes
-		LNK_CRYPTOAPI=yes
-		
-	2) libksi is built as lib using MTd RTL and OpenSLL
-		nmake RTL=MTd KSI_LIB=lib KSI_DIR="C:\KSI" OPENSSL_DIR="C:\OPENSSL"
-		LNK_WININET=yes LNK_OPENSSL=yes
-		
-	3) libksi is built as dll using MD RTL and windows native libraries:
-		nmake RTL=MD KSI_LIB=dll KSI_DIR="C:\KSI" OPENSSL_DIR="C:\OPENSSL"
-		LNK_WINHTTP=yes LNK_CRYPTOAPI=yes
-		
-	4) libksi is build as lib, using MTd and windows native libraries to build
-	   installer for 64bit OS:
-		nmake RTL=MTd KSI_LIB=lib KSI_DIR="C:\KSI" LNK_WININET=yes
-		LNK_CRYPTOAPI=yes INSTALL_MACHINE=64 installer
+
+    1) libksi is built as lib using MT RTL and windows native libraries:
+        nmake RTL=MT KSI_LIB=lib KSI_DIR="C:\KSI" PST_DIR="C:\PST"
+        LNK_WININET=yes LNK_CRYPTOAPI=yes
+
+    2) libksi is built as lib using MTd RTL and OpenSSL
+        nmake RTL=MTd KSI_LIB=lib KSI_DIR="C:\KSI" PST_DIR="C:\PST"
+        OPENSSL_DIR="C:\OPENSSL" LNK_WININET=yes LNK_OPENSSL=yes
+
+    3) libksi is built as dll using MD RTL and windows native libraries:
+        nmake RTL=MD KSI_LIB=dll KSI_DIR="C:\KSI" PST_DIR="C:\PST"
+        OPENSSL_DIR="C:\OPENSSL" LNK_WINHTTP=yes LNK_CRYPTOAPI=yes
+
+    4) libksi is built as lib, using MTd and windows native libraries to build
+       installer for 64bit OS:
+        nmake RTL=MTd KSI_LIB=lib KSI_DIR="C:\KSI" PST_DIR="C:\PST"
+        LNK_WININET=yes LNK_CRYPTOAPI=yes INSTALL_MACHINE=64 installer
