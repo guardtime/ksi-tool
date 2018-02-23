@@ -66,38 +66,38 @@ AC_ARG_WITH(libparamset,
 AS_HELP_STRING([--without-libparamset], [Do not check or add libparamset automatically for linking (no -lparamset is added). Libparamset library file must be provided by user (via LIBS variable) explicitly. Usable when default automatic linking does not work as expected (e.g. unable to link libparamset statically). Default is with libparamset.]),:,:)
 
 # Specify all possible dependencies for RPM and DEB packaging.
-KSI_RPM_BUILD_DEPENDECY="BuildRequires: libksi-devel >= $LIBKSI_VER"
-KSI_DEB_BUILD_DEPENDECY="libksi-dev(>=$LIBKSI_VER)"
-KSI_RPM_RUN_DEPENDECY="Requires: libksi >= $LIBKSI_VER"
-KSI_DEB_RUN_DEPENDECY="libksi(>=$LIBKSI_VER)"
+KSI_RPM_BUILD_DEPENDENCY="BuildRequires: libksi-devel >= $LIBKSI_VER"
+KSI_DEB_BUILD_DEPENDENCY="libksi-dev(>=$LIBKSI_VER)"
+KSI_RPM_RUN_DEPENDENCY="Requires: libksi >= $LIBKSI_VER"
+KSI_DEB_RUN_DEPENDENCY="libksi(>=$LIBKSI_VER)"
 
-PST_RPM_BUILD_DEPENDECY="BuildRequires: libparamset-devel >= $LIBPST_VER"
-PST_DEB_BUILD_DEPENDECY="libparamset-dev(>=$LIBPST_VER)"
-PST_RPM_RUN_DEPENDECY="Requires: libparamset >= $LIBPST_VER"
-PST_DEB_RUN_DEPENDECY="libparamset(>=$LIBPST_VER)"
+PST_RPM_BUILD_DEPENDENCY="BuildRequires: libparamset-devel >= $LIBPST_VER"
+PST_DEB_BUILD_DEPENDENCY="libparamset-dev(>=$LIBPST_VER)"
+PST_RPM_RUN_DEPENDENCY="Requires: libparamset >= $LIBPST_VER"
+PST_DEB_RUN_DEPENDENCY="libparamset(>=$LIBPST_VER)"
 
 # If libksi is excluded from linking, remove packaging run dependency, as libksi must be provided as static library via LIBS environment variable. See ./configure -h.
 if (test "$with_libksi" = "no") ; then
 	AC_MSG_NOTICE([Note that user must specify libksi explicitly! See configure option (configure -h) --without-libksi and environment variable LIBS.])
 	KSI_PACKAGING_BUILD_FLAGS="$KSI_PACKAGING_BUILD_FLAGS --without-libksi"
-	KSI_RPM_RUN_DEPENDECY=""
-	KSI_DEB_RUN_DEPENDECY=""
+	KSI_RPM_RUN_DEPENDENCY=""
+	KSI_DEB_RUN_DEPENDENCY=""
 fi
 
 # If libparamset is excluded from linking, remove packaging run dependency, as libparamset must be provided as static library via LIBS environment variable.  See ./configure -h.
 if (test "$with_libparamset" = "no") ; then
 	AC_MSG_NOTICE([Note that user must specify libparamset explicitly! See configure option (configure -h) --without-libparamset and environment variable LIBS.])
 	KSI_PACKAGING_BUILD_FLAGS="$KSI_PACKAGING_BUILD_FLAGS --without-libparamset"
-	PST_RPM_RUN_DEPENDECY=""
-	PST_DEB_RUN_DEPENDECY=""
+	PST_RPM_RUN_DEPENDENCY=""
+	PST_DEB_RUN_DEPENDENCY=""
 fi
 
 if test "$enable_static_build" = "yes" ; then
 	AC_CANONICAL_HOST
-	KSI_RPM_RUN_DEPENDECY=""
-	KSI_DEB_RUN_DEPENDECY=""
-	PST_RPM_RUN_DEPENDECY=""
-	PST_DEB_RUN_DEPENDECY=""
+	KSI_RPM_RUN_DEPENDENCY=""
+	KSI_DEB_RUN_DEPENDENCY=""
+	PST_RPM_RUN_DEPENDENCY=""
+	PST_DEB_RUN_DEPENDENCY=""
 
 	if test "${host_os#*linux}" != "$host_os" ; then
 		dy_link_flag="-Bdynamic"
@@ -132,14 +132,14 @@ else
 	fi
 fi
 
-AC_SUBST(KSI_RPM_RUN_DEPENDECY)
-AC_SUBST(KSI_DEB_RUN_DEPENDECY)
-AC_SUBST(KSI_DEB_BUILD_DEPENDECY)
-AC_SUBST(KSI_RPM_BUILD_DEPENDECY)
-AC_SUBST(PST_RPM_RUN_DEPENDECY)
-AC_SUBST(PST_DEB_RUN_DEPENDECY)
-AC_SUBST(PST_DEB_BUILD_DEPENDECY)
-AC_SUBST(PST_RPM_BUILD_DEPENDECY)
+AC_SUBST(KSI_RPM_RUN_DEPENDENCY)
+AC_SUBST(KSI_DEB_RUN_DEPENDENCY)
+AC_SUBST(KSI_DEB_BUILD_DEPENDENCY)
+AC_SUBST(KSI_RPM_BUILD_DEPENDENCY)
+AC_SUBST(PST_RPM_RUN_DEPENDENCY)
+AC_SUBST(PST_DEB_RUN_DEPENDENCY)
+AC_SUBST(PST_DEB_BUILD_DEPENDENCY)
+AC_SUBST(PST_RPM_BUILD_DEPENDENCY)
 AC_SUBST(KSI_PACKAGING_BUILD_FLAGS)
 
 

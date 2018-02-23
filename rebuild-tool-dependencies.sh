@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# Copyright 2013-2017 Guardtime, Inc.
+# Copyright 2013-2018 Guardtime, Inc.
 #
 # This file is part of the Guardtime client SDK.
 #
@@ -37,12 +37,12 @@ cd $tmp_build_dir_name
   git clone $libparamset_git $libparamset_dir_name
 
   cd $libksi_dir_name
-	git checkout v3.17.2693
+    git checkout v3.17.2693
     ./rebuild.sh
   cd ..
 
   cd $libparamset_dir_name
-	git checkout v1.0.212
+    git checkout v1.0.212
     ./rebuild.sh
   cd ..
 cd ..
