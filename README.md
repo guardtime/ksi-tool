@@ -27,11 +27,11 @@ yum install ksi-tools
 
 ### From Source Code
 
-If the latest version is needed or the package is not available for the platform you are using, check out source code from Github and build it using `gcc` or `VS`. To build KSI tool `libksi-devel` (KSI C SDK) and `libparamset-devel` packages are needed (maybe found from Guardtime repositories). Both are available in Github as source code. See [https://github.com/GuardTime/libksi](https://github.com/GuardTime/libksi) for libksi and [https://github.com/GuardTime/libparamset](https://github.com/GuardTime/libparamset) for libparamset.
+If the latest version is needed or the package is not available for the platform you are using, check out source code from Github and build it using `gcc` or `VS`. To build KSI tool, `libksi-devel` (KSI C SDK) and `libparamset-devel` packages are needed (maybe found from Guardtime repositories). Both are available in Github as source code. See [https://github.com/GuardTime/libksi](https://github.com/GuardTime/libksi) for libksi and [https://github.com/GuardTime/libparamset](https://github.com/GuardTime/libparamset) for libparamset.
 
 Use `rebuild.sh` script to build `KSI` tool and see `rebuild.sh -h` for more details.
 
-On Windows see `WinBuild.txt` for more detail how to build `KSI` tool or call `WinBuildOnline.bat` to get and build `libksi` and `libparamset` from Github automatically, resulting `KSI` tool binary linked with Windows native libraries.
+On Windows see `WinBuild.txt` for more detail how to build `KSI` tool or call `WinBuildOnline.bat` to get and build `libksi` and `libparamset` from Github automatically, producing `KSI` tool binary linked with Windows native libraries.
 
 See `test/TEST-README.md` to learn how to run KSI command-line tool tests on Windows and Linux.
 
