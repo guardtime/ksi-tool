@@ -147,21 +147,27 @@ error_handling_build_tool:
 !IFNDEF KSI_DIR
 	@echo "ERROR: KSI_DIR is not specified! Specify KSI_DIR as path to directory"
 	@echo "       containing libksi (KSI C SDK) sub directories lib and include."
-	@echo "       See README for more information."
+	@echo "       See WinBuild.txt for more information."
+	@exit 1
+!ENDIF
+!IFNDEF PST_DIR
+	@echo "ERROR: PST_DIR is not specified! Specify PST_DIR as path to directory"
+	@echo "       containing libparamset sub directories lib and include."
+	@echo "       See WinBuild.txt for more information."
 	@exit 1
 !ENDIF
 !IF "$(LNK_WININET)" != "yes" && "$(LNK_WINHTTP)" != "yes" && "$(LNK_CURL)" != "yes"
 	@echo "ERROR: Network provider library not spcified!"
 	@echo "       Specify one of the following that matches with the libksi (KSI C SDK):"
 	@echo "       LNK_WININET=yes, LNK_WINHTTP=yes or LNK_CURL=yes."
-	@echo "       See README for more information."
+	@echo "       See WinBuild.txt for more information."
 	@exit 1
 !ENDIF
 !IF "$(LNK_CURL)" == "yes"
 !IFNDEF CURL_DIR
 	@echo "ERROR: LNK_CURL is specified but CURL_DIR is not! Specify CURL_DIR as"
 	@echo "       path to directory containing curl sub directories lib and include."
-	@echo "       See README for more information."
+	@echo "       See WinBuild.txt for more information."
 	@exit 1
 !ENDIF
 !ENDIF
@@ -169,14 +175,14 @@ error_handling_build_tool:
 	@echo "ERROR: Cryptographic provider library not spcified!"
 	@echo "       Specify one of the following that matches with the libksi (KSI C SDK):"
 	@echo "       LNK_OPENSSL=yes or LNK_CRYPTOAPI=yes."
-	@echo "       See README for more information."
+	@echo "       See WinBuild.txt for more information."
 	@exit 1
 !ENDIF
 !IF "$(LNK_OPENSSL)" == "yes"
 !IFNDEF OPENSSL_DIR
 	@echo "ERROR: LNK_OPENSSL is specified but OPENSSL_DIR is not! Specify OPENSSL_DIR as"
 	@echo "       path to directory containing OpenSSL sub directories lib and include."
-	@echo "       See README for more information."
+	@echo "       See WinBuild.txt for more information."
 	@exit 1
 !ENDIF
 !ENDIF
