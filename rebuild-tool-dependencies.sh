@@ -21,7 +21,9 @@
 set -e
 
 libksi_git="https://github.com/guardtime/libksi.git"
+libksi_version=v3.17.2693
 libparamset_git="https://github.com/guardtime/libparamset.git"
+libparamset_version=v1.0.216
 
 tmp_build_dir_name="tmp_dep_build"
 lib_out_dir="dependencies"
@@ -37,12 +39,12 @@ cd $tmp_build_dir_name
   git clone $libparamset_git $libparamset_dir_name
 
   cd $libksi_dir_name
-    git checkout v3.17.2693
+    git checkout $libksi_version
     ./rebuild.sh
   cd ..
 
   cd $libparamset_dir_name
-    git checkout v1.0.212
+    git checkout $libparamset_version
     ./rebuild.sh
   cd ..
 cd ..
