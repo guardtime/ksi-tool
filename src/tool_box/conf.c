@@ -59,6 +59,8 @@ int conf_run(int argc, char** argv, char **envp) {
 			goto cleanup;
 	}
 
+	res = CONF_LoadEnvNameContent(set, "KSI_CONF", envp);
+	if (res != KT_OK) goto cleanup;
 
 	if (PARAM_SET_isSetByName(set, "dump")) {
 		if (CONF_isEnvSet()) {
