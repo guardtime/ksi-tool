@@ -28,7 +28,7 @@ extern "C" {
 
 int CONF_LoadEnvNameContent(PARAM_SET *set, const char *env_name, char **envp);
 const char *CONF_getEnvName(void);
-const char *CONF_getEnvNameContent(void);	
+const char *CONF_getEnvNameContent(void);
 int CONF_isEnvSet(void);
 int CONF_convertFilePaths(PARAM_SET *set, const char *conf_file, const char *names, const char *source, int prio);
 /**
@@ -71,7 +71,7 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags);
  * \param env		- Pointer to the pointer to c-string values representing environment variables.
  * \param priority	- The priority of the parameters.
  * \convertPaths    - If this flag is set all paths in configuration file that are not full
- *						paths are interpreted as paths relative to the configuration file. 
+ *						paths are interpreted as paths relative to the configuration file.
  * \return KT_OK if successful, error code otherwise. KT_IO_ERROR if file do not exist or
  * KT_NO_PRIVILEGES if access is not permitted.
  */

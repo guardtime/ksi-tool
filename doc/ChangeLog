@@ -10,10 +10,12 @@
 * IMPROVEMENT: Parameters -H, --aggr-hmac-alg and --ext-hmac-alg do not permit usage of untrusted hash algorithm.
 * IMPROVEMENT: Help (ksi -h) separates untrusted hash algorithms from trusted ones.
 * IMPROVEMENT: Update verify handling in accordance with libksi improvements.
+* IMPROVEMENT: When it is not possible to access configuration file via KSI_CONF, warning is displayed instead of error. Invalid configuration file pointed by KSI_CONF is still handled as error.
 * BUGFIX: Int type argument removed from parameter --mdata-req-tm. Affects "ksi sign -h" and "ksi conf -h".
 * BUGFIX: Empty first page from doc/ksi-conf.pdf removed.
 * BUGFIX: Pointer handling in param_control.c fixed.
 * BUGFIX: Description of Debian package fixed.
+* BUGFIX: In case of empty string as KSI_CONF value, warning is displayed.
 
 Version 2.7
 
