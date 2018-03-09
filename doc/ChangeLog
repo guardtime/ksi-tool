@@ -1,3 +1,4 @@
+* IMPROVEMENT: New parameter --grep that can be used together with --dump to make output usable for grepping.
 * IMPROVEMENT: Task and command-line parameter parser is linked as external library (libparamset).
 * IMPROVEMENT: Script rebuild.sh changed to main build script that is called from the others.
 * IMPROVEMENT: Convenience script WinBuildOnline.bat that links KSI tool with libksi and libparamset statically. Libksi and libparamset are downloaded and built from Github.

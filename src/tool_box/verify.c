@@ -90,7 +90,7 @@ int verify_run(int argc, char **argv, char **envp) {
 	 * Extract command line parameters and also add configuration specific parameters.
 	 */
 	res = PARAM_SET_new(
-			CONF_generate_param_set_desc("{i}{x}{f}{d}{pub-str}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}{conf}{log}{h|help}", "XP", buf, sizeof(buf)),
+			CONF_generate_param_set_desc("{i}{x}{f}{d}{pub-str}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}{grep}{conf}{log}{h|help}", "XP", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -146,11 +146,15 @@ int verify_run(int argc, char **argv, char **envp) {
 	/* Fall through: if (res != KT_OK) goto cleanup; */
 
 	if (PARAM_SET_isSetByName(set, "dump")) {
+		int dump_flags = OBJPRINT_NONE;
+
+		if (PARAM_SET_isSetByName(set, "grep")) dump_flags |= OBJPRINT_GREPABLE;
+
 		/**
 		 * Dump signature.
 		 */
 		print_result("\n");
-		OBJPRINT_signatureDump(ksi, sig, print_result);
+		OBJPRINT_signatureDump(ksi, sig, dump_flags, print_result);
 		/**
 		 * Dump verification result data.
 		 */
@@ -242,6 +246,7 @@ char *verify_help_toString(char *buf, size_t len) {
 		"             is performed successfully, 'NA' means that it could not be performed\n"
 		"             as there was not enough information and 'FAILED' means that the\n"
 		"             verification was unsuccessful.\n"
+		" --grep    - Makes signature dump (see --dump) suitable for processing with grep.\n"
 		" --conf <file>\n"
 		"             Read configuration options from given file. It must be noted\n"
 		"             that configuration options given explicitly on command line will\n"
@@ -281,11 +286,11 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFileWithPipe, convertRepair_path, extract_inputSignature);
 	PARAM_SET_addControl(set, "{f}", isFormatOk_inputHash, isContentOk_inputHash, convertRepair_path, extract_inputHash);
-	PARAM_SET_addControl(set, "{d}{x}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{d}{x}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}{grep}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{pub-str}", isFormatOk_pubString, NULL, NULL, extract_pubString);
 
 	PARAM_SET_setParseOptions(set, "i", PST_PRSCMD_HAS_VALUE | PST_PRSCMD_COLLECT_LOOSE_VALUES);
-	PARAM_SET_setParseOptions(set, "{x}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}", PST_PRSCMD_HAS_NO_VALUE);
+	PARAM_SET_setParseOptions(set, "{x}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}{grep}", PST_PRSCMD_HAS_NO_VALUE);
 
 	/*						ID						DESC								MAN							ATL		FORBIDDEN											IGN	*/
 	TASK_SET_add(task_set,	ANC_BASED_DEFAULT,		"Verify.",							"i",						NULL,	"ver-int,ver-cal,ver-key,ver-pub,P,cnstr,pub-str",	NULL);

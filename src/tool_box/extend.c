@@ -73,7 +73,7 @@ int extend_run(int argc, char** argv, char **envp) {
 	 */
 	res = PARAM_SET_new(
 			CONF_generate_param_set_desc(
-					"{i}{input}{o}{d}{x}{T}{pub-str}{dump}{dump-conf}"
+					"{i}{input}{o}{d}{x}{T}{pub-str}{dump}{dump-conf}{grep}"
 					"{conf}{apply-remote-conf}{log}{h|help}{replace-existing}", "XP", buf, sizeof(buf)),
 					&set);
 	if (res != KT_OK) goto cleanup;
@@ -180,6 +180,7 @@ char *extend_help_toString(char*buf, size_t len) {
 		"             format to stdout.\n"
 		" --dump-conf\n"
 		"           - Dump extender configuration to stdout.\n"
+		" --grep    - Makes signature dump (see --dump) suitable for processing with grep.\n"
 		" --conf <file>\n"
 		"             Read configuration options from given file. It must be noted\n"
 		"             that configuration options given explicitly on command line will\n"
@@ -532,9 +533,9 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFileWithPipe, convertRepair_path, extract_inputSignature);
 	PARAM_SET_addControl(set, "{input}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignatureFromFile);
 	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
-	PARAM_SET_addControl(set, "{d}{dump}{dump-conf}{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{d}{dump}{dump-conf}{grep}{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{pub-str}", isFormatOk_pubString, NULL, NULL, extract_pubString);
-	PARAM_SET_setParseOptions(set, "{d}{dump}{dump-conf}{replace-existing}{apply-remote-conf}", PST_PRSCMD_HAS_NO_VALUE);
+	PARAM_SET_setParseOptions(set, "{d}{dump}{dump-conf}{grep}{replace-existing}{apply-remote-conf}", PST_PRSCMD_HAS_NO_VALUE);
 
 	/**
 	 * To enable wildcard characters (WC) to work on Windows, configure the WC
@@ -687,6 +688,7 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 	const char *mode = NULL;
 	KSI_PolicyVerificationResult *result_ext = NULL;
 	KSI_PolicyVerificationResult *result_sig = NULL;
+	int dump_flags = OBJPRINT_NONE;
 
 	if (set == NULL || err == NULL || ksi == NULL || task_id > 2) {
 		res = KT_INVALID_ARGUMENT;
@@ -698,6 +700,7 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 
 	d = PARAM_SET_isSetByName(set, "d");
 	dump = PARAM_SET_isSetByName(set, "dump");
+	if (PARAM_SET_isSetByName(set, "grep")) dump_flags |= OBJPRINT_GREPABLE;
 
 	extra.ctx = ksi;
 	extra.err = err;
@@ -756,10 +759,10 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 		if (PARAM_SET_isSetByName(set, "dump")) {
 			print_result("\n");
 			print_result("=== Old signature ===\n");
-			OBJPRINT_signatureDump(ksi, sig, print_result);
+			OBJPRINT_signatureDump(ksi, sig, dump_flags, print_result);
 			print_result("\n");
 			print_result("=== Extended signature ===\n");
-			OBJPRINT_signatureDump(ksi, ext, print_result);
+			OBJPRINT_signatureDump(ksi, ext, dump_flags, print_result);
 			print_result("\n");
 			print_result("=== Extended signature verification ===\n");
 			OBJPRINT_signatureVerificationResultDump(result_ext , print_result);

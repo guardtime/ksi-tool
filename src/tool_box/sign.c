@@ -105,7 +105,7 @@ int sign_run(int argc, char** argv, char **envp) {
 	 */
 	res = PARAM_SET_new(
 			CONF_generate_param_set_desc(
-					"{sign}{i}{input}{o}{data-out}{d}{dump}{dump-conf}{log}{conf}{h|help}{dump-last-leaf}"
+					"{sign}{i}{input}{o}{data-out}{d}{dump}{grep}{dump-conf}{log}{conf}{h|help}{dump-last-leaf}"
 					"{prev-leaf}{mdata}{mask}{show-progress}{apply-remote-conf}", "S", buf, sizeof(buf)),
 					&set);
 	if (res != KT_OK) goto cleanup;
@@ -252,6 +252,7 @@ char *sign_help_toString(char*buf, size_t len) {
 		" --dump    - Dump signature(s) created in human-readable format to stdout.\n"
 		" --dump-conf\n"
 		"           - Dump aggregator configuration to stdout.\n"
+		" --grep    - Makes signature dump (see --dump) suitable for processing with grep.\n"
 		" --show-progress\n"
 		"           - Show progress bar. Is only valid with -d.\n"
 		" --conf <file>\n"
@@ -314,7 +315,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputHash, isContentOk_inputHash, convertRepair_path, extract_inputHash);
 	PARAM_SET_addControl(set, "{input}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputHashFromFile);
 	PARAM_SET_addControl(set, "{prev-leaf}", isFormatOk_imprint, isContentOk_imprint, NULL, extract_imprint);
-	PARAM_SET_addControl(set, "{d}{dump}{dump-conf}{dump-last-leaf}{mdata}{show-progress}{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{d}{dump}{grep}{dump-conf}{dump-last-leaf}{mdata}{show-progress}{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{mask}", isFormatOk_mask, isContentOk_mask, convertRepair_mask, extract_mask);
 	PARAM_SET_setParseOptions(set, "{d}{dump}{dump-conf}{dump-last-leaf}{mdata}{show-progress}{apply-remote-conf}", PST_PRSCMD_HAS_NO_VALUE);
 
@@ -1174,6 +1175,7 @@ static int KT_SIGN_dump(KSI_CTX *ksi, PARAM_SET *set, ERR_TRCKR *err, SIGNING_AG
 	int in_count = 0;
 	int dump = 0;
 	KSI_Signature *sig = NULL;
+	int dump_flags = OBJPRINT_NONE;
 
 	if (set == NULL || err == NULL || aggr_round == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
@@ -1184,6 +1186,7 @@ static int KT_SIGN_dump(KSI_CTX *ksi, PARAM_SET *set, ERR_TRCKR *err, SIGNING_AG
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 
 	dump = PARAM_SET_isSetByName(set, "dump");
+	if (PARAM_SET_isSetByName(set, "grep")) dump_flags |= OBJPRINT_GREPABLE;
 
 	while (dump && aggr_round[i] != NULL) {
 		if (in_count > 1) print_result("Signatures from aggregation round: %i\n\n", i);
@@ -1200,7 +1203,7 @@ static int KT_SIGN_dump(KSI_CTX *ksi, PARAM_SET *set, ERR_TRCKR *err, SIGNING_AG
 
 			print_result("Document : '%s'\n", aggr_round[i]->fname[n]);
 			print_result("Signature: '%s'\n", aggr_round[i]->fname_out[n]);
-			OBJPRINT_signatureDump(ksi, sig, print_result);
+			OBJPRINT_signatureDump(ksi, sig, dump_flags, print_result);
 			KSI_Signature_free(sig);
 			sig = NULL;
 			print_result("\n\n");

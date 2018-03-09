@@ -117,6 +117,10 @@ Print detailed information about processes and errors to \fIstderr\fR.
 Dump signature and document hash being verified in human-readable format to \fIstdout\fR. In verification report \fIOK\fR means that the step is performed successfully, \fINA\fR means that it could not be performed as there was not enough information and \fIFAILED\fR means that the verification was unsuccessful.
 .\"
 .TP
+\fB--grep\fR
+Makes signature dump (see \fB--dump\fR) suitable for processing with grep.
+.\"
+.TP
 \fB--conf \fIfile\fR
 Read configuration options from given file. It must be noted that configuration options given explicitly on command line will override the ones in the configuration file (see \fBksi-conf\fR(5) for more information).
 .\"
