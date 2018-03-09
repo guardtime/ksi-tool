@@ -105,7 +105,7 @@ int sign_run(int argc, char** argv, char **envp) {
 	 */
 	res = PARAM_SET_new(
 			CONF_generate_param_set_desc(
-					"{sign}{i}{input}{o}{data-out}{d}{dump}{grep}{dump-conf}{log}{conf}{h|help}{dump-last-leaf}"
+					"{sign}{i}{input}{o}{data-out}{d}{dump}{dump-conf}{log}{conf}{h|help}{dump-last-leaf}"
 					"{prev-leaf}{mdata}{mask}{show-progress}{apply-remote-conf}", "S", buf, sizeof(buf)),
 					&set);
 	if (res != KT_OK) goto cleanup;
@@ -249,10 +249,11 @@ char *sign_help_toString(char*buf, size_t len) {
 		"             and pre-calculated hash imprints (SHA-256:7647c6...) are all\n"
 		"             interpreted as regular files).\n"
 		" -d        - Print detailed information about processes and errors to stderr.\n"
-		" --dump    - Dump signature(s) created in human-readable format to stdout.\n"
+		" --dump [G]\n"
+		"           - Dump signature(s) created in human-readable format to stdout. To make\n"
+		"             signature dump suitable for processing with grep, use 'G' as argument.\n"
 		" --dump-conf\n"
 		"           - Dump aggregator configuration to stdout.\n"
-		" --grep    - Makes signature dump (see --dump) suitable for processing with grep.\n"
 		" --show-progress\n"
 		"           - Show progress bar. Is only valid with -d.\n"
 		" --conf <file>\n"
@@ -315,9 +316,11 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputHash, isContentOk_inputHash, convertRepair_path, extract_inputHash);
 	PARAM_SET_addControl(set, "{input}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputHashFromFile);
 	PARAM_SET_addControl(set, "{prev-leaf}", isFormatOk_imprint, isContentOk_imprint, NULL, extract_imprint);
-	PARAM_SET_addControl(set, "{d}{dump}{grep}{dump-conf}{dump-last-leaf}{mdata}{show-progress}{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{d}{dump-conf}{dump-last-leaf}{mdata}{show-progress}{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{mask}", isFormatOk_mask, isContentOk_mask, convertRepair_mask, extract_mask);
-	PARAM_SET_setParseOptions(set, "{d}{dump}{dump-conf}{dump-last-leaf}{mdata}{show-progress}{apply-remote-conf}", PST_PRSCMD_HAS_NO_VALUE);
+	PARAM_SET_setParseOptions(set, "{d}{dump-conf}{dump-last-leaf}{mdata}{show-progress}{apply-remote-conf}", PST_PRSCMD_HAS_NO_VALUE);
+
+	PARAM_SET_addControl(set, "{dump}", NULL, isContentOk_dump_flag, NULL, extract_dump_flag);
 
 	/**
 	 * To enable wildcard characters (WC) to work on Windows, configure the WC
@@ -1186,7 +1189,7 @@ static int KT_SIGN_dump(KSI_CTX *ksi, PARAM_SET *set, ERR_TRCKR *err, SIGNING_AG
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 
 	dump = PARAM_SET_isSetByName(set, "dump");
-	if (PARAM_SET_isSetByName(set, "grep")) dump_flags |= OBJPRINT_GREPABLE;
+	PARAM_SET_getObj(set, "dump", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&dump_flags);
 
 	while (dump && aggr_round[i] != NULL) {
 		if (in_count > 1) print_result("Signatures from aggregation round: %i\n\n", i);

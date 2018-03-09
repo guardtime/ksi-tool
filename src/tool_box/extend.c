@@ -73,7 +73,7 @@ int extend_run(int argc, char** argv, char **envp) {
 	 */
 	res = PARAM_SET_new(
 			CONF_generate_param_set_desc(
-					"{i}{input}{o}{d}{x}{T}{pub-str}{dump}{dump-conf}{grep}"
+					"{i}{input}{o}{d}{x}{T}{pub-str}{dump}{dump-conf}"
 					"{conf}{apply-remote-conf}{log}{h|help}{replace-existing}", "XP", buf, sizeof(buf)),
 					&set);
 	if (res != KT_OK) goto cleanup;
@@ -176,11 +176,11 @@ char *extend_help_toString(char*buf, size_t len) {
 		"             and pre-calculated hash imprints (SHA-256:7647c6...) are all\n"
 		"             interpreted as regular files).\n"
 		" -d        - Print detailed information about processes and errors.\n"
-		" --dump    - Dump extended signature and verification info in human-readable\n"
-		"             format to stdout.\n"
+		" --dump [G]\n"
+		"           - Dump signature(s) created in human-readable format to stdout. To make\n"
+		"             signature dump suitable for processing with grep, use 'G' as argument.\n"
 		" --dump-conf\n"
 		"           - Dump extender configuration to stdout.\n"
-		" --grep    - Makes signature dump (see --dump) suitable for processing with grep.\n"
 		" --conf <file>\n"
 		"             Read configuration options from given file. It must be noted\n"
 		"             that configuration options given explicitly on command line will\n"
@@ -533,9 +533,11 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFileWithPipe, convertRepair_path, extract_inputSignature);
 	PARAM_SET_addControl(set, "{input}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignatureFromFile);
 	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
-	PARAM_SET_addControl(set, "{d}{dump}{dump-conf}{grep}{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{d}{dump-conf}{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{pub-str}", isFormatOk_pubString, NULL, NULL, extract_pubString);
-	PARAM_SET_setParseOptions(set, "{d}{dump}{dump-conf}{grep}{replace-existing}{apply-remote-conf}", PST_PRSCMD_HAS_NO_VALUE);
+	PARAM_SET_setParseOptions(set, "{d}{dump-conf}{replace-existing}{apply-remote-conf}", PST_PRSCMD_HAS_NO_VALUE);
+
+	PARAM_SET_addControl(set, "{dump}", NULL, isContentOk_dump_flag, NULL, extract_dump_flag);
 
 	/**
 	 * To enable wildcard characters (WC) to work on Windows, configure the WC
@@ -700,7 +702,7 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 
 	d = PARAM_SET_isSetByName(set, "d");
 	dump = PARAM_SET_isSetByName(set, "dump");
-	if (PARAM_SET_isSetByName(set, "grep")) dump_flags |= OBJPRINT_GREPABLE;
+	PARAM_SET_getObj(set, "dump", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&dump_flags);
 
 	extra.ctx = ksi;
 	extra.err = err;

@@ -67,6 +67,7 @@ enum contentStatus {
 	FUNCTION_INVALID_ARG_1,
 	FUNCTION_INVALID_ARG_2,
 	INVALID_VERSION,
+	INVALID_FLAG_PARAM,
 	PARAM_UNKNOWN_ERROR
 };
 
@@ -178,6 +179,9 @@ int isFormatOk_mask(const char* mask);
 int isContentOk_mask(const char* mask);
 int convertRepair_mask(const char* arg, char* buf, unsigned len);
 int extract_mask(void **extra, const char* str, void** obj);
+
+int isContentOk_dump_flag(const char* arg);
+int extract_dump_flag(void **extra, const char* str,  void** obj);
 
 int extract_inputSignature(void **extra, const char* str, void** obj);
 int extract_inputSignatureFromFile(void **extra, const char* str, void** obj);

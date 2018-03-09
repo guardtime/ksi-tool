@@ -1160,6 +1160,7 @@ const char *getParameterErrorString(int res) {
 		case FUNCTION_INVALID_ARG_1: return "Argument 1 is invalid";
 		case FUNCTION_INVALID_ARG_2: return "Argument 2 is invalid";
 		case INVALID_VERSION: return "Invalid version";
+		case INVALID_FLAG_PARAM: return "Invalid flag argument";
 		default: return "Unknown error";
 	}
 }
@@ -1430,6 +1431,25 @@ cleanup:
 	return res;
 }
 
+int isContentOk_dump_flag(const char* arg) {
+	if (arg == NULL || *arg == '\0') return PARAM_OK;
+	if (strcmp(arg, "G") != 0) return INVALID_FLAG_PARAM;
+	return PARAM_OK;
+}
+
+int extract_dump_flag(void **extra, const char* str,  void** obj) {
+	int *pInt = (int*)obj;
+	VARIABLE_IS_NOT_USED(extra);
+	if (str == NULL || *str == '\0') {
+		*pInt = OBJPRINT_NONE;
+	} else if (strcmp(str, "G") == 0) {
+		*pInt = OBJPRINT_GREPABLE;
+	} else {
+		*pInt = OBJPRINT_NONE;
+	}
+
+	return PST_OK;
+}
 
 int get_pipe_out_error(PARAM_SET *set, ERR_TRCKR *err, const char *check_all_files, const char *out_file_names, const char *print_out_names) {
 	return get_io_pipe_error(set, err, 0, check_all_files, out_file_names, print_out_names);
