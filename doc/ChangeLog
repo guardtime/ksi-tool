@@ -1,3 +1,4 @@
+* IMPROVEMENT: OSX installer build script removed as it is availabe from guardtime/ksi homebrew tap.
 * IMPROVEMENT: Parameter --dump has optional argument 'G' that can be used for optimizing the output for grepping.
 * IMPROVEMENT: When dumping signature (--dump), request time from metadata is printed in seconds and in human-readable string.
 * IMPROVEMENT: Task and command-line parameter parser is linked as external library (libparamset).
