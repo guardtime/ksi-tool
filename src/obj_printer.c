@@ -157,8 +157,11 @@ void OBJPRINT_IdentityMetadata(KSI_CTX *ctx, KSI_Signature *sig, int flags, int 
 		print("Unable to get signer identity.\n");
 		goto cleanup;
 	}
-
-	print("Identity Metadata: %i\n", KSI_HashChainLinkIdentityList_length(identity));
+	if (flags & OBJPRINT_GREPABLE) {
+		print("Identity Metadata: %i\n", KSI_HashChainLinkIdentityList_length(identity));
+	} else {
+		print("Identity Metadata:\n");
+	}
 
 	if (KSI_HashChainLinkIdentityList_length(identity) == 0) {
 		print("%s'Unknown'.\n", offset);

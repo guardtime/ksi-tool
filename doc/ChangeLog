@@ -1,4 +1,5 @@
 * IMPROVEMENT: Parameter --dump has optional argument 'G 'that can be used to make output usable for grepping.
+* IMPROVEMENT: When dumping signature (--dump), request time from metadata is printed in seconds and in human-readable string.
 * IMPROVEMENT: Task and command-line parameter parser is linked as external library (libparamset).
 * IMPROVEMENT: Script rebuild.sh changed to main build script that is called from the others.
 * IMPROVEMENT: Convenience script WinBuildOnline.bat that links KSI tool with libksi and libparamset statically. Libksi and libparamset are downloaded and built from Github.
