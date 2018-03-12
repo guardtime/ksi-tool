@@ -113,8 +113,8 @@ Specify an OpenSSL-style trust store directory for publications file verificatio
 Print detailed information about processes and errors to \fIstderr\fR.
 .\"
 .TP
-\fB--dump\fR
-Dump signature and document hash being verified in human-readable format to \fIstdout\fR. In verification report \fIOK\fR means that the step is performed successfully, \fINA\fR means that it could not be performed as there was not enough information and \fIFAILED\fR means that the verification was unsuccessful.
+\fB--dump \fR[\fIG\fR]
+Dump signature and document hash being verified in human-readable format to \fIstdout\fR. In verification report \fIOK\fR means that the step is performed successfully, \fINA\fR means that it could not be performed as there was not enough information and \fIFAILED\fR means that the verification was unsuccessful. To make signature dump suitable for processing with grep, use '\fBG\fR' as argument.
 .\"
 .TP
 \fB--conf \fIfile\fR

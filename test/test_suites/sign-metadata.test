@@ -77,7 +77,7 @@ EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/ebcd -
 EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-4.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata-mac-id "My Computer" --mdata-req-tm --mdata
 >>> /(.*Identity Metadata.*)([^$]|[
 ])+
-(.*[0-9]+.*Client ID: 'My name', Machine ID: 'My Computer', Request time: '([0-9]{16})'.*)/
+(.*[0-9]+.*Client ID: 'My name', Machine ID: 'My Computer', Request time: [(][0-9]{10}[.][0-9]{0,6}[)].*)/
 >>>2 /(.*Add document hash.*)(.*with metadata.*)/
 >>>= 0
 
@@ -94,7 +94,7 @@ EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/ebcd -
 EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-5.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata-mac-id "My Computer" --mdata-req-tm --mdata-sqn-nr --mdata
 >>> /(.*Identity Metadata.*)([^$]|[
 ])+
-(.*[0-9]+.*Client ID: 'My name', Machine ID: 'My Computer', Sequence number: '[0-9]+', Request time: '([0-9]{16})'.*)/
+(.*[0-9]+.*Client ID: 'My name', Machine ID: 'My Computer', Sequence number: [0-9]+, Request time: [(][0-9]{10}[.][0-9]{0,6}[)].*)/
 >>>2 /(.*Add document hash.*)(.*with metadata.*)/
 >>>= 0
 
@@ -111,7 +111,7 @@ EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/ebcd -
 EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-6.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata-mac-id "My Computer" --mdata-req-tm --mdata-sqn-nr 5 --mdata
 >>> /(.*Identity Metadata.*)([^$]|[
 ])+
-(.*[0-9]+.*Client ID: 'My name', Machine ID: 'My Computer', Sequence number: '5', Request time: '([0-9]{16})'.*)/
+(.*[0-9]+.*Client ID: 'My name', Machine ID: 'My Computer', Sequence number: 5, Request time: [(][0-9]{10}[.][0-9]{0,6}[)].*)/
 >>>2 /(.*Add document hash.*)(.*with metadata.*)/
 >>>= 0
 
@@ -128,12 +128,12 @@ EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/ebcd -
 EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -i test/resource/file/abcd -o test/out/sign/ebcd-sgn-0-0.ksig -o test/out/sign/abcd-sgn-0-0.ksig --max-lvl 2 --mdata-cli-id "My name" --mdata-sqn-nr --mdata
 >>> /(.*Document : '.*ebcd'.*)([^$]|[
 ])+
-(.*[0-9]+.*Client ID: 'My name', Sequence number: '0'.*)
+(.*[0-9]+.*Client ID: 'My name', Sequence number: 0.*)
 ([^$]|[
 ])*
 (.*Document : '.*abcd'.*)([^$]|[
 ])+
-(.*[0-9]+.*Client ID: 'My name', Sequence number: '0'.*)/
+(.*[0-9]+.*Client ID: 'My name', Sequence number: 0.*)/
 >>>2 /(.*Add document hash.*)(.*2\/2.*)(.*with metadata.*)/
 >>>= 0
 
@@ -152,12 +152,12 @@ EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/abcd -
 EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -i test/resource/file/abcd -o test/out/sign/ebcd-sgn-0-1.ksig -o test/out/sign/abcd-sgn-1-1.ksig --max-lvl 1 --max-aggr-rounds 2 --mdata-cli-id "My name" --mdata-sqn-nr --mdata
 >>> /(.*Document : '.*ebcd'.*)([^$]|[
 ])+
-(.*[0-9]+.*Client ID: 'My name', Sequence number: '0'.*)
+(.*[0-9]+.*Client ID: 'My name', Sequence number: 0.*)
 ([^$]|[
 ])*
 (.*Document : '.*abcd'.*)([^$]|[
 ])+
-(.*[0-9]+.*Client ID: 'My name', Sequence number: '1'.*)/
+(.*[0-9]+.*Client ID: 'My name', Sequence number: 1.*)/
 >>>2 /(.*Signing the local aggregation tree.*)(.*2\/2.*)/
 >>>= 0
 
@@ -176,12 +176,12 @@ EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/abcd -
 EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -i test/resource/file/abcd -o test/out/sign/ebcd-sgn-5-2.ksig -o test/out/sign/abcd-sgn-6-2.ksig --max-lvl 1 --max-aggr-rounds 2 --mdata-cli-id "My name" --mdata-sqn-nr 5 --mdata
 >>> /(.*Document : '.*ebcd'.*)([^$]|[
 ])+
-(.*[0-9]+.*Client ID: 'My name', Sequence number: '5'.*)
+(.*[0-9]+.*Client ID: 'My name', Sequence number: 5.*)
 ([^$]|[
 ])*
 (.*Document : '.*abcd'.*)([^$]|[
 ])+
-(.*[0-9]+.*Client ID: 'My name', Sequence number: '6'.*)/
+(.*[0-9]+.*Client ID: 'My name', Sequence number: 6.*)/
 >>>2 /(.*Signing the local aggregation tree.*)(.*2\/2.*)/
 >>>= 0
 

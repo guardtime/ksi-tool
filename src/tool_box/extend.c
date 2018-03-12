@@ -176,8 +176,9 @@ char *extend_help_toString(char*buf, size_t len) {
 		"             and pre-calculated hash imprints (SHA-256:7647c6...) are all\n"
 		"             interpreted as regular files).\n"
 		" -d        - Print detailed information about processes and errors.\n"
-		" --dump    - Dump extended signature and verification info in human-readable\n"
-		"             format to stdout.\n"
+		" --dump [G]\n"
+		"           - Dump signature(s) created in human-readable format to stdout. To make\n"
+		"             signature dump suitable for processing with grep, use 'G' as argument.\n"
 		" --dump-conf\n"
 		"           - Dump extender configuration to stdout.\n"
 		" --conf <file>\n"
@@ -532,9 +533,11 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFileWithPipe, convertRepair_path, extract_inputSignature);
 	PARAM_SET_addControl(set, "{input}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignatureFromFile);
 	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
-	PARAM_SET_addControl(set, "{d}{dump}{dump-conf}{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{d}{dump-conf}{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{pub-str}", isFormatOk_pubString, NULL, NULL, extract_pubString);
-	PARAM_SET_setParseOptions(set, "{d}{dump}{dump-conf}{replace-existing}{apply-remote-conf}", PST_PRSCMD_HAS_NO_VALUE);
+	PARAM_SET_setParseOptions(set, "{d}{dump-conf}{replace-existing}{apply-remote-conf}", PST_PRSCMD_HAS_NO_VALUE);
+
+	PARAM_SET_addControl(set, "{dump}", NULL, isContentOk_dump_flag, NULL, extract_dump_flag);
 
 	/**
 	 * To enable wildcard characters (WC) to work on Windows, configure the WC
@@ -687,6 +690,7 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 	const char *mode = NULL;
 	KSI_PolicyVerificationResult *result_ext = NULL;
 	KSI_PolicyVerificationResult *result_sig = NULL;
+	int dump_flags = OBJPRINT_NONE;
 
 	if (set == NULL || err == NULL || ksi == NULL || task_id > 2) {
 		res = KT_INVALID_ARGUMENT;
@@ -698,6 +702,7 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 
 	d = PARAM_SET_isSetByName(set, "d");
 	dump = PARAM_SET_isSetByName(set, "dump");
+	PARAM_SET_getObj(set, "dump", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&dump_flags);
 
 	extra.ctx = ksi;
 	extra.err = err;
@@ -756,10 +761,10 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 		if (PARAM_SET_isSetByName(set, "dump")) {
 			print_result("\n");
 			print_result("=== Old signature ===\n");
-			OBJPRINT_signatureDump(ksi, sig, print_result);
+			OBJPRINT_signatureDump(ksi, sig, dump_flags, print_result);
 			print_result("\n");
 			print_result("=== Extended signature ===\n");
-			OBJPRINT_signatureDump(ksi, ext, print_result);
+			OBJPRINT_signatureDump(ksi, ext, dump_flags, print_result);
 			print_result("\n");
 			print_result("=== Extended signature verification ===\n");
 			OBJPRINT_signatureVerificationResultDump(result_ext , print_result);
