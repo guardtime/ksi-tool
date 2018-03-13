@@ -152,3 +152,14 @@ EXECUTABLE sign --conf test/test.cfg --max-lvl 3 --max-aggr-rounds 3 test/resour
 (.*Saving 9 files.*)
 (.*[#*].*)/
 >>>= 0
+
+# Sign files in multiple rounds, no masking, no metadata. Run with progress bar..
+EXECUTABLE sign --conf test/test.cfg -d --show-progress --max-lvl 1 --max-aggr-rounds 5 -i test/resource/file/a* -i test/resource/file/f* -o test/out/sign
+>>>2 /Sig.*2.*files.*1.2.*
+.*[#]{64}.*
+.*Sig.*local aggr.*tree.* 1.2.*
+.*
+.*Sig.*2.*2.2.*
+.*[#]{64}.*
+.*Sig.*local aggr.*tree.* 2.2/
+>>>= 0

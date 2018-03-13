@@ -980,7 +980,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 			if (prgrs && (i % divider == 0 || i + 1 >= in_count || tree_input + 1 == to_be_signed_in_round)) {
 				PROGRESS_BAR_display((int)((tree_input + 1) * 100 / to_be_signed_in_round));
 
-				if (in_count > 64) divider = to_be_signed_in_round / 64;
+				if (to_be_signed_in_round > 64) divider = to_be_signed_in_round / 64;
 				else divider = 1;
 			}
 
