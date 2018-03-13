@@ -19,6 +19,7 @@
 * BUGFIX: Pointer handling in param_control.c fixed.
 * BUGFIX: Description of Debian package fixed.
 * BUGFIX: In case of empty string as KSI_CONF value, warning is displayed.
+* BUGFIX: KSI tool crash fixed when signing 64 or more input files files with parameter --show-progress.
 
 Version 2.7
 
