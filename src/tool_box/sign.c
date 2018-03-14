@@ -62,7 +62,7 @@ typedef struct SIGNING_AGGR_ROUND_st {
 	char **fname;
 	char **fname_out;
 
-	 /* Count of hash values used in aggreation round. */
+	 /* Count of hash values used in aggregation round. */
 	size_t hash_count_max;
 	size_t hash_count;
 } SIGNING_AGGR_ROUND;
@@ -80,14 +80,14 @@ static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int check_io_naming_and_type_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int task);
 static void SIGNING_AGGR_ROUND_free(SIGNING_AGGR_ROUND *obj);
-static void SIGNING_AGGR_ROUND_ARRAY_free(SIGNING_AGGR_ROUND **array);
+static int SIGNING_AGGR_ROUND_resetAndClean(SIGNING_AGGR_ROUND *round);
 static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int *remote_max_lvl, KSI_HashAlgorithm *remote_algo);
 static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, int remote_max_lvl, size_t *inputs);
 static int KT_SIGN_getAggregationRoundsNeeded(PARAM_SET *set, ERR_TRCKR *err, size_t max_tree_inputs, size_t *rounds);
-static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, KSI_HashAlgorithm remote_algo, size_t max_tree_inputs, size_t rounds, SIGNING_AGGR_ROUND ***aggr_rounds_record);
-static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_AGGR_ROUND **aggr_round);
+static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, KSI_HashAlgorithm remote_algo, size_t max_tree_inputs, size_t rounds);
+static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_AGGR_ROUND *aggr_round, int offset);
 static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, size_t seq_offset, KSI_MetaData **mdata);
-static int KT_SIGN_dump(KSI_CTX *ksi, PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND **aggr_round);
+static int KT_SIGN_dump(KSI_CTX *ksi, PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND *aggr_round);
 
 int sign_run(int argc, char** argv, char **envp) {
 	int res;
@@ -412,7 +412,6 @@ cleanup:
 
 static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int task) {
 	int res = KT_UNKNOWN_ERROR;
-	SIGNING_AGGR_ROUND **aggr_rounds = NULL;
 
 	switch (task) {
 		case SIGN_DATA:
@@ -433,16 +432,7 @@ static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int task) {
 				res = KT_SIGN_getAggregationRoundsNeeded(set, err, max_tree_input, &rounds);
 				if (res != KT_OK) goto cleanup;
 
-				res = KT_SIGN_performSigning(set, err, ctx, remote_algo, max_tree_input, rounds, &aggr_rounds);
-				if (res != KT_OK) goto cleanup;
-
-				res = KT_SIGN_saveToOutput(set, err, ctx, aggr_rounds);
-				if (res != KT_OK) goto cleanup;
-
-				/**
-				 * If signature was created without errors print some info on demand.
-				 */
-				res = KT_SIGN_dump(NULL, set, err, aggr_rounds);
+				res = KT_SIGN_performSigning(set, err, ctx, remote_algo, max_tree_input, rounds);
 				if (res != KT_OK) goto cleanup;
 			}
 			goto cleanup;
@@ -457,7 +447,6 @@ static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int task) {
 	}
 
 cleanup:
-	SIGNING_AGGR_ROUND_ARRAY_free(aggr_rounds);
 	return res;
 }
 
@@ -680,44 +669,16 @@ cleanup:
 }
 
 static void SIGNING_AGGR_ROUND_free(SIGNING_AGGR_ROUND *obj) {
-	int i = 0;
-
 	if (obj == NULL) return;
 
-	KSI_BlockSigner_free(obj->block_signer);
-	KSI_BlockSignerHandleList_free(obj->bs_handleList);
 	KSI_free(obj->fname);
 
-	if (obj->fname_out != NULL) {
-		i = 0;
-		while (i < obj->hash_count && obj->fname_out[i] != NULL) {
-			KSI_free(obj->fname_out[i++]);
-		}
-		KSI_free(obj->fname_out);
-	}
+	SIGNING_AGGR_ROUND_resetAndClean(obj);
 
-	if (obj->hash_values != NULL) {
-		i = 0;
-		while (i < obj->hash_count && obj->hash_values[i] != NULL) {
-			KSI_DataHash_free(obj->hash_values[i++]);
-		}
-		KSI_free(obj->hash_values);
-	}
+	KSI_free(obj->fname_out);
+	KSI_free(obj->hash_values);
 
 	KSI_free(obj);
-}
-
-static void SIGNING_AGGR_ROUND_ARRAY_free(SIGNING_AGGR_ROUND **array) {
-		if (array != NULL) {
-		int i = 0;
-
-		while (array[i] != NULL) {
-			SIGNING_AGGR_ROUND_free(array[i]);
-			i++;
-		}
-
-		KSI_free(array);
-	}
 }
 
 static int SIGNING_AGGR_ROUND_new(size_t max_leaves, SIGNING_AGGR_ROUND **round) {
@@ -808,7 +769,38 @@ cleanup:
 	return res;
 }
 
-static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, KSI_HashAlgorithm remote_algo, size_t max_tree_inputs, size_t rounds, SIGNING_AGGR_ROUND ***aggr_rounds_record) {
+static int SIGNING_AGGR_ROUND_resetAndClean(SIGNING_AGGR_ROUND *round) {
+	int res;
+	int i = 0;
+
+	if (round == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	if (round->fname_out != NULL) {
+		i = 0;
+		while (i < round->hash_count && round->fname_out[i] != NULL) {
+			KSI_free(round->fname_out[i++]);
+		}
+	}
+
+	if (round->hash_values != NULL) {
+		i = 0;
+		while (i < round->hash_count && round->hash_values[i] != NULL) {
+			KSI_DataHash_free(round->hash_values[i++]);
+		}
+	}
+
+	round->hash_count = 0;
+	res = KT_OK;
+
+cleanup:
+
+	return res;
+}
+
+static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, KSI_HashAlgorithm remote_algo, size_t max_tree_inputs, size_t rounds) {
 	int res = KT_UNKNOWN_ERROR;
 	int d = 0;
 	int prgrs = 0;
@@ -821,7 +813,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 	int isMetadata = 0;
 	int isMasking = 0;
 	KSI_DataHash *prev_leaf = NULL;
-	SIGNING_AGGR_ROUND **aggr_round = NULL;
+	SIGNING_AGGR_ROUND *aggr_round = NULL;
 	int tree_size_1 = 0;
 	KSI_BlockSigner *bs = NULL;
 	KSI_BlockSignerHandle *hndl = NULL;
@@ -831,7 +823,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 	size_t r = 0;
 	KSI_DataHash *hash = NULL;
 
-	if (set == NULL || err == NULL || max_tree_inputs == 0 || rounds == 0 || aggr_rounds_record == NULL) {
+	if (set == NULL || err == NULL || max_tree_inputs == 0 || rounds == 0) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
@@ -898,20 +890,15 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 		}
 	}
 
-
-	/**
-	 * Create records for each aggregation round + 1 extra for indicating the end
-	 * of the array.
-	 */
-	aggr_round = (SIGNING_AGGR_ROUND**)KSI_calloc(rounds + 1, sizeof(SIGNING_AGGR_ROUND*));
-	if (aggr_round == NULL) {
-		res = KT_OUT_OF_MEMORY;
-		goto cleanup;
-	}
-
-	aggr_round[rounds] = NULL;
-
 	if (rounds == 1 && in_count == 1 && !isMasking && !isMetadata) tree_size_1 = 1;
+
+
+	res = SIGNING_AGGR_ROUND_new(max_tree_inputs, &aggr_round);
+	ERR_CATCH_MSG(err, res, "Error: Unable to create a record for aggregation round.");
+
+	res = KSITOOL_KSI_BlockSigner_new(err, ctx, algo, isMasking ? prev_leaf : NULL, isMasking ? mask_iv : NULL, &bs);
+	ERR_CATCH_MSG(err, res, "Error: Unable to create KSI Block Signer.");
+
 
 	/**
 	 * Perform local aggregation.
@@ -920,11 +907,11 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 		size_t tree_input = 0;
 		size_t to_be_signed_in_round = (((r + 1) * max_tree_inputs) < in_count) ? max_tree_inputs : in_count - (int)r * max_tree_inputs;
 
-		res = SIGNING_AGGR_ROUND_new(to_be_signed_in_round, &aggr_round[r]);
-		ERR_CATCH_MSG(err, res, "Error: Unable to create a record for aggregation round.");
+		res = KSI_BlockSigner_reset(bs);
+		ERR_CATCH_MSG(err, res, "Error: Unable to reset Block Signer.");
 
-		res = KSITOOL_KSI_BlockSigner_new(err, ctx, algo, isMasking ? prev_leaf : NULL, isMasking ? mask_iv : NULL, &bs);
-		ERR_CATCH_MSG(err, res, "Error: Unable to create KSI Block Signer.");
+		res = SIGNING_AGGR_ROUND_resetAndClean(aggr_round);
+		ERR_CATCH_MSG(err, res, "Error: Unable to reset SIGNING_AGGR_ROUND struct.");
 
 		/* Initialize a list for keeping hash handles. */
 		res = KSI_BlockSignerHandleList_new(&hndlList);
@@ -939,7 +926,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 
 
 		if (prgrs || in_count > 1) {
-			print_debug("Signing %i files in round %i/%i.\n", to_be_signed_in_round, r + 1, rounds);
+			print_debug("Signing %i files in round %i/%i.%s\n", to_be_signed_in_round, r + 1, rounds, prgrs ? "" : "\n");
 		}
 
 		for (tree_input = 0; tree_input < max_tree_inputs && i < in_count; tree_input++, i++) {
@@ -971,7 +958,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 			res = PARAM_SET_getStr(set, "i,input", NULL, PST_PRIORITY_NONE, (int)i, &fname);
 			ERR_CATCH_MSG(err, res, "Error: Unable to get files name.");
 
-			res = SIGNING_AGGR_ROUND_append(aggr_round[r], hash, fname);
+			res = SIGNING_AGGR_ROUND_append(aggr_round, hash, fname);
 			ERR_CATCH_MSG(err, res, "Error: Unable to add hash value and files name to local aggregation record.");
 			hash = NULL;
 
@@ -987,7 +974,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 		}
 
 
-		if (prgrs) print_debug("\n");
+		if ((!tree_size_1 || prgrs)) print_debug("\n");
 
 		if (tree_size_1) print_progressDesc(d, "Creating signature from hash... ");
 		else print_progressDesc(d, "Signing the local aggregation tree %d/%d... ", r + 1, rounds);
@@ -996,26 +983,31 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 		if (tree_size_1) {ERR_CATCH_MSG(err, res, "Error: Unable to create signature.");}
 		else {ERR_CATCH_MSG(err, res, "Error: Unable to complete and sign the local aggregation tree.");}
 
-		aggr_round[r]->block_signer = bs;
-		bs = NULL;
-		aggr_round[r]->bs_handleList = hndlList;
-		hndlList = NULL;
+		aggr_round->block_signer = bs;
+		aggr_round->bs_handleList = hndlList;
 
 		print_progressResult(res);
+		if (!prgrs && !tree_size_1) print_debug("\n");
+
+		KT_SIGN_saveToOutput(set, err, ctx, aggr_round, (int)(r * max_tree_inputs));
+
+		res = KT_SIGN_dump(NULL, set, err, aggr_round);
+		if (res != KT_OK) goto cleanup;
+		if (prgrs) print_debug("\n");
 
 		if (!tree_size_1 || (tree_size_1 && prgrs)) print_debug("\n");
 		KSI_MetaData_free(mdata);
 		mdata = NULL;
+
+		KSI_BlockSignerHandleList_free(hndlList);
+		hndlList = NULL;
 	}
 
 
-	*aggr_rounds_record = aggr_round;
-	aggr_round = NULL;
 	res = KT_OK;
 
 cleanup:
-
-	SIGNING_AGGR_ROUND_ARRAY_free(aggr_round);
+	SIGNING_AGGR_ROUND_free(aggr_round);
 	KSI_DataHash_free(hash);
 	KSI_DataHash_free(prev_leaf);
 	KSI_BlockSigner_free(bs);
@@ -1068,14 +1060,13 @@ cleanup:
 	return res;
 }
 
-static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_AGGR_ROUND **aggr_round) {
+static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_AGGR_ROUND *aggr_round, int offset) {
 	int res = PST_UNKNOWN_ERROR;
 	int in_count = 0;
 	int divider = 0;
 	int prgrs = 0;
 	int how_to_save = OUTPUT_UNKNOWN;
 	const char *mode = NULL;
-	int i = 0;
 	int n = 0;
 	int count = 0;
 	KSI_Signature *sig = NULL;
@@ -1086,8 +1077,7 @@ static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SI
 		goto cleanup;
 	}
 
-	res = PARAM_SET_getValueCount(set, "i,input", NULL, PST_PRIORITY_NONE, &in_count);
-	if (res != PST_OK) goto cleanup;
+	in_count = (int)aggr_round->hash_count;
 
 	if (in_count >= 10000) divider = in_count / 100;
 	else if (in_count >= 1000) divider = 10;
@@ -1102,64 +1092,60 @@ static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SI
 
 	if (prgrs) print_debug("Saving %i files.\n", in_count);
 
-	while (aggr_round[i] != NULL) {
-		for (n = 0; n < aggr_round[i]->hash_count; n++) {
-			char save_to_file[1024] = "";
-			char real_output_name[1024] = "";
-			size_t real_out_name_size = 0;
-			KSI_DataHash *hsh = NULL;
-			KSI_BlockSignerHandle *hndl = NULL;
+	for (n = 0; n < aggr_round->hash_count; n++) {
+		char save_to_file[1024] = "";
+		char real_output_name[1024] = "";
+		size_t real_out_name_size = 0;
+		KSI_DataHash *hsh = NULL;
+		KSI_BlockSignerHandle *hndl = NULL;
 
-			/* Get the handle from the list. */
-			res = KSI_BlockSignerHandleList_elementAt(aggr_round[i]->bs_handleList, n, &hndl);
-			ERR_CATCH_MSG(err, res, "Error: Unable to extract block signer leaf handle from the list.");
+		/* Get the handle from the list. */
+		res = KSI_BlockSignerHandleList_elementAt(aggr_round->bs_handleList, n, &hndl);
+		ERR_CATCH_MSG(err, res, "Error: Unable to extract block signer leaf handle from the list.");
 
-			/* Get KSI signature from block-signer handle. */
-			res = KSI_BlockSignerHandle_getSignature(hndl, &sig);
-			ERR_CATCH_MSG(err, res, "Error: Unable to extract signature.");
+		/* Get KSI signature from block-signer handle. */
+		res = KSI_BlockSignerHandle_getSignature(hndl, &sig);
+		ERR_CATCH_MSG(err, res, "Error: Unable to extract signature.");
 
-			res = KSI_Signature_getDocumentHash(sig, &hsh);
-			ERR_CATCH_MSG(err, res, "Error: Unable to extract signature document hash.");
+		res = KSI_Signature_getDocumentHash(sig, &hsh);
+		ERR_CATCH_MSG(err, res, "Error: Unable to extract signature document hash.");
 
-			/* Verify that is it the correct signature. */
-			if (!KSI_DataHash_equals(aggr_round[i]->hash_values[n], hsh)) {
-				ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Unexpected error. Signature data hash mismatch.");
-				goto cleanup;
-			}
-
-			if (get_output_file_name(set, err, "i,input", "o", how_to_save, count, save_to_file, sizeof(save_to_file), generate_file_name) == NULL) {
-				ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Unexpected error. Unable to get the file name to save the signature to.");
-				goto cleanup;
-			}
-
-			res = KSI_OBJ_saveSignature(err, ksi, sig, mode, save_to_file, real_output_name, sizeof(real_output_name));
-			ERR_CATCH_MSG(err, res, "Error: Unable to save signature.");
-
-			real_out_name_size = sizeof(char) * (strlen(real_output_name) + 1);
-
-			real_output_name_copy = (char*)KSI_malloc(real_out_name_size);
-			if (real_output_name_copy == NULL) {
-				res = KT_OUT_OF_MEMORY;
-				goto cleanup;
-			}
-
-			PST_strncpy(real_output_name_copy, real_output_name, real_out_name_size);
-			aggr_round[i]->fname_out[n] = real_output_name_copy;
-			if (!prgrs) print_debug("Signature saved to '%s'.\n", real_output_name);
-
-			KSI_Signature_free(sig);
-			sig = NULL;
-			real_output_name_copy = NULL;
-
-			count++;
-			if (prgrs && (count % divider == 0 || count + 1 >= in_count)) {
-				PROGRESS_BAR_display((count + 1) * 100 / in_count);
-			}
-
+		/* Verify that is it the correct signature. */
+		if (!KSI_DataHash_equals(aggr_round->hash_values[n], hsh)) {
+			ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Unexpected error. Signature data hash mismatch.");
+			goto cleanup;
 		}
-		i++;
+
+		if (get_output_file_name(set, err, "i,input", "o", how_to_save, offset + count, save_to_file, sizeof(save_to_file), generate_file_name) == NULL) {
+			ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Unexpected error. Unable to get the file name to save the signature to.");
+			goto cleanup;
+		}
+
+		res = KSI_OBJ_saveSignature(err, ksi, sig, mode, save_to_file, real_output_name, sizeof(real_output_name));
+		ERR_CATCH_MSG(err, res, "Error: Unable to save signature.");
+
+		real_out_name_size = sizeof(char) * (strlen(real_output_name) + 1);
+
+		real_output_name_copy = (char*)KSI_malloc(real_out_name_size);
+		if (real_output_name_copy == NULL) {
+			res = KT_OUT_OF_MEMORY;
+			goto cleanup;
+		}
+
+		PST_strncpy(real_output_name_copy, real_output_name, real_out_name_size);
+		aggr_round->fname_out[n] = real_output_name_copy;
+		if (!prgrs) print_debug("Signature saved to '%s'.\n", real_output_name);
+
+		KSI_Signature_free(sig);
+		sig = NULL;
+		real_output_name_copy = NULL;
+
+		count++;
+		if (prgrs && (count % divider == 0 || count + 1 >= in_count)) {
+			PROGRESS_BAR_display((count + 1) * 100 / in_count);
+		}
+
 	}
-	if (i > 0) print_debug("\n");
 
 	res = KT_OK;
 
@@ -1171,12 +1157,11 @@ cleanup:
 	return res;
 }
 
-static int KT_SIGN_dump(KSI_CTX *ksi, PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND **aggr_round) {
+static int KT_SIGN_dump(KSI_CTX *ksi, PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND *aggr_round) {
 	int res = PST_UNKNOWN_ERROR;
 	int i = 0;
 	int n = 0;
 	int in_count = 0;
-	int dump = 0;
 	KSI_Signature *sig = NULL;
 	int dump_flags = OBJPRINT_NONE;
 
@@ -1185,33 +1170,34 @@ static int KT_SIGN_dump(KSI_CTX *ksi, PARAM_SET *set, ERR_TRCKR *err, SIGNING_AG
 		goto cleanup;
 	}
 
+	if (!PARAM_SET_isSetByName(set, "dump")) {
+		res = KT_OK;
+		goto cleanup;
+	}
+	PARAM_SET_getObj(set, "dump", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&dump_flags);
+
 	res = PARAM_SET_getValueCount(set, "i,input", NULL, PST_PRIORITY_NONE, &in_count);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 
-	dump = PARAM_SET_isSetByName(set, "dump");
-	PARAM_SET_getObj(set, "dump", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&dump_flags);
 
-	while (dump && aggr_round[i] != NULL) {
-		if (in_count > 1) print_result("Signatures from aggregation round: %i\n\n", i);
+	if (in_count > 1) print_result("Signatures from aggregation round: %i\n\n", i);
 
-		for (n = 0; n < aggr_round[i]->hash_count; n++) {
-			KSI_BlockSignerHandle *hndl = NULL;
+	for (n = 0; n < aggr_round->hash_count; n++) {
+		KSI_BlockSignerHandle *hndl = NULL;
 
-			/* Get the handle from the list. */
-			res = KSI_BlockSignerHandleList_elementAt(aggr_round[i]->bs_handleList, n, &hndl);
-			ERR_CATCH_MSG(err, res, "Error: Unable to extract block signer leaf handle from the list.");
+		/* Get the handle from the list. */
+		res = KSI_BlockSignerHandleList_elementAt(aggr_round->bs_handleList, n, &hndl);
+		ERR_CATCH_MSG(err, res, "Error: Unable to extract block signer leaf handle from the list.");
 
-			res = KSI_BlockSignerHandle_getSignature(hndl, &sig);
-			ERR_CATCH_MSG(err, res, "Error: Unable to get signature to dump its content.");
+		res = KSI_BlockSignerHandle_getSignature(hndl, &sig);
+		ERR_CATCH_MSG(err, res, "Error: Unable to get signature to dump its content.");
 
-			print_result("Document : '%s'\n", aggr_round[i]->fname[n]);
-			print_result("Signature: '%s'\n", aggr_round[i]->fname_out[n]);
-			OBJPRINT_signatureDump(ksi, sig, dump_flags, print_result);
-			KSI_Signature_free(sig);
-			sig = NULL;
-			print_result("\n\n");
-		}
-		i++;
+		print_result("Document : '%s'\n", aggr_round->fname[n]);
+		print_result("Signature: '%s'\n", aggr_round->fname_out[n]);
+		OBJPRINT_signatureDump(ksi, sig, dump_flags, print_result);
+		KSI_Signature_free(sig);
+		sig = NULL;
+		print_result("\n\n");
 	}
 
 	res = KT_OK;
