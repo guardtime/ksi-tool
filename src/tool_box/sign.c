@@ -989,7 +989,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 		print_progressResult(res);
 		if (!prgrs && !tree_size_1) print_debug("\n");
 
-		KT_SIGN_saveToOutput(set, err, ctx, aggr_round, r * (int)max_tree_inputs);
+		KT_SIGN_saveToOutput(set, err, ctx, aggr_round, (int)(r * max_tree_inputs));
 
 		res = KT_SIGN_dump(NULL, set, err, aggr_round);
 		if (res != KT_OK) goto cleanup;
@@ -1077,7 +1077,7 @@ static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SI
 		goto cleanup;
 	}
 
-	in_count = aggr_round->hash_count;
+	in_count = (int)aggr_round->hash_count;
 
 	if (in_count >= 10000) divider = in_count / 100;
 	else if (in_count >= 1000) divider = 10;
