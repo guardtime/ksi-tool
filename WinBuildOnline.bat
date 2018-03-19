@@ -36,7 +36,7 @@ SET dll=lib
 
 nmake clean
 call rebuild-tool-dependencies.bat "RTL=%rtl% DLL=%dll% NET_PROVIDER=WININET CRYPTO_PROVIDER=CRYPTOAPI" "RTL=%rtl% DLL=%dll%"
-nmake  RTL=%rtl% KSI_LIB=%dll% PST_LIB=%dll% LNK_WININET=yes LNK_CRYPTOAPI=yes LNK_WINHTTP=no LNK_CURL=no LNK_OPENSSL=no
+nmake  RTL=%rtl% KSI_LIB=%dll% LNK_WININET=yes LNK_CRYPTOAPI=yes LNK_WINHTTP=no LNK_CURL=no LNK_OPENSSL=no
 
 endlocal
 pause
