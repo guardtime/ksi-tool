@@ -73,7 +73,8 @@ if /I "%argc%" EQU "2" (
 )
 
 REM Get and build dependecies.
-if not exist %tmp_dir% md %tmp_dir%
+if exist %tmp_dir% rd /S /Q %tmp_dir%
+md %tmp_dir%
 if exist %out_dir% rd /S /Q %out_dir%
 
 cd %tmp_dir%
@@ -87,7 +88,7 @@ cd %tmp_dir%
 	git checkout %libksi_version%
 	if %errorlevel% neq 0 exit /b %errorlevel%
 
-    nmake %libksimakeopt% clean test
+	nmake %libksimakeopt% clean test
 	if %errorlevel% neq 0 exit /b %errorlevel%
   cd ..
 
@@ -95,7 +96,12 @@ cd %tmp_dir%
 	git checkout %libparamset_version%
 	if %errorlevel% neq 0 exit /b %errorlevel%
 
-    nmake %libparamsetmakeopt% clean test
+
+	nmake %libparamsetmakeopt% clean test
+	if %errorlevel% neq 0 exit /b %errorlevel%
+
+	REM Remove when libparamset windows build is fixed.
+	out\bin\test.exe .\test
 	if %errorlevel% neq 0 exit /b %errorlevel%
   cd ..
 cd ..
