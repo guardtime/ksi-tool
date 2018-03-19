@@ -51,7 +51,7 @@ EXT_LIB = libksiapi$(RTL).lib libparamset$(RTL).lib \
 
 
 CCFLAGS = /nologo /W4 /D_CRT_SECURE_NO_DEPRECATE  /I$(KSI_DIR)\include /I$(PST_DIR)\include
-LDFLAGS = /NOLOGO /LIBPATH:"$(KSI_DIR)\$(KSI_LIB)" /LIBPATH:"$(PST_DIR)\$(PST_LIB)"
+LDFLAGS = /NOLOGO /LIBPATH:"$(KSI_DIR)\$(KSI_LIB)" /LIBPATH:"$(PST_DIR)\$(KSI_LIB)"
 
 !IF "$(KSI_LIB)" == "dll"
 CCFLAGS = $(CCFLAGS) /DDLL_BUILD
