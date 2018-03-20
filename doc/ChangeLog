@@ -1,4 +1,4 @@
-* IMPROVEMENT: Build warnings on Windows removed.
+* IMPROVEMENT: Resolved build warnings on Windows.
 * IMPROVEMENT: When signing multiple files within multiple aggregation rounds, signatures are saved imediately to optimize memory usage.
 * IMPROVEMENT: OSX installer build script removed as it is availabe from guardtime/ksi homebrew tap.
 * IMPROVEMENT: Parameter --dump has optional argument 'G' that can be used for optimizing the output for grepping.

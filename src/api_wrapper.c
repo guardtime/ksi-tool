@@ -23,6 +23,7 @@
 #include <ksi/compatibility.h>
 #include <ksi/policy.h>
 #include "ksi/net.h"
+#include "common.h"
 #include "tool_box.h"
 #include "smart_file.h"
 #include "err_trckr.h"
@@ -721,7 +722,7 @@ int KSITOOL_LOG_SmartFile(void *logCtx, int logLevel, const char *message) {
 }
 
 static int KSI_Signature_serialize_wrapper(KSI_CTX *ksi, KSI_Signature *sig, unsigned char **raw, size_t *raw_len) {
-	if (ksi);
+	VARIABLE_IS_NOT_USED(ksi);
 	return KSI_Signature_serialize(sig, raw, raw_len);
 }
 
