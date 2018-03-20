@@ -11,7 +11,7 @@ KSI command-line tool enables the access to the KSI blockchain and its functions
 
 ### Latest Release from Guardtime Repository
 
-In order to install the `KSI` CentOS/RHEL:
+In order to install the `KSI` on CentOS/RHEL:
 
 ```
 cd /etc/yum.repos.d
@@ -54,7 +54,7 @@ brew install ksi-tools
 
 If the latest version is needed or the package is not available for the platform you are using, check out source code from Github and build it using `gcc` or `VS`. To build KSI tool, `libksi-devel` (KSI C SDK) and `libparamset-devel` packages are needed (maybe found from Guardtime repositories). Both are available in Github as source code. See [https://github.com/GuardTime/libksi](https://github.com/GuardTime/libksi) for libksi and [https://github.com/GuardTime/libparamset](https://github.com/GuardTime/libparamset) for libparamset.
 
-Use `rebuild.sh` script to build `KSI` tool and see `rebuild.sh -h` for more details (use flags `--get-dep-online -s` to get `libksi` and `libparamset` from github automatically without installing libraries).
+Use `rebuild.sh` script to build `KSI` tool and see `rebuild.sh -h` for more details (use flags `--get-dep-online -s` to get `libksi` and `libparamset` from github automatically without installing the libraries).
 
 On Windows see `WinBuild.txt` for more detail how to build `KSI` tool or call `WinBuildOnline.bat` to get and build `libksi` and `libparamset` from Github automatically, producing `KSI` tool binary linked with Windows native libraries.
 
