@@ -317,6 +317,8 @@ void OBJPRINT_signatureCertificate(KSI_CTX *ctx, const KSI_Signature *sig, int (
 	KSI_OctetString *ID = NULL;
 	KSI_Utf8String *sig_type = NULL;
 	KSI_PublicationsFile *pubfile = NULL;
+	KSI_PKICertificate *verificationCert = NULL;
+	char buf[1024];
 
 	char tmp[1024];
 	char str_id[1024];
@@ -341,26 +343,22 @@ void OBJPRINT_signatureCertificate(KSI_CTX *ctx, const KSI_Signature *sig, int (
 	ret = KSI_OctetString_toString(ID, ':', str_id, sizeof(str_id));
 	if (ret != str_id) goto cleanup;
 
-	do {
-		KSI_PKICertificate *verificationCert = NULL;
-		char buf[1024];
-
-		if (ctx == NULL) break;
-
+	if (ctx != NULL) {
 		res = KSI_receivePublicationsFile(ctx, &pubfile);
 		if (res == KSI_PUBLICATIONS_FILE_NOT_CONFIGURED) CN = "(Publications file not specified!)";
-		if (res != KSI_OK || pubfile == NULL) break;
+		if (res != KSI_OK || pubfile == NULL) goto final_print;
 
 		res = KSI_PublicationsFile_getPKICertificateById(pubfile, ID, &verificationCert);
 		if (verificationCert == NULL) CN = "(Certificate not found from publications file!)";
-		if (res != KSI_OK || verificationCert == NULL) break;
+		if (res != KSI_OK || verificationCert == NULL) goto final_print;
 
-		if(KSI_PKICertificate_toString(verificationCert, buf, sizeof(buf)) == NULL) break;
+		if(KSI_PKICertificate_toString(verificationCert, buf, sizeof(buf)) == NULL) goto final_print;
 
-		if(STRING_extractAbstract(buf, "Issued to: ", "\n  * Issued by", tmp, sizeof(tmp), find_charAfterStrn, find_charBeforeStrn, NULL) == NULL) break;
+		if(STRING_extractAbstract(buf, "Issued to: ", "\n  * Issued by", tmp, sizeof(tmp), find_charAfterStrn, find_charBeforeStrn, NULL) == NULL) goto final_print;
 		CN = tmp;
-	} while(0);
+	}
 
+final_print:
 	print("Calendar Authentication Record %s signature:\n", get_signature_type_from_oid(KSI_Utf8String_cstr(sig_type)));
 	print("  Signing certificate ID: %s\n", str_id);
 	if (CN) print("  Signing certificate issued to: %s\n", CN);
