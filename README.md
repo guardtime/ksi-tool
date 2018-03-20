@@ -44,7 +44,7 @@ sudo apt update
 apt-get install ksi-tools
 ```
 
-In order to install the `KSI` on OSX:
+In order to install the `KSI` on OS X:
 ```
 brew tap guardtime/ksi
 brew install ksi-tools
@@ -52,11 +52,11 @@ brew install ksi-tools
 
 ### From Source Code
 
-If the latest version is needed or the package is not available for the platform you are using, check out source code from Github and build it using `gcc` or `VS`. To build KSI tool, `libksi-devel` (KSI C SDK) and `libparamset-devel` packages are needed (maybe found from Guardtime repositories). Both are available in Github as source code. See [https://github.com/GuardTime/libksi](https://github.com/GuardTime/libksi) for libksi and [https://github.com/GuardTime/libparamset](https://github.com/GuardTime/libparamset) for libparamset.
+If the latest version is needed or the package is not available for the platform you are using, check out source code from GitHub and build it using `gcc` or `VS`. To build KSI tool, `libksi-devel` (KSI C SDK) and `libparamset-devel` packages are needed (can be found in Guardtime repositories). Both are available in GitHub as source code. See [https://github.com/GuardTime/libksi](https://github.com/GuardTime/libksi) for `libksi` and [https://github.com/GuardTime/libparamset](https://github.com/GuardTime/libparamset) for `libparamset`.
 
-Use `rebuild.sh` script to build `KSI` tool and see `rebuild.sh -h` for more details (use flags `--get-dep-online -s` to get `libksi` and `libparamset` from github automatically without installing the libraries).
+Use `rebuild.sh` script to build `KSI` tool and see `rebuild.sh -h` for more details (use flags `--get-dep-online -s` to get `libksi` and `libparamset` from GitHub automatically without installing the libraries).
 
-On Windows see `WinBuild.txt` for more detail how to build `KSI` tool or call `WinBuildOnline.bat` to get and build `libksi` and `libparamset` from Github automatically, producing `KSI` tool binary linked with Windows native libraries.
+On Windows see `WinBuild.txt` for more detail how to build `KSI` tool or call `WinBuildOnline.bat` to get and build `libksi` and `libparamset` from GitHub automatically, producing `KSI` tool binary linked with Windows native libraries.
 
 See `test/TEST-README.md` to learn how to run KSI command-line tool tests on Windows and Linux.
 
