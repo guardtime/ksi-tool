@@ -11,7 +11,7 @@ KSI command-line tool enables the access to the KSI blockchain and its functions
 
 ### Latest Release from Guardtime Repository
 
-In order to install the `KSI` CentOS/RHEL packages directly from the Guardtime public repository, download and save the repository configuration to the `/etc/yum.repos.d/` folder:
+In order to install the `KSI` CentOS/RHEL:
 
 ```
 cd /etc/yum.repos.d
@@ -22,14 +22,39 @@ sudo curl -O http://download.guardtime.com/ksi/configuration/guardtime.el6.repo
 # In case of RHEL / CentOS 7
 sudo curl -O http://download.guardtime.com/ksi/configuration/guardtime.el7.repo
 
+# In case of Fedora 26
+sudo curl -O http://download.guardtime.com/ksi/configuration/guardtime.fc26.repo
+
 yum install ksi-tools
+```
+
+In order to install the `KSI` on Debian / Ubuntu:
+
+```
+# Add Guardtime pgp key.
+sudo curl http://download.guardtime.com/ksi/GUARDTIME-GPG-KEY | sudo apt-key add -
+
+# In case of Ubuntu 16 (Xenial)
+sudo curl -o /etc/apt/sources.list.d/guardtime.list http://download.guardtime.com/ksi/configuration/guardtime.xenial.list
+
+# In case of Debian 9 (Stretch)
+sudo curl -o /etc/apt/sources.list.d/guardtime.list http://download.guardtime.com/ksi/configuration/guardtime.stretch.list
+
+sudo apt update
+apt-get install ksi-tools
+```
+
+In order to install the `KSI` on OSX:
+```
+brew tap guardtime/ksi
+brew install ksi-tools
 ```
 
 ### From Source Code
 
 If the latest version is needed or the package is not available for the platform you are using, check out source code from Github and build it using `gcc` or `VS`. To build KSI tool, `libksi-devel` (KSI C SDK) and `libparamset-devel` packages are needed (maybe found from Guardtime repositories). Both are available in Github as source code. See [https://github.com/GuardTime/libksi](https://github.com/GuardTime/libksi) for libksi and [https://github.com/GuardTime/libparamset](https://github.com/GuardTime/libparamset) for libparamset.
 
-Use `rebuild.sh` script to build `KSI` tool and see `rebuild.sh -h` for more details.
+Use `rebuild.sh` script to build `KSI` tool and see `rebuild.sh -h` for more details (use flags `--get-dep-online -s` to get `libksi` and `libparamset` from github automatically without installing libraries).
 
 On Windows see `WinBuild.txt` for more detail how to build `KSI` tool or call `WinBuildOnline.bat` to get and build `libksi` and `libparamset` from Github automatically, producing `KSI` tool binary linked with Windows native libraries.
 
