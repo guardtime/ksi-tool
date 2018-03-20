@@ -167,9 +167,8 @@ static int x(char c){
 		return c - '0';
 	if (c >= 'a' && c <= 'f')
 		return c - 'a' + 10;
-	if (c >= 'A' && c <= 'F')
+	else
 		return c - 'A' + 10;
-	abort(); // isxdigit lies.
 }
 
 static int xx(char c1, char c2){
