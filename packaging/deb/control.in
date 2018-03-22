@@ -28,5 +28,5 @@ Package: @PACKAGE@
 Architecture: any
 Section: utils
 Priority: optional
-Description: Keyless Signature Infrastructure (KSI) command-line tool, also called KSI tool. Execute ksi -h to view brief usage instructions.
+Description: KSI command-line tool, also called KSI tool. Execute ksi -h to view brief usage instructions.
 Depends: @KSI_DEB_RUN_DEPENDENCY@, @PST_DEB_RUN_DEPENDENCY@
