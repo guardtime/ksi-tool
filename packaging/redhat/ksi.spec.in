@@ -26,7 +26,7 @@
 %define upstream_release 0
 
 
-Summary: Keyless  Signature Infrastructure (KSI) command-line tool, also called KSI tool.
+Summary: KSI command-line tool, also called KSI tool.
 Name: %{name_package}
 Version: @VERSION@
 Release: 1%{?dist}
@@ -50,7 +50,7 @@ Obsoletes: ksi <= 2.0.744-2
 @PST_RPM_RUN_DEPENDENCY@
 
 %description
-Keyless Signature Infrastructure (KSI) command-line tool, also called KSI tool. Execute %{name_tool} -h to view brief usage instructions.
+KSI command-line tool, also called KSI tool. Execute %{name_tool} -h to view brief usage instructions.
 
 
 %post
