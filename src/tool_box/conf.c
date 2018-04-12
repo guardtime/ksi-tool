@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <ksi/compatibility.h>
 #include "param_set/param_set.h"
+#include "param_set/strn.h"
 #include "ksitool_err.h"
 #include "printer.h"
 #include "conf_file.h"
@@ -84,9 +85,18 @@ cleanup:
 }
 
 char *conf_help_toString(char *buf, size_t len) {
+	int res;
+	PARAM_SET *set;
 	size_t count = 0;
+	char tmp[0xfff];
+	char *ret = NULL;
 
 	if (buf == NULL || len == 0) return NULL;
+
+	res = CONF_createSet(&set);
+	if (res != PST_OK) goto cleanup;
+
+	PARAM_SET_setHelpText(set, "V", "<file>", "Certificate file in PEM format for publications file verification.");
 
 	count += KSI_snprintf(buf + count, len - count,
 		"Usage:\n"
@@ -97,99 +107,21 @@ char *conf_help_toString(char *buf, size_t len) {
 			, TOOL_getName()
 			);
 
-	count += KSI_snprintf(buf + count, len - count,
-		"KSI configuration file help:\n\n"
-		"  The KSI command-line tool has several configuration options, most of them are\n"
-		"  related to the KSI service configuration (e.g. KSI signing service URL and access\n"
-		"  credentials). The configuration options are described below. There are following\n"
-		"  ways to specify these configuration options:\n\n"
+	count += PST_snhiprintf(buf + count, len - count, 80, 0, 0, NULL, ' ', "KSI configuration file help:\n\\>2\n"
+			"The KSI command-line tool has several configuration options, most of them are  related to the KSI service configuration (e.g. KSI signing service URL and access credentials). The configuration options are described below. There are following ways to specify these configuration options:\n"
+			"\\>3\n*\\>5 directly on command line (highest priority);"
+			"\\>3\n*\\>5 in a file specified by the --conf command-line argument;"
+			"\\>3\n*\\>5 in a file specified by the KSI_CONF environment variable (lowest priority)."
+			"\\>2\n\n"
+			"If a configuration option is specified in more than one source (e.g. both directly on command-line argument and in a configuration file) the source with the highest priority will be used. A short parameter or multiple flags must have prefix - and long parameters have prefix --. If some parameter values contain whitespace characters double quote marks (\") must be used to wrap the entire value. If double quote mark or backslash have to be used inside the value part an escape character (\\\\) must be typed before the character(\\\\\" or \\\\\\\\). If configuration option with unknown or invalid key-value pairs is used, an error is generated.\n\n"
+			"In configuration file each key-value pair must be placed on a single line. Start the line with # to write a comment. Not full paths (V, W and P with URI scheme file://) are interpreted as relative to the configuration file.\n\n");
 
-		"   * directly on command line (highest priority);\n"
-		"   * in a file specified by the --conf command-line argument;\n"
-		"   * in a file specified by the KSI_CONF environment variable (lowest priority).\n\n"
+	count += KSI_snprintf(buf + count, len - count, "All known parameters:\n");
 
-		"  If a configuration option is specified in more than one source (e.g. both directly\n"
-		"  on command-line argument and in a configuration file) the source with the highest\n"
-		"  priority will be used. A short parameter or multiple flags must have prefix - and\n"
-		"  long parameters have prefix --. If some parameter values contain whitespace\n"
-		"  characters double quote marks (\") must be used to wrap the entire value. If double\n"
-		"  quote mark or backslash have to be used inside the value part an escape character\n"
-		"  (\\) must be typed before the character(\\\" or \\\\). If configuration option with\n"
-		"  unknown or invalid key-value pairs is used, an error is generated.\n\n"
-
-		"  In configuration file each key-value pair must be placed on a single line. Start\n"
-		"  the line with # to write a comment. Not full paths (V, W and P with URI scheme\n"
-		"  file://) are interpreted as relative to the configuration file.\n\n"
-
-		"All known parameters:\n"
-		);
+	ret = PARAM_SET_helpToString(set, "S,aggr-user,aggr-key,aggr-hmac-alg,H,X,ext-user,ext-key,ext-hmac-alg,P,cnstr,V,W,max-lvl,max-aggr-rounds,mdata-cli-id,mdata-mac-id,mdata-sqn-nr,mdata-req-tm,c,C,publications-file-no-verify,apply-remote-conf", 1, 13, 80, tmp, sizeof(tmp));
 
 	count += KSI_snprintf(buf + count, len - count,
-		" -S <URL>  - Signing service (KSI Aggregator) URL.\n"
-		" --aggr-user <str>\n"
-		"           - Username for signing service.\n"
-		" --aggr-key <str>\n"
-		"           - HMAC key for signing service.\n"
-		" --aggr-hmac-alg <alg>\n"
-		"           - Hash algorithm to be used for computing HMAC on outgoing messages towards\n"
-		"             KSI aggregator. If not set, default algorithm is used.\n"
-		" -H <alg>  - Use the given hash algorithm to hash the file to be signed. If not\n"
-		"             set, the default algorithm is used. Use ksi -h to get the list of\n"
-		"             supported hash algorithms.\n"
-		"             If used in combination with --apply-remote-conf, the algorithm\n"
-		"             parameter provided by the server will be ignored.\n"
-		" -X <URL>  - Extending service (KSI Extender) URL.\n"
-		" --ext-user <str>\n"
-		"           - Username for extending service.\n"
-		" --ext-key <str>\n"
-		"           - HMAC key for extending service.\n"
-		" --ext-hmac-alg <alg>\n"
-		"           - Hash algorithm to be used for computing HMAC on outgoing messages towards\n"
-		"             KSI extender. If not set, default algorithm is used.\n"
-		" -P <URL>  - Publications file URL (or file with URI scheme 'file://').\n"
-		" --cnstr <oid=value>\n"
-		"           - OID of the PKI certificate field (e.g. e-mail address) and the expected\n"
-		"             value to qualify the certificate for verification of publications file\n"
-		"             PKI signature. At least one constraint must be defined.\n"
-		" -V        - Certificate file in PEM format for publications file verification.\n"
-		" -W <dir>  - specify an OpenSSL-style trust store directory for publications file verification.\n"
-		" --max-lvl <int>\n"
-		"           - Set the maximum depth (0 - 255) of the local aggregation tree\n"
-		"             (default 0). If used in combination with --apply-remote-conf,\n"
-		"             where service maximum level is provided, the smaller value is\n"
-		"             applied.\n"
-		" --max-aggr-rounds <int>\n"
-		"           - Set the upper limit of local aggregation rounds that may be\n"
-		"             performed (default 1).\n"
-		" --mdata-cli-id <str>\n"
-		"           - Specify client id as a string that will be embedded into the\n"
-		"             signature as metadata. It is mandatory part of the metadata.\n"
-		" --mdata-mac-id <str>\n"
-		"           - Specify machine id as a string that will be embedded into the\n"
-		"             signature as metadata. It is optional part of metadata.\n"
-		" --mdata-sqn-nr <int>\n"
-		"           - Specify incremental (sequence number is incremented in every\n"
-		"             aggregation round) sequence number of the request as integer\n"
-		"             that will be embedded into the signature as metadata. It is\n"
-		"             optional part of metadata.\n"
-		" --mdata-req-tm\n"
-		"           - Embed request time extracted from the machine clock into the\n"
-		"             signature as metadata. It is optional part of metadata.\n"
-		" -c <int>  - Set network transfer timeout, after successful connect, in seconds.\n"
-		" -C <int>  - Set network connect timeout in seconds (is not supported with TCP client).\n"
-		" --publications-file-no-verify\n"
-		"           - A flag to force the tool to trust the publications file without\n"
-		"             verifying it. The flag can only be defined on command-line to avoid\n"
-		"             the usage of insecure configuration files. It must be noted that the\n"
-		"             option is insecure and may only be used for testing.\n"
-		" --apply-remote-conf\n"
-		"           - Obtain and apply additional configuration data from service server.\n"
-		"             Use ksi sign -h, or ksi extend -h for more information.\n"
-		"\n"
-		"\n"
-		);
-
-	count += KSI_snprintf(buf + count, len - count,
+		"%s\n\n"
 		"An example configuration file:\n\n"
 		" # --- BEGINNING ---\n"
 		" # KSI Signing service parameters:\n"
@@ -208,10 +140,15 @@ char *conf_help_toString(char *buf, size_t len) {
 		" --cnstr email=publications@guardtime.com\n"
 		" --cnstr \"org=Guardtime AS\"\n"
 		" # --- END ---\n"
-		"\n"
+		"\n", tmp
 		);
 
 
+cleanup:
+	if (res != PST_OK || ret == NULL) {
+		PST_snprintf(buf + count, len - count, "\nError: There were failures while generating help by PARAM_SET.\n");
+	}
+	PARAM_SET_free(set);
 	return buf;
 }
 

@@ -141,6 +141,12 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 
 		res = PARAM_SET_addControl(conf, "{cnstr}", isFormatOk_constraint, NULL, convertRepair_constraint, NULL);
 		if (res != PST_OK) goto cleanup;
+
+		PARAM_SET_setHelpText(conf, "P", "<URL>", "Publications file URL (or file with URI scheme 'file://').");
+		PARAM_SET_setHelpText(conf, "cnstr", "<oid=value>", "OID of the PKI certificate field (e.g. e-mail address) and the expected value to qualify the certificate for verification of publications file PKI signature. At least one constraint must be defined.");
+		PARAM_SET_setHelpText(conf, "V", "<file>", "Certificate file in PEM format for publications file verification. All values from lower priority source are ignored.");
+		PARAM_SET_setHelpText(conf, "W", "<dir>", "Specify an OpenSSL-style trust store directory for publications file verification.");
+		PARAM_SET_setHelpText(conf, "publications-file-no-verify", NULL, "A flag to force the tool to trust the publications file without verifying it. The flag can only be defined on command-line to avoid the usage of insecure configuration files. It must be noted that the option is insecure and may only be used for testing.");
 	}
 
 	if (is_S) {
@@ -179,6 +185,18 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 
 		res = PARAM_SET_addControl(conf, "{aggr-pdu-v}", isFormatOk_string, isContentOk_pduVersion, NULL, NULL);
 		if (res != PST_OK) goto cleanup;
+
+		PARAM_SET_setHelpText(conf, "S", "<URL>", "Signing service (KSI Aggregator) URL.");
+		PARAM_SET_setHelpText(conf, "aggr-user", "<str>", "Username for signing service.");
+		PARAM_SET_setHelpText(conf, "aggr-key", "<str>", "HMAC key for signing service.");
+		PARAM_SET_setHelpText(conf, "aggr-hmac-alg", "<alg>", "Hash algorithm to be used for computing HMAC on outgoing messages towards KSI aggregator. If not set, default algorithm is used.");
+		PARAM_SET_setHelpText(conf, "H", "<alg>", "Use the given hash algorithm to hash the file to be signed. If not set, the default algorithm is used. Use ksi -h to get the list of supported hash algorithms.\nIf used in combination with --apply-remote-conf, the algorithm parameter provided by the server will be ignored.");
+		PARAM_SET_setHelpText(conf, "max-lvl", "<int>", "Set the maximum depth (0 - 255) of the local aggregation tree (default 0). If used in combination with --apply-remote-conf, where service maximum level is provided, the smaller value is applied.");
+		PARAM_SET_setHelpText(conf, "max-aggr-rounds", "<int>", "Set the upper limit of local aggregation rounds that may be performed (default 1).");
+		PARAM_SET_setHelpText(conf, "mdata-cli-id", "<str>", "Specify client id as a string that will be embedded into the signature as metadata. It is mandatory part of the metadata.");
+		PARAM_SET_setHelpText(conf, "mdata-mac-id", "<str>", "Specify machine id as a string that will be embedded into the signature as metadata. It is optional part of metadata.");
+		PARAM_SET_setHelpText(conf, "mdata-sqn-nr", "<int>", "Specify incremental (sequence number is incremented in every aggregation round) sequence number of the request as integer that will be embedded into the signature as metadata. It is optional part of metadata.");
+		PARAM_SET_setHelpText(conf, "mdata-req-tm", "<int>", "Embed request time extracted from the machine clock into the signature as metadata. It is optional part of metadata.");
 	}
 
 	if (is_X) {
@@ -193,6 +211,12 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 
 		res = PARAM_SET_addControl(conf, "{ext-pdu-v}", isFormatOk_string, isContentOk_pduVersion, NULL, NULL);
 		if (res != PST_OK) goto cleanup;
+
+		PARAM_SET_setHelpText(conf, "X", "<URL>", "Extending service (KSI Extender) URL.");
+		PARAM_SET_setHelpText(conf, "ext-user", "<user>", "Username for extending service.");
+		PARAM_SET_setHelpText(conf, "ext-key", "<key>", "HMAC key for extending service.");
+		PARAM_SET_setHelpText(conf, "ext-hmac-alg", "<alg>", "Hash algorithm to be used for computing HMAC on outgoing messages towards KSI extender. If not set, default algorithm is used.");
+
 	}
 
 	if (is_X || is_S) {
@@ -207,11 +231,15 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 
 		res = PARAM_SET_addControl(conf, "{msg-id}", isFormatOk_int_can_be_null, isContentOk_uint_not_zero_can_be_null, NULL, extract_int);
 		if (res != PST_OK) goto cleanup;
+
+		PARAM_SET_setHelpText(conf, "apply-remote-conf", NULL, "Obtain and apply additional configuration data from service server. Use ksi sign -h, or ksi extend -h for more information.");
 	}
 
 	res = PARAM_SET_addControl(conf, "{c}{C}", isFormatOk_int, isContentOk_uint, NULL, extract_int);
 	if (res != PST_OK) goto cleanup;
 
+	PARAM_SET_setHelpText(conf, "c", "<int>", "Set network transfer timeout, after successful connect, in seconds.");
+	PARAM_SET_setHelpText(conf, "C", "<int>", "Set network connect timeout in seconds (is not supported with TCP client).");
 
 	res = KT_OK;
 
