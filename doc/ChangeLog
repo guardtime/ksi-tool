@@ -1,17 +1,17 @@
 * IMPROVEMENT: Help text is formatted by libparamset.
 * IMPROVEMENT: Resolved build warnings on Windows.
-* IMPROVEMENT: When signing multiple files within multiple aggregation rounds, signatures are saved imediately to optimize memory usage.
-* IMPROVEMENT: OSX installer build script removed as it is availabe from guardtime/ksi homebrew tap.
+* IMPROVEMENT: When signing multiple files within multiple aggregation rounds, signatures are saved immediately to optimize memory usage.
+* IMPROVEMENT: OSX installer build script removed as it is available from guardtime/ksi homebrew tap.
 * IMPROVEMENT: Parameter --dump has optional argument 'G' that can be used for optimizing the output for grepping.
 * IMPROVEMENT: When dumping signature (--dump), request time from metadata is printed in seconds and in human-readable string.
 * IMPROVEMENT: Task and command-line parameter parser is linked as external library (libparamset).
 * IMPROVEMENT: Script rebuild.sh changed to main build script that is called from the others.
-* IMPROVEMENT: Convenience script WinBuildOnline.bat that links KSI tool with libksi and libparamset statically. Libksi and libparamset are downloaded and built from Github.
-* IMPROVEMENT: Convenience script rebuild.sh --get-dep-online that links KSI tool with libksi and libparamset statically. Libksi and libparamset are downloaded and built from Github.
+* IMPROVEMENT: Convenience script WinBuildOnline.bat implemented that links KSI tool with libksi and libparamset statically. Libksi and libparamset are downloaded and built from Github.
+* IMPROVEMENT: Convenience script rebuild.sh --get-dep-online implemented that links KSI tool with libksi and libparamset statically. Libksi and libparamset are downloaded and built from Github.
 * IMPROVEMENT: New option '--without-libksi' added to configure script that removes -lksi from linking thus making it possible to explicitly specify the libksi library file that is used for linking.
+* IMPROVEMENT: Tests refactored to suite with libksi 3.17.
 * IMPROVEMENT: Build requires libksi version >= 3.17.
 * IMPROVEMENT: README.md included to packaging.
-* IMPROVEMENT: Tests refactored to suite with libksi 3.17.
 * IMPROVEMENT: Error message improved when untrusted hash algorithm is used.
 * IMPROVEMENT: Parameters -H, --aggr-hmac-alg and --ext-hmac-alg do not permit usage of untrusted hash algorithm.
 * IMPROVEMENT: Help (ksi -h) separates untrusted hash algorithms from trusted ones.
