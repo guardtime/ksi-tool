@@ -26,6 +26,7 @@
 #include "param_set/param_set.h"
 #include "param_set/parameter.h"
 #include "param_set/task_def.h"
+#include "param_set/strn.h"
 #include "tool_box/ksi_init.h"
 #include "tool_box/param_control.h"
 #include "tool_box/task_initializer.h"
@@ -71,6 +72,8 @@ static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
 static void signature_print_suggestions_for_publication_based_verification(PARAM_SET *set, ERR_TRCKR *err, int errCode, KSI_CTX *ksi,
 											KSI_Signature *sig, KSI_RuleVerificationResult *verRes, KSI_PublicationData *userPubData);
 
+#define PARAMS "{i}{x}{f}{d}{pub-str}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}{conf}{log}{h|help}"
+
 int verify_run(int argc, char **argv, char **envp) {
 	int res;
 	char buf[2048];
@@ -90,9 +93,7 @@ int verify_run(int argc, char **argv, char **envp) {
 	/**
 	 * Extract command line parameters and also add configuration specific parameters.
 	 */
-	res = PARAM_SET_new(
-			CONF_generate_param_set_desc("{i}{x}{f}{d}{pub-str}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}{conf}{log}{h|help}", "XP", buf, sizeof(buf)),
-			&set);
+	res = PARAM_SET_new(CONF_generate_param_set_desc(PARAMS, "XP", buf, sizeof(buf)), &set);
 	if (res != KT_OK) goto cleanup;
 
 	res = TASK_SET_new(&task_set);
@@ -195,75 +196,52 @@ cleanup:
 }
 
 char *verify_help_toString(char *buf, size_t len) {
+	int res;
+	char *ret = NULL;
+	PARAM_SET *set;
 	size_t count = 0;
+	char tmp[1024];
 
-	count += KSI_snprintf(buf + count, len - count,
-		"Usage:"
-		" %s verify -i <in.ksig> [-f <data>] [more_options]\n"
-		" %s verify --ver-int -i <in.ksig> [-f <data>] [more_options]\n"
-		" %s verify --ver-cal -i <in.ksig> [-f <data>] -X <URL>\n"
-		"     [--ext-user <user> --ext-key <key>] [more_options]\n"
-		" %s verify --ver-key -i <in.ksig> [-f <data>] -P <URL>\n"
-		"     [--cnstr <oid=value>]... [more_options]\n"
-		" %s verify --ver-pub -i <in.ksig> [-f <data>] --pub-str <pubstring>\n"
-		"     [-x -X <URL>  [--ext-user <user> --ext-key <key>]] [more_options]\n"
-		" %s verify --ver-pub -i <in.ksig> [-f <data>] -P <URL> [--cnstr <oid=value>]...\n"
-		"        [-x -X <URL>  [--ext-user <user> --ext-key <key>]] [more_options]\n"
-		"\n"
-		" --ver-int - Perform internal verification.\n"
-		" --ver-cal - Perform calendar-based verification (use extending service).\n"
-		" --ver-key - Perform key-based verification.\n"
-		" --ver-pub - Perform publication-based verification (use with -x to permit extending).\n"
-		" -i <in.ksig>\n"
-		"           - Signature file to be verified. Use '-' as file name to read\n"
-		"             the signature from stdin. Flag -i can be omitted when specifying\n"
-		"             the input. Without -i it is not possible to sign files that look\n"
-		"             like command-line parameters (e.g. -a, --option).\n"
-		" -f <data> - Path to file to be hashed or data hash imprint to extract the hash\n"
-		"             value that is going to be verified. Hash format: <alg>:<hash in hex>.\n"
-		"             Use '-' as file name to read data to be hashed from stdin.\n"
-		" -x        - Permit to use extender for publication-based verification.\n"
-		" -X <URL>  - Extending service (KSI Extender) URL.\n"
-		" --ext-user <user>\n"
-		"           - Username for extending service.\n"
-		" --ext-key <key>\n"
-		"           - HMAC key for extending service.\n"
-		" --ext-hmac-alg <alg>\n"
-		"           - Hash algorithm to be used for computing HMAC on outgoing messages\n"
-		"             towards KSI extender. If not set, default algorithm is used.\n"
-		" --pub-str <str>\n"
-		"           - Publication string to verify with.\n"
-		" -P <URL>  - Publications file URL (or file with URI scheme 'file://').\n"
-		" --cnstr <oid=value>\n"
-		"           - OID of the PKI certificate field (e.g. e-mail address) and the expected\n"
-		"             value to qualify the certificate for verification of publications file\n"
-		"             PKI signature. At least one constraint must be defined.\n"
-		" -V        - Certificate file in PEM format for publications file verification.\n"
-		"             All values from lower priority source are ignored.\n"
-		"\n"
-		" -d        - Print detailed information about processes and errors to stderr.\n"
-		" --dump [G]\n"
-		"           - Dump signature and document hash being verified in human-readable\n"
-		"             format to stdout. In verification report 'OK' means that the step\n"
-		"             is performed successfully, 'NA' means that it could not be performed\n"
-		"             as there was not enough information and 'FAILED' means that the\n"
-		"             verification was unsuccessful.\n"
-		"             To make signature dump suitable for processing with grep, use 'G' as\n"
-		"             argument.\n"
-		" --conf <file>\n"
-		"             Read configuration options from given file. It must be noted\n"
-		"             that configuration options given explicitly on command line will\n"
-		"             override the ones in the configuration file.\n"
-		" --log <file>\n"
-		"           - Write libksi log to given file. Use '-' as file name to redirect log to stdout.\n",
-		TOOL_getName(),
-		TOOL_getName(),
-		TOOL_getName(),
-		TOOL_getName(),
-		TOOL_getName(),
-		TOOL_getName()
-	);
+	res = PARAM_SET_new(CONF_generate_param_set_desc(PARAMS, "XP", tmp, sizeof(tmp)), &set);
+	if (res != PST_OK) goto cleanup;
 
+	res = CONF_initialize_set_functions(set, "XP");
+	if (res != PST_OK) goto cleanup;
+
+
+	PARAM_SET_setHelpText(set, "ver-int", NULL, "Perform internal verification.");
+	PARAM_SET_setHelpText(set, "ver-cal", NULL, "Perform calendar-based verification (use extending service).");
+	PARAM_SET_setHelpText(set, "ver-key", NULL, "Perform key-based verification.");
+	PARAM_SET_setHelpText(set, "ver-pub", NULL, "Perform publication-based verification (use with -x to permit extending).");
+	PARAM_SET_setHelpText(set, "i", "<in.ksig>", "Signature file to be verified. Use '-' as file name to read the signature from stdin. Flag -i can be omitted when specifying the input. Without -i it is not possible to sign files that look like command-line parameters (e.g. -a, --option).");
+	PARAM_SET_setHelpText(set, "f", "<data>", "Path to file to be hashed or data hash imprint to extract the hash value that is going to be verified. Hash format: <alg>:<hash in hex>. Use '-' as file name to read data to be hashed from stdin.");
+	PARAM_SET_setHelpText(set, "x", NULL, "Permit to use extender for publication-based verification.");
+	PARAM_SET_setHelpText(set, "pub-str", "<str>", "Publication string to verify with.");
+	PARAM_SET_setHelpText(set, "dump", "[G]", "Dump signature and document hash being verified in human-readable format to stdout. In verification report 'OK' means that the step is performed successfully, 'NA' means that it could not be performed as there was not enough information and 'FAILED' means that the verification was unsuccessful. To make signature dump suitable for processing with grep, use 'G' as argument.");
+	PARAM_SET_setHelpText(set, "d", NULL, "Print detailed information about processes and errors to stderr.");
+	PARAM_SET_setHelpText(set, "conf", "<file>", "Read configuration options from given file. It must be noted that configuration options given explicitly on command line will override the ones in the configuration file.");
+	PARAM_SET_setHelpText(set, "log", "<file>", "Write libksi log to given file. Use '-' as file name to redirect log to stdout.");
+
+
+	count += PST_snhiprintf(buf + count, len - count, 80, 0, 0, NULL, ' ', "Usage:\\>1\n"
+			"ksi verify -i <in.ksig> [-f <data>] [more_options]\n"
+			"ksi verify --ver-int -i <in.ksig> [-f <data>] [more_options]\\>1\n\\>5"
+			"ksi verify --ver-cal -i <in.ksig> [-f <data>] -X <URL>\n"
+			"[--ext-user <user> --ext-key <key>] [more_options]\\>1\n\\>5"
+			"ksi verify --ver-key -i <in.ksig> [-f <data>] -P <URL>\n"
+			"[--cnstr <oid=value>]... [more_options]\\>1\n\\>5"
+			"ksi verify --ver-pub -i <in.ksig> [-f <data>] --pub-str <pubstring>\n"
+			"[-x -X <URL> [--ext-user <user> --ext-key <key>]] [more_options]\\>1\n\\>5"
+			"ksi verify --ver-pub -i <in.ksig> [-f <data>] -P <URL> [--cnstr <oid=value>]...\n"
+			"[-x -X <URL> [--ext-user <user> --ext-key <key>]] [more_options]\\>\n\n\n");
+
+	ret = PARAM_SET_helpToString(set, "ver-int, ver-cal, ver-key, ver-pub,i,f,x,X,ext-user,ext-key,ext-hmac-alg,pub-str,P,cnstr,V,d,dump,conf,log", 1, 13, 80, buf + count, len - count);
+
+cleanup:
+	if (res != PST_OK || ret == NULL) {
+		PST_snprintf(buf + count, len - count, "\nError: There were failures while generating help by PARAM_SET.\n");
+	}
+	PARAM_SET_free(set);
 	return buf;
 }
 

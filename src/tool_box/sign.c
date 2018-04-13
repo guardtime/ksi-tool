@@ -27,6 +27,7 @@
 #include <ksi/blocksigner.h>
 #include "param_set/param_set.h"
 #include "param_set/task_def.h"
+#include "param_set/strn.h"
 #include "api_wrapper.h"
 #include "tool_box/param_control.h"
 #include "tool_box/ksi_init.h"
@@ -89,6 +90,8 @@ static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SI
 static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, size_t seq_offset, KSI_MetaData **mdata);
 static int KT_SIGN_dump(KSI_CTX *ksi, PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND *aggr_round);
 
+#define PARAMS "{sign}{i}{input}{o}{data-out}{d}{dump}{dump-conf}{log}{conf}{h|help}{dump-last-leaf}{prev-leaf}{mdata}{mask}{show-progress}{apply-remote-conf}"
+
 int sign_run(int argc, char** argv, char **envp) {
 	int res;
 	char buf[2048];
@@ -103,11 +106,7 @@ int sign_run(int argc, char** argv, char **envp) {
 	/**
 	 * Extract command line parameters.
 	 */
-	res = PARAM_SET_new(
-			CONF_generate_param_set_desc(
-					"{sign}{i}{input}{o}{data-out}{d}{dump}{dump-conf}{log}{conf}{h|help}{dump-last-leaf}"
-					"{prev-leaf}{mdata}{mask}{show-progress}{apply-remote-conf}", "S", buf, sizeof(buf)),
-					&set);
+	res = PARAM_SET_new(CONF_generate_param_set_desc(PARAMS, "S", buf, sizeof(buf)), &set);
 	if (res != KT_OK) goto cleanup;
 
 	res = TASK_SET_new(&task_set);
@@ -158,137 +157,52 @@ cleanup:
 	return KSITOOL_errToExitCode(res);
 }
 
-char *sign_help_toString(char*buf, size_t len) {
+char *sign_help_toString(char *buf, size_t len) {
+	int res;
+	char *ret = NULL;
+	PARAM_SET *set;
 	size_t count = 0;
+	char tmp[1024];
 
-	count += KSI_snprintf(buf + count, len - count,
-		"Usage:\n"
-		" %s sign -S <URL> [--aggr-user <user> --aggr-key <key>] [-H <alg>]\n"
-		"          [--data-out <file>] [more_options] [-i <input>]... [<input>]...\n"
-		"          [-- [<only file input>]...] [-o <out.ksig>]...\n"
-		"\n"
-		"\n"
-		" -i <input>\n"
-		"           - The input is either the path to the file to be hashed and signed\n"
-		"             or a hash imprint in the case the data to be signed has been hashed\n"
-		"             already. Use '-' as file name to read data to be hashed from stdin.\n"
-		"             Hash imprint format: <alg>:<hash in hex>.\n\n"
-		"             Flag -i can be omitted when specifying the input. To interpret all\n"
-		"             inputs as regular files no matter what the file's name is see\n"
-		"             parameter --.\n"
-		" -o <out.ksig>\n"
-		"           - Output file path for the signature. Use '-' as file name to\n"
-		"             redirect signature binary stream to stdout. If not specified the\n"
-		"             output is saved to the same directory where the input file is\n"
-		"             located. When specified as directory all the signatures are saved\n"
-		"             there. When signature's output file name is not explicitly\n"
-		"             specified the signature is saved to <input file>.ksig\n"
-		"             (or <input file>_<nr>.ksig, where <nr> is auto-incremented counter\n"
-		"             if the output file already exists). When there are N x input and\n"
-		"             explicitly specified N x output every signature is saved to the\n"
-		"             corresponding path. If output file name is explicitly specified,\n"
-		"             will always overwrite the existing file.\n"
-		" -H <alg>  - Use the given hash algorithm to hash the file to be signed. If not\n"
-		"             set, the default algorithm is used. Use ksi -h to get the list of\n"
-		"             supported hash algorithms.\n"
-		"             If used in combination with --apply-remote-conf, the algorithm\n"
-		"             parameter provided by the server will be ignored.\n"
-		" -S <URL>  - Signing service (KSI Aggregator) URL.\n"
-		" --aggr-user <str>\n"
-		"           - Username for signing service.\n"
-		" --aggr-key <str>\n"
-		"           - HMAC key for signing service.\n"
-		" --aggr-hmac-alg <alg>\n"
-		"           - Hash algorithm to be used for computing HMAC on outgoing messages\n"
-		"             towards KSI aggregator. If not set, default algorithm is used.\n"
-		" --data-out <file>\n"
-		"           - Save signed data to file. Use when signing an incoming stream.\n"
-		"             Use '-' as file name to redirect data being hashed to stdout.\n"
-		" --max-lvl <int>\n"
-		"           - Set the maximum depth (0 - 255) of the local aggregation tree\n"
-		"             (default 0). If used in combination with --apply-remote-conf,\n"
-		"             where service maximum level is provided, the smaller value is\n"
-		"             applied.\n"
-		" --max-aggr-rounds <int>\n"
-		"           - Set the upper limit of local aggregation rounds that may be\n"
-		"             performed (default 1).\n"
-		" --mask [<hex | alg:[arg...]>]\n"
-		"           - Specify a hex string to initialize and apply the masking process,\n"
-		"             or algorithm to generate the initial value instead.\n"
-		"             Supported algorithms:\n\n"
-		"               * crand:seed,len - Use standard C rand() function to generate\n"
-		"                 array of random numbers with the given seed and length. The\n"
-		"                 seed value is unsigned 32bit integer or 'time' to use the\n"
-		"                 system time value instead. If function is specified without the\n"
-		"                 arguments (crand:) 'time' is used to generate random array with\n"
-		"                 size of 32 bytes.\n\n"
-		"             When mask is specified without the argument (--mask) 'crand:' is\n"
-		"             used as default.\n"
-		" --prev-leaf <alg>:<hash>\n"
-		"           - Specify the hash imprint of the last leaf from another local\n"
-		"             aggregation tree to link it with the current first local\n"
-		"             aggregation round. Is valid only with option --mask.\n"
-		" --mdata   - Embed metadata to the KSI signature. To configure metadata at lest\n"
-		"             --mdata-cli-id must be specified.\n"
-		" --mdata-cli-id <str>\n"
-		"           - Specify client id as a string that will be embedded into the\n"
-		"             signature as metadata. It is mandatory part of the metadata.\n"
-		" --mdata-mac-id <str>\n"
-		"           - Specify machine id as a string that will be embedded into the\n"
-		"             signature as metadata. It is optional part of metadata.\n"
-		" --mdata-sqn-nr <int>\n"
-		"           - Specify incremental (sequence number is incremented in every\n"
-		"             aggregation round) sequence number of the request as integer\n"
-		"             that will be embedded into the signature as metadata. It is\n"
-		"             optional part of metadata.\n"
-		" --mdata-req-tm\n"
-		"           - Embed request time extracted from the machine clock into the\n"
-		"             signature as metadata. It is optional part of metadata.\n"
-		" --        - If used everything specified after the token is interpreted as\n"
-		"             input file (command-line parameters (e.g. --conf, -d), stdin (-)\n"
-		"             and pre-calculated hash imprints (SHA-256:7647c6...) are all\n"
-		"             interpreted as regular files).\n"
-		" -d        - Print detailed information about processes and errors to stderr.\n"
-		" --dump [G]\n"
-		"           - Dump signature(s) created in human-readable format to stdout. To make\n"
-		"             signature dump suitable for processing with grep, use 'G' as argument.\n"
-		" --dump-conf\n"
-		"           - Dump aggregator configuration to stdout.\n"
-		" --show-progress\n"
-		"           - Show progress bar. Is only valid with -d.\n"
-		" --conf <file>\n"
-		"           - Read configuration options from given file. It must be noted\n"
-		"             that configuration options given explicitly on command line will\n"
-		"             override the ones in the configuration file.\n"
-		" --apply-remote-conf\n"
-		"           - Obtain and apply configuration data from aggregation service server.\n"
-		"             Following configuration parameters can be received from server:\n"
-		"               * maximum level - the maximum allowed depth of the local\n"
-		"                 aggregation tree. This can be set to a lower value with\n"
-		"                 --max-lvl.\n"
-		"               * aggregation hash algorithm - recommended hash function identifier\n"
-		"                 to be used for hashing the file to be signed. This parameter can\n"
-		"                 be overridden with -H.\n"
-#if 0
-		"               * aggregation period - recommended duration of client's aggregation\n"
-		"                 round, in milliseconds.\n"
-		"               * maximum requests - maximum number of requests the client is\n"
-		"                 allowed to send within one aggregation period of the recommended\n"
-		"                 duration.\n"
-		"               * parent URI - parent server URI. Note that there may be several\n"
-		"                 parent servers listed in the configuration. Typically these are\n"
-		"                 all members of one aggregator cluster.\n"
-#endif
-		"             It must be noted that the described parameters are optional and may\n"
-		"             not be provided by the server. Use --dump-conf to view configuration\n"
-		"             parameters.\n"
-		" --log <file>\n"
-		"           - Write libksi log to given file. Use '-' as file name to redirect\n"
-		"             log to stdout.\n"
-		"\n"
-		, TOOL_getName()
-	);
+	res = PARAM_SET_new(CONF_generate_param_set_desc(PARAMS, "S", tmp, sizeof(tmp)), &set);
+	if (res != PST_OK) goto cleanup;
 
+	res = CONF_initialize_set_functions(set, "S");
+	if (res != PST_OK) goto cleanup;
+
+	PARAM_SET_setPrintName(set, "input", "--", NULL); /* Temporary name change for formatting help text. */
+	PARAM_SET_setHelpText(set, "input", NULL, "If used everything specified after the token is interpreted as input file (command-line parameters (e.g. --conf, -d), stdin (-) and pre-calculated hash imprints (SHA-256:7647c6...) are all interpreted as regular files).");
+	PARAM_SET_setHelpText(set, "i", "<input>", "The input is either the path to the file to be hashed and signed or a hash imprint in the case the data to be signed has been hashed already. Use '-' as file name to read data to be hashed from stdin. Hash imprint format: <alg>:<hash in hex>.\n\nFlag -i can be omitted when specifying the input. To interpret all inputs as regular files no matter what the file's name is see parameter --.");
+	PARAM_SET_setHelpText(set, "o", "<out.ksig>", "Output file path for the signature. Use '-' as file name to redirect signature binary stream to stdout. If not specified the output is saved to the same directory where the input file is located. When specified as directory all the signatures are saved there. When signature's output file name is not explicitly specified the signature is saved to <input file>.ksig (or <input file>_<nr>.ksig, where <nr> is auto-incremented counter if the output file already exists). When there are N x input and explicitly specified N x output every signature is saved to the corresponding path. If output file name is explicitly specified, will always overwrite the existing file.");
+	PARAM_SET_setHelpText(set, "data-out", "<file>", "Save signed data to file. Use when signing an incoming stream. Use '-' as file name to redirect data being hashed to stdout.");
+	PARAM_SET_setHelpText(set, "mask", "[<hex | alg:[arg...]>]",  "Specify a hex string to initialize and apply the masking process, or algorithm to generate the initial value instead.\nSupported algorithms:\n"
+																		"\\>2\n*\\>4 crand:seed,len - Use standard C rand() function to generate array of random numbers with the given seed and length. The seed value is unsigned 32bit integer or 'time' to use the system time value instead. If function is specified without the arguments (crand:) 'time' is used to generate random array with size of 32 bytes.\\>\n\n"
+																		"When mask is specified without the argument (--mask) 'crand:' is used as default.");
+	PARAM_SET_setHelpText(set, "prev-leaf", "<alg>:<hash>", "Specify the hash imprint of the last leaf from another local aggregation tree to link it with the current first local aggregation round. Is valid only with option --mask.");
+	PARAM_SET_setHelpText(set, "mdata", NULL, "Embed metadata to the KSI signature. To configure metadata at lest --mdata-cli-id must be specified.");
+	PARAM_SET_setHelpText(set, "dump", "[G]", "Dump signature(s) created in human-readable format to stdout. To make.signature dump suitable for processing with grep, use 'G' as argument.");
+	PARAM_SET_setHelpText(set, "dump-conf", NULL, "Dump aggregator configuration to stdout.");
+	PARAM_SET_setHelpText(set, "show-progress", NULL, "Show progress bar. Is only valid with -d.");
+	PARAM_SET_setHelpText(set,    "apply-remote-conf", NULL, "Obtain and apply configuration data from aggregation service server. Following configuration parameters can be received from server:"
+										"\\>2\n*\\>4  maximum level - the maximum allowed depth of the local aggregation tree. This can be set to a lower value with --max-lvl."
+										"\\>2\n*\\>4  aggregation hash algorithm - recommended hash function identifier to be used for hashing the file to be signed. This parameter can be overridden with -H.\\>\n"
+										"It must be noted that the described parameters are optional and may not be provided by the server. Use --dump-conf to view configuration parameters.");
+	PARAM_SET_setHelpText(set, "d", NULL, "Print detailed information about processes and errors to stderr.");
+	PARAM_SET_setHelpText(set, "conf", "<file>", "Read configuration options from given file. It must be noted that configuration options given explicitly on command line will override the ones in the configuration file.");
+	PARAM_SET_setHelpText(set, "log", "<file>", "Write libksi log to given file. Use '-' as file name to redirect log to stdout.");
+
+	count += PST_snhiprintf(buf + count, len - count, 80, 0, 0, NULL, ' ', "Usage:\\>1\n\\>10"
+			"ksi sign -S <URL> [--aggr-user <user> --aggr-key <key>] [-H <alg>]\n"
+			"[--data-out <file>] [more_options] [-i <input>]... [<input>]...\n"
+			"[-- [<only file input>]...] [-o <out.ksig>]...\\>\n\n\n");
+
+	ret = PARAM_SET_helpToString(set, "i,o,H,S,aggr-user,aggr-key,aggr-hmac-alg,data-out,max-lvl,max-aggr-rounds,mask,prev-leaf,mdata,mdata-cli-id,mdata-mac-id,mdata-sqn-nr,mdata-req-tm,input,d,dump,dump-conf,show-progress,conf,apply-remote-conf,log", 1, 13, 80, buf + count, len - count);
+
+cleanup:
+	if (res != PST_OK || ret == NULL) {
+		PST_snprintf(buf + count, len - count, "\nError: There were failures while generating help by PARAM_SET.\n");
+	}
+	PARAM_SET_free(set);
 	return buf;
 }
 
