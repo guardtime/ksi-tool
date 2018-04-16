@@ -1,11 +1,10 @@
-
 .TH KSI-CONF 5
 .\"
 .SH NAME
-\fBksi.conf\fR - Keyless Signature Infrastructure (KSI) command-line tool configuration file.
+\fBksi.conf\fR - KSI command-line tool configuration file.
 .\"
 .SH DESCRIPTION
-The KSI command-line tool has several configuration options, most of them are related to the KSI service configuration (e.g. KSI signing service URL and access credentials). The configuration options are described in the \fBOPTIONS\fR section below. Ways to define the options are:
+The KSI command-line tool has several configuration options, most of them are related to the KSI service configuration (such as KSI signing service URL and access credentials). The configuration options are described in the \fBOPTIONS\fR section. Ways to define the options are:
 .LP
 .IP \(bu 4
 directly on command line (highest priority)
@@ -14,7 +13,7 @@ in a file specified by the \fB--conf\fR command-line argument
 .IP \(bu 4
 in a file specified by the \fBKSI_CONF\fR (lowest priority)
 .LP
-If a configuration option is specified in more than one source, the source with the highest priority will be used (i.e. command-line argument will override file specified by \fB--conf\fR or \fBKSI_CONF\fR).
+If a configuration option is specified in more than one source, the source with the highest priority will be used (meaning that command-line argument will override file specified by \fB--conf\fR or \fBKSI_CONF\fR).
 .LP
 While defining options, a short parameter or multiple flags must have prefix '\fB-\fR' and long parameters have prefix '\fB--\fR'. If some parameter values contain whitespace characters, double quote marks (\fB"\fR) must be used to wrap the entire value. If double quote mark or backslash have to be used inside the value part, an escape character (\fB\\\fR) must be typed before the charcater(\fB\\"\fR or \fB\\\\\fR). If configuration option with unknown or invalid key-value pairs is used, an error is generated.
 .LP

@@ -69,6 +69,17 @@ EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/ou
 
 # ======================== Failed extending.     ========================
 
+# Extender returns a package with untrusted HMAC algorithm.
+EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/ok-sig-2014-08-01.1-extended-hmac_sha512.ksig --ext-hmac-alg SHA1 -d -X file://test/resource/server/ok-sig-2014-08-01.1-nok-extend_response-hmac_sha1.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=test@test.com -V test/resource/certificates/ok-test.crt
+>>>2 /(.*Algorithm is not trusted.*)(.*CMD.*)(.*ext-hmac-alg.*)(.*SHA1.*)/
+>>>= 3
+
+# Extender returns a package with different HMAC algorithm.
+EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/ok-sig-2014-08-01.1-extended-hmac_sha512.ksig --ext-hmac-alg SHA256 -d -X file://test/resource/server/ok-sig-2014-08-01.1-nok-extend_response-hmac_sha1.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=test@test.com -V test/resource/certificates/ok-test.crt
+>>>2 /(Unable to extend signature.*)(.*HMAC algorithm mismatch.*)(.*211.*)
+(.*HMAC algorithm mismatch)/
+>>>= 11
+
 # Extend signature to the nearest publication. Server response has wrong request id.
 # Request id:  1
 # Response id: 2

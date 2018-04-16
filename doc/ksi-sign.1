@@ -10,7 +10,7 @@
 \fBksi sign -S \fIURL \fR[\fB--aggr-user \fIuser \fB--aggr-key \fIkey\fR] \fB--dump-conf
 .\"
 .SH DESCRIPTION
-Signs the given input such as content of a given file or a precomputed hash value with KSI. User must have access to KSI signing service (KSI Aggregator) for signing. Note that until not extended, the signatures can be verified using the copy of calendar blockchain at KSI Extender (calendar-based verification) or using the PKI signature in the calendar authentication record (key-based verification, temporary only). See \fBksi-verify\fR(1) for details.
+Signs the given input such as content of a given file or a precomputed hash value with KSI. User must have access to KSI signing service (KSI Aggregator) for signing. Note that until not extended, the signatures can be verified by using the copy of calendar blockchain at KSI Extender (calendar-based verification) or using the PKI signature in the calendar authentication record (key-based verification, temporary only). See \fBksi-verify\fR(1) for details.
 .\"
 .SH OPTIONS
 .TP
@@ -100,8 +100,8 @@ If used, \fBeverything\fR specified after the token is interpreted as \fBinput f
 Print detailed information about processes and errors to \fIstderr\fR.
 .\"
 .TP
-\fB--dump\fR
-Dump signature(s) created in human-readable format to \fIstdout\fR.
+\fB--dump \fR[\fIG\fR]
+Dump signature(s) created in human-readable format to \fIstdout\fR. To make signature dump suitable for processing with grep, use '\fBG\fR' as argument.
 .\"
 .TP
 \fB--dump-conf\fR

@@ -1,5 +1,5 @@
 #
-# Copyright 2013-2016 Guardtime, Inc.
+# Copyright 2013-2018 Guardtime, Inc.
 #
 # This file is part of the Guardtime client SDK.
 #
@@ -26,7 +26,7 @@
 %define upstream_release 0
 
 
-Summary: Keyless  Signature Infrastructure (KSI) command-line tool, also called KSI tool.
+Summary: KSI command-line tool, also called KSI tool.
 Name: %{name_package}
 Version: @VERSION@
 Release: 1%{?dist}
@@ -44,12 +44,13 @@ BuildRoot: %{_tmppath}/%{name_package}-%{version}-build
 Obsoletes: ksi <= 2.0.744-2
 
 # Dependencies are set in config.ac
-@KSI_RPM_BUILD_DEPENDECY@
-@KSI_RPM_RUN_DEPENDECY@
-
+@KSI_RPM_BUILD_DEPENDENCY@
+@KSI_RPM_RUN_DEPENDENCY@
+@PST_RPM_BUILD_DEPENDENCY@
+@PST_RPM_RUN_DEPENDENCY@
 
 %description
-Guardtime signing and verification tool. Execute %{name_tool} -h to view brief usage instructions.
+KSI command-line tool, also called KSI tool. Execute %{name_tool} -h to view brief usage instructions.
 
 
 %post
@@ -78,6 +79,7 @@ make install DESTDIR=%{buildroot}
 %{_mandir}/man1/ksi-verify.1*
 %{_mandir}/man5/ksi-conf.5*
 %{_docdir}/%{name_package}/LICENSE
+%{_docdir}/%{name_package}/README.md
 %{_docdir}/%{name_package}/ChangeLog
 
 %changelog

@@ -143,7 +143,7 @@ void OBJPRINT_signatureInputHash(KSI_Signature *sig, int (*print)(const char *fo
 	return;
 }
 
-void OBJPRINT_IdentityMetadata(KSI_Signature *sig, int (*print)(const char *format, ... )){
+void OBJPRINT_IdentityMetadata(KSI_CTX *ctx, KSI_Signature *sig, int flags, int (*print)(const char *format, ... )){
 	int res = KSI_UNKNOWN_ERROR;
 	KSI_HashChainLinkIdentityList *identity = NULL;
 	size_t i;
@@ -152,11 +152,15 @@ void OBJPRINT_IdentityMetadata(KSI_Signature *sig, int (*print)(const char *form
 
 	if (sig == NULL) goto cleanup;
 
-	print("Identity Metadata: \n");
 	res = KSI_Signature_getAggregationHashChainIdentity(sig, &identity);
 	if (res != KSI_OK){
 		print("Unable to get signer identity.\n");
 		goto cleanup;
+	}
+	if (flags & OBJPRINT_GREPABLE) {
+		print("Identity Metadata: %i\n", KSI_HashChainLinkIdentityList_length(identity));
+	} else {
+		print("Identity Metadata:\n");
 	}
 
 	if (KSI_HashChainLinkIdentityList_length(identity) == 0) {
@@ -187,13 +191,20 @@ void OBJPRINT_IdentityMetadata(KSI_Signature *sig, int (*print)(const char *form
 					goto cleanup;
 				}
 
-				print("%s%d) '%s' (legacy)\n", offset, i + 1, KSI_Utf8String_cstr(clientId));
+				if (flags & OBJPRINT_GREPABLE) {
+					print("%s%d) Client ID: %s\n", offset, i + 1, KSI_Utf8String_cstr(clientId));
+				} else {
+					print("%s%d) '%s' (legacy)\n", offset, i + 1, KSI_Utf8String_cstr(clientId));
+				}
 
 			} else if (type == KSI_IDENTITY_TYPE_METADATA) {
 				KSI_Utf8String *clientId = NULL;
 				KSI_Utf8String *macId = NULL;
 				KSI_Integer *seqNr = NULL;
 				KSI_Integer *reqTm = NULL;
+				uint64_t reqTmSec = 0;
+				uint64_t reqTmMicro = 0;
+				char date[1024] = "Unable to convert time to date";
 
 				/* ClientId is mandatory element. */
 				res = KSI_HashChainLinkIdentity_getClientId(id, &clientId);
@@ -201,7 +212,6 @@ void OBJPRINT_IdentityMetadata(KSI_Signature *sig, int (*print)(const char *form
 					print("Unable to get client id.\n");
 					goto cleanup;
 				}
-				print("%s%d) Client ID: '%s'", offset, i + 1, KSI_Utf8String_cstr(clientId));
 
 				/* Read optional elements. */
 				res = KSI_HashChainLinkIdentity_getMachineId(id, &macId);
@@ -220,12 +230,33 @@ void OBJPRINT_IdentityMetadata(KSI_Signature *sig, int (*print)(const char *form
 					goto cleanup;
 				}
 
-				/* Print values if available. */
-				if (macId) print(", Machine ID: '%s'", KSI_Utf8String_cstr(macId));
-				if (seqNr) print(", Sequence number: '%i'", (unsigned long)KSI_Integer_getUInt64(seqNr));
-				if (reqTm) print(", Request time: '%llu'", KSI_Integer_getUInt64(reqTm));
+				if (reqTm) {
+					KSI_Integer *reqTmMillis = NULL;
+					res = KSI_Integer_new(ctx, KSI_Integer_getUInt64(reqTm) / 1000000, &reqTmMillis);
+					if (reqTmMillis) KSI_Integer_toDateString(reqTmMillis, date, sizeof(date));
+					KSI_Integer_free(reqTmMillis);
+					if (res != KSI_OK) {
+						print("Unable to convert request time to seconds.\n");
+						goto cleanup;
+					}
 
-				print("\n");
+					reqTmSec = KSI_Integer_getUInt64(reqTm) / 1000000;
+					reqTmMicro = KSI_Integer_getUInt64(reqTm) - (reqTmSec * 1000000);
+				}
+
+				/* Print values if available. */
+				if (flags & OBJPRINT_GREPABLE) {
+					print("%s%d) Client ID: %s\n", offset, i + 1, KSI_Utf8String_cstr(clientId));
+					if (macId) print("%s%d) Machine ID: %s\n", offset, i + 1, KSI_Utf8String_cstr(macId));
+					if (seqNr) print("%s%d) Sequence number: %i\n", offset, i + 1, (unsigned long)KSI_Integer_getUInt64(seqNr));
+					if (reqTm)print("%s%d) Request time: (%llu.%llu) %s+00:00\n", offset, i + 1, reqTmSec, reqTmMicro, date);
+				} else {
+					print("%s%d) Client ID: '%s'", offset, i + 1, KSI_Utf8String_cstr(clientId));
+					if (macId) print(", Machine ID: '%s'", KSI_Utf8String_cstr(macId));
+					if (seqNr) print(", Sequence number: %i", (unsigned long)KSI_Integer_getUInt64(seqNr));
+					if (reqTm) print(", Request time: (%llu.%llu) %s+00:00", reqTmSec, reqTmMicro, date);
+					print("\n");
+				}
 			} else {
 				print("%s%d) Unknown identity type.\n", offset, i + 1);
 			}
@@ -286,6 +317,8 @@ void OBJPRINT_signatureCertificate(KSI_CTX *ctx, const KSI_Signature *sig, int (
 	KSI_OctetString *ID = NULL;
 	KSI_Utf8String *sig_type = NULL;
 	KSI_PublicationsFile *pubfile = NULL;
+	KSI_PKICertificate *verificationCert = NULL;
+	char buf[1024];
 
 	char tmp[1024];
 	char str_id[1024];
@@ -310,26 +343,22 @@ void OBJPRINT_signatureCertificate(KSI_CTX *ctx, const KSI_Signature *sig, int (
 	ret = KSI_OctetString_toString(ID, ':', str_id, sizeof(str_id));
 	if (ret != str_id) goto cleanup;
 
-	do {
-		KSI_PKICertificate *verificationCert = NULL;
-		char buf[1024];
-
-		if (ctx == NULL) break;
-
+	if (ctx != NULL) {
 		res = KSI_receivePublicationsFile(ctx, &pubfile);
 		if (res == KSI_PUBLICATIONS_FILE_NOT_CONFIGURED) CN = "(Publications file not specified!)";
-		if (res != KSI_OK || pubfile == NULL) break;
+		if (res != KSI_OK || pubfile == NULL) goto final_print;
 
 		res = KSI_PublicationsFile_getPKICertificateById(pubfile, ID, &verificationCert);
 		if (verificationCert == NULL) CN = "(Certificate not found from publications file!)";
-		if (res != KSI_OK || verificationCert == NULL) break;
+		if (res != KSI_OK || verificationCert == NULL) goto final_print;
 
-		if(KSI_PKICertificate_toString(verificationCert, buf, sizeof(buf)) == NULL) break;
+		if(KSI_PKICertificate_toString(verificationCert, buf, sizeof(buf)) == NULL) goto final_print;
 
-		if(STRING_extractAbstract(buf, "Issued to: ", "\n  * Issued by", tmp, sizeof(tmp), find_charAfterStrn, find_charBeforeStrn, NULL) == NULL) break;
+		if(STRING_extractAbstract(buf, "Issued to: ", "\n  * Issued by", tmp, sizeof(tmp), find_charAfterStrn, find_charBeforeStrn, NULL) == NULL) goto final_print;
 		CN = tmp;
-	} while(0);
+	}
 
+final_print:
 	print("Calendar Authentication Record %s signature:\n", get_signature_type_from_oid(KSI_Utf8String_cstr(sig_type)));
 	print("  Signing certificate ID: %s\n", str_id);
 	if (CN) print("  Signing certificate issued to: %s\n", CN);
@@ -398,7 +427,7 @@ cleanup:
 	return;
 }
 
-void OBJPRINT_signatureDump(KSI_CTX *ctx, KSI_Signature *sig, int (*print)(const char *format, ... )) {
+void OBJPRINT_signatureDump(KSI_CTX *ctx, KSI_Signature *sig, int flags, int (*print)(const char *format, ... )) {
 
 	print("KSI Signature dump:\n");
 
@@ -412,7 +441,7 @@ void OBJPRINT_signatureDump(KSI_CTX *ctx, KSI_Signature *sig, int (*print)(const
 	print("  ");
 	OBJPRINT_signatureSigningTime(sig, print);
 	print("  ");
-	OBJPRINT_IdentityMetadata(sig, print);
+	OBJPRINT_IdentityMetadata(ctx, sig, flags, print);
 	print("  Trust anchor: ");
 
 	if (KSITOOL_Signature_isCalendarAuthRecPresent(sig)) {

@@ -1,6 +1,6 @@
 GOTO copyrightend
 
-    Copyright 2013-2016 Guardtime, Inc.
+    Copyright 2013-2018 Guardtime, Inc.
 
     This file is part of the Guardtime client SDK.
 
@@ -38,6 +38,7 @@ rem To avoid the variables to leak out of the script setlocal is called.
 setlocal
 
 set ksi_dir=C:\path_to\libksi\out
+set pst_dir=C:\path_to\paramset\out
 
 rem Specify how the libksi was linked.
 
@@ -56,7 +57,7 @@ set lnk_wininet=yes
 rem Rebuild the KSI tool.
 
 nmake clean
-nmake /S KSI_DIR=%ksi_dir% RTL=%rtl% KSI_LIB=%ksi_lib% LNK_CRYPTOAPI=%lnk_cryptoapi% LNK_WININET=%lnk_wininet%
+nmake /S KSI_DIR=%ksi_dir% PST_DIR=%pst_dir% RTL=%rtl% KSI_LIB=%ksi_lib% LNK_CRYPTOAPI=%lnk_cryptoapi% LNK_WININET=%lnk_wininet%
 
 endlocal
 pause

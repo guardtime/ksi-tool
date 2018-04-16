@@ -1,5 +1,5 @@
 #
-# Copyright 2013-2016 Guardtime, Inc.
+# Copyright 2013-2018 Guardtime, Inc.
 #
 # This file is part of the Guardtime client SDK.
 #
@@ -25,27 +25,27 @@
 ##
 EXECUTABLE signx
 >>>2 /(.*Error)(.*Invalid task)(.*Read help.*)
-(.*Did you mean)(.*'sign')(.*instead of)(.*'signx')/
+(.*Did [yY]ou mean)(.*'sign')(.*instead of)(.*'signx')/
 >>>= 3
 
 EXECUTABLE onf
 >>>2 /(.*Error)(.*Invalid task)(.*Read help.*)
-(.*Did you mean)(.*'conf')(.*instead of)(.*'onf')/
+(.*Did [yY]ou mean)(.*'conf')(.*instead of)(.*'onf')/
 >>>= 3
 
 EXECUTABLE erify
 >>>2 /(.*Error)(.*Invalid task)(.*Read help.*)
-(.*Did you mean)(.*'verify')(.*instead of)(.*'erify')/
+(.*Did [yY]ou mean)(.*'verify')(.*instead of)(.*'erify')/
 >>>= 3
 
 EXECUTABLE ectendf
 >>>2 /(.*Error)(.*Invalid task)(.*Read help.*)
-(.*Did you mean)(.*'extend')(.*instead of)(.*'ectendf')/
+(.*Did [yY]ou mean)(.*'extend')(.*instead of)(.*'ectendf')/
 >>>= 3
 
 EXECUTABLE pubfiaile
 >>>2 /(.*Error)(.*Invalid task)(.*Read help.*)
-(.*Did you mean)(.*'pubfile')(.*instead of)(.*'pubfiaile')/
+(.*Did [yY]ou mean)(.*'pubfile')(.*instead of)(.*'pubfiaile')/
 >>>= 3
 
 ## 6
@@ -54,5 +54,5 @@ EXECUTABLE pubfiaile
 ##
 EXECUTABLE --sign
 >>>2 /(.*Error)(.*Invalid task)(.*Read help.*)
-(.*Did you mean)(.*'sign')(.*instead of)(.*'--sign')/
+(.*Did [yY]ou mean)(.*'sign')(.*instead of)(.*'--sign')/
 >>>= 3

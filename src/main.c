@@ -49,7 +49,7 @@ const char *TOOL_getName(void) {
 	return name;
 }
 
-static char *hash_algorithms_to_string(char *buf, size_t buf_len) {
+static char *hash_algorithms_to_string(char *buf, size_t buf_len, int isTrusted) {
 	int i;
 	size_t count = 0;
 
@@ -59,7 +59,7 @@ static char *hash_algorithms_to_string(char *buf, size_t buf_len) {
 
 
 	for (i = 0; i < KSI_NUMBER_OF_KNOWN_HASHALGS; i++) {
-		if (KSI_isHashAlgorithmSupported(i)) {
+		if (KSI_isHashAlgorithmSupported(i) && ((KSI_isHashAlgorithmTrusted(i) && isTrusted) || (!KSI_isHashAlgorithmTrusted(i) && !isTrusted))) {
 			count += KSI_snprintf(buf + count, buf_len - count, "%s%s",
 				count == 0 ? "" : " ",
 				KSI_getHashAlgorithmName(i)
@@ -142,7 +142,11 @@ static void print_general_help(PARAM_SET *set, const char *KSI_CONF){
 	print_result(
 	"Supported hash algorithms (default: %s):\n"
 	"  %s\n", default_algo,
-		hash_algorithms_to_string(buf, sizeof(buf)));
+		hash_algorithms_to_string(buf, sizeof(buf), 1));
+
+	print_result(
+	"Supported but NOT TRUSTED hash algorithms (can not be used for signing or HMAC):\n"
+	"  %s\n\n", hash_algorithms_to_string(buf, sizeof(buf), 0));
 }
 
 static int ksitool_compo_get(TASK_SET *tasks, PARAM_SET **set, TOOL_COMPONENT_LIST **compo);
@@ -164,8 +168,8 @@ int main(int argc, char** argv, char **envp) {
 	 * or an error.
 	 */
 	print_init();
-	print_disable(PRINT_WARNINGS | PRINT_INFO | PRINT_DEBUG);
-	print_enable(PRINT_RESULT | PRINT_ERRORS | PRINT_SUGGESTION);
+	print_disable(PRINT_INFO | PRINT_DEBUG);
+	print_enable(PRINT_RESULT | PRINT_ERRORS | PRINT_WARNINGS | PRINT_SUGGESTION);
 
 
 	/**
@@ -179,13 +183,6 @@ int main(int argc, char** argv, char **envp) {
 
 	res = CONF_createSet(&configuration);
 	if (res != PST_OK) goto cleanup;
-
-	/**
-	 * Load the configuration file from environment.
-	 */
-	res = CONF_fromEnvironment(configuration, "KSI_CONF", envp, 0, 1);
-	res = conf_report_errors(configuration, CONF_getEnvNameContent(), res);
-	if (res != KT_OK) goto cleanup;
 
 	/**
 	 * Get all possible components to run.
@@ -238,7 +235,14 @@ int main(int argc, char** argv, char **envp) {
 			print_result("%s\n", TOOL_COMPONENT_LIST_helpToString(components, TASK_getID(task),buf, sizeof(buf)));
 		}
 
+		/**
+		 * Load the configuration file from environment. Check for warnings and errors.
+		 */
+		res = CONF_fromEnvironment(configuration, "KSI_CONF", envp, 0, 1);
 		print_general_help(configuration, CONF_getEnvNameContent());
+		res = conf_report_errors(configuration, CONF_getEnvNameContent(), res);
+		if (res != KT_OK) goto cleanup;
+
 		res = KT_OK;
 		goto cleanup;
 	} else if (PARAM_SET_isSetByName(set, "version")) {
@@ -246,14 +250,6 @@ int main(int argc, char** argv, char **envp) {
 		res = KT_OK;
 		goto cleanup;
 	}
-
-	if (CONF_isInvalid(configuration)) {
-		print_errors("KSI configuration file from KSI_CONF is invalid:\n");
-		print_errors("%s\n", CONF_errorsToString(configuration, "  ", buf, sizeof(buf)));
-		res = KT_INVALID_CONF;
-		goto cleanup;
-	}
-
 
 	/**
 	 * Invalid task. Give user some hints.

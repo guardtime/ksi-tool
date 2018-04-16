@@ -488,12 +488,12 @@ static int tool_init_hmac_alg(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set) {
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY && res != PST_PARAMETER_NOT_FOUND) goto cleanup;
 
 	if (aggr_alg != KSI_HASHALG_INVALID) {
-		res = KSI_CTX_setOption(ksi, KSI_OPT_AGGR_HMAC_ALGORITHM, (void*)aggr_alg);
+		res = KSI_CTX_setOption(ksi, KSI_OPT_AGGR_HMAC_ALGORITHM, (void*)(size_t)aggr_alg);
 		if (res != KSI_OK) goto cleanup;
 	}
 
 	if (ext_alg != KSI_HASHALG_INVALID) {
-		res = KSI_CTX_setOption(ksi, KSI_OPT_EXT_HMAC_ALGORITHM, (void*)ext_alg);
+		res = KSI_CTX_setOption(ksi, KSI_OPT_EXT_HMAC_ALGORITHM, (void*)(size_t)ext_alg);
 		if (res != KSI_OK) goto cleanup;
 	}
 

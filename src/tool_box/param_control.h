@@ -52,6 +52,7 @@ enum contentStatus {
 	PARAM_OK = 0x00,
 	PARAM_INVALID,
 	HASH_ALG_INVALID_NAME,
+	HASH_ALG_UNTRUSTED,
 	HASH_IMPRINT_INVALID_LEN,
 	INTEGER_TOO_LARGE,
 	INTEGER_TOO_SMALL,
@@ -66,6 +67,7 @@ enum contentStatus {
 	FUNCTION_INVALID_ARG_1,
 	FUNCTION_INVALID_ARG_2,
 	INVALID_VERSION,
+	INVALID_FLAG_PARAM,
 	PARAM_UNKNOWN_ERROR
 };
 
@@ -98,6 +100,7 @@ int extract_OctetString(void **extra, const char* str, void** obj);
 
 int isFormatOk_hashAlg(const char *hashAlg);
 int isContentOk_hashAlg(const char *alg);
+int isContentOk_hashAlgRejectDeprecated(const char *alg);
 /** extra is not used.*/
 int extract_hashAlg(void **extra, const char* str, void** obj);
 
@@ -176,6 +179,9 @@ int isFormatOk_mask(const char* mask);
 int isContentOk_mask(const char* mask);
 int convertRepair_mask(const char* arg, char* buf, unsigned len);
 int extract_mask(void **extra, const char* str, void** obj);
+
+int isContentOk_dump_flag(const char* arg);
+int extract_dump_flag(void **extra, const char* str,  void** obj);
 
 int extract_inputSignature(void **extra, const char* str, void** obj);
 int extract_inputSignatureFromFile(void **extra, const char* str, void** obj);

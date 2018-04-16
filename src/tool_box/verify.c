@@ -19,12 +19,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <ksi/ksi.h>
 #include <ksi/compatibility.h>
 #include <ksi/policy.h>
 #include "param_set/param_set.h"
 #include "param_set/parameter.h"
 #include "param_set/task_def.h"
+#include "param_set/strn.h"
 #include "tool_box/ksi_init.h"
 #include "tool_box/param_control.h"
 #include "tool_box/task_initializer.h"
@@ -68,7 +70,9 @@ static int signature_verify_publication_based_with_pubfile(PARAM_SET *set, ERR_T
 static int signature_verify_calendar_based(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_DataHash *hsh, KSI_PolicyVerificationResult **out);
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
 static void signature_print_suggestions_for_publication_based_verification(PARAM_SET *set, ERR_TRCKR *err, int errCode, KSI_CTX *ksi,
-											KSI_Signature *sig, KSI_PolicyVerificationResult *verRes, KSI_PublicationData *userPubData);
+											KSI_Signature *sig, KSI_RuleVerificationResult *verRes, KSI_PublicationData *userPubData);
+
+#define PARAMS "{i}{x}{f}{d}{pub-str}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}{conf}{log}{h|help}"
 
 int verify_run(int argc, char **argv, char **envp) {
 	int res;
@@ -89,9 +93,7 @@ int verify_run(int argc, char **argv, char **envp) {
 	/**
 	 * Extract command line parameters and also add configuration specific parameters.
 	 */
-	res = PARAM_SET_new(
-			CONF_generate_param_set_desc("{i}{x}{f}{d}{pub-str}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}{conf}{log}{h|help}", "XP", buf, sizeof(buf)),
-			&set);
+	res = PARAM_SET_new(CONF_generate_param_set_desc(PARAMS, "XP", buf, sizeof(buf)), &set);
 	if (res != KT_OK) goto cleanup;
 
 	res = TASK_SET_new(&task_set);
@@ -146,11 +148,15 @@ int verify_run(int argc, char **argv, char **envp) {
 	/* Fall through: if (res != KT_OK) goto cleanup; */
 
 	if (PARAM_SET_isSetByName(set, "dump")) {
+		int dump_flags = OBJPRINT_NONE;
+
+		PARAM_SET_getObj(set, "dump", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&dump_flags);
+
 		/**
 		 * Dump signature.
 		 */
 		print_result("\n");
-		OBJPRINT_signatureDump(ksi, sig, print_result);
+		OBJPRINT_signatureDump(ksi, sig, dump_flags, print_result);
 		/**
 		 * Dump verification result data.
 		 */
@@ -190,72 +196,52 @@ cleanup:
 }
 
 char *verify_help_toString(char *buf, size_t len) {
+	int res;
+	char *ret = NULL;
+	PARAM_SET *set;
 	size_t count = 0;
+	char tmp[1024];
 
-	count += KSI_snprintf(buf + count, len - count,
-		"Usage:"
-		" %s verify -i <in.ksig> [-f <data>] [more_options]\n"
-		" %s verify --ver-int -i <in.ksig> [-f <data>] [more_options]\n"
-		" %s verify --ver-cal -i <in.ksig> [-f <data>] -X <URL>\n"
-		"     [--ext-user <user> --ext-key <key>] [more_options]\n"
-		" %s verify --ver-key -i <in.ksig> [-f <data>] -P <URL>\n"
-		"     [--cnstr <oid=value>]... [more_options]\n"
-		" %s verify --ver-pub -i <in.ksig> [-f <data>] --pub-str <pubstring>\n"
-		"     [-x -X <URL>  [--ext-user <user> --ext-key <key>]] [more_options]\n"
-		" %s verify --ver-pub -i <in.ksig> [-f <data>] -P <URL> [--cnstr <oid=value>]...\n"
-		"        [-x -X <URL>  [--ext-user <user> --ext-key <key>]] [more_options]\n"
-		"\n"
-		" --ver-int - Perform internal verification.\n"
-		" --ver-cal - Perform calendar-based verification (use extending service).\n"
-		" --ver-key - Perform key-based verification.\n"
-		" --ver-pub - Perform publication-based verification (use with -x to permit extending).\n"
-		" -i <in.ksig>\n"
-		"           - Signature file to be verified. Use '-' as file name to read\n"
-		"             the signature from stdin. Flag -i can be omitted when specifying\n"
-		"             the input. Without -i it is not possible to sign files that look\n"
-		"             like command-line parameters (e.g. -a, --option).\n"
-		" -f <data> - Path to file to be hashed or data hash imprint to extract the hash\n"
-		"             value that is going to be verified. Hash format: <alg>:<hash in hex>.\n"
-		"             Use '-' as file name to read data to be hashed from stdin.\n"
-		" -x        - Permit to use extender for publication-based verification.\n"
-		" -X <URL>  - Extending service (KSI Extender) URL.\n"
-		" --ext-user <user>\n"
-		"           - Username for extending service.\n"
-		" --ext-key <key>\n"
-		"           - HMAC key for extending service.\n"
-		" --ext-hmac-alg <alg>\n"
-		"           - Hash algorithm to be used for computing HMAC on outgoing messages\n"
-		"             towards KSI extender. If not set, default algorithm is used.\n"
-		" --pub-str <str>\n"
-		"           - Publication string to verify with.\n"
-		" -P <URL>  - Publications file URL (or file with URI scheme 'file://').\n"
-		" --cnstr <oid=value>\n"
-		"           - OID of the PKI certificate field (e.g. e-mail address) and the expected\n"
-		"             value to qualify the certificate for verification of publications file\n"
-		"             PKI signature. At least one constraint must be defined.\n"
-		" -V        - Certificate file in PEM format for publications file verification.\n"
-		"             All values from lower priority source are ignored.\n"
-		"\n"
-		" -d        - Print detailed information about processes and errors to stderr.\n"
-		" --dump    - Dump signature and document hash being verified in human-readable\n"
-		"             format to stdout. In verification report 'OK' means that the step\n"
-		"             is performed successfully, 'NA' means that it could not be performed\n"
-		"             as there was not enough information and 'FAILED' means that the\n"
-		"             verification was unsuccessful.\n"
-		" --conf <file>\n"
-		"             Read configuration options from given file. It must be noted\n"
-		"             that configuration options given explicitly on command line will\n"
-		"             override the ones in the configuration file.\n"
-		" --log <file>\n"
-		"           - Write libksi log to given file. Use '-' as file name to redirect log to stdout.\n",
-		TOOL_getName(),
-		TOOL_getName(),
-		TOOL_getName(),
-		TOOL_getName(),
-		TOOL_getName(),
-		TOOL_getName()
-	);
+	res = PARAM_SET_new(CONF_generate_param_set_desc(PARAMS, "XP", tmp, sizeof(tmp)), &set);
+	if (res != PST_OK) goto cleanup;
 
+	res = CONF_initialize_set_functions(set, "XP");
+	if (res != PST_OK) goto cleanup;
+
+
+	PARAM_SET_setHelpText(set, "ver-int", NULL, "Perform internal verification.");
+	PARAM_SET_setHelpText(set, "ver-cal", NULL, "Perform calendar-based verification (use extending service).");
+	PARAM_SET_setHelpText(set, "ver-key", NULL, "Perform key-based verification.");
+	PARAM_SET_setHelpText(set, "ver-pub", NULL, "Perform publication-based verification (use with -x to permit extending).");
+	PARAM_SET_setHelpText(set, "i", "<in.ksig>", "Signature file to be verified. Use '-' as file name to read the signature from stdin. Flag -i can be omitted when specifying the input. Without -i it is not possible to sign files that look like command-line parameters (e.g. -a, --option).");
+	PARAM_SET_setHelpText(set, "f", "<data>", "Path to file to be hashed or data hash imprint to extract the hash value that is going to be verified. Hash format: <alg>:<hash in hex>. Use '-' as file name to read data to be hashed from stdin.");
+	PARAM_SET_setHelpText(set, "x", NULL, "Permit to use extender for publication-based verification.");
+	PARAM_SET_setHelpText(set, "pub-str", "<str>", "Publication string to verify with.");
+	PARAM_SET_setHelpText(set, "dump", "[G]", "Dump signature and document hash being verified in human-readable format to stdout. In verification report 'OK' means that the step is performed successfully, 'NA' means that it could not be performed as there was not enough information and 'FAILED' means that the verification was unsuccessful. To make signature dump suitable for processing with grep, use 'G' as argument.");
+	PARAM_SET_setHelpText(set, "d", NULL, "Print detailed information about processes and errors to stderr.");
+	PARAM_SET_setHelpText(set, "conf", "<file>", "Read configuration options from given file. It must be noted that configuration options given explicitly on command line will override the ones in the configuration file.");
+	PARAM_SET_setHelpText(set, "log", "<file>", "Write libksi log to given file. Use '-' as file name to redirect log to stdout.");
+
+
+	count += PST_snhiprintf(buf + count, len - count, 80, 0, 0, NULL, ' ', "Usage:\\>1\n"
+			"ksi verify -i <in.ksig> [-f <data>] [more_options]\n"
+			"ksi verify --ver-int -i <in.ksig> [-f <data>] [more_options]\\>1\n\\>5"
+			"ksi verify --ver-cal -i <in.ksig> [-f <data>] -X <URL>\n"
+			"[--ext-user <user> --ext-key <key>] [more_options]\\>1\n\\>5"
+			"ksi verify --ver-key -i <in.ksig> [-f <data>] -P <URL>\n"
+			"[--cnstr <oid=value>]... [more_options]\\>1\n\\>5"
+			"ksi verify --ver-pub -i <in.ksig> [-f <data>] --pub-str <pubstring>\n"
+			"[-x -X <URL> [--ext-user <user> --ext-key <key>]] [more_options]\\>1\n\\>5"
+			"ksi verify --ver-pub -i <in.ksig> [-f <data>] -P <URL> [--cnstr <oid=value>]...\n"
+			"[-x -X <URL> [--ext-user <user> --ext-key <key>]] [more_options]\\>\n\n\n");
+
+	ret = PARAM_SET_helpToString(set, "ver-int, ver-cal, ver-key, ver-pub,i,f,x,X,ext-user,ext-key,ext-hmac-alg,pub-str,P,cnstr,V,d,dump,conf,log", 1, 13, 80, buf + count, len - count);
+
+cleanup:
+	if (res != PST_OK || ret == NULL) {
+		PST_snprintf(buf + count, len - count, "\nError: There were failures while generating help by PARAM_SET.\n");
+	}
+	PARAM_SET_free(set);
 	return buf;
 }
 
@@ -281,11 +267,12 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{log}", isFormatOk_path, NULL, convertRepair_path, NULL);
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFileWithPipe, convertRepair_path, extract_inputSignature);
 	PARAM_SET_addControl(set, "{f}", isFormatOk_inputHash, isContentOk_inputHash, convertRepair_path, extract_inputHash);
-	PARAM_SET_addControl(set, "{d}{x}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{d}{x}{ver-int}{ver-cal}{ver-key}{ver-pub}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{pub-str}", isFormatOk_pubString, NULL, NULL, extract_pubString);
+	PARAM_SET_addControl(set, "{dump}", NULL, isContentOk_dump_flag, NULL, extract_dump_flag);
 
 	PARAM_SET_setParseOptions(set, "i", PST_PRSCMD_HAS_VALUE | PST_PRSCMD_COLLECT_LOOSE_VALUES);
-	PARAM_SET_setParseOptions(set, "{x}{ver-int}{ver-cal}{ver-key}{ver-pub}{dump}", PST_PRSCMD_HAS_NO_VALUE);
+	PARAM_SET_setParseOptions(set, "{x}{ver-int}{ver-cal}{ver-key}{ver-pub}", PST_PRSCMD_HAS_NO_VALUE);
 
 	/*						ID						DESC								MAN							ATL		FORBIDDEN											IGN	*/
 	TASK_SET_add(task_set,	ANC_BASED_DEFAULT,		"Verify.",							"i",						NULL,	"ver-int,ver-cal,ver-key,ver-pub,P,cnstr,pub-str",	NULL);
@@ -394,9 +381,17 @@ static int signature_verify_general(PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 	 */
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_general(err, sig, ksi, hsh, pub_data, x, out);
-	if (*out != NULL) {
-		ERR_CATCH_MSG(err, res, "Error: [%s] %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode),
-				OBJPRINT_getVerificationErrorDescription((*out)->finalResult.errorCode), task);
+	if (res != KSI_OK && *out != NULL) {
+		KSI_RuleVerificationResult *verificationResult = NULL;
+
+		if (KSI_RuleVerificationResultList_elementAt(
+				(*out)->ruleResults, KSI_RuleVerificationResultList_length((*out)->ruleResults) - 1,
+				&verificationResult) == KSI_OK && verificationResult != NULL) {
+			ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.",
+					OBJPRINT_getVerificationErrorCode(verificationResult->errorCode),
+					OBJPRINT_getVerificationErrorDescription(verificationResult->errorCode), task);
+		}
+		goto cleanup;
 	} else {
 		ERR_CATCH_MSG(err, res, "Error: %s failed.", task);
 	}
@@ -423,9 +418,17 @@ static int signature_verify_internally(PARAM_SET *set, ERR_TRCKR *err,
 
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_internally(err, sig, ksi, hsh, out);
-	if (*out != NULL) {
-		ERR_CATCH_MSG(err, res, "Error: [%s] %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode),
-				OBJPRINT_getVerificationErrorDescription((*out)->finalResult.errorCode), task);
+	if (res != KSI_OK && *out != NULL) {
+		KSI_RuleVerificationResult *verificationResult = NULL;
+
+		if (KSI_RuleVerificationResultList_elementAt(
+				(*out)->ruleResults, KSI_RuleVerificationResultList_length((*out)->ruleResults) - 1,
+				&verificationResult) == KSI_OK && verificationResult != NULL) {
+			ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.",
+					OBJPRINT_getVerificationErrorCode(verificationResult->errorCode),
+					OBJPRINT_getVerificationErrorDescription(verificationResult->errorCode), task);
+		}
+		goto cleanup;
 	} else {
 		ERR_CATCH_MSG(err, res, "Error: %s failed.", task);
 	}
@@ -452,9 +455,17 @@ static int signature_verify_key_based(PARAM_SET *set, ERR_TRCKR *err,
 	 */
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_keyBased(err, sig, ksi, hsh, out);
-	if (*out != NULL) {
-		ERR_CATCH_MSG(err, res, "Error: [%s] %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode),
-				OBJPRINT_getVerificationErrorDescription((*out)->finalResult.errorCode), task);
+	if (res != KSI_OK && *out != NULL) {
+		KSI_RuleVerificationResult *verificationResult = NULL;
+
+		if (KSI_RuleVerificationResultList_elementAt(
+				(*out)->ruleResults, KSI_RuleVerificationResultList_length((*out)->ruleResults) - 1,
+				&verificationResult) == KSI_OK && verificationResult != NULL) {
+			ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.",
+					OBJPRINT_getVerificationErrorCode(verificationResult->errorCode),
+					OBJPRINT_getVerificationErrorDescription(verificationResult->errorCode), task);
+		}
+		goto cleanup;
 	} else {
 		ERR_CATCH_MSG(err, res, "Error: %s failed.", task);
 	}
@@ -488,14 +499,21 @@ static int signature_verify_publication_based_with_user_pub(PARAM_SET *set, ERR_
 	 */
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_userProvidedPublicationBased(err, sig, ksi, hsh, pub_data, x, out);
-	if (*out != NULL) {
+	if (res != KSI_OK && *out != NULL) {
 		if (res != KT_OK) {
-				signature_print_suggestions_for_publication_based_verification(set, err, res, ksi, sig, *out, pub_data);
+			KSI_RuleVerificationResult *verificationResult = NULL;
 
-				ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode),
-										OBJPRINT_getVerificationErrorDescription((*out)->finalResult.errorCode), task);
-				goto cleanup;
+			if (KSI_RuleVerificationResultList_elementAt(
+					(*out)->ruleResults, KSI_RuleVerificationResultList_length((*out)->ruleResults) - 1,
+					&verificationResult) == KSI_OK && verificationResult != NULL) {
+				signature_print_suggestions_for_publication_based_verification(set, err, res, ksi, sig, verificationResult, pub_data);
+
+				ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.",
+						OBJPRINT_getVerificationErrorCode(verificationResult->errorCode),
+						OBJPRINT_getVerificationErrorDescription(verificationResult->errorCode), task);
 			}
+			goto cleanup;
+		}
 	} else {
 		ERR_CATCH_MSG(err, res, "Error: %s failed.", task);
 	}
@@ -524,14 +542,21 @@ static int signature_verify_publication_based_with_pubfile(PARAM_SET *set, ERR_T
 	 */
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_publicationsFileBased(err, sig, ksi, hsh, x, out);
-	if (*out != NULL) {
-			if (res != KT_OK) {
-				signature_print_suggestions_for_publication_based_verification(set, err, res, ksi, sig, *out, NULL);
+	if (res != KSI_OK && *out != NULL) {
+		if (res != KT_OK) {
+			KSI_RuleVerificationResult *verificationResult = NULL;
 
-				ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode),
-										OBJPRINT_getVerificationErrorDescription((*out)->finalResult.errorCode), task);
-				goto cleanup;
+			if (KSI_RuleVerificationResultList_elementAt(
+					(*out)->ruleResults, KSI_RuleVerificationResultList_length((*out)->ruleResults) - 1,
+					&verificationResult) == KSI_OK && verificationResult != NULL) {
+				signature_print_suggestions_for_publication_based_verification(set, err, res, ksi, sig, verificationResult, NULL);
+
+				ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.",
+						OBJPRINT_getVerificationErrorCode(verificationResult->errorCode),
+						OBJPRINT_getVerificationErrorDescription(verificationResult->errorCode), task);
 			}
+			goto cleanup;
+		}
 	} else {
 		ERR_CATCH_MSG(err, res, "Error: %s failed.", task);
 	}
@@ -558,9 +583,17 @@ static int signature_verify_calendar_based(PARAM_SET *set, ERR_TRCKR *err,
 	 */
 	print_progressDesc(d, "%s... ", task);
 	res = KSITOOL_SignatureVerify_calendarBased(err, sig, ksi, hsh, out);
-	if (*out != NULL) {
-		ERR_CATCH_MSG(err, res, "Error: [%s] %s. %s failed.", OBJPRINT_getVerificationErrorCode((*out)->finalResult.errorCode),
-				OBJPRINT_getVerificationErrorDescription((*out)->finalResult.errorCode), task);
+	if (res != KSI_OK && *out != NULL) {
+		KSI_RuleVerificationResult *verificationResult = NULL;
+
+		if (KSI_RuleVerificationResultList_elementAt(
+				(*out)->ruleResults, KSI_RuleVerificationResultList_length((*out)->ruleResults) - 1,
+				&verificationResult) == KSI_OK && verificationResult != NULL) {
+			ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.",
+					OBJPRINT_getVerificationErrorCode(verificationResult->errorCode),
+					OBJPRINT_getVerificationErrorDescription(verificationResult->errorCode), task);
+		}
+		goto cleanup;
 	} else {
 		ERR_CATCH_MSG(err, res, "Error: %s failed.", task);
 	}
@@ -588,7 +621,7 @@ cleanup:
 
 static void signature_print_suggestions_for_publication_based_verification(PARAM_SET *set, ERR_TRCKR *err, int errCode,
 														   KSI_CTX *ksi, KSI_Signature *sig,
-														   KSI_PolicyVerificationResult *verRes, KSI_PublicationData *userPubData) {
+														   KSI_RuleVerificationResult *verRes, KSI_PublicationData *userPubData) {
 
 	int res = KT_UNKNOWN_ERROR;
 	KSI_PublicationRecord *rec = NULL;
@@ -602,7 +635,7 @@ static void signature_print_suggestions_for_publication_based_verification(PARAM
 	int isExtended = 0;
 	int ispubfile = userPubData == NULL ? 1 : 0;
 
-	if (verRes == NULL || verRes->finalResult.errorCode != KSI_VER_ERR_GEN_2 || sig == NULL) return;
+	if (verRes == NULL || verRes->errorCode != KSI_VER_ERR_GEN_2 || sig == NULL) return;
 
 
 	x = PARAM_SET_isSetByName(set, "x");

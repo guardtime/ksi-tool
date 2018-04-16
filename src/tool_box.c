@@ -31,6 +31,7 @@
 #include "param_set/param_set.h"
 #include "printer.h"
 #include "api_wrapper.h"
+#include "common.h"
 
 
 
@@ -258,7 +259,7 @@ cleanup:
 
 static const char* find_group_start(const char *str, const char *ignore) {
 	size_t i = 0;
-	if (ignore);
+	VARIABLE_IS_NOT_USED(ignore);
 	while (str[i] && isspace(str[i])) i++;
 	return (i == 0) ? str : &str[i];
 }
@@ -268,7 +269,7 @@ static const char* find_group_end(const char *str, const char *ignore) {
 	int is_firs_non_whsp_found = 0;
 	size_t i = 0;
 
-	if (ignore);
+	VARIABLE_IS_NOT_USED(ignore);
 	while (str[i]) {
 		if (!isspace(str[i])) is_firs_non_whsp_found = 1;
 		if (isspace(str[i]) && is_quote_opened == 0 && is_firs_non_whsp_found) return &str[i - 1];

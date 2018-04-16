@@ -75,4 +75,22 @@ EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-2014-08-01.1.no-ca
 (.*Trust anchor.*)(.*Calendar Blockchain.*)/
 >>>= 0
 
+# Dump signature, suitable for grepping.
+EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-sha1-2016-05-26.ext.ksig --dump G
+>>> /(Input h)(.*SHA)(.*1)(.*a7d2c6238a9.*591ab.*)
+(.*Signing time)(.*2016.05.26 09.23.51.*)
+(.*Identity Metadata: 4.*)
+(.*1. Client ID: GT.*)
+(.*2. Client ID: staging AS.*)
+(.*3. Client ID: taavi_al.*)
+(.*3. Machine ID: test:taavi.*)
+(.*3. Sequence number: 0.*)/
+>>>= 0
 
+EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-sha1-2016-05-26.ext.ksig --dump G
+>>> /(.*3. Request time: )(.1464254627.126227)(.*2016.05.26 09.23.47.*)
+(.*4. Client ID: anon1.*)
+(.*4. Machine ID: anon:http.*)
+(.*4. Sequence number: 0.*)
+(.*4. Request time: )(.1464254627.124789)(.*2016.05.26 09.23.47.*)/
+>>>= 0

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 Guardtime, Inc.
+ * Copyright 2013-2018 Guardtime, Inc.
  *
  * This file is part of the Guardtime client SDK.
  *
@@ -27,6 +27,7 @@
 #include <ksi/blocksigner.h>
 #include "param_set/param_set.h"
 #include "param_set/task_def.h"
+#include "param_set/strn.h"
 #include "api_wrapper.h"
 #include "tool_box/param_control.h"
 #include "tool_box/ksi_init.h"
@@ -40,7 +41,6 @@
 #include "tool.h"
 #include "param_set/parameter.h"
 #include "tool_box.h"
-#include "param_set/param_set_obj_impl.h"
 #include "param_set/strn.h"
 #include "common.h"
 
@@ -63,7 +63,7 @@ typedef struct SIGNING_AGGR_ROUND_st {
 	char **fname;
 	char **fname_out;
 
-	 /* Count of hash values used in aggreation round. */
+	 /* Count of hash values used in aggregation round. */
 	size_t hash_count_max;
 	size_t hash_count;
 } SIGNING_AGGR_ROUND;
@@ -81,14 +81,16 @@ static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int check_io_naming_and_type_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int task);
 static void SIGNING_AGGR_ROUND_free(SIGNING_AGGR_ROUND *obj);
-static void SIGNING_AGGR_ROUND_ARRAY_free(SIGNING_AGGR_ROUND **array);
+static int SIGNING_AGGR_ROUND_resetAndClean(SIGNING_AGGR_ROUND *round);
 static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int *remote_max_lvl, KSI_HashAlgorithm *remote_algo);
 static int KT_SIGN_getMaximumInputsPerRound(PARAM_SET *set, ERR_TRCKR *err, int remote_max_lvl, size_t *inputs);
 static int KT_SIGN_getAggregationRoundsNeeded(PARAM_SET *set, ERR_TRCKR *err, size_t max_tree_inputs, size_t *rounds);
-static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, KSI_HashAlgorithm remote_algo, size_t max_tree_inputs, size_t rounds, SIGNING_AGGR_ROUND ***aggr_rounds_record);
-static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_AGGR_ROUND **aggr_round);
+static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, KSI_HashAlgorithm remote_algo, size_t max_tree_inputs, size_t rounds);
+static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_AGGR_ROUND *aggr_round, int offset);
 static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, size_t seq_offset, KSI_MetaData **mdata);
-static int KT_SIGN_dump(KSI_CTX *ksi, PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND **aggr_round);
+static int KT_SIGN_dump(KSI_CTX *ksi, PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND *aggr_round);
+
+#define PARAMS "{sign}{i}{input}{o}{data-out}{d}{dump}{dump-conf}{log}{conf}{h|help}{dump-last-leaf}{prev-leaf}{mdata}{mask}{show-progress}{apply-remote-conf}"
 
 int sign_run(int argc, char** argv, char **envp) {
 	int res;
@@ -104,11 +106,7 @@ int sign_run(int argc, char** argv, char **envp) {
 	/**
 	 * Extract command line parameters.
 	 */
-	res = PARAM_SET_new(
-			CONF_generate_param_set_desc(
-					"{sign}{i}{input}{o}{data-out}{d}{dump}{dump-conf}{log}{conf}{h|help}{dump-last-leaf}"
-					"{prev-leaf}{mdata}{mask}{show-progress}{apply-remote-conf}", "S", buf, sizeof(buf)),
-					&set);
+	res = PARAM_SET_new(CONF_generate_param_set_desc(PARAMS, "S", buf, sizeof(buf)), &set);
 	if (res != KT_OK) goto cleanup;
 
 	res = TASK_SET_new(&task_set);
@@ -159,135 +157,52 @@ cleanup:
 	return KSITOOL_errToExitCode(res);
 }
 
-char *sign_help_toString(char*buf, size_t len) {
+char *sign_help_toString(char *buf, size_t len) {
+	int res;
+	char *ret = NULL;
+	PARAM_SET *set;
 	size_t count = 0;
+	char tmp[1024];
 
-	count += KSI_snprintf(buf + count, len - count,
-		"Usage:\n"
-		" %s sign -S <URL> [--aggr-user <user> --aggr-key <key>] [-H <alg>]\n"
-		"          [--data-out <file>] [more_options] [-i <input>]... [<input>]...\n"
-		"          [-- [<only file input>]...] [-o <out.ksig>]...\n"
-		"\n"
-		"\n"
-		" -i <input>\n"
-		"           - The input is either the path to the file to be hashed and signed\n"
-		"             or a hash imprint in the case the data to be signed has been hashed\n"
-		"             already. Use '-' as file name to read data to be hashed from stdin.\n"
-		"             Hash imprint format: <alg>:<hash in hex>.\n\n"
-		"             Flag -i can be omitted when specifying the input. To interpret all\n"
-		"             inputs as regular files no matter what the file's name is see\n"
-		"             parameter --.\n"
-		" -o <out.ksig>\n"
-		"           - Output file path for the signature. Use '-' as file name to\n"
-		"             redirect signature binary stream to stdout. If not specified the\n"
-		"             output is saved to the same directory where the input file is\n"
-		"             located. When specified as directory all the signatures are saved\n"
-		"             there. When signature's output file name is not explicitly\n"
-		"             specified the signature is saved to <input file>.ksig\n"
-		"             (or <input file>_<nr>.ksig, where <nr> is auto-incremented counter\n"
-		"             if the output file already exists). When there are N x input and\n"
-		"             explicitly specified N x output every signature is saved to the\n"
-		"             corresponding path. If output file name is explicitly specified,\n"
-		"             will always overwrite the existing file.\n"
-		" -H <alg>  - Use the given hash algorithm to hash the file to be signed. If not\n"
-		"             set, the default algorithm is used. Use ksi -h to get the list of\n"
-		"             supported hash algorithms.\n"
-		"             If used in combination with --apply-remote-conf, the algorithm\n"
-		"             parameter provided by the server will be ignored.\n"
-		" -S <URL>  - Signing service (KSI Aggregator) URL.\n"
-		" --aggr-user <str>\n"
-		"           - Username for signing service.\n"
-		" --aggr-key <str>\n"
-		"           - HMAC key for signing service.\n"
-		" --aggr-hmac-alg <alg>\n"
-		"           - Hash algorithm to be used for computing HMAC on outgoing messages\n"
-		"             towards KSI aggregator. If not set, default algorithm is used.\n"
-		" --data-out <file>\n"
-		"           - Save signed data to file. Use when signing an incoming stream.\n"
-		"             Use '-' as file name to redirect data being hashed to stdout.\n"
-		" --max-lvl <int>\n"
-		"           - Set the maximum depth (0 - 255) of the local aggregation tree\n"
-		"             (default 0). If used in combination with --apply-remote-conf,\n"
-		"             where service maximum level is provided, the smaller value is\n"
-		"             applied.\n"
-		" --max-aggr-rounds <int>\n"
-		"           - Set the upper limit of local aggregation rounds that may be\n"
-		"             performed (default 1).\n"
-		" --mask [<hex | alg:[arg...]>]\n"
-		"           - Specify a hex string to initialize and apply the masking process,\n"
-		"             or algorithm to generate the initial value instead.\n"
-		"             Supported algorithms:\n\n"
-		"               * crand:seed,len - Use standard C rand() function to generate\n"
-		"                 array of random numbers with the given seed and length. The\n"
-		"                 seed value is unsigned 32bit integer or 'time' to use the\n"
-		"                 system time value instead. If function is specified without the\n"
-		"                 arguments (crand:) 'time' is used to generate random array with\n"
-		"                 size of 32 bytes.\n\n"
-		"             When mask is specified without the argument (--mask) 'crand:' is\n"
-		"             used as default.\n"
-		" --prev-leaf <alg>:<hash>\n"
-		"           - Specify the hash imprint of the last leaf from another local\n"
-		"             aggregation tree to link it with the current first local\n"
-		"             aggregation round. Is valid only with option --mask.\n"
-		" --mdata   - Embed metadata to the KSI signature. To configure metadata at lest\n"
-		"             --mdata-cli-id must be specified.\n"
-		" --mdata-cli-id <str>\n"
-		"           - Specify client id as a string that will be embedded into the\n"
-		"             signature as metadata. It is mandatory part of the metadata.\n"
-		" --mdata-mac-id <str>\n"
-		"           - Specify machine id as a string that will be embedded into the\n"
-		"             signature as metadata. It is optional part of metadata.\n"
-		" --mdata-sqn-nr <int>\n"
-		"           - Specify incremental (sequence number is incremented in every\n"
-		"             aggregation round) sequence number of the request as integer\n"
-		"             that will be embedded into the signature as metadata. It is\n"
-		"             optional part of metadata.\n"
-		" --mdata-req-tm <int>\n"
-		"           - Embed request time extracted from the machine clock into the\n"
-		"             signature as metadata. It is optional part of metadata.\n"
-		" --        - If used everything specified after the token is interpreted as\n"
-		"             input file (command-line parameters (e.g. --conf, -d), stdin (-)\n"
-		"             and pre-calculated hash imprints (SHA-256:7647c6...) are all\n"
-		"             interpreted as regular files).\n"
-		" -d        - Print detailed information about processes and errors to stderr.\n"
-		" --dump    - Dump signature(s) created in human-readable format to stdout.\n"
-		" --dump-conf\n"
-		"           - Dump aggregator configuration to stdout.\n"
-		" --show-progress\n"
-		"           - Show progress bar. Is only valid with -d.\n"
-		" --conf <file>\n"
-		"           - Read configuration options from given file. It must be noted\n"
-		"             that configuration options given explicitly on command line will\n"
-		"             override the ones in the configuration file.\n"
-		" --apply-remote-conf\n"
-		"           - Obtain and apply configuration data from aggregation service server.\n"
-		"             Following configuration parameters can be received from server:\n"
-		"               * maximum level - the maximum allowed depth of the local\n"
-		"                 aggregation tree. This can be set to a lower value with\n"
-		"                 --max-lvl.\n"
-		"               * aggregation hash algorithm - recommended hash function identifier\n"
-		"                 to be used for hashing the file to be signed. This parameter can\n"
-		"                 be overridden with -H.\n"
-#if 0
-		"               * aggregation period - recommended duration of client's aggregation\n"
-		"                 round, in milliseconds.\n"
-		"               * maximum requests - maximum number of requests the client is\n"
-		"                 allowed to send within one aggregation period of the recommended\n"
-		"                 duration.\n"
-		"               * parent URI - parent server URI. Note that there may be several\n"
-		"                 parent servers listed in the configuration. Typically these are\n"
-		"                 all members of one aggregator cluster.\n"
-#endif
-		"             It must be noted that the described parameters are optional and may\n"
-		"             not be provided by the server. Use --dump-conf to view configuration\n"
-		"             parameters.\n"
-		" --log <file>\n"
-		"           - Write libksi log to given file. Use '-' as file name to redirect\n"
-		"             log to stdout.\n"
-		"\n"
-		, TOOL_getName()
-	);
+	res = PARAM_SET_new(CONF_generate_param_set_desc(PARAMS, "S", tmp, sizeof(tmp)), &set);
+	if (res != PST_OK) goto cleanup;
 
+	res = CONF_initialize_set_functions(set, "S");
+	if (res != PST_OK) goto cleanup;
+
+	PARAM_SET_setPrintName(set, "input", "--", NULL); /* Temporary name change for formatting help text. */
+	PARAM_SET_setHelpText(set, "input", NULL, "If used everything specified after the token is interpreted as input file (command-line parameters (e.g. --conf, -d), stdin (-) and pre-calculated hash imprints (SHA-256:7647c6...) are all interpreted as regular files).");
+	PARAM_SET_setHelpText(set, "i", "<input>", "The input is either the path to the file to be hashed and signed or a hash imprint in the case the data to be signed has been hashed already. Use '-' as file name to read data to be hashed from stdin. Hash imprint format: <alg>:<hash in hex>.\n\nFlag -i can be omitted when specifying the input. To interpret all inputs as regular files no matter what the file's name is see parameter --.");
+	PARAM_SET_setHelpText(set, "o", "<out.ksig>", "Output file path for the signature. Use '-' as file name to redirect signature binary stream to stdout. If not specified the output is saved to the same directory where the input file is located. When specified as directory all the signatures are saved there. When signature's output file name is not explicitly specified the signature is saved to <input file>.ksig (or <input file>_<nr>.ksig, where <nr> is auto-incremented counter if the output file already exists). When there are N x input and explicitly specified N x output every signature is saved to the corresponding path. If output file name is explicitly specified, will always overwrite the existing file.");
+	PARAM_SET_setHelpText(set, "data-out", "<file>", "Save signed data to file. Use when signing an incoming stream. Use '-' as file name to redirect data being hashed to stdout.");
+	PARAM_SET_setHelpText(set, "mask", "[<hex | alg:[arg...]>]",  "Specify a hex string to initialize and apply the masking process, or algorithm to generate the initial value instead.\nSupported algorithms:\n"
+																		"\\>2\n*\\>4 crand:seed,len - Use standard C rand() function to generate array of random numbers with the given seed and length. The seed value is unsigned 32bit integer or 'time' to use the system time value instead. If function is specified without the arguments (crand:) 'time' is used to generate random array with size of 32 bytes.\\>\n\n"
+																		"When mask is specified without the argument (--mask) 'crand:' is used as default.");
+	PARAM_SET_setHelpText(set, "prev-leaf", "<alg>:<hash>", "Specify the hash imprint of the last leaf from another local aggregation tree to link it with the current first local aggregation round. Is valid only with option --mask.");
+	PARAM_SET_setHelpText(set, "mdata", NULL, "Embed metadata to the KSI signature. To configure metadata at lest --mdata-cli-id must be specified.");
+	PARAM_SET_setHelpText(set, "dump", "[G]", "Dump signature(s) created in human-readable format to stdout. To make.signature dump suitable for processing with grep, use 'G' as argument.");
+	PARAM_SET_setHelpText(set, "dump-conf", NULL, "Dump aggregator configuration to stdout.");
+	PARAM_SET_setHelpText(set, "show-progress", NULL, "Show progress bar. Is only valid with -d.");
+	PARAM_SET_setHelpText(set,    "apply-remote-conf", NULL, "Obtain and apply configuration data from aggregation service server. Following configuration parameters can be received from server:"
+										"\\>2\n*\\>4  maximum level - the maximum allowed depth of the local aggregation tree. This can be set to a lower value with --max-lvl."
+										"\\>2\n*\\>4  aggregation hash algorithm - recommended hash function identifier to be used for hashing the file to be signed. This parameter can be overridden with -H.\\>\n"
+										"It must be noted that the described parameters are optional and may not be provided by the server. Use --dump-conf to view configuration parameters.");
+	PARAM_SET_setHelpText(set, "d", NULL, "Print detailed information about processes and errors to stderr.");
+	PARAM_SET_setHelpText(set, "conf", "<file>", "Read configuration options from given file. It must be noted that configuration options given explicitly on command line will override the ones in the configuration file.");
+	PARAM_SET_setHelpText(set, "log", "<file>", "Write libksi log to given file. Use '-' as file name to redirect log to stdout.");
+
+	count += PST_snhiprintf(buf + count, len - count, 80, 0, 0, NULL, ' ', "Usage:\\>1\n\\>10"
+			"ksi sign -S <URL> [--aggr-user <user> --aggr-key <key>] [-H <alg>]\n"
+			"[--data-out <file>] [more_options] [-i <input>]... [<input>]...\n"
+			"[-- [<only file input>]...] [-o <out.ksig>]...\\>\n\n\n");
+
+	ret = PARAM_SET_helpToString(set, "i,o,H,S,aggr-user,aggr-key,aggr-hmac-alg,data-out,max-lvl,max-aggr-rounds,mask,prev-leaf,mdata,mdata-cli-id,mdata-mac-id,mdata-sqn-nr,mdata-req-tm,input,d,dump,dump-conf,show-progress,conf,apply-remote-conf,log", 1, 13, 80, buf + count, len - count);
+
+cleanup:
+	if (res != PST_OK || ret == NULL) {
+		PST_snprintf(buf + count, len - count, "\nError: There were failures while generating help by PARAM_SET.\n");
+	}
+	PARAM_SET_free(set);
 	return buf;
 }
 
@@ -315,9 +230,11 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputHash, isContentOk_inputHash, convertRepair_path, extract_inputHash);
 	PARAM_SET_addControl(set, "{input}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputHashFromFile);
 	PARAM_SET_addControl(set, "{prev-leaf}", isFormatOk_imprint, isContentOk_imprint, NULL, extract_imprint);
-	PARAM_SET_addControl(set, "{d}{dump}{dump-conf}{dump-last-leaf}{mdata}{show-progress}{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{d}{dump-conf}{dump-last-leaf}{mdata}{show-progress}{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{mask}", isFormatOk_mask, isContentOk_mask, convertRepair_mask, extract_mask);
-	PARAM_SET_setParseOptions(set, "{d}{dump}{dump-conf}{dump-last-leaf}{mdata}{show-progress}{apply-remote-conf}", PST_PRSCMD_HAS_NO_VALUE);
+	PARAM_SET_setParseOptions(set, "{d}{dump-conf}{dump-last-leaf}{mdata}{show-progress}{apply-remote-conf}", PST_PRSCMD_HAS_NO_VALUE);
+
+	PARAM_SET_addControl(set, "{dump}", NULL, isContentOk_dump_flag, NULL, extract_dump_flag);
 
 	/**
 	 * To enable wildcard characters (WC) to work on Windows, configure the WC
@@ -325,7 +242,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	 * values from command-line are read.
 	 */
 #ifdef _WIN32
-	res = PARAM_SET_setWildcardExpander(set, "i,input", NULL, NULL, Win32FileWildcard);
+	res = PARAM_SET_setWildcardExpander(set, "i,input", NULL, NULL, NULL, Win32FileWildcard);
 	extra_parse_flags = PST_PRSCMD_EXPAND_WILDCARD;
 #endif
 
@@ -409,7 +326,6 @@ cleanup:
 
 static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int task) {
 	int res = KT_UNKNOWN_ERROR;
-	SIGNING_AGGR_ROUND **aggr_rounds = NULL;
 
 	switch (task) {
 		case SIGN_DATA:
@@ -430,16 +346,7 @@ static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int task) {
 				res = KT_SIGN_getAggregationRoundsNeeded(set, err, max_tree_input, &rounds);
 				if (res != KT_OK) goto cleanup;
 
-				res = KT_SIGN_performSigning(set, err, ctx, remote_algo, max_tree_input, rounds, &aggr_rounds);
-				if (res != KT_OK) goto cleanup;
-
-				res = KT_SIGN_saveToOutput(set, err, ctx, aggr_rounds);
-				if (res != KT_OK) goto cleanup;
-
-				/**
-				 * If signature was created without errors print some info on demand.
-				 */
-				res = KT_SIGN_dump(NULL, set, err, aggr_rounds);
+				res = KT_SIGN_performSigning(set, err, ctx, remote_algo, max_tree_input, rounds);
 				if (res != KT_OK) goto cleanup;
 			}
 			goto cleanup;
@@ -454,7 +361,6 @@ static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int task) {
 	}
 
 cleanup:
-	SIGNING_AGGR_ROUND_ARRAY_free(aggr_rounds);
 	return res;
 }
 
@@ -677,44 +583,16 @@ cleanup:
 }
 
 static void SIGNING_AGGR_ROUND_free(SIGNING_AGGR_ROUND *obj) {
-	int i = 0;
-
 	if (obj == NULL) return;
 
-	KSI_BlockSigner_free(obj->block_signer);
-	KSI_BlockSignerHandleList_free(obj->bs_handleList);
 	KSI_free(obj->fname);
 
-	if (obj->fname_out != NULL) {
-		i = 0;
-		while (i < obj->hash_count && obj->fname_out[i] != NULL) {
-			KSI_free(obj->fname_out[i++]);
-		}
-		KSI_free(obj->fname_out);
-	}
+	SIGNING_AGGR_ROUND_resetAndClean(obj);
 
-	if (obj->hash_values != NULL) {
-		i = 0;
-		while (i < obj->hash_count && obj->hash_values[i] != NULL) {
-			KSI_DataHash_free(obj->hash_values[i++]);
-		}
-		KSI_free(obj->hash_values);
-	}
+	KSI_free(obj->fname_out);
+	KSI_free(obj->hash_values);
 
 	KSI_free(obj);
-}
-
-static void SIGNING_AGGR_ROUND_ARRAY_free(SIGNING_AGGR_ROUND **array) {
-		if (array != NULL) {
-		int i = 0;
-
-		while (array[i] != NULL) {
-			SIGNING_AGGR_ROUND_free(array[i]);
-			i++;
-		}
-
-		KSI_free(array);
-	}
 }
 
 static int SIGNING_AGGR_ROUND_new(size_t max_leaves, SIGNING_AGGR_ROUND **round) {
@@ -805,20 +683,51 @@ cleanup:
 	return res;
 }
 
-static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, KSI_HashAlgorithm remote_algo, size_t max_tree_inputs, size_t rounds, SIGNING_AGGR_ROUND ***aggr_rounds_record) {
+static int SIGNING_AGGR_ROUND_resetAndClean(SIGNING_AGGR_ROUND *round) {
+	int res;
+	int i = 0;
+
+	if (round == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	if (round->fname_out != NULL) {
+		i = 0;
+		while (i < round->hash_count && round->fname_out[i] != NULL) {
+			KSI_free(round->fname_out[i++]);
+		}
+	}
+
+	if (round->hash_values != NULL) {
+		i = 0;
+		while (i < round->hash_count && round->hash_values[i] != NULL) {
+			KSI_DataHash_free(round->hash_values[i++]);
+		}
+	}
+
+	round->hash_count = 0;
+	res = KT_OK;
+
+cleanup:
+
+	return res;
+}
+
+static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, KSI_HashAlgorithm remote_algo, size_t max_tree_inputs, size_t rounds) {
 	int res = KT_UNKNOWN_ERROR;
 	int d = 0;
 	int prgrs = 0;
 	int in_count = 0;
 	size_t divider = 1;
 	char *signed_data_out = NULL;
-	KSI_HashAlgorithm algo = KSI_UNAVAILABLE_HASH_ALGORITHM;
+	KSI_HashAlgorithm algo = KSI_HASHALG_INVALID;
 	COMPOSITE extra;
 	KSI_OctetString *mask_iv = NULL;
 	int isMetadata = 0;
 	int isMasking = 0;
 	KSI_DataHash *prev_leaf = NULL;
-	SIGNING_AGGR_ROUND **aggr_round = NULL;
+	SIGNING_AGGR_ROUND *aggr_round = NULL;
 	int tree_size_1 = 0;
 	KSI_BlockSigner *bs = NULL;
 	KSI_BlockSignerHandle *hndl = NULL;
@@ -828,7 +737,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 	size_t r = 0;
 	KSI_DataHash *hash = NULL;
 
-	if (set == NULL || err == NULL || max_tree_inputs == 0 || rounds == 0 || aggr_rounds_record == NULL) {
+	if (set == NULL || err == NULL || max_tree_inputs == 0 || rounds == 0) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
@@ -895,20 +804,15 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 		}
 	}
 
-
-	/**
-	 * Create records for each aggregation round + 1 extra for indicating the end
-	 * of the array.
-	 */
-	aggr_round = (SIGNING_AGGR_ROUND**)KSI_calloc(rounds + 1, sizeof(SIGNING_AGGR_ROUND*));
-	if (aggr_round == NULL) {
-		res = KT_OUT_OF_MEMORY;
-		goto cleanup;
-	}
-
-	aggr_round[rounds] = NULL;
-
 	if (rounds == 1 && in_count == 1 && !isMasking && !isMetadata) tree_size_1 = 1;
+
+
+	res = SIGNING_AGGR_ROUND_new(max_tree_inputs, &aggr_round);
+	ERR_CATCH_MSG(err, res, "Error: Unable to create a record for aggregation round.");
+
+	res = KSITOOL_KSI_BlockSigner_new(err, ctx, algo, isMasking ? prev_leaf : NULL, isMasking ? mask_iv : NULL, &bs);
+	ERR_CATCH_MSG(err, res, "Error: Unable to create KSI Block Signer.");
+
 
 	/**
 	 * Perform local aggregation.
@@ -917,11 +821,11 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 		size_t tree_input = 0;
 		size_t to_be_signed_in_round = (((r + 1) * max_tree_inputs) < in_count) ? max_tree_inputs : in_count - (int)r * max_tree_inputs;
 
-		res = SIGNING_AGGR_ROUND_new(to_be_signed_in_round, &aggr_round[r]);
-		ERR_CATCH_MSG(err, res, "Error: Unable to create a record for aggregation round.");
+		res = KSI_BlockSigner_reset(bs);
+		ERR_CATCH_MSG(err, res, "Error: Unable to reset Block Signer.");
 
-		res = KSI_BlockSigner_new(ctx, algo, isMasking ? prev_leaf : NULL, isMasking ? mask_iv : NULL, &bs);
-		ERR_CATCH_MSG(err, res, "Error: Unable to create KSI Block Signer.");
+		res = SIGNING_AGGR_ROUND_resetAndClean(aggr_round);
+		ERR_CATCH_MSG(err, res, "Error: Unable to reset SIGNING_AGGR_ROUND struct.");
 
 		/* Initialize a list for keeping hash handles. */
 		res = KSI_BlockSignerHandleList_new(&hndlList);
@@ -936,11 +840,12 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 
 
 		if (prgrs || in_count > 1) {
-			print_debug("Signing %i files in round %i/%i.\n", to_be_signed_in_round, r + 1, rounds);
+			print_debug("Signing %i files in round %i/%i.%s\n", to_be_signed_in_round, r + 1, rounds, prgrs ? "" : "\n");
 		}
 
 		for (tree_input = 0; tree_input < max_tree_inputs && i < in_count; tree_input++, i++) {
 			char *fname = NULL;
+			KSI_HashAlgorithm hash_algo = KSI_HASHALG_INVALID;
 
 			if (!prgrs) print_progressDesc(d, "Extracting hash from input... ");
 
@@ -956,17 +861,18 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 					(isMetadata && isMasking) ? "and metadata with enabled masking " : ""
 					);
 
-			res = KSI_BlockSigner_addLeaf(bs, hash, 0, mdata, &hndl);
-			ERR_CATCH_MSG(err, res, "Error: Unable to add a hash value to a local aggregation tree.");
+			KSI_DataHash_getHashAlg(hash, &hash_algo);
+			res = KSITOOL_BlockSigner_addLeaf(err, ctx, bs, hash, 0, mdata, &hndl);
+			ERR_CATCH_MSG(err, res, "Error: Unable to add a (%s) hash value to a local aggregation tree.", KSI_getHashAlgorithmName(hash_algo));
 
 			res = KSI_BlockSignerHandleList_append(hndlList, hndl);
-			ERR_CATCH_MSG(err, res, "Error: Unable to append blck-signer handle to the list.");
+			ERR_CATCH_MSG(err, res, "Error: Unable to append block-signer handle to the list.");
 			hndl = NULL;
 
 			res = PARAM_SET_getStr(set, "i,input", NULL, PST_PRIORITY_NONE, (int)i, &fname);
 			ERR_CATCH_MSG(err, res, "Error: Unable to get files name.");
 
-			res = SIGNING_AGGR_ROUND_append(aggr_round[r], hash, fname);
+			res = SIGNING_AGGR_ROUND_append(aggr_round, hash, fname);
 			ERR_CATCH_MSG(err, res, "Error: Unable to add hash value and files name to local aggregation record.");
 			hash = NULL;
 
@@ -975,14 +881,14 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 			if (prgrs && (i % divider == 0 || i + 1 >= in_count || tree_input + 1 == to_be_signed_in_round)) {
 				PROGRESS_BAR_display((int)((tree_input + 1) * 100 / to_be_signed_in_round));
 
-				if (in_count > 64) divider = to_be_signed_in_round / 64;
+				if (to_be_signed_in_round > 64) divider = to_be_signed_in_round / 64;
 				else divider = 1;
 			}
 
 		}
 
 
-		if (prgrs) print_debug("\n");
+		if ((!tree_size_1 || prgrs)) print_debug("\n");
 
 		if (tree_size_1) print_progressDesc(d, "Creating signature from hash... ");
 		else print_progressDesc(d, "Signing the local aggregation tree %d/%d... ", r + 1, rounds);
@@ -991,26 +897,31 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 		if (tree_size_1) {ERR_CATCH_MSG(err, res, "Error: Unable to create signature.");}
 		else {ERR_CATCH_MSG(err, res, "Error: Unable to complete and sign the local aggregation tree.");}
 
-		aggr_round[r]->block_signer = bs;
-		bs = NULL;
-		aggr_round[r]->bs_handleList = hndlList;
-		hndlList = NULL;
+		aggr_round->block_signer = bs;
+		aggr_round->bs_handleList = hndlList;
 
 		print_progressResult(res);
+		if (!prgrs && !tree_size_1) print_debug("\n");
+
+		KT_SIGN_saveToOutput(set, err, ctx, aggr_round, (int)(r * max_tree_inputs));
+
+		res = KT_SIGN_dump(NULL, set, err, aggr_round);
+		if (res != KT_OK) goto cleanup;
+		if (prgrs) print_debug("\n");
 
 		if (!tree_size_1 || (tree_size_1 && prgrs)) print_debug("\n");
 		KSI_MetaData_free(mdata);
 		mdata = NULL;
+
+		KSI_BlockSignerHandleList_free(hndlList);
+		hndlList = NULL;
 	}
 
 
-	*aggr_rounds_record = aggr_round;
-	aggr_round = NULL;
 	res = KT_OK;
 
 cleanup:
-
-	SIGNING_AGGR_ROUND_ARRAY_free(aggr_round);
+	SIGNING_AGGR_ROUND_free(aggr_round);
 	KSI_DataHash_free(hash);
 	KSI_DataHash_free(prev_leaf);
 	KSI_BlockSigner_free(bs);
@@ -1063,14 +974,13 @@ cleanup:
 	return res;
 }
 
-static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_AGGR_ROUND **aggr_round) {
+static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SIGNING_AGGR_ROUND *aggr_round, int offset) {
 	int res = PST_UNKNOWN_ERROR;
 	int in_count = 0;
 	int divider = 0;
 	int prgrs = 0;
 	int how_to_save = OUTPUT_UNKNOWN;
 	const char *mode = NULL;
-	int i = 0;
 	int n = 0;
 	int count = 0;
 	KSI_Signature *sig = NULL;
@@ -1081,8 +991,7 @@ static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SI
 		goto cleanup;
 	}
 
-	res = PARAM_SET_getValueCount(set, "i,input", NULL, PST_PRIORITY_NONE, &in_count);
-	if (res != PST_OK) goto cleanup;
+	in_count = (int)aggr_round->hash_count;
 
 	if (in_count >= 10000) divider = in_count / 100;
 	else if (in_count >= 1000) divider = 10;
@@ -1097,64 +1006,60 @@ static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SI
 
 	if (prgrs) print_debug("Saving %i files.\n", in_count);
 
-	while (aggr_round[i] != NULL) {
-		for (n = 0; n < aggr_round[i]->hash_count; n++) {
-			char save_to_file[1024] = "";
-			char real_output_name[1024] = "";
-			size_t real_out_name_size = 0;
-			KSI_DataHash *hsh = NULL;
-			KSI_BlockSignerHandle *hndl = NULL;
+	for (n = 0; n < aggr_round->hash_count; n++) {
+		char save_to_file[1024] = "";
+		char real_output_name[1024] = "";
+		size_t real_out_name_size = 0;
+		KSI_DataHash *hsh = NULL;
+		KSI_BlockSignerHandle *hndl = NULL;
 
-			/* Get the handle from the list. */
-			res = KSI_BlockSignerHandleList_elementAt(aggr_round[i]->bs_handleList, n, &hndl);
-			ERR_CATCH_MSG(err, res, "Error: Unable to extract block signer leaf handle from the list.");
+		/* Get the handle from the list. */
+		res = KSI_BlockSignerHandleList_elementAt(aggr_round->bs_handleList, n, &hndl);
+		ERR_CATCH_MSG(err, res, "Error: Unable to extract block signer leaf handle from the list.");
 
-			/* Get KSI signature from block-signer handle. */
-			res = KSI_BlockSignerHandle_getSignature(hndl, &sig);
-			ERR_CATCH_MSG(err, res, "Error: Unable to extract signature.");
+		/* Get KSI signature from block-signer handle. */
+		res = KSI_BlockSignerHandle_getSignature(hndl, &sig);
+		ERR_CATCH_MSG(err, res, "Error: Unable to extract signature.");
 
-			res = KSI_Signature_getDocumentHash(sig, &hsh);
-			ERR_CATCH_MSG(err, res, "Error: Unable to extract signature document hash.");
+		res = KSI_Signature_getDocumentHash(sig, &hsh);
+		ERR_CATCH_MSG(err, res, "Error: Unable to extract signature document hash.");
 
-			/* Verify that is it the correct signature. */
-			if (!KSI_DataHash_equals(aggr_round[i]->hash_values[n], hsh)) {
-				ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Unexpected error. Signature data hash mismatch.");
-				goto cleanup;
-			}
-
-			if (get_output_file_name(set, err, "i,input", "o", how_to_save, count, save_to_file, sizeof(save_to_file), generate_file_name) == NULL) {
-				ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Unexpected error. Unable to get the file name to save the signature to.");
-				goto cleanup;
-			}
-
-			res = KSI_OBJ_saveSignature(err, ksi, sig, mode, save_to_file, real_output_name, sizeof(real_output_name));
-			ERR_CATCH_MSG(err, res, "Error: Unable to save signature.");
-
-			real_out_name_size = sizeof(char) * (strlen(real_output_name) + 1);
-
-			real_output_name_copy = (char*)KSI_malloc(real_out_name_size);
-			if (real_output_name_copy == NULL) {
-				res = KT_OUT_OF_MEMORY;
-				goto cleanup;
-			}
-
-			PST_strncpy(real_output_name_copy, real_output_name, real_out_name_size);
-			aggr_round[i]->fname_out[n] = real_output_name_copy;
-			if (!prgrs) print_debug("Signature saved to '%s'.\n", real_output_name);
-
-			KSI_Signature_free(sig);
-			sig = NULL;
-			real_output_name_copy = NULL;
-
-			count++;
-			if (prgrs && (count % divider == 0 || count + 1 >= in_count)) {
-				PROGRESS_BAR_display((count + 1) * 100 / in_count);
-			}
-
+		/* Verify that is it the correct signature. */
+		if (!KSI_DataHash_equals(aggr_round->hash_values[n], hsh)) {
+			ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Unexpected error. Signature data hash mismatch.");
+			goto cleanup;
 		}
-		i++;
+
+		if (get_output_file_name(set, err, "i,input", "o", how_to_save, offset + count, save_to_file, sizeof(save_to_file), generate_file_name) == NULL) {
+			ERR_TRCKR_ADD(err, res = KT_UNKNOWN_ERROR, "Error: Unexpected error. Unable to get the file name to save the signature to.");
+			goto cleanup;
+		}
+
+		res = KSI_OBJ_saveSignature(err, ksi, sig, mode, save_to_file, real_output_name, sizeof(real_output_name));
+		ERR_CATCH_MSG(err, res, "Error: Unable to save signature.");
+
+		real_out_name_size = sizeof(char) * (strlen(real_output_name) + 1);
+
+		real_output_name_copy = (char*)KSI_malloc(real_out_name_size);
+		if (real_output_name_copy == NULL) {
+			res = KT_OUT_OF_MEMORY;
+			goto cleanup;
+		}
+
+		PST_strncpy(real_output_name_copy, real_output_name, real_out_name_size);
+		aggr_round->fname_out[n] = real_output_name_copy;
+		if (!prgrs) print_debug("Signature saved to '%s'.\n", real_output_name);
+
+		KSI_Signature_free(sig);
+		sig = NULL;
+		real_output_name_copy = NULL;
+
+		count++;
+		if (prgrs && (count % divider == 0 || count + 1 >= in_count)) {
+			PROGRESS_BAR_display((count + 1) * 100 / in_count);
+		}
+
 	}
-	if (i > 0) print_debug("\n");
 
 	res = KT_OK;
 
@@ -1166,45 +1071,47 @@ cleanup:
 	return res;
 }
 
-static int KT_SIGN_dump(KSI_CTX *ksi, PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND **aggr_round) {
+static int KT_SIGN_dump(KSI_CTX *ksi, PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND *aggr_round) {
 	int res = PST_UNKNOWN_ERROR;
 	int i = 0;
 	int n = 0;
 	int in_count = 0;
-	int dump = 0;
 	KSI_Signature *sig = NULL;
+	int dump_flags = OBJPRINT_NONE;
 
 	if (set == NULL || err == NULL || aggr_round == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
+	if (!PARAM_SET_isSetByName(set, "dump")) {
+		res = KT_OK;
+		goto cleanup;
+	}
+	PARAM_SET_getObj(set, "dump", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&dump_flags);
+
 	res = PARAM_SET_getValueCount(set, "i,input", NULL, PST_PRIORITY_NONE, &in_count);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 
-	dump = PARAM_SET_isSetByName(set, "dump");
 
-	while (dump && aggr_round[i] != NULL) {
-		if (in_count > 1) print_result("Signatures from aggregation round: %i\n\n", i);
+	if (in_count > 1) print_result("Signatures from aggregation round: %i\n\n", i);
 
-		for (n = 0; n < aggr_round[i]->hash_count; n++) {
-			KSI_BlockSignerHandle *hndl = NULL;
+	for (n = 0; n < aggr_round->hash_count; n++) {
+		KSI_BlockSignerHandle *hndl = NULL;
 
-			/* Get the handle from the list. */
-			res = KSI_BlockSignerHandleList_elementAt(aggr_round[i]->bs_handleList, n, &hndl);
-			ERR_CATCH_MSG(err, res, "Error: Unable to extract block signer leaf handle from the list.");
+		/* Get the handle from the list. */
+		res = KSI_BlockSignerHandleList_elementAt(aggr_round->bs_handleList, n, &hndl);
+		ERR_CATCH_MSG(err, res, "Error: Unable to extract block signer leaf handle from the list.");
 
-			res = KSI_BlockSignerHandle_getSignature(hndl, &sig);
-			ERR_CATCH_MSG(err, res, "Error: Unable to get signature to dump its content.");
+		res = KSI_BlockSignerHandle_getSignature(hndl, &sig);
+		ERR_CATCH_MSG(err, res, "Error: Unable to get signature to dump its content.");
 
-			print_result("Document : '%s'\n", aggr_round[i]->fname[n]);
-			print_result("Signature: '%s'\n", aggr_round[i]->fname_out[n]);
-			OBJPRINT_signatureDump(ksi, sig, print_result);
-			KSI_Signature_free(sig);
-			sig = NULL;
-			print_result("\n\n");
-		}
-		i++;
+		print_result("Document : '%s'\n", aggr_round->fname[n]);
+		print_result("Signature: '%s'\n", aggr_round->fname_out[n]);
+		OBJPRINT_signatureDump(ksi, sig, dump_flags, print_result);
+		KSI_Signature_free(sig);
+		sig = NULL;
+		print_result("\n\n");
 	}
 
 	res = KT_OK;

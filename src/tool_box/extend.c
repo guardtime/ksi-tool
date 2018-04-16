@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 Guardtime, Inc.
+ * Copyright 2013-2018 Guardtime, Inc.
  *
  * This file is part of the Guardtime client SDK.
  *
@@ -27,6 +27,7 @@
 #include "param_set/param_set.h"
 #include "param_set/task_def.h"
 #include "param_set/parameter.h"
+#include "param_set/strn.h"
 #include "tool_box/ksi_init.h"
 #include "tool_box/param_control.h"
 #include "tool_box/task_initializer.h"
@@ -57,6 +58,8 @@ enum EXTEND_TASKS_en {
 	EXTENDER_DUMP_CONF
 };
 
+#define PARAMS "{i}{input}{o}{d}{x}{T}{pub-str}{dump}{dump-conf}{conf}{apply-remote-conf}{log}{h|help}{replace-existing}"
+
 int extend_run(int argc, char** argv, char **envp) {
 	int res;
 	TASK *task = NULL;
@@ -71,11 +74,7 @@ int extend_run(int argc, char** argv, char **envp) {
 	/**
 	 * Extract command line parameters.
 	 */
-	res = PARAM_SET_new(
-			CONF_generate_param_set_desc(
-					"{i}{input}{o}{d}{x}{T}{pub-str}{dump}{dump-conf}"
-					"{conf}{apply-remote-conf}{log}{h|help}{replace-existing}", "XP", buf, sizeof(buf)),
-					&set);
+	res = PARAM_SET_new(CONF_generate_param_set_desc(PARAMS, "XP", buf, sizeof(buf)), &set);
 	if (res != KT_OK) goto cleanup;
 
 	res = TASK_SET_new(&task_set);
@@ -121,97 +120,57 @@ cleanup:
 
 	return KSITOOL_errToExitCode(res);
 }
-char *extend_help_toString(char*buf, size_t len) {
+char *extend_help_toString(char *buf, size_t len) {
+	int res;
+	PARAM_SET *set;
 	size_t count = 0;
+	char tmp[1024];
+	char *ret = NULL;
 
-	count += KSI_snprintf(buf + count, len - count,
-		"Usage:\n"
-		" %s extend [-i <in.ksig>] [-o <out.ksig>] -X <URL>\n"
-		"    [--ext-user <user> --ext-key <key>] -P <URL> [--cnstr <oid=value>]...\n"
-		"    [more_options] [--] input...\n"
-		" %s extend [-i <in.ksig>] [-o <out.ksig>] -X <URL>\n"
-		"    [--ext-user <user> --ext-key <key>] -P <URL> [--cnstr <oid=value>]...\n"
-		"    [--pub-str <str>] [more_options] [--] input...\n"
-		"\n"
-		" -i <in.ksig>\n"
-		"           - File path to the KSI signature file to be extended. Use '-' as the\n"
-		"             path to read the signature from stdin.\n"
-		"             Flag -i can be omitted when specifying the input. To interpret all\n"
-		"             inputs as regular files no matter what the file's name is see\n"
-		"             parameter --.\n"
-		" -o <out.ksig>\n"
-		"             Specify the output file path for the extended signature. Use '-' as\n"
-		"             the path to redirect the signature binary stream to stdout. If not\n"
-		"             specified, the output is saved to the same directory where the\n"
-		"             input file is located. If specified as directory, all the\n"
-		"             signatures are saved there. When signature's output file name is\n"
-		"             not explicitly specified the signature is saved to\n"
-		"             <input[.E]>.ext.ksig or <input[.E]>.ext_<nr>.ksig where E is input\n"
-		"             file extension that is NOT equal to ksig and nr is auto-incremented\n"
-		"             counter if the output file already exists. If output file name is\n"
-		"             explicitly specified, will always overwrite the existing file.\n"
-		" -X <URL>  - Extending service (KSI Extender) URL.\n"
-		" --ext-user <user>\n"
-		"           - Username for extending service.\n"
-		" --ext-key <key>\n"
-		"           - HMAC key for extending service.\n"
-		" --ext-hmac-alg <alg>\n"
-		"           - Hash algorithm to be used for computing HMAC on outgoing messages\n"
-		"             towards KSI extender. If not set, default algorithm is used.\n"
-		" -P <URL>  - Publications file URL (or file with URI scheme 'file://').\n"
-		" --cnstr <oid=value>\n"
-		"           - OID of the PKI certificate field (e.g. e-mail address) and the\n"
-		"             expected value to qualify the certificate for verification of\n"
-		"             publications file PKI signature. At least one constraint must be\n"
-		"             defined.\n"
-		" --pub-str <str>\n"
-		"           - Publication string that denotes to existing publication record in\n"
-		"             KSI publications file to extend to.\n"
-		" --replace-existing\n"
-		"           - Replace input KSI signature with the successfully extended version.\n"
-		" -V        - Certificate file in PEM format for publications file verification.\n"
-		"             All values from lower priority source are ignored.\n"
-		" --        - If used everything specified after the token is interpreted as\n"
-		"             input file (command-line parameters (e.g. --conf, -d), stdin (-)\n"
-		"             and pre-calculated hash imprints (SHA-256:7647c6...) are all\n"
-		"             interpreted as regular files).\n"
-		" -d        - Print detailed information about processes and errors.\n"
-		" --dump    - Dump extended signature and verification info in human-readable\n"
-		"             format to stdout.\n"
-		" --dump-conf\n"
-		"           - Dump extender configuration to stdout.\n"
-		" --conf <file>\n"
-		"             Read configuration options from given file. It must be noted\n"
-		"             that configuration options given explicitly on command line will\n"
-		"             override the ones in the configuration file.\n"
-		" --apply-remote-conf\n"
-		"           - Obtain and apply configuration data from extender service server.\n"
-		"             Following configuration is received from server:\n"
-		"               * Calendar first time - aggregation time of the oldest calendar\n"
-		"                 record the extender has.\n"
-		"               * Calendar last time - aggregation time of the newest calendar\n"
-		"                 record the extender has.\n"
-#if 0
-		"               * Maximum requests - maximum number of requests the client is\n"
-		"                 allowed to send within one second.\n"
-		"               * Parent URI - parent server URI. Note that there may be several\n"
-		"                 parent servers listed in the configuration. Typically these are\n"
-		"                 all members of one aggregator cluster.\n"
-#endif
-		"             The time span is used to verify, whether the request could be\n"
-		"             successfully performed. It must be noted that the described\n"
-		"             parameters are optional and may not be provided by the server.\n"
-		"             Use --dump-conf to view configuration parameters.\n"
-		" --log <file>\n"
-		"           - Write libksi log to given file. Use '-' as file name to redirect\n"
-		"             log to stdout.\n",
-		TOOL_getName(),
-		TOOL_getName(),
-		TOOL_getName()
-	);
+	if (buf == NULL || len == 0) return NULL;
 
+	res = PARAM_SET_new(CONF_generate_param_set_desc(PARAMS, "XP", tmp, sizeof(tmp)), &set);
+	if (res != PST_OK) goto cleanup;
+
+	res = CONF_initialize_set_functions(set, "XP");
+	if (res != PST_OK) goto cleanup;
+
+
+	PARAM_SET_setPrintName(set, "input", "--", NULL); /* Temporary name change for formatting help text. */
+	PARAM_SET_setHelpText(set, "input", NULL, "If used everything specified after the token is interpreted as input file (command-line parameters (e.g. --conf, -d), stdin (-) and pre-calculated hash imprints (SHA-256:7647c6...) are all interpreted as regular files).");
+	PARAM_SET_setHelpText(set, "i", "<in.ksig>", "File path to the KSI signature file to be extended. Use '-' as the path to read the signature from stdin.\nFlag -i can be omitted when specifying the input. To interpret all inputs as regular files no matter what the file's name is see parameter --.");
+	PARAM_SET_setHelpText(set, "o", "<out.ksig>", "Specify the output file path for the extended signature. Use '-' as the path to redirect the signature binary stream to stdout. If not specified, the output is saved to the same directory where the input file is located. If specified as directory, all the signatures are saved there. When signature's output file name is not explicitly specified the signature is saved to <input[.E]>.ext.ksig or <input[.E]>.ext_<nr>.ksig where E is input file extension that is NOT equal to ksig and nr is auto-incremented counter if the output file already exists. If output file name is explicitly specified, will always overwrite the existing file.");
+	PARAM_SET_setHelpText(set, "pub-str", "<str>", "Publication string that denotes to existing publication record in KSI publications file to extend to.");
+	PARAM_SET_setHelpText(set, "replace-existing", NULL, "Replace input KSI signature with the successfully extended version.");
+	PARAM_SET_setHelpText(set, "dump-conf", NULL, "Dump extender configuration to stdout.");
+	PARAM_SET_setHelpText(set, "apply-remote-conf", NULL, "Obtain and apply configuration data from extender service server. Following configuration is received from server:"
+																"\\>2\n*\\>4 Calendar first time - aggregation time of the oldest calendar record the extender has."
+																"\\>2\n*\\>4 Calendar last time - aggregation time of the newest calendar record the extender has.\\>\n"
+																"The time span is used to verify, whether the request could be successfully performed. It must be noted that the described parameters are optional and may not be provided by the server. Use --dump-conf to view configuration parameters.");
+	PARAM_SET_setHelpText(set, "dump", "[G]", "Dump signature(s) created in human-readable format to stdout. To make.signature dump suitable for processing with grep, use 'G' as argument.");
+	PARAM_SET_setHelpText(set, "d", NULL, "Print detailed information about processes and errors to stderr.");
+	PARAM_SET_setHelpText(set, "conf", "<file>", "Read configuration options from given file. It must be noted that configuration options given explicitly on command line will override the ones in the configuration file.");
+	PARAM_SET_setHelpText(set, "log", "<file>", "Write libksi log to given file. Use '-' as file name to redirect log to stdout.");
+
+
+	count += PST_snhiprintf(buf + count, len - count, 80, 0, 0, NULL, ' ', "Usage:\\>1\n\\>4"
+			"ksi extend [-i <in.ksig>] [-o <out.ksig>] -X <URL>\n"
+			"[--ext-user <user> --ext-key <key>] -P <URL> [--cnstr <oid=value>]...\n"
+			"[more_options] [--] input...\\>1\n\\>4"
+			"ksi extend [-i <in.ksig>] [-o <out.ksig>] -X <URL>\n"
+			"[--ext-user <user> --ext-key <key>] -P <URL> [--cnstr <oid=value>]...\n"
+			"[--pub-str <str>] [more_options] [--] input...\\>\n\n\n");
+
+	ret = PARAM_SET_helpToString(set, "i,o,X,ext-user,ext-key,ext-hmac-alg,P,cnstr,pub-str,replace-existing,V,input,d,dump,dump-conf,conf,apply-remote-conf,log", 1, 13, 80, buf + count, len - count);
+
+cleanup:
+	if (res != PST_OK || ret == NULL) {
+		PST_snprintf(buf + count, len - count, "\nError: There were failures while generating help by PARAM_SET.\n");
+	}
+	PARAM_SET_free(set);
 	return buf;
 }
+
 const char *extend_get_desc(void) {
 	return "Extends existing KSI signature to the given publication.";
 }
@@ -532,9 +491,11 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFileWithPipe, convertRepair_path, extract_inputSignature);
 	PARAM_SET_addControl(set, "{input}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignatureFromFile);
 	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
-	PARAM_SET_addControl(set, "{d}{dump}{dump-conf}{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{d}{dump-conf}{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{pub-str}", isFormatOk_pubString, NULL, NULL, extract_pubString);
-	PARAM_SET_setParseOptions(set, "{d}{dump}{dump-conf}{replace-existing}{apply-remote-conf}", PST_PRSCMD_HAS_NO_VALUE);
+	PARAM_SET_setParseOptions(set, "{d}{dump-conf}{replace-existing}{apply-remote-conf}", PST_PRSCMD_HAS_NO_VALUE);
+
+	PARAM_SET_addControl(set, "{dump}", NULL, isContentOk_dump_flag, NULL, extract_dump_flag);
 
 	/**
 	 * To enable wildcard characters (WC) to work on Windows, configure the WC
@@ -542,7 +503,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	 * values from command-line are read.
 	 */
 #ifdef _WIN32
-	res = PARAM_SET_setWildcardExpander(set, "i,input", NULL, NULL, Win32FileWildcard);
+	res = PARAM_SET_setWildcardExpander(set, "i,input", NULL, NULL, NULL, Win32FileWildcard);
 	extra_parse_flags = PST_PRSCMD_EXPAND_WILDCARD;
 #endif
 
@@ -687,6 +648,7 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 	const char *mode = NULL;
 	KSI_PolicyVerificationResult *result_ext = NULL;
 	KSI_PolicyVerificationResult *result_sig = NULL;
+	int dump_flags = OBJPRINT_NONE;
 
 	if (set == NULL || err == NULL || ksi == NULL || task_id > 2) {
 		res = KT_INVALID_ARGUMENT;
@@ -698,6 +660,7 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 
 	d = PARAM_SET_isSetByName(set, "d");
 	dump = PARAM_SET_isSetByName(set, "dump");
+	PARAM_SET_getObj(set, "dump", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&dump_flags);
 
 	extra.ctx = ksi;
 	extra.err = err;
@@ -756,10 +719,10 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 		if (PARAM_SET_isSetByName(set, "dump")) {
 			print_result("\n");
 			print_result("=== Old signature ===\n");
-			OBJPRINT_signatureDump(ksi, sig, print_result);
+			OBJPRINT_signatureDump(ksi, sig, dump_flags, print_result);
 			print_result("\n");
 			print_result("=== Extended signature ===\n");
-			OBJPRINT_signatureDump(ksi, ext, print_result);
+			OBJPRINT_signatureDump(ksi, ext, dump_flags, print_result);
 			print_result("\n");
 			print_result("=== Extended signature verification ===\n");
 			OBJPRINT_signatureVerificationResultDump(result_ext , print_result);

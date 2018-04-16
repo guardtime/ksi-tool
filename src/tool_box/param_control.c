@@ -167,9 +167,8 @@ static int x(char c){
 		return c - '0';
 	if (c >= 'a' && c <= 'f')
 		return c - 'a' + 10;
-	if (c >= 'A' && c <= 'F')
+	else
 		return c - 'A' + 10;
-	abort(); // isxdigit lies.
 }
 
 static int xx(char c1, char c2){
@@ -728,16 +727,31 @@ int isFormatOk_path(const char *path) {
 	return FORMAT_OK;
 }
 
-int isFormatOk_hashAlg(const char *hashAlg){
+int isFormatOk_hashAlg(const char *hashAlg) {
 	if (hashAlg == NULL) return FORMAT_NULLPTR;
 	if (strlen(hashAlg) == 0) return FORMAT_NOCONTENT;
 	return FORMAT_OK;
 }
 
-int isContentOk_hashAlg(const char *alg){
+int isContentOk_hashAlg(const char *alg) {
 	if (KSI_getHashAlgorithmByName(alg) != KSI_HASHALG_INVALID) return PARAM_OK;
 	else return HASH_ALG_INVALID_NAME;
 }
+
+int isContentOk_hashAlgRejectDeprecated(const char *alg) {
+	int ret;
+
+	ret = isContentOk_hashAlg(alg);
+	if (ret != PARAM_OK) return ret;
+
+	if (!KSI_isHashAlgorithmTrusted(KSI_getHashAlgorithmByName(alg))) {
+		return HASH_ALG_UNTRUSTED;
+	}
+
+	return PARAM_OK;
+}
+
+
 
 int extract_hashAlg(void **extra, const char* str, void** obj) {
 	const char *hash_alg_name = NULL;
@@ -1124,6 +1138,7 @@ const char *getParameterErrorString(int res) {
 		case PARAM_INVALID: return "Parameter is invalid";
 		case FORMAT_NOT_INTEGER: return "Invalid integer";
 		case HASH_ALG_INVALID_NAME: return "Algorithm name is incorrect";
+		case HASH_ALG_UNTRUSTED: return "Algorithm is not trusted";
 		case HASH_IMPRINT_INVALID_LEN: return "Hash length is incorrect";
 		case FORMAT_INVALID_HEX_CHAR: return "Invalid hex character";
 		case FORMAT_ODD_NUMBER_OF_HEX_CHARACTERS: return "There must be even number of hex characters";
@@ -1144,6 +1159,7 @@ const char *getParameterErrorString(int res) {
 		case FUNCTION_INVALID_ARG_1: return "Argument 1 is invalid";
 		case FUNCTION_INVALID_ARG_2: return "Argument 2 is invalid";
 		case INVALID_VERSION: return "Invalid version";
+		case INVALID_FLAG_PARAM: return "Invalid flag argument";
 		default: return "Unknown error";
 	}
 }
@@ -1300,7 +1316,7 @@ static int decode_mask(const char* mask, int *func, char *arg1, char *arg2, size
 
 int isFormatOk_mask(const char* mask) {
 	if (mask == NULL) return FORMAT_OK;
-	if (mask == '\0') return FORMAT_NOCONTENT;
+	if (*mask == '\0') return FORMAT_NOCONTENT;
 
 	if (strchr(mask, ':') != NULL) {
 		return FORMAT_OK;
@@ -1316,7 +1332,7 @@ int isContentOk_mask(const char* mask) {
 	int function = MASK_F_INVALID;
 
 	if (mask == NULL) return PARAM_OK;
-	if (mask == '\0') return FORMAT_NOCONTENT;
+	if (*mask == '\0') return FORMAT_NOCONTENT;
 
 	if (strchr(mask, ':') != NULL) {
 		res = decode_mask(mask, &function, arg1, arg2, sizeof(arg1));
@@ -1414,6 +1430,25 @@ cleanup:
 	return res;
 }
 
+int isContentOk_dump_flag(const char* arg) {
+	if (arg == NULL || *arg == '\0') return PARAM_OK;
+	if (strcmp(arg, "G") != 0) return INVALID_FLAG_PARAM;
+	return PARAM_OK;
+}
+
+int extract_dump_flag(void **extra, const char* str,  void** obj) {
+	int *pInt = (int*)obj;
+	VARIABLE_IS_NOT_USED(extra);
+	if (str == NULL || *str == '\0') {
+		*pInt = OBJPRINT_NONE;
+	} else if (strcmp(str, "G") == 0) {
+		*pInt = OBJPRINT_GREPABLE;
+	} else {
+		*pInt = OBJPRINT_NONE;
+	}
+
+	return PST_OK;
+}
 
 int get_pipe_out_error(PARAM_SET *set, ERR_TRCKR *err, const char *check_all_files, const char *out_file_names, const char *print_out_names) {
 	return get_io_pipe_error(set, err, 0, check_all_files, out_file_names, print_out_names);
