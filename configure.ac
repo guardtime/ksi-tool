@@ -55,8 +55,8 @@ AC_PROG_LN_S
 AC_CHECK_LIB([crypto], [SHA256_Init], [], [AC_MSG_FAILURE([Could not find OpenSSL 0.9.8+ libraries.])])
 AC_CHECK_LIB([curl], [curl_easy_init], [], [AC_MSG_FAILURE([Could not find Curl libraries.])])
 
-LIBKSI_VER="3.14"
-LIBPST_VER="1.0"
+LIBKSI_VER="3.17"
+LIBPST_VER="1.1"
 AC_ARG_ENABLE(static-build,         AS_HELP_STRING([--enable-static-build], [Enable static linking of libksi and libparamset. Note that on some platforms this option may not work and user has to provide the static libksi and libparamset library file explicitly. See option --without-libksi and --without-libparamset instead. Default is no static.]),:,:)
 
 AC_ARG_WITH(libksi,
