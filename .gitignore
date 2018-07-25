@@ -24,7 +24,7 @@ packaging/redhat/ksi.spec
 
 # Ide project files
 IDE/
-
+.idea
 
 
 
