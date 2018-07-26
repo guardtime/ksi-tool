@@ -1,6 +1,6 @@
 # KSI Command-line Tool
 
-Guardtime's KSI is an industrial scale blockchain platform that cryptographically ensures data integrity and proves time of existence. Its keyless signatures, based on hash chains, link data to global calendar blockchain. The checkpoints of the blockchain, published in newspapers and electronic media, enable long term integrity of any digital asset without the need to trust any system.
+Guardtime's KSI Blockchain is an industrial scale blockchain platform that cryptographically ensures data integrity and proves time of existence. The KSI signatures, based on hash chains, link data to this global calendar blockchain. The checkpoints of the blockchain, published in newspapers and electronic media, enable long term integrity of any digital asset without the need to trust any system. 
 
 There are many applications for KSI, a classical example is signing of any type logs, e.g. system logs, financial transactions, call records. For more, see [https://guardtime.com](https://guardtime.com)
 
