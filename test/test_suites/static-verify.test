@@ -287,6 +287,5 @@ EXECUTABLE sign -i SHA256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d
 >>>= 0
 EXECUTABLE verify --ver-cal -i test/out/sign/imprint_sha256_sv.ksig -d --dump --conf test/resource/conf/verify-test_ok_sig-imprint_sha256-extend_response-err_107.tlv.cfg
 >>>  /.*Trust anchor: Calendar Authentication Record.*/
->>>2 /.*Error: Signature calendar-based verification failed.*
-.*Error: Extender returned error 263.*/
+>>>2 /.*Error: Signature calendar-based verification failed.*/
 >>>= 7
