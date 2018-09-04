@@ -159,7 +159,8 @@ char *extend_help_toString(char *buf, size_t len) {
 			"[more_options] [--] input...\\>1\n\\>4"
 			"ksi extend [-i <in.ksig>] [-o <out.ksig>] -X <URL>\n"
 			"[--ext-user <user> --ext-key <key>] -P <URL> [--cnstr <oid=value>]...\n"
-			"[--pub-str <str>] [more_options] [--] input...\\>\n\n\n");
+			"[--pub-str <str>] [more_options] [--] input...\\>1\n\\>4"
+			"ksi extend -X <URL> [--ext-user <user> --ext-key <key>] --dump-conf\\>\n\n\n");
 
 	ret = PARAM_SET_helpToString(set, "i,o,X,ext-user,ext-key,ext-hmac-alg,P,cnstr,pub-str,replace-existing,V,input,d,dump,dump-conf,conf,apply-remote-conf,log", 1, 13, 80, buf + count, len - count);
 

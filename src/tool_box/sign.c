@@ -194,7 +194,8 @@ char *sign_help_toString(char *buf, size_t len) {
 	count += PST_snhiprintf(buf + count, len - count, 80, 0, 0, NULL, ' ', "Usage:\\>1\n\\>10"
 			"ksi sign -S <URL> [--aggr-user <user> --aggr-key <key>] [-H <alg>]\n"
 			"[--data-out <file>] [more_options] [-i <input>]... [<input>]...\n"
-			"[-- [<only file input>]...] [-o <out.ksig>]...\\>\n\n\n");
+			"[-- [<only file input>]...] [-o <out.ksig>]...\\>1\n\\>4"
+			"ksi sign -S <URL> [--aggr-user <user> --aggr-key <key>] --dump-conf\\>\n\n\n");
 
 	ret = PARAM_SET_helpToString(set, "i,o,H,S,aggr-user,aggr-key,aggr-hmac-alg,data-out,max-lvl,max-aggr-rounds,mask,prev-leaf,mdata,mdata-cli-id,mdata-mac-id,mdata-sqn-nr,mdata-req-tm,input,d,dump,dump-conf,show-progress,conf,apply-remote-conf,log", 1, 13, 80, buf + count, len - count);
 
