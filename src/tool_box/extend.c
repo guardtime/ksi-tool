@@ -316,6 +316,7 @@ static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX
 	int d = 0;
 	KSI_Signature *tmp = NULL;
 	KSI_PublicationsFile *pubFile = NULL;
+	KSI_PublicationRecord *pubRec = NULL;
 
 	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || ext == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
@@ -338,7 +339,6 @@ static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX
 
 	/* Obtain configuration from server. */
 	if (PARAM_SET_isSetByName(set, "apply-remote-conf")) {
-		KSI_PublicationRecord *pubRec = NULL;
 		KSI_PublicationData *pubData = NULL;
 		KSI_Integer *sigTime = NULL;
 		KSI_Integer *pubTime = NULL;
@@ -383,6 +383,7 @@ cleanup:
 	print_progressResult(res);
 
 	KSI_PublicationsFile_free(pubFile);
+	KSI_PublicationRecord_free(pubRec);
 	KSI_Signature_free(tmp);
 
 	return res;
