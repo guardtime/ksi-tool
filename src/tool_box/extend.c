@@ -270,50 +270,6 @@ cleanup:
 	return res;
 }
 
-static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext) {
-	int res;
-	int d = 0;
-	KSI_Signature *tmp = NULL;
-	KSI_PublicationsFile *pubFile = NULL;
-
-	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || ext == NULL) {
-		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
-		goto cleanup;
-	}
-
-
-	d = PARAM_SET_isSetByName(set, "d");
-
-	print_progressDesc(d, "%s", getPublicationsFileRetrieveDescriptionString(set));
-	res = KSITOOL_receivePublicationsFile(err, ksi, &pubFile);
-	ERR_CATCH_MSG(err, res, "Error: Unable receive publications file.");
-	print_progressResult(res);
-
-	if (!PARAM_SET_isSetByName(set, "publications-file-no-verify")) {
-		print_progressDesc(d, "Verifying publications file... ");
-		res = KSITOOL_verifyPublicationsFile(err, ksi, pubFile);
-		ERR_CATCH_MSG(err, res, "Error: Unable to verify publications file.");
-		print_progressResult(res);
-	}
-
-	print_progressDesc(d, "Extend the signature to the earliest available publication... ");
-	res = KSITOOL_extendSignature(err, ksi, sig, &tmp);
-	ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
-	print_progressResult(res);
-
-	*ext = tmp;
-	tmp = NULL;
-	res = KT_OK;
-
-cleanup:
-	print_progressResult(res);
-
-	KSI_PublicationsFile_free(pubFile);
-	KSI_Signature_free(tmp);
-
-	return res;
-}
-
 static int obtain_remote_conf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size_t *calFirst, size_t *calLast) {
 	int res = KT_UNKNOWN_ERROR;
 	KSI_Config *config = NULL;
@@ -347,7 +303,86 @@ static int obtain_remote_conf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size
 	if (calLast && last) *calLast = KSI_Integer_getUInt64(last);
 
 cleanup:
+	print_progressResult(res);
+
 	KSI_Config_free(config);
+
+	return res;
+}
+
+static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext) {
+	int res;
+	int d = 0;
+	KSI_Signature *tmp = NULL;
+	KSI_PublicationsFile *pubFile = NULL;
+
+	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || ext == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		goto cleanup;
+	}
+
+	d = PARAM_SET_isSetByName(set, "d");
+
+	print_progressDesc(d, "%s", getPublicationsFileRetrieveDescriptionString(set));
+	res = KSITOOL_receivePublicationsFile(err, ksi, &pubFile);
+	ERR_CATCH_MSG(err, res, "Error: Unable receive publications file.");
+	print_progressResult(res);
+
+	if (!PARAM_SET_isSetByName(set, "publications-file-no-verify")) {
+		print_progressDesc(d, "Verifying publications file... ");
+		res = KSITOOL_verifyPublicationsFile(err, ksi, pubFile);
+		ERR_CATCH_MSG(err, res, "Error: Unable to verify publications file.");
+		print_progressResult(res);
+	}
+
+	/* Obtain configuration from server. */
+	if (PARAM_SET_isSetByName(set, "apply-remote-conf")) {
+		KSI_PublicationRecord *pubRec = NULL;
+		KSI_PublicationData *pubData = NULL;
+		KSI_Integer *sigTime = NULL;
+		KSI_Integer *pubTime = NULL;
+		size_t calFirst = 0;
+		size_t calLast = 0;
+
+		res = KSI_Signature_getSigningTime(sig, &sigTime);
+		ERR_CATCH_MSG(err, res, "Error: Unable to get signing time.");
+
+		res = KSI_PublicationsFile_getNearestPublication(pubFile, sigTime, &pubRec);
+		ERR_CATCH_MSG(err, res, "Error: Unable to find nearest publication.");
+
+		res = KSI_PublicationRecord_getPublishedData(pubRec, &pubData);
+		ERR_CATCH_MSG(err, res, "Error: Unable to get publication data.");
+
+		res = KSI_PublicationData_getTime(pubData, &pubTime);
+		ERR_CATCH_MSG(err, res, "Error: Unable to get publication time.");
+
+		res = obtain_remote_conf(set, err, ksi, &calFirst, &calLast);
+		if (res != KT_OK) goto cleanup;
+
+		if ((calFirst != 0 && KSI_Integer_getUInt64(pubTime) < calFirst) ||
+				(calLast != 0 && KSI_Integer_getUInt64(pubTime) > calLast)) {
+			ERR_TRCKR_ADD(err, res = KT_EXT_CAL_TIME_OUT_OF_LIMIT,  "Error: Unable to extend signature to specified time.");
+			if (!PARAM_SET_isSetByName(set, "dump-conf")) {
+				ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion: Use --dump-conf for more information.");
+			}
+			goto cleanup;
+		}
+	}
+
+	print_progressDesc(d, "Extend the signature to the earliest available publication... ");
+	res = KSITOOL_extendSignature(err, ksi, sig, &tmp);
+	ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
+	print_progressResult(res);
+
+	*ext = tmp;
+	tmp = NULL;
+	res = KT_OK;
+
+cleanup:
+	print_progressResult(res);
+
+	KSI_PublicationsFile_free(pubFile);
+	KSI_Signature_free(tmp);
 
 	return res;
 }
@@ -389,7 +424,9 @@ static int extend_to_specified_time(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi
 	if ((calFirst != 0 && KSI_Integer_getUInt64(pubTime) < calFirst) ||
 			(calLast != 0 && KSI_Integer_getUInt64(pubTime) > calLast)) {
 		ERR_TRCKR_ADD(err, res = KT_EXT_CAL_TIME_OUT_OF_LIMIT,  "Error: Unable to extend signature to specified time.");
-		ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion: Use --dump-conf for more information.");
+		if (!PARAM_SET_isSetByName(set, "dump-conf")) {
+			ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion: Use --dump-conf for more information.");
+		}
 		goto cleanup;
 	}
 
@@ -428,6 +465,7 @@ static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_C
 	res = PARAM_SET_getStr(set, "pub-str", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &pubs_str);
 	ERR_CATCH_MSG(err, res, "Error: Unable get publication string.");
 
+
 	print_progressDesc(d, "%s", getPublicationsFileRetrieveDescriptionString(set));
 	res = KSITOOL_receivePublicationsFile(err, ksi, &pubFile);
 	ERR_CATCH_MSG(err, res, "Error: Unable receive publications file.");
@@ -442,12 +480,37 @@ static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_C
 	}
 	print_progressResult(res);
 
-
 	if (!PARAM_SET_isSetByName(set, "publications-file-no-verify")) {
 		print_progressDesc(d, "Verifying publications file... ");
 		res = KSITOOL_verifyPublicationsFile(err, ksi, pubFile);
 		ERR_CATCH_MSG(err, res, "Error: Unable to verify publications file.");
 		print_progressResult(res);
+	}
+
+	/* Obtain configuration from server. */
+	if (PARAM_SET_isSetByName(set, "apply-remote-conf")) {
+		KSI_PublicationData *pubData = NULL;
+		KSI_Integer *pubTime = NULL;
+		size_t calFirst = 0;
+		size_t calLast = 0;
+
+		res = KSI_PublicationRecord_getPublishedData(pub_rec, &pubData);
+		ERR_CATCH_MSG(err, res, "Error: Unable to get publication data.");
+
+		res = KSI_PublicationData_getTime(pubData, &pubTime);
+		ERR_CATCH_MSG(err, res, "Error: Unable to get publication time.");
+
+		res = obtain_remote_conf(set, err, ksi, &calFirst, &calLast);
+		if (res != KT_OK) goto cleanup;
+
+		if ((calFirst != 0 && KSI_Integer_getUInt64(pubTime) < calFirst) ||
+				(calLast != 0 && KSI_Integer_getUInt64(pubTime) > calLast)) {
+			ERR_TRCKR_ADD(err, res = KT_EXT_CAL_TIME_OUT_OF_LIMIT,  "Error: Unable to extend signature to specified time.");
+			if (!PARAM_SET_isSetByName(set, "dump-conf")) {
+				ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion: Use --dump-conf for more information.");
+			}
+			goto cleanup;
+		}
 	}
 
 	print_progressDesc(d, "Extend the signature to the specified publication... ");

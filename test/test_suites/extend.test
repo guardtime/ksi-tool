@@ -74,6 +74,24 @@ EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08
 >>>= 0
 
 
+# KSI extend to the specified publication. Obtain additional configuration from extender (note - extender conf is supported from PDU v2).
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/pub-str.ext.ksig -d --pub-str AAAAAA-C3ONWQ-AANO2I-UDF2Y3-YUANDE-FA4WDB-JMECT3-ZURJ6C-ZB4GSD-YUKTC7-PFGWY4-NZLPQP --apply-remote-conf --dump-conf --ext-pdu-v v2
+>>> /Extender configuration/
+>>>2 /(Receiving remote configuration)(.*ok.*)
+(Extend the signature to)(.*ok.*)
+(Verifying extended signature)(.*ok.*)
+(Saving signature)(.*ok.*)/
+>>>= 0
+
+# KSI extend to the nearest publication. Obtain additional configuration from extender (note - extender conf is supported from PDU v2).
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/nearest-pub.ext.ksig -d --apply-remote-conf --dump-conf --ext-pdu-v v2
+>>> /Extender configuration/
+>>>2 /(Receiving remote configuration)(.*ok.*)
+(Extend the signature to)(.*ok.*)
+(Verifying extended signature)(.*ok.*)
+(Saving signature)(.*ok.*)/
+>>>= 0
+
 ## 3
 # 3) Extend 1 file to specified publication. Replace the original file with the
 # extended version.
