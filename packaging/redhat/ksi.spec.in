@@ -52,10 +52,6 @@ Obsoletes: ksi <= 2.0.744-2
 %description
 KSI command-line tool, also called KSI tool. Execute %{name_tool} -h to view brief usage instructions.
 
-
-%post
-echo "Warning: Package ksitool is legacy version of the package ksi-tools and will be obsolated in the future."
-
 %prep
 %setup -q -n %{name_package}-%{version}
 
