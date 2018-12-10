@@ -377,7 +377,6 @@ static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX
 
 	if (pubFileOut != NULL) {
 		*pubFileOut = pubFile;
-		pubFile = NULL;
 	}
 
 	*ext = tmp;
@@ -527,7 +526,6 @@ static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_C
 
 	if (pubFileOut != NULL) {
 		*pubFileOut = pubFile;
-		pubFile = NULL;
 	}
 
 	*ext = tmp;
@@ -723,7 +721,7 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 	const char *mode = NULL;
 	KSI_PolicyVerificationResult *result_ext = NULL;
 	KSI_PolicyVerificationResult *result_sig = NULL;
-	KSI_PublicationsFile *pubFile = NULL;
+
 	int dump_flags = OBJPRINT_NONE;
 
 	if (set == NULL || err == NULL || ksi == NULL || task_id > 2) {
@@ -751,6 +749,10 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 		char *in_fname = NULL;
 		const char *save_to = NULL;
 		char buf[1024] = "";
+
+		/* This must not be freed! */
+		KSI_PublicationsFile *pubFile = NULL;
+
 		if (i > 0 && (d || dump)) print_debug(" ----------------------------\n");
 
 		PARAM_SET_getStr(set, "i,input", NULL, PST_PRIORITY_NONE, i, &in_fname);
@@ -840,6 +842,5 @@ cleanup:
 	KSI_PolicyVerificationResult_free(result_sig);
 	KSI_Signature_free(sig);
 	KSI_Signature_free(ext);
-	KSI_PublicationsFile_free(pubFile);
 	return res;
 }

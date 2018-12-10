@@ -23,6 +23,7 @@
 #include <ksi/ksi.h>
 #include <ksi/compatibility.h>
 #include <ksi/policy.h>
+#include <ksi/err.h>
 #include "param_set/param_set.h"
 #include "param_set/parameter.h"
 #include "param_set/task_def.h"

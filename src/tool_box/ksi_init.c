@@ -446,31 +446,6 @@ cleanup:
 	return res;
 }
 
-static int tool_init_ksi_publications_file(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set) {
-	int res = KSI_UNKNOWN_ERROR;
-	KSI_PublicationsFile *tmp = NULL;
-
-	if (ksi == NULL || err == NULL || set == NULL) {
-		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
-		goto cleanup;
-	}
-
-	/**
-	 * If there is a direct need to not verify publications file do the publications
-	 * file request manually so KSI API do not verify the file extracted by the API
-	 * user.
-	 */
-	if (PARAM_SET_isSetByName(set, "publications-file-no-verify")) {
-		KSI_receivePublicationsFile(ksi, &tmp);
-	}
-
-	res = KT_OK;
-
-cleanup:
-
-	return res;
-}
-
 static int tool_init_hmac_alg(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set) {
 	int res;
 	KSI_HashAlgorithm aggr_alg = KSI_HASHALG_INVALID;
@@ -563,12 +538,6 @@ int TOOL_init_ksi(PARAM_SET *set, KSI_CTX **ksi, ERR_TRCKR **error, SMART_FILE *
 	res = tool_init_pdu(tmp, err, set);
 	if (res != KT_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to configure KSI PDU version.");
-		goto cleanup;
-	}
-
-	res = tool_init_ksi_publications_file(tmp, err, set);
-	if (res != KT_OK) {
-		ERR_TRCKR_ADD(err, res, "Error: Unable to configure KSI publications file.");
 		goto cleanup;
 	}
 
