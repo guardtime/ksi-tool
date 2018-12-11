@@ -23,6 +23,7 @@
 #include <ksi/ksi.h>
 #include <ksi/compatibility.h>
 #include <ksi/policy.h>
+#include <ksi/err.h>
 #include "param_set/param_set.h"
 #include "param_set/parameter.h"
 #include "param_set/task_def.h"
@@ -366,6 +367,7 @@ static int signature_verify_general(PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 	int d = PARAM_SET_isSetByName(set, "d");
 	int x = PARAM_SET_isSetByName(set, "x");
 	KSI_PublicationData *pub_data = NULL;
+	KSI_PublicationsFile *pubFile = NULL;
 	static const char *task = "Signature verification according to trust anchor";
 
 	/**
@@ -376,11 +378,21 @@ static int signature_verify_general(PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 		ERR_CATCH_MSG(err, res, "Error: Failed to get publication data.");
 	}
 
+	/* If user insists to ignore the publications file and publications file URI is set, try to retrieve it.
+	   If it fails ignore the incident and let the general verification handle the case. */
+	if (PARAM_SET_isSetByName(set, "publications-file-no-verify,P")) {
+		res = KSITOOL_receivePublicationsFile(err, ksi, &pubFile);
+		if (res != KSI_OK) {
+			KSI_ERR_clearErrors(ksi);
+			res = KSI_OK;
+		}
+	}
+
 	/**
 	 * Verify signature.
 	 */
 	print_progressDesc(d, "%s... ", task);
-	res = KSITOOL_SignatureVerify_general(err, sig, ksi, hsh, pub_data, x, out);
+	res = KSITOOL_SignatureVerify_general(err, sig, ksi, hsh, pubFile, pub_data, x, out);
 	if (res != KSI_OK && *out != NULL) {
 		KSI_RuleVerificationResult *verificationResult = NULL;
 
@@ -403,6 +415,7 @@ cleanup:
 	print_progressResult(res);
 
 	KSI_PublicationData_free(pub_data);
+	KSI_PublicationsFile_free(pubFile);
 
 	return res;
 }
@@ -449,12 +462,20 @@ static int signature_verify_key_based(PARAM_SET *set, ERR_TRCKR *err,
 	int res;
 	int d = PARAM_SET_isSetByName(set, "d");
 	static const char *task = "Signature key-based verification";
+	KSI_PublicationsFile *pubFile = NULL;
+
 
 	/**
 	 * Verify signature.
 	 */
 	print_progressDesc(d, "%s... ", task);
-	res = KSITOOL_SignatureVerify_keyBased(err, sig, ksi, hsh, out);
+
+	if (PARAM_SET_isSetByName(set, "publications-file-no-verify")) {
+		res = KSITOOL_receivePublicationsFile(err, ksi, &pubFile);
+		ERR_CATCH_MSG(err, res, "Error: Unable receive publications file.");
+	}
+
+	res = KSITOOL_SignatureVerify_keyBased(err, sig, ksi, hsh, pubFile, out);
 	if (res != KSI_OK && *out != NULL) {
 		KSI_RuleVerificationResult *verificationResult = NULL;
 
@@ -474,6 +495,7 @@ static int signature_verify_key_based(PARAM_SET *set, ERR_TRCKR *err,
 
 cleanup:
 
+	KSI_PublicationsFile_free(pubFile);
 	print_progressResult(res);
 
 	return res;
@@ -536,12 +558,19 @@ static int signature_verify_publication_based_with_pubfile(PARAM_SET *set, ERR_T
 	int d = PARAM_SET_isSetByName(set, "d");
 	int x = PARAM_SET_isSetByName(set, "x");
 	static const char *task = "Signature publication-based verification with publications file";
+	KSI_PublicationsFile *pubFile = NULL;
 
 	/**
 	 * Verify signature.
 	 */
 	print_progressDesc(d, "%s... ", task);
-	res = KSITOOL_SignatureVerify_publicationsFileBased(err, sig, ksi, hsh, x, out);
+
+	if (PARAM_SET_isSetByName(set, "publications-file-no-verify")) {
+		res = KSITOOL_receivePublicationsFile(err, ksi, &pubFile);
+		ERR_CATCH_MSG(err, res, "Error: Unable receive publications file.");
+	}
+
+	res = KSITOOL_SignatureVerify_publicationsFileBased(err, sig, ksi, hsh, pubFile, x, out);
 	if (res != KSI_OK && *out != NULL) {
 		if (res != KT_OK) {
 			KSI_RuleVerificationResult *verificationResult = NULL;

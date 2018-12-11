@@ -211,15 +211,48 @@ cleanup:
 	return res;
 }
 
-int KSITOOL_extendSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Signature *sig, KSI_Signature **ext) {
-	int res;
+int KSITOOL_extendSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Signature *sig, KSI_PublicationsFile* pubfile, KSI_Signature **ext) {
+	int res = KSI_UNKNOWN_ERROR;
+	KSI_PublicationsFile *pubFile = NULL;
+	KSI_Integer *signingTime = NULL;
+	KSI_PublicationRecord *pubRec = NULL;
+	KSI_Signature *extSig = NULL;
 
 	if (err == NULL || ctx == NULL || sig == NULL || ext == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		return res;
 	}
 
-	res = KSI_extendSignature(ctx, sig, ext);
+	if (pubfile != NULL) {
+		pubFile = KSI_PublicationsFile_ref(pubfile);
+	} else {
+		res = KSITOOL_receivePublicationsFile(err, ctx, &pubFile);
+		if (res != KSI_OK) goto cleanup;
+
+		res = KSITOOL_verifyPublicationsFile(err, ctx, pubFile);
+		if (res != KSI_OK) goto cleanup;
+	}
+
+
+
+	res = KSI_Signature_getSigningTime(sig, &signingTime);
+	if (res != KSI_OK) goto ksierrhandle;
+
+	res = KSI_PublicationsFile_getNearestPublication(pubFile, signingTime, &pubRec);
+	if (res != KSI_OK) goto ksierrhandle;
+
+	if (pubRec == NULL) {
+		res = KSI_EXTEND_NO_SUITABLE_PUBLICATION;
+		goto ksierrhandle;
+	}
+
+	res = KSI_Signature_extendWithPolicy(sig, ctx, pubRec, KSI_VERIFICATION_POLICY_INTERNAL, NULL, &extSig);
+	if (res != KSI_OK) goto ksierrhandle;
+
+	*ext = extSig;
+	extSig = NULL;
+
+ksierrhandle:
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -227,6 +260,12 @@ int KSITOOL_extendSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Signature *sig, KS
 		appendExtenderErrors(err, res);
 		appendPubFileErros(err, res);
 	}
+
+cleanup:
+
+	KSI_PublicationRecord_free(pubRec);
+	KSI_PublicationsFile_free(pubFile);
+	KSI_Signature_free(extSig);
 
 	return res;
 }
@@ -329,7 +368,7 @@ int KSITOOL_Aggregator_getConf(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Config **config
 	return res;
 }
 
-int KSITOOL_SignatureVerify_with_publications_file_or_calendar(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
+int KSITOOL_SignatureVerify_with_publications_file_or_calendar(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh, KSI_PublicationsFile* pubFile,
                                           int extperm, KSI_PolicyVerificationResult **result) {
 	int res;
 
@@ -339,7 +378,7 @@ int KSITOOL_SignatureVerify_with_publications_file_or_calendar(ERR_TRCKR *err, K
 	}
 
     if (KSITOOL_Signature_isPublicationRecordPresent(sig)) {
-        res = KSITOOL_SignatureVerify_publicationsFileBased(err, sig, ctx, hsh, extperm, result);
+        res = KSITOOL_SignatureVerify_publicationsFileBased(err, sig, ctx, hsh, pubFile, extperm, result);
     } else {
         res = KSITOOL_SignatureVerify_calendarBased(err, sig, ctx, hsh, result);
     }
@@ -347,7 +386,7 @@ int KSITOOL_SignatureVerify_with_publications_file_or_calendar(ERR_TRCKR *err, K
     return res;
 }
 
-int KSITOOL_SignatureVerify_general(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
+int KSITOOL_SignatureVerify_general(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh, KSI_PublicationsFile* pubFile,
 														 KSI_PublicationData *pubdata, int extperm,
 														 KSI_PolicyVerificationResult **result){
 	int res;
@@ -358,7 +397,7 @@ int KSITOOL_SignatureVerify_general(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX 
 		return res;
 	}
 
-	res = verify_signature(sig, ctx, hsh, extperm, NULL, pubdata, KSI_VERIFICATION_POLICY_GENERAL, result);
+	res = verify_signature(sig, ctx, hsh, extperm, pubFile, pubdata, KSI_VERIFICATION_POLICY_GENERAL, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -404,7 +443,7 @@ int KSITOOL_SignatureVerify_calendarBased(ERR_TRCKR *err, KSI_Signature *sig, KS
 	return res;
 }
 
-int KSITOOL_SignatureVerify_keyBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
+int KSITOOL_SignatureVerify_keyBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh, KSI_PublicationsFile* pubFile,
 									 KSI_PolicyVerificationResult **result){
 	int res;
 
@@ -413,7 +452,7 @@ int KSITOOL_SignatureVerify_keyBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX
 		return res;
 	}
 
-	res = verify_signature(sig, ctx, hsh, 0, NULL, NULL, KSI_VERIFICATION_POLICY_KEY_BASED, result);
+	res = verify_signature(sig, ctx, hsh, 0, pubFile, NULL, KSI_VERIFICATION_POLICY_KEY_BASED, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -422,7 +461,7 @@ int KSITOOL_SignatureVerify_keyBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX
 	return res;
 }
 
-int KSITOOL_SignatureVerify_publicationsFileBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
+int KSITOOL_SignatureVerify_publicationsFileBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh, KSI_PublicationsFile* pubFile,
 												  int extperm,
 												  KSI_PolicyVerificationResult **result){
 	int res;
@@ -432,7 +471,7 @@ int KSITOOL_SignatureVerify_publicationsFileBased(ERR_TRCKR *err, KSI_Signature 
 		return res;
 	}
 
-	res = verify_signature(sig, ctx, hsh, extperm, NULL, NULL, KSI_VERIFICATION_POLICY_PUBLICATIONS_FILE_BASED, result);
+	res = verify_signature(sig, ctx, hsh, extperm, pubFile, NULL, KSI_VERIFICATION_POLICY_PUBLICATIONS_FILE_BASED, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {

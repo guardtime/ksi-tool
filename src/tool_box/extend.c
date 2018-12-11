@@ -42,9 +42,9 @@
 #include "tool.h"
 #include "common.h"
 
-static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext);
+static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_PublicationsFile **pubFileOut, KSI_Signature **ext);
 static int extend_to_specified_time(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, COMPOSITE *extra, KSI_Signature *sig, KSI_Signature **ext);
-static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext);
+static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_PublicationsFile **pubFileOut, KSI_Signature **ext);
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int check_other_input_param_errors(PARAM_SET *set, ERR_TRCKR *err);
@@ -243,7 +243,7 @@ cleanup:
 	return res;
 }
 
-static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *ext, const char *fname, const char *mode, KSI_PolicyVerificationResult **result) {
+static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *ext, KSI_PublicationsFile* pubFile, const char *fname, const char *mode, KSI_PolicyVerificationResult **result) {
 	int res;
 	int d;
 
@@ -256,7 +256,7 @@ static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Sig
 	d = PARAM_SET_isSetByName(set, "d");
 
 	print_progressDesc(d, "Verifying extended signature... ");
-	res = KSITOOL_SignatureVerify_with_publications_file_or_calendar(err, ext, ksi, NULL, 1, result);
+	res = KSITOOL_SignatureVerify_with_publications_file_or_calendar(err, ext, ksi, NULL, pubFile, 1, result);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify extended signature.");
 	print_progressResult(res);
 
@@ -311,7 +311,7 @@ cleanup:
 	return res;
 }
 
-static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext) {
+static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_PublicationsFile **pubFileOut, KSI_Signature **ext) {
 	int res;
 	int d = 0;
 	KSI_Signature *tmp = NULL;
@@ -371,9 +371,13 @@ static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX
 	}
 
 	print_progressDesc(d, "Extend the signature to the earliest available publication... ");
-	res = KSITOOL_extendSignature(err, ksi, sig, &tmp);
+	res = KSITOOL_extendSignature(err, ksi, sig, pubFile, &tmp);
 	ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
 	print_progressResult(res);
+
+	if (pubFileOut != NULL) {
+		*pubFileOut = pubFile;
+	}
 
 	*ext = tmp;
 	tmp = NULL;
@@ -450,7 +454,7 @@ cleanup:
 	return res;
 }
 
-static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext) {
+static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_PublicationsFile **pubFileOut, KSI_Signature **ext) {
 	int res;
 	int d = 0;
 	KSI_Signature *tmp = NULL;
@@ -519,6 +523,10 @@ static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_C
 	res = KSITOOL_Signature_extend(err, sig, ksi, pub_rec, &tmp);
 	ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
 	print_progressResult(res);
+
+	if (pubFileOut != NULL) {
+		*pubFileOut = pubFile;
+	}
 
 	*ext = tmp;
 	tmp = NULL;
@@ -713,6 +721,7 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 	const char *mode = NULL;
 	KSI_PolicyVerificationResult *result_ext = NULL;
 	KSI_PolicyVerificationResult *result_sig = NULL;
+
 	int dump_flags = OBJPRINT_NONE;
 
 	if (set == NULL || err == NULL || ksi == NULL || task_id > 2) {
@@ -740,6 +749,10 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 		char *in_fname = NULL;
 		const char *save_to = NULL;
 		char buf[1024] = "";
+
+		/* This must not be freed! */
+		KSI_PublicationsFile *pubFile = NULL;
+
 		if (i > 0 && (d || dump)) print_debug(" ----------------------------\n");
 
 		PARAM_SET_getStr(set, "i,input", NULL, PST_PRIORITY_NONE, i, &in_fname);
@@ -765,20 +778,20 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 
 		switch(task_id) {
 			case EXTEND_TO_HEAD:
-				res = extend_to_nearest_publication(set, err, ksi, sig, &ext);
+				res = extend_to_nearest_publication(set, err, ksi, sig, &pubFile, &ext);
 				break;
 			case EXTEND_TO_TIME:
 				res = extend_to_specified_time(set, err, ksi, &extra, sig, &ext);
 				break;
 			case EXTEND_TO_PUB_STR:
-				res = extend_to_specified_publication(set, err, ksi, sig, &ext);
+				res = extend_to_specified_publication(set, err, ksi, sig, &pubFile, &ext);
 				break;
 		}
 		if (res != KT_OK) goto cleanup;
 
 		save_to = get_output_file_name(set, err, "i,input", "o", how_to_save, i, buf, sizeof(buf), generate_file_name);
 
-		res = verify_and_save(set, err, ksi, ext, save_to, mode, &result_ext);
+		res = verify_and_save(set, err, ksi, ext, pubFile, save_to, mode, &result_ext);
 		if (res != KT_OK) goto cleanup;
 
 		if (PARAM_SET_isSetByName(set, "dump")) {

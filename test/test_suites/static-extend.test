@@ -32,6 +32,17 @@ EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/ou
 (Saving signature)(.*ok.*)/
 >>>= 0
 
+# Extend signature to the nearest publication. Ignore publications file verification. First make sure that extending fails without --publications-file-no-verify!
+EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/ok-sig-2014-08-01.1-extended-1.ksig -d --cnstr E=dummy@test.com --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
+>>>2 /Verifying publications file.*failed([^$]|[
+])*Unable to verify publications file.*The PKI certificate is not trusted.*/
+>>>= 10
+EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/ok-sig-2014-08-01.1-extended-1.ksig -d --cnstr E=dummy@test.com --publications-file-no-verify --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
+>>>2 /(Extend the signature to the earliest available publication)(.*ok.*)
+(Verifying extended signature)(.*ok.*)
+(Saving signature)(.*ok.*)/
+>>>= 0
+
 # Extend signature to the nearest publication. Specify service URI.
 EXECUTABLE extend -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/ok-sig-2014-08-01.1-extended-2.ksig -d -X file://test/resource/server/ok-sig-2014-08-01.1-extend_response.tlv --ext-user anon --ext-key anon -P file://test/resource/publication/ksi-publications.bin --cnstr email=test@test.com -V test/resource/certificates/ok-test.crt
 >>>2 /(Extend the signature to the earliest available publication)(.*ok.*)
