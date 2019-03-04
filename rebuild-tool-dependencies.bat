@@ -63,7 +63,7 @@ if /I "%argc%" EQU "2" (
 	echo.
 	echo   This script needs exactly 2 parameters - make options for libksi and
 	echo   libparamset. Extra parameter 3 can be used. If given value
-	echo   --ign-online-dep-test tests for dependencies are ignored.
+	echo   --ign-dep-online-err tests for dependencies are ignored.
 	echo.
 	echo   It will create a temporary folder '%tmp_dir%'.
 	echo   If successful will output include and libary files to corresponding
@@ -78,7 +78,7 @@ if /I "%argc%" EQU "2" (
 	exit /B 1
 )
 
-if [%ignore_exit_code%] == [--ign-online-dep-test] echo "NB! NB! Tests for dependencies ignored."
+if [%ignore_exit_code%] == [--ign-dep-online-err] echo "NB! NB! Tests for dependencies ignored."
 
 
 REM Get and build dependecies.
@@ -98,16 +98,16 @@ cd %tmp_dir%
 	if %errorlevel% neq 0 exit /b %errorlevel%
 
 	nmake %libksimakeopt% clean test
-	if %errorlevel% neq 0 if not [%ignore_exit_code%] == [--ign-online-dep-test] exit /b %errorlevel%
+	if %errorlevel% neq 0 if not [%ignore_exit_code%] == [--ign-dep-online-err] exit /b %errorlevel%
   cd ..
 
   cd %libparamset_dir_name%
 	git checkout %libparamset_version%
-	if %errorlevel% neq 0 if not [%ignore_exit_code%] == [--ign-online-dep-test] exit /b %errorlevel%
+	if %errorlevel% neq 0 if not [%ignore_exit_code%] == [--ign-dep-online-err] exit /b %errorlevel%
 
 
 	nmake %libparamsetmakeopt% clean test
-	if %errorlevel% neq 0 if not [%ignore_exit_code%] == [--ign-online-dep-test] exit /b %errorlevel%
+	if %errorlevel% neq 0 if not [%ignore_exit_code%] == [--ign-dep-online-err] exit /b %errorlevel%
 
 	REM Remove when libparamset windows build is fixed.
 	out\bin\test.exe .\test

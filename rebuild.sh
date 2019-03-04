@@ -87,7 +87,7 @@ help_txt() {
 	echo "         It is useful when building packages with dependencies that are not"
 	echo "         installed by package manager."
 	echo ""
-	echo "  --ign-online-dep-test"
+	echo "  --ign-dep-online-err"
 	echo "       - This option can be combined with --get-dep-online to ignore failing"
 	echo "         tests of the dependencies built. Note that actually it ignores the exit"
 	echo "         code of the rebuild script and continues in case of error. Make sure"
@@ -223,8 +223,8 @@ while [ "$1" != "" ]; do
 								 rpmbuild_flags="--nodeps"
 								 debuild_flags="-d"
 								 ;;
-		--ign-online-dep-test )	 echo "Ignoring test results while building online dependencies"
-								 rebuild_tool_dependencies_flags="--ignore-test-results"
+		--ign-dep-online-err )	 echo "Ignoring errors while building online dependencies."
+								 rebuild_tool_dependencies_flags="--ignore-build-error"
 								 ;;
 		-v )					 is_verbose=true
 								 ;;

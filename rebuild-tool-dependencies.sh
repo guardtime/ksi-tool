@@ -34,7 +34,7 @@ ignore_exit_code=false
 
 while [ "$1" != "" ]; do
 	case $1 in
-		--ignore-test-results )	 echo "When building libksi and libparamset, result of the tests is ignored."
+		--ignore-build-error )	 echo "When building libksi and libparamset, result of the tests is ignored."
 								 ignore_exit_code=true
 								 ;;
 		* )						 echo "Unknown token '$1' from command-line."
