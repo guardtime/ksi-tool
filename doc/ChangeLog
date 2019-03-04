@@ -1,3 +1,5 @@
+* FEATURE: Script rebuild.sh has new option --ign-online-dep-test to ignore test results during online build (--get-dep-online).
+* FEATURE: Script WinBuildOnline.bat has new option --ign-online-dep-test to ignore test results during online build.
 * BUGFIX: Fixed extender '--apply-remote-conf' handling.
 
 Version 2.8

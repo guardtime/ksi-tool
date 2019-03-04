@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# Copyright 2013-2018 Guardtime, Inc.
+# Copyright 2013-2019 Guardtime, Inc.
 #
 # This file is part of the Guardtime client SDK.
 #
@@ -30,7 +30,19 @@ lib_out_dir="dependencies"
 libksi_dir_name="libksi"
 libparamset_dir_name="libparamset"
 
+ignore_exit_code=false
 
+while [ "$1" != "" ]; do
+	case $1 in
+		--ignore-test-results )	 echo "When building libksi and libparamset, result of the tests is ignored."
+								 ignore_exit_code=true
+								 ;;
+		* )						 echo "Unknown token '$1' from command-line."
+	esac
+	shift
+done
+
+rm -rf $tmp_build_dir_name
 mkdir -p $tmp_build_dir_name
 rm -rf $lib_out_dir
 
@@ -40,12 +52,12 @@ cd $tmp_build_dir_name
 
   cd $libksi_dir_name
     git checkout $libksi_version
-    ./rebuild.sh
+    ./rebuild.sh || $ignore_exit_code
   cd ..
 
   cd $libparamset_dir_name
     git checkout $libparamset_version
-    ./rebuild.sh
+    ./rebuild.sh || $ignore_exit_code
   cd ..
 cd ..
 

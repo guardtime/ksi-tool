@@ -56,7 +56,10 @@ Build process
 
     WinBuildOnline.bat is a convenience script that will download and build
     libksi (built with Windows native libraries) and libparamset. Result is
-    statically linked KSI tool.
+    statically linked KSI tool. If in some reason tests of the libraries fail,
+	use option --ign-online-dep-test to skip the failure. NB! In that case
+	You must be sure that You KNOW WHY the tests are FAILING and it is SAFE
+	to skip them.
 
     WinBuild.bat.sample is a sample build script. It must be modified to get
     the build working.
