@@ -54,6 +54,12 @@ if /I "%argc%" EQU "2" (
 	echo Rebuilding dependencies for KSI tool.
 ) else if /I "%argc%" EQU "3" (
 	echo Rebuilding dependencies for KSI tool without testing.
+	if /I "%ignore_exit_code%" EQU "--ign-dep-online-err" (
+		echo "NB! Tests for dependencies ignored."
+	) else (
+		echo Unknown parameter %ignore_exit_code%
+		exit /B 1
+	)
 ) else (
 	echo Usage:
 	echo.
@@ -77,9 +83,6 @@ if /I "%argc%" EQU "2" (
 	echo.    %libparamset_dll_dir%
 	exit /B 1
 )
-
-if /I "%ignore_exit_code%" EQU "--ign-dep-online-err" echo "NB! Tests for dependencies ignored."
-
 
 
 REM Get and build dependecies.
