@@ -216,10 +216,10 @@ while [ "$1" != "" ]; do
 								 extra_compiler_flags="$extra_compiler_flags $1"
 								 is_extra_l_or_c_flags=true
 								 ;;
-		--get-dep-online )	     echo "Download and build libksi and libparamset."
+		--get-dep-online )		 echo "Download and build libksi and libparamset."
 								 do_build_dependecies=true
 								 ;;
-		--no-dep-check )	     echo "Ignoring 'build depends on' when building a package."
+		--no-dep-check )		 echo "Ignoring 'build depends on' when building a package."
 								 rpmbuild_flags="--nodeps"
 								 debuild_flags="-d"
 								 ;;
@@ -232,6 +232,7 @@ while [ "$1" != "" ]; do
 								 ;;
 		* )						 echo "Unknown token '$1' from command-line."
 								 show_help=true
+								 exit 1
 	esac
 	shift
 done

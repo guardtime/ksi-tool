@@ -59,14 +59,14 @@ if /I "%argc%" EQU "2" (
 	echo.
 	echo   %0 'libksi make options' 'libparamset make options'
 	echo.
-    echo Description:
+	echo Description:
 	echo.
 	echo   This script needs exactly 2 parameters - make options for libksi and
 	echo   libparamset. Extra parameter 3 can be used. If given value
 	echo   --ign-dep-online-err tests for dependencies are ignored.
 	echo.
-	echo   It will create a temporary folder '%tmp_dir%'.
-	echo   If successful will output include and libary files to corresponding
+	echo   A temporary folder '%tmp_dir%' will be created.
+	echo   On success, include and library files will be generated into following folders:
 	echo   folders:
 	echo.
 	echo.    %libksi_inc_dir%

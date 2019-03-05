@@ -38,6 +38,7 @@ while [ "$1" != "" ]; do
 								 ignore_exit_code=true
 								 ;;
 		* )						 echo "Unknown token '$1' from command-line."
+								 exit 1
 	esac
 	shift
 done
