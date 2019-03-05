@@ -78,7 +78,8 @@ if /I "%argc%" EQU "2" (
 	exit /B 1
 )
 
-if [%ignore_exit_code%] == [--ign-dep-online-err] echo "NB! NB! Tests for dependencies ignored."
+if /I "%ignore_exit_code%" EQU "--ign-dep-online-err" echo "NB! Tests for dependencies ignored."
+
 
 
 REM Get and build dependecies.
@@ -98,16 +99,16 @@ cd %tmp_dir%
 	if %errorlevel% neq 0 exit /b %errorlevel%
 
 	nmake %libksimakeopt% clean test
-	if %errorlevel% neq 0 if not [%ignore_exit_code%] == [--ign-dep-online-err] exit /b %errorlevel%
+	if %errorlevel% neq 0 if /I not "%ignore_exit_code%" EQU "--ign-dep-online-err" exit /b %errorlevel%
   cd ..
 
   cd %libparamset_dir_name%
 	git checkout %libparamset_version%
-	if %errorlevel% neq 0 if not [%ignore_exit_code%] == [--ign-dep-online-err] exit /b %errorlevel%
+	if %errorlevel% neq 0 if /I not "%ignore_exit_code%" EQU "--ign-dep-online-err" exit /b %errorlevel%
 
 
 	nmake %libparamsetmakeopt% clean test
-	if %errorlevel% neq 0 if not [%ignore_exit_code%] == [--ign-dep-online-err] exit /b %errorlevel%
+	if %errorlevel% neq 0 if /I not "%ignore_exit_code%" EQU "--ign-dep-online-err" exit /b %errorlevel%
 
 	REM Remove when libparamset windows build is fixed.
 	out\bin\test.exe .\test
