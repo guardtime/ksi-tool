@@ -45,22 +45,34 @@ set libparamset_dll_dir=%out_dir%\libparamset\dll
 REM Parsing input parameters.
 set libksimakeopt=%~1
 set libparamsetmakeopt=%~2
+set ignore_exit_code=%~3
 
 set argc=0
 for %%x in (%*) do Set /A argc+=1
 
 if /I "%argc%" EQU "2" (
-	echo Rebuilding dependecies for KSI tool.
+	echo Rebuilding dependencies for KSI tool.
+) else if /I "%argc%" EQU "3" (
+	echo Rebuilding dependencies for KSI tool without testing.
+	if /I "%ignore_exit_code%" EQU "--ign-dep-online-err" (
+		echo "NB! Tests for dependencies ignored."
+	) else (
+		echo Unknown parameter %ignore_exit_code%
+		exit /B 1
+	)
 ) else (
 	echo Usage:
 	echo.
 	echo   %0 'libksi make options' 'libparamset make options'
 	echo.
-    echo Description:
+	echo Description:
 	echo.
 	echo   This script needs exactly 2 parameters - make options for libksi and
-	echo   libparamset. It will create a temporary folder '%tmp_dir%'.
-	echo   If successful will output include and libary files to corresponding
+	echo   libparamset. Extra parameter 3 can be used. If given value
+	echo   --ign-dep-online-err tests for dependencies are ignored.
+	echo.
+	echo   A temporary folder '%tmp_dir%' will be created.
+	echo   On success, include and library files will be generated into following folders:
 	echo   folders:
 	echo.
 	echo.    %libksi_inc_dir%
@@ -71,6 +83,7 @@ if /I "%argc%" EQU "2" (
 	echo.    %libparamset_dll_dir%
 	exit /B 1
 )
+
 
 REM Get and build dependecies.
 if exist %tmp_dir% rd /S /Q %tmp_dir%
@@ -89,16 +102,16 @@ cd %tmp_dir%
 	if %errorlevel% neq 0 exit /b %errorlevel%
 
 	nmake %libksimakeopt% clean test
-	if %errorlevel% neq 0 exit /b %errorlevel%
+	if %errorlevel% neq 0 if /I not "%ignore_exit_code%" EQU "--ign-dep-online-err" exit /b %errorlevel%
   cd ..
 
   cd %libparamset_dir_name%
 	git checkout %libparamset_version%
-	if %errorlevel% neq 0 exit /b %errorlevel%
+	if %errorlevel% neq 0 if /I not "%ignore_exit_code%" EQU "--ign-dep-online-err" exit /b %errorlevel%
 
 
 	nmake %libparamsetmakeopt% clean test
-	if %errorlevel% neq 0 exit /b %errorlevel%
+	if %errorlevel% neq 0 if /I not "%ignore_exit_code%" EQU "--ign-dep-online-err" exit /b %errorlevel%
 
 	REM Remove when libparamset windows build is fixed.
 	out\bin\test.exe .\test

@@ -1,6 +1,6 @@
 GOTO copyrightend
 
-    Copyright 2013-2018 Guardtime, Inc.
+    Copyright 2013-2019 Guardtime, Inc.
 
     This file is part of the Guardtime client SDK.
 
@@ -35,7 +35,7 @@ SET rtl=MT
 SET dll=lib
 
 nmake clean
-call rebuild-tool-dependencies.bat "RTL=%rtl% DLL=%dll% NET_PROVIDER=WININET CRYPTO_PROVIDER=CRYPTOAPI" "RTL=%rtl% DLL=%dll%"
+call rebuild-tool-dependencies.bat "RTL=%rtl% DLL=%dll% NET_PROVIDER=WININET CRYPTO_PROVIDER=CRYPTOAPI" "RTL=%rtl% DLL=%dll%" %1
 nmake  RTL=%rtl% KSI_LIB=%dll% LNK_WININET=yes LNK_CRYPTOAPI=yes LNK_WINHTTP=no LNK_CURL=no LNK_OPENSSL=no
 
 endlocal
