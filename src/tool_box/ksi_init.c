@@ -144,7 +144,7 @@ cleanup:
 }
 
 static int tool_init_ksi_network_provider(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set) {
-	int res;
+	int res = KT_UNKNOWN_ERROR;
 	char *aggr_url = NULL;
 	char *aggr_user = NULL;
 	char *aggr_pass = NULL;
@@ -176,21 +176,28 @@ static int tool_init_ksi_network_provider(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SE
 	PARAM_SET_getObj(set, "C", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&networkConnectionTimeout);
 	PARAM_SET_getObj(set, "c", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&networkTransferTimeout);
 
-	aggr_user = aggr_user == NULL ? "anon" : aggr_user;
-	aggr_pass = aggr_pass == NULL ? "anon" : aggr_pass;
-	ext_user = ext_user == NULL ? "anon" : ext_user;
-	ext_pass = ext_pass == NULL ? "anon" : ext_pass;
-
 
 	/**
 	 * Set service urls.
 	 */
 	if (ext_url != NULL) {
+		res = KT_OK;
+		if (ext_user == NULL || ext_pass == NULL) res = KT_INVALID_CMD_PARAM;
+		if (ext_user == NULL) ERR_TRCKR_ADD(err, res, "Error: Extender user (null) not set!");
+		if (ext_pass == NULL) ERR_TRCKR_ADD(err, res, "Error: Extender key (null) not set!");
+		ERR_CATCH_MSG(err, res, "Error: Unable set extender.");
+
 		res = KSI_CTX_setExtender(ksi, ext_url, ext_user, ext_pass);
 		ERR_CATCH_MSG(err, res, "Error: Unable set extender.");
 	}
 
 	if (aggr_url != NULL) {
+		res = KT_OK;
+		if (aggr_user == NULL || aggr_pass == NULL) res = KT_INVALID_CMD_PARAM;
+		if (aggr_user == NULL) ERR_TRCKR_ADD(err, res, "Error: Aggregator user (null) not set!");
+		if (aggr_pass == NULL) ERR_TRCKR_ADD(err, res, "Error: Aggregator key (null) not set!");
+		ERR_CATCH_MSG(err, res, "Error: Unable set aggregator.");
+
 		res = KSI_CTX_setAggregator(ksi, aggr_url, aggr_user, aggr_pass);
 		ERR_CATCH_MSG(err, res, "Error: Unable set aggregator.");
 	}
