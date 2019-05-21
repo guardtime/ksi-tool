@@ -28,6 +28,7 @@
 #include "tool.h"
 #include "default_tasks.h"
 #include "common.h"
+#include "smart_file.h"
 
 static void print_conf_file(const char *fname, int (*print)(const char *format, ... ));
 
@@ -163,8 +164,16 @@ static void print_conf_file(const char *fname, int (*print)(const char *format, 
 
 	if (fname == NULL || print == NULL) return;
 
+	if (!SMART_FILE_doFileExist(fname)) {
+		print("Error: Configuration file '%s' does not exist.\n", fname);
+		return;
+	}
+
 	f = fopen(fname, "r");
-	if (f == NULL) print("Error: Unable to read file for printing '%s'.\n", fname);
+	if (f == NULL) {
+		print("Error: Unable to read file for printing '%s'.\n", fname);
+		return;
+	}
 
 	while (!feof(f)) {
 		buf[0] = '\0';
