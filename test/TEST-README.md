@@ -10,7 +10,7 @@ Tests can be run with KSI built within the project or with KSI installed on the 
 * [shelltestrunner](http://joyful.com/shelltestrunner/) - Mandatory for every test.
 * [valgrind](http://valgrind.org/) - For memory tests only, Unix.
 * [drmemory](https://github.com/DynamoRIO/drmemory) - For memory tests only, Windows.
-* `sed` - For memory tests on Windows (e.g. [Cygwin](https://www.cygwin.com/)).
+* `sed` - For memory tests (on Windows use e.g. [Cygwin](https://www.cygwin.com/)).
 * [gttlvutil](https://github.com/guardtime/gttlvutil) - When available extra tests for metadata and masking are performed.
 
 

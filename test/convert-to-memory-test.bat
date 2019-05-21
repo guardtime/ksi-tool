@@ -1,7 +1,7 @@
 setlocal
 
 IF "%2"=="" (
-echo "Usage $0 <test_file_in> <memory_test_out>"
+echo "Usage: $0 <test_file_in> <memory_test_out>"
 )
  
  set test_file_in="%1"
