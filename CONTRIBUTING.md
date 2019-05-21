@@ -13,9 +13,9 @@
 * Run all tests before the commit to make sure nothing else broke.
 * Commit changes in logical units.
 * Use the following sample as guide for commit message format (#7 is the issue number in Github):
-```
-    GitHub-#7: description of the change.
-```
+  ```
+  GitHub-#7: description of the change.
+  ```
 
 # Submitting Changes
 

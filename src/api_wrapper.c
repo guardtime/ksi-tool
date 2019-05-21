@@ -23,6 +23,7 @@
 #include <ksi/compatibility.h>
 #include <ksi/policy.h>
 #include "ksi/net.h"
+#include "common.h"
 #include "tool_box.h"
 #include "smart_file.h"
 #include "err_trckr.h"
@@ -33,6 +34,11 @@
 		}
 static int appendInvalidPubfileUrlOrFileError(ERR_TRCKR *err, int res, KSI_CTX *ksi, long line) {
 	char buf[2048];
+
+	if (err == NULL || ksi == NULL) {
+		ERR_TRCKR_ADD(err, KT_INVALID_ARGUMENT, NULL);
+		return 1;
+	}
 
 	if (res == KSI_OK) return 0;
 
@@ -51,6 +57,12 @@ static int appendInvalidServiceUrlError(ERR_TRCKR *err, int res, KSI_CTX *ksi, l
 	char errTrcae[8192];
 	char serviceName[2048];
 	char *ret = NULL;
+
+	if (err == NULL || ksi == NULL) {
+		ERR_TRCKR_ADD(err, KT_INVALID_ARGUMENT, NULL);
+		return 1;
+	}
+
 	if (res == KSI_OK) return 0;
 
 	/* If is HTTP error with code 4 */
@@ -79,6 +91,12 @@ static int appendBaseErrorIfPresent(ERR_TRCKR *err, int res, KSI_CTX *ksi, long 
 	char buf[2048];
 	int ext = 0;
 	int tmp;
+
+	if (err == NULL || ksi == NULL) {
+		ERR_TRCKR_ADD(err, KT_INVALID_ARGUMENT, NULL);
+		return 1;
+	}
+
 	if (res != KSI_OK) {
 		KSI_ERR_getBaseErrorMessage(ksi, buf, sizeof(buf), &tmp, &ext);
 		if (buf[0] != 0 && tmp != KSI_OK) {
@@ -104,9 +122,17 @@ static void appendNetworkErrors(ERR_TRCKR *err, int res) {
 	ERR_APPEND_KSI_ERR(err, res, KSI_HTTP_ERROR);
 }
 
+static void appendHashAlgoErrors(ERR_TRCKR *err, int res) {
+	if (res == KSI_OK) return;
+
+	ERR_APPEND_KSI_ERR(err, res, KSI_UNTRUSTED_HASH_ALGORITHM);
+	ERR_APPEND_KSI_ERR(err, res, KSI_UNAVAILABLE_HASH_ALGORITHM);
+}
+
 static void appendExtenderErrors(ERR_TRCKR *err, int res) {
 	if (res == KSI_OK) return;
 	ERR_APPEND_KSI_ERR_EXT_MSG(err, res, KSI_EXTENDER_NOT_CONFIGURED, "Extender URL is not configured.");
+	ERR_APPEND_KSI_ERR_EXT_MSG(err, res, KSI_UNSUPPORTED_PDU_VERSION, "PDU version for given request is not supported.");
 	ERR_APPEND_KSI_ERR(err, res, KSI_EXTEND_NO_SUITABLE_PUBLICATION);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_DATABASE_CORRUPT);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_DATABASE_MISSING);
@@ -114,15 +140,18 @@ static void appendExtenderErrors(ERR_TRCKR *err, int res) {
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_REQUEST_TIME_TOO_NEW);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_REQUEST_TIME_TOO_OLD);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_INVALID_TIME_RANGE);
+	appendHashAlgoErrors(err, res);
 }
 
 static void appendAggreErrors(ERR_TRCKR *err, int res) {
 	if (res == KSI_OK) return;
-	ERR_APPEND_KSI_ERR_EXT_MSG(err, res, KSI_AGGREGATOR_NOT_CONFIGURED, "Extender URL is not configured.");
+	ERR_APPEND_KSI_ERR_EXT_MSG(err, res, KSI_AGGREGATOR_NOT_CONFIGURED, "Aggregator URL is not configured.");
+	ERR_APPEND_KSI_ERR_EXT_MSG(err, res, KSI_UNSUPPORTED_PDU_VERSION, "PDU version for given request is not supported.");
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_AGGR_REQUEST_TOO_LARGE);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_AGGR_REQUEST_OVER_QUOTA);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_AGGR_TOO_MANY_REQUESTS);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_AGGR_INPUT_TOO_LONG);
+	appendHashAlgoErrors(err, res);
 }
 
 static void appendPubFileErros(ERR_TRCKR *err, int res) {
@@ -134,8 +163,7 @@ static void appendPubFileErros(ERR_TRCKR *err, int res) {
 	ERR_APPEND_KSI_ERR(err, res, KSI_PKI_CERTIFICATE_NOT_TRUSTED);
 }
 
-static int verify_signature(KSI_Signature *sig, KSI_CTX *ctx,
-							KSI_DataHash *hsh, KSI_uint64_t rootLevel,
+static int verify_signature(KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
 							int extAllowed, KSI_PublicationsFile *pubFile, KSI_PublicationData *pubData,
 							const KSI_Policy *policy,
 							KSI_PolicyVerificationResult **result) {
@@ -164,14 +192,6 @@ static int verify_signature(KSI_Signature *sig, KSI_CTX *ctx,
 	/* Init user publication data in verification context */
 	info.userPublication = pubData;
 
-	/* Init aggregation level in verification context */
-	if (rootLevel > 0xff) {
-		res = KSI_INVALID_FORMAT;
-		goto cleanup;
-	}
-
-	info.docAggrLevel = rootLevel;
-
 	/* Init extention permission in verification context */
 	info.extendingAllowed = !!extAllowed;
 
@@ -191,10 +211,48 @@ cleanup:
 	return res;
 }
 
-int KSITOOL_extendSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Signature *sig, KSI_Signature **ext) {
-	int res;
+int KSITOOL_extendSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Signature *sig, KSI_PublicationsFile* pubfile, KSI_Signature **ext) {
+	int res = KSI_UNKNOWN_ERROR;
+	KSI_PublicationsFile *pubFile = NULL;
+	KSI_Integer *signingTime = NULL;
+	KSI_PublicationRecord *pubRec = NULL;
+	KSI_Signature *extSig = NULL;
 
-	res = KSI_extendSignature(ctx, sig, ext);
+	if (err == NULL || ctx == NULL || sig == NULL || ext == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
+	if (pubfile != NULL) {
+		pubFile = KSI_PublicationsFile_ref(pubfile);
+	} else {
+		res = KSITOOL_receivePublicationsFile(err, ctx, &pubFile);
+		if (res != KSI_OK) goto cleanup;
+
+		res = KSITOOL_verifyPublicationsFile(err, ctx, pubFile);
+		if (res != KSI_OK) goto cleanup;
+	}
+
+
+
+	res = KSI_Signature_getSigningTime(sig, &signingTime);
+	if (res != KSI_OK) goto ksierrhandle;
+
+	res = KSI_PublicationsFile_getNearestPublication(pubFile, signingTime, &pubRec);
+	if (res != KSI_OK) goto ksierrhandle;
+
+	if (pubRec == NULL) {
+		res = KSI_EXTEND_NO_SUITABLE_PUBLICATION;
+		goto ksierrhandle;
+	}
+
+	res = KSI_Signature_extendWithPolicy(sig, ctx, pubRec, KSI_VERIFICATION_POLICY_INTERNAL, NULL, &extSig);
+	if (res != KSI_OK) goto ksierrhandle;
+
+	*ext = extSig;
+	extSig = NULL;
+
+ksierrhandle:
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -203,11 +261,22 @@ int KSITOOL_extendSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Signature *sig, KS
 		appendPubFileErros(err, res);
 	}
 
+cleanup:
+
+	KSI_PublicationRecord_free(pubRec);
+	KSI_PublicationsFile_free(pubFile);
+	KSI_Signature_free(extSig);
+
 	return res;
 }
 
 int KSITOOL_Signature_extendTo(ERR_TRCKR *err, const KSI_Signature *signature, KSI_CTX *ctx, KSI_Integer *to, KSI_Signature **extended) {
 	int res;
+
+	if (err == NULL || ctx == NULL || signature == NULL || to == NULL || extended == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
 
 	res = KSI_Signature_extendTo(signature, ctx, to, extended);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
@@ -221,6 +290,11 @@ int KSITOOL_Signature_extendTo(ERR_TRCKR *err, const KSI_Signature *signature, K
 
 int KSITOOL_Signature_extend(ERR_TRCKR *err, const KSI_Signature *signature, KSI_CTX *ctx, const KSI_PublicationRecord *pubRec, KSI_Signature **extended) {
 	int res;
+
+	if (err == NULL || ctx == NULL || signature == NULL || pubRec == NULL || extended == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
 
 	res = KSI_Signature_extend(signature, ctx, pubRec, extended);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
@@ -236,6 +310,11 @@ int KSITOOL_Signature_extend(ERR_TRCKR *err, const KSI_Signature *signature, KSI
 int KSITOOL_RequestHandle_getExtendResponse(ERR_TRCKR *err, KSI_CTX *ctx, KSI_RequestHandle *handle, KSI_ExtendResp **resp) {
 	int res;
 
+	if (err == NULL || ctx == NULL || handle == NULL || resp == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
 	res = KSI_RequestHandle_getExtendResponse(handle, resp);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
@@ -247,25 +326,85 @@ int KSITOOL_RequestHandle_getExtendResponse(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Re
 	return res;
 }
 
-int KSITOOL_SignatureVerify_general(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
-									KSI_PublicationData *pubdata, int extperm,
-									KSI_PolicyVerificationResult **result) {
+int KSITOOL_Extender_getConf(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Config **config) {
 	int res;
 
-	/* First check if user has provided publications */
-	if (pubdata != NULL) {
-		res = KSITOOL_SignatureVerify_userProvidedPublicationBased(err, sig, ctx, hsh, pubdata, extperm, result);
-	} else {
-		/* Get available trust anchor from the signature */
-		if (KSITOOL_Signature_isCalendarAuthRecPresent(sig)) {
-			res = KSITOOL_SignatureVerify_keyBased(err, sig, ctx, hsh, result);
-		} else if (KSITOOL_Signature_isPublicationRecordPresent(sig)) {
-			res = KSITOOL_SignatureVerify_publicationsFileBased(err, sig, ctx, hsh, extperm, result);
-		} else {
-			res = KSITOOL_SignatureVerify_calendarBased(err, sig, ctx, hsh, result);
-		}
+	if (err == NULL || ctx == NULL || config == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
 	}
 
+	res = KSI_receiveExtenderConfig(ctx, config);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
+
+	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
+		appendNetworkErrors(err, res);
+		appendExtenderErrors(err, res);
+	}
+
+	if (res == KSI_UNSUPPORTED_PDU_VERSION) {
+		ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion:  Use '--ext-pdu-v v2' in order to use supported PDU version for given request.\n");
+	}
+
+	return res;
+}
+
+int KSITOOL_Aggregator_getConf(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Config **config) {
+	int res;
+
+	if (err == NULL || ctx == NULL || config == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
+	res = KSI_receiveAggregatorConfig(ctx, config);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
+
+	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
+		appendNetworkErrors(err, res);
+		appendAggreErrors(err, res);
+	}
+
+	return res;
+}
+
+int KSITOOL_SignatureVerify_with_publications_file_or_calendar(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh, KSI_PublicationsFile* pubFile,
+                                          int extperm, KSI_PolicyVerificationResult **result) {
+	int res;
+
+	if (err == NULL || sig == NULL || ctx == NULL || result == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
+    if (KSITOOL_Signature_isPublicationRecordPresent(sig)) {
+        res = KSITOOL_SignatureVerify_publicationsFileBased(err, sig, ctx, hsh, pubFile, extperm, result);
+    } else {
+        res = KSITOOL_SignatureVerify_calendarBased(err, sig, ctx, hsh, result);
+    }
+
+    return res;
+}
+
+int KSITOOL_SignatureVerify_general(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh, KSI_PublicationsFile* pubFile,
+														 KSI_PublicationData *pubdata, int extperm,
+														 KSI_PolicyVerificationResult **result){
+	int res;
+
+
+	if (err == NULL || sig == NULL || ctx == NULL || result == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
+	res = verify_signature(sig, ctx, hsh, extperm, pubFile, pubdata, KSI_VERIFICATION_POLICY_GENERAL, result);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
+
+	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
+		appendPubFileErros(err, res);
+		appendNetworkErrors(err, res);
+		appendExtenderErrors(err, res);
+	}
 	return res;
 }
 
@@ -273,7 +412,12 @@ int KSITOOL_SignatureVerify_internally(ERR_TRCKR *err, KSI_Signature *sig, KSI_C
 									   KSI_PolicyVerificationResult **result) {
 	int res;
 
-	res = verify_signature(sig, ctx, hsh, 0, 0, NULL, NULL, KSI_VERIFICATION_POLICY_INTERNAL, result);
+	if (err == NULL || sig == NULL || ctx == NULL || result == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
+	res = verify_signature(sig, ctx, hsh, 0, NULL, NULL, KSI_VERIFICATION_POLICY_INTERNAL, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 	appendBaseErrorIfPresent(err, res, ctx, __LINE__);
 
@@ -284,7 +428,12 @@ int KSITOOL_SignatureVerify_calendarBased(ERR_TRCKR *err, KSI_Signature *sig, KS
 										  KSI_PolicyVerificationResult **result) {
 	int res;
 
-	res = verify_signature(sig, ctx, hsh, 0, 1, NULL, NULL, KSI_VERIFICATION_POLICY_CALENDAR_BASED, result);
+	if (err == NULL || sig == NULL || ctx == NULL || result == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
+	res = verify_signature(sig, ctx, hsh, 1, NULL, NULL, KSI_VERIFICATION_POLICY_CALENDAR_BASED, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -294,11 +443,16 @@ int KSITOOL_SignatureVerify_calendarBased(ERR_TRCKR *err, KSI_Signature *sig, KS
 	return res;
 }
 
-int KSITOOL_SignatureVerify_keyBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
+int KSITOOL_SignatureVerify_keyBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh, KSI_PublicationsFile* pubFile,
 									 KSI_PolicyVerificationResult **result){
 	int res;
 
-	res = verify_signature(sig, ctx, hsh, 0, 0, NULL, NULL, KSI_VERIFICATION_POLICY_KEY_BASED, result);
+	if (err == NULL || sig == NULL || ctx == NULL || result == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
+	res = verify_signature(sig, ctx, hsh, 0, pubFile, NULL, KSI_VERIFICATION_POLICY_KEY_BASED, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -307,12 +461,17 @@ int KSITOOL_SignatureVerify_keyBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX
 	return res;
 }
 
-int KSITOOL_SignatureVerify_publicationsFileBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
+int KSITOOL_SignatureVerify_publicationsFileBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh, KSI_PublicationsFile* pubFile,
 												  int extperm,
 												  KSI_PolicyVerificationResult **result){
 	int res;
 
-	res = verify_signature(sig, ctx, hsh, 0, extperm, NULL, NULL, KSI_VERIFICATION_POLICY_PUBLICATIONS_FILE_BASED, result);
+	if (err == NULL || sig == NULL || ctx == NULL || result == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
+	res = verify_signature(sig, ctx, hsh, extperm, pubFile, NULL, KSI_VERIFICATION_POLICY_PUBLICATIONS_FILE_BASED, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -328,9 +487,14 @@ int KSITOOL_SignatureVerify_userProvidedPublicationBased(ERR_TRCKR *err, KSI_Sig
 														 KSI_PolicyVerificationResult **result){
 	int res;
 
+	if (err == NULL || sig == NULL || ctx == NULL || result == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
 	if (pubdata == NULL) return KSI_INVALID_FORMAT;
 
-	res = verify_signature(sig, ctx, hsh, 0, extperm, NULL, pubdata, KSI_VERIFICATION_POLICY_USER_PUBLICATION_BASED, result);
+	res = verify_signature(sig, ctx, hsh, extperm, NULL, pubdata, KSI_VERIFICATION_POLICY_USER_PUBLICATION_BASED, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -340,9 +504,32 @@ int KSITOOL_SignatureVerify_userProvidedPublicationBased(ERR_TRCKR *err, KSI_Sig
 	return res;
 }
 
-int KSITOOL_BlockSigner_close(ERR_TRCKR *err, KSI_CTX *ctx, KSI_BlockSigner *signer, KSI_MultiSignature **ms) {
+int KSITOOL_KSI_BlockSigner_new(ERR_TRCKR *err, KSI_CTX *ctx, KSI_HashAlgorithm algoId, KSI_DataHash *prevLeaf, KSI_OctetString *initVal, KSI_BlockSigner **signer) {
 	int res;
-	res = KSI_BlockSigner_close(signer, ms);
+
+	if (err == NULL || ctx == NULL || signer == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
+	res = KSI_BlockSigner_new(ctx, algoId, prevLeaf, initVal, signer);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
+
+	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
+		appendAggreErrors(err, res);
+	}
+	return res;
+}
+
+int KSITOOL_BlockSigner_closeAndSign(ERR_TRCKR *err, KSI_CTX *ctx, KSI_BlockSigner *signer) {
+	int res;
+
+	if (err == NULL || ctx == NULL || signer == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
+	res = KSI_BlockSigner_closeAndSign(signer);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -352,8 +539,32 @@ int KSITOOL_BlockSigner_close(ERR_TRCKR *err, KSI_CTX *ctx, KSI_BlockSigner *sig
 	return res;
 }
 
+int KSITOOL_BlockSigner_addLeaf(ERR_TRCKR *err, KSI_CTX *ctx, KSI_BlockSigner *signer, KSI_DataHash *hsh, int level, KSI_MetaData *metaData, KSI_BlockSignerHandle **handle) {
+	int res;
+
+	if (err == NULL || ctx == NULL || signer == NULL || hsh == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
+	res = KSI_BlockSigner_addLeaf(signer, hsh, level, metaData, handle);
+	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
+
+	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
+		appendHashAlgoErrors(err, res);
+	}
+	return res;
+}
+
+
 int KSITOOL_receivePublicationsFile(ERR_TRCKR *err, KSI_CTX *ctx, KSI_PublicationsFile **pubFile) {
 	int res;
+
+	if (err == NULL || ctx == NULL || pubFile == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
+
 	res = KSI_receivePublicationsFile(ctx, pubFile);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
@@ -366,6 +577,11 @@ int KSITOOL_receivePublicationsFile(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Publicatio
 
 int KSITOOL_verifyPublicationsFile(ERR_TRCKR *err, KSI_CTX *ctx, KSI_PublicationsFile *pubfile) {
 	int res;
+
+	if (err == NULL || ctx == NULL || pubfile == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
+	}
 
 	res = KSI_verifyPublicationsFile(ctx, pubfile);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
@@ -545,11 +761,13 @@ int KSITOOL_LOG_SmartFile(void *logCtx, int logLevel, const char *message) {
 }
 
 static int KSI_Signature_serialize_wrapper(KSI_CTX *ksi, KSI_Signature *sig, unsigned char **raw, size_t *raw_len) {
-	if (ksi);
+	VARIABLE_IS_NOT_USED(ksi);
 	return KSI_Signature_serialize(sig, raw, raw_len);
 }
 
-static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, const char* mode, void **obj,	int (*parse)(KSI_CTX *ksi, unsigned char *raw, unsigned raw_len, void **obj), void (*obj_free)(void*), const char *name) {
+static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, const char* mode, void **obj,
+						int (*parse)(KSI_CTX *ksi, unsigned char *raw, unsigned raw_len, const KSI_Policy *policy, KSI_VerificationContext *context, void **obj),
+						void (*obj_free)(void*), const char *name) {
 	int res;
 	SMART_FILE *file = NULL;
 	unsigned char buf[0xffff + 4];
@@ -558,9 +776,8 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, const ch
 	size_t data_len = 0;
 	size_t dummy_len = 0;
 
-
-	if (err == NULL || ksi == NULL || path == NULL || obj == NULL || parse == NULL || obj_free == NULL) {
-		res = KT_INVALID_ARGUMENT;
+	if (err == NULL || ksi == NULL || path == NULL || mode == NULL || obj == NULL || parse == NULL || obj_free == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -571,13 +788,13 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, const ch
 	}
 
 	res = SMART_FILE_read(file, (char *)buf, sizeof(buf), &data_len);
-	if(res != SMART_FILE_OK) {
+	if (res != SMART_FILE_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to read %s from file.", name);
 		goto cleanup;
 	}
 
 	res = SMART_FILE_read(file, (char *)dummy, sizeof(dummy), &dummy_len);
-	if(res != SMART_FILE_OK) {
+	if (res != SMART_FILE_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to read data from file.");
 		goto cleanup;
 	}
@@ -592,7 +809,7 @@ static int load_ksi_obj(ERR_TRCKR *err, KSI_CTX *ksi, const char *path, const ch
 		goto cleanup;
 	}
 
-	res = parse(ksi, buf, (unsigned)data_len, &tmp);
+	res = parse(ksi, buf, (unsigned)data_len, KSI_VERIFICATION_POLICY_EMPTY, NULL, &tmp);
 	if (res != KSI_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to parse %s.", name);
 		goto cleanup;
@@ -617,14 +834,12 @@ static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, const char *mode, void *obj,
 	unsigned char *raw = NULL;
 	size_t raw_len = 0;
 	size_t count = 0;
-	char mode_sum[32];
 
-	if (err == NULL || ksi == NULL || obj == NULL || serialize == NULL || path == NULL) {
-		res = KT_INVALID_ARGUMENT;
+	if (err == NULL || ksi == NULL || mode == NULL || obj == NULL || serialize == NULL || path == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
-	KSI_snprintf(mode_sum, sizeof(mode_sum), "wb%s", (mode == NULL) ? "" : mode);
 
 	res = serialize(ksi, obj, &raw, &raw_len);
 	if (res != KSI_OK) {
@@ -632,7 +847,7 @@ static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, const char *mode, void *obj,
 		goto cleanup;
 	}
 
-	res = SMART_FILE_open(path, mode_sum, &file);
+	res = SMART_FILE_open(path, mode, &file);
 	if (res != KT_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: %s", KSITOOL_errToString(res));
 		goto cleanup;
@@ -643,7 +858,7 @@ static int saveKsiObj(ERR_TRCKR *err, KSI_CTX *ksi, const char *mode, void *obj,
 	}
 
 	res = SMART_FILE_write(file, (char *)raw, raw_len, &count);
-	if(res != SMART_FILE_OK || count != raw_len) {
+	if (res != SMART_FILE_OK || count != raw_len) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to write to file.");
 		goto cleanup;
 	}
@@ -661,8 +876,9 @@ cleanup:
 int KSI_OBJ_saveSignature(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, const char *mode, const char *fname, char *f, size_t f_len) {
 	int res;
 
-	if (ksi == NULL || fname == NULL || sign == NULL) {
-		return KT_INVALID_ARGUMENT;
+	if (err == NULL || ksi == NULL || fname == NULL || sign == NULL || mode == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
 	}
 
 	res = saveKsiObj(err, ksi, mode, sign,
@@ -679,8 +895,9 @@ int KSI_OBJ_saveSignature(ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sign, con
 int KSI_OBJ_savePublicationsFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsFile *pubfile, const char *mode, const char *fname) {
 	int res;
 
-	if (ksi == NULL || fname == NULL || pubfile == NULL) {
-		return KT_INVALID_ARGUMENT;
+	if (err == NULL || ksi == NULL || fname == NULL || pubfile == NULL || mode == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
 	}
 
 	res = saveKsiObj(err, ksi, mode, pubfile,
@@ -697,13 +914,14 @@ int KSI_OBJ_savePublicationsFile(ERR_TRCKR *err, KSI_CTX *ksi, KSI_PublicationsF
 int KSI_OBJ_loadSignature(ERR_TRCKR *err, KSI_CTX *ksi, const char *fname, const char* mode, KSI_Signature **sig) {
 	int res;
 
-	if (ksi == NULL || fname == NULL || sig == NULL) {
-		return KT_INVALID_ARGUMENT;
+	if (err == NULL || ksi == NULL || fname == NULL || mode == NULL || sig == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		return res;
 	}
 
 	res = load_ksi_obj(err, ksi, fname, mode,
 				(void**)sig,
-				(int (*)(KSI_CTX *, unsigned char*, unsigned, void**))KSI_Signature_parse,
+				(int (*)(KSI_CTX *, unsigned char*, unsigned, const KSI_Policy *, KSI_VerificationContext *, void**))KSI_Signature_parseWithPolicy,
 				(void (*)(void *))KSI_Signature_free,
 				"KSI Signature");
 
@@ -737,8 +955,6 @@ int KSITOOL_KSI_ERR_toExitCode(int error_code) {
 		case KSI_ASYNC_NOT_FINISHED:
 		case KSI_INVALID_PUBLICATION:
 		case KSI_UNKNOWN_ERROR:
-		case KSI_MULTISIG_NOT_FOUND:
-		case KSI_MULTISIG_INVALID_STATE:
 		case KSI_SERVICE_INVALID_REQUEST:
 		case KSI_SERVICE_INVALID_PAYLOAD:
 		case KSI_SERVICE_INTERNAL_ERROR:
@@ -816,6 +1032,7 @@ int KSITOOL_KSI_ERR_toExitCode(int error_code) {
 		 * HMAC error.
 		 */
 		case KSI_HMAC_MISMATCH:
+		case KSI_HMAC_ALGORITHM_MISMATCH:
 			return EXIT_HMAC_ERROR;
 
 		case KSI_SERVICE_AUTHENTICATION_FAILURE:

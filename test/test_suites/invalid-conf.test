@@ -1,5 +1,5 @@
 #
-# Copyright 2013-2016 Guardtime, Inc.
+# Copyright 2013-2018 Guardtime, Inc.
 #
 # This file is part of the Guardtime client SDK.
 #
@@ -27,15 +27,15 @@ EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-forbidden-flags.cfg
 
 # Unknown flags in configuration file are not allowed.
 EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-unknown-flags.cfg
->>>2 /(Unknown parameter)(.*H.*)(.*from.*)(.*nok-conf-unknown-flags.cfg.*)
+>>>2 /(Unknown parameter)(.*d.*)(.*from.*)(.*nok-conf-unknown-flags.cfg.*)
 (.*Unknown parameter)(.*T.*)(.*from.*)(.*nok-conf-unknown-flags.cfg.*)/
 >>>= 16
 
 # Test typo suggestions.
 EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-typos.cfg
 >>>2 /(configuration file)(.*nok-conf-typos.cfg.*)(.*is invalid.*)
-(.*Did You mean.*)(.*--aggr-key.*)(.*instead of.*)(.*aggre-keey.*)
-(.*Did You mean.*)(.*--aggr-user.*)(.*instead of.*)(.*agepusr.*)/
+(.*Did [yY]ou mean.*)(.*--aggr-key.*)(.*instead of.*)(.*aggre-keey.*)
+(.*Did [yY]ou mean.*)(.*--aggr-user.*)(.*instead of.*)(.*agepusr.*)/
 >>>= 16
 
 # Conf with invalid syntax.
@@ -48,61 +48,39 @@ EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-syntax-error.cfg
 
 # Conf with flags valid on command-line but do not belong to conf 1.
 EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-flags-valid-on-cmd-inside-conf-1.cfg
->>>2 /(.*d of.*)(.*sign.*)
-(.*d of.*)(.*sign.*)
-(.*d of.*)(.*sign.*)
-(.*d of.*)(.*sign.*)
-(.*d of.*)(.*i.*)
-(.*d of.*)(.*i.*)
-(.*d of.*)(.*input.*)
-(.*d of.*)(.*input.*)
-(.*d of.*)(.*input.*)
-(.*d of.*)(.*o.*)
-(.*d of.*)(.*data-out.*)
-.*/
+>>>2 /(.*d of)(.*i).*([^$]|[
+])*(.*d of)(.*input).*([^$]|[
+])*(.*d of)(.*o).*([^$]|[
+])*(.*d of)(.*data-out).*([^$]|[
+])*(.*d of)(.*dump).*([^$]|[
+])*(.*d of)(.*log).*([^$]|[
+])*(.*d of)(.*conf).*([^$]|[
+])*(.*d of)(.*help).*([^$]|[
+])*(.*d of)(.*prev-leaf)/
 >>>= 16
+
 EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-flags-valid-on-cmd-inside-conf-1.cfg
->>>2 /(d of.*)(.*d.*)
-(.*d of.*)(.*d.*)
-(.*d of.*)(.*d.*)
-(.*d of.*)(.*d.*)
-(.*d of.*)(.*d.*)
-(.*d of.*)(.*dump.*)
-(.*d of.*)(.*dump.*)
-(.*d of.*)(.*dump.*)
-(.*d of.*)(.*log.*)
-(.*d of.*)(.*log.*)
-(.*d of.*)(.*log.*)
-(.*d of.*)(.*conf.*)
-(.*d of.*)(.*conf.*)
-(.*d of.*)(.*help.*)
-(.*d of.*)(.*prev-leaf.*)/
+>>>2 /(.*d of)(.*help).*([^$]|[
+])*(.*d of)(.*prev-leaf)/
 >>>= 16
 
 EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-flags-valid-on-cmd-inside-conf-2.cfg
->>>2 /(d of.*)(.*mdata.*)
-(.*d of.*)(.*mask.*)
-.*
-.*
-(.*d of.*)(.*show-progress.*)
-(.*d of.*)(.*x.*)
-.*
-.*
-.*
-(.*d of.*)(.*pub-str.*)
-.*
-(.*d of.*)(.*ver-cal.*)
-.*
-.*
-(.*d of.*)(.*ver-key.*)
-.*
-(.*d of.*)(.*ver-pub.*)/
+>>>2 /(.*d of)(.*mdata).*([^$]|[
+])*(.*d of)(.*mask).*([^$]|[
+])*(.*d of)(.*show-progress).*([^$]|[
+])*(.*d of)(.*pub-str).*([^$]|[
+])*(.*d of)(.*ver-cal).*([^$]|[
+])*(.*d of)(.*ver-key).*([^$]|[
+])*(.*d of)(.*ver-pub).*([^$]|[
+])*(.*Unknown.*)(.*x.*)/
 >>>= 16
 
 EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-flags-valid-on-cmd-inside-conf-3.cfg
->>>2 /(Unknown.*)(.*H.*)
-(.*Unknown.*)(.*h.*)
-(.*Unknown.*)(.*dump-last-leaf.*)
+>>>2 /(configuration file)(.*is invalid.*)
+(.*Did.*)(.*aggr-hmac-alg.*)(.*h.*)
+(.*Did.*)(.*ext-hmac-alg.*)(.*h.*)
+(.*Did.*)(.*apply-remote-conf.*)(.*dump-last-leaf.*)
+(.*Unknown.*)(.*d.*)
 (.*Unknown.*)(.*T.*)
 (.*Unknown.*)(.*ver-int.*)/
 >>>= 16

@@ -86,10 +86,10 @@ void DEBUG_verifyPubfile(KSI_CTX *ksi, PARAM_SET *set, int res, KSI_Publications
 			char *ret = NULL;
 
 			ret = STRING_extractRmWhite(constraint, NULL, "=", OID, sizeof(OID));
-			if(ret != OID) continue;
+			if (ret != OID) continue;
 
 			ret = STRING_extractRmWhite(constraint, "=", NULL, value, sizeof(value));
-			if(ret != value) continue;
+			if (ret != value) continue;
 
 			print_debug("  * %s = '%s'\n", OID_getShortDescriptionString(OID), value);
 		}

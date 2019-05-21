@@ -23,6 +23,7 @@
 #include <ctype.h>
 #include <limits.h>
 #include <string.h>
+#include <time.h>
 #include <ksi/ksi.h>
 #include <ksi/compatibility.h>
 #include "tool_box.h"
@@ -50,7 +51,7 @@ static int analyze_hexstring_format(const char *hex, double *cor) {
 	size_t valid_count = 0;
 	double tmp = 0;
 
-	if(hex == NULL) {
+	if (hex == NULL) {
 		return FORMAT_NULLPTR;
 	}
 
@@ -60,7 +61,7 @@ static int analyze_hexstring_format(const char *hex, double *cor) {
 			valid_count++;
 		}
 	}
-	if(count > 0) {
+	if (count > 0) {
 		tmp = (double)valid_count / (double)count;
 	}
 
@@ -166,14 +167,12 @@ static int x(char c){
 		return c - '0';
 	if (c >= 'a' && c <= 'f')
 		return c - 'a' + 10;
-	if (c >= 'A' && c <= 'F')
+	else
 		return c - 'A' + 10;
-	abort(); // isxdigit lies.
-	return -1; // makes compiler happy
 }
 
 static int xx(char c1, char c2){
-	if(!isxdigit(c1) || !isxdigit(c2))
+	if (!isxdigit(c1) || !isxdigit(c2))
 		return -1;
 	return x(c1) * 16 + x(c2);
 }
@@ -244,7 +243,7 @@ int isFormatOk_hex(const char *hexin){
 	return FORMAT_OK;
 }
 
-int extract_OctetString(void *extra, const char* str, void** obj) {
+int extract_OctetString(void **extra, const char* str, void** obj) {
 	int res;
 	void **extra_array = (void**)extra;
 	COMPOSITE *comp = NULL;
@@ -281,8 +280,8 @@ static int imprint_get_hash_obj(const char *imprint, KSI_CTX *ksi, ERR_TRCKR *er
 	KSI_HashAlgorithm alg_id = KSI_HASHALG_INVALID;
 	KSI_DataHash *tmp = NULL;
 
-	if (imprint == NULL || ksi == NULL || hash == NULL) {
-		res = KT_INVALID_ARGUMENT;
+	if (imprint == NULL || ksi == NULL || err == NULL || hash == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -326,8 +325,8 @@ static int file_get_hash(ERR_TRCKR *err, KSI_CTX *ctx, const char *open_mode, co
 	size_t write_count = 0;
 	KSI_DataHash *tmp = NULL;
 
-	if(err == NULL || fname_in == NULL || hash == NULL) {
-		res = KT_INVALID_ARGUMENT;
+	if (err == NULL || ctx == NULL || open_mode == NULL || fname_in == NULL || hash == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -478,7 +477,7 @@ static int convert_UTC_to_UNIX2(const char* arg, time_t *time) {
 	struct tm time_st;
 	time_t t;
 
-	if(arg == NULL || time == NULL) {
+	if (arg == NULL || time == NULL) {
 		res = KT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
@@ -515,18 +514,18 @@ int isInteger(const char *str) {
 }
 
 int isFormatOk_url(const char *url) {
-	if(url == NULL) return FORMAT_NULLPTR;
-	if(strlen(url) == 0) return FORMAT_NOCONTENT;
+	if (url == NULL) return FORMAT_NULLPTR;
+	if (strlen(url) == 0) return FORMAT_NOCONTENT;
 
-	if(strstr(url, "ksi://") == url)
+	if (strstr(url, "ksi://") == url)
 		return FORMAT_OK;
-	else if(strstr(url, "http://") == url || strstr(url, "ksi+http://") == url)
+	else if (strstr(url, "http://") == url || strstr(url, "ksi+http://") == url)
 		return FORMAT_OK;
-	else if(strstr(url, "https://") == url || strstr(url, "ksi+https://") == url)
+	else if (strstr(url, "https://") == url || strstr(url, "ksi+https://") == url)
 		return FORMAT_OK;
-	else if(strstr(url, "ksi+tcp://") == url)
+	else if (strstr(url, "ksi+tcp://") == url)
 		return FORMAT_OK;
-	else if(strstr(url, "file://") == url)
+	else if (strstr(url, "file://") == url)
 		return FORMAT_OK;
 	else
 		return FORMAT_URL_UNKNOWN_SCHEME;
@@ -537,7 +536,8 @@ int convertRepair_url(const char* arg, char* buf, unsigned len) {
 	unsigned i = 0;
 	int isFile;
 
-	if(arg == NULL || buf == NULL) return 0;
+	if (arg == NULL) return PST_PARAM_CONVERT_NOT_PERFORMED;
+	if (buf == NULL) return PST_INVALID_ARGUMENT;
 	scheme = strstr(arg, "://");
 	isFile = (strstr(arg, "file://") == arg);
 
@@ -546,7 +546,7 @@ int convertRepair_url(const char* arg, char* buf, unsigned len) {
 		if (strlen(buf)+strlen(arg) < len)
 			strcat(buf, arg);
 		else
-			return 0;
+			return PST_PARAM_CONVERT_NOT_PERFORMED;
 	} else {
 		while (arg[i] && i < len - 1) {
 			if (&arg[i] < scheme) {
@@ -565,15 +565,15 @@ int convertRepair_url(const char* arg, char* buf, unsigned len) {
 		}
 		buf[i] = 0;
 	}
-	return 1;
+	return PST_OK;
 }
 
 
 int isFormatOk_int(const char *integer) {
 	int i = 0;
 	int C;
-	if(integer == NULL) return FORMAT_NULLPTR;
-	if(strlen(integer) == 0) return FORMAT_NOCONTENT;
+	if (integer == NULL) return FORMAT_NULLPTR;
+	if (strlen(integer) == 0) return FORMAT_NOCONTENT;
 
 	while ((C = integer[i++]) != '\0') {
 		if ((i - 1 == 0 && C != '-' && !isdigit(C)) ||
@@ -616,6 +616,11 @@ int isContentOk_uint_can_be_null(const char *integer) {
 	else return isContentOk_uint(integer);
 }
 
+int isContentOk_uint_not_zero_can_be_null(const char *integer) {
+	if (integer == NULL) return FORMAT_OK;
+	else return isContentOk_uint_not_zero(integer);
+}
+
 int isContentOk_int(const char* integer) {
 	long tmp;
 
@@ -629,11 +634,11 @@ int isContentOk_int(const char* integer) {
 	return PARAM_OK;
 }
 
-int extract_int(void *extra, const char* str,  void** obj){
+int extract_int(void **extra, const char* str,  void** obj){
 	long tmp;
 	int *pI = (int*)obj;
 	VARIABLE_IS_NOT_USED(extra);
-	tmp = strtol(str, NULL, 10);
+	tmp = str != NULL ? strtol(str, NULL, 10) : 0;
 	if (tmp < INT_MIN || tmp > INT_MAX) return KT_INVALID_CMD_PARAM;
 	*pI = (int)tmp;
 	return PST_OK;
@@ -652,10 +657,22 @@ int isContentOk_tree_level(const char* integer) {
 	return PARAM_OK;
 }
 
+int isContentOk_pduVersion(const char* version) {
+	if (version == NULL) return FORMAT_NULLPTR;
+
+	if (strcmp(version, "v1") == 0) {
+		return PARAM_OK;
+	} else if (strcmp(version, "v2") == 0) {
+		return PARAM_OK;
+	}
+
+	return INVALID_VERSION;
+}
+
 
 int isFormatOk_inputFile(const char *path){
-	if(path == NULL) return FORMAT_NULLPTR;
-	if(strlen(path) == 0) return FORMAT_NOCONTENT;
+	if (path == NULL) return FORMAT_NULLPTR;
+	if (strlen(path) == 0) return FORMAT_NOCONTENT;
 	return FORMAT_OK;
 }
 
@@ -690,41 +707,57 @@ int isContentOk_inputFileRestrictPipe(const char* path){
 int convertRepair_path(const char* arg, char* buf, unsigned len){
 	char *toBeReplaced = NULL;
 
-	if(arg == NULL || buf == NULL) return 0;
+	if (arg == NULL) return PST_PARAM_CONVERT_NOT_PERFORMED;
+	if (buf == NULL) return PST_INVALID_ARGUMENT;
 	KSI_strncpy(buf, arg, len - 1);
 
 
 	toBeReplaced = buf;
-	while((toBeReplaced = strchr(toBeReplaced, '\\')) != NULL){
+	while ((toBeReplaced = strchr(toBeReplaced, '\\')) != NULL){
 		*toBeReplaced = '/';
 		toBeReplaced++;
 	}
 
-	return 1;
+	return PST_OK;
 }
 
 int isFormatOk_path(const char *path) {
-	if(path == NULL) return FORMAT_NULLPTR;
-	if(path[0] == '\0') return FORMAT_NOCONTENT;
+	if (path == NULL) return FORMAT_NULLPTR;
+	if (path[0] == '\0') return FORMAT_NOCONTENT;
 	return FORMAT_OK;
 }
 
-int isFormatOk_hashAlg(const char *hashAlg){
-	if(hashAlg == NULL) return FORMAT_NULLPTR;
-	if(strlen(hashAlg) == 0) return FORMAT_NOCONTENT;
+int isFormatOk_hashAlg(const char *hashAlg) {
+	if (hashAlg == NULL) return FORMAT_NULLPTR;
+	if (strlen(hashAlg) == 0) return FORMAT_NOCONTENT;
 	return FORMAT_OK;
 }
 
-int isContentOk_hashAlg(const char *alg){
-	if(KSI_getHashAlgorithmByName(alg) != KSI_HASHALG_INVALID) return PARAM_OK;
+int isContentOk_hashAlg(const char *alg) {
+	if (KSI_getHashAlgorithmByName(alg) != KSI_HASHALG_INVALID) return PARAM_OK;
 	else return HASH_ALG_INVALID_NAME;
 }
 
-int extract_hashAlg(void *extra, const char* str, void** obj) {
+int isContentOk_hashAlgRejectDeprecated(const char *alg) {
+	int ret;
+
+	ret = isContentOk_hashAlg(alg);
+	if (ret != PARAM_OK) return ret;
+
+	if (!KSI_isHashAlgorithmTrusted(KSI_getHashAlgorithmByName(alg))) {
+		return HASH_ALG_UNTRUSTED;
+	}
+
+	return PARAM_OK;
+}
+
+
+
+int extract_hashAlg(void **extra, const char* str, void** obj) {
 	const char *hash_alg_name = NULL;
 	KSI_HashAlgorithm *hash_id = (KSI_HashAlgorithm*)obj;
+	VARIABLE_IS_NOT_USED(extra);
 
-	if (extra);
 	hash_alg_name = str != NULL ? (str) : ("default");
 	*hash_id = KSI_getHashAlgorithmByName(hash_alg_name);
 
@@ -737,14 +770,14 @@ int extract_hashAlg(void *extra, const char* str, void** obj) {
 int isFormatOk_imprint(const char *imprint){
 	char *colon;
 
-	if(imprint == NULL) return FORMAT_NULLPTR;
-	if(strlen(imprint) == 0) return FORMAT_NOCONTENT;
+	if (imprint == NULL) return FORMAT_NULLPTR;
+	if (strlen(imprint) == 0) return FORMAT_NOCONTENT;
 
 	colon = strchr(imprint, ':');
 
-	if(colon == NULL) return FORMAT_IMPRINT_NO_COLON;
-	if(colon != NULL && colon == imprint) return FORMAT_IMPRINT_NO_HASH_ALG;
-	if(*(colon + 1) == '\0') return FORMAT_IMPRINT_NO_HASH;
+	if (colon == NULL) return FORMAT_IMPRINT_NO_COLON;
+	if (colon != NULL && colon == imprint) return FORMAT_IMPRINT_NO_HASH_ALG;
+	if (*(colon + 1) == '\0') return FORMAT_IMPRINT_NO_HASH;
 
 	return analyze_hexstring_format(colon + 1, NULL);
 }
@@ -756,7 +789,7 @@ int isContentOk_imprint(const char *imprint) {
 	unsigned len = 0;
 	unsigned expected_len = 0;
 
-	if(imprint == NULL) return PARAM_INVALID;
+	if (imprint == NULL) return PARAM_INVALID;
 
 	res = imprint_extract_fields(imprint, &alg_id, NULL, hash, sizeof(hash));
 	if (res != KT_OK) {
@@ -783,7 +816,7 @@ cleanup:
 	return res;
 }
 
-int extract_imprint(void *extra, const char* str, void** obj) {
+int extract_imprint(void **extra, const char* str, void** obj) {
 	int res;
 	void **extra_array = (void**)extra;
 	COMPOSITE *comp = NULL;
@@ -813,7 +846,7 @@ cleanup:
 
 int isFormatOk_inputHash(const char *str) {
 	if (str == NULL) return FORMAT_NULLPTR;
-	if(strlen(str) == 0) return FORMAT_NOCONTENT;
+	if (strlen(str) == 0) return FORMAT_NOCONTENT;
 
 	if (is_imprint(str)) {
 		return isFormatOk_imprint(str);
@@ -833,7 +866,7 @@ int isContentOk_inputHash(const char *str) {
 	}
 }
 
-static int extract_input_hash(void *extra, const char* str, void** obj, int no_imprint, int no_stream) {
+static int extract_input_hash(void **extra, const char* str, void** obj, int no_imprint, int no_stream) {
 	int res;
 	void **extra_array = extra;
 	PARAM_SET *set = (PARAM_SET*)(extra_array[0]);
@@ -874,15 +907,15 @@ cleanup:
 	return res;
 }
 
-int extract_inputHash(void *extra, const char* str, void** obj) {
+int extract_inputHash(void **extra, const char* str, void** obj) {
 	return extract_input_hash(extra, str, obj, 0, 0);
 }
 
-int extract_inputHashFromFile(void *extra, const char* str, void** obj) {
+int extract_inputHashFromFile(void **extra, const char* str, void** obj) {
 	return extract_input_hash(extra, str, obj, 1, 1);
 }
 
-int extract_inputSignature(void *extra, const char* str, void** obj) {
+static int extract_input_signature(void **extra, const char* str, void** obj, int isStream) {
 	int res;
 	void **extra_array = extra;
 	COMPOSITE *comp = (COMPOSITE*)(extra_array[1]);
@@ -894,12 +927,20 @@ int extract_inputSignature(void *extra, const char* str, void** obj) {
 		goto cleanup;
 	}
 
-	res = KSI_OBJ_loadSignature(err, ctx, str, "rbs", (KSI_Signature**)obj);
+	res = KSI_OBJ_loadSignature(err, ctx, str, isStream ? "rbs" : "rb", (KSI_Signature**)obj);
 	if (res != KT_OK) goto cleanup;
 
 cleanup:
 
 	return res;
+}
+
+int extract_inputSignature(void **extra, const char* str, void** obj) {
+	return extract_input_signature(extra, str, obj, 1);
+}
+
+int extract_inputSignatureFromFile(void **extra, const char* str, void** obj) {
+	return extract_input_signature(extra, str, obj, 1);
 }
 
 
@@ -919,7 +960,7 @@ int isFormatOk_pubString(const char *str) {
 	return FORMAT_OK;
 }
 
-int extract_pubString(void *extra, const char* str, void** obj) {
+int extract_pubString(void **extra, const char* str, void** obj) {
 	int res;
 	void **extra_array = extra;
 	COMPOSITE *comp = (COMPOSITE*)(extra_array[1]);
@@ -968,7 +1009,7 @@ int isContentOk_utcTime(const char *time) {
 	}
 }
 
-int extract_utcTime(void *extra, const char* str, void** obj) {
+int extract_utcTime(void **extra, const char* str, void** obj) {
 	int res;
 	void **extra_array = extra;
 	COMPOSITE *comp = (COMPOSITE*)(extra_array[1]);
@@ -1023,19 +1064,19 @@ cleanup:
 
 
 int isFormatOk_flag(const char *flag) {
-	if(flag == NULL) return FORMAT_OK;
+	if (flag == NULL) return FORMAT_OK;
 	else return FORMAT_FLAG_HAS_ARGUMENT;
 }
 
 int isFormatOk_userPass(const char *uss_pass) {
-	if(uss_pass == NULL) return FORMAT_NULLPTR;
-	if(strlen(uss_pass) == 0) return FORMAT_NOCONTENT;
+	if (uss_pass == NULL) return FORMAT_NULLPTR;
+	if (strlen(uss_pass) == 0) return FORMAT_NOCONTENT;
 	return FORMAT_OK;
 }
 
 int isFormatOk_string(const char *str) {
-	if(str == NULL) return FORMAT_NULLPTR;
-	if(strlen(str) == 0) return FORMAT_NOCONTENT;
+	if (str == NULL) return FORMAT_NULLPTR;
+	if (strlen(str) == 0) return FORMAT_NOCONTENT;
 	return FORMAT_OK;
 }
 
@@ -1044,13 +1085,13 @@ int isFormatOk_constraint(const char *constraint) {
 	char *at = NULL;
 	unsigned i = 0;
 
-	if(constraint == NULL) return FORMAT_NULLPTR;
-	if(strlen(constraint) == 0) return FORMAT_NOCONTENT;
+	if (constraint == NULL) return FORMAT_NULLPTR;
+	if (strlen(constraint) == 0) return FORMAT_NOCONTENT;
 
-	if((at = strchr(constraint,'=')) == NULL) return FORMAT_INVALID;
-	if(at == constraint || *(at+1)==0) return FORMAT_INVALID;
+	if ((at = strchr(constraint,'=')) == NULL) return FORMAT_INVALID;
+	if (at == constraint || *(at + 1) == 0) return FORMAT_INVALID;
 
-	while (constraint[i] != 0 &&  constraint[i] != '=') {
+	while (constraint[i] != 0 && constraint[i] != '=') {
 		if (!isdigit(constraint[i]) && constraint[i] != '.')
 			return FORMAT_INVALID_OID;
 		i++;
@@ -1063,19 +1104,22 @@ int convertRepair_constraint(const char* arg, char* buf, unsigned len) {
 	char *value = NULL;
 	const char *oid = NULL;
 
-	if(arg == NULL || buf == NULL) return 0;
-	KSI_strncpy(buf, arg, len-1);
+	if (arg == NULL) return PST_PARAM_CONVERT_NOT_PERFORMED;
+	if (buf == NULL) return PST_INVALID_ARGUMENT;
 
 	value = strchr(arg, '=');
-	if (value == NULL) return 0;
+	if (value == NULL) return PST_PARAM_CONVERT_NOT_PERFORMED;
 	else value++;
 
 	oid = OID_getFromString(arg);
 
-	if (oid != NULL && value != NULL)
+	if (oid != NULL && value != NULL) {
 		KSI_snprintf(buf, len, "%s=%s", oid, value);
+	} else {
+		return PST_PARAM_CONVERT_NOT_PERFORMED;
+	}
 
-	return 1;
+	return PST_OK;
 }
 
 
@@ -1094,6 +1138,7 @@ const char *getParameterErrorString(int res) {
 		case PARAM_INVALID: return "Parameter is invalid";
 		case FORMAT_NOT_INTEGER: return "Invalid integer";
 		case HASH_ALG_INVALID_NAME: return "Algorithm name is incorrect";
+		case HASH_ALG_UNTRUSTED: return "Algorithm is not trusted";
 		case HASH_IMPRINT_INVALID_LEN: return "Hash length is incorrect";
 		case FORMAT_INVALID_HEX_CHAR: return "Invalid hex character";
 		case FORMAT_ODD_NUMBER_OF_HEX_CHARACTERS: return "There must be even number of hex characters";
@@ -1113,6 +1158,8 @@ const char *getParameterErrorString(int res) {
 		case FUNCTION_INVALID_ARG_COUNT: return "Invalid function argument count";
 		case FUNCTION_INVALID_ARG_1: return "Argument 1 is invalid";
 		case FUNCTION_INVALID_ARG_2: return "Argument 2 is invalid";
+		case INVALID_VERSION: return "Invalid version";
+		case INVALID_FLAG_PARAM: return "Invalid flag argument";
 		default: return "Unknown error";
 	}
 }
@@ -1134,7 +1181,7 @@ static int get_io_pipe_error(PARAM_SET *set, ERR_TRCKR *err, int isStdin, const 
 
 
 	if (err == NULL || set == NULL || (io_file_names == NULL && check_all_files == NULL && io_flag_names == NULL)) {
-		res = KT_INVALID_ARGUMENT;
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		goto cleanup;
 	}
 
@@ -1269,7 +1316,7 @@ static int decode_mask(const char* mask, int *func, char *arg1, char *arg2, size
 
 int isFormatOk_mask(const char* mask) {
 	if (mask == NULL) return FORMAT_OK;
-	if (mask == '\0') return FORMAT_NOCONTENT;
+	if (*mask == '\0') return FORMAT_NOCONTENT;
 
 	if (strchr(mask, ':') != NULL) {
 		return FORMAT_OK;
@@ -1285,25 +1332,25 @@ int isContentOk_mask(const char* mask) {
 	int function = MASK_F_INVALID;
 
 	if (mask == NULL) return PARAM_OK;
-	if (mask == '\0') return FORMAT_NOCONTENT;
+	if (*mask == '\0') return FORMAT_NOCONTENT;
 
 	if (strchr(mask, ':') != NULL) {
 		res = decode_mask(mask, &function, arg1, arg2, sizeof(arg1));
 		if (res == -1) return FORMAT_UNKNOWN_ERROR;
 		else return res;
 	} else {
-		return UNKNOWN_FUNCTION;
+		return PARAM_OK;
 	}
 }
 
 int convertRepair_mask(const char* arg, char* buf, unsigned len) {
-	if (buf == NULL || len == 0) return 0;
+	if (buf == NULL || len == 0) return PST_INVALID_ARGUMENT;
 	if (arg == NULL) PST_strncpy(buf, "crand:", len);
-	else PST_strncpy(buf, arg, len);
-	return 1;
+	else return PST_PARAM_CONVERT_NOT_PERFORMED;
+	return PST_OK;
 }
 
-int extract_mask(void *extra, const char* str, void** obj) {
+int extract_mask(void **extra, const char* str, void** obj) {
 	int res;
 	void **extra_array = extra;
 	COMPOSITE *comp = (COMPOSITE*)(extra_array[1]);
@@ -1383,6 +1430,25 @@ cleanup:
 	return res;
 }
 
+int isContentOk_dump_flag(const char* arg) {
+	if (arg == NULL || *arg == '\0') return PARAM_OK;
+	if (strcmp(arg, "G") != 0) return INVALID_FLAG_PARAM;
+	return PARAM_OK;
+}
+
+int extract_dump_flag(void **extra, const char* str,  void** obj) {
+	int *pInt = (int*)obj;
+	VARIABLE_IS_NOT_USED(extra);
+	if (str == NULL || *str == '\0') {
+		*pInt = OBJPRINT_NONE;
+	} else if (strcmp(str, "G") == 0) {
+		*pInt = OBJPRINT_GREPABLE;
+	} else {
+		*pInt = OBJPRINT_NONE;
+	}
+
+	return PST_OK;
+}
 
 int get_pipe_out_error(PARAM_SET *set, ERR_TRCKR *err, const char *check_all_files, const char *out_file_names, const char *print_out_names) {
 	return get_io_pipe_error(set, err, 0, check_all_files, out_file_names, print_out_names);
@@ -1411,6 +1477,7 @@ int Win32FileWildcard(PARAM_VAL *param_value, void *ctx, int *value_shift) {
 	const char *source;
 	int prio = 0;
 	PARAM_VAL *tmp = NULL;
+	PARAM_VAL *insertTo = param_value;
 	int count = 0;
 	char buf[1024] = "";
 	char path[1024] = "";
@@ -1425,7 +1492,7 @@ int Win32FileWildcard(PARAM_VAL *param_value, void *ctx, int *value_shift) {
 
 	/**
 	 * Search for a files and directories matching the wildcard.
-	 * Ignore "." and "..". If the current value is t and a, b and c are expaned
+	 * Ignore "." and "..". If the current value is t and a, b and c are expanded
 	 * value, the resulting array is [... t, a, b, c ...].
 	 */
 
@@ -1453,9 +1520,10 @@ int Win32FileWildcard(PARAM_VAL *param_value, void *ctx, int *value_shift) {
 		res = PARAM_VAL_new(buf, source, prio, &tmp);
 		if (res != PST_OK) goto cleanup;
 
-		res = PARAM_VAL_insert(param_value, NULL, PST_PRIORITY_NONE, count, tmp);
+		res = PARAM_VAL_insert(insertTo, NULL, PST_PRIORITY_NONE, 0, tmp);
 		if (res != PST_OK) goto cleanup;
 
+		insertTo = tmp;
 		tmp = NULL;
 		count++;
 	} while (FindNextFile(hfile, &found) != 0);

@@ -23,37 +23,7 @@
 #include <stdlib.h>
 #include "obj_printer.h"
 #include "api_wrapper.h"
-
-typedef struct {
-	KSI_VerificationErrorCode errorCode;
-	const char *code;
-} verificationErrorDetail_st;
-
-static const verificationErrorDetail_st verification_error[] = {
-	{ KSI_VER_ERR_GEN_1,	"GEN-1"},
-	{ KSI_VER_ERR_GEN_2,	"GEN-2"},
-	{ KSI_VER_ERR_INT_1,	"INT-1"},
-	{ KSI_VER_ERR_INT_2,	"INT-2"},
-	{ KSI_VER_ERR_INT_3,	"INT-3"},
-	{ KSI_VER_ERR_INT_4,	"INT-4"},
-	{ KSI_VER_ERR_INT_5,	"INT-5"},
-	{ KSI_VER_ERR_INT_6,	"INT-6"},
-	{ KSI_VER_ERR_INT_7,	"INT-7"},
-	{ KSI_VER_ERR_INT_8,	"INT-8"},
-	{ KSI_VER_ERR_INT_9,	"INT-9"},
-	{ KSI_VER_ERR_INT_10,	"INT-10"},
-	{ KSI_VER_ERR_INT_11,	"INT-11"},
-	{ KSI_VER_ERR_PUB_1,	"PUB-1"},
-	{ KSI_VER_ERR_PUB_2,	"PUB-2"},
-	{ KSI_VER_ERR_PUB_3,	"PUB-3"},
-	{ KSI_VER_ERR_KEY_1,	"KEY-1"},
-	{ KSI_VER_ERR_KEY_2,	"KEY-2"},
-	{ KSI_VER_ERR_CAL_1,	"CAL-1"},
-	{ KSI_VER_ERR_CAL_2,	"CAL-2"},
-	{ KSI_VER_ERR_CAL_3,	"CAL-3"},
-	{ KSI_VER_ERR_CAL_4,	"CAL-4"},
-	{ KSI_VER_ERR_NONE,		""}
-};
+#include "tool_box.h"
 
 void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile, int (*print)(const char *format, ... )){
 	int res = KSI_UNKNOWN_ERROR;
@@ -64,34 +34,34 @@ void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile, in
 	char *pLineBreak = NULL;
 	char *pStart = NULL;
 
-	if(pubFile == NULL) return;
+	if (pubFile == NULL) return;
 
 	print("Publication Records:\n");
 
 	res = KSI_PublicationsFile_getPublications(pubFile, &list_publicationRecord);
-	if(res != KSI_OK) return;
+	if (res != KSI_OK) return;
 
 	for (i = 0; i < KSI_PublicationRecordList_length(list_publicationRecord); i++) {
 		int h=0;
 		res = KSI_PublicationRecordList_elementAt(list_publicationRecord, i, &publicationRecord);
-		if(res != KSI_OK) return;
+		if (res != KSI_OK) return;
 
-		if(KSITOOL_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
+		if (KSITOOL_PublicationRecord_toString(publicationRecord, buf, sizeof(buf)) == NULL) return;
 
 		pStart = buf;
 		j=1;
 		h=0;
-		if(i) print("\n");
-		while((pLineBreak = strchr(pStart, '\n')) != NULL){
+		if (i) print("\n");
+		while ((pLineBreak = strchr(pStart, '\n')) != NULL){
 			*pLineBreak = 0;
-			if(h++ < 3)
+			if (h++ < 3)
 				print("%s %s\n", "  ", pStart);
 			else
 				print("%s %2i) %s\n", "    ", j++, pStart);
 			pStart = pLineBreak+1;
 		}
 
-		if(h < 3)
+		if (h < 3)
 			print("%s %s\n", "  ", pStart);
 		else
 			print("%s %2i) %s\n", "    ", j++, pStart);
@@ -108,24 +78,24 @@ void OBJPRINT_signaturePublicationReference(KSI_Signature *sig, int (*print)(con
 	char *pStart = buf;
 	int i=1;
 	int h=0;
-	if(sig == NULL) return;
+	if (sig == NULL) return;
 
 	print("Publication Record:\n");
 	res = KSI_Signature_getPublicationRecord(sig, &publicationRecord);
-	if(res != KSI_OK)return ;
+	if (res != KSI_OK)return ;
 
-	if(publicationRecord == NULL) {
+	if (publicationRecord == NULL) {
 		print("  (No publication records available)\n\n");
 		return;
 	}
 
-	if(KSITOOL_PublicationRecord_toString(publicationRecord, buf,sizeof(buf))== NULL) return;
+	if (KSITOOL_PublicationRecord_toString(publicationRecord, buf, sizeof(buf)) == NULL) return;
 	pStart = buf;
 
-	while((pLineBreak = strchr(pStart, '\n')) != NULL){
+	while ((pLineBreak = strchr(pStart, '\n')) != NULL){
 		*pLineBreak = 0;
 
-		if(h < 3)
+		if (h < 3)
 			print("%s %s\n", "  ", pStart);
 		else
 			print("%s %2i) %s\n", "    ", i++, pStart);
@@ -133,7 +103,7 @@ void OBJPRINT_signaturePublicationReference(KSI_Signature *sig, int (*print)(con
 		pStart = pLineBreak+1;
 	}
 
-	if(h<3)
+	if (h < 3)
 		print("%s %s\n", "  ", pStart);
 	else
 		print("%s %2i) %s\n", "    ", i++, pStart);
@@ -173,23 +143,129 @@ void OBJPRINT_signatureInputHash(KSI_Signature *sig, int (*print)(const char *fo
 	return;
 }
 
-void OBJPRINT_signerIdentity(KSI_Signature *sig, int (*print)(const char *format, ... )){
+void OBJPRINT_IdentityMetadata(KSI_CTX *ctx, KSI_Signature *sig, int flags, int (*print)(const char *format, ... )){
 	int res = KSI_UNKNOWN_ERROR;
-	char *signerIdentity = NULL;
+	KSI_HashChainLinkIdentityList *identity = NULL;
+	size_t i;
+	const char *offset = "    ";
+	KSI_Integer *tmpInt = NULL;
 
-	if(sig == NULL) goto cleanup;
+	if (sig == NULL) goto cleanup;
 
-	print("Signer identity: ");
-	res = KSI_Signature_getSignerIdentity(sig, &signerIdentity);
-	if(res != KSI_OK){
+	res = KSI_Signature_getAggregationHashChainIdentity(sig, &identity);
+	if (res != KSI_OK){
 		print("Unable to get signer identity.\n");
 		goto cleanup;
 	}
+	if (flags & OBJPRINT_GREPABLE) {
+		print("Identity Metadata: %i\n", KSI_HashChainLinkIdentityList_length(identity));
+	} else {
+		print("Identity Metadata:\n");
+	}
 
-	print("'%s'.\n", signerIdentity == NULL || strlen(signerIdentity) == 0 ? "Unknown" : signerIdentity);
+	if (KSI_HashChainLinkIdentityList_length(identity) == 0) {
+		print("%s'Unknown'.\n", offset);
+	} else {
+		for (i = 0; i < KSI_HashChainLinkIdentityList_length(identity); i++) {
+			KSI_HashChainLinkIdentity *id = NULL;
+			KSI_HashChainLinkIdentityType type;
+
+			res = KSI_HashChainLinkIdentityList_elementAt(identity, i, &id);
+			if (res != KSI_OK){
+				print("Unable to get identity.\n");
+				goto cleanup;
+			}
+
+			res = KSI_HashChainLinkIdentity_getType(id, &type);
+			if (res != KSI_OK){
+				print("Unable to get identity type.\n");
+				goto cleanup;
+			}
+
+			if (type == KSI_IDENTITY_TYPE_LEGACY_ID) {
+				KSI_Utf8String *clientId = NULL;
+
+				res = KSI_HashChainLinkIdentity_getClientId(id, &clientId);
+				if (res != KSI_OK){
+					print("Unable to get client id.\n");
+					goto cleanup;
+				}
+
+				if (flags & OBJPRINT_GREPABLE) {
+					print("%s%d) Client ID: %s\n", offset, i + 1, KSI_Utf8String_cstr(clientId));
+				} else {
+					print("%s%d) '%s' (legacy)\n", offset, i + 1, KSI_Utf8String_cstr(clientId));
+				}
+
+			} else if (type == KSI_IDENTITY_TYPE_METADATA) {
+				KSI_Utf8String *clientId = NULL;
+				KSI_Utf8String *macId = NULL;
+				KSI_Integer *seqNr = NULL;
+				KSI_Integer *reqTm = NULL;
+				uint64_t reqTmSec = 0;
+				uint64_t reqTmMicro = 0;
+				char date[1024] = "Unable to convert time to date";
+
+				/* ClientId is mandatory element. */
+				res = KSI_HashChainLinkIdentity_getClientId(id, &clientId);
+				if (res != KSI_OK || clientId == NULL){
+					print("Unable to get client id.\n");
+					goto cleanup;
+				}
+
+				/* Read optional elements. */
+				res = KSI_HashChainLinkIdentity_getMachineId(id, &macId);
+				if (res != KSI_OK){
+					print("Unable to get machine id.\n");
+					goto cleanup;
+				}
+				res = KSI_HashChainLinkIdentity_getSequenceNr(id, &seqNr);
+				if (res != KSI_OK){
+					print("Unable to get sequence number.\n");
+					goto cleanup;
+				}
+				res = KSI_HashChainLinkIdentity_getRequestTime(id, &reqTm);
+				if (res != KSI_OK){
+					print("Unable to get sequence number.\n");
+					goto cleanup;
+				}
+
+				if (reqTm) {
+					KSI_Integer *reqTmMillis = NULL;
+					res = KSI_Integer_new(ctx, KSI_Integer_getUInt64(reqTm) / 1000000, &reqTmMillis);
+					if (reqTmMillis) KSI_Integer_toDateString(reqTmMillis, date, sizeof(date));
+					KSI_Integer_free(reqTmMillis);
+					if (res != KSI_OK) {
+						print("Unable to convert request time to seconds.\n");
+						goto cleanup;
+					}
+
+					reqTmSec = KSI_Integer_getUInt64(reqTm) / 1000000;
+					reqTmMicro = KSI_Integer_getUInt64(reqTm) - (reqTmSec * 1000000);
+				}
+
+				/* Print values if available. */
+				if (flags & OBJPRINT_GREPABLE) {
+					print("%s%d) Client ID: %s\n", offset, i + 1, KSI_Utf8String_cstr(clientId));
+					if (macId) print("%s%d) Machine ID: %s\n", offset, i + 1, KSI_Utf8String_cstr(macId));
+					if (seqNr) print("%s%d) Sequence number: %i\n", offset, i + 1, (unsigned long)KSI_Integer_getUInt64(seqNr));
+					if (reqTm)print("%s%d) Request time: (%llu.%llu) %s+00:00\n", offset, i + 1, reqTmSec, reqTmMicro, date);
+				} else {
+					print("%s%d) Client ID: '%s'", offset, i + 1, KSI_Utf8String_cstr(clientId));
+					if (macId) print(", Machine ID: '%s'", KSI_Utf8String_cstr(macId));
+					if (seqNr) print(", Sequence number: %i", (unsigned long)KSI_Integer_getUInt64(seqNr));
+					if (reqTm) print(", Request time: (%llu.%llu) %s+00:00", reqTmSec, reqTmMicro, date);
+					print("\n");
+				}
+			} else {
+				print("%s%d) Unknown identity type.\n", offset, i + 1);
+			}
+		}
+	}
+
 cleanup:
-
-	KSI_free(signerIdentity);
+	KSI_Integer_free(tmpInt);
+	KSI_HashChainLinkIdentityList_free(identity);
 	return;
 }
 
@@ -234,14 +310,19 @@ static const char *get_signature_type_from_oid(const char *oid) {
 	}
 }
 
-void OBJPRINT_signatureCertificate(const KSI_Signature *sig, int (*print)(const char *format, ... )) {
+void OBJPRINT_signatureCertificate(KSI_CTX *ctx, const KSI_Signature *sig, int (*print)(const char *format, ... )) {
 	int res;
 	KSI_CalendarAuthRec *calAuthRec = NULL;
 	KSI_PKISignedData *pki_data = NULL;
 	KSI_OctetString *ID = NULL;
 	KSI_Utf8String *sig_type = NULL;
+	KSI_PublicationsFile *pubfile = NULL;
+	KSI_PKICertificate *verificationCert = NULL;
+	char buf[1024];
 
+	char tmp[1024];
 	char str_id[1024];
+	const char *CN = NULL;
 
 	char *ret;
 
@@ -262,12 +343,30 @@ void OBJPRINT_signatureCertificate(const KSI_Signature *sig, int (*print)(const 
 	ret = KSI_OctetString_toString(ID, ':', str_id, sizeof(str_id));
 	if (ret != str_id) goto cleanup;
 
+	if (ctx != NULL) {
+		res = KSI_receivePublicationsFile(ctx, &pubfile);
+		if (res == KSI_PUBLICATIONS_FILE_NOT_CONFIGURED) CN = "(Publications file not specified!)";
+		if (res != KSI_OK || pubfile == NULL) goto final_print;
+
+		res = KSI_PublicationsFile_getPKICertificateById(pubfile, ID, &verificationCert);
+		if (verificationCert == NULL) CN = "(Certificate not found from publications file!)";
+		if (res != KSI_OK || verificationCert == NULL) goto final_print;
+
+		if(KSI_PKICertificate_toString(verificationCert, buf, sizeof(buf)) == NULL) goto final_print;
+
+		if(STRING_extractAbstract(buf, "Issued to: ", "\n  * Issued by", tmp, sizeof(tmp), find_charAfterStrn, find_charBeforeStrn, NULL) == NULL) goto final_print;
+		CN = tmp;
+	}
+
+final_print:
 	print("Calendar Authentication Record %s signature:\n", get_signature_type_from_oid(KSI_Utf8String_cstr(sig_type)));
 	print("  Signing certificate ID: %s\n", str_id);
+	if (CN) print("  Signing certificate issued to: %s\n", CN);
 	print("  Signature type: %s\n", KSI_Utf8String_cstr(sig_type));
 
 cleanup:
 
+	KSI_PublicationsFile_free(pubfile);
 
 	return;
 }
@@ -280,20 +379,20 @@ void OBJPRINT_publicationsFileCertificates(const KSI_PublicationsFile *pubfile, 
 	unsigned int i=0;
 	int res = 0;
 
-	if(pubfile == NULL) goto cleanup;
+	if (pubfile == NULL) goto cleanup;
 	print("Certificates for key-based signature verification:\n");
 
 	res = KSI_PublicationsFile_getCertificates(pubfile, &certReclist);
-	if(res != KSI_OK || certReclist == NULL) goto cleanup;
+	if (res != KSI_OK || certReclist == NULL) goto cleanup;
 
 	for (i = 0; i < KSI_CertificateRecordList_length(certReclist); i++){
 		res = KSI_CertificateRecordList_elementAt(certReclist, i, &certRec);
-		if(res != KSI_OK || certRec == NULL) goto cleanup;
+		if (res != KSI_OK || certRec == NULL) goto cleanup;
 
 		res = KSI_CertificateRecord_getCert(certRec, &cert);
-		if(res != KSI_OK || cert == NULL) goto cleanup;
+		if (res != KSI_OK || cert == NULL) goto cleanup;
 
-		if(KSI_PKICertificate_toString(cert, buf, sizeof(buf)) != NULL)
+		if (KSI_PKICertificate_toString(cert, buf, sizeof(buf)) != NULL)
 			print("%s\n", buf);
 	}
 
@@ -328,7 +427,7 @@ cleanup:
 	return;
 }
 
-void OBJPRINT_signatureDump(KSI_Signature *sig, int (*print)(const char *format, ... )) {
+void OBJPRINT_signatureDump(KSI_CTX *ctx, KSI_Signature *sig, int flags, int (*print)(const char *format, ... )) {
 
 	print("KSI Signature dump:\n");
 
@@ -342,12 +441,12 @@ void OBJPRINT_signatureDump(KSI_Signature *sig, int (*print)(const char *format,
 	print("  ");
 	OBJPRINT_signatureSigningTime(sig, print);
 	print("  ");
-	OBJPRINT_signerIdentity(sig, print);
+	OBJPRINT_IdentityMetadata(ctx, sig, flags, print);
 	print("  Trust anchor: ");
 
 	if (KSITOOL_Signature_isCalendarAuthRecPresent(sig)) {
 		print("Calendar Authentication Record.\n\n");
-		OBJPRINT_signatureCertificate(sig, print);
+		OBJPRINT_signatureCertificate(ctx, sig, print);
 	} else if (KSITOOL_Signature_isPublicationRecordPresent(sig)) {
 		print("Publication Record.\n\n");
 		OBJPRINT_signaturePublicationReference(sig, print);
@@ -384,20 +483,8 @@ static const char *getVerificationResultCode(KSI_VerificationResultCode code) {
 	}
 }
 
-static const verificationErrorDetail_st *getVerificationErrorDetails(KSI_VerificationErrorCode code) {
-	size_t i;
-	size_t size = sizeof(verification_error) / sizeof(verificationErrorDetail_st);
-
-	for (i = 0; i < size; i++) {
-		if (verification_error[i].errorCode == code) return &verification_error[i];
-	}
-	return NULL;
-}
-
 const char *OBJPRINT_getVerificationErrorCode(KSI_VerificationErrorCode code) {
-	const verificationErrorDetail_st *details = getVerificationErrorDetails(code);
-
-	return (details != NULL ? details->code : "Unknown");
+	return KSI_VerificationErrorCode_toString(code);
 }
 
 const char *OBJPRINT_getVerificationErrorDescription(KSI_VerificationErrorCode code) {
@@ -450,10 +537,12 @@ void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *resu
 	unsigned int i = 0;
 	size_t step;
 	size_t stepsLeft;
+	const char *not_ok_string = NULL;
 
 	if (result == NULL){
 		return;
 	}
+	not_ok_string = (result->resultCode == KSI_VER_RES_OK || result->resultCode == KSI_VER_RES_NA) ? "na" : "failed";
 
 	print("KSI Verification result dump:\n");
 	print("  Verification abstract:\n");
@@ -462,7 +551,7 @@ void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *resu
 	do {
 		if (result->finalResult.stepsPerformed & step) {
 			print("    %s.. %s", getVerificationStepDescription(step),
-					(getVerificationStepResult(step, result) ? "ok" : "failed"));
+					(getVerificationStepResult(step, result) ? "ok" : not_ok_string));
 			print("\n");
 		}
 		step <<= 1;
@@ -488,3 +577,90 @@ void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *resu
 	return;
 }
 
+void OBJPRINT_aggregatorConfDump(KSI_Config *config, int (*print)(const char *format, ... )) {
+	int res;
+	KSI_Integer *max_level = NULL;
+	KSI_Integer *aggr_algo = NULL;
+	KSI_Integer *aggr_period = NULL;
+	KSI_Integer *max_req = NULL;
+	KSI_Utf8StringList *parent_uri = NULL;
+	size_t i;
+
+	print("Aggregator configuration:\n");
+
+	res = KSI_Config_getAggrAlgo(config, &aggr_algo);
+	if (res != KSI_OK) return;
+	if (aggr_algo) print("  Hash algorithm: %s\n", KSI_getHashAlgorithmName((KSI_HashAlgorithm)KSI_Integer_getUInt64(aggr_algo)));
+
+	res = KSI_Config_getMaxLevel(config, &max_level);
+	if (res != KSI_OK) return;
+	if (max_level) print("  Maximum level: %d\n", KSI_Integer_getUInt64(max_level));
+
+	res = KSI_Config_getAggrPeriod(config, &aggr_period);
+	if (res != KSI_OK) return;
+	if (aggr_period) print("  Aggregation period: %d\n", KSI_Integer_getUInt64(aggr_period));
+
+	res = KSI_Config_getMaxRequests(config, &max_req);
+	if (res != KSI_OK) return;
+	if (max_req) print("  Maximum requests: %d\n", KSI_Integer_getUInt64(max_req));
+
+	res = KSI_Config_getParentUri(config, &parent_uri);
+	if (res != KSI_OK) return;
+	if (parent_uri) {
+		print("  Parent URI:\n");
+		for (i = 0; i < KSI_Utf8StringList_length(parent_uri); i++) {
+			KSI_Utf8String *uri = NULL;
+
+			res = KSI_Utf8StringList_elementAt(parent_uri, i, &uri);
+			if (res != KSI_OK) return;
+			print("    %s\n", KSI_Utf8String_cstr(uri));
+		}
+	}
+	print("\n");
+}
+
+void OBJPRINT_extenderConfDump(KSI_Config *config, int (*print)(const char *format, ... )) {
+	int res;
+	KSI_Integer *max_req = NULL;
+	KSI_Utf8StringList *parent_uri = NULL;
+	KSI_Integer *cal_first = NULL;
+	KSI_Integer *cal_last = NULL;
+	size_t i;
+	char date[1024];
+
+	print("Extender configuration:\n");
+
+	res = KSI_Config_getCalendarFirstTime(config, &cal_first);
+	if (res != KSI_OK) return;
+	if (cal_first) {
+		print("  Calendar first time: (%i) %s+00:00\n",
+				KSI_Integer_getUInt64(cal_first),
+				KSI_Integer_toDateString(cal_first, date, sizeof(date)));
+	}
+
+	res = KSI_Config_getCalendarLastTime(config, &cal_last);
+	if (res != KSI_OK) return;
+	if (cal_last) {
+		print("  Calendar last time:  (%i) %s+00:00\n",
+				KSI_Integer_getUInt64(cal_last),
+				KSI_Integer_toDateString(cal_last, date, sizeof(date)));
+	}
+
+	res = KSI_Config_getMaxRequests(config, &max_req);
+	if (res != KSI_OK) return;
+	if (max_req) print("  Maximum requests: %d\n", KSI_Integer_getUInt64(max_req));
+
+	res = KSI_Config_getParentUri(config, &parent_uri);
+	if (res != KSI_OK) return;
+	if (parent_uri) {
+		print("  Parent URI:\n");
+		for (i = 0; i < KSI_Utf8StringList_length(parent_uri); i++) {
+			KSI_Utf8String *uri = NULL;
+
+			res = KSI_Utf8StringList_elementAt(parent_uri, i, &uri);
+			if (res != KSI_OK) return;
+			print("    %s\n", KSI_Utf8String_cstr(uri));
+		}
+	}
+	print("\n");
+}

@@ -1,13 +1,117 @@
-* BUGFIX: User info embedded in the uri is interpreted as KSI user info only when the known uri scheme has prefix 'ksi+' (e.g. ksi+http).
+(TOOL-267) * IMPROVEMENT: Usage of ksi+ (e.g. ksi+http) URL schemes documented.
+(TOOL-266) * FEATURE: Script rebuild.sh has new option --ign-dep-online-errt to ignore test results during online build (--get-dep-online).
+(TOOL-266) * FEATURE: Script WinBuildOnline.bat has new option --ign-dep-online-err to ignore test results during online build.
+* BUGFIX: Fixed extender '--apply-remote-conf' handling.
+(TOOL-268) * BUGFIX: There is no default user and key as anon anymore.
+
+Version 2.8
+
+2018-04-23 2.8.1300
+
+* IMPROVEMENT: Build requires libksi version >= 3.17.
+* IMPROVEMENT: Tests refactored to suite with libksi 3.17.
+* IMPROVEMENT: Resolved build warnings on Windows.
+* IMPROVEMENT: Script rebuild.sh changed to main build script that is called from the others.
+* IMPROVEMENT: Convenience script WinBuildOnline.bat that links KSI tool with libksi and libparamset statically. Libksi and libparamset are downloaded and built from Github.
+* IMPROVEMENT: Convenience script rebuild.sh --get-dep-online that links KSI tool with libksi and libparamset statically. Libksi and libparamset are downloaded and built from Github.
+* IMPROVEMENT: New option '--without-libksi' added to configure script that removes -lksi from linking thus making it possible to explicitly specify the libksi library file that is used for linking.
+* IMPROVEMENT: OSX installer build script removed as it is availabe from guardtime/ksi homebrew tap.
+* IMPROVEMENT: Task and command-line parameter parser is linked as external library (libparamset).
+* IMPROVEMENT: README.md included to packaging.
+* IMPROVEMENT: Parameter --dump has optional argument 'G' that can be used for optimizing the output for grepping.
+* IMPROVEMENT: When dumping signature (--dump), request time from metadata is printed in seconds and in human-readable string.
+* IMPROVEMENT: When signing multiple files within multiple aggregation rounds, signatures are saved imediately to optimize memory usage.
+* IMPROVEMENT: Error message improved when untrusted hash algorithm is used.
+* IMPROVEMENT: Parameters -H, --aggr-hmac-alg and --ext-hmac-alg do not permit usage of untrusted hash algorithm.
+* IMPROVEMENT: Help (ksi -h) separates untrusted hash algorithms from trusted ones.
+* IMPROVEMENT: Update verify handling in accordance with libksi improvements.
+* IMPROVEMENT: When it is not possible to access configuration file via KSI_CONF, warning is displayed instead of error. Invalid configuration file pointed by KSI_CONF is still handled as error.
+* BUGFIX: Int type argument removed from parameter --mdata-req-tm. Affects "ksi sign -h" and "ksi conf -h".
+* BUGFIX: Empty first page from doc/ksi-conf.pdf removed.
+* BUGFIX: Pointer handling in param_control.c fixed.
+* BUGFIX: Description of Debian package fixed.
+* BUGFIX: In case of empty string as KSI_CONF value, warning is displayed.
+* BUGFIX: KSI tool crash fixed when signing less than 64 file during single aggregation round with flag --show-progress.
+
+Version 2.7
+
+2017-10-13 2.7.1200
+
+* IMPROVEMENT: Task and command-line parameter parser updated.
+* IMPROVEMENT: Test suite accustomed to KSI PDU version 2.
+* IMPROVEMENT: Sample test configuration file (test/test.cfg.sample) updated.
+* IMPROVEMENT: Task verify supports input without specifying -i (only files that do not look like potential parameters, e.g. -a or --option).
+* IMPROVEMENT: KSI signature task verify is always using libksi's default verification policy when policy is not explicitly specified (e.g. --ver-pub).
+* IMPROVEMENT: KSI signature dump (--dump) will print some extra information for Calendar Authentication Record signatures certificate (works with extend and verify).
+* IMPROVEMENT: New script rebuild-deb.sh to build debian package.
+* IMPROVEMENT: Parameter -T and its use case is removed from ksi extend help (ksi extend -h).
+* IMPROVEMENT: Extending with flags -T and --pub-str explained more explicitly in ksi-extend.1.
+* BUGFIX: Tests will run both tlvutil-metadata.test and tlvutil-pdu-header.test if gttlvutil is installed.
+* BUGFIX: Publications file downloaded can be redirected to stdout (-o -).
+* BUGFIX: Verification result dump shows steps that are inconclusive as "na" instead of "failed".
+
+Version 2.6
+
+2017-06-13 2.6.1136
+
+* IMPROVEMENT: Error handling improved when PDU version 1 is used to fetch extender configuration.
+* IMPROVEMENT: Typo fixed in verification command.
+
+Version 2.5
+
+2017-05-15 2.5.1125
+
+* IMPROVEMENT: Remote configuration request failure may print some helpful hints.
+* IMPROVEMENT: Publication-based verification may print some helpful hints how to fix the failing verification.
+* IMPROVEMENT: Parameter -H can be used inside KSI configuration file to override default hash algorithm.
+* FEATURE: New flag --aggr-hmac-alg for specifing KSI aggregator HMAC algorithm.
+* FEATURE: New flag --ext-hmac-alg for specifing KSI extender HMAC algorithm.
+* FEATURE: New flags --inst-id and --msg-id for specifying instance id and message id for KSI PDU header.
+* FEATURE: New flag --dump-conf for dumping remote configuration to stdout.
+* FEATURE: New flag --apply-remote-conf for obtaining and applying server configuration.
+* BUGFIX: Linux and Windows pipe test uses installed KSI tool when the binary is missing from the project directory.
+
+Version 2.4
+
+2017-01-20 2.4.1038
+
+* IMPROVEMENT: Command-line parameter parser updated and optimized.
+* IMPROVEMENT: Windows Wildcard resolver optimized.
+* IMPROVEMENT: --dump prints identity metadata instead of signer identity (deprecated).
+* IMPROVEMENT: Windows installer automatically removes the older version.
+* IMPROVEMENT: Extending of multiple signatures implemented.
+* IMPROVEMENT: Deprecated libksi functions removed.
+* FEATURE: It is possible to specify output (-o) as directory when extending.
+* FEATURE: It is possible to specify multiple inputs (-i) when extending.
+* FEATURE: Wildcard support when extending multiple files (works also on Windows).
+* FEATURE: New flag --replace-existing to replace the input file with successfully extended version.
+* BUGFIX: Error message for case where aggregator URL is not configured fixed.
+* BUGFIX: Description of the output file name generation during extending fixed.
+* BUGFIX: Progress bar in signing made smoother.
+
+Version 2.3
+
+2016-11-16 2.3.984
+
+* IMPROVEMENT: Refactored block-signer handling.
+* IMPROVEMENT: New parameters --aggr-pdu-v and --ext-pdu-v added.
+
+Version 2.2
+
+2016-10-18 2.2.961
+
+* IMPROVEMENT: Refactoring due to background verification.
 * IMPROVEMENT: Command-line parameter parser updated.
 * IMPROVEMENT: Command-line typo errors are printed before invalid value or format errors.
+* IMPROVEMENT: Error handling for detecting unexpected internal errors improved.
+* IMPROVEMENT: Masking and metadata tests implemented. If gttlvutil is not available extra tests are ignored.
 * FEATURE: Local aggregation implemented. See new options for more details --max-lvl, --max-aggr-rounds --mask and --mdata*.
 * FEATURE: It is possible to specify output (-o) as directory when signing.
 * FEATURE: It is possible to specify multiple inputs (-i) when signing.
 * FEATURE: New option -- under sign after what everything is interpreted as regular input file.
 * FEATURE: New options --mask and --prev-leaf to enable and configure input masking.
-* FEATURE: Wildcard support when signing multiple files (works also on windows).
-
+* FEATURE: Wildcard support when signing multiple files (works also on Windows).
+* BUGFIX: User info embedded in the URI is interpreted as KSI user info only when the known URI scheme has prefix 'ksi+' (e.g. ksi+http).
 
 Version 2.1
 
@@ -52,7 +156,7 @@ Version 2.0
 
 Version 1.10
 
-2016-18-04 1.10.0
+2016-04-19 1.10.0
 
 * IMPROVEMENT: Enabled autotools option subdir-objects to remove build errors (on Mac OS and Ubuntu). (TOOL-97)
 * IMPROVEMENT: Added option to build static ksitool. (TOOL-103)
@@ -92,7 +196,7 @@ Version 1.8
 * Windows installer build supports INSTALL_MACHINE as x86, x64, 32 or 64.
 * When aggregator url is used for extending or vice versa, helpful error message is printed.
 * Debug messages related to PKI signature are improved (use with -d).
-* ChangeLog added. 
+* ChangeLog added.
 * Bug fix. When defining publications file constraints on command-line (--cnstr) default constraints are ignored.
 * Bug fix. Environment variables with similar prefix to the correct one are ignored.
 
@@ -147,7 +251,7 @@ Version 1.8
 * KSI error trace is logged with parameter --log.
 * Tcp client supported with url scheme tcp://.
 * Url scheme ksi:// is supported.
-* Bug fix. Extended signature is actually verified online when using -vx. 
+* Bug fix. Extended signature is actually verified online when using -vx.
 * Bug fix. Service timing measurement fixed.
 * Bug fix. When downloading publications file (-p -o -P), parameter -X is not required.
 * Bug fix. When extending invalid signature verification result is shown correctly.

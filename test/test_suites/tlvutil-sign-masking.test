@@ -1,0 +1,106 @@
+#
+# Copyright 2013-2016 Guardtime, Inc.
+#
+# This file is part of the Guardtime client SDK.
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES, CONDITIONS, OR OTHER LICENSES OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
+# "Guardtime" and "KSI" are trademarks or registered trademarks of
+# Guardtime, Inc., and no license to trademarks is granted; Guardtime
+# reserves and retains all trademark rights.
+
+##
+# Test suite examins the KSI masking successful cases.
+# EXECUTABLE --version > test\out\dummy.txt is used to overcome the first string
+# "EXECUTABLE" replacment with KSI and continue testing with gttlvutil.
+##
+
+# SHA-256:1e39b7630d3153960d4e81f2101aa6f86e1f85ab746481a9fee6d896b4f23287
+
+#ebcd:
+#SHA2-256:3d04292585ea6208e0ac6e245c51d872b53fd27f6806225610cfa21e9ec42c28
+
+#abcd:
+#SHA2-256:e12e115acf4552b2568b55e93cbd39394c4ef81c82447fafc997882a02d23677
+
+##
+# Nr. 1
+# Add 2 files to the local aggregation tree and check if both signatures contain
+# the hash value from the parent.
+##
+EXECUTABLE sign --conf test/test.cfg -d -i test/resource/file/ebcd -i test/resource/file/abcd -o test/out/sign/ebcd-no-mask-0.ksig -o test/out/sign/abcd-no-mask-0.ksig --max-lvl 1
+>>>2 /(.*Signing the local aggregation tree.*)(.*1\/1.*)/
+>>>= 0
+
+# Verify with ksi verify and gttlvdump.
+EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/ebcd -i test/out/sign/ebcd-no-mask-0.ksig
+>>>= 0
+
+EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/abcd -i test/out/sign/abcd-no-mask-0.ksig
+>>>= 0
+
+ gttlvdump -pPy test/out/sign/ebcd-no-mask-0.ksig
+>>>/(.*TLV.*02.*)(.*Sibling hash.*)(.*sha2-256:e12e115acf4552b2568b55e93cbd39394c4ef81c82447fafc997882a02d23677.*)/
+>>>= 0
+
+ gttlvdump -pPy test/out/sign/abcd-no-mask-0.ksig
+>>>/(.*TLV.*02.*)(.*Sibling hash.*)(.*sha2-256:3d04292585ea6208e0ac6e245c51d872b53fd27f6806225610cfa21e9ec42c28.*)/
+>>>= 0
+
+##
+# Nr. 2
+# Add 2 files to the local aggregation tree and use default masking. Both
+# signatures must NOT contain each other input hash values.
+##
+EXECUTABLE sign --conf test/test.cfg -d -i test/resource/file/ebcd -i test/resource/file/abcd -o test/out/sign/ebcd-mask-0.ksig -o test/out/sign/abcd-mask-0.ksig --max-lvl 2 --mask
+>>>2 /(.*Signing the local aggregation tree.*)(.*1\/1.*)/
+>>>= 0
+
+# Verify with ksi verify and gttlvdump.
+EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/ebcd -i test/out/sign/ebcd-mask-0.ksig
+>>>= 0
+
+EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/abcd -i test/out/sign/abcd-mask-0.ksig
+>>>= 0
+
+ gttlvdump -pPy test/out/sign/ebcd-mask-0.ksig
+>>>!/(.*TLV.*02.*)(.*Sibling hash.*)(.*sha2-256:e12e115acf4552b2568b55e93cbd39394c4ef81c82447fafc997882a02d23677.*)/
+>>>= 0
+
+ gttlvdump -pPy test/out/sign/abcd-mask-0.ksig
+>>>!/(.*TLV.*02.*)(.*Sibling hash.*)(.*sha2-256:3d04292585ea6208e0ac6e245c51d872b53fd27f6806225610cfa21e9ec42c28.*)/
+>>>= 0
+
+##
+# Nr. 3
+# Add 1 file to the local aggregation tree and link it with the hash value from
+# the "previous" local aggregation round. Lets take hash value from "imaginary"
+# tree (X0) and select a random seed (hex) aabb (iv) to initialize the masking.
+#
+# iv == aabb
+# X0 == SHA-256:(01)1e39b7630d3153960d4e81f2101aa6f86e1f85ab746481a9fee6d896b4f23287
+# m1 == hash(X0 | iv)
+#    == hash(011e39b7630d3153960d4e81f2101aa6f86e1f85ab746481a9fee6d896b4f23287 | aabb)
+#    == 5771d844ce32ab357d3533a318885972edefacccd713326e2007db19e45b97c9
+# Value m1 must be in the first aggregation chain indicating the the linking was
+# actually performed.
+##
+EXECUTABLE sign --conf test/test.cfg -d -i test/resource/file/ebcd -o test/out/sign/ebcd-prev-leaf-0.ksig --max-lvl 1 --prev-leaf SHA-256:1e39b7630d3153960d4e81f2101aa6f86e1f85ab746481a9fee6d896b4f23287 --mask aabb
+>>>2 /(.*Signing the local aggregation tree.*)(.*1\/1.*)/
+>>>= 0
+
+# Verify with ksi verify and gttlvdump.
+EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/ebcd -i test/out/sign/ebcd-prev-leaf-0.ksig
+>>>= 0
+
+ gttlvdump -pPy test/out/sign/ebcd-prev-leaf-0.ksig
+>>>/(.*TLV.*02.*)(.*Sibling hash.*)(.*sha2-256:5771d844ce32ab357d3533a318885972edefacccd713326e2007db19e45b97c9.*)/
+>>>= 0
+

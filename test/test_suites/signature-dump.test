@@ -1,0 +1,96 @@
+#
+# Copyright 2013-2016 Guardtime, Inc.
+#
+# This file is part of the Guardtime client SDK.
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES, CONDITIONS, OR OTHER LICENSES OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
+# "Guardtime" and "KSI" are trademarks or registered trademarks of
+# Guardtime, Inc., and no license to trademarks is granted; Guardtime
+# reserves and retains all trademark rights.
+
+
+# Misuse of signing command-line.
+
+# Dump extended signature (general signature info) 1.0.
+EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig --dump
+>>> /(Input hash)(.*SHA.*)(.*256.*)(.*11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d.*)
+(.*Signing time.*)(.*2014.08.01 14.41.06.*)
+(.*Identity Metadata.*)
+(.*GT.*)
+(.*testA.*)
+(.*36-test.*)
+(.*Trust anchor.*)(.*Publication Record.*)/
+>>>= 0
+
+# Dump extended signature (publication record) 1.1.
+EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig --dump
+>>> /(.*Publication string.*)(.*AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4.*)
+(.*Publication date.*)(.*2014.08.15 00.00.00.*)
+(.*Published hash)(.*SHA.*)(.*256.*)(.*f41157b228426c657ef81740cabae530572c313dc4da916306e67bd9b7742865.*)/
+>>>= 0
+
+# Dump signature with calendar authentication record 2.0.
+EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-2014-08-01.1.ksig --dump
+>>> /(Input hash)(.*SHA.*)(.*256.*)(.*11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d.*)
+(.*Signing time.*)(.*2014.08.01 14.41.06.*)
+(.*Identity Metadata.*)
+(.*GT.*)
+(.*testA.*)
+(.*36-test.*)
+(.*Trust anchor.*)(.*Calendar Authentication Record.*)/
+>>>= 0
+
+# Dump signature with calendar authentication record where the certificate is NOT found from the publications file.
+EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-2014-08-01.1.ksig --dump
+>>> /(Calendar Authentication Record PKI signature.*)
+(.*Signing certificate ID.*)(.*a4.*2c.*61.*ad.*)
+(.*Signing certificate issued to.*)(.*Certificate not found from publications file.*)
+(.*Signature type.*)(.*1.*2.*840.*113549.*1.*1.*11.*)/
+>>>= 0
+
+# Dump signature with calendar authentication record where the certificate is found from the publications file.
+EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-2014-08-01.1.ksig --conf test/resource/conf/static-sign-1.cfg --dump
+>>> /(Calendar Authentication Record PKI signature.*)
+(.*Signing certificate ID.*)(.*a4.*2c.*61.*ad.*)
+(.*Signing certificate issued to.*)(.*CN=H1.*)(.*O=Guardtime.*)
+(.*Signature type.*)(.*1.*2.*840.*113549.*1.*1.*11.*)/
+>>>= 0
+
+# Dump signature without calender chain.
+EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-2014-08-01.1.no-cal-hashchain.ksig --dump
+>>> /(Input hash)(.*SHA.*)(.*256.*)(.*11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d.*)
+(.*Signing time.*)(.*2014.08.01 14.41.06.*)
+(.*Identity Metadata.*)
+(.*GT.*)(legacy.*)
+(.*testA.*)(legacy.*)
+(.*36-test.*)(legacy.*)
+(.*Trust anchor.*)(.*Calendar Blockchain.*)/
+>>>= 0
+
+# Dump signature, suitable for grepping.
+EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-sha1-2016-05-26.ext.ksig --dump G
+>>> /(Input h)(.*SHA)(.*1)(.*a7d2c6238a9.*591ab.*)
+(.*Signing time)(.*2016.05.26 09.23.51.*)
+(.*Identity Metadata: 4.*)
+(.*1. Client ID: GT.*)
+(.*2. Client ID: staging AS.*)
+(.*3. Client ID: taavi_al.*)
+(.*3. Machine ID: test:taavi.*)
+(.*3. Sequence number: 0.*)/
+>>>= 0
+
+EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-sha1-2016-05-26.ext.ksig --dump G
+>>> /(.*3. Request time: )(.1464254627.126227)(.*2016.05.26 09.23.47.*)
+(.*4. Client ID: anon1.*)
+(.*4. Machine ID: anon:http.*)
+(.*4. Sequence number: 0.*)
+(.*4. Request time: )(.1464254627.124789)(.*2016.05.26 09.23.47.*)/
+>>>= 0

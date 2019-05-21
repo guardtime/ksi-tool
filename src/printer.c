@@ -34,9 +34,10 @@ struct printer_conf_st {
 	FILE *warning;
 	FILE *error;
 	FILE *debug;
+	FILE *suggestion;
 };
 
-struct printer_conf_st printer_conf = {(PRINT_INFO | PRINT_WARNINGS | PRINT_ERRORS | PRINT_RESULT | PRINT_DEBUG), NULL, NULL, NULL, NULL, NULL};
+struct printer_conf_st printer_conf = {(PRINT_INFO | PRINT_WARNINGS | PRINT_ERRORS | PRINT_RESULT | PRINT_DEBUG | PRINT_SUGGESTION), NULL, NULL, NULL, NULL, NULL, NULL};
 
 void print_setStream(unsigned print, FILE* stream) {
 	if (print & PRINT_INFO) {
@@ -54,6 +55,9 @@ void print_setStream(unsigned print, FILE* stream) {
 	if (print & PRINT_DEBUG) {
 		printer_conf.debug = stream;
 	}
+	if (print & PRINT_SUGGESTION) {
+		printer_conf.suggestion = stream;
+	}
 }
 
 void print_enable(unsigned print) {
@@ -65,9 +69,9 @@ void print_disable(unsigned print) {
 }
 
 void print_init(void) {
-	print_setStream(PRINT_RESULT | PRINT_INFO | PRINT_WARNINGS, stdout);
-	print_setStream(PRINT_DEBUG | PRINT_ERRORS, stderr);
-	print_enable(PRINT_RESULT | PRINT_INFO | PRINT_WARNINGS | PRINT_ERRORS);
+	print_setStream(PRINT_RESULT | PRINT_INFO, stdout);
+	print_setStream(PRINT_DEBUG | PRINT_ERRORS | PRINT_WARNINGS | PRINT_SUGGESTION, stderr);
+	print_enable(PRINT_RESULT | PRINT_INFO | PRINT_WARNINGS | PRINT_ERRORS | PRINT_SUGGESTION);
 }
 
 
@@ -126,6 +130,13 @@ int print_debug(const char *format, ... ) {
 	return res;
 }
 
-
-
-
+int print_suggestion(const char *format, ... ) {
+	int res = 0;
+	if (printer_conf.print & PRINT_SUGGESTION) {
+		va_list va;
+		va_start(va, format);
+		res = vfprintf(printer_conf.suggestion, format, va);
+		va_end(va);
+	}
+	return res;
+}

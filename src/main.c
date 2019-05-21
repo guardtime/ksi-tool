@@ -30,6 +30,7 @@
 #include "ksitool_err.h"
 #include "printer.h"
 #include "conf_file.h"
+#include "common.h"
 
 
 #ifndef _WIN32
@@ -48,7 +49,7 @@ const char *TOOL_getName(void) {
 	return name;
 }
 
-static char *hash_algorithms_to_string(char *buf, size_t buf_len) {
+static char *hash_algorithms_to_string(char *buf, size_t buf_len, int isTrusted) {
 	int i;
 	size_t count = 0;
 
@@ -58,7 +59,7 @@ static char *hash_algorithms_to_string(char *buf, size_t buf_len) {
 
 
 	for (i = 0; i < KSI_NUMBER_OF_KNOWN_HASHALGS; i++) {
-		if (KSI_isHashAlgorithmSupported(i)) {
+		if (KSI_isHashAlgorithmSupported(i) && ((KSI_isHashAlgorithmTrusted(i) && isTrusted) || (!KSI_isHashAlgorithmTrusted(i) && !isTrusted))) {
 			count += KSI_snprintf(buf + count, buf_len - count, "%s%s",
 				count == 0 ? "" : " ",
 				KSI_getHashAlgorithmName(i)
@@ -77,6 +78,8 @@ static void print_general_help(PARAM_SET *set, const char *KSI_CONF){
 	char *aggre_url = NULL;
 	char *ext_url = NULL;
 	char *pub_url = NULL;
+	char *algo_from_conf = NULL;
+	const char *default_algo = NULL;
 	char *cnstr = NULL;
 	char buf[1024];
 	int i = 0;
@@ -92,6 +95,9 @@ static void print_general_help(PARAM_SET *set, const char *KSI_CONF){
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) return;
 
 	res = PARAM_SET_getStr(set, "P", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &pub_url);
+	if (res != PST_OK && res != PST_PARAMETER_EMPTY) return;
+
+	res = PARAM_SET_getStr(set, "H", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &algo_from_conf);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY) return;
 
 
@@ -128,10 +134,19 @@ static void print_general_help(PARAM_SET *set, const char *KSI_CONF){
 	/**
 	 * Print info about supported hash algorithms.
 	 */
+	if (algo_from_conf != NULL) {
+		default_algo = KSI_getHashAlgorithmName(KSI_getHashAlgorithmByName(algo_from_conf));
+	} else {
+		default_algo = KSI_getHashAlgorithmName(KSI_getHashAlgorithmByName("DEFAULT"));
+	}
 	print_result(
-	"Supported hash algorithms:\n"
-	"  %s\n",
-		hash_algorithms_to_string(buf, sizeof(buf)));
+	"Supported hash algorithms (default: %s):\n"
+	"  %s\n", default_algo,
+		hash_algorithms_to_string(buf, sizeof(buf), 1));
+
+	print_result(
+	"Supported but NOT TRUSTED hash algorithms (can not be used for signing or HMAC):\n"
+	"  %s\n\n", hash_algorithms_to_string(buf, sizeof(buf), 0));
 }
 
 static int ksitool_compo_get(TASK_SET *tasks, PARAM_SET **set, TOOL_COMPONENT_LIST **compo);
@@ -153,8 +168,8 @@ int main(int argc, char** argv, char **envp) {
 	 * or an error.
 	 */
 	print_init();
-	print_disable(PRINT_WARNINGS | PRINT_INFO | PRINT_DEBUG);
-	print_enable(PRINT_RESULT | PRINT_ERRORS);
+	print_disable(PRINT_INFO | PRINT_DEBUG);
+	print_enable(PRINT_RESULT | PRINT_ERRORS | PRINT_WARNINGS | PRINT_SUGGESTION);
 
 
 	/**
@@ -168,13 +183,6 @@ int main(int argc, char** argv, char **envp) {
 
 	res = CONF_createSet(&configuration);
 	if (res != PST_OK) goto cleanup;
-
-	/**
-	 * Load the configuration file from environment.
-	 */
-	res = CONF_fromEnvironment(configuration, "KSI_CONF", envp, 0, 1);
-	res = conf_report_errors(configuration, CONF_getEnvNameContent(), res);
-	if (res != KT_OK) goto cleanup;
 
 	/**
 	 * Get all possible components to run.
@@ -227,7 +235,14 @@ int main(int argc, char** argv, char **envp) {
 			print_result("%s\n", TOOL_COMPONENT_LIST_helpToString(components, TASK_getID(task),buf, sizeof(buf)));
 		}
 
+		/**
+		 * Load the configuration file from environment. Check for warnings and errors.
+		 */
+		res = CONF_fromEnvironment(configuration, "KSI_CONF", envp, 0, 1);
 		print_general_help(configuration, CONF_getEnvNameContent());
+		res = conf_report_errors(configuration, CONF_getEnvNameContent(), res);
+		if (res != KT_OK) goto cleanup;
+
 		res = KT_OK;
 		goto cleanup;
 	} else if (PARAM_SET_isSetByName(set, "version")) {
@@ -236,21 +251,14 @@ int main(int argc, char** argv, char **envp) {
 		goto cleanup;
 	}
 
-	if (CONF_isInvalid(configuration)) {
-		print_errors("KSI configuration file from KSI_CONF is invalid:\n");
-		print_errors("%s\n", CONF_errorsToString(configuration, "  ", buf, sizeof(buf)));
-		res = KT_INVALID_CONF;
-		goto cleanup;
-	}
-
-
 	/**
 	 * Invalid task. Give user some hints.
 	 */
 	if (task == NULL) {
 		print_errors("Error: Invalid task. Read help (-h) or man page.\n");
 		if (PARAM_SET_isTypoFailure(set_task_name)) {
-			print_errors("%s\n", PARAM_SET_typosToString(set_task_name, PST_TOSTR_NONE, NULL, buf, sizeof(buf)));
+
+			print_errors("%s\n", PARAM_SET_typosToString(set_task_name, NULL, buf, sizeof(buf)));
 		} else if (PARAM_SET_isUnknown(set_task_name)){
 			print_errors("%s\n", PARAM_SET_unknownsToString(set_task_name, NULL, buf, sizeof(buf)));
 		}
@@ -287,15 +295,32 @@ cleanup:
 	return retval;
 }
 
+static const char* getPrintName(PARAM *param, char *buf, unsigned buf_len) {
+	const char *name = NULL;
+	VARIABLE_IS_NOT_USED(buf);
+	VARIABLE_IS_NOT_USED(buf_len);
+	PARAM_getName(param, &name, NULL);
+	return name;
+}
+
 static int ksitool_compo_get(TASK_SET *tasks, PARAM_SET **set, TOOL_COMPONENT_LIST **compo) {
 	int res;
 	TOOL_COMPONENT_LIST *tmp_compo = NULL;
 	PARAM_SET *tmp_set = NULL;
+	const char *taskNames = "{sign}{extend}{verify}{pubfile}{conf}";
+
+	if (tasks == NULL || set == NULL || compo == NULL) {
+		res = KT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
 
 	/**
 	 * Create parameter list that contains all known tasks.
 	 */
-	res = PARAM_SET_new("{sign}{extend}{verify}{pubfile}{conf}", &tmp_set);
+	res = PARAM_SET_new(taskNames, &tmp_set);
+	if (res != PST_OK) goto cleanup;
+
+	res = PARAM_SET_setPrintName(tmp_set, taskNames, NULL, getPrintName);
 	if (res != PST_OK) goto cleanup;
 
 	res = TOOL_COMPONENT_LIST_new(32, &tmp_compo);
@@ -309,6 +334,7 @@ static int ksitool_compo_get(TASK_SET *tasks, PARAM_SET **set, TOOL_COMPONENT_LI
 	TASK_SET_add(tasks, 2, "extend", "extend", NULL, NULL, NULL);
 	TASK_SET_add(tasks, 3, "pubfile", "pubfile", NULL, NULL, NULL);
 	TASK_SET_add(tasks, 0xffff, "conf", "conf", NULL, NULL, NULL);
+
 
 	/**
 	 * Define tool component as runnable.

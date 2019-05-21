@@ -1,26 +1,19 @@
 .TH KSI 1
 .\"
-.\"
-.\"
 .SH NAME
-\fBksi \fR- Keyless Signature Infrastructure (KSI) command-line tool.
-.\"
+\fBksi \fR- KSI command-line tool, also called KSI tool.
 .\"
 .SH SYNOPSIS
-.\"
-.br
-\fBksi \fR[\fB-h\fR] [\fB--version\fR]
+\fBksi \fR[\fB-h\fR][\fB--version\fR]
 .br
 \fBksi \fBcommand\fR \fB-h\fR
 .br
-\fBksi \fBcommand\fR [\fIservice_parameters\fR] [\fIoptions\fR]
-.\"
-.\"
+\fBksi \fBcommand\fR [\fIservice_parameters\fR][\fIoptions\fR]
 .\"
 .SH DESCRIPTION
-Keyless Signature Infrastructure (KSI) is an industrial scale blockchain platform that cryptographically ensures data integrity and proves time of existence. Its keyless signatures, based on hash chains, link data to global calendar blockchain.
+Guardtime's KSI Blockchain is an industrial scale blockchain platform that cryptographically ensures data integrity and proves time of existence. The KSI signatures, based on hash chains, link data to this global calendar blockchain.
 .LP
-KSI command line tool enables the access to the KSI blockchain and its functions from the shell. It can be used for signing data in files or other sources, extending existing KSI signatures and verifying them using different trust anchors. The first argument of the tool is the KSI command followed by the KSI service configuration parameters and options.
+KSI command-line tool enables the access to the KSI blockchain and its functions from the shell. It can be used for signing data in files or other sources, extending existing KSI signatures and verifying them using different trust anchors. The first argument of the tool is the KSI command followed by the KSI service configuration parameters and options.
 .LP
 See \fBksi-conf\fR(5) or man page of specific KSI command for more information about KSI service configuration.
 .LP
@@ -46,7 +39,7 @@ Downloads and verifies KSI publications file. See \fBksi-pubfile\fR(1) for more 
 .\"
 .TP
 \fB-h\fR
-Print help text. Use \fBksi component -h\fR to print help for the specific command.
+Print help text. Use \fBksi command -h\fR to print help for the specific command.
 .\"
 .TP
 \fB--version\fR
@@ -92,7 +85,7 @@ Print version info.
 .\"
 .TP
 \fB10
-\fBCryptographic error.\fR Error may be generated due to untrusted or unavailable hash algorithm or by an invalid PKI signature / untrusted certificate.
+\fBCryptographic error.\fR Error may be generated due to mistrusted or unavailable hash algorithm or by an invalid PKI signature / mistrusted certificate.
 .\"
 .TP
 \fB11
@@ -116,16 +109,13 @@ Print version info.
 \fBInvalid configuration.\fR KSI tool configuration or KSI C API library configuration is invalid.
 .br
 .\"
-.\"
-.\"
 .SH ENVIRONMENT
-.LP
 The \fBKSI_CONF\fR environment variable points to the KSI configuration file containing the KSI service related parameters such as the URLs to the KSI Aggregator and Extender service and the corresponding access credentials. See \fBksi-conf\fR(5) for more information.
 .LP
+.\"
 .SH AUTHOR
-.LP
 Guardtime AS, http://www.guardtime.com/
 .LP
+.\"
 .SH SEE ALSO
-.LP
-\fBksi-sign\fR(1), \fBksi-verify\fR(1), \fBksi-extend\fR(1), \fBksi-pubfile\fR(1), \fBksi-conf\fR(5) 
+\fBksi-sign\fR(1), \fBksi-verify\fR(1), \fBksi-extend\fR(1), \fBksi-pubfile\fR(1), \fBksi-conf\fR(5)

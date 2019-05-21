@@ -20,12 +20,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <ksi/ksi.h>
 #include <ksi/net.h>
 #include <ksi/hashchain.h>
 #include <ksi/compatibility.h>
 #include "param_set/param_set.h"
 #include "param_set/task_def.h"
+#include "param_set/strn.h"
 #include "tool_box/ksi_init.h"
 #include "tool_box/param_control.h"
 #include "tool_box/task_initializer.h"
@@ -43,6 +45,9 @@ static int pubfile_task(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int id, KS
 static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, COMPOSITE *extra);
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
+
+#define PARAMS "{o}{d}{v}{T}{conf}{dump}{log}{h|help}"
+
 
 int pubfile_run(int argc, char** argv, char **envp) {
 	int res;
@@ -62,7 +67,7 @@ int pubfile_run(int argc, char** argv, char **envp) {
 	 * Extract command line parameters.
 	 */
 	res = PARAM_SET_new(
-			CONF_generate_param_set_desc("{o}{d}{v}{T}{conf}{dump}{log}{h|help}", "XP", buf, sizeof(buf)),
+			CONF_generate_param_set_desc(PARAMS, "XP", buf, sizeof(buf)),
 			&set);
 	if (res != KT_OK) goto cleanup;
 
@@ -78,10 +83,10 @@ int pubfile_run(int argc, char** argv, char **envp) {
 	res = TASK_INITIALIZER_check_analyze_report(set, task_set, 0.5, 0.1, &task);
 	if (res != KT_OK) goto cleanup;
 
+	d = PARAM_SET_isSetByName(set, "d");
+
 	res = TOOL_init_ksi(set, &ksi, &err, &logfile);
 	if (res != KT_OK) goto cleanup;
-
-	d = PARAM_SET_isSetByName(set, "d");
 
 	res = check_pipe_errors(set, err);
 	if (res != KT_OK) goto cleanup;
@@ -113,11 +118,8 @@ cleanup:
 		KSITOOL_KSI_ERRTrace_LOG(ksi);
 		print_debug("\n");
 		DEBUG_verifyPubfile(ksi, set, res, pubfile);
-
-		print_errors("\n");
-		if (d) ERR_TRCKR_printExtendedErrors(err);
-		else  ERR_TRCKR_printErrors(err);
 	}
+	ERR_TRCKR_print(err, d);
 
 	KSI_PublicationsFile_free(pubfile);
 	SMART_FILE_close(logfile);
@@ -128,53 +130,49 @@ cleanup:
 
 	return KSITOOL_errToExitCode(res);
 }
-char *pubfile_help_toString(char*buf, size_t len) {
+char *pubfile_help_toString(char *buf, size_t len) {
+	int res;
+	char *ret = NULL;
+	PARAM_SET *set;
 	size_t count = 0;
+	char tmp[1024];
 
-	count += KSI_snprintf(buf + count, len - count,
-		"Usage:\n"
-		" %s pubfile -P <URL> --dump [-d]\n"
-		" %s pubfile -P <URL> -v --cnstr <oid=value>... [-V <file>]... [-W <file>]...\n"
-		"        [-d] [more_options]\n"
-		" %s pubfile -P <URL> -o <pubfile.bin> --cnstr <oid=value>... [-V <file>]...\n"
-		"        [-W <dir>]... [-d] [more_options]\n"
-		" %s pubfile -T <time> -X <URL> [--ext-user <user> --ext-key <key>]\n"
-		"\n"
-		" -P <URL>  - Publications file URL (or file with URI scheme 'file://').\n"
-		" --cnstr <oid=value>\n"
-		"           - OID of the PKI certificate field (e.g. e-mail address) and the expected\n"
-		"             value to qualify the certificate for verification of publications file\n"
-		"             PKI signature. At least one constraint must be defined.\n"
-		" -v        - Perform publications file verification. Note that when -o is used to\n"
-		"             save publications file, the verification is performed implicitly.\n"
-		" -V        - Certificate file in PEM format for publications file verification.\n"
-		"             All values from lower priority source are ignored.\n"
-		" -o <pubfile.bin>\n"
-		"           - Output file path to store publications file. Use '-' as file name\n"
-		"             to redirect publications file binary stream to stdout. Publications file\n"
-		"             is always verified before saving.\n"
-		" -X <URL>  - Extending service (KSI Extender) URL.\n"
-		" --ext-user <str>\n"
-		"           - Username for extending service.\n"
-		" --ext-key <key>\n"
-		"           - HMAC key for extending service.\n"
-		" -T <time> - Time to create a publication string for as the number of seconds\n"
-		"             since 1970-01-01 00:00:00 UTC or time string formatted as \"YYYY-MM-DD hh:mm:ss\".\n"
-		" -d        - Print detailed information about processes and errors to stderr.\n"
-		" --dump    - Dump publications file in human-readable format to stdout. Without any extra\n"
-		"             flags publications file verification is not performed.\n"
-		" --conf <file>\n"
-		"             Read configuration options from given file. It must be noted\n"
-		"             that configuration options given explicitly on command line will\n"
-		"             override the ones in the configuration file.\n"
-		" --log <file>\n"
-		"           - Write libksi log to given file. Use '-' as file name to redirect log to stdout.\n",
-		TOOL_getName(),
-		TOOL_getName(),
-		TOOL_getName(),
-		TOOL_getName()
-	);
+	res = PARAM_SET_new(CONF_generate_param_set_desc(PARAMS, "XP", tmp, sizeof(tmp)), &set);
+	if (res != PST_OK) goto cleanup;
 
+	res = CONF_initialize_set_functions(set, "XP");
+	if (res != PST_OK) goto cleanup;
+
+
+
+	PARAM_SET_setHelpText(set, "o", "<pubfile.bin>", "Output file path to store publications file. Use '-' as file name to redirect publications file binary stream to stdout. Publications file is always verified before saving.");
+	PARAM_SET_setHelpText(set, "T", "<time>", "Time to create a publication string for as the number of seconds since 1970-01-01 00:00:00 UTC or time string formatted as \"YYYY-MM-DD hh:mm:ss\".");
+	PARAM_SET_setHelpText(set, "cnstr", "<oid=value>", "OID of the PKI certificate field (e.g. e-mail address) and the expected value to qualify the certificate for verification of publications file PKI signature. At least one constraint must be defined.");
+	PARAM_SET_setHelpText(set, "v", NULL, "Perform publications file verification. Note that when -o is used to save publications file, the verification is performed implicitly.");
+	PARAM_SET_setHelpText(set, "dump", NULL, "Dump publications file in human-readable format to stdout. Without any extra flags publications file verification is not performed.");
+	PARAM_SET_setHelpText(set, "d", NULL, "Print detailed information about processes and errors to stderr.");
+	PARAM_SET_setHelpText(set, "conf", "<file>", "Read configuration options from given file. It must be noted that configuration options given explicitly on command line will override the ones in the configuration file.");
+	PARAM_SET_setHelpText(set, "log", "<file>", "Write libksi log to given file. Use '-' as file name to redirect log to stdout.");
+
+
+	count += PST_snhiprintf(buf + count, len - count, 80, 0, 0, NULL, ' ', "Usage:\\>1\n"
+				"ksi pubfile -P <URL> --dump [-d]\n\\>8"
+				"ksi pubfile -P <URL> -v --cnstr <oid=value>... [-V <file>]... [-W <file>]...\n"
+				"[-d] [more_options]\\>1\n\\>8"
+				"ksi pubfile -P <URL> -o <pubfile.bin> --cnstr <oid=value>... [-V <file>]...\\>8\n"
+				"[-W <dir>]... [-d] [more_options]\\>1\n"
+				"ksi pubfile -T <time> -X <URL> [--ext-user <user> --ext-key <key>]\n\n\n");
+
+	ret = PARAM_SET_helpToString(set, "P,cnstr,v,V,o,X,ext-user,ext-key,ext-hmac-alg,T,d,dump,conf,log", 1, 13, 80, buf + count, len - count);
+
+
+
+
+cleanup:
+	if (res != PST_OK || ret == NULL) {
+		PST_snprintf(buf + count, len - count, "\nError: There were failures while generating help by PARAM_SET.\n");
+	}
+	PARAM_SET_free(set);
 	return buf;
 }
 
@@ -239,11 +237,16 @@ static int pubfile_task(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int id, KS
 	}
 
 	if (id == 2 && save_to != NULL) {
+		int isStdout = strcmp(save_to, "-") == 0;
+		const char *mode = isStdout ? "wbs" : "wb";
+
 		print_progressDesc(d, "Saving publications file... ");
-		res = KSI_OBJ_savePublicationsFile(err, ksi, tmp, NULL, save_to);
+		res = KSI_OBJ_savePublicationsFile(err, ksi, tmp, mode, save_to);
 		ERR_CATCH_MSG(err, res, "Error: Unable to save publications file.");
 		print_progressResult(res);
-		print_debug("Publications file saved to '%s'.\n", save_to);
+
+		if (isStdout) print_debug("Publications file saved to stdout.\n");
+		else print_debug("Publications file saved to '%s'.\n", save_to);
 	}
 
 
@@ -291,7 +294,8 @@ static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ks
 			KSI_Integer_toDateString(start, buf, sizeof(buf)),
 			KSI_Integer_getUInt64(start));
 
-	res = KSI_Integer_new(ksi, (KSI_uint64_t)start, &reqID);
+	srand((unsigned)time(NULL));
+	res = KSI_Integer_new(ksi, (KSI_uint64_t)rand(), &reqID);
 	ERR_CATCH_MSG(err, res, "Error: %s", KSITOOL_errToString(res));
 	res = KSI_ExtendReq_new(ksi, &extReq);
 	ERR_CATCH_MSG(err, res, "Error: %s", KSITOOL_errToString(res));
@@ -378,7 +382,7 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	}
 
 	/**
-	 * Configure parameter set, control, repair and object extractor function.
+	 * Configure parameter set, check, repair and object extractor function.
 	 */
 	res = CONF_initialize_set_functions(set, "XP");
 	if (res != KT_OK) goto cleanup;

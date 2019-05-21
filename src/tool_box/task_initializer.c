@@ -52,7 +52,7 @@ int TASK_INITIALIZER_check_analyze_report(PARAM_SET *set, TASK_SET *task_set, do
 	 * Check for typos and unknown parameters.
 	 */
 	if (PARAM_SET_isTypoFailure(set)) {
-			print_errors("%s\n", PARAM_SET_typosToString(set, PST_TOSTR_DOUBLE_HYPHEN, NULL, buf, sizeof(buf)));
+			print_errors("%s\n", PARAM_SET_typosToString(set, NULL, buf, sizeof(buf)));
 			res = KT_INVALID_CMD_PARAM;
 			goto cleanup;
 	} else if (PARAM_SET_isUnknown(set)){
@@ -123,14 +123,14 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 
 	/**
 	 * Include conf from environment.
-     */
+	 */
 	res = CONF_fromEnvironment(conf_env, "KSI_CONF", envp, PRIORITY_KSI_CONF, 1);
 	res = conf_report_errors(conf_env, CONF_getEnvNameContent(), res);
 	if (res != KT_OK) goto cleanup;
 
 	/**
 	 * Read conf from command line.
-     */
+	 */
 	res = PARAM_SET_parseCMD(set, argc, argv, "CMD", PRIORITY_CMD);
 	if (res != KT_OK) {
 		print_errors("Error: Unable to parse command-line.\n");
@@ -139,7 +139,7 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 
 	/**
 	 * Include configuration file.
-     */
+	 */
 	if (PARAM_SET_isSetByName(set, "conf")) {
 		res = PARAM_SET_getStr(set, "conf", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &conf_file_name);
 		if (res != PST_OK && res != PST_PARAMETER_INVALID_FORMAT) goto cleanup;
@@ -163,7 +163,7 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 
 	/**
 	 * Merge conf files to the set.
-     */
+	 */
 	res = PARAM_SET_IncludeSet(set, conf_env);
 	if (res != PST_OK) goto cleanup;
 
@@ -176,7 +176,7 @@ int TASK_INITIALIZER_getServiceInfo(PARAM_SET *set, int argc, char **argv, char 
 	 * values are extracted and it is checked if user info at the given priority level
 	 * exists. If not, user info is extracted from URLs if present and appended to
 	 * the same priority level as URLs.
-     */
+	 */
 	res = extract_user_info_from_url_if_needed(set, "S", "aggr-user", "aggr-key");
 	if (res != KT_OK) goto cleanup;
 
@@ -209,7 +209,7 @@ static int isKSIUserInfoInsideUrl(const char *url, char *buf_u, char *buf_k, siz
 	 * The user info embedded in the url is extracted ONLY when the url scheme
 	 * contains prefix ksi+. In the other cases the user info is interpreted as
 	 * specified by the given protocol.
-     */
+	 */
 	if (scheme == NULL || strstr(scheme, "ksi+") == NULL) goto cleanup;
 
 	ret = STRING_extractAbstract(url, "://", "@", buf, sizeof(buf), find_charAfterStrn, find_charBeforeStrn, NULL);
@@ -247,7 +247,7 @@ static int extract_user_info_from_url_if_needed(PARAM_SET *set, const char *flag
 	}
 	/**
 	 * Extract the url withe the greatest priority for further examination.
-     */
+	 */
 	res = PARAM_SET_getStr(set, flag_name, NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &url);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY && res != PST_PARAMETER_INVALID_FORMAT && res != PST_PARAMETER_NOT_FOUND) {
 		goto cleanup;
@@ -259,7 +259,7 @@ static int extract_user_info_from_url_if_needed(PARAM_SET *set, const char *flag
 	/**
 	 * If there is a user info embedded into url, check if there is a need to
 	 * extract the values and append to the set.
-     */
+	 */
 	if (isKSIUserInfoInsideUrl(url, usr, key, sizeof(usr))) {
 		res = PARAM_SET_getAtr(set, flag_name, NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &atr);
 		if (res != PST_OK) goto cleanup;

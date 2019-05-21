@@ -4,11 +4,15 @@
  -S http://example.gateway.com:3333/gt-signingservice
  --aggr-user anon
  --aggr-key anon
+ --aggr-pdu-v v2
+ --aggr-hmac-alg SHA2-512
 
 # KSI extending service:
  -X http://example.gateway.com:8010/gt-extendingservice
  --ext-user anon
  --ext-key anon
+ --ext-pdu-v v2
+ --ext-hmac-alg SHA2-512
 
 # KSI publications file:
  -P http://example/ksi-publications.bin

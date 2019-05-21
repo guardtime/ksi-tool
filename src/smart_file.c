@@ -300,6 +300,7 @@ static int smart_file_get_error_win(unsigned error) {
 		case ERROR_DIRECTORY:
 		case ERROR_INVALID_NAME:
 		case ERROR_BAD_PATHNAME:
+		case ERROR_PATH_NOT_FOUND:
 			smart_file_error_code =  SMART_FILE_INVALID_PATH;
 		break;
 
@@ -553,6 +554,7 @@ static int smart_file_get_error_unix(void) {
 		break;
 
 		case EINVAL:
+		case ENAMETOOLONG:
 			smart_file_error_code =  SMART_FILE_INVALID_PATH;
 		break;
 
@@ -787,7 +789,7 @@ int SMART_FILE_write(SMART_FILE *file, char *raw, size_t raw_len, size_t *count)
 		res = file->file_write(file->file, raw, raw_len, &c);
 		if (res != SMART_FILE_OK) goto cleanup;
 	} else {
-		return SMART_FILE_NOT_OPEND;
+		return SMART_FILE_NOT_OPENED;
 	}
 
 	if (count != NULL) {
@@ -819,7 +821,7 @@ int SMART_FILE_read(SMART_FILE *file, char *raw, size_t raw_len, size_t *count) 
 		res = file->file_read(file->file, raw, raw_len, &c);
 		if (res != SMART_FILE_OK) goto cleanup;
 	} else {
-		return SMART_FILE_NOT_OPEND;
+		return SMART_FILE_NOT_OPENED;
 	}
 
 	/**
@@ -907,6 +909,39 @@ int SMART_FILE_hasFileExtension(const char *path, const char *ext) {
 	}
 }
 
+int SMART_FILE_rename(const char *old_path, const char *new_path) {
+	int res;
+
+	if (old_path == NULL || new_path == NULL) return SMART_FILE_INVALID_ARG;
+
+#ifdef _WIN32
+	res = MoveFile(old_path, new_path);
+	res = (res == 0) ? smart_file_get_error_win(GetLastError()) : SMART_FILE_OK;
+#else
+	res = rename(old_path, new_path);
+	res = (res != 0) ? smart_file_get_error_unix() : SMART_FILE_OK;
+#endif
+
+	return res;
+}
+
+int SMART_FILE_remove(const char *fname) {
+	int res;
+
+	if (fname == NULL) return SMART_FILE_INVALID_ARG;
+
+#ifdef _WIN32
+	res = DeleteFile(fname);
+	res = (res == 0) ? smart_file_get_error_win(GetLastError()) : SMART_FILE_OK;
+#else
+	res = remove(fname);
+	res = (res != 0) ? smart_file_get_error_unix() : SMART_FILE_OK;
+#endif
+
+	return res;
+}
+
+
 const char* SMART_FILE_errorToString(int error_code) {
 	switch (error_code) {
 		case SMART_FILE_OK:
@@ -925,7 +960,7 @@ const char* SMART_FILE_errorToString(int error_code) {
 			return "Unable to write to file.";
 		case SMART_FILE_BUFFER_TOO_SMALL:
 			return "Insufficient buffer size.";
-		case SMART_FILE_NOT_OPEND:
+		case SMART_FILE_NOT_OPENED:
 			return "File is not opened.";
 		case SMART_FILE_DOES_NOT_EXIST:
 			return "File does not exist.";

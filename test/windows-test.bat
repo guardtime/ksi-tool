@@ -21,15 +21,21 @@ GOTO copyrightend
 
 REM Remove test output directories.
 rmdir /S /Q test\out\extend
+rmdir /S /Q test\out\extend-replace-existing
 rmdir /S /Q test\out\sign
 rmdir /S /Q test\out\pubfile
 rmdir /S /Q test\out\fname
+rmdir /S /Q test\out\mass_extend
+rmdir /S /Q test\out\tmp
 
 REM Create test output directories.
 mkdir test\out\sign
 mkdir test\out\extend
+mkdir test\out\extend-replace-existing
 mkdir test\out\pubfile
 mkdir test\out\fname
+mkdir test\out\mass_extend
+mkdir test\out\tmp
 
 REM Create some test files to output directory.
 copy /Y test\resource\file\testFile	test\out\fname\_
@@ -41,10 +47,17 @@ copy /Y test\resource\file\testFile	test\out\fname\a_23_1000.ksig
 copy /Y test\resource\file\testFile	test\out\fname\a_23_1000_5.ksig
 copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\fname\ok-sig.ksig
 copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\fname\ok-sig
+copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\fname\mass-extend-1.ksig
+copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\fname\mass-extend-2.ksig
+copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\fname\mass-extend-2.ksig
+copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\extend-replace-existing\not-extended-1A.ksig
+copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\extend-replace-existing\not-extended-1B.ksig
+copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\extend-replace-existing\not-extended-2B.ksig
+
 REM Define KSI_CONF for temporary testing.
 setlocal
 
-set KSI_CONF=test/resource/conf/default-not-working-conf.cfg
+set KSI_CONF=test/resource/conf/default-conf.cfg
 
 REM If ksi tool in project directory is available use that one, if not
 REM use the one installed in the machine.
@@ -54,16 +67,41 @@ if exist bin\ksi.exe (
     set tool=ksi
 )
 
+@echo off
+setlocal enabledelayedexpansion
+(for /f "delims=" %%i in (test\test_suites\pipe.test) do (
+    set "line=%%i"
+    set line=!line:{KSI_BIN}=%tool%!
+	echo !line!
+))>test\out\tmp\pipe.test
+@echo on
+
+
+gttlvdump -h > NUL && gttlvgrep -h > NUL
+if not ERRORLEVEL 1 (
+	set TEST_DEPENDING_ON_TLVUTIL=test\test_suites\tlvutil-metadata.test test\test_suites\tlvutil-sign-masking.test
+) else (
+	set TEST_DEPENDING_ON_TLVUTIL=
+)
+
+gttlvdump -h > NUL && gttlvgrep -h > NUL && grep --help > NUL
+if not ERRORLEVEL 1 (
+	set TEST_DEPENDING_ON_TLVUTIL_GREP=test\test_suites\tlvutil-pdu-header.test
+) else (
+	set TEST_DEPENDING_ON_TLVUTIL_GREP=
+)
+
 shelltest ^
 test\test_suites\sign.test ^
 test\test_suites\static-sign.test ^
 test\test_suites\sign-verify.test ^
 test\test_suites\extend.test ^
+test\test_suites\mass-extend.test ^
 test\test_suites\extend-verify.test ^
 test\test_suites\static-verify.test ^
 test\test_suites\static-sign-verify.test ^
 test\test_suites\static-extend.test ^
-test\test_suites\win-pipe.test ^
+test\out\tmp\pipe.test ^
 test\test_suites\sign-cmd.test ^
 test\test_suites\extend-cmd.test ^
 test\test_suites\static-verify-invalid-signatures.test ^
@@ -71,12 +109,18 @@ test\test_suites\pubfile.test ^
 test\test_suites\static-pubfile.test ^
 test\test_suites\verify-invalid-pubfile.test ^
 test\test_suites\verify-cmd.test ^
+test\test_suites\signature-dump.test ^
 test\test_suites\default-conf.test ^
 test\test_suites\invalid-conf.test ^
 test\test_suites\file-name-gen.test ^
+test\test_suites\cmd.test ^
 test\test_suites\sign-block-signer.test ^
 test\test_suites\sign-block-signer-cmd.test ^
---with=%tool% -- -j1
+test\test_suites\verify-pub-suggestions.test ^
+test\test_suites\sign-metadata.test ^
+%TEST_DEPENDING_ON_TLVUTIL% ^
+%TEST_DEPENDING_ON_TLVUTIL_GREP% ^
+--with=%tool% -a -- -j1
 set exit_code=%errorlevel%
 
 endlocal

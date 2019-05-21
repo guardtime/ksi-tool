@@ -1,0 +1,196 @@
+#
+# Copyright 2013-2016 Guardtime, Inc.
+#
+# This file is part of the Guardtime client SDK.
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES, CONDITIONS, OR OTHER LICENSES OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
+# "Guardtime" and "KSI" are trademarks or registered trademarks of
+# Guardtime, Inc., and no license to trademarks is granted; Guardtime
+# reserves and retains all trademark rights.
+
+##
+# Test suite examins the KSI metadata successful cases.
+# EXECUTABLE --version > test\out\dummy.txt is used to overcome the first string
+# "EXECUTABLE" replacment with KSI and continue testing with gttlvutil.
+#
+# Note: given test suite relies on prior execution of sign-metadata.test
+##
+
+##
+# Nr. 1
+# Signaturemetadata composed of client id "My name".
+# Check if metadata record exists and if it matches the expected result.
+# Main test case:
+#   EXECUTABLE sign --conf test/resource/conf/static-sign-metadata-1.cfg -d --dump -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-1.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata
+##
+
+# Verify metadata correctness.
+ gttlvgrep -er 800.801[5] test/out/sign/ebcd-mdata-1.ksig | gttlvdump -pPy
+>>>/(.*TLV.*04.*)(.*L = 14.*)(.*Metadata.*)
+.*
+(.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)/
+>>>= 0
+
+# Verify chain index correctness.
+ gttlvgrep -er 800.801[5] test/out/sign/ebcd-mdata-1.ksig | gttlvdump -pPy
+>>>/(.*Chain index.*10.*)
+(.*Chain index.*31.*)
+(.*Chain index.*13.*)
+(.*Chain index.*11.*)
+(.*Chain index.*3.*)
+(.*Chain index.*3.*)/
+>>>= 0
+
+
+##
+# Nr. 2
+# Signature contains metadata composed of client and machine id.
+# Check if metadata record exists and if it matches the expected result.
+# Main test case:
+#   EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-2.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata --mdata-mac-id "My Computer"
+##
+ gttlvdump -pPy test/out/sign/ebcd-mdata-2.ksig
+>>>/(.*TLV.*04.*)(.*L = 28.*)(.*Metadata.*)
+.*
+(.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
+(.*TLV.*02.*)(.*Machine id.*)(.*My Computer\\0.*)/
+>>>= 0
+
+##
+# Nr. 3
+# Signature contains metadata composed of client and machine id.
+# Check if metadata record exists and if it matches the expected result.
+# Main test case:
+#   EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-3.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata-mac-id "My Computer" --mdata
+##
+ gttlvdump -pPy test/out/sign/ebcd-mdata-3.ksig
+>>>/(.*TLV.*04.*)(.*L = 28.*)(.*Metadata.*)
+.*
+(.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
+(.*TLV.*02.*)(.*Machine id.*)(.*My Computer\\0.*)/
+>>>= 0
+
+##
+# Nr. 4
+# Signature contains metadata composed of client, machine id and the request
+# time. Check if metadata record exists and if it matches the expected result.
+# Main test case:
+#   EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-4.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata-mac-id "My Computer" --mdata-req-tm --mdata
+##
+ gttlvdump -pPy test/out/sign/ebcd-mdata-4.ksig
+>>>/(.*TLV.*04.*)(.*L = 36.*)(.*Metadata.*)
+.*
+(.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
+(.*TLV.*02.*)(.*Machine id.*)(.*My Computer\\0.*)
+(.*TLV.*04.*)(.*Request time.*)/
+>>>= 0
+
+##
+# Nr. 5
+# Signature contains metadata composed of client, machine id, the request
+# time and the sequence nr (default). Check if metadata record exists and if it
+# matches the expected result.
+# Main test case:
+#   EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-5.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata-mac-id "My Computer" --mdata-req-tm --mdata-sqn-nr --mdata
+##
+ gttlvdump -pPy test/out/sign/ebcd-mdata-5.ksig
+>>>/(.*TLV.*04.*)(.*L = 38.*)(.*Metadata.*)
+.*
+(.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
+(.*TLV.*02.*)(.*Machine id.*)(.*My Computer\\0.*)
+(.*TLV.*03.*)(.*Sequence nr.*)(.*0.*)
+(.*TLV.*04.*)(.*Request time.*)/
+>>>= 0
+
+
+##
+# Nr. 6
+# Signature contains metadata composed of client, machine id, the request
+# time and the sequence nr. Check if metadata record exists and if it matches the
+# expected result.
+# Main test case:
+#   EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -o test/out/sign/ebcd-mdata-6.ksig --max-lvl 1 --mdata-cli-id "My name" --mdata-mac-id "My Computer" --mdata-req-tm --mdata-sqn-nr 5 --mdata
+##
+ gttlvdump -pPy test/out/sign/ebcd-mdata-6.ksig
+>>>/(.*TLV.*04.*)(.*L = 40.*)(.*Metadata.*)
+.*
+(.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
+(.*TLV.*02.*)(.*Machine id.*)(.*My Computer\\0.*)
+(.*TLV.*03.*)(.*Sequence nr.*)(.*5.*)
+(.*TLV.*04.*)(.*Request time.*)/
+>>>= 0
+
+##
+# Nr. 7
+# Two signature files containing metadata default sequence number. Check if
+# sequence number is equal to 0 in both signatures (it must be incremented when
+# aggregation round changes).
+# Main test case:
+#   EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -i test/resource/file/abcd -o test/out/sign/ebcd-sgn-0-0.ksig -o test/out/sign/abcd-sgn-0-0.ksig --max-lvl 2 --mdata-cli-id "My name" --mdata-sqn-nr --mdata
+##
+ gttlvdump -pPy test/out/sign/ebcd-sgn-0-0.ksig
+>>>/(.*TLV.*04.*)(.*L = 16.*)(.*Metadata.*)
+.*
+(.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
+(.*TLV.*03.*)(.*Sequence nr.*)(.*0.*)/
+>>>= 0
+
+ gttlvdump -pPy test/out/sign/abcd-sgn-0-0.ksig
+>>>/(.*TLV.*04.*)(.*L = 16.*)(.*Metadata.*)
+.*
+(.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
+(.*TLV.*03.*)(.*Sequence nr.*)(.*0.*)/
+>>>= 0
+
+##
+# Nr. 8
+# Two signature files containing metadata default sequence number. Perform the
+# signing in multiple rounds and check if sequence number is incremented.
+# Main test case:
+#   EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -i test/resource/file/abcd -o test/out/sign/ebcd-sgn-0-1.ksig -o test/out/sign/abcd-sgn-1-1.ksig --max-lvl 1 --max-aggr-rounds 2 --mdata-cli-id "My name" --mdata-sqn-nr --mdata
+##
+ gttlvdump -pPy test/out/sign/ebcd-sgn-0-1.ksig
+>>>/(.*TLV.*04.*)(.*L = 16.*)(.*Metadata.*)
+.*
+(.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
+(.*TLV.*03.*)(.*Sequence nr.*)(.*0.*)/
+>>>= 0
+
+ gttlvdump -pPy test/out/sign/abcd-sgn-1-1.ksig
+>>>/(.*TLV.*04.*)(.*L = 16.*)(.*Metadata.*)
+.*
+(.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
+(.*TLV.*03.*)(.*Sequence nr.*)(.*1.*)/
+>>>= 0
+
+##
+# Nr. 9
+# Two signature files containing metadata sequence number 5. Perform the
+# signing in multiple rounds and check if sequence number is incremented.
+# Main test case:
+#   EXECUTABLE sign --conf test/test.cfg -d --dump -i test/resource/file/ebcd -i test/resource/file/abcd -o test/out/sign/ebcd-sgn-5-2.ksig -o test/out/sign/abcd-sgn-6-2.ksig --max-lvl 1 --max-aggr-rounds 2 --mdata-cli-id "My name" --mdata-sqn-nr 5 --mdata
+##
+ gttlvdump -pPy test/out/sign/ebcd-sgn-5-2.ksig
+>>>/(.*TLV.*04.*)(.*L = 16.*)(.*Metadata.*)
+.*
+(.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
+(.*TLV.*03.*)(.*Sequence nr.*)(.*5.*)/
+>>>= 0
+
+ gttlvdump -pPy test/out/sign/abcd-sgn-6-2.ksig
+>>>/(.*TLV.*04.*)(.*L = 16.*)(.*Metadata.*)
+.*
+(.*TLV.*01.*)(.*Client id.*)(.*My name\\0.*)
+(.*TLV.*03.*)(.*Sequence nr.*)(.*6.*)/
+>>>= 0
+
+
+

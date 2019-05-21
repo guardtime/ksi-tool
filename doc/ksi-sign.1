@@ -1,91 +1,91 @@
 .TH KSI-SIGN 1
 .\"
-.\"
-.\"
 .SH NAME
 \fBksi sign \fR- Sign data with KSI command-line tool.
-.\"
 .\"
 .SH SYNOPSIS
 .HP 4
 \fBksi sign \fR[\fB-o \fIout.ksig\fR]... \fB-S \fIURL \fR[\fB--aggr-user \fIuser \fB--aggr-key \fIkey\fR] \fR[\fB-H \fIalg\fR] [\fB--data-out \fIfile\fR] [\fB--dump\fR] [\fImore options\fR] [\fB-i \fIinput\fR]... [\fIinput\fR]... [\fB-- \fIonly_file_input\fR...]
-.br
-.\"
+.HP 4
+\fBksi sign -S \fIURL \fR[\fB--aggr-user \fIuser \fB--aggr-key \fIkey\fR] \fB--dump-conf
 .\"
 .SH DESCRIPTION
-.\"
-Signs the given input such as content of a given file or a pre-computed hash value with KSI. User must have access to KSI signing service (KSI Aggregator) for signing. Note that until not extended, the signatures can be verified using the copy of calendar blockchain at KSI Extender (calendar-based verification) or using the PKI signature in the calendar authentication record (key-based verification, temporary only). See \fBksi-verify\fR(1) for details.
-.\"
+Signs the given input such as content of a given file or a precomputed hash value with KSI. User must have access to KSI signing service (KSI Aggregator) for signing. Note that until not extended, the signatures can be verified by using the copy of calendar blockchain at KSI Extender (calendar-based verification) or using the PKI signature in the calendar authentication record (key-based verification, temporary only). See \fBksi-verify\fR(1) for details.
 .\"
 .SH OPTIONS
-.\"
 .TP
 \fB-i \fIinput\fR
-The input is either the path to the file to be hashed and signed or a hash imprint in the case the data to be signed has been hashed already. Use '-' as file name to read data to be hashed from \fIstdin\fR. Hash imprint format: <\fIalg\fR>:<\fIhash in hex\fR>. Use \fB-h\fR to get the list of supported hash algorithms. Note that only the main data stream of the file is hashed, any extensions of specific file systems are ignored (e.g. the alternate data streams of NTFS are not signed).
-
-Flag \fB-i\fR can be omitted when specifying the input. Without \fB-i\fR it is not possible to sign files that look like command-line parameters (e.g. -a, --option). To interpret all inputs as regular files no matter what the file's name is see parameter \fB--\fR.
+The input is either the path to the file to be hashed and signed or a hash imprint in the case the data to be signed has been hashed already. Use '\fB-\fR' as file name to read data to be hashed from \fIstdin\fR.
+.\"
+Hash imprint format: <\fIalg\fR>:<\fIhash in hex\fR>, where <\fIalg\fR> marks the hash algorithm and <\fIhash in hex\fR> is hash value in hex format. Use \fB-h\fR to get the list of supported hash algorithms. Note that only the main data stream of the file is hashed, any extensions of specific file systems are ignored (e.g. the alternate data streams of NTFS are not signed).
+.\"
+Flag \fB-i\fR can be omitted when specifying the input. Without \fB-i\fR it is not possible to sign files that look like command-line parameters (e.g. -a, --option). To interpret all inputs as regular files no matter what the file's name is, see parameter \fB--\fR.
 .\"
 .TP
 \fB-o \fIout.ksig\fR
-Output file's path for the signature. Use '-' as file name to redirect signature binary stream to \fIstdout\fR. If not specified the output is saved to the same directory where the input file is located. When specified as directory all the signatures are saved there. When signature's output file name is not explicitly specified the signature is saved to <input file>.ksig (or <input file>_<nr>.ksig, where <nr> is auto-incremented counter if the output file already exists). When there are N x input and explicitly specified N x output every signature is saved to the corresponding path. If output file name is explicitly specified, will always overwrite the existing file.
+Define the output file's path for the signature. Use '\fB-\fR' as file name to redirect signature binary stream to \fIstdout\fR. If not specified, the output is saved to the same directory where the input file is located. If specified as directory, all the signatures are saved there. When signature's output file name is not explicitly specified the signature is saved to <input file>.ksig (or <input file>_<nr>.ksig, where <nr> is auto-incremented counter if the output file already exists). When there are N x input and explicitly specified N x output every signature is saved to the corresponding path. If output file name is explicitly specified, will always overwrite the existing file.
 .\"
 .TP
 \fB-H \fIalg\fR
-Use the given hash algorithm to hash the file to be signed. Use \fBksi -h \fRto get the list of supported hash algorithms.
+Use the given hash algorithm to hash the file to be signed. If not set, the default algorithm is used. Use \fBksi -h \fRto get the list of supported hash algorithms. If used in combination with \fB--apply-remote-conf\fR, the algorithm parameter provided by the server will be ignored.
 .\"
 .TP
 \fB-S \fIURL\fR
-Signing service (KSI Aggregator) URL.
+Specify the signing service (KSI Aggregator) URL. Supported URL schemes are: \fIhttp\fR, \fIhttps\fR, \fIksi+http\fR, \fIksi+https\fR and \fIksi+tcp\fR. It is possible to embed HTTP or KSI user info into the URL. With \fIksi+\fR suffix (e.g. ksi+http//user:key@...), user info is interpreted as KSI user info, otherwise (e.g. http//user:key@...) the user info is interpreted as HTTP user info. User info specified with \fB--aggr-user\fR and \fB--aggr-key\fR will overwrite the embedded values.
 .\"
 .TP
 \fB--aggr-user \fIuser\fR
-Username for signing service.
+Specify the username for signing service.
 .\"
 .TP
 \fB--aggr-key \fIkey\fR
-HMAC Key for signing service.
+Specify the HMAC key for signing service.
+.\"
+.TP
+\fB--aggr-hmac-alg \fIalg\fR
+Hash algorithm to be used for computing HMAC on outgoing messages towards KSI aggregator. If not set, default algorithm is used. Use \fBksi -h \fRto get the list of supported hash algorithms.
 .\"
 .TP
 \fB--data-out \fIfile\fR
-Save signed data to file. Use when signing a stream. Use '-' as file name to redirect data being hashed to \fIstdout\fR.
+Save signed data to file. Use when signing a stream. Use '\fB-\fR' as file name to redirect data being hashed to \fIstdout\fR.
 .\"
 .TP
 \fB--max-lvl \fIint\fR
-Set the maximum depth (0 - 255) of the local aggregation tree (default 0). It must be noted that when using masking (\fB--mask\fR) or embedding the metadata (\fB--mdata\fR) both will reduce the maximum count of document hash values that could be singed during a single local aggregation round. To enable signing in multiple local aggregation rounds see \fB--max-aggr-rounds\fR.
+Set the maximum depth (0 - 255) of the local aggregation tree (default: 0). It must be noted that when using masking (\fB--mask\fR) or embedding the metadata (\fB--mdata\fR), the maximum count of document hash values that could be signed during a single local aggregation round will be reduced. To enable signing in multiple local aggregation rounds see \fB--max-aggr-rounds\fR. If used in combination with \fB--apply-remote-conf\fR, where service \fImaximum level\fR is provided, the smaller value is applied.
 .\"
 .TP
 \fB--max-aggr-rounds \fIint\fR
-Set the upper limit of local aggregation rounds that may be performed (default 1).
+Set the upper limit of local aggregation rounds that may be performed (default: 1).
 .\"
 .TP
-\fB--mask \fR[\fIiv\fR]
-Specify a hex string to initialize and apply the masking process or algorithm to generate the initial value instead. See \fB--prev-leaf\fR to see how to link another aggregation tree to current aggregation process. Supported algorithms:
+\fB--mask \fR[<\fIhex | alg:[arg...]\fR>]
+Specify a hex string to initialize and apply the masking process, or specify an algorithm to generate the initial value instead. See \fB--prev-leaf\fR to see how to link another aggregation tree to current aggregation process. Supported algorithms:
 .RS
 .IP \(bu 4
-\fBcrand\fR:\fIseed\fR,\fIlen\fR - Use standard C rand() function to generate array of random numbers with the given seed and length. The seed value is unsigned 32bit integer or 'time' to use the system time value instead. If function is specified without the arguments (crand:) 'time' is used to generate random arry with size of 32 baits.
+\fBcrand\fR:\fIseed\fR,\fIlen\fR - Use standard C rand() function to generate array of random numbers with the given seed and length. The seed value is unsigned 32bit integer or 'time' to use the system time value instead. If function is specified without the arguments (crand:) 'time' is used to generate random array with size of 32 bytes.
 .LP
 When mask is specified without the argument the default mask 'crand:' is used.
 .RE
 .\"
 .TP
 \fB--prev-leaf \fIhash\fR
-Specify the hash value of the last leaf from another local aggregation tree to link it with the current first local aggregation round. Is valid only with option \fB--mask\fR.
+Specify the hash imprint of the last leaf from another local aggregation tree to link it with the current first local aggregation round. Hash imprint format: <\fIalg\fR>:<\fIhash in hex\fR>, where <\fIalg\fR> marks the hash algorithm and <\fIhash in hex\fR> is hash value in hex format. Use \fB-h \fRto get the list of supported hash algorithms. Is valid only with option \fB--mask\fR.
 .\"
 .TP
 \fB--mdata\fR
-Embed metadata to the KSI signature. To configure metadata at lest \fB--mdata-cli-id\fR must be specified. See also other options \fB--mdata-*\fR.
+Embed metadata to the KSI signature. To configure metadata at least \fB--mdata-cli-id\fR must be specified. See also other options \fB--mdata-*\fR.
 .\"
 .TP
 \fB--mdata-cli-id \fIstr\fR
-Specify client id as a string that will be embedded into the signature as metadata. It is mandatory part of the metadata.
+Specify client ID as a string that will be embedded into the signature as metadata. It is mandatory part of the metadata.
 .\"
 .TP
 \fB--mdata-mac-id \fIstr\fR
-Specify machine id as a string that will be embedded into the signature as metadata. It is optional part of metadata.
+Specify machine ID as a string that will be embedded into the signature as metadata. It is optional part of metadata.
 .\"
 .TP
 \fB--mdata-sqn-nr \fR[\fIint\fR]
-Specify incremental (sequence number is incremented in every aggregation round) sequence number of the request as integer that will be embedded into the signature as metadata. If the parameter is given without the argument 0 is used. It is optional part of metadata.
+Specify incremental (sequence number is incremented in every aggregation round) sequence number of the request as integer that will be embedded into the signature as metadata. If the parameter is given without the argument, 0 is used. It is optional part of metadata.
 .\"
 .TP
 \fB--mdata-req-tm\fR
@@ -93,15 +93,19 @@ Embed request time extracted from the machine clock into the signature as metada
 .\"
 .TP
 \fB--\fR
-If used \fBeverything\fR specified after the token is interpreted as \fBinput file\fR (command-line parameters (e.g. --conf, -d), \fIstdin\fR (-) and pre-calculated hash imprints (SHA-256:7647c6...) are all interpreted as regular files).
+If used, \fBeverything\fR specified after the token is interpreted as \fBinput file\fR (command-line parameters (e.g. --conf, -d), \fIstdin\fR (\fB-\fR) and precomputed hash imprints (SHA-256:7647c6...) are all interpreted as regular files).
 .\"
 .TP
 \fB-d\fR
 Print detailed information about processes and errors to \fIstderr\fR.
 .\"
 .TP
-\fB--dump\fR
-Dump signature(s) created in human-readable format to \fIstdout\fR.
+\fB--dump \fR[\fIG\fR]
+Dump signature(s) created in human-readable format to \fIstdout\fR. To make signature dump suitable for processing with grep, use '\fBG\fR' as argument.
+.\"
+.TP
+\fB--dump-conf\fR
+Dump aggregator (URL specified by \fB-S\fR parameter) configuration in human-readable format to \fIstdout\fR.
 .\"
 .TP
 \fB--show-progress\fR
@@ -112,103 +116,145 @@ Show progress bar and print it to \fIstderr\fR. Is only valid with \fB-d\fR. It 
 Read configuration options from given file. It must be noted that configuration options given explicitly on command line will override the ones in the configuration file. See \fBksi-conf\fR(5) for more information.
 .\"
 .TP
+\fB--apply-remote-conf\fR
+Obtain and apply additional configuration data from the aggregator. Following configuration parameters can be received:
+.RS
+.IP \(bu 4
+\fBmaximum level\fR - Maximum allowed depth of the local aggregation tree. This can be set to a lower value with \fB--max-lvl\fR.
+.LP
+.IP \(bu 4
+\fBaggregation hash algorithm\fR - Recommended hash function identifier to be used for hashing the file to be signed. This parameter can be overridden with \fB-H\fR.
+.LP
+Note that the described parameters are optional and may not be provided by the aggregator that you turn to. Use \fB--dump-conf\fR to view the provided configuration parameters.
+.RE
+.TP
+\fB--inst-id \fR[\fIint\fR]
+An integer (>= 0) to identify the sender instance that is constant during the KSI tool process lifetime. It should stay constant or increase every time KSI tool is executed as server may drop future messages with lower \fIinstance identifier\fR values. When specified as integer, the constant value is used. When specified without argument, unix time is used in place of a constant. If not specified, \fIinstance identifier\fR is not included to the request header. Note that this value only affects KSI protocol PDUs.
+.\"
+.TP
+\fB--msg-id \fR[\fIint\fR]
+An integer (>= 1) to identify the requests within KSI tool process lifetime. The \fImessage identifier\fR value is increased after every request. When specified without argument, 1 is used. If not specified \fImessage identifier\fR is not included to the request header. Note that this value only affects KSI protocol PDUs.
+.\"
+.TP
 \fB--log \fIfile\fR
-Write libksi log to given file. Use '-' as file name to redirect log to \fIstdout\fR.
+Write \fBlibksi\fR log to given file. Use '\fB-\fR' as file name to redirect log to \fIstdout\fR.
 .br
-.\"
-.\"
 .\"
 .SH EXIT STATUS
 See \fBksi\fR(1) for more information.
 .\"
-.\"
-.\"
 .SH EXAMPLES
-.LP
 In the following examples it is assumed that KSI service configuration options (URLs, access credentials) are defined. See \fBksi-conf\fR(5) for more information.
-.LP
-.TP 2
+.\"
+.TP 3
 \fB1
-\fRTo sign a file \fIfile\fR and save signature to \fIsig.ksig\fR call:
+To sign a file \fIfile\fR and save signature to \fIsig.ksig\fR:
 .LP
 .RS 4
-.HP 4
 \fBksi sign -i \fIfile\fR \fB-o \fIsig.ksig\fR
 .RE
 .\"
-.TP 2
+.TP 3
 \fB2
-\fRTo sign a data hash (hashed with SHA256) and save the resulting signature to file \fIsig.ksig\fR call:
+To sign a data hash (hashed with SHA256) and save the resulting signature to file \fIsig.ksig\fR:
 .LP
 .RS 4
-.HP 4
-\fBksi sign -i\fI SHA-256:c8ef6d57ac28d1b4e95a513959\\f5fcdd0688380a43d601a5ace1d2e96884690a\fR -o \fIsig.ksig\fB
+\fBksi sign -i \fISHA-256:c8ef6d57ac28d1b4e95a513959\\f5fcdd0688380a43d601a5ace1d2e96884690a\fB -o \fIsig.ksig\fR
 .RE
-.LP
 .\"
-.TP 2
+.TP 3
 \fB3
-\fRTo sign a data file \fIfile\fR with non-default algorithm \fI SHA1\fR call:
+To sign a data file \fIfile\fR with non-default algorithm \fI SHA1\fR:
 .LP
 .RS 4
-.HP 4
-\fBksi sign -i \fIfile\fB -H\fI SHA1\fB -o\fI sig.ksig\fR 
-.RE
-.LP
-.\"
-.TP 2
-\fB4
-\fRTo sign a stream (stdin), save data from stream to \fIfile\fR and save signature to \fIsig.ksig\fR call:
-.LP
-.RS 4
-.HP 4
 \fBksi sign -i \fIfile\fB -H\fI SHA1\fB -o\fI sig.ksig\fR
 .RE
 .\"
-.TP 2
-\fB5
-\fRTo perform local aggregation on files \fI*.doc\fR and save all the signatures to directory \fIdoc/sig\fR call:
+.TP 3
+\fB4
+To sign a stream (\fIstdin\fR), save data from stream to \fIfile\fR and save signature to \fIsig.ksig\fR:
 .LP
 .RS 4
-.HP 4
+\fBksi sign -i \fI-\fR \fB--data-out \fIfile\fB -o\fI sig.ksig\fR
+.RE
+.\"
+.TP 3
+\fB5
+To perform local aggregation on files \fI*.doc\fR and save all the signatures to directory \fIdoc/sig\fR:
+.LP
+.RS 4
 \fBksi sign -o \fIdoc/sig\fR \fB--max-lvl \fI5\fB -- \fI*.doc\fR
 .RE
 .\"
-.TP 2
+.TP 3
 \fB6
-\fRTo embed user id "\fIMy Name\fR" as metadata to the signature of document \fIfile\fR call:
+To embed user ID "\fIMy Name\fR" as metadata to the signature of document \fIfile\fR:
 .LP
 .RS 4
-.HP 4
-\fBksi sign \fIfile\fR \fB--max-lvl \fI2\fB \fB--mdata --mdata-cl-id \fR"\fIMy Name\fR"
+\fBksi sign \fIfile\fR \fB--max-lvl \fI2\fB \fB--mdata --mdata-cli-id \fR"\fIMy Name\fR"
 .RE
 .\"
-.TP 2
+.TP 3
 \fB7
-\fRTo sign more files than the user is permitted to sign during a single aggregation request call:
+Using \fB--max-aggr-rounds\fR to sign more files than a local aggregation tree can handle with the specified tree size, in multiple rounds:
 .LP
 .RS 4
-.HP 4
 \fBksi sign -o \fIdoc/sig\fR \fB--max-lvl \fI5\fB --max-aggr-rounds 10 -- \fI*.doc\fR
 .RE
 .\"
-.TP 2
-\fB7
-\fRTo sign multiple files and enable masking with default configuration call:
+.TP 3
+\fB8
+To sign multiple files and enable masking with default configuration:
 .LP
 .RS 4
-.HP 4
 \fBksi sign -o \fIdoc/sig\fR \fB--max-lvl \fI5\fB --mask -- \fI*.doc\fR
 .RE
 .\"
-.SH ENVIRONMENT
+.TP 3
+\fB9
+To sign a file \fIfile\fR with aggregator configuration and save signature to \fIsig.ksig\fR:
 .LP
+.RS 4
+\fBksi sign -i \fIfile\fR \fB-o \fIsig.ksig\fB --apply-remote-conf\fR
+.RE
+.\"
+.TP 3
+\fB10
+To sign a file \fIfile\fR with aggregator configuration and save signature to \fIsig.ksig\fR. Override the remote algorithm configuration:
+.LP
+.RS 4
+\fBksi sign -i \fIfile\fB -H\fI SHA1\fB -o \fIsig.ksig\fB --apply-remote-conf\fR
+.RE
+.\"
+.TP 3
+\fB11
+To sign multiple files with aggregator configuration:
+.LP
+.RS 4
+\fBksi sign -o \fIdoc/sig\fB --apply-remote-conf -- \fI*.doc\fR
+.RE
+.\"
+.TP 3
+\fB12
+To sign multiple files with aggregator configuration. Override the remote maximum level:
+.LP
+.RS 4
+\fBksi sign -o \fIdoc/sig\fB --apply-remote-conf --max-lvl \fI5\fB -- \fI*.doc\fR
+.RE
+.\"
+.TP 3
+\fB13
+Dump aggregator configuration in human-readable format to stdout:
+.LP
+.RS 4
+\fBksi sign -S \fIhttp://example.gateway.com:3333/gt-signingservice\fB --dump-conf\fR
+.RE
+.\"
+.SH ENVIRONMENT
 Use the environment variable \fBKSI_CONF\fR to define the default configuration file. See \fBksi-conf\fR(5) for more information.
 .LP
 .SH AUTHOR
-.LP
 Guardtime AS, http://www.guardtime.com/
 .LP
 .SH SEE ALSO
-.LP
 \fBksi\fR(1), \fBksi-verify\fR(1), \fBksi-extend\fR(1), \fBksi-pubfile\fR(1), \fBksi-conf\fR(5)

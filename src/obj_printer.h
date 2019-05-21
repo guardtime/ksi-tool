@@ -27,12 +27,21 @@
 extern "C" {
 #endif
 
-void OBJPRINT_signerIdentity(KSI_Signature *sig, int (*print)(const char *format, ... ));
+/* Optional flags fot some OBJPRINT_* functions.*/
+enum {
+	/* Default behaviour. */
+	OBJPRINT_NONE = 0x00,
+
+	/* Generates output that is suitable for processing with grep. */
+	OBJPRINT_GREPABLE = 0x01
+};
+
+void OBJPRINT_IdentityMetadata(KSI_CTX * ctx, KSI_Signature *sig, int flags, int (*print)(const char *format, ... ));
 void OBJPRINT_signaturePublicationReference(KSI_Signature *sig, int (*print)(const char *format, ... ));
-void OBJPRINT_signatureVerificationInfo(KSI_Signature *sig, int (*print)(const char *format, ... ));
+//void OBJPRINT_signatureVerificationInfo(KSI_Signature *sig, int (*print)(const char *format, ... ));
 void OBJPRINT_signatureSigningTime(const KSI_Signature *sig, int (*print)(const char *format, ... ));
-void OBJPRINT_signatureCertificate(const KSI_Signature *sig, int (*print)(const char *format, ... ));
-void OBJPRINT_signatureDump(KSI_Signature *sig, int (*print)(const char *format, ... ));
+void OBJPRINT_signatureCertificate(KSI_CTX *ctx, const KSI_Signature *sig, int (*print)(const char *format, ... ));
+void OBJPRINT_signatureDump(KSI_CTX *ctx, KSI_Signature *sig, int flags, int (*print)(const char *format, ... ));
 
 void OBJPRINT_Hash(KSI_DataHash *hsh, const char *prefix, int (*print)(const char *format, ... ));
 
@@ -45,6 +54,9 @@ const char *OBJPRINT_getVerificationErrorCode(KSI_VerificationErrorCode code);
 const char *OBJPRINT_getVerificationErrorDescription(KSI_VerificationErrorCode code);
 
 void OBJPRINT_signatureVerificationResultDump(KSI_PolicyVerificationResult *res, int (*print)(const char *format, ... ));
+
+void OBJPRINT_aggregatorConfDump(KSI_Config *config, int (*print)(const char *format, ... ));
+void OBJPRINT_extenderConfDump(KSI_Config *config, int (*print)(const char *format, ... ));
 
 #ifdef	__cplusplus
 }

@@ -64,6 +64,13 @@ EXECUTABLE sign --mask crand:time,x --mask crand:,x --mask crand:,x,x --mask cra
 (.*Invalid function argument count.*)(.*crand:,,.*)/
 >>>= 3
 
+# Test mask with invalid hex string:
+EXECUTABLE sign --mask a --mask AB --mask abmm --mask abn -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*There must be even number of hex characters.*)(.*a.*)
+(.*Invalid hex character.*)(.*abmm.*)
+(.*There must be even number of hex characters.*)(.*abn.*)/
+>>>= 3
+
 # Test mask with invalid input:
 EXECUTABLE sign --mask invalid_hex -i test/resource/file/abcd -o test/out/sign
 >>>2 /(.*There must be even number of hex characters.*)(.*invalid_hex.*)/
@@ -105,51 +112,66 @@ EXECUTABLE sign --max-lvl 10 -o test/out/sign/sig_1.ksig -- test/resource/file/a
 
 # Test invalid IO combinations 6. A two output files for more than two input files.:
 EXECUTABLE sign --max-lvl 10 -o test/out/sign/sig_1.ksig -o test/out/sign/sig_2.ksig -- test/resource/file/*
->>>2 /(.*Error: Not enough output parameters specified to store all signatures to corresponding file.*)/
+>>>2 /(.*Error: Not enough output parameters specified to store all signatures to corresponding files.*)/
 >>>= 3
 
 # Test invalid IO combinations 7. Try to read 2x from stdin:
-EXECUTABLE sign --max-lvl 10 -i - -i - -o test/out/sign 
+EXECUTABLE sign --max-lvl 10 -i - -i - -o test/out/sign
 >>>2 /(.*Error: Multiple different simultaneous inputs from stdin.*)(.*-i -.*)/
 >>>= 3
 
 # Test invalid IO combinations 8. Try to sign single file with masking when tree's size is too small:
-EXECUTABLE sign --max-lvl 0 --mask -d -i test/resource/file/abcd -o test/out/sign 
->>>2 /(.*Error: Unable to use masking.*)(.*as the local aggregation tree's maximum depth is too small.*)(.*--max-lvl.*)/
+EXECUTABLE sign --max-lvl 0 --mask -d -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*Error: Unable to use masking.*)(.*as the local aggregation tree's maximum allowed depth is too small.*)/
 >>>= 8
 
 # Test invalid IO combinations 9. Try to sign single file with metadata when tree's size is too small:
-EXECUTABLE sign --max-lvl 0 --mdata --mdata-cli-id "My Name" -d -i test/resource/file/abcd -o test/out/sign 
->>>2 /(.*Error: Unable to embed metadata.*)(.*as the local aggregation tree's maximum depth is too small.*)(.*--max-lvl.*)/
+EXECUTABLE sign --max-lvl 0 --mdata --mdata-cli-id "My Name" -d -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*Error: Unable to embed metadata.*)(.*as the local aggregation tree's maximum allowed depth is too small.*)/
 >>>= 8
 
 # Test invalid IO combinations 10. Try to link another tree's leaf to the local aggregation when masking is disabled:
-EXECUTABLE sign --max-lvl 0 --prev-leaf SHA-256:76b127cddb918c3be744980c094c6c9c0d6c0a8d54b8d971b67886772fbe47c6 -d -i test/resource/file/abcd -o test/out/sign 
+EXECUTABLE sign --max-lvl 0 --prev-leaf SHA-256:76b127cddb918c3be744980c094c6c9c0d6c0a8d54b8d971b67886772fbe47c6 -d -i test/resource/file/abcd -o test/out/sign
 >>>2 /(.*Error: Unable to link the local aggregation tree with the last leaf of the previous local aggregation tree as masking is not enabled.*)(.*--mask.*)/
 >>>= 8
 
 # Test invalid IO combinations 11. Try to masking and metadata with too small tree 1:
-EXECUTABLE sign --max-lvl 0 --mask --mdata --mdata-cli-id "My Naem" -d -i test/resource/file/abcd -o test/out/sign 
->>>2 /(.*Error: Unable to add metadata with masking.*)(.*as the local aggregation tree's maximum depth is too small.*)(.*--max-lvl.*)/
+EXECUTABLE sign --max-lvl 0 --mask --mdata --mdata-cli-id "My Name" -d -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*Error: Unable to add metadata with masking.*)(.*as the local aggregation tree's maximum allowed depth is too small.*)/
 >>>= 8
 
 # Test invalid IO combinations 12. Try to masking and metadata with too small tree 2:
-EXECUTABLE sign --max-lvl 1 --mask --mdata --mdata-cli-id "My Naem" -d -i test/resource/file/abcd -o test/out/sign 
->>>2 /(.*Error: Unable to add metadata with masking.*)(.*as the local aggregation tree's maximum depth is too small.*)(.*--max-lvl.*)/
+EXECUTABLE sign --max-lvl 1 --mask --mdata --mdata-cli-id "My Name" -d -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*Error: Unable to add metadata with masking.*)(.*as the local aggregation tree's maximum allowed depth is too small.*)/
 >>>= 8
 
 # Test invalid IO combinations 13. Try to link another tree's leaf with the local aggregation, masking and metadata enabled 1:
-EXECUTABLE sign --max-lvl 0 --mask --prev-leaf SHA-256:76b127cddb918c3be744980c094c6c9c0d6c0a8d54b8d971b67886772fbe47c6 --mdata --mdata-cli-id "My Naem" -d -i test/resource/file/abcd -o test/out/sign 
->>>2 /(.*Error: Unable to embed metadata and link the local aggregation tree with the last leaf of the previous local aggregation tree with masking.*)(.*as the local aggregation tree's maximum depth is too small.*)(.*--max-lvl.*)/
+EXECUTABLE sign --max-lvl 0 --mask --prev-leaf SHA-256:76b127cddb918c3be744980c094c6c9c0d6c0a8d54b8d971b67886772fbe47c6 --mdata --mdata-cli-id "My Name" -d -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*Error: Unable to embed metadata and link the local aggregation tree with the last leaf of the previous local aggregation tree with masking.*)(.*as the local aggregation tree's maximum allowed depth is too small.*)/
 >>>= 8
 
 # Test invalid IO combinations 14. Try to link another tree's leaf with the local aggregation, masking and metadata enabled 2:
-EXECUTABLE sign --max-lvl 1 --mask --prev-leaf SHA-256:76b127cddb918c3be744980c094c6c9c0d6c0a8d54b8d971b67886772fbe47c6 --mdata --mdata-cli-id "My Naem" -d -i test/resource/file/abcd -o test/out/sign 
->>>2 /(.*Error: Unable to embed metadata and link the local aggregation tree with the last leaf of the previous local aggregation tree with masking.*)(.*as the local aggregation tree's maximum depth is too small.*)(.*--max-lvl.*)/
+EXECUTABLE sign --max-lvl 1 --mask --prev-leaf SHA-256:76b127cddb918c3be744980c094c6c9c0d6c0a8d54b8d971b67886772fbe47c6 --mdata --mdata-cli-id "My Name" -d -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*Error: Unable to embed metadata and link the local aggregation tree with the last leaf of the previous local aggregation tree with masking.*)(.*as the local aggregation tree's maximum allowed depth is too small.*)/
 >>>= 8
 
-# Test metadata without client id:
-EXECUTABLE sign --max-lvl 1 --mdata --mdata-sqn-nr -d --mdata-mac-id "My Comuter" --mdata-req-tm -i test/resource/file/abcd -o test/out/sign
+# Test metadata without client id. Use metadata with only Machine Id:
+EXECUTABLE sign --max-lvl 1 --mdata --mdata-mac-id "My Comuter" -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*Error: Client ID is missing but is mandatory part of metadata.*)/
+>>>= 3
+
+# Test metadata without client id. Use metadata with only Sequence Number:
+EXECUTABLE sign --max-lvl 1 --mdata --mdata-sqn-nr -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*Error: Client ID is missing but is mandatory part of metadata.*)/
+>>>= 3
+
+# Test metadata without client id. Use metadata with only Request Time:
+EXECUTABLE sign --max-lvl 1 --mdata --mdata-req-tm -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*Error: Client ID is missing but is mandatory part of metadata.*)/
+>>>= 3
+
+# Test metadata without client id. Use full metadata structure:
+EXECUTABLE sign --max-lvl 1 --mdata --mdata-sqn-nr -d --mdata-mac-id "My Comuter" --mdata-req-tm --mdata-sqn-nr -i test/resource/file/abcd -o test/out/sign
 >>>2 /(.*Error: Client ID is missing but is mandatory part of metadata.*)/
 >>>= 3
 
@@ -158,3 +180,17 @@ EXECUTABLE sign --max-lvl 10 -o test/out/sign -- test/resource/file/this_file_se
 >>>2 /((.*You have to define at least one of the flag.*)(.*-i.*)(.*--input.*))|(.*File does not exist.*)(.*this_file_set_does_not_exist[*].*)/
 >>>= 3
 
+# Test masking with invalid previous leaf format 1:
+EXECUTABLE sign --max-lvl 1 --mask --prev-leaf kk -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*Imprint format must be <alg>:<hash>.*)(.*prev-leaf.*)/
+>>>= 3
+
+# Test masking with invalid previous leaf format 2:
+EXECUTABLE sign --max-lvl 1 --mask --prev-leaf maa:kk -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*Invalid hex character.*)(.*prev-leaf.*)/
+>>>= 3
+
+# Test metadata with invalid mdata-sgn-nr:
+EXECUTABLE sign --max-lvl 1 --mdata --mdata-cli-id "My name" --mdata-sqn-nr 0x -i test/resource/file/abcd -o test/out/sign
+>>>2 /(.*Invalid integer.*)(.*mdata-sqn-nr.*)/
+>>>= 3

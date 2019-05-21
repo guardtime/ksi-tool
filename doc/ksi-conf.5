@@ -1,14 +1,10 @@
 .TH KSI-CONF 5
 .\"
-.\"
-.\"
 .SH NAME
-\fBksi.conf \fR- Keyless Signature Infrastructure (KSI) command-line tool configuration file.
-.\"
+\fBksi.conf\fR - KSI command-line tool configuration file.
 .\"
 .SH DESCRIPTION
-.LP
-The KSI command-line tool has several configuration options, most of them are related to the KSI service configuration (e.g. KSI signing service URL and access credentials). The configuration options are described in the \fBOPTIONS\fR section below. There are following ways to specify these configuration options:
+The KSI command-line tool has several configuration options, most of them are related to the KSI service configuration (such as KSI signing service URL and access credentials). The configuration options are described in the \fBOPTIONS\fR section. Ways to define the options are:
 .LP
 .IP \(bu 4
 directly on command line (highest priority)
@@ -17,71 +13,96 @@ in a file specified by the \fB--conf\fR command-line argument
 .IP \(bu 4
 in a file specified by the \fBKSI_CONF\fR (lowest priority)
 .LP
-If a configuration option is specified in more than one source (e.g. both directly on command-line argument and in a configuration file) the source with the highest priority will be used. A short parameter or multiple flags must have prefix \fB-\fR and long parameters have prefix \fB--\fR. If some parameter values contain whitespace characters double quote marks (\fB"\fR) must be used to wrap the entire value. If double quote mark or backslash have to be used inside the value part an escape character (\fB\\\fR) must be typed before the charcater(\fB\\"\fR or \fB\\\\\fR). If configuration option with unknown or invalid key-value pairs is used, an error is generated.
+If a configuration option is specified in more than one source, the source with the highest priority will be used (meaning that command-line argument will override file specified by \fB--conf\fR or \fBKSI_CONF\fR).
 .LP
-In configuration file each key-value pair must be placed on a single line. Start the line with \fB#\fR to write a comment. Not full paths (V, W and P with URI scheme file://) are interpreted as relative to the configurations file.
+While defining options, a short parameter or multiple flags must have prefix '\fB-\fR' and long parameters have prefix '\fB--\fR'. If some parameter values contain whitespace characters, double quote marks (\fB"\fR) must be used to wrap the entire value. If double quote mark or backslash have to be used inside the value part, an escape character (\fB\\\fR) must be typed before the charcater(\fB\\"\fR or \fB\\\\\fR). If configuration option with unknown or invalid key-value pairs is used, an error is generated.
 .LP
-.SH OPTIONS
+In configuration file each key-value pair must be placed on a single line. For commenting, start the line with \fB#\fR.
 .br
+In case of \fB-V\fR, \fB-W\fR and \fB-P\fR options file location is interpreted as relative to the configuration file, if full path is not defined.
+.br
+See \fBEXAMPLES\fR for more information.
 .\"
+.SH OPTIONS
 .TP
 \fB-S \fIURL\fR
-Signing service (KSI Aggregator) URL.
+Specify the signing service (KSI Aggregator) URL. Supported URL schemes are: \fIhttp\fR, \fIhttps\fR, \fIksi+http\fR, \fIksi+https\fR and \fIksi+tcp\fR. It is possible to embed HTTP or KSI user info into the URL. With \fIksi+\fR suffix (e.g. ksi+http//user:key@...), user info is interpreted as KSI user info, otherwise (e.g. http//user:key@...) the user info is interpreted as HTTP user info. User info specified with \fB--aggr-user\fR and \fB--aggr-key\fR will overwrite the embedded values.
 .\"
 .TP
 \fB--aggr-user \fIstr\fR
-Username for signing service.
+Specify the username for signing service.
 .\"
 .TP
 \fB--aggr-key \fIstr\fR
-HMAC key for signing service.
+Specify the HMAC key for signing service.
+.\"
+.TP
+\fB--aggr-hmac-alg \fIalg\fR
+Hash algorithm to be used for computing HMAC on outgoing messages towards KSI aggregator. If not set, default algorithm is used. Use \fBksi -h \fRto get the list of supported hash algorithms.
+.\"
+.TP
+\fB--aggr-pdu-v \fIstr\fR
+Specify the KSIAP (KSI Aggregation Protocol) PDU version. Valid values are \fIv1\fR and \fIv2\fR. Note that \fIv1\fR is \fBdeprecated\fR and will be fully replaced with \fIv2\fR in the future.
+.\"
+.TP
+\fB-H \fIalg\fR
+Use the given hash algorithm to hash the file to be signed. If not set, the default algorithm is used. Use \fBksi -h \fRto get the list of supported hash algorithms. If used in combination with \fB--apply-remote-conf\fR, the algorithm parameter provided by the server will be ignored.
 .\"
 .TP
 \fB-X \fIURL\fR
-Extending service (KSI Extender) URL.
+Specify the extending service (KSI Extender) URL. Supported URL schemes are: \fIhttp\fR, \fIhttps\fR, \fIksi+http\fR, \fIksi+https\fR and \fIksi+tcp\fR. It is possible to embed HTTP or KSI user info into the URL. With \fIksi+\fR suffix (e.g. ksi+http//user:key@...), user info is interpreted as KSI user info, otherwise (e.g. http//user:key@...) the user info is interpreted as HTTP user info. User info specified with \fB--ext-user\fR and \fB--ext-key\fR will overwrite the embedded values.
 .\"
 .TP
 \fB--ext-user \fIstr\fR
-Username for extending service.
+Specify the username for extending service.
 .\"
 .TP
 \fB--ext-key \fIstr\fR
-HMAC key for extending service.
+Specify the HMAC key for extending service.
+.\"
+.TP
+\fB--ext-hmac-alg \fIalg\fR
+Hash algorithm to be used for computing HMAC on outgoing messages towards KSI extender. If not set, default algorithm is used. Use \fBksi -h \fRto get the list of supported hash algorithms.
+.\"
+.TP
+\fB--ext-pdu-v \fIstr\fR
+Specify the KSIEP (KSI Extension Protocol) PDU version. Valid values are \fIv1\fR and \fIv2\fR. Note that \fIv1\fR is \fBdeprecated\fR and will be fully replaced with \fIv2\fR in the future.
+.\"
 .\"
 .TP
 \fB--max-lvl \fIint\fR
-Set the maximum depth (0 - 255) of the local aggregation tree (default 0). It must be noted that when using masking (\fB--mask\fR) or embedding the metadata (\fB--mdata\fR) both will reduce the maximum count of document hash values that could be singed during a single local aggregation round. To enable signing in multiple local aggregation rounds see \fB--max-aggr-rounds\fR.
+Set the maximum depth (0 - 255) of the local aggregation tree (default: 0). It must be noted that when using masking (\fB--mask\fR) or embedding of the metadata (\fB--mdata\fR), the maximum count of document hash values that could be signed during a single local aggregation round will be reduced. To enable signing in multiple local aggregation rounds see \fB--max-aggr-rounds\fR. If used in combination with \fB--apply-remote-conf\fR, where service \fImaximum level\fR is provided, the smaller value is applied.
 .\"
 .TP
 \fB--max-aggr-rounds \fIint\fR
-Set the upper limit of local aggregation rounds that may be performed (default 1).
+Set the upper limit of local aggregation rounds that may be performed (default: 1).
 .\"
 .TP
 \fB--mdata-cli-id \fIstr\fR
-Specify client id as a string that will be embedded into the signature as metadata. It is mandatory part of the metadata.
+Specify the client ID as a string which will be embedded into the signature as metadata. It is mandatory part of the metadata.
 .\"
 .TP
 \fB--mdata-mac-id \fIstr\fR
-Specify machine id as a string that will be embedded into the signature as metadata. It is optional part of metadata.
+Specify the machine ID as a string which will be embedded into the signature as metadata. It is optional part of the metadata.
 .\"
 .TP
 \fB--mdata-sqn-nr \fR[\fIint\fR]
-Specify incremental (sequence number is incremented in every aggregation round) sequence number of the request as integer that will be embedded into the signature as metadata. If the parameter is given without the argument 0 is used. It is optional part of metadata.
+Specify the incremental (sequence number is incremented in every aggregation round) sequence number of the request as integer which will be embedded into the signature as metadata. If the parameter is given without the argument, 0 is used. It is optional part of metadata.
 .\"
 .TP
 \fB--mdata-req-tm\fR
-Embed request time extracted from the machine clock into the signature as metadata. It is optional part of metadata.
+Embed the request time extracted from the machine clock into the signature as metadata. It is optional part of metadata.
 .\"
 .TP
 \fB-P \fIURL\fR
-Publications file URL  (or file with URI scheme 'file://').
+Specify the publications file URL (or file with URI scheme 'file://').
 .\"
 .TP
 \fB--cnstr \fIoid\fR=\fIvalue\fR
-OID of the PKI certificate field (e.g. e-mail address) and the expected value to qualify the certificate for verification of publications file PKI signature. At least one constraint must be defined.
+Specify the OID of the PKI certificate field (e.g. e-mail address) and the expected value to qualify the certificate for verification of publications file's PKI signature. At least one constraint must be defined.
 .RS
 .HP 0
-For more common OID's there are convenience names defined:
+For more common OIDs there are convenience names defined:
 .IP \(bu 4
 \fBE\fR or \fBemail\fR for OID 1.2.840.113549.1.9.1
 .IP \(bu 4
@@ -94,7 +115,7 @@ For more common OID's there are convenience names defined:
 .\"
 .TP
 \fB-V \fIfile\fR
-Certificate file in PEM format for publications file verification.
+Specify the certificate file in PEM format for publications file verification.
 .\"
 .TP
 \fB-W \fIdir\fR
@@ -102,22 +123,33 @@ Specify an OpenSSL-style trust store directory for publications file verificatio
 .\"
 .TP
 \fB-C \fIint\fR
-Network connect timeout in seconds  (is not supported with TCP client).
+Specify allowed connect timeout in seconds. This is not supported with TCP client.
 .\"
 .TP
 \fB-c \fIint\fR
-Network transfer timeout, after successful connect, in seconds.
+Specify allowed network transfer timeout, after successful connect, in seconds.
 .\"
 .TP
 \fB--publications-file-no-verify\fR
-A flag to force the tool to trust the publications file without verifying it. The flag can only be defined on command-line to avoid the usage of insecure configurations files. It must be noted that the \fBoption is insecure \fRand may only be used for testing.
+Force the KSI tool to trust the publications file without verifying it. This option can only be defined on command line to avoid the usage of insecure configuration files. Note that the \fBoption is insecure\fR and may only be used for testing.
 .\"
+.TP
+\fB--apply-remote-conf\fR
+Obtain and apply additional configuration data from service server. See \fBksi-sign\fR(1) and \fBksi-extend\fR(1) for more information.
+.\"
+.TP
+\fB--inst-id \fR[\fIint\fR]
+An integer (>= 0) to identify the sender instance that is constant during the KSI tool process lifetime. It should stay constant or increase every time KSI tool is executed as server may drop future messages with lower \fIinstance identifier\fR values. When specified as integer, the constant value is used. When specified without argument, unix time is used in place of a constant. If not specified, \fIinstance identifier\fR is not included to the request header. Note that this value only affects KSI protocol PDUs.
+.\"
+.TP
+\fB--msg-id \fR[\fIint\fR]
+An integer (>= 1) to identify the requests within KSI tool process lifetime. The \fImessage identifier\fR value is increased after every request. When specified without argument, 1 is used. If not specified \fImessage identifier\fR is not included to the request header. Note that this value only affects KSI protocol PDUs.
 .\"
 .SH ENVIRONMENT
-Program \fBksi\fR(1) uses environment variable \fBKSI_CONF \fRto point to the default configurations file.
+Program \fBksi\fR(1) uses environment variable \fBKSI_CONF \fRto point to the default configuration file.
 .\"
 .SH EXAMPLES
-An example of configurations file:
+An example of configuration file:
 .LP
 .RS
 \fR# --- BEGINNING ---
@@ -133,7 +165,12 @@ An example of configurations file:
 \fB--aggr-key \fIanon
 .br
 .LP
-\fR# KSI Extending service:
+\fR# Override default hash algorithm:
+.br
+\fB-H \fISHA2-512
+.br
+.LP
+\fR# KSI Extending service parameters:
 .br
 \fR# Note that ext-key real value is &h/J"kv\\G##
 .br
@@ -159,10 +196,8 @@ An example of configurations file:
 .br
 .RE
 .\"
-.\"
 .SH AUTHOR
 Guardtime AS, http://www.guardtime.com/
-.\"
 .\"
 .SH SEE ALSO
 \fBksi-sign\fR(1), \fBksi-verify\fR(1), \fBksi-extend\fR(1), \fBksi-pubfile\fR(1)

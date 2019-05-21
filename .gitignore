@@ -2,31 +2,29 @@
 *.rpm
 *.gz
 
-# Object files, executable
+# Object files, executable, build files
 *.obj
 *.o
 /bin
 /obj
 *.exe
-src/gtime
+src/ksi
+*.deps
+*.def
+*.pdb
+*.dirstamp
 
 # Test files, temp files
 test/out
-todo.txt
 *.ksig
 *~
 *.lnk
-
+*.ps
+packaging/redhat/ksi.spec
 
 # Ide project files
-/nbproject
-/dist
-gtime/
-build/
-/src/.deps/
-/gtime/nbproject/private/
-.dep.inc
-*.pdb
+IDE/
+.idea
 
 
 

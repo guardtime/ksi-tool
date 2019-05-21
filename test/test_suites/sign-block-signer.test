@@ -44,15 +44,14 @@ EXECUTABLE verify --ver-int --conf test/test.cfg -d -f test/resource/file/abcx -
 
 # Sign 1 files with metadata where maximum tree level is 1 (tree with max 2 leaves), no masking.
 EXECUTABLE sign --conf test/test.cfg -d --max-lvl 1 --mdata-cli-id "My Name" --mdata -i test/resource/file/abcd -o test/out/sign/abcx-mdata.ksig
->>>2 /.*Add document hash 1\/1 with metadata to the local aggregation tree.*
-.*
-.*
+>>>2 /.*Add document hash 1\/1 with metadata to the local aggregation tree.*([^$]|[
+])*
 .*Signature saved to.*/
 >>>= 0
 
 # Verify if metadata exists.
 EXECUTABLE verify --ver-int --conf test/test.cfg -d --dump -i test/out/sign/abcx-mdata.ksig
->>> /(.*:: My Name.*)/
+>>> /(.*'My Name'*)/
 >>>= 0
 
 # Sign 2 files with metadata and masking where maximum tree level is 3 (tree with max 8 leaves). Output to directory.
@@ -60,18 +59,19 @@ EXECUTABLE sign --conf test/test.cfg -d --max-lvl 3 --mdata-cli-id "My Name" --m
 >>>2 /(.*Add document hash 1\/2 and metadata with enabled masking to the local aggregation tree.*)(.*ok.*)
 .*
 (.*Add document hash 2\/2 and metadata with enabled masking to the local aggregation tree.*)(.*ok.*)
+.*
 (.*Signing the local aggregation tree 1\/1.*)
 .*
-(.*saved t.*)(.*abcd.*)
-(.*saved t.*)(.*abcx.*)/
+(.*saved t)(.*abcd.*)
+(.*saved t)(.*abcx.*)/
 >>>= 0
 
 # Verify if metadata exists.
 EXECUTABLE verify --ver-int --conf test/test.cfg -d --dump -i test/out/sign/abcd.ksig
->>> /(.*:: My Name.*)/
+>>> /(.*'My Name'*)/
 >>>= 0
 EXECUTABLE verify --ver-int --conf test/test.cfg -d --dump -i test/out/sign/abcx.ksig
->>> /(.*:: My Name.*)/
+>>> /(.*'My Name'*)/
 >>>= 0
 
 # Sign multiple hash imprints with enabled masking, no metadata.
@@ -134,7 +134,8 @@ EXECUTABLE verify --conf test/test.cfg --ver-int -f test/resource/file/--odd-fil
 # Sign files in multiple rounds, no masking, no metadata. Check if file names are correct.
 EXECUTABLE sign --conf test/test.cfg -d --max-lvl 1 --max-aggr-rounds 5 -i test/resource/file/a* -i test/resource/file/f* -o test/out/sign
 >>>2 /(.*saved to.*)(.*sign\/abcd_1.ksig.*)
-(.*saved to.*)(.*sign\/abcx_1.ksig.*)
+(.*saved to.*)(.*sign\/abcx_1.ksig.*).*([^$]|[
+])*
 (.*saved to.*)(.*sign\/file_max_tlv_size.ksig.*)
 (.*saved to.*)(.*sign\/file_max_tlv_size_p1.ksig.*)/
 >>>= 0
@@ -144,11 +145,12 @@ EXECUTABLE sign --conf test/test.cfg --max-lvl 3 --max-aggr-rounds 3 test/resour
 >>>2 /(.*Signing 8 files in round 1\/2.*)
 (.*[#*].*)
 (.*Signing the local aggregation tree 1\/2.*)(.*ok.*)
+(.*Saving 8 files.*)
+(.*[#*].*)
 .*
 (.*Signing 1 files in round 2\/2.*)
 (.*[#*].*)
 (.*Signing the local aggregation tree 2\/2.*)(.*ok.*)
-.*
-(.*Saving 9 files.*)
+(.*Saving 1 files.*)
 (.*[#*].*)/
 >>>= 0

@@ -35,7 +35,11 @@ typedef struct ERR_ENTRY_st {
 struct ERR_TRCKR_st {
 	ERR_ENTRY err[MAX_ERROR_COUNT];
 	unsigned count;
-	int (*printErrors)(const char*, ...);
+	char additionalInfo[MAX_ADDITIONAL_INFO_LEN];
+	size_t additionalInfo_len;
+	char warnings[MAX_ADDITIONAL_INFO_LEN];
+	size_t warnings_len;
+	int (*printer)(const char*, ...);
 	const char *(*errCodeToString)(int);
 };
 
@@ -52,9 +56,12 @@ ERR_TRCKR *ERR_TRCKR_new(int (*printErrors)(const char*, ...),
 	if (tmp == NULL) return NULL;
 
 	tmp->count = 0;
+	tmp->additionalInfo_len = 0;
+	tmp->additionalInfo[0] = '\0';
+	tmp->warnings_len = 0;
+	tmp->warnings[0] = '\0';
 
-
-	tmp->printErrors = printErrors != NULL ? printErrors : printf;
+	tmp->printer = printErrors != NULL ? printErrors : printf;
 	tmp->errCodeToString = errCodeToString != NULL ? errCodeToString : dummy_errocode_to_string;
 	return tmp;
 }
@@ -67,7 +74,7 @@ void ERR_TRCKR_free(ERR_TRCKR *obj) {
 void ERR_TRCKR_add(ERR_TRCKR *err, int code, const char *fname, int lineN, const char *msg, ...) {
 	va_list va;
 	if (err == NULL || fname == NULL) return;
-	if(err->count >= MAX_ERROR_COUNT ) return;
+	if (err->count >= MAX_ERROR_COUNT ) return;
 
 	va_start(va, msg);
 	KSI_vsnprintf(err->err[err->count].message, MAX_MESSAGE_LEN, msg == NULL ? "" : msg, va);
@@ -84,9 +91,49 @@ void ERR_TRCKR_add(ERR_TRCKR *err, int code, const char *fname, int lineN, const
 	return;
 }
 
+void ERR_TRCKR_addAdditionalInfo(ERR_TRCKR *err, const char *info, ...) {
+	size_t count = 0;
+	va_list va;
+
+	if (err == NULL || info == NULL) return;
+	if (err->additionalInfo_len >= MAX_ADDITIONAL_INFO_LEN) return;
+
+	count = err->additionalInfo_len;
+
+	va_start(va, info);
+	count += KSI_vsnprintf(err->additionalInfo + count, MAX_ADDITIONAL_INFO_LEN - count, info, va);
+	va_end(va);
+
+	err->additionalInfo_len = count;
+
+	return;
+}
+
+void ERR_TRCKR_addWarning(ERR_TRCKR *err, const char *info, ...) {
+	size_t count = 0;
+	va_list va;
+
+	if (err == NULL || info == NULL) return;
+	if (err->warnings_len >= MAX_ADDITIONAL_INFO_LEN) return;
+
+	count = err->warnings_len;
+
+	va_start(va, info);
+	count += KSI_vsnprintf(err->warnings + count, MAX_ADDITIONAL_INFO_LEN - count, info, va);
+	va_end(va);
+
+	err->warnings_len = count;
+
+	return;
+}
+
 void ERR_TRCKR_reset(ERR_TRCKR *err) {
 	if (err == NULL) return;
 	err->count = 0;
+	err->additionalInfo_len = 0;
+	err->additionalInfo[0] = '\0';
+	err->warnings_len = 0;
+	err->warnings[0] = '\0';
 }
 
 void ERR_TRCKR_printErrors(ERR_TRCKR *err) {
@@ -96,14 +143,14 @@ void ERR_TRCKR_printErrors(ERR_TRCKR *err) {
 
 	for (i = err->count - 1; i >= 0; i--) {
 		if (err->err[i].message[0] == '\0') {
-			err->printErrors("%i) %s%s",i+1,  err->errCodeToString(err->err[i].code), (err->err[i].message[strlen(err->err[i].message) - 1] == '\n') ? ("") : ("\n"));
+			err->printer("%i) %s%s",i+1,  err->errCodeToString(err->err[i].code), (err->err[i].message[strlen(err->err[i].message) - 1] == '\n') ? ("") : ("\n"));
 		} else {
-			err->printErrors("%i) %s%s",i+1,  err->err[i].message, (err->err[i].message[strlen(err->err[i].message) - 1] == '\n') ? ("") : ("\n"));
+			err->printer("%i) %s%s",i+1,  err->err[i].message, (err->err[i].message[strlen(err->err[i].message) - 1] == '\n') ? ("") : ("\n"));
 		}
 	}
 
 	return;
-	}
+}
 
 void ERR_TRCKR_printExtendedErrors(ERR_TRCKR *err) {
 	int i;
@@ -111,7 +158,7 @@ void ERR_TRCKR_printExtendedErrors(ERR_TRCKR *err) {
 	if (err == NULL) return;
 
 	for (i = err->count - 1; i >= 0; i--) {
-		err->printErrors("%i) %s (%i) %s [%s 0x%02x]%s",i+1,
+		err->printer("%i) %s (%i) %s [%s 0x%02x]%s",i+1,
 				err->err[i].fileName,
 				err->err[i].line,
 				err->err[i].message,
@@ -119,6 +166,43 @@ void ERR_TRCKR_printExtendedErrors(ERR_TRCKR *err) {
 				err->err[i].code,
 				(err->err[i].message[strlen(err->err[i].message) - 1] == '\n') ? ("") : ("\n") );
 	}
+
+	return;
+}
+
+void ERR_TRCKR_printAdditionalInfo(ERR_TRCKR *err) {
+	if (err == NULL) return;
+
+	if (err->additionalInfo_len > 0) {
+		err->printer("\nAdditional info:\n");
+		err->printer("%s\n", err->additionalInfo);
+	}
+
+	return;
+}
+
+void ERR_TRCKR_printWarnings(ERR_TRCKR *err) {
+	if (err == NULL) return;
+
+	if (err->warnings_len > 0) {
+		err->printer("\nWarnings:\n");
+		err->printer("%s\n", err->warnings);
+	}
+
+	return;
+}
+
+void ERR_TRCKR_print(ERR_TRCKR *err, int extended) {
+	if (err == NULL) return;
+
+	/* Print errors. */
+	if (err->count) err->printer("\n");
+	if (extended) ERR_TRCKR_printExtendedErrors(err);
+	else ERR_TRCKR_printErrors(err);
+	/* Print warnings. */
+	ERR_TRCKR_printWarnings(err);
+	/* Print additional info. */
+	ERR_TRCKR_printAdditionalInfo(err);
 
 	return;
 }
