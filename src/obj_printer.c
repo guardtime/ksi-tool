@@ -525,9 +525,19 @@ static void printRuleVerificationResult(int (*print)(const char *format, ... ), 
 	}
 	print(" %s.", OBJPRINT_getVerificationErrorDescription(result->errorCode));
 	if ((result->resultCode != KSI_VER_RES_OK) ||
-			(printRuleWhenOk && result->resultCode == KSI_VER_RES_OK)) {
-		print("\tIn rule:");
-		print("\t%s", getPrintableRuleName(result->ruleName));
+		(printRuleWhenOk && result->resultCode == KSI_VER_RES_OK)) {
+
+		print("\tIn rule:\t%s", getPrintableRuleName(result->ruleName));
+		if (result->status != KSI_OK) {
+			print(" (Ksierr: 0x%02x %s", result->status, KSI_getErrorString(result->status));
+
+			if (result->statusExt != KSI_OK || result->statusMessage != NULL) print(" Exterr:");
+			if (result->statusExt != KSI_OK) print(" %i", result->statusExt);
+			if (result->statusMessage != NULL) print(" '%s'", result->statusMessage);
+
+			print(")");
+		}
+
 	}
 	print("\n");
 }

@@ -1,3 +1,5 @@
+(TOOL-269) * IMPROVEMENT: Some of the tests changed accordingly to the changes in libksi verification process.
+(TOOL-269) * IMPROVEMENT: Verification error output with --dump may show additional error information.
 (TOOL-192) * IMPROVEMENT: Memory tests for Windows implemented (test\memory-test.bat).
 (TOOL-267) * IMPROVEMENT: Usage of ksi+ (e.g. ksi+http) URL schemes documented.
 (TOOL-266) * FEATURE: Script rebuild.sh has new option --ign-dep-online-errt to ignore test results during online build (--get-dep-online).
