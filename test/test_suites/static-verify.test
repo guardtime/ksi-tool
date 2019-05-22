@@ -280,8 +280,10 @@ EXECUTABLE verify --ver-key -i test/resource/signature/nok-sig-2014-08-01-cert-i
 >>>  /(Signing certificate ID)(.*ff:ff:ff:01.*)
 (.*Signing certificate issued to)(.*Certificate not found from publications file)([^$]|[
 ])+
-(.*KEY-01)(.*Certificate not found)/
->>>2 /(KEY-01)(.*Certificate not found)(.*Signature key-based verification failed.)/
+(.*Verifying calendar authentication record... na)([^$]|[
+])+
+(.*GEN-02)(.*Verification inconclusive)(.*CertificateExistence)/
+>>>2 /(GEN-02)(.*Verification inconclusive. Signature key-based verification failed.)/
 >>>= 6
 
 # ------ Calendar based verification. ------
@@ -299,5 +301,5 @@ EXECUTABLE sign -i SHA256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d
 >>>= 0
 EXECUTABLE verify --ver-cal -i test/out/sign/imprint_sha256_sv.ksig -d --dump --conf test/resource/conf/verify-test_ok_sig-imprint_sha256-extend_response-err_107.tlv.cfg
 >>>  /.*Trust anchor: Calendar Authentication Record.*/
->>>2 /.*Error: Signature calendar-based verification failed.*/
->>>= 7
+>>>2 /.*Error: The request asked for hash values newer than the current real time*/
+>>>= 6
