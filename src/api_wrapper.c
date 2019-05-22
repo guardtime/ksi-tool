@@ -132,7 +132,6 @@ static void appendHashAlgoErrors(ERR_TRCKR *err, int res) {
 static void appendExtenderErrors(ERR_TRCKR *err, int res) {
 	if (res == KSI_OK) return;
 	ERR_APPEND_KSI_ERR_EXT_MSG(err, res, KSI_EXTENDER_NOT_CONFIGURED, "Extender URL is not configured.");
-	ERR_APPEND_KSI_ERR_EXT_MSG(err, res, KSI_UNSUPPORTED_PDU_VERSION, "PDU version for given request is not supported.");
 	ERR_APPEND_KSI_ERR(err, res, KSI_EXTEND_NO_SUITABLE_PUBLICATION);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_DATABASE_CORRUPT);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_DATABASE_MISSING);
@@ -146,7 +145,6 @@ static void appendExtenderErrors(ERR_TRCKR *err, int res) {
 static void appendAggreErrors(ERR_TRCKR *err, int res) {
 	if (res == KSI_OK) return;
 	ERR_APPEND_KSI_ERR_EXT_MSG(err, res, KSI_AGGREGATOR_NOT_CONFIGURED, "Aggregator URL is not configured.");
-	ERR_APPEND_KSI_ERR_EXT_MSG(err, res, KSI_UNSUPPORTED_PDU_VERSION, "PDU version for given request is not supported.");
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_AGGR_REQUEST_TOO_LARGE);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_AGGR_REQUEST_OVER_QUOTA);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_AGGR_TOO_MANY_REQUESTS);
@@ -340,10 +338,6 @@ int KSITOOL_Extender_getConf(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Config **config) 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
 		appendNetworkErrors(err, res);
 		appendExtenderErrors(err, res);
-	}
-
-	if (res == KSI_UNSUPPORTED_PDU_VERSION) {
-		ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion:  Use '--ext-pdu-v v2' in order to use supported PDU version for given request.\n");
 	}
 
 	return res;

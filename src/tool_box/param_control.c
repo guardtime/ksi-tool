@@ -657,19 +657,6 @@ int isContentOk_tree_level(const char* integer) {
 	return PARAM_OK;
 }
 
-int isContentOk_pduVersion(const char* version) {
-	if (version == NULL) return FORMAT_NULLPTR;
-
-	if (strcmp(version, "v1") == 0) {
-		return PARAM_OK;
-	} else if (strcmp(version, "v2") == 0) {
-		return PARAM_OK;
-	}
-
-	return INVALID_VERSION;
-}
-
-
 int isFormatOk_inputFile(const char *path){
 	if (path == NULL) return FORMAT_NULLPTR;
 	if (strlen(path) == 0) return FORMAT_NOCONTENT;

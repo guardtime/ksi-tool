@@ -1,3 +1,4 @@
+(TOOL-270) * IMPROVEMENT: Support for legacy and unused PDU v1 removed.
 (TOOL-269) * IMPROVEMENT: Some of the tests changed accordingly to the changes in libksi verification process.
 (TOOL-269) * IMPROVEMENT: Verification error output with --dump may show additional error information.
 (TOOL-192) * IMPROVEMENT: Memory tests for Windows implemented (test\memory-test.bat).
