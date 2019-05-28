@@ -208,13 +208,13 @@ Signature calendar-based verification.*ok.*/
 EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig --pub-str AAAAAA-CV65PY-AAIVFG-UJMDXY-XGBKMO-DISYGA-YPPQYY-QEWTQ5-Y43NGX-B22W7H-IGZQNN-DRTW2H -d --dump --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>  /Final result.*
 .*GEN-02((.*ExtendingPermittedVerification.*)|(.*RequireNoUserProvidedPublication.*))/
->>>2 /Signature verification according to trust anchor.*failed.*/
+>>>2 /Signature verification according to trust anchor.*na.*/
 >>>= 6
 
 # Trust anchor: Calendar Blockchain. Verification is NA as default verification policy do not use calendar-based verification.
 EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.no-cal-hashchain.ksig -d --dump  --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>  /(NA.*GEN-02.*In rule.*CalendarHashChainPresenceVerification)/
->>>2 /(Verification inconclusive. Signature verification according to trust anchor failed)/
+>>>2 /(Verification inconclusive. Signature verification according to trust anchor inconclusive)/
 >>>= 6
 
 
@@ -237,7 +237,7 @@ EXECUTABLE verify --ver-int -i test/resource/signature/ok-sig-2014-08-01.1.ksig 
 EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ksig -d --dump -P file://test/resource/publication/ksi-publications.bin --cnstr email=test@test.com -V test/resource/certificates/ok-test.crt
 >>>  /Final result.*
 .*GEN-02.*PublicationsFileExtendingPermittedVerification/
->>>2 /Signature publication-based verification with publications file.*failed.*/
+>>>2 /Signature publication-based verification with publications file.*inconclusive.*/
 >>>= 6
 
 
@@ -247,7 +247,7 @@ EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ksig 
 
 # Signature is created after publication.
 EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig --pub-str AAAAAA-CTOQBY-AAMJYH-XZPM6T-UO6U6V-2WJMHQ-EJMVXR-JEAGID-2OY7P5-XFFKYI-QIF2LG-YOV7SO -d --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
->>>2 /(Signature publication-based verification with user publication string)(.*failed.*)/
+>>>2 /(Signature publication-based verification with user publication string)(.*inconclusive.*)/
 >>>= 6
 
 # Wrong user publication string, extending not permitted.
@@ -255,7 +255,7 @@ EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.k
 >>>  /.*GEN-02.*UserProvidedPublicationExtendingPermittedVerification.*
 .*Final result.*
 .*NA.*SignaturePublicationRecordMissing/
->>>2 /Signature publication-based verification with user publication string.*failed.*/
+>>>2 /Signature publication-based verification with user publication string.*inconclusive.*/
 >>>= 6
 
 
@@ -265,14 +265,14 @@ EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.k
 EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-2014-08-01.1.no-cal-hashchain.ksig -d --dump --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>  /Final result.*
 .*GEN-02.*CalendarHashChainPresenceVerification/
->>>2 /Signature key-based verification.*failed.*/
+>>>2 /Signature key-based verification.*inconclusive.*/
 >>>= 6
 
 # Calendar authentication record is missing.
 EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -d --dump --conf test/resource/conf/verify-test_ok-sig-2014-08-01.1-extend_response.cfg
 >>>  /Final result.*
 .*GEN-02.*CalendarAuthenticationRecordPresenceVerification/
->>>2 /Signature key-based verification.*failed.*/
+>>>2 /Signature key-based verification.*inconclusive.*/
 >>>= 6
 
 # Calendar authentication record signature certificate ID changed so that it does not refer to any certificate in publications file.
@@ -283,7 +283,7 @@ EXECUTABLE verify --ver-key -i test/resource/signature/nok-sig-2014-08-01-cert-i
 (.*Verifying calendar authentication record... na)([^$]|[
 ])+
 (.*GEN-02)(.*Verification inconclusive)(.*CertificateExistence)/
->>>2 /(GEN-02)(.*Verification inconclusive. Signature key-based verification failed.)/
+>>>2 /(GEN-02)(.*Verification inconclusive. Signature key-based verification inconclusive.)/
 >>>= 6
 
 # ------ Calendar based verification. ------
