@@ -360,6 +360,18 @@ cleanup:
 	return res;
 }
 
+
+static void append_verification_result_error(KSI_RuleVerificationResult *verificationResult, ERR_TRCKR *err, int res, const char *task, int line) {
+	int is_na = verificationResult->errorCode == KSI_VerificationErrorCode_fromString("GEN-02");
+	const char *errorSuffix = is_na ? "inconclusive" : "failed";
+
+	print_progressResult(res);
+
+	ERR_TRCKR_add(err, res, __FILE__, line, "Error: [%s] %s. %s %s.",
+			OBJPRINT_getVerificationErrorCode(verificationResult->errorCode),
+			OBJPRINT_getVerificationErrorDescription(verificationResult->errorCode), task, errorSuffix);
+}
+
 static int signature_verify_general(PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *extra,
 									KSI_CTX *ksi, KSI_Signature *sig, KSI_DataHash *hsh,
 									KSI_PolicyVerificationResult **out) {
@@ -399,9 +411,7 @@ static int signature_verify_general(PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 		if (KSI_RuleVerificationResultList_elementAt(
 				(*out)->ruleResults, KSI_RuleVerificationResultList_length((*out)->ruleResults) - 1,
 				&verificationResult) == KSI_OK && verificationResult != NULL) {
-			ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.",
-					OBJPRINT_getVerificationErrorCode(verificationResult->errorCode),
-					OBJPRINT_getVerificationErrorDescription(verificationResult->errorCode), task);
+			append_verification_result_error(verificationResult, err, res, task, __LINE__);
 		}
 		goto cleanup;
 	} else {
@@ -437,9 +447,7 @@ static int signature_verify_internally(PARAM_SET *set, ERR_TRCKR *err,
 		if (KSI_RuleVerificationResultList_elementAt(
 				(*out)->ruleResults, KSI_RuleVerificationResultList_length((*out)->ruleResults) - 1,
 				&verificationResult) == KSI_OK && verificationResult != NULL) {
-			ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.",
-					OBJPRINT_getVerificationErrorCode(verificationResult->errorCode),
-					OBJPRINT_getVerificationErrorDescription(verificationResult->errorCode), task);
+			append_verification_result_error(verificationResult, err, res, task, __LINE__);
 		}
 		goto cleanup;
 	} else {
@@ -482,9 +490,7 @@ static int signature_verify_key_based(PARAM_SET *set, ERR_TRCKR *err,
 		if (KSI_RuleVerificationResultList_elementAt(
 				(*out)->ruleResults, KSI_RuleVerificationResultList_length((*out)->ruleResults) - 1,
 				&verificationResult) == KSI_OK && verificationResult != NULL) {
-			ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.",
-					OBJPRINT_getVerificationErrorCode(verificationResult->errorCode),
-					OBJPRINT_getVerificationErrorDescription(verificationResult->errorCode), task);
+			append_verification_result_error(verificationResult, err, res, task, __LINE__);
 		}
 		goto cleanup;
 	} else {
@@ -530,9 +536,7 @@ static int signature_verify_publication_based_with_user_pub(PARAM_SET *set, ERR_
 					&verificationResult) == KSI_OK && verificationResult != NULL) {
 				signature_print_suggestions_for_publication_based_verification(set, err, res, ksi, sig, verificationResult, pub_data);
 
-				ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.",
-						OBJPRINT_getVerificationErrorCode(verificationResult->errorCode),
-						OBJPRINT_getVerificationErrorDescription(verificationResult->errorCode), task);
+				append_verification_result_error(verificationResult, err, res, task, __LINE__);
 			}
 			goto cleanup;
 		}
@@ -580,9 +584,7 @@ static int signature_verify_publication_based_with_pubfile(PARAM_SET *set, ERR_T
 					&verificationResult) == KSI_OK && verificationResult != NULL) {
 				signature_print_suggestions_for_publication_based_verification(set, err, res, ksi, sig, verificationResult, NULL);
 
-				ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.",
-						OBJPRINT_getVerificationErrorCode(verificationResult->errorCode),
-						OBJPRINT_getVerificationErrorDescription(verificationResult->errorCode), task);
+				append_verification_result_error(verificationResult, err, res, task, __LINE__);
 			}
 			goto cleanup;
 		}
@@ -618,9 +620,7 @@ static int signature_verify_calendar_based(PARAM_SET *set, ERR_TRCKR *err,
 		if (KSI_RuleVerificationResultList_elementAt(
 				(*out)->ruleResults, KSI_RuleVerificationResultList_length((*out)->ruleResults) - 1,
 				&verificationResult) == KSI_OK && verificationResult != NULL) {
-			ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.",
-					OBJPRINT_getVerificationErrorCode(verificationResult->errorCode),
-					OBJPRINT_getVerificationErrorDescription(verificationResult->errorCode), task);
+				append_verification_result_error(verificationResult, err, res, task, __LINE__);
 		}
 		goto cleanup;
 	} else {

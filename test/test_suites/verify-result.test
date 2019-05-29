@@ -20,6 +20,6 @@
 EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig --pub-str AAAAAA-CV65PY-AAIVFG-UJMDXY-XGBKMO-DISYGA-YPPQYY-QEWTQ5-Y43NGX-B22W7H-IGZQNN-DRTW2H -x -d --dump -X dummy-dummy-not-existing-url
 >>>  /(NA)(.*GEN-02)(.*Verification inconclusive)(.*In rule)(.*UserProvidedPublicationTimeVerification).*([^$]|[
 ])*(NA)(.*GEN-02)(.*Verification inconclusive)(.*In rule)(.*UserProvidedPublicationExtendToPublication)(.*Ksierr: 0x202 Network error. Exterr:)/
->>>2 /(Signature publication-based verification with user publication string)(.*failed.*)/
+>>>2 /(Signature publication-based verification with user publication string)(.*na.*)/
 >>>= 6
 

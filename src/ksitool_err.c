@@ -52,7 +52,7 @@ static int ksitool_ErrToExitcode(int error_code) {
 		case KT_AGGR_LVL_EXCEED_LIMIT:
 		case KT_EXT_CAL_TIME_OUT_OF_LIMIT:
 			return EXIT_INVALID_CONF;
-		case KT_KSI_SIG_VER_IMPOSSIBLE:
+		case KT_VERIFICATION_INCONCLUSIVE:
 			return EXIT_VERIFY_ERROR;
 		case KT_PUBFILE_HAS_NO_PUBREC_TO_EXTEND_TO:
 			return EXIT_EXTEND_ERROR;
@@ -127,8 +127,8 @@ static const char* ksitoolErrToString(int error_code) {
 			return "The command-line parameter is invalid or missing.";
 		case KT_NO_PRIVILEGES:
 			return "User has no privileges.";
-		case KT_KSI_SIG_VER_IMPOSSIBLE:
-			return "Verification can't be performed.";
+		case KT_VERIFICATION_INCONCLUSIVE:
+			return "Verification inconclusive.";
 		case KT_PUBFILE_HAS_NO_PUBREC_TO_EXTEND_TO:
 			return "No publication record found to extend to.";
 		case KT_AGGR_LVL_LIMIT_TOO_SMALL:

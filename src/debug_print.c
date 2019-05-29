@@ -162,6 +162,8 @@ void print_progressResult(int res) {
 
 		if (res == KT_OK) {
 			print_debug("ok.%s\n", timerOn ? time_str : "");
+		} else if (res == KT_VERIFICATION_INCONCLUSIVE) {
+			print_debug("na.%s\n", timerOn ? time_str : "");
 		} else {
 			print_debug("failed.%s\n", timerOn ? time_str : "");
 		}

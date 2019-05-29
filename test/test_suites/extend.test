@@ -128,7 +128,7 @@ EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08
 
 # KSI extend to the publication record that does not exist in publications file.
 EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/should-not-be-3.ksig -d --pub-str AAAAAA-CVWIVC-QAIVKJ-SIRUQZ-MZBJPS-T7P2UX-DDX4JF-KLMCXI-TXIKGF-B6MAJQ-JIJPTD-C2EDEO
->>>2 /(Error: Unable to extend signature as publication record not found from publications file.)(.*0x10014.*)/
+>>>2 /(Error: Unable to extend signature as publication record not found from publications file.)(.*No publication record found to extend to.*)/
 >>>= 7
 
 # KSI extend invalid signature.
