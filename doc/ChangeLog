@@ -1,5 +1,6 @@
 (TOOL-272) * IMPROVEMENT: Inconclusive verification error messages improved.
 (TOOL-269) * IMPROVEMENT: Some of the tests changed accordingly to the changes in libksi verification process.
+(TOOL-273) * IMPROVEMENT: Some of the tests changed accordingly to the changed in libksi block-signer.
 (TOOL-269) * IMPROVEMENT: Verification error output with --dump may show additional error information.
 (TOOL-192) * IMPROVEMENT: Memory tests for Windows implemented (test\memory-test.bat).
 (TOOL-267) * IMPROVEMENT: Usage of ksi+ (e.g. ksi+http) URL schemes documented.
