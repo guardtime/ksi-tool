@@ -1,4 +1,5 @@
 (TOOL-272) * IMPROVEMENT: Inconclusive verification error messages improved.
+(TOOL-270) * IMPROVEMENT: Support for legacy and unused PDU v1 removed.
 (TOOL-269) * IMPROVEMENT: Some of the tests changed accordingly to the changes in libksi verification process.
 (TOOL-273) * IMPROVEMENT: Some of the tests changed accordingly to the changed in libksi block-signer.
 (TOOL-269) * IMPROVEMENT: Verification error output with --dump may show additional error information.

@@ -183,9 +183,6 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 		res = PARAM_SET_setParseOptions(conf, "{mdata-req-tm}", PST_PRSCMD_HAS_NO_VALUE);
 		if (res != PST_OK) goto cleanup;
 
-		res = PARAM_SET_addControl(conf, "{aggr-pdu-v}", isFormatOk_string, isContentOk_pduVersion, NULL, NULL);
-		if (res != PST_OK) goto cleanup;
-
 		PARAM_SET_setHelpText(conf, "S", "<URL>", "Signing service (KSI Aggregator) URL. Supported URL schemes are: http, https, ksi+http, ksi+https and ksi+tcp.");
 		PARAM_SET_setHelpText(conf, "aggr-user", "<str>", "Username for signing service.");
 		PARAM_SET_setHelpText(conf, "aggr-key", "<str>", "HMAC key for signing service.");
@@ -207,9 +204,6 @@ int CONF_initialize_set_functions(PARAM_SET *conf, const char *flags) {
 		if (res != PST_OK) goto cleanup;
 
 		res = PARAM_SET_addControl(conf, "{ext-key}{ext-user}", isFormatOk_userPass, NULL, NULL, NULL);
-		if (res != PST_OK) goto cleanup;
-
-		res = PARAM_SET_addControl(conf, "{ext-pdu-v}", isFormatOk_string, isContentOk_pduVersion, NULL, NULL);
 		if (res != PST_OK) goto cleanup;
 
 		PARAM_SET_setHelpText(conf, "X", "<URL>", "Extending service (KSI Extender) URL. Supported URL schemes are: http, https, ksi+http, ksi+https and ksi+tcp.");
