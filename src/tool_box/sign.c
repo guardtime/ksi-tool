@@ -90,7 +90,7 @@ static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SI
 static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, size_t seq_offset, KSI_MetaData **mdata);
 static int KT_SIGN_dump(KSI_CTX *ksi, PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND *aggr_round);
 
-#define PARAMS "{sign}{i}{input}{o}{data-out}{d}{dump}{dump-conf}{log}{conf}{h|help}{dump-last-leaf}{prev-leaf}{mdata}{mask}{show-progress}{apply-remote-conf}"
+#define PARAMS "{sign}{i}{input}{o}{data-out}{d}{dump}{dump-conf}{log}{conf}{h|help}{dump-last-leaf}{prev-leaf}{mdata}{mask}{show-progress}"
 
 int sign_run(int argc, char** argv, char **envp) {
 	int res;
@@ -231,9 +231,9 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputHash, isContentOk_inputHash, convertRepair_path, extract_inputHash);
 	PARAM_SET_addControl(set, "{input}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputHashFromFile);
 	PARAM_SET_addControl(set, "{prev-leaf}", isFormatOk_imprint, isContentOk_imprint, NULL, extract_imprint);
-	PARAM_SET_addControl(set, "{d}{dump-conf}{dump-last-leaf}{mdata}{show-progress}{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{d}{dump-conf}{dump-last-leaf}{mdata}{show-progress}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{mask}", isFormatOk_mask, isContentOk_mask, convertRepair_mask, extract_mask);
-	PARAM_SET_setParseOptions(set, "{d}{dump-conf}{dump-last-leaf}{mdata}{show-progress}{apply-remote-conf}", PST_PRSCMD_HAS_NO_VALUE);
+	PARAM_SET_setParseOptions(set, "{d}{dump-conf}{dump-last-leaf}{mdata}{show-progress}", PST_PRSCMD_HAS_NO_VALUE);
 
 	PARAM_SET_addControl(set, "{dump}", NULL, isContentOk_dump_flag, NULL, extract_dump_flag);
 
