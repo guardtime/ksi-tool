@@ -95,7 +95,7 @@ EXECUTABLE verify --ver-int -i test/resource/signature/ok-legacy-sig-2014-06.gtt
 (Signature internal verification)(.*ok.*)/
 >>>= 0
 
-# Wrong document hash.
+# Invalid OID for signature type inCalendar Authentication Record.
 EXECUTABLE verify --ver-int --dump -d --dump -i  test\resource\signature\nok-sig-invalid-oid.ksig
 >>>  /Calendar Authentication Record .unknown. signature:.*
 .*Signing certificate ID: a4.2c.61.ad.*
