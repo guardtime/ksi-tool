@@ -58,7 +58,7 @@ enum EXTEND_TASKS_en {
 	EXTENDER_DUMP_CONF
 };
 
-#define PARAMS "{i}{input}{o}{d}{x}{T}{pub-str}{dump}{dump-conf}{conf}{apply-remote-conf}{log}{h|help}{replace-existing}"
+#define PARAMS "{i}{input}{o}{d}{x}{T}{pub-str}{dump}{dump-conf}{conf}{log}{h|help}{replace-existing}"
 
 int extend_run(int argc, char** argv, char **envp) {
 	int res;
@@ -564,9 +564,9 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFileWithPipe, convertRepair_path, extract_inputSignature);
 	PARAM_SET_addControl(set, "{input}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignatureFromFile);
 	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
-	PARAM_SET_addControl(set, "{d}{dump-conf}{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{d}{dump-conf}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{pub-str}", isFormatOk_pubString, NULL, NULL, extract_pubString);
-	PARAM_SET_setParseOptions(set, "{d}{dump-conf}{replace-existing}{apply-remote-conf}", PST_PRSCMD_HAS_NO_VALUE);
+	PARAM_SET_setParseOptions(set, "{d}{dump-conf}{replace-existing}", PST_PRSCMD_HAS_NO_VALUE);
 
 	PARAM_SET_addControl(set, "{dump}", NULL, isContentOk_dump_flag, NULL, extract_dump_flag);
 
