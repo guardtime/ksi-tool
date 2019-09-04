@@ -320,7 +320,7 @@ static int is_formatted_as_oid(const char *oid) {
 		i++;
 	}
 
-	if (i > 0 && oid[0] == '.') return 0;
+	if (i == 0 || oid[i-1] == '.') return 0;
 
 	return 1;
 }
