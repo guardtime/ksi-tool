@@ -95,6 +95,13 @@ EXECUTABLE verify --ver-int -i test/resource/signature/ok-legacy-sig-2014-06.gtt
 (Signature internal verification)(.*ok.*)/
 >>>= 0
 
+# Invalid OID for signature type in Calendar Authentication Record.
+EXECUTABLE verify --ver-int --dump -d --dump -i  test/resource/signature/nok-sig-invalid-oid.ksig
+>>>  /Calendar Authentication Record .unknown. signature:.*
+.*Signing certificate ID: a4.2c.61.ad.*
+.*Signing certificate issued to: .Certificate not found from publications file..*
+.*Signature type: .Not recognized as OID..*/
+>>>= 0
 
 # ------ Publication based verification, use publications file. ------
 # Verify against online publications file.

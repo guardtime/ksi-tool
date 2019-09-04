@@ -302,6 +302,29 @@ void OBJPRINT_signatureSigningTime(const KSI_Signature *sig, int (*print)(const 
 	return;
 }
 
+static int is_formatted_as_oid(const char *oid) {
+	size_t i = 0;
+	int isDot = 0;
+
+	if (oid == NULL) return 0;
+	if (oid[0] == '.') return 0;
+
+	while (oid[i] != 0) {
+		if (oid[i] == '.') {
+			isDot++;
+		} else {
+			isDot = 0;
+		}
+
+		if ((!isdigit(oid[i]) && !isDot) || isDot > 1) return 0;
+		i++;
+	}
+
+	if (i == 0 || oid[i-1] == '.') return 0;
+
+	return 1;
+}
+
 static const char *get_signature_type_from_oid(const char *oid) {
 	if (strcmp(oid, "1.2.840.113549.1.1.11") == 0) {
 		return "PKI";
@@ -323,8 +346,9 @@ void OBJPRINT_signatureCertificate(KSI_CTX *ctx, const KSI_Signature *sig, int (
 	char tmp[1024];
 	char str_id[1024];
 	const char *CN = NULL;
+	int isOid = 0;
 
-	char *ret;
+	char *ret = NULL;
 
 	if (sig == NULL) goto cleanup;
 
@@ -339,6 +363,8 @@ void OBJPRINT_signatureCertificate(KSI_CTX *ctx, const KSI_Signature *sig, int (
 
 	res = KSI_PKISignedData_getSigType(pki_data, &sig_type);
 	if (res != KSI_OK || sig_type == NULL) goto cleanup;
+
+	isOid = is_formatted_as_oid(KSI_Utf8String_cstr(sig_type));
 
 	ret = KSI_OctetString_toString(ID, ':', str_id, sizeof(str_id));
 	if (ret != str_id) goto cleanup;
@@ -362,7 +388,11 @@ final_print:
 	print("Calendar Authentication Record %s signature:\n", get_signature_type_from_oid(KSI_Utf8String_cstr(sig_type)));
 	print("  Signing certificate ID: %s\n", str_id);
 	if (CN) print("  Signing certificate issued to: %s\n", CN);
-	print("  Signature type: %s\n", KSI_Utf8String_cstr(sig_type));
+	if (isOid) {
+		print("  Signature type: %s\n", KSI_Utf8String_cstr(sig_type));
+	} else {
+		print("  Signature type: <Not recognized as OID>\n");
+	}
 
 cleanup:
 
