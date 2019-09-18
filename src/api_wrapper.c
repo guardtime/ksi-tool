@@ -640,7 +640,7 @@ void KSITOOL_KSI_ERRTrace_LOG(KSI_CTX *ksi) {
 char *KSITOOL_DataHash_toString(KSI_DataHash *hsh, char *buf, size_t buf_len) {
 	char tmp[1024];
 	char alg_hex_str[3] = {0, 0, 0};
-	KSI_HashAlgorithm alg = KSI_HASHALG_INVALID;
+	KSI_HashAlgorithm alg = KSI_HASHALG_INVALID_VALUE;
 
 	if (hsh == NULL || buf == NULL || buf_len == 0) return NULL;
 	if (KSI_DataHash_toString(hsh, tmp, sizeof(tmp)) ==  NULL) return NULL;
