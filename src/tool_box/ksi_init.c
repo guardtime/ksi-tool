@@ -457,8 +457,8 @@ cleanup:
 
 static int tool_init_hmac_alg(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set) {
 	int res;
-	KSI_HashAlgorithm aggr_alg = KSI_HASHALG_INVALID;
-	KSI_HashAlgorithm ext_alg  = KSI_HASHALG_INVALID;
+	KSI_HashAlgorithm aggr_alg = KSI_HASHALG_INVALID_VALUE;
+	KSI_HashAlgorithm ext_alg  = KSI_HASHALG_INVALID_VALUE;
 
 	if (ksi == NULL || err == NULL || set == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
@@ -471,12 +471,12 @@ static int tool_init_hmac_alg(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set) {
 	res = PARAM_SET_getObjExtended(set, "ext-hmac-alg", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, NULL, (void**)&ext_alg);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY && res != PST_PARAMETER_NOT_FOUND) goto cleanup;
 
-	if (aggr_alg != KSI_HASHALG_INVALID) {
+	if (KSI_isHashAlgorithmSupported(aggr_alg)) {
 		res = KSI_CTX_setOption(ksi, KSI_OPT_AGGR_HMAC_ALGORITHM, (void*)(size_t)aggr_alg);
 		if (res != KSI_OK) goto cleanup;
 	}
 
-	if (ext_alg != KSI_HASHALG_INVALID) {
+	if (KSI_isHashAlgorithmSupported(ext_alg)) {
 		res = KSI_CTX_setOption(ksi, KSI_OPT_EXT_HMAC_ALGORITHM, (void*)(size_t)ext_alg);
 		if (res != KSI_OK) goto cleanup;
 	}

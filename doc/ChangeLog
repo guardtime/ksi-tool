@@ -12,6 +12,7 @@
 (TOOL-268) * BUGFIX: There is no default user and key as anon anymore.
 (TOOL-263) * BUGFIX: Command 'ksi conf --dump' will not crash when configuration file pointed by KSI_CONF does not exists.
 (TOOL-275) * BUGFIX: Typo fix suggestions for option --apply-remote-conf are not double printed.
+(TOOL-276) * IMPROVEMENT: Verification on hash algorithm ID refactored.
 
 Version 2.8
 

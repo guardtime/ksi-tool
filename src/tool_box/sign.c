@@ -334,7 +334,7 @@ static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int task) {
 				size_t max_tree_input = 0;
 				size_t rounds = 0;
 				int remote_max_lvl = TREE_DEPTH_INVALID;
-				KSI_HashAlgorithm remote_algo = KSI_HASHALG_INVALID;
+				KSI_HashAlgorithm remote_algo = KSI_HASHALG_INVALID_VALUE;
 
 				if (PARAM_SET_isSetByName(set, "apply-remote-conf")) {
 					res = KT_SIGN_getRemoteConf(set, err, ctx, &remote_max_lvl, &remote_algo);
@@ -438,7 +438,7 @@ static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, i
 			}
 			*remote_algo = alg_id;
 		} else {
-			*remote_algo = KSI_HASHALG_INVALID;
+			*remote_algo = KSI_HASHALG_INVALID_VALUE;
 		}
 	}
 
@@ -722,7 +722,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 	int in_count = 0;
 	size_t divider = 1;
 	char *signed_data_out = NULL;
-	KSI_HashAlgorithm algo = KSI_HASHALG_INVALID;
+	KSI_HashAlgorithm algo = KSI_HASHALG_INVALID_VALUE;
 	COMPOSITE extra;
 	KSI_OctetString *mask_iv = NULL;
 	int isMetadata = 0;
@@ -765,7 +765,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 		res = PARAM_SET_getObjExtended(set, "H", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, NULL, (void**)&algo);
 		if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 	} else {
-		algo = (remote_algo != KSI_HASHALG_INVALID) ? remote_algo : KSI_getHashAlgorithmByName("default");
+		algo = (KSI_isHashAlgorithmSupported(remote_algo)) ? remote_algo : KSI_getHashAlgorithmByName("default");
 	}
 
 	/**
@@ -846,7 +846,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 
 		for (tree_input = 0; tree_input < max_tree_inputs && i < in_count; tree_input++, i++) {
 			char *fname = NULL;
-			KSI_HashAlgorithm hash_algo = KSI_HASHALG_INVALID;
+			KSI_HashAlgorithm hash_algo = KSI_HASHALG_INVALID_VALUE;
 
 			if (!prgrs) print_progressDesc(d, "Extracting hash from input... ");
 

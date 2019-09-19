@@ -89,7 +89,7 @@ int verify_run(int argc, char **argv, char **envp) {
 	KSI_DataHash *hsh = NULL;
 	KSI_Signature *sig = NULL;
 	KSI_PolicyVerificationResult *result = NULL;
-	KSI_HashAlgorithm alg = KSI_HASHALG_INVALID;
+	KSI_HashAlgorithm alg = KSI_HASHALG_INVALID_VALUE;
 
 	/**
 	 * Extract command line parameters and also add configuration specific parameters.
