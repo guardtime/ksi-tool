@@ -765,7 +765,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 		res = PARAM_SET_getObjExtended(set, "H", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, NULL, (void**)&algo);
 		if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 	} else {
-		algo = (remote_algo != KSI_HASHALG_INVALID_VALUE) ? remote_algo : KSI_getHashAlgorithmByName("default");
+		algo = (KSI_isHashAlgorithmSupported(remote_algo)) ? remote_algo : KSI_getHashAlgorithmByName("default");
 	}
 
 	/**
