@@ -21,6 +21,7 @@
 #include <ksi/policy.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "obj_printer.h"
 #include "api_wrapper.h"
 #include "tool_box.h"
