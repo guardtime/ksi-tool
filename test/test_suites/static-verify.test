@@ -53,8 +53,8 @@ EXECUTABLE verify -i test/resource/signature/ok-sig-sha1-2016-05-26.ksig -f test
 
 # General verification. Ignore publications file verification. First make sure that verification fails without --publications-file-no-verify!
 EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.ksig -d --cnstr E=dummy@mail.test -P file://test/resource/publication/ksi-publications.bin
->>>2 /Error.*Signature verification according to trust anchor.*The PKI certificate is not trusted/
->>>= 10
+>>>2 /Error: .GEN-02. Verification inconclusive. Signature verification according to trust anchor inconclusive./
+>>>= 6
 EXECUTABLE verify -i test/resource/signature/ok-sig-2014-08-01.1.ksig -d --publications-file-no-verify --cnstr E=dummy@mail.test -P file://test/resource/publication/ksi-publications.bin
 >>>2 /Signature verification according to trust anchor.*ok.*/
 >>>= 0
@@ -179,8 +179,8 @@ EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-sha1-2016-05-26.ks
 
 # Key based verification. Ignore publications file verification. First make sure that verification fails without --publications-file-no-verify!
 EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-2014-08-01.1.ksig -d --cnstr E=dummy@mail.test -P file://test/resource/publication/ksi-publications.bin
->>>2 /Error.*Signature key-based verification failed.*The PKI certificate is not trusted/
->>>= 10
+>>>2 /Error: .GEN-02. Verification inconclusive. Signature key-based verification inconclusive./
+>>>= 6
 EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-2014-08-01.1.ksig -d --publications-file-no-verify --cnstr E=dummy@mail.test -P file://test/resource/publication/ksi-publications.bin
 >>>2 /Signature key-based verification.*ok.*/
 >>>= 0
@@ -309,4 +309,10 @@ EXECUTABLE sign -i SHA256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d
 EXECUTABLE verify --ver-cal -i test/out/sign/imprint_sha256_sv.ksig -d --dump --conf test/resource/conf/verify-test_ok_sig-imprint_sha256-extend_response-err_107.tlv.cfg
 >>>  /.*Trust anchor: Calendar Authentication Record.*/
 >>>2 /.*Error: The request asked for hash values newer than the current real time*/
+>>>= 6
+
+# Try to verify a signature by key-based verification if publications file do not exist.
+EXECUTABLE verify --ver-key -i test/resource/signature/ok-sig-2014-08-01.1.ksig -P file://test/that_file_do_not_exist --cnstr E=test@test.com
+>>>2 /(.*Error.*)(.*Verification inconclusive..*)
+(.*Error.*)(.*Unable to open file.*)/
 >>>= 6
