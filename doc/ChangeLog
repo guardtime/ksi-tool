@@ -1,3 +1,4 @@
+(TOOL-271) * IMPROVEMENT: Build requires libksi version >= 3.20.
 (TOOL-272) * IMPROVEMENT: Inconclusive verification error messages improved.
 (TOOL-270) * IMPROVEMENT: Support for legacy and unused PDU v1 removed.
 (TOOL-269) * IMPROVEMENT: Some of the tests changed accordingly to the changes in libksi verification process.

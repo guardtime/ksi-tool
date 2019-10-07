@@ -21,7 +21,7 @@
 set -e
 
 libksi_git="https://github.com/guardtime/libksi.git"
-libksi_version=v3.17.2693
+libksi_version=v3.20.3025
 libparamset_git="https://github.com/guardtime/libparamset.git"
 libparamset_version=v1.1.240
 
