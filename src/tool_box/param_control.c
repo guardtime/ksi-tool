@@ -141,7 +141,7 @@ cleanup:
 
 int is_imprint(const char *str) {
 	int res;
-	KSI_HashAlgorithm alg = KSI_HASHALG_INVALID;
+	KSI_HashAlgorithm alg = KSI_HASHALG_INVALID_VALUE;
 	int isColon = 0;
 	char hex[1024];
 	double correctness = 1;
@@ -151,7 +151,7 @@ int is_imprint(const char *str) {
 	if (res != KT_OK) return 0;
 
 	if (!isColon) correctness = 0;
-	if (alg == KSI_HASHALG_INVALID) correctness = 0;
+	if (!KSI_isHashAlgorithmSupported(alg)) correctness = 0;
 
 	analyze_hexstring_format(hex, &tmp);
 	if (tmp < 1.0) correctness = 0;
@@ -277,7 +277,7 @@ static int imprint_get_hash_obj(const char *imprint, KSI_CTX *ksi, ERR_TRCKR *er
 	char hash_hex[1024];
 	unsigned char bin[1024];
 	size_t bin_len = 0;
-	KSI_HashAlgorithm alg_id = KSI_HASHALG_INVALID;
+	KSI_HashAlgorithm alg_id = KSI_HASHALG_INVALID_VALUE;
 	KSI_DataHash *tmp = NULL;
 
 	if (imprint == NULL || ksi == NULL || err == NULL || hash == NULL) {
@@ -291,7 +291,7 @@ static int imprint_get_hash_obj(const char *imprint, KSI_CTX *ksi, ERR_TRCKR *er
 	res = hex_string_to_bin(hash_hex, bin, sizeof(bin), &bin_len);
 	if (res != KT_OK) goto cleanup;
 
-	if (alg_id == KSI_HASHALG_INVALID) {
+	if (!KSI_isHashAlgorithmSupported(alg_id)) {
 		res = KT_UNKNOWN_HASH_ALG;
 		goto cleanup;
 	}
@@ -657,19 +657,6 @@ int isContentOk_tree_level(const char* integer) {
 	return PARAM_OK;
 }
 
-int isContentOk_pduVersion(const char* version) {
-	if (version == NULL) return FORMAT_NULLPTR;
-
-	if (strcmp(version, "v1") == 0) {
-		return PARAM_OK;
-	} else if (strcmp(version, "v2") == 0) {
-		return PARAM_OK;
-	}
-
-	return INVALID_VERSION;
-}
-
-
 int isFormatOk_inputFile(const char *path){
 	if (path == NULL) return FORMAT_NULLPTR;
 	if (strlen(path) == 0) return FORMAT_NOCONTENT;
@@ -734,7 +721,7 @@ int isFormatOk_hashAlg(const char *hashAlg) {
 }
 
 int isContentOk_hashAlg(const char *alg) {
-	if (KSI_getHashAlgorithmByName(alg) != KSI_HASHALG_INVALID) return PARAM_OK;
+	if (KSI_isHashAlgorithmSupported(KSI_getHashAlgorithmByName(alg))) return PARAM_OK;
 	else return HASH_ALG_INVALID_NAME;
 }
 
@@ -761,7 +748,7 @@ int extract_hashAlg(void **extra, const char* str, void** obj) {
 	hash_alg_name = str != NULL ? (str) : ("default");
 	*hash_id = KSI_getHashAlgorithmByName(hash_alg_name);
 
-	if (*hash_id == KSI_HASHALG_INVALID) return KT_UNKNOWN_HASH_ALG;
+	if (!KSI_isHashAlgorithmSupported(*hash_id)) return KT_UNKNOWN_HASH_ALG;
 
 	return PST_OK;
 }
@@ -785,7 +772,7 @@ int isFormatOk_imprint(const char *imprint){
 int isContentOk_imprint(const char *imprint) {
 	int res = PARAM_INVALID;
 	char hash[1024];
-	KSI_HashAlgorithm alg_id = KSI_HASHALG_INVALID;
+	KSI_HashAlgorithm alg_id = KSI_HASHALG_INVALID_VALUE;
 	unsigned len = 0;
 	unsigned expected_len = 0;
 
@@ -797,7 +784,7 @@ int isContentOk_imprint(const char *imprint) {
 		goto cleanup;
 	}
 
-	if (alg_id == KSI_HASHALG_INVALID) {
+	if (!KSI_isHashAlgorithmSupported(alg_id)) {
 		res = HASH_ALG_INVALID_NAME;
 		goto cleanup;
 	}

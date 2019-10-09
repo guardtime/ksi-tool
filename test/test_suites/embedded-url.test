@@ -1,0 +1,80 @@
+#
+# Copyright 2013-2019 Guardtime, Inc.
+#
+# This file is part of the Guardtime client SDK.
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES, CONDITIONS, OR OTHER LICENSES OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
+# "Guardtime" and "KSI" are trademarks or registered trademarks of
+# Guardtime, Inc., and no license to trademarks is granted; Guardtime
+# reserves and retains all trademark rights.
+
+
+# Generate ok conf, where explicit user info is removed and is embedded into the
+# URL. The URL scheme is ksi+http and is interpreted as KSI user info. Note
+# that Empty string will embed correct user info from user defined original
+# configuration file instead of empty string!
+ test/construct_conf_file.sh test/test.cfg "" "" "" "" "ksi+http://" > test/out/ok-embed-ksi-usrinf.cnf
+>>>= 0
+
+# Generate ok conf, where explicit user info is removed and is embedded into the
+# URL. As the URL scheme is http, user info is interpreted as http user info and
+# KSI service must be provided from other source.
+ test/construct_conf_file.sh test/test.cfg "" "" "" "" "http://" > test/out/ok-embed-http-usrinf.cnf
+>>>= 0
+
+# Copy and spoil ok-embed-ksi-usrinf.cnf with some invalid user info that will
+# overwrite the correct embedded KSI user info.
+ cp test/out/ok-embed-ksi-usrinf.cnf test/out/ok-embed-ksi-usrinf-with-bad-explicit-usrinf.cnf
+>>>= 0
+ echo " --aggr-key _invalid_key_" >> test/out/ok-embed-ksi-usrinf-with-bad-explicit-usrinf.cnf
+>>>= 0
+ echo " --aggr-user _invalid_user_" >> test/out/ok-embed-ksi-usrinf-with-bad-explicit-usrinf.cnf
+>>>= 0
+ echo " --ext-key _invalid_key_" >> test/out/ok-embed-ksi-usrinf-with-bad-explicit-usrinf.cnf
+>>>= 0
+ echo " --ext-user _invalid_user_" >> test/out/ok-embed-ksi-usrinf-with-bad-explicit-usrinf.cnf
+>>>= 0
+
+
+# Make sure that default configuration file fails.
+EXECUTABLE sign -i test/resource/file/testFile -o test/out/sign/testFile.ksig -d
+>>>2 /Error: Unable to read TLV from file./
+>>>= 4
+
+# OK test where correct KSI user info is embedded into the URL.
+EXECUTABLE sign --conf test/out/ok-embed-ksi-usrinf.cnf -i test/resource/file/testFile -o test/out/sign/embed_url_test_dummy.ksig -d
+>>>2 /Signature saved to/
+>>>= 0
+EXECUTABLE pubfile --conf test/out/ok-embed-ksi-usrinf.cnf -d -T "2017-06-09 00:00:00"
+>>> /Publication string: AAAAAA-CZHHSQ-AAMEUO-Y45EWD-TIUMB7-H43SZN-T5KXL6-GUOT7M-IX6SXB-OWFG2D-XXW5EF-4N7VDM/
+>>>= 0
+
+# Check that http user info is not interpreted as KSI user info. A configuration
+# file is provided that has correct service URLs and has proper KSI user info
+# embedded into the URLs as http user info - it must not be used for KSI
+# service. Task must fail as default configuration file contains some nonsense
+# as user info.
+EXECUTABLE sign --conf test/out/ok-embed-http-usrinf.cnf -i test/resource/file/testFile -o test/out/sign/embed_url_test_dummy.ksig -d
+>>>2 /Error: The request could not be authenticated/
+>>>= 14
+EXECUTABLE pubfile --conf test/out/ok-embed-http-usrinf.cnf -d -T "2017-06-09 00:00:00"
+>>>2 /Error: The request could not be authenticated/
+>>>= 14
+
+# Use configuration file that has correct KSI service URL with correct embedded
+# KSI user info and invalid explicit user info that will overwrite the embedded
+# user info. Task must fail.
+EXECUTABLE sign --conf test/out/ok-embed-ksi-usrinf-with-bad-explicit-usrinf.cnf -i test/resource/file/testFile -o test/out/sign/embed_url_test_dummy.ksig -d
+>>>2 /Error: The request could not be authenticated/
+>>>= 14
+EXECUTABLE pubfile --conf test/out/ok-embed-ksi-usrinf-with-bad-explicit-usrinf.cnf -d -T "2017-06-09 00:00:00"
+>>>2 /Error: The request could not be authenticated/
+>>>= 14

@@ -90,7 +90,7 @@ static int KT_SIGN_saveToOutput(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, SI
 static int KT_SIGN_getMetadata(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, size_t seq_offset, KSI_MetaData **mdata);
 static int KT_SIGN_dump(KSI_CTX *ksi, PARAM_SET *set, ERR_TRCKR *err, SIGNING_AGGR_ROUND *aggr_round);
 
-#define PARAMS "{sign}{i}{input}{o}{data-out}{d}{dump}{dump-conf}{log}{conf}{h|help}{dump-last-leaf}{prev-leaf}{mdata}{mask}{show-progress}{apply-remote-conf}"
+#define PARAMS "{sign}{i}{input}{o}{data-out}{d}{dump}{dump-conf}{log}{conf}{h|help}{dump-last-leaf}{prev-leaf}{mdata}{mask}{show-progress}"
 
 int sign_run(int argc, char** argv, char **envp) {
 	int res;
@@ -121,10 +121,10 @@ int sign_run(int argc, char** argv, char **envp) {
 	res = TASK_INITIALIZER_check_analyze_report(set, task_set, 0.2, 0.1, &task);
 	if (res != KT_OK) goto cleanup;
 
+	d = PARAM_SET_isSetByName(set, "d");
+
 	res = TOOL_init_ksi(set, &ksi, &err, &logfile);
 	if (res != KT_OK) goto cleanup;
-
-	d = PARAM_SET_isSetByName(set, "d");
 
 	res = check_pipe_errors(set, err);
 	if (res != KT_OK) goto cleanup;
@@ -194,7 +194,8 @@ char *sign_help_toString(char *buf, size_t len) {
 	count += PST_snhiprintf(buf + count, len - count, 80, 0, 0, NULL, ' ', "Usage:\\>1\n\\>10"
 			"ksi sign -S <URL> [--aggr-user <user> --aggr-key <key>] [-H <alg>]\n"
 			"[--data-out <file>] [more_options] [-i <input>]... [<input>]...\n"
-			"[-- [<only file input>]...] [-o <out.ksig>]...\\>\n\n\n");
+			"[-- [<only file input>]...] [-o <out.ksig>]...\\>1\n\\>4"
+			"ksi sign -S <URL> [--aggr-user <user> --aggr-key <key>] --dump-conf\\>\n\n\n");
 
 	ret = PARAM_SET_helpToString(set, "i,o,H,S,aggr-user,aggr-key,aggr-hmac-alg,data-out,max-lvl,max-aggr-rounds,mask,prev-leaf,mdata,mdata-cli-id,mdata-mac-id,mdata-sqn-nr,mdata-req-tm,input,d,dump,dump-conf,show-progress,conf,apply-remote-conf,log", 1, 13, 80, buf + count, len - count);
 
@@ -230,9 +231,9 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputHash, isContentOk_inputHash, convertRepair_path, extract_inputHash);
 	PARAM_SET_addControl(set, "{input}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputHashFromFile);
 	PARAM_SET_addControl(set, "{prev-leaf}", isFormatOk_imprint, isContentOk_imprint, NULL, extract_imprint);
-	PARAM_SET_addControl(set, "{d}{dump-conf}{dump-last-leaf}{mdata}{show-progress}{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{d}{dump-conf}{dump-last-leaf}{mdata}{show-progress}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{mask}", isFormatOk_mask, isContentOk_mask, convertRepair_mask, extract_mask);
-	PARAM_SET_setParseOptions(set, "{d}{dump-conf}{dump-last-leaf}{mdata}{show-progress}{apply-remote-conf}", PST_PRSCMD_HAS_NO_VALUE);
+	PARAM_SET_setParseOptions(set, "{d}{dump-conf}{dump-last-leaf}{mdata}{show-progress}", PST_PRSCMD_HAS_NO_VALUE);
 
 	PARAM_SET_addControl(set, "{dump}", NULL, isContentOk_dump_flag, NULL, extract_dump_flag);
 
@@ -333,7 +334,7 @@ static int handleTask(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, int task) {
 				size_t max_tree_input = 0;
 				size_t rounds = 0;
 				int remote_max_lvl = TREE_DEPTH_INVALID;
-				KSI_HashAlgorithm remote_algo = KSI_HASHALG_INVALID;
+				KSI_HashAlgorithm remote_algo = KSI_HASHALG_INVALID_VALUE;
 
 				if (PARAM_SET_isSetByName(set, "apply-remote-conf")) {
 					res = KT_SIGN_getRemoteConf(set, err, ctx, &remote_max_lvl, &remote_algo);
@@ -437,7 +438,7 @@ static int KT_SIGN_getRemoteConf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, i
 			}
 			*remote_algo = alg_id;
 		} else {
-			*remote_algo = KSI_HASHALG_INVALID;
+			*remote_algo = KSI_HASHALG_INVALID_VALUE;
 		}
 	}
 
@@ -721,7 +722,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 	int in_count = 0;
 	size_t divider = 1;
 	char *signed_data_out = NULL;
-	KSI_HashAlgorithm algo = KSI_HASHALG_INVALID;
+	KSI_HashAlgorithm algo = KSI_HASHALG_INVALID_VALUE;
 	COMPOSITE extra;
 	KSI_OctetString *mask_iv = NULL;
 	int isMetadata = 0;
@@ -764,7 +765,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 		res = PARAM_SET_getObjExtended(set, "H", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, NULL, (void**)&algo);
 		if (res != PST_OK && res != PST_PARAMETER_EMPTY) goto cleanup;
 	} else {
-		algo = (remote_algo != KSI_HASHALG_INVALID) ? remote_algo : KSI_getHashAlgorithmByName("default");
+		algo = (KSI_isHashAlgorithmSupported(remote_algo)) ? remote_algo : KSI_getHashAlgorithmByName("default");
 	}
 
 	/**
@@ -845,7 +846,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 
 		for (tree_input = 0; tree_input < max_tree_inputs && i < in_count; tree_input++, i++) {
 			char *fname = NULL;
-			KSI_HashAlgorithm hash_algo = KSI_HASHALG_INVALID;
+			KSI_HashAlgorithm hash_algo = KSI_HASHALG_INVALID_VALUE;
 
 			if (!prgrs) print_progressDesc(d, "Extracting hash from input... ");
 

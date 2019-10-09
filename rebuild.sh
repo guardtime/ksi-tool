@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# Copyright 2013-2018 Guardtime, Inc.
+# Copyright 2013-2019 Guardtime, Inc.
 #
 # This file is part of the Guardtime client SDK.
 #
@@ -79,13 +79,21 @@ help_txt() {
 	echo "       - When this flag is set, libksi and libparamset are downloaded from"
 	echo "         github and built. Result is dumped in directory 'dependencies' that"
 	echo "         will contain 'include' and 'lib' directory. Libraries built should"
-	echo "         be available automatically. If not, see -l and -i."
+	echo "         be available automatically. If not, see -l and -i. Note that when"
+	echo "         combined with --build-rpm or --build-deb also --no-dep-check is"
+	echo "         applied."
 	echo ""
 	echo "  --no-dep-check"
 	echo "       - No dependency check is performed when building rpm or deb package. Note"
 	echo "         that it doesn't remove required dependencies from constructed packages!"
 	echo "         It is useful when building packages with dependencies that are not"
 	echo "         installed by package manager."
+	echo ""
+	echo "  --ign-dep-online-err"
+	echo "       - This option can be combined with --get-dep-online to ignore failing"
+	echo "         tests of the dependencies built. Note that actually it ignores the exit"
+	echo "         code of the rebuild script and continues in case of error. Make sure"
+	echo "         that You really know what You are doing when using this option!"
 	echo ""
 	echo "  -v"
 	echo "       - Verbose output."
@@ -164,7 +172,7 @@ do_build_rpm=false
 do_build_deb=false
 do_build_dependecies=false
 show_help=false
-
+rebuild_tool_dependencies_flags=""
 
 # Simple command-line parameter parser.
 while [ "$1" != "" ]; do
@@ -210,12 +218,17 @@ while [ "$1" != "" ]; do
 								 extra_compiler_flags="$extra_compiler_flags $1"
 								 is_extra_l_or_c_flags=true
 								 ;;
-		--get-dep-online )	     echo "Download and build libksi and libparamset."
+		--get-dep-online )		 echo "Download and build libksi and libparamset."
 								 do_build_dependecies=true
-								 ;;
-		--no-dep-check )	     echo "Ignoring 'build depends on' when building a package."
 								 rpmbuild_flags="--nodeps"
 								 debuild_flags="-d"
+								 ;;
+		--no-dep-check )		 echo "Ignoring 'build depends on' when building a package."
+								 rpmbuild_flags="--nodeps"
+								 debuild_flags="-d"
+								 ;;
+		--ign-dep-online-err )	 echo "Ignoring errors while building online dependencies."
+								 rebuild_tool_dependencies_flags="--ignore-build-error"
 								 ;;
 		-v )					 is_verbose=true
 								 ;;
@@ -223,6 +236,7 @@ while [ "$1" != "" ]; do
 								 ;;
 		* )						 echo "Unknown token '$1' from command-line."
 								 show_help=true
+								 exit 1
 	esac
 	shift
 done
@@ -235,7 +249,7 @@ fi
 if $do_build_dependecies ; then
 	is_inc_dir_set=true
 	is_lib_dir_set=true
-	./rebuild-tool-dependencies.sh
+	./rebuild-tool-dependencies.sh $rebuild_tool_dependencies_flags
 	include_dir="$include_dir -I$(pwd)/dependencies/include"
 	lib_dir="$lib_dir -L$(pwd)/dependencies/lib"
 	lib_path="$lib_path $(pwd)/dependencies/lib:"

@@ -1,3 +1,25 @@
+Version 2.9
+
+2019-10-09 2.9.1374
+
+* IMPROVEMENT: Build requires libksi version >= 3.20.
+* IMPROVEMENT: Build script rebuild.sh will apply --no-dep-check automatically when building packages with --get-dep-online.
+* IMPROVEMENT: Inconclusive verification error messages improved.
+* IMPROVEMENT: Verification error output with --dump may show additional error information.
+* IMPROVEMENT: Verification of hash algorithm ID refactored.
+* IMPROVEMENT: Support for legacy and unused PDU v1 removed.
+* IMPROVEMENT: Some of the tests changed accordingly to the changes in libksi verification process.
+* IMPROVEMENT: Some of the tests changed accordingly to the changed in libksi block-signer.
+* IMPROVEMENT: Memory tests for Windows implemented (test\memory-test.bat).
+* IMPROVEMENT: Usage of ksi+ (e.g. ksi+http) URL schemes documented.
+* FEATURE: Script rebuild.sh has new option --ign-dep-online-err to ignore test results during online build (--get-dep-online).
+* FEATURE: Script WinBuildOnline.bat has new option --ign-dep-online-err to ignore test results during online build.
+* BUGFIX: Fixed extender '--apply-remote-conf' handling.
+* BUGFIX: Internal verification with option --dump will not print Calendar Authentication Record signature type OID value if it is not formatted as valid OID.
+* BUGFIX: There is no default user and key as anon anymore.
+* BUGFIX: Command 'ksi conf --dump' will not crash when configuration file pointed by KSI_CONF does not exists.
+* BUGFIX: Typo fix suggestions for option --apply-remote-conf are not double printed.
+
 Version 2.8
 
 2018-04-23 2.8.1300

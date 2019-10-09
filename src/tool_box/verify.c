@@ -23,6 +23,7 @@
 #include <ksi/ksi.h>
 #include <ksi/compatibility.h>
 #include <ksi/policy.h>
+#include <ksi/err.h>
 #include "param_set/param_set.h"
 #include "param_set/parameter.h"
 #include "param_set/task_def.h"
@@ -88,7 +89,7 @@ int verify_run(int argc, char **argv, char **envp) {
 	KSI_DataHash *hsh = NULL;
 	KSI_Signature *sig = NULL;
 	KSI_PolicyVerificationResult *result = NULL;
-	KSI_HashAlgorithm alg = KSI_HASHALG_INVALID;
+	KSI_HashAlgorithm alg = KSI_HASHALG_INVALID_VALUE;
 
 	/**
 	 * Extract command line parameters and also add configuration specific parameters.
@@ -108,10 +109,10 @@ int verify_run(int argc, char **argv, char **envp) {
 	res = TASK_INITIALIZER_check_analyze_report(set, task_set, 0.2, 0.1, &task);
 	if (res != KT_OK) goto cleanup;
 
+	d = PARAM_SET_isSetByName(set, "d");
+
 	res = TOOL_init_ksi(set, &ksi, &err, &logfile);
 	if (res != KT_OK) goto cleanup;
-
-	d = PARAM_SET_isSetByName(set, "d");
 
 	res = check_pipe_errors(set, err);
 	if (res != KT_OK) goto cleanup;
@@ -359,6 +360,18 @@ cleanup:
 	return res;
 }
 
+
+static void append_verification_result_error(KSI_RuleVerificationResult *verificationResult, ERR_TRCKR *err, int res, const char *task, int line) {
+	int is_na = verificationResult->errorCode == KSI_VerificationErrorCode_fromString("GEN-02");
+	const char *errorSuffix = is_na ? "inconclusive" : "failed";
+
+	print_progressResult(res);
+
+	ERR_TRCKR_add(err, res, __FILE__, line, "Error: [%s] %s. %s %s.",
+			OBJPRINT_getVerificationErrorCode(verificationResult->errorCode),
+			OBJPRINT_getVerificationErrorDescription(verificationResult->errorCode), task, errorSuffix);
+}
+
 static int signature_verify_general(PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *extra,
 									KSI_CTX *ksi, KSI_Signature *sig, KSI_DataHash *hsh,
 									KSI_PolicyVerificationResult **out) {
@@ -366,6 +379,7 @@ static int signature_verify_general(PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 	int d = PARAM_SET_isSetByName(set, "d");
 	int x = PARAM_SET_isSetByName(set, "x");
 	KSI_PublicationData *pub_data = NULL;
+	KSI_PublicationsFile *pubFile = NULL;
 	static const char *task = "Signature verification according to trust anchor";
 
 	/**
@@ -376,20 +390,28 @@ static int signature_verify_general(PARAM_SET *set, ERR_TRCKR *err, COMPOSITE *e
 		ERR_CATCH_MSG(err, res, "Error: Failed to get publication data.");
 	}
 
+	/* If user insists to ignore the publications file and publications file URI is set, try to retrieve it.
+	   If it fails ignore the incident and let the general verification handle the case. */
+	if (PARAM_SET_isSetByName(set, "publications-file-no-verify,P")) {
+		res = KSITOOL_receivePublicationsFile(err, ksi, &pubFile);
+		if (res != KSI_OK) {
+			KSI_ERR_clearErrors(ksi);
+			res = KSI_OK;
+		}
+	}
+
 	/**
 	 * Verify signature.
 	 */
 	print_progressDesc(d, "%s... ", task);
-	res = KSITOOL_SignatureVerify_general(err, sig, ksi, hsh, pub_data, x, out);
+	res = KSITOOL_SignatureVerify_general(err, sig, ksi, hsh, pubFile, pub_data, x, out);
 	if (res != KSI_OK && *out != NULL) {
 		KSI_RuleVerificationResult *verificationResult = NULL;
 
 		if (KSI_RuleVerificationResultList_elementAt(
 				(*out)->ruleResults, KSI_RuleVerificationResultList_length((*out)->ruleResults) - 1,
 				&verificationResult) == KSI_OK && verificationResult != NULL) {
-			ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.",
-					OBJPRINT_getVerificationErrorCode(verificationResult->errorCode),
-					OBJPRINT_getVerificationErrorDescription(verificationResult->errorCode), task);
+			append_verification_result_error(verificationResult, err, res, task, __LINE__);
 		}
 		goto cleanup;
 	} else {
@@ -403,6 +425,7 @@ cleanup:
 	print_progressResult(res);
 
 	KSI_PublicationData_free(pub_data);
+	KSI_PublicationsFile_free(pubFile);
 
 	return res;
 }
@@ -424,9 +447,7 @@ static int signature_verify_internally(PARAM_SET *set, ERR_TRCKR *err,
 		if (KSI_RuleVerificationResultList_elementAt(
 				(*out)->ruleResults, KSI_RuleVerificationResultList_length((*out)->ruleResults) - 1,
 				&verificationResult) == KSI_OK && verificationResult != NULL) {
-			ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.",
-					OBJPRINT_getVerificationErrorCode(verificationResult->errorCode),
-					OBJPRINT_getVerificationErrorDescription(verificationResult->errorCode), task);
+			append_verification_result_error(verificationResult, err, res, task, __LINE__);
 		}
 		goto cleanup;
 	} else {
@@ -449,21 +470,27 @@ static int signature_verify_key_based(PARAM_SET *set, ERR_TRCKR *err,
 	int res;
 	int d = PARAM_SET_isSetByName(set, "d");
 	static const char *task = "Signature key-based verification";
+	KSI_PublicationsFile *pubFile = NULL;
+
 
 	/**
 	 * Verify signature.
 	 */
 	print_progressDesc(d, "%s... ", task);
-	res = KSITOOL_SignatureVerify_keyBased(err, sig, ksi, hsh, out);
+
+	if (PARAM_SET_isSetByName(set, "publications-file-no-verify")) {
+		res = KSITOOL_receivePublicationsFile(err, ksi, &pubFile);
+		ERR_CATCH_MSG(err, res, "Error: Unable receive publications file.");
+	}
+
+	res = KSITOOL_SignatureVerify_keyBased(err, sig, ksi, hsh, pubFile, out);
 	if (res != KSI_OK && *out != NULL) {
 		KSI_RuleVerificationResult *verificationResult = NULL;
 
 		if (KSI_RuleVerificationResultList_elementAt(
 				(*out)->ruleResults, KSI_RuleVerificationResultList_length((*out)->ruleResults) - 1,
 				&verificationResult) == KSI_OK && verificationResult != NULL) {
-			ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.",
-					OBJPRINT_getVerificationErrorCode(verificationResult->errorCode),
-					OBJPRINT_getVerificationErrorDescription(verificationResult->errorCode), task);
+			append_verification_result_error(verificationResult, err, res, task, __LINE__);
 		}
 		goto cleanup;
 	} else {
@@ -474,6 +501,7 @@ static int signature_verify_key_based(PARAM_SET *set, ERR_TRCKR *err,
 
 cleanup:
 
+	KSI_PublicationsFile_free(pubFile);
 	print_progressResult(res);
 
 	return res;
@@ -508,9 +536,7 @@ static int signature_verify_publication_based_with_user_pub(PARAM_SET *set, ERR_
 					&verificationResult) == KSI_OK && verificationResult != NULL) {
 				signature_print_suggestions_for_publication_based_verification(set, err, res, ksi, sig, verificationResult, pub_data);
 
-				ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.",
-						OBJPRINT_getVerificationErrorCode(verificationResult->errorCode),
-						OBJPRINT_getVerificationErrorDescription(verificationResult->errorCode), task);
+				append_verification_result_error(verificationResult, err, res, task, __LINE__);
 			}
 			goto cleanup;
 		}
@@ -536,12 +562,19 @@ static int signature_verify_publication_based_with_pubfile(PARAM_SET *set, ERR_T
 	int d = PARAM_SET_isSetByName(set, "d");
 	int x = PARAM_SET_isSetByName(set, "x");
 	static const char *task = "Signature publication-based verification with publications file";
+	KSI_PublicationsFile *pubFile = NULL;
 
 	/**
 	 * Verify signature.
 	 */
 	print_progressDesc(d, "%s... ", task);
-	res = KSITOOL_SignatureVerify_publicationsFileBased(err, sig, ksi, hsh, x, out);
+
+	if (PARAM_SET_isSetByName(set, "publications-file-no-verify")) {
+		res = KSITOOL_receivePublicationsFile(err, ksi, &pubFile);
+		ERR_CATCH_MSG(err, res, "Error: Unable receive publications file.");
+	}
+
+	res = KSITOOL_SignatureVerify_publicationsFileBased(err, sig, ksi, hsh, pubFile, x, out);
 	if (res != KSI_OK && *out != NULL) {
 		if (res != KT_OK) {
 			KSI_RuleVerificationResult *verificationResult = NULL;
@@ -551,9 +584,7 @@ static int signature_verify_publication_based_with_pubfile(PARAM_SET *set, ERR_T
 					&verificationResult) == KSI_OK && verificationResult != NULL) {
 				signature_print_suggestions_for_publication_based_verification(set, err, res, ksi, sig, verificationResult, NULL);
 
-				ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.",
-						OBJPRINT_getVerificationErrorCode(verificationResult->errorCode),
-						OBJPRINT_getVerificationErrorDescription(verificationResult->errorCode), task);
+				append_verification_result_error(verificationResult, err, res, task, __LINE__);
 			}
 			goto cleanup;
 		}
@@ -589,9 +620,7 @@ static int signature_verify_calendar_based(PARAM_SET *set, ERR_TRCKR *err,
 		if (KSI_RuleVerificationResultList_elementAt(
 				(*out)->ruleResults, KSI_RuleVerificationResultList_length((*out)->ruleResults) - 1,
 				&verificationResult) == KSI_OK && verificationResult != NULL) {
-			ERR_TRCKR_ADD(err, res, "Error: [%s] %s. %s failed.",
-					OBJPRINT_getVerificationErrorCode(verificationResult->errorCode),
-					OBJPRINT_getVerificationErrorDescription(verificationResult->errorCode), task);
+				append_verification_result_error(verificationResult, err, res, task, __LINE__);
 		}
 		goto cleanup;
 	} else {

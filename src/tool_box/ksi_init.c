@@ -144,7 +144,7 @@ cleanup:
 }
 
 static int tool_init_ksi_network_provider(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set) {
-	int res;
+	int res = KT_UNKNOWN_ERROR;
 	char *aggr_url = NULL;
 	char *aggr_user = NULL;
 	char *aggr_pass = NULL;
@@ -176,21 +176,28 @@ static int tool_init_ksi_network_provider(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SE
 	PARAM_SET_getObj(set, "C", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&networkConnectionTimeout);
 	PARAM_SET_getObj(set, "c", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, (void**)&networkTransferTimeout);
 
-	aggr_user = aggr_user == NULL ? "anon" : aggr_user;
-	aggr_pass = aggr_pass == NULL ? "anon" : aggr_pass;
-	ext_user = ext_user == NULL ? "anon" : ext_user;
-	ext_pass = ext_pass == NULL ? "anon" : ext_pass;
-
 
 	/**
 	 * Set service urls.
 	 */
 	if (ext_url != NULL) {
+		res = KT_OK;
+		if (ext_user == NULL || ext_pass == NULL) res = KT_INVALID_CMD_PARAM;
+		if (ext_user == NULL) ERR_TRCKR_ADD(err, res, "Error: Extender user (null) not set!");
+		if (ext_pass == NULL) ERR_TRCKR_ADD(err, res, "Error: Extender key (null) not set!");
+		ERR_CATCH_MSG(err, res, "Error: Unable set extender.");
+
 		res = KSI_CTX_setExtender(ksi, ext_url, ext_user, ext_pass);
 		ERR_CATCH_MSG(err, res, "Error: Unable set extender.");
 	}
 
 	if (aggr_url != NULL) {
+		res = KT_OK;
+		if (aggr_user == NULL || aggr_pass == NULL) res = KT_INVALID_CMD_PARAM;
+		if (aggr_user == NULL) ERR_TRCKR_ADD(err, res, "Error: Aggregator user (null) not set!");
+		if (aggr_pass == NULL) ERR_TRCKR_ADD(err, res, "Error: Aggregator key (null) not set!");
+		ERR_CATCH_MSG(err, res, "Error: Unable set aggregator.");
+
 		res = KSI_CTX_setAggregator(ksi, aggr_url, aggr_user, aggr_pass);
 		ERR_CATCH_MSG(err, res, "Error: Unable set aggregator.");
 	}
@@ -270,13 +277,15 @@ static int tool_init_pdu(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set) {
 		goto cleanup;
 	}
 
-	/* Check if PDU version type is specified. */
-	res = PARAM_SET_getStr(set, "aggr-pdu-v", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &aggr_pdu_version);
-	if (res != PST_OK && res != PST_PARAMETER_EMPTY && res !=PST_PARAMETER_NOT_FOUND) goto cleanup;
 
-	res = PARAM_SET_getStr(set, "ext-pdu-v", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &ext_pdu_version);
-	if (res != PST_OK && res != PST_PARAMETER_EMPTY && res !=PST_PARAMETER_NOT_FOUND) goto cleanup;
+	if (PARAM_SET_isSetByName(set, "aggr-pdu-v")) {
+		ERR_TRCKR_addWarning(err, "  * Warning: --aggr-pdu-v has no effect and will be removed in the future.");
+	}
 
+	if (PARAM_SET_isSetByName(set, "ext-pdu-v")) {
+		ERR_TRCKR_addWarning(err, "  * Warning: --ext-pdu-v has no effect and will be removed in the future.");
+
+	}
 
 	if (aggr_pdu_version != NULL) {
 		size_t aggr_pdu = strcmp(aggr_pdu_version, "v1") == 0 ? KSI_PDU_VERSION_1 : KSI_PDU_VERSION_2;
@@ -446,35 +455,10 @@ cleanup:
 	return res;
 }
 
-static int tool_init_ksi_publications_file(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set) {
-	int res = KSI_UNKNOWN_ERROR;
-	KSI_PublicationsFile *tmp = NULL;
-
-	if (ksi == NULL || err == NULL || set == NULL) {
-		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
-		goto cleanup;
-	}
-
-	/**
-	 * If there is a direct need to not verify publications file do the publications
-	 * file request manually so KSI API do not verify the file extracted by the API
-	 * user.
-	 */
-	if (PARAM_SET_isSetByName(set, "publications-file-no-verify")) {
-		KSI_receivePublicationsFile(ksi, &tmp);
-	}
-
-	res = KT_OK;
-
-cleanup:
-
-	return res;
-}
-
 static int tool_init_hmac_alg(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set) {
 	int res;
-	KSI_HashAlgorithm aggr_alg = KSI_HASHALG_INVALID;
-	KSI_HashAlgorithm ext_alg  = KSI_HASHALG_INVALID;
+	KSI_HashAlgorithm aggr_alg = KSI_HASHALG_INVALID_VALUE;
+	KSI_HashAlgorithm ext_alg  = KSI_HASHALG_INVALID_VALUE;
 
 	if (ksi == NULL || err == NULL || set == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
@@ -487,12 +471,12 @@ static int tool_init_hmac_alg(KSI_CTX *ksi, ERR_TRCKR *err, PARAM_SET *set) {
 	res = PARAM_SET_getObjExtended(set, "ext-hmac-alg", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, NULL, (void**)&ext_alg);
 	if (res != PST_OK && res != PST_PARAMETER_EMPTY && res != PST_PARAMETER_NOT_FOUND) goto cleanup;
 
-	if (aggr_alg != KSI_HASHALG_INVALID) {
+	if (KSI_isHashAlgorithmSupported(aggr_alg)) {
 		res = KSI_CTX_setOption(ksi, KSI_OPT_AGGR_HMAC_ALGORITHM, (void*)(size_t)aggr_alg);
 		if (res != KSI_OK) goto cleanup;
 	}
 
-	if (ext_alg != KSI_HASHALG_INVALID) {
+	if (KSI_isHashAlgorithmSupported(ext_alg)) {
 		res = KSI_CTX_setOption(ksi, KSI_OPT_EXT_HMAC_ALGORITHM, (void*)(size_t)ext_alg);
 		if (res != KSI_OK) goto cleanup;
 	}
@@ -563,12 +547,6 @@ int TOOL_init_ksi(PARAM_SET *set, KSI_CTX **ksi, ERR_TRCKR **error, SMART_FILE *
 	res = tool_init_pdu(tmp, err, set);
 	if (res != KT_OK) {
 		ERR_TRCKR_ADD(err, res, "Error: Unable to configure KSI PDU version.");
-		goto cleanup;
-	}
-
-	res = tool_init_ksi_publications_file(tmp, err, set);
-	if (res != KT_OK) {
-		ERR_TRCKR_ADD(err, res, "Error: Unable to configure KSI publications file.");
 		goto cleanup;
 	}
 

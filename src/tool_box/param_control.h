@@ -155,7 +155,6 @@ int isContentOk_int(const char* integer);
 int extract_int(void **extra, const char* str,  void** obj);
 
 int isContentOk_tree_level(const char *integer);
-int isContentOk_pduVersion(const char* version);
 
 int isFormatOk_url(const char *url);
 int convertRepair_url(const char* arg, char* buf, unsigned len);

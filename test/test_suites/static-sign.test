@@ -35,8 +35,9 @@ EXECUTABLE sign --conf test/resource/conf/static-sign-4.hmac-sha512.cfg -i SHA2-
 
 # Legacy PDU v1 signing.
 EXECUTABLE sign --conf test/resource/conf/static-sign-legacy.cfg -i SHA-256:11a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d -o test/out/sign/static-3.ksig -d
->>>2 /Signature saved to/
->>>= 0
+>>>2 /(Error: Unable to parse aggregation pdu.).*([^$]|[
+])*(Warning: --aggr-pdu-v has no effect and will be removed in the future.)/
+>>>= 1
 
 # Unsuccessful signing.
 

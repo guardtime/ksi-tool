@@ -110,6 +110,8 @@ test/test_suites/cmd.test \
 test/test_suites/sign-block-signer-cmd.test \
 test/test_suites/sign-metadata.test \
 test/test_suites/verify-pub-suggestions.test \
+test/test_suites/embedded-url.test \
+test/test_suites/verify-result.test \
 $TEST_DEPENDING_ON_TLVUTIL \
 --with=$tool -a -- -j1
 exit_code=$?

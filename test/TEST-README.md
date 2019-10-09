@@ -9,7 +9,9 @@ Tests can be run with KSI built within the project or with KSI installed on the 
 
 * [shelltestrunner](http://joyful.com/shelltestrunner/) - Mandatory for every test.
 * [valgrind](http://valgrind.org/) - For memory tests only, Unix.
-* `gttlvutil` - When available extra tests for metadata and masking are performed.
+* [drmemory](https://github.com/DynamoRIO/drmemory) - For memory tests only, Windows.
+* `sed` - For memory tests (on Windows use e.g. [Cygwin](https://www.cygwin.com/)).
+* [gttlvutil](https://github.com/guardtime/gttlvutil) - When available extra tests for metadata and masking are performed.
 
 
 ## TEST RELATED FILES
@@ -25,9 +27,13 @@ All files related to the tests can be found from directory `test` that is locate
  convert-to-memory-test.sh
                   - helper scrip that converts regular test to valgrind
                     memory test (Unix only). Should not be called by the user as it is used by memory-test.sh internally.
+ convert-to-memory-test.bat
+                  - helper scrip that converts regular test to drmemory
+                    memory test (Windows only). Should not be called by the user as it is used by memory-test.bat internally.
  windows-test.bat - use to run tests on Windows platform.
  test.sh          - use to run tests on Unix platform.
  memory-test.sh   - use to run valgrind memory tests.
+ memory-test.bat  - use to run drmemory memory tests.
 ```
 
 ## CONFIGURING TESTS
@@ -42,6 +48,7 @@ Tests must be run from KSI comman-line tool root directory and the output is gen
 To run tests on Windows, call:
 ```
 test\windows-test.bat
+test\memory-test.bat
 ```
 
 To run tests on RHEL/CentOS:
