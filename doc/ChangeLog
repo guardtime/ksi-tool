@@ -1,6 +1,6 @@
 Version 2.9
 
-2019-10-09 2.9.1372
+2019-10-09 2.9.1374
 
 * IMPROVEMENT: Build requires libksi version >= 3.20.
 * IMPROVEMENT: Build script rebuild.sh will apply --no-dep-check automatically when building packages with --get-dep-online.
