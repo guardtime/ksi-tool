@@ -1,20 +1,24 @@
-(TOOL-271) * IMPROVEMENT: Build requires libksi version >= 3.20.
-(TOOL-271) * IMPROVEMENT: Build script rebuild.sh will apply --no-dep-check automatically when building packages with --get-dep-online.
-(TOOL-272) * IMPROVEMENT: Inconclusive verification error messages improved.
-(TOOL-270) * IMPROVEMENT: Support for legacy and unused PDU v1 removed.
-(TOOL-269) * IMPROVEMENT: Some of the tests changed accordingly to the changes in libksi verification process.
-(TOOL-273) * IMPROVEMENT: Some of the tests changed accordingly to the changed in libksi block-signer.
-(TOOL-269) * IMPROVEMENT: Verification error output with --dump may show additional error information.
-(TOOL-192) * IMPROVEMENT: Memory tests for Windows implemented (test\memory-test.bat).
-(TOOL-267) * IMPROVEMENT: Usage of ksi+ (e.g. ksi+http) URL schemes documented.
-(TOOL-266) * FEATURE: Script rebuild.sh has new option --ign-dep-online-errt to ignore test results during online build (--get-dep-online).
-(TOOL-266) * FEATURE: Script WinBuildOnline.bat has new option --ign-dep-online-err to ignore test results during online build.
+Version 2.9
+
+2019-10-09 2.9.1372
+
+* IMPROVEMENT: Build requires libksi version >= 3.20.
+* IMPROVEMENT: Build script rebuild.sh will apply --no-dep-check automatically when building packages with --get-dep-online.
+* IMPROVEMENT: Inconclusive verification error messages improved.
+* IMPROVEMENT: Verification error output with --dump may show additional error information.
+* IMPROVEMENT: Verification of hash algorithm ID refactored.
+* IMPROVEMENT: Support for legacy and unused PDU v1 removed.
+* IMPROVEMENT: Some of the tests changed accordingly to the changes in libksi verification process.
+* IMPROVEMENT: Some of the tests changed accordingly to the changed in libksi block-signer.
+* IMPROVEMENT: Memory tests for Windows implemented (test\memory-test.bat).
+* IMPROVEMENT: Usage of ksi+ (e.g. ksi+http) URL schemes documented.
+* FEATURE: Script rebuild.sh has new option --ign-dep-online-err to ignore test results during online build (--get-dep-online).
+* FEATURE: Script WinBuildOnline.bat has new option --ign-dep-online-err to ignore test results during online build.
 * BUGFIX: Fixed extender '--apply-remote-conf' handling.
-(TOOL-274) * BUGFIX: Internal verification with option --dump will not print Calendar Authentication Record signature type OID value if it is not formatted as valid OID.
-(TOOL-268) * BUGFIX: There is no default user and key as anon anymore.
-(TOOL-263) * BUGFIX: Command 'ksi conf --dump' will not crash when configuration file pointed by KSI_CONF does not exists.
-(TOOL-275) * BUGFIX: Typo fix suggestions for option --apply-remote-conf are not double printed.
-(TOOL-276) * IMPROVEMENT: Verification on hash algorithm ID refactored.
+* BUGFIX: Internal verification with option --dump will not print Calendar Authentication Record signature type OID value if it is not formatted as valid OID.
+* BUGFIX: There is no default user and key as anon anymore.
+* BUGFIX: Command 'ksi conf --dump' will not crash when configuration file pointed by KSI_CONF does not exists.
+* BUGFIX: Typo fix suggestions for option --apply-remote-conf are not double printed.
 
 Version 2.8
 
