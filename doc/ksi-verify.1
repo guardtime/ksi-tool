@@ -58,7 +58,7 @@ Specify file to be hashed or precomputed data hash imprint to extract the hash v
 .\"
 .TP
 \fB-X \fIURL\fR
-Specify the extending service (KSI Extender) URL.
+Specify the extending service (KSI Extender) URL. Supported URL schemes are: \fIhttp\fR, \fIhttps\fR, \fIksi+http\fR, \fIksi+https\fR and \fIksi+tcp\fR. It is possible to embed HTTP or KSI user info into the URL. With \fIksi+\fR suffix (e.g. ksi+http//user:key@...), user info is interpreted as KSI user info, otherwise (e.g. http//user:key@...) the user info is interpreted as HTTP user info. User info specified with \fB--ext-user\fR and \fB--ext-key\fR will overwrite the embedded values.
 .\"
 .TP
 \fB--ext-user \fIstr\fR

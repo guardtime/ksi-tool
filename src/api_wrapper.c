@@ -132,7 +132,6 @@ static void appendHashAlgoErrors(ERR_TRCKR *err, int res) {
 static void appendExtenderErrors(ERR_TRCKR *err, int res) {
 	if (res == KSI_OK) return;
 	ERR_APPEND_KSI_ERR_EXT_MSG(err, res, KSI_EXTENDER_NOT_CONFIGURED, "Extender URL is not configured.");
-	ERR_APPEND_KSI_ERR_EXT_MSG(err, res, KSI_UNSUPPORTED_PDU_VERSION, "PDU version for given request is not supported.");
 	ERR_APPEND_KSI_ERR(err, res, KSI_EXTEND_NO_SUITABLE_PUBLICATION);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_DATABASE_CORRUPT);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_EXTENDER_DATABASE_MISSING);
@@ -146,7 +145,6 @@ static void appendExtenderErrors(ERR_TRCKR *err, int res) {
 static void appendAggreErrors(ERR_TRCKR *err, int res) {
 	if (res == KSI_OK) return;
 	ERR_APPEND_KSI_ERR_EXT_MSG(err, res, KSI_AGGREGATOR_NOT_CONFIGURED, "Aggregator URL is not configured.");
-	ERR_APPEND_KSI_ERR_EXT_MSG(err, res, KSI_UNSUPPORTED_PDU_VERSION, "PDU version for given request is not supported.");
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_AGGR_REQUEST_TOO_LARGE);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_AGGR_REQUEST_OVER_QUOTA);
 	ERR_APPEND_KSI_ERR(err, res, KSI_SERVICE_AGGR_TOO_MANY_REQUESTS);
@@ -199,8 +197,12 @@ static int verify_signature(KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
 	res = KSI_SignatureVerifier_verify(policy, &info, result);
 	if (res != KSI_OK) goto cleanup;
 
-	if (*result && (*result)->finalResult.resultCode != KSI_VER_RES_OK) {
-		res = KSI_VERIFICATION_FAILURE;
+	if (*result) {
+		if ((*result)->finalResult.resultCode == KSI_VER_RES_NA) {
+			res = KT_VERIFICATION_INCONCLUSIVE;
+		} else if ((*result)->finalResult.resultCode != KSI_VER_RES_OK) {
+			res = KSI_VERIFICATION_FAILURE;
+		}
 	}
 
 cleanup:
@@ -211,15 +213,48 @@ cleanup:
 	return res;
 }
 
-int KSITOOL_extendSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Signature *sig, KSI_Signature **ext) {
-	int res;
+int KSITOOL_extendSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Signature *sig, KSI_PublicationsFile* pubfile, KSI_Signature **ext) {
+	int res = KSI_UNKNOWN_ERROR;
+	KSI_PublicationsFile *pubFile = NULL;
+	KSI_Integer *signingTime = NULL;
+	KSI_PublicationRecord *pubRec = NULL;
+	KSI_Signature *extSig = NULL;
 
 	if (err == NULL || ctx == NULL || sig == NULL || ext == NULL) {
 		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
 		return res;
 	}
 
-	res = KSI_extendSignature(ctx, sig, ext);
+	if (pubfile != NULL) {
+		pubFile = KSI_PublicationsFile_ref(pubfile);
+	} else {
+		res = KSITOOL_receivePublicationsFile(err, ctx, &pubFile);
+		if (res != KSI_OK) goto cleanup;
+
+		res = KSITOOL_verifyPublicationsFile(err, ctx, pubFile);
+		if (res != KSI_OK) goto cleanup;
+	}
+
+
+
+	res = KSI_Signature_getSigningTime(sig, &signingTime);
+	if (res != KSI_OK) goto ksierrhandle;
+
+	res = KSI_PublicationsFile_getNearestPublication(pubFile, signingTime, &pubRec);
+	if (res != KSI_OK) goto ksierrhandle;
+
+	if (pubRec == NULL) {
+		res = KSI_EXTEND_NO_SUITABLE_PUBLICATION;
+		goto ksierrhandle;
+	}
+
+	res = KSI_Signature_extendWithPolicy(sig, ctx, pubRec, KSI_VERIFICATION_POLICY_INTERNAL, NULL, &extSig);
+	if (res != KSI_OK) goto ksierrhandle;
+
+	*ext = extSig;
+	extSig = NULL;
+
+ksierrhandle:
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -227,6 +262,12 @@ int KSITOOL_extendSignature(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Signature *sig, KS
 		appendExtenderErrors(err, res);
 		appendPubFileErros(err, res);
 	}
+
+cleanup:
+
+	KSI_PublicationRecord_free(pubRec);
+	KSI_PublicationsFile_free(pubFile);
+	KSI_Signature_free(extSig);
 
 	return res;
 }
@@ -303,10 +344,6 @@ int KSITOOL_Extender_getConf(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Config **config) 
 		appendExtenderErrors(err, res);
 	}
 
-	if (res == KSI_UNSUPPORTED_PDU_VERSION) {
-		ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion:  Use '--ext-pdu-v v2' in order to use supported PDU version for given request.\n");
-	}
-
 	return res;
 }
 
@@ -329,7 +366,7 @@ int KSITOOL_Aggregator_getConf(ERR_TRCKR *err, KSI_CTX *ctx, KSI_Config **config
 	return res;
 }
 
-int KSITOOL_SignatureVerify_with_publications_file_or_calendar(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
+int KSITOOL_SignatureVerify_with_publications_file_or_calendar(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh, KSI_PublicationsFile* pubFile,
                                           int extperm, KSI_PolicyVerificationResult **result) {
 	int res;
 
@@ -339,7 +376,7 @@ int KSITOOL_SignatureVerify_with_publications_file_or_calendar(ERR_TRCKR *err, K
 	}
 
     if (KSITOOL_Signature_isPublicationRecordPresent(sig)) {
-        res = KSITOOL_SignatureVerify_publicationsFileBased(err, sig, ctx, hsh, extperm, result);
+        res = KSITOOL_SignatureVerify_publicationsFileBased(err, sig, ctx, hsh, pubFile, extperm, result);
     } else {
         res = KSITOOL_SignatureVerify_calendarBased(err, sig, ctx, hsh, result);
     }
@@ -347,7 +384,7 @@ int KSITOOL_SignatureVerify_with_publications_file_or_calendar(ERR_TRCKR *err, K
     return res;
 }
 
-int KSITOOL_SignatureVerify_general(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
+int KSITOOL_SignatureVerify_general(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh, KSI_PublicationsFile* pubFile,
 														 KSI_PublicationData *pubdata, int extperm,
 														 KSI_PolicyVerificationResult **result){
 	int res;
@@ -358,7 +395,7 @@ int KSITOOL_SignatureVerify_general(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX 
 		return res;
 	}
 
-	res = verify_signature(sig, ctx, hsh, extperm, NULL, pubdata, KSI_VERIFICATION_POLICY_GENERAL, result);
+	res = verify_signature(sig, ctx, hsh, extperm, pubFile, pubdata, KSI_VERIFICATION_POLICY_GENERAL, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -404,7 +441,7 @@ int KSITOOL_SignatureVerify_calendarBased(ERR_TRCKR *err, KSI_Signature *sig, KS
 	return res;
 }
 
-int KSITOOL_SignatureVerify_keyBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
+int KSITOOL_SignatureVerify_keyBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh, KSI_PublicationsFile* pubFile,
 									 KSI_PolicyVerificationResult **result){
 	int res;
 
@@ -413,7 +450,7 @@ int KSITOOL_SignatureVerify_keyBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX
 		return res;
 	}
 
-	res = verify_signature(sig, ctx, hsh, 0, NULL, NULL, KSI_VERIFICATION_POLICY_KEY_BASED, result);
+	res = verify_signature(sig, ctx, hsh, 0, pubFile, NULL, KSI_VERIFICATION_POLICY_KEY_BASED, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -422,7 +459,7 @@ int KSITOOL_SignatureVerify_keyBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX
 	return res;
 }
 
-int KSITOOL_SignatureVerify_publicationsFileBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh,
+int KSITOOL_SignatureVerify_publicationsFileBased(ERR_TRCKR *err, KSI_Signature *sig, KSI_CTX *ctx, KSI_DataHash *hsh, KSI_PublicationsFile* pubFile,
 												  int extperm,
 												  KSI_PolicyVerificationResult **result){
 	int res;
@@ -432,7 +469,7 @@ int KSITOOL_SignatureVerify_publicationsFileBased(ERR_TRCKR *err, KSI_Signature 
 		return res;
 	}
 
-	res = verify_signature(sig, ctx, hsh, extperm, NULL, NULL, KSI_VERIFICATION_POLICY_PUBLICATIONS_FILE_BASED, result);
+	res = verify_signature(sig, ctx, hsh, extperm, pubFile, NULL, KSI_VERIFICATION_POLICY_PUBLICATIONS_FILE_BASED, result);
 	if (res != KSI_OK) KSITOOL_KSI_ERRTrace_save(ctx);
 
 	if (appendBaseErrorIfPresent(err, res, ctx, __LINE__) == 0) {
@@ -603,7 +640,7 @@ void KSITOOL_KSI_ERRTrace_LOG(KSI_CTX *ksi) {
 char *KSITOOL_DataHash_toString(KSI_DataHash *hsh, char *buf, size_t buf_len) {
 	char tmp[1024];
 	char alg_hex_str[3] = {0, 0, 0};
-	KSI_HashAlgorithm alg = KSI_HASHALG_INVALID;
+	KSI_HashAlgorithm alg = KSI_HASHALG_INVALID_VALUE;
 
 	if (hsh == NULL || buf == NULL || buf_len == 0) return NULL;
 	if (KSI_DataHash_toString(hsh, tmp, sizeof(tmp)) ==  NULL) return NULL;

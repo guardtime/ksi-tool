@@ -71,8 +71,7 @@ EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-flags-valid-on-cmd-insi
 ])*(.*d of)(.*pub-str).*([^$]|[
 ])*(.*d of)(.*ver-cal).*([^$]|[
 ])*(.*d of)(.*ver-key).*([^$]|[
-])*(.*d of)(.*ver-pub).*([^$]|[
-])*(.*Unknown.*)(.*x.*)/
+])*(.*Unknown.*)(.*L.*)/
 >>>= 16
 
 EXECUTABLE pubfile -v --conf test/resource/conf/nok-conf-flags-valid-on-cmd-inside-conf-3.cfg

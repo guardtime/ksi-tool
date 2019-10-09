@@ -1,7 +1,5 @@
-#!/bin/bash
-
 #
-# Copyright 2013-2016 Guardtime, Inc.
+# Copyright 2013-2019 Guardtime, Inc.
 #
 # This file is part of the Guardtime client SDK.
 #
@@ -18,21 +16,10 @@
 # Guardtime, Inc., and no license to trademarks is granted; Guardtime
 # reserves and retains all trademark rights.
 
- if [ "$#" -eq 2 ]; then
- 	test_file_in="$1"
- 	memory_test_out="$2"
- else
- 	echo "Usage $0 <test_file_in> <memory_test_out>"
-	exit
- fi
+# Verify against extender.
+EXECUTABLE verify --ver-pub -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig --pub-str AAAAAA-CV65PY-AAIVFG-UJMDXY-XGBKMO-DISYGA-YPPQYY-QEWTQ5-Y43NGX-B22W7H-IGZQNN-DRTW2H -x -d --dump -X dummy-dummy-not-existing-url
+>>>  /(NA)(.*GEN-02)(.*Verification inconclusive)(.*In rule)(.*UserProvidedPublicationTimeVerification).*([^$]|[
+])*(NA)(.*GEN-02)(.*Verification inconclusive)(.*In rule)(.*UserProvidedPublicationExtendToPublication)(.*Ksierr: 0x202 Network error. Exterr:)/
+>>>2 /(Signature publication-based verification with user publication string)(.*na.*)/
+>>>= 6
 
-
-echo Generating memory test from $test_file_in
-
-cp  $test_file_in $memory_test_out 
-sed -i -f test/delete-stderr-check.sed $memory_test_out
-sed -i -f test/replace-with-valgrind.sed $memory_test_out
-sed -i -f test/rename-output.sed $memory_test_out
-
-
-exit $?

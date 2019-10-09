@@ -31,7 +31,7 @@ Use the given hash algorithm to hash the file to be signed. If not set, the defa
 .\"
 .TP
 \fB-S \fIURL\fR
-Specify the signing service (KSI Aggregator) URL.
+Specify the signing service (KSI Aggregator) URL. Supported URL schemes are: \fIhttp\fR, \fIhttps\fR, \fIksi+http\fR, \fIksi+https\fR and \fIksi+tcp\fR. It is possible to embed HTTP or KSI user info into the URL. With \fIksi+\fR suffix (e.g. ksi+http//user:key@...), user info is interpreted as KSI user info, otherwise (e.g. http//user:key@...) the user info is interpreted as HTTP user info. User info specified with \fB--aggr-user\fR and \fB--aggr-key\fR will overwrite the embedded values.
 .\"
 .TP
 \fB--aggr-user \fIuser\fR

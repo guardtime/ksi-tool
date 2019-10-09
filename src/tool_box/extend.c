@@ -42,9 +42,9 @@
 #include "tool.h"
 #include "common.h"
 
-static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext);
+static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_PublicationsFile **pubFileOut, KSI_Signature **ext);
 static int extend_to_specified_time(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, COMPOSITE *extra, KSI_Signature *sig, KSI_Signature **ext);
-static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext);
+static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_PublicationsFile **pubFileOut, KSI_Signature **ext);
 static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set);
 static int check_pipe_errors(PARAM_SET *set, ERR_TRCKR *err);
 static int check_other_input_param_errors(PARAM_SET *set, ERR_TRCKR *err);
@@ -58,7 +58,7 @@ enum EXTEND_TASKS_en {
 	EXTENDER_DUMP_CONF
 };
 
-#define PARAMS "{i}{input}{o}{d}{x}{T}{pub-str}{dump}{dump-conf}{conf}{apply-remote-conf}{log}{h|help}{replace-existing}"
+#define PARAMS "{i}{input}{o}{d}{x}{T}{pub-str}{dump}{dump-conf}{conf}{log}{h|help}{replace-existing}"
 
 int extend_run(int argc, char** argv, char **envp) {
 	int res;
@@ -89,10 +89,10 @@ int extend_run(int argc, char** argv, char **envp) {
 	res = TASK_INITIALIZER_check_analyze_report(set, task_set, 0.5, 0.1, &task);
 	if (res != KT_OK) goto cleanup;
 
+	d = PARAM_SET_isSetByName(set, "d");
+
 	res = TOOL_init_ksi(set, &ksi, &err, &logfile);
 	if (res != KT_OK) goto cleanup;
-
-	d = PARAM_SET_isSetByName(set, "d");
 
 	res = check_pipe_errors(set, err);
 	if (res != KT_OK) goto cleanup;
@@ -159,7 +159,8 @@ char *extend_help_toString(char *buf, size_t len) {
 			"[more_options] [--] input...\\>1\n\\>4"
 			"ksi extend [-i <in.ksig>] [-o <out.ksig>] -X <URL>\n"
 			"[--ext-user <user> --ext-key <key>] -P <URL> [--cnstr <oid=value>]...\n"
-			"[--pub-str <str>] [more_options] [--] input...\\>\n\n\n");
+			"[--pub-str <str>] [more_options] [--] input...\\>1\n\\>4"
+			"ksi extend -X <URL> [--ext-user <user> --ext-key <key>] --dump-conf\\>\n\n\n");
 
 	ret = PARAM_SET_helpToString(set, "i,o,X,ext-user,ext-key,ext-hmac-alg,P,cnstr,pub-str,replace-existing,V,input,d,dump,dump-conf,conf,apply-remote-conf,log", 1, 13, 80, buf + count, len - count);
 
@@ -242,7 +243,7 @@ cleanup:
 	return res;
 }
 
-static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *ext, const char *fname, const char *mode, KSI_PolicyVerificationResult **result) {
+static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *ext, KSI_PublicationsFile* pubFile, const char *fname, const char *mode, KSI_PolicyVerificationResult **result) {
 	int res;
 	int d;
 
@@ -255,7 +256,7 @@ static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Sig
 	d = PARAM_SET_isSetByName(set, "d");
 
 	print_progressDesc(d, "Verifying extended signature... ");
-	res = KSITOOL_SignatureVerify_with_publications_file_or_calendar(err, ext, ksi, NULL, 1, result);
+	res = KSITOOL_SignatureVerify_with_publications_file_or_calendar(err, ext, ksi, NULL, pubFile, 1, result);
 	ERR_CATCH_MSG(err, res, "Error: Unable to verify extended signature.");
 	print_progressResult(res);
 
@@ -266,50 +267,6 @@ static int verify_and_save(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Sig
 
 cleanup:
 	print_progressResult(res);
-
-	return res;
-}
-
-static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext) {
-	int res;
-	int d = 0;
-	KSI_Signature *tmp = NULL;
-	KSI_PublicationsFile *pubFile = NULL;
-
-	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || ext == NULL) {
-		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
-		goto cleanup;
-	}
-
-
-	d = PARAM_SET_isSetByName(set, "d");
-
-	print_progressDesc(d, "%s", getPublicationsFileRetrieveDescriptionString(set));
-	res = KSITOOL_receivePublicationsFile(err, ksi, &pubFile);
-	ERR_CATCH_MSG(err, res, "Error: Unable receive publications file.");
-	print_progressResult(res);
-
-	if (!PARAM_SET_isSetByName(set, "publications-file-no-verify")) {
-		print_progressDesc(d, "Verifying publications file... ");
-		res = KSITOOL_verifyPublicationsFile(err, ksi, pubFile);
-		ERR_CATCH_MSG(err, res, "Error: Unable to verify publications file.");
-		print_progressResult(res);
-	}
-
-	print_progressDesc(d, "Extend the signature to the earliest available publication... ");
-	res = KSITOOL_extendSignature(err, ksi, sig, &tmp);
-	ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
-	print_progressResult(res);
-
-	*ext = tmp;
-	tmp = NULL;
-	res = KT_OK;
-
-cleanup:
-	print_progressResult(res);
-
-	KSI_PublicationsFile_free(pubFile);
-	KSI_Signature_free(tmp);
 
 	return res;
 }
@@ -330,7 +287,7 @@ static int obtain_remote_conf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size
 
 	print_progressDesc(d, "Receiving remote configuration... ");
 	res = KSITOOL_Extender_getConf(err, ctx, &config);
-	ERR_CATCH_MSG(err, res, "Error: Unable to receive remote config.");
+	ERR_CATCH_MSG(err, res, "Error: Unable to receive remote configuration.");
 	print_progressResult(res);
 
 	if (PARAM_SET_isSetByName(set, "dump-conf")) {
@@ -347,7 +304,91 @@ static int obtain_remote_conf(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, size
 	if (calLast && last) *calLast = KSI_Integer_getUInt64(last);
 
 cleanup:
+	print_progressResult(res);
+
 	KSI_Config_free(config);
+
+	return res;
+}
+
+static int extend_to_nearest_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_PublicationsFile **pubFileOut, KSI_Signature **ext) {
+	int res;
+	int d = 0;
+	KSI_Signature *tmp = NULL;
+	KSI_PublicationsFile *pubFile = NULL;
+	KSI_PublicationRecord *pubRec = NULL;
+
+	if (set == NULL || ksi == NULL || err == NULL || sig == NULL || ext == NULL) {
+		ERR_TRCKR_ADD(err, res = KT_INVALID_ARGUMENT, NULL);
+		goto cleanup;
+	}
+
+	d = PARAM_SET_isSetByName(set, "d");
+
+	print_progressDesc(d, "%s", getPublicationsFileRetrieveDescriptionString(set));
+	res = KSITOOL_receivePublicationsFile(err, ksi, &pubFile);
+	ERR_CATCH_MSG(err, res, "Error: Unable receive publications file.");
+	print_progressResult(res);
+
+	if (!PARAM_SET_isSetByName(set, "publications-file-no-verify")) {
+		print_progressDesc(d, "Verifying publications file... ");
+		res = KSITOOL_verifyPublicationsFile(err, ksi, pubFile);
+		ERR_CATCH_MSG(err, res, "Error: Unable to verify publications file.");
+		print_progressResult(res);
+	}
+
+	/* Obtain configuration from server. */
+	if (PARAM_SET_isSetByName(set, "apply-remote-conf")) {
+		KSI_PublicationData *pubData = NULL;
+		KSI_Integer *sigTime = NULL;
+		KSI_Integer *pubTime = NULL;
+		size_t calFirst = 0;
+		size_t calLast = 0;
+
+		res = KSI_Signature_getSigningTime(sig, &sigTime);
+		ERR_CATCH_MSG(err, res, "Error: Unable to get signing time.");
+
+		res = KSI_PublicationsFile_getNearestPublication(pubFile, sigTime, &pubRec);
+		ERR_CATCH_MSG(err, res, "Error: Unable to find nearest publication.");
+
+		res = KSI_PublicationRecord_getPublishedData(pubRec, &pubData);
+		ERR_CATCH_MSG(err, res, "Error: Unable to get publication data.");
+
+		res = KSI_PublicationData_getTime(pubData, &pubTime);
+		ERR_CATCH_MSG(err, res, "Error: Unable to get publication time.");
+
+		res = obtain_remote_conf(set, err, ksi, &calFirst, &calLast);
+		if (res != KT_OK) goto cleanup;
+
+		if ((calFirst != 0 && KSI_Integer_getUInt64(pubTime) < calFirst) ||
+				(calLast != 0 && KSI_Integer_getUInt64(pubTime) > calLast)) {
+			ERR_TRCKR_ADD(err, res = KT_EXT_CAL_TIME_OUT_OF_LIMIT,  "Error: Unable to extend signature to specified time.");
+			if (!PARAM_SET_isSetByName(set, "dump-conf")) {
+				ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion: Use --dump-conf for more information.");
+			}
+			goto cleanup;
+		}
+	}
+
+	print_progressDesc(d, "Extend the signature to the earliest available publication... ");
+	res = KSITOOL_extendSignature(err, ksi, sig, pubFile, &tmp);
+	ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
+	print_progressResult(res);
+
+	if (pubFileOut != NULL) {
+		*pubFileOut = pubFile;
+	}
+
+	*ext = tmp;
+	tmp = NULL;
+	res = KT_OK;
+
+cleanup:
+	print_progressResult(res);
+
+	KSI_PublicationsFile_free(pubFile);
+	KSI_PublicationRecord_free(pubRec);
+	KSI_Signature_free(tmp);
 
 	return res;
 }
@@ -389,7 +430,9 @@ static int extend_to_specified_time(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi
 	if ((calFirst != 0 && KSI_Integer_getUInt64(pubTime) < calFirst) ||
 			(calLast != 0 && KSI_Integer_getUInt64(pubTime) > calLast)) {
 		ERR_TRCKR_ADD(err, res = KT_EXT_CAL_TIME_OUT_OF_LIMIT,  "Error: Unable to extend signature to specified time.");
-		ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion: Use --dump-conf for more information.");
+		if (!PARAM_SET_isSetByName(set, "dump-conf")) {
+			ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion: Use --dump-conf for more information.");
+		}
 		goto cleanup;
 	}
 
@@ -411,7 +454,7 @@ cleanup:
 	return res;
 }
 
-static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_Signature **ext) {
+static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, KSI_Signature *sig, KSI_PublicationsFile **pubFileOut, KSI_Signature **ext) {
 	int res;
 	int d = 0;
 	KSI_Signature *tmp = NULL;
@@ -428,6 +471,7 @@ static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_C
 	res = PARAM_SET_getStr(set, "pub-str", NULL, PST_PRIORITY_HIGHEST, PST_INDEX_LAST, &pubs_str);
 	ERR_CATCH_MSG(err, res, "Error: Unable get publication string.");
 
+
 	print_progressDesc(d, "%s", getPublicationsFileRetrieveDescriptionString(set));
 	res = KSITOOL_receivePublicationsFile(err, ksi, &pubFile);
 	ERR_CATCH_MSG(err, res, "Error: Unable receive publications file.");
@@ -442,7 +486,6 @@ static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_C
 	}
 	print_progressResult(res);
 
-
 	if (!PARAM_SET_isSetByName(set, "publications-file-no-verify")) {
 		print_progressDesc(d, "Verifying publications file... ");
 		res = KSITOOL_verifyPublicationsFile(err, ksi, pubFile);
@@ -450,10 +493,40 @@ static int extend_to_specified_publication(PARAM_SET *set, ERR_TRCKR *err, KSI_C
 		print_progressResult(res);
 	}
 
+	/* Obtain configuration from server. */
+	if (PARAM_SET_isSetByName(set, "apply-remote-conf")) {
+		KSI_PublicationData *pubData = NULL;
+		KSI_Integer *pubTime = NULL;
+		size_t calFirst = 0;
+		size_t calLast = 0;
+
+		res = KSI_PublicationRecord_getPublishedData(pub_rec, &pubData);
+		ERR_CATCH_MSG(err, res, "Error: Unable to get publication data.");
+
+		res = KSI_PublicationData_getTime(pubData, &pubTime);
+		ERR_CATCH_MSG(err, res, "Error: Unable to get publication time.");
+
+		res = obtain_remote_conf(set, err, ksi, &calFirst, &calLast);
+		if (res != KT_OK) goto cleanup;
+
+		if ((calFirst != 0 && KSI_Integer_getUInt64(pubTime) < calFirst) ||
+				(calLast != 0 && KSI_Integer_getUInt64(pubTime) > calLast)) {
+			ERR_TRCKR_ADD(err, res = KT_EXT_CAL_TIME_OUT_OF_LIMIT,  "Error: Unable to extend signature to specified time.");
+			if (!PARAM_SET_isSetByName(set, "dump-conf")) {
+				ERR_TRCKR_addAdditionalInfo(err, "  * Suggestion: Use --dump-conf for more information.");
+			}
+			goto cleanup;
+		}
+	}
+
 	print_progressDesc(d, "Extend the signature to the specified publication... ");
 	res = KSITOOL_Signature_extend(err, sig, ksi, pub_rec, &tmp);
 	ERR_CATCH_MSG(err, res, "Error: Unable to extend signature.");
 	print_progressResult(res);
+
+	if (pubFileOut != NULL) {
+		*pubFileOut = pubFile;
+	}
 
 	*ext = tmp;
 	tmp = NULL;
@@ -491,9 +564,9 @@ static int generate_tasks_set(PARAM_SET *set, TASK_SET *task_set) {
 	PARAM_SET_addControl(set, "{i}", isFormatOk_inputFile, isContentOk_inputFileWithPipe, convertRepair_path, extract_inputSignature);
 	PARAM_SET_addControl(set, "{input}", isFormatOk_inputFile, isContentOk_inputFile, convertRepair_path, extract_inputSignatureFromFile);
 	PARAM_SET_addControl(set, "{T}", isFormatOk_utcTime, isContentOk_utcTime, NULL, extract_utcTime);
-	PARAM_SET_addControl(set, "{d}{dump-conf}{apply-remote-conf}", isFormatOk_flag, NULL, NULL, NULL);
+	PARAM_SET_addControl(set, "{d}{dump-conf}", isFormatOk_flag, NULL, NULL, NULL);
 	PARAM_SET_addControl(set, "{pub-str}", isFormatOk_pubString, NULL, NULL, extract_pubString);
-	PARAM_SET_setParseOptions(set, "{d}{dump-conf}{replace-existing}{apply-remote-conf}", PST_PRSCMD_HAS_NO_VALUE);
+	PARAM_SET_setParseOptions(set, "{d}{dump-conf}{replace-existing}", PST_PRSCMD_HAS_NO_VALUE);
 
 	PARAM_SET_addControl(set, "{dump}", NULL, isContentOk_dump_flag, NULL, extract_dump_flag);
 
@@ -648,6 +721,7 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 	const char *mode = NULL;
 	KSI_PolicyVerificationResult *result_ext = NULL;
 	KSI_PolicyVerificationResult *result_sig = NULL;
+
 	int dump_flags = OBJPRINT_NONE;
 
 	if (set == NULL || err == NULL || ksi == NULL || task_id > 2) {
@@ -675,6 +749,10 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 		char *in_fname = NULL;
 		const char *save_to = NULL;
 		char buf[1024] = "";
+
+		/* This must not be freed! */
+		KSI_PublicationsFile *pubFile = NULL;
+
 		if (i > 0 && (d || dump)) print_debug(" ----------------------------\n");
 
 		PARAM_SET_getStr(set, "i,input", NULL, PST_PRIORITY_NONE, i, &in_fname);
@@ -700,20 +778,20 @@ static int perform_extending(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int t
 
 		switch(task_id) {
 			case EXTEND_TO_HEAD:
-				res = extend_to_nearest_publication(set, err, ksi, sig, &ext);
+				res = extend_to_nearest_publication(set, err, ksi, sig, &pubFile, &ext);
 				break;
 			case EXTEND_TO_TIME:
 				res = extend_to_specified_time(set, err, ksi, &extra, sig, &ext);
 				break;
 			case EXTEND_TO_PUB_STR:
-				res = extend_to_specified_publication(set, err, ksi, sig, &ext);
+				res = extend_to_specified_publication(set, err, ksi, sig, &pubFile, &ext);
 				break;
 		}
 		if (res != KT_OK) goto cleanup;
 
 		save_to = get_output_file_name(set, err, "i,input", "o", how_to_save, i, buf, sizeof(buf), generate_file_name);
 
-		res = verify_and_save(set, err, ksi, ext, save_to, mode, &result_ext);
+		res = verify_and_save(set, err, ksi, ext, pubFile, save_to, mode, &result_ext);
 		if (res != KT_OK) goto cleanup;
 
 		if (PARAM_SET_isSetByName(set, "dump")) {

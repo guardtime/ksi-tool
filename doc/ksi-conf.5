@@ -26,7 +26,7 @@ See \fBEXAMPLES\fR for more information.
 .SH OPTIONS
 .TP
 \fB-S \fIURL\fR
-Specify the signing service (KSI Aggregator) URL.
+Specify the signing service (KSI Aggregator) URL. Supported URL schemes are: \fIhttp\fR, \fIhttps\fR, \fIksi+http\fR, \fIksi+https\fR and \fIksi+tcp\fR. It is possible to embed HTTP or KSI user info into the URL. With \fIksi+\fR suffix (e.g. ksi+http//user:key@...), user info is interpreted as KSI user info, otherwise (e.g. http//user:key@...) the user info is interpreted as HTTP user info. User info specified with \fB--aggr-user\fR and \fB--aggr-key\fR will overwrite the embedded values.
 .\"
 .TP
 \fB--aggr-user \fIstr\fR
@@ -41,16 +41,12 @@ Specify the HMAC key for signing service.
 Hash algorithm to be used for computing HMAC on outgoing messages towards KSI aggregator. If not set, default algorithm is used. Use \fBksi -h \fRto get the list of supported hash algorithms.
 .\"
 .TP
-\fB--aggr-pdu-v \fIstr\fR
-Specify the KSIAP (KSI Aggregation Protocol) PDU version. Valid values are \fIv1\fR and \fIv2\fR. Note that \fIv1\fR is \fBdeprecated\fR and will be fully replaced with \fIv2\fR in the future.
-.\"
-.TP
 \fB-H \fIalg\fR
 Use the given hash algorithm to hash the file to be signed. If not set, the default algorithm is used. Use \fBksi -h \fRto get the list of supported hash algorithms. If used in combination with \fB--apply-remote-conf\fR, the algorithm parameter provided by the server will be ignored.
 .\"
 .TP
 \fB-X \fIURL\fR
-Specify the extending service (KSI Extender) URL.
+Specify the extending service (KSI Extender) URL. Supported URL schemes are: \fIhttp\fR, \fIhttps\fR, \fIksi+http\fR, \fIksi+https\fR and \fIksi+tcp\fR. It is possible to embed HTTP or KSI user info into the URL. With \fIksi+\fR suffix (e.g. ksi+http//user:key@...), user info is interpreted as KSI user info, otherwise (e.g. http//user:key@...) the user info is interpreted as HTTP user info. User info specified with \fB--ext-user\fR and \fB--ext-key\fR will overwrite the embedded values.
 .\"
 .TP
 \fB--ext-user \fIstr\fR
@@ -63,11 +59,6 @@ Specify the HMAC key for extending service.
 .TP
 \fB--ext-hmac-alg \fIalg\fR
 Hash algorithm to be used for computing HMAC on outgoing messages towards KSI extender. If not set, default algorithm is used. Use \fBksi -h \fRto get the list of supported hash algorithms.
-.\"
-.TP
-\fB--ext-pdu-v \fIstr\fR
-Specify the KSIEP (KSI Extension Protocol) PDU version. Valid values are \fIv1\fR and \fIv2\fR. Note that \fIv1\fR is \fBdeprecated\fR and will be fully replaced with \fIv2\fR in the future.
-.\"
 .\"
 .TP
 \fB--max-lvl \fIint\fR
