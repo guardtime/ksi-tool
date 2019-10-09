@@ -79,7 +79,9 @@ help_txt() {
 	echo "       - When this flag is set, libksi and libparamset are downloaded from"
 	echo "         github and built. Result is dumped in directory 'dependencies' that"
 	echo "         will contain 'include' and 'lib' directory. Libraries built should"
-	echo "         be available automatically. If not, see -l and -i."
+	echo "         be available automatically. If not, see -l and -i. Note that when"
+	echo "         combined with --build-rpm or --build-deb also --no-dep-check is"
+	echo "         applied."
 	echo ""
 	echo "  --no-dep-check"
 	echo "       - No dependency check is performed when building rpm or deb package. Note"
@@ -218,6 +220,8 @@ while [ "$1" != "" ]; do
 								 ;;
 		--get-dep-online )		 echo "Download and build libksi and libparamset."
 								 do_build_dependecies=true
+								 rpmbuild_flags="--nodeps"
+								 debuild_flags="-d"
 								 ;;
 		--no-dep-check )		 echo "Ignoring 'build depends on' when building a package."
 								 rpmbuild_flags="--nodeps"

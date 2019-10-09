@@ -103,7 +103,7 @@ VER = \
 COM_ID = \
 !INCLUDE <$(COMM_ID_FILE)>
 !MESSAGE Git OK. Include commit ID $(COM_ID).
-!IF [rm $(COMM_ID_FILE)] == 0
+!IF [del $(COMM_ID_FILE)] == 0
 !MESSAGE File $(COMM_ID_FILE) deleted.
 !ENDIF
 !ELSE
