@@ -46,13 +46,10 @@ copy /Y test\resource\file\testFile	test\out\fname\a_23_1000
 copy /Y test\resource\file\testFile	test\out\fname\a_23_1000.ksig
 copy /Y test\resource\file\testFile	test\out\fname\a_23_1000_5.ksig
 copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\fname\ok-sig.ksig
-copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\fname\ok-sig
-copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\fname\mass-extend-1.ksig
-copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\fname\mass-extend-2.ksig
-copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\fname\mass-extend-2.ksig
-copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\extend-replace-existing\not-extended-1A.ksig
-copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\extend-replace-existing\not-extended-1B.ksig
-copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\extend-replace-existing\not-extended-2B.ksig
+rem copy /Y test\resource\signature\ok-sig-2014-08-01.1.ksig test\out\fname\ok-sig
+rem copy /Y test\resource\signature\ok-sig-2021-04-30.ksig test\out\extend-replace-existing\not-extended-1A.ksig
+copy /Y test\resource\signature\ok-sig-2021-04-30.ksig test\out\extend-replace-existing\not-extended-1B.ksig
+copy /Y test\resource\signature\ok-sig-2021-04-30.ksig test\out\extend-replace-existing\not-extended-2B.ksig
 
 REM Define KSI_CONF for temporary testing.
 setlocal
