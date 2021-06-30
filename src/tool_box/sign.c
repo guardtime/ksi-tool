@@ -841,7 +841,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 
 
 		if (prgrs || in_count > 1) {
-			print_debug("Signing %i files in round %i/%i.%s\n", to_be_signed_in_round, r + 1, rounds, prgrs ? "" : "\n");
+			print_debug("Signing %zu files in round %zu/%zu.%s\n", to_be_signed_in_round, r + 1, rounds, prgrs ? "" : "\n");
 		}
 
 		for (tree_input = 0; tree_input < max_tree_inputs && i < in_count; tree_input++, i++) {
@@ -855,7 +855,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 
 			if (!tree_size_1 && !prgrs) print_progressResult(res);
 
-			if (!tree_size_1 && !prgrs) print_progressDesc(d, "Add document hash %d/%d %s%s%sto the local aggregation tree... ",
+			if (!tree_size_1 && !prgrs) print_progressDesc(d, "Add document hash %zu/%zu %s%s%sto the local aggregation tree... ",
 					tree_input + 1, to_be_signed_in_round,
 					(isMetadata && !isMasking) ? "with metadata " : "",
 					(!isMetadata && isMasking) ? "with enabled masking " : "",
@@ -892,7 +892,7 @@ static int KT_SIGN_performSigning(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ctx, 
 		if ((!tree_size_1 || prgrs)) print_debug("\n");
 
 		if (tree_size_1) print_progressDesc(d, "Creating signature from hash... ");
-		else print_progressDesc(d, "Signing the local aggregation tree %d/%d... ", r + 1, rounds);
+		else print_progressDesc(d, "Signing the local aggregation tree %zu/%zu... ", r + 1, rounds);
 
 		res = KSITOOL_BlockSigner_closeAndSign(err, ctx, bs);
 		if (tree_size_1) {ERR_CATCH_MSG(err, res, "Error: Unable to create signature.");}

@@ -1,3 +1,7 @@
+(TOOL-281) BUGFIX: KSI tool works on Raspberry Pi.
+(TOOL-281) BUGFIX: Some format strings fixed by replacing %i with %llu for uint64_t.
+(TOOL-281) BUGFIX: Some format strings fixed by replacing %i with %zu for size_t.
+
 Version 2.9
 
 2019-10-09 2.9.1374

@@ -58,14 +58,14 @@ void OBJPRINT_publicationsFileReferences(const KSI_PublicationsFile *pubFile, in
 			if (h++ < 3)
 				print("%s %s\n", "  ", pStart);
 			else
-				print("%s %2i) %s\n", "    ", j++, pStart);
+				print("%s %2u) %s\n", "    ", j++, pStart);
 			pStart = pLineBreak+1;
 		}
 
 		if (h < 3)
 			print("%s %s\n", "  ", pStart);
 		else
-			print("%s %2i) %s\n", "    ", j++, pStart);
+			print("%s %2u) %s\n", "    ", j++, pStart);
 	}
 	print("\n");
 	return;
@@ -159,7 +159,7 @@ void OBJPRINT_IdentityMetadata(KSI_CTX *ctx, KSI_Signature *sig, int flags, int 
 		goto cleanup;
 	}
 	if (flags & OBJPRINT_GREPABLE) {
-		print("Identity Metadata: %i\n", KSI_HashChainLinkIdentityList_length(identity));
+		print("Identity Metadata: %zu\n", KSI_HashChainLinkIdentityList_length(identity));
 	} else {
 		print("Identity Metadata:\n");
 	}
@@ -193,9 +193,9 @@ void OBJPRINT_IdentityMetadata(KSI_CTX *ctx, KSI_Signature *sig, int flags, int 
 				}
 
 				if (flags & OBJPRINT_GREPABLE) {
-					print("%s%d) Client ID: %s\n", offset, i + 1, KSI_Utf8String_cstr(clientId));
+					print("%s%zu) Client ID: %s\n", offset, i + 1, KSI_Utf8String_cstr(clientId));
 				} else {
-					print("%s%d) '%s' (legacy)\n", offset, i + 1, KSI_Utf8String_cstr(clientId));
+					print("%s%zu) '%s' (legacy)\n", offset, i + 1, KSI_Utf8String_cstr(clientId));
 				}
 
 			} else if (type == KSI_IDENTITY_TYPE_METADATA) {
@@ -247,19 +247,19 @@ void OBJPRINT_IdentityMetadata(KSI_CTX *ctx, KSI_Signature *sig, int flags, int 
 
 				/* Print values if available. */
 				if (flags & OBJPRINT_GREPABLE) {
-					print("%s%d) Client ID: %s\n", offset, i + 1, KSI_Utf8String_cstr(clientId));
-					if (macId) print("%s%d) Machine ID: %s\n", offset, i + 1, KSI_Utf8String_cstr(macId));
-					if (seqNr) print("%s%d) Sequence number: %i\n", offset, i + 1, (unsigned long)KSI_Integer_getUInt64(seqNr));
-					if (reqTm)print("%s%d) Request time: (%llu.%llu) %s+00:00\n", offset, i + 1, reqTmSec, reqTmMicro, date);
+					print("%s%zu) Client ID: %s\n", offset, i + 1, KSI_Utf8String_cstr(clientId));
+					if (macId) print("%s%zu) Machine ID: %s\n", offset, i + 1, KSI_Utf8String_cstr(macId));
+					if (seqNr) print("%s%zu) Sequence number: %llu\n", offset, i + 1, KSI_Integer_getUInt64(seqNr));
+					if (reqTm)print("%s%zu) Request time: (%llu.%llu) %s+00:00\n", offset, i + 1, reqTmSec, reqTmMicro, date);
 				} else {
-					print("%s%d) Client ID: '%s'", offset, i + 1, KSI_Utf8String_cstr(clientId));
+					print("%s%zu) Client ID: '%s'", offset, i + 1, KSI_Utf8String_cstr(clientId));
 					if (macId) print(", Machine ID: '%s'", KSI_Utf8String_cstr(macId));
-					if (seqNr) print(", Sequence number: %i", (unsigned long)KSI_Integer_getUInt64(seqNr));
+					if (seqNr) print(", Sequence number: %llu", KSI_Integer_getUInt64(seqNr));
 					if (reqTm) print(", Request time: (%llu.%llu) %s+00:00", reqTmSec, reqTmMicro, date);
 					print("\n");
 				}
 			} else {
-				print("%s%d) Unknown identity type.\n", offset, i + 1);
+				print("%s%zu) Unknown identity type.\n", offset, i + 1);
 			}
 		}
 	}
@@ -273,7 +273,6 @@ cleanup:
 void OBJPRINT_signatureSigningTime(const KSI_Signature *sig, int (*print)(const char *format, ... )) {
 	int res;
 	KSI_Integer *sigTime = NULL;
-	unsigned long signingTime = 0;
 	char date[1024];
 
 
@@ -292,10 +291,8 @@ void OBJPRINT_signatureSigningTime(const KSI_Signature *sig, int (*print)(const 
 			return;
 		}
 
-		signingTime = (unsigned long)KSI_Integer_getUInt64(sigTime);
-
-		print("Signing time: (%i) %s+00:00\n",
-			  signingTime, date);
+		print("Signing time: (%llu) %s+00:00\n",
+			  KSI_Integer_getUInt64(sigTime), date);
 	} else {
 		print("Signing time: N/A\n");
 	}
@@ -635,15 +632,15 @@ void OBJPRINT_aggregatorConfDump(KSI_Config *config, int (*print)(const char *fo
 
 	res = KSI_Config_getMaxLevel(config, &max_level);
 	if (res != KSI_OK) return;
-	if (max_level) print("  Maximum level: %d\n", KSI_Integer_getUInt64(max_level));
+	if (max_level) print("  Maximum level: %llu\n", KSI_Integer_getUInt64(max_level));
 
 	res = KSI_Config_getAggrPeriod(config, &aggr_period);
 	if (res != KSI_OK) return;
-	if (aggr_period) print("  Aggregation period: %d\n", KSI_Integer_getUInt64(aggr_period));
+	if (aggr_period) print("  Aggregation period: %llu\n", KSI_Integer_getUInt64(aggr_period));
 
 	res = KSI_Config_getMaxRequests(config, &max_req);
 	if (res != KSI_OK) return;
-	if (max_req) print("  Maximum requests: %d\n", KSI_Integer_getUInt64(max_req));
+	if (max_req) print("  Maximum requests: %llu\n", KSI_Integer_getUInt64(max_req));
 
 	res = KSI_Config_getParentUri(config, &parent_uri);
 	if (res != KSI_OK) return;
@@ -674,7 +671,7 @@ void OBJPRINT_extenderConfDump(KSI_Config *config, int (*print)(const char *form
 	res = KSI_Config_getCalendarFirstTime(config, &cal_first);
 	if (res != KSI_OK) return;
 	if (cal_first) {
-		print("  Calendar first time: (%i) %s+00:00\n",
+		print("  Calendar first time: (%llu) %s+00:00\n",
 				KSI_Integer_getUInt64(cal_first),
 				KSI_Integer_toDateString(cal_first, date, sizeof(date)));
 	}
@@ -682,14 +679,14 @@ void OBJPRINT_extenderConfDump(KSI_Config *config, int (*print)(const char *form
 	res = KSI_Config_getCalendarLastTime(config, &cal_last);
 	if (res != KSI_OK) return;
 	if (cal_last) {
-		print("  Calendar last time:  (%i) %s+00:00\n",
+		print("  Calendar last time:  (%llu) %s+00:00\n",
 				KSI_Integer_getUInt64(cal_last),
 				KSI_Integer_toDateString(cal_last, date, sizeof(date)));
 	}
 
 	res = KSI_Config_getMaxRequests(config, &max_req);
 	if (res != KSI_OK) return;
-	if (max_req) print("  Maximum requests: %d\n", KSI_Integer_getUInt64(max_req));
+	if (max_req) print("  Maximum requests: %llu\n", KSI_Integer_getUInt64(max_req));
 
 	res = KSI_Config_getParentUri(config, &parent_uri);
 	if (res != KSI_OK) return;
