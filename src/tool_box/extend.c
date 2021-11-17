@@ -423,7 +423,7 @@ static int extend_to_specified_time(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi
 	}
 
 	/* Extend the signature. */
-	print_progressDesc(d, "Extending the signature to %s (%i)... ",
+	print_progressDesc(d, "Extending the signature to %s (%llu)... ",
 			KSI_Integer_toDateString(pubTime, buf, sizeof(buf)),
 			KSI_Integer_getUInt64(pubTime));
 

@@ -32,7 +32,7 @@ Version: @VERSION@
 Release: 1%{?dist}
 License: Apache 2.0
 Group: Applications/Security
-Source:  http://download.guardtime.com/%{name_package}-%{version}.tar.gz
+Source:  https://download.guardtime.com/%{name_package}-%{version}.tar.gz
 URL: http://www.guardtime.com
 Vendor: Guardtime AS
 Packager: Guardtime AS <info@guardtime.com>
