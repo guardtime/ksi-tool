@@ -1,3 +1,4 @@
+(TOOL-280) BUGFIX: Some old signatures replaced with more recent ones in extending tests, to avoid test failures as calendar data base may not have required rounds available.
 (TOOL-281) BUGFIX: KSI tool works on Raspberry Pi.
 (TOOL-281) BUGFIX: Some format strings fixed by replacing %i with %llu for uint64_t.
 (TOOL-281) BUGFIX: Some format strings fixed by replacing %i with %zu for size_t.

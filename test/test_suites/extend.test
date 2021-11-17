@@ -19,63 +19,63 @@
 # Successful extending.
 
 # KSI extend to the nearest publication.
-# Publication string: AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
-# Publication date: 2014-08-15 00:00:00 UTC
-EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/nearest.pub.ext.ksig -d
+# Publication string: AAAAAA-DAT4HQ-AAINTY-4FF6LC-NJNWEB-75EK74-C6K52X-XC77IR-JZWJDP-6C2TTL-FERUFI-OOJW2C
+# Publication date: 2021-05-15 00:00:00 UTC
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2021-04-30.ksig -o test/out/extend/nearest.pub.ext.ksig -d
 >>>2 /(Extend the signature to the earliest available publication)(.*ok.*)
 (Verifying extended signature)(.*ok.*)
 (Saving signature)(.*ok.*)/
 >>>= 0
 
 # KSI write signature to stdout.
-# Publication string: AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
-# Publication date: 2014-08-15 00:00:00 UTC
-EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o - > test/out/extend/piped.nearest.pub.ext.ksig -d
+# Publication string: AAAAAA-DAT4HQ-AAINTY-4FF6LC-NJNWEB-75EK74-C6K52X-XC77IR-JZWJDP-6C2TTL-FERUFI-OOJW2C
+# Publication date: 2021-05-15 00:00:00 UTC
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2021-04-30.ksig -o - > test/out/extend/piped.nearest.pub.ext.ksig -d
 >>>2 /(Extend the signature to the earliest available publication)(.*ok.*)
 (Verifying extended signature)(.*ok.*)
 (Saving signature)(.*ok.*)/
 >>>= 0
 
 # KSI extend to the specified publication (that is the nearest).
-# Publication string: AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
-# Publication date: 2014-08-15 00:00:00 UTC UTC
-EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/specified.nearest.pub.ext.ksig -d --pub-str AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
+# Publication string: AAAAAA-DAT4HQ-AAINTY-4FF6LC-NJNWEB-75EK74-C6K52X-XC77IR-JZWJDP-6C2TTL-FERUFI-OOJW2C
+# Publication date: 2021-05-15 00:00:00 UTC
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2021-04-30.ksig -o test/out/extend/specified.nearest.pub.ext.ksig -d --pub-str AAAAAA-DAT4HQ-AAINTY-4FF6LC-NJNWEB-75EK74-C6K52X-XC77IR-JZWJDP-6C2TTL-FERUFI-OOJW2C
 >>>2 /(Extend the signature to the specified publication)(.*ok.*)
 (Verifying extended signature)(.*ok.*)
 (Saving signature)(.*ok.*)/
 >>>= 0
 
 # KSI extend to the specified publication (that is not the nearest publication).
-# Publication string: AAAAAA-CWN5MA-AAK3AP-WSCETA-RKKP5V-OIITKT-XODBUJ-RQVGAI-DL7PHU-V6M2UY-DCTGDK-B47JCA
-# Publication date: 2015-12-15 00:00:00 UTC
-EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/specified.pub.ext.ksig -d --pub-str AAAAAA-CWN5MA-AAK3AP-WSCETA-RKKP5V-OIITKT-XODBUJ-RQVGAI-DL7PHU-V6M2UY-DCTGDK-B47JCA
+# Publication string: AAAAAA-DAY7WY-AAP6WL-HUTOS7-CUZ5SH-BS56EX-LMUAB7-VDBGSA-YBIQVX-SHF7DL-6ZU27U-H2NNUG
+# Publication date: 2021-06-15 00:00:00 UTC
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2021-04-30.ksig -o test/out/extend/specified.pub.ext.ksig -d --pub-str AAAAAA-DAY7WY-AAP6WL-HUTOS7-CUZ5SH-BS56EX-LMUAB7-VDBGSA-YBIQVX-SHF7DL-6ZU27U-H2NNUG
 >>>2 /(Extend the signature to the specified publication)(.*ok.*)
 (Verifying extended signature)(.*ok.*)
 (Saving signature)(.*ok.*)/
 >>>= 0
 
 # KSI extend to the specified time without publication record.
-# Publication string: AAAAAA-CVWIVC-QAIVKJ-SIRUQZ-MZBJPS-T7P2UX-DDX4JF-KLMCXI-TXIKGF-B6MAJQ-JIJPTD-C2EDEO
-# Publication date: (1437739560) 2015-07-24 12:06:00 UTC
-EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/specified.no-pub.ext.ksig -d -T "2015-07-24 12:06:00"
->>>2 /(Extending the signature to)(.*1437739560)(.*ok.*)
+# Publication string: AAAAAA-DA3MGK-QALV5P-43ZHTQ-DVXFIL-FUNRP3-2AUSNA-76HXKO-HRXN34-2NPAQP-32OELQ-V75AHJ
+# Publication date: (1624968360) 2021-06-29 12:06:00 UTC
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2021-04-30.ksig -o test/out/extend/specified.no-pub.ext.ksig -d -T "2021-06-29 12:06:00"
+>>>2 /(Extending the signature to)(.*1624968360)(.*ok.*)
 (Verifying extended signature)(.*ok.*)
 (Saving signature)(.*ok.*)/
 >>>= 0
 
 # KSI extend to the specified time without publication record. Obtain additional configuration from extender.
-# Publication string: AAAAAA-CVWIVC-QAIVKJ-SIRUQZ-MZBJPS-T7P2UX-DDX4JF-KLMCXI-TXIKGF-B6MAJQ-JIJPTD-C2EDEO
-# Publication date: (1437739560) 2015-07-24 12:06:00 UTC
-EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/specified.no-pub.ext.ksig -d -T "2015-07-24 12:06:00" --apply-remote-conf --dump-conf
+# Publication string: AAAAAA-DA3MGK-QALV5P-43ZHTQ-DVXFIL-FUNRP3-2AUSNA-76HXKO-HRXN34-2NPAQP-32OELQ-V75AHJ
+# Publication date: (1624968360) 2021-06-29 12:06:00 UTC
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2021-04-30.ksig -o test/out/extend/specified.no-pub.ext.ksig -d -T "2021-06-29 12:06:00" --apply-remote-conf --dump-conf
 >>> /Extender configuration/
->>>2 /(Extending the signature to)(.*1437739560)(.*ok.*)
+>>>2 /(Extending the signature to)(.*1624968360)(.*ok.*)
 (Verifying extended signature)(.*ok.*)
 (Saving signature)(.*ok.*)/
 >>>= 0
 
 
 # KSI extend to the specified publication. Obtain additional configuration from extender (note - extender conf is supported from PDU v2).
-EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/pub-str.ext.ksig -d --pub-str AAAAAA-C3ONWQ-AANO2I-UDF2Y3-YUANDE-FA4WDB-JMECT3-ZURJ6C-ZB4GSD-YUKTC7-PFGWY4-NZLPQP --apply-remote-conf --dump-conf
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2021-04-30.ksig -o test/out/extend/pub-str.ext.ksig -d --pub-str AAAAAA-DAY7WY-AAP6WL-HUTOS7-CUZ5SH-BS56EX-LMUAB7-VDBGSA-YBIQVX-SHF7DL-6ZU27U-H2NNUG --apply-remote-conf --dump-conf
 >>> /Extender configuration/
 >>>2 /(Receiving remote configuration)(.*ok.*)
 (Extend the signature to)(.*ok.*)
@@ -84,7 +84,7 @@ EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08
 >>>= 0
 
 # KSI extend to the nearest publication. Obtain additional configuration from extender.
-EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o test/out/extend/nearest-pub.ext.ksig -d --apply-remote-conf --dump-conf
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2021-04-30.ksig -o test/out/extend/nearest-pub.ext.ksig -d --apply-remote-conf --dump-conf
 >>> /Extender configuration/
 >>>2 /(Receiving remote configuration)(.*ok.*)
 (Extend the signature to)(.*ok.*)
@@ -96,8 +96,8 @@ EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08
 # 3) Extend 1 file to specified publication. Replace the original file with the
 # extended version.
 #
-EXECUTABLE extend --conf test/test.cfg -i test/out/extend-replace-existing/not-extended-1A.ksig -d --dump --pub-str AAAAAA-CXMCNI-AAJIV3-RB5OEJ-JBK57H-SJ42PI-IB2RE7-2CA2TM-H5W3EF-TF2BX7-HRNRP5-Q2E754 --replace-existing
->>> /(.*AAAAAA-CXMCNI-AAJIV3-RB5OEJ-JBK57H-SJ42PI-IB2RE7-2CA2TM-H5W3EF-TF2BX7-HRNRP5-Q2E754.*)/
+EXECUTABLE extend --conf test/test.cfg -i test/out/extend-replace-existing/not-extended-1A.ksig -d --dump --pub-str AAAAAA-DAY7WY-AAP6WL-HUTOS7-CUZ5SH-BS56EX-LMUAB7-VDBGSA-YBIQVX-SHF7DL-6ZU27U-H2NNUG --replace-existing
+>>> /(.*AAAAAA-DAY7WY-AAP6WL-HUTOS7-CUZ5SH-BS56EX-LMUAB7-VDBGSA-YBIQVX-SHF7DL-6ZU27U-H2NNUG.*)/
 >>>2 /(Ext.*1.*)
 .*
 (.*R.*ok.*)

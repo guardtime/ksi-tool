@@ -36,6 +36,6 @@ Data From Stdin
 >>>= 0
 
 # KSI Extend signature and pipe extend signature to verification.
- {KSI_BIN} extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ksig -o - | {KSI_BIN} verify --ver-pub --conf test/test.cfg -i - -d --pub-str AAAAAA-CT5VGY-AAPUCF-L3EKCC-NRSX56-AXIDFL-VZJQK4-WDCPOE-3KIWGB-XGPPM3-O5BIMW-REOVR4
+ {KSI_BIN} extend --conf test/test.cfg -i test/resource/signature/ok-sig-2021-04-30.ksig -o - | {KSI_BIN} verify --ver-pub --conf test/test.cfg -i - -d --pub-str AAAAAA-DAT4HQ-AAINTY-4FF6LC-NJNWEB-75EK74-C6K52X-XC77IR-JZWJDP-6C2TTL-FERUFI-OOJW2C
 >>>2 /(Signature publication-based verification with user publication string)(.*ok.*)/
 >>>= 0
