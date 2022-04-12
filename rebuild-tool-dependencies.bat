@@ -24,7 +24,7 @@ setlocal
 
 REM Git repositories and corresponding versions.
 set libksi_git="https://github.com/guardtime/libksi.git"
-set libksi_version=v3.20.3025
+set libksi_version=v3.21.3075
 set libparamset_git="https://github.com/guardtime/libparamset.git"
 set libparamset_version=v1.1.240
 
