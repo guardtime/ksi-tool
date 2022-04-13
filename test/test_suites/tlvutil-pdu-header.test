@@ -145,7 +145,7 @@ EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08
 # Nr. 10
 # Specify message id. Perform 2 sequential extending request and check if message ID is increasing.
 ##
-EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2014-08-01.1.ext.ksig -i test/resource/signature/ok-legacy-sig-2014-06.gtts.ksig -o test/out/extend/dummy.1.ksig -o test/out/extend/dummy.2.ksig  --msg-id --log - | grep -oP "request.*\(len.*=[0-9]*.*\).*:\K.*" | gttlvdump -pP -E hex
+EXECUTABLE extend --conf test/test.cfg -i test/resource/signature/ok-sig-2021-04-30.ksig -i test/resource/signature/ok-legacy-sig-2014-06.gtts.ksig -o test/out/extend/dummy.1.ksig -o test/out/extend/dummy.2.ksig  --msg-id --log - | grep -oP "request.*\(len.*=[0-9]*.*\).*:\K.*" | gttlvdump -pP -E hex
 >>> /(.*03.*)(.*Message id.*)(.*1.*)([^$]|[
 ])*(03.*)(.*Message id.*)(.*2.*)/
 >>>= 0

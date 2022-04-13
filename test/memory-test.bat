@@ -54,12 +54,9 @@ copy test\resource\file\testFile	%mem_test_dir%\a_23_1000.ksig
 copy test\resource\file\testFile	%mem_test_dir%\a_23_1000_5.ksig
 copy test\resource\signature\ok-sig-2014-08-01.1.ksig %mem_test_dir%\ok-sig.ksig
 copy test\resource\signature\ok-sig-2014-08-01.1.ksig %mem_test_dir%\ok-sig
-copy test\resource\signature\ok-sig-2014-08-01.1.ksig %mem_test_dir%\mass-extend-1.ksig
-copy test\resource\signature\ok-sig-2014-08-01.1.ksig %mem_test_dir%\mass-extend-2.ksig
-copy test\resource\signature\ok-sig-2014-08-01.1.ksig %mem_test_dir%\mass-extend-2.ksig
-copy test\resource\signature\ok-sig-2014-08-01.1.ksig %mem_test_dir%\not-extended-1A.ksig
-copy test\resource\signature\ok-sig-2014-08-01.1.ksig %mem_test_dir%\not-extended-1B.ksig
-copy test\resource\signature\ok-sig-2014-08-01.1.ksig %mem_test_dir%\not-extended-2B.ksig
+copy test\resource\signature\ok-sig-2021-04-30.ksig %mem_test_dir%\not-extended-1A.ksig
+copy test\resource\signature\ok-sig-2021-04-30.ksig %mem_test_dir%\not-extended-1B.ksig
+copy test\resource\signature\ok-sig-2021-04-30.ksig %mem_test_dir%\not-extended-2B.ksig
 
 REM  Configure temporary KSI_CONF.
 SET KSI_CONF=test/resource/conf/default-conf.cfg

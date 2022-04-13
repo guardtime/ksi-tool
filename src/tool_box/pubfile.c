@@ -222,7 +222,7 @@ static int pubfile_task(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ksi, int id, KS
 	ERR_CATCH_MSG(err, res, "Error: Unable to extract publication time.");
 	print_progressResult(res);
 
-	print_debug("Latest publication (%i) %s+00:00.\n",
+	print_debug("Latest publication (%llu) %s+00:00.\n",
 			KSI_Integer_getUInt64(pubTime),
 			KSI_Integer_toDateString(pubTime, buf, sizeof(buf)));
 
@@ -290,7 +290,7 @@ static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ks
 	ERR_CATCH_MSG(err, res, "Error: Unable to extract the time value to create the publication string for.");
 	end = KSI_Integer_ref(start);
 
-	print_progressDesc(d, "Sending extend request to %s (%lu)... ",
+	print_progressDesc(d, "Sending extend request to %s (%llu)... ",
 			KSI_Integer_toDateString(start, buf, sizeof(buf)),
 			KSI_Integer_getUInt64(start));
 
@@ -328,7 +328,7 @@ static int pubfile_create_pub_string(PARAM_SET *set, ERR_TRCKR *err, KSI_CTX *ks
 			res = KSI_ExtendResp_getStatus(extResp, &extender_status);
 			ERR_CATCH_MSG(err, res, "Error: %s", KSITOOL_errToString(res));
 
-			ERR_TRCKR_ADD(err, res = KSI_convertExtenderStatusCode(extender_status), "Extender returned error %llu: '%s'.", (unsigned long long)KSI_Integer_getUInt64(respStatus), KSI_Utf8String_cstr(errm));
+			ERR_TRCKR_ADD(err, res = KSI_convertExtenderStatusCode(extender_status), "Extender returned error %llu: '%s'.", KSI_Integer_getUInt64(respStatus), KSI_Utf8String_cstr(errm));
 		}else{
 			ERR_TRCKR_ADD(err, res, "Extender returned error %llu.", (unsigned long long)KSI_Integer_getUInt64(respStatus));
 		}

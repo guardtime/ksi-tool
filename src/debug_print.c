@@ -156,7 +156,7 @@ void print_progressResult(int res) {
 		if (timerOn == 1) {
 			measureLastCall();
 
-			KSI_snprintf(time_str, sizeof(time_str), " (%i ms)", elapsed_time_ms);
+			KSI_snprintf(time_str, sizeof(time_str), " (%u ms)", elapsed_time_ms);
 			time_str[sizeof(time_str) - 1] = 0;
 		}
 
