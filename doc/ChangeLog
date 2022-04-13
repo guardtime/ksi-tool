@@ -2,11 +2,11 @@ Version 2.10
 
 2022-04-12 2.10.1384
 
-IMPROVEMENT: Build script with option --get-dep-online is using libksi 3.21.3075.
-BUGFIX: Some old signatures replaced with more recent ones in extending tests, to avoid test failures as calendar data base may not have required rounds available.
-BUGFIX: KSI tool works on Raspberry Pi.
-BUGFIX: Some format strings fixed by replacing %i with %llu for uint64_t.
-BUGFIX: Some format strings fixed by replacing %i with %zu for size_t.
+* IMPROVEMENT: Build script with option --get-dep-online is using libksi 3.21.3075.
+* BUGFIX: Some old signatures replaced with more recent ones in extending tests, to avoid test failures as calendar data base may not have required rounds available.
+* BUGFIX: KSI tool works on Raspberry Pi.
+* BUGFIX: Some format strings fixed by replacing %i with %llu for uint64_t.
+* BUGFIX: Some format strings fixed by replacing %i with %zu for size_t.
 
 Version 2.9
 
