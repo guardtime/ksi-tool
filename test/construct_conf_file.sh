@@ -52,7 +52,9 @@ function extract_scheme() {
 # scheme (e.g. http://)
 # return URL part after scheme
 function extract_host_and_stuff() {
-	echo $1 | grep -Po "($2)\K.*"
+	scheme=$(sed 's/+/./g' <<<"$2")
+	echo $1 | grep -Po "($scheme)\K.*"
+
 }
 
 # Extract entire URL.

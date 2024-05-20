@@ -16,14 +16,11 @@ In order to install the `KSI` on CentOS/RHEL:
 ```
 cd /etc/yum.repos.d
 
-# In case of RHEL / CentOS 6
-sudo curl -O https://download.guardtime.com/ksi/configuration/guardtime.el6.repo
-
-# In case of RHEL / CentOS 7
+# In case of RHEL/CentOS 7
 sudo curl -O https://download.guardtime.com/ksi/configuration/guardtime.el7.repo
 
-# In case of Fedora 26
-sudo curl -O https://download.guardtime.com/ksi/configuration/guardtime.fc26.repo
+# In case of RHEL/CentOS 8
+sudo curl -O https://download.guardtime.com/ksi/configuration/guardtime.el8.repo
 
 yum install ksi-tools
 ```
@@ -119,8 +116,8 @@ Curl         >=7.37.0   MIT           https://github.com/curl/curl.git
 ```
 OS/Platform                         Compatibility
 
-RHEL 6 and 7, x86_64 architecture   Fully compatible and tested.
-CentOS 6 and 7, x86_64 architecture Fully Compatible and tested.
+RHEL 7 and 8, x86_64 architecture   Fully compatible and tested.
+CentOS 7 and 8, x86_64 architecture Fully Compatible and tested.
 Debian                              Compatible but not tested on regular basis.
 OS X                                Compatible but not tested on regular basis.
 Windows 7, 8, 10                    Compatible but not tested on regular basis.
