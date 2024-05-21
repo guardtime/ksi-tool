@@ -1,5 +1,10 @@
 Version 2.10
 
+2024-05-20 2.10.1387
+
+* IMPROVEMENT: Build script with option --get-dep-online is using libksi 3.21.3087.
+* IMPROVEMENT: Tests updated.
+
 2022-04-12 2.10.1384
 
 * IMPROVEMENT: Build script with option --get-dep-online is using libksi 3.21.3075.
